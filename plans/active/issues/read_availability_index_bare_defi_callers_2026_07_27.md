@@ -60,7 +60,7 @@ context_scope:
     deployment-api/deployment_api/services/manifest_source.py,
     /codex/02-data/honest-coverage-model.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+    /plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
     features-service/features_service/volatility/core/orchestration_service.py,
   ]
 locked_since:

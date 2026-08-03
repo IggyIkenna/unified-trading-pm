@@ -25,7 +25,7 @@ tags: [manifest, read-availability-index, oom, defi, memory-bounding, data-pipel
 related:
   [
     /plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md,
-    /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+    /plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
     /plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /codex/02-data/availability-manifest-and-data-status.md,
