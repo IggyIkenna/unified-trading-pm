@@ -9,7 +9,7 @@ summary: >-
   then run the standard 6-step archival ritual. Authored 2026-08-03 to close the finalize-plan-coverage gate
   (check_finalize_plan_coverage.py) that the original plan's shipping without a companion finalize tripped —
   task_template.md §4, "Every AO-dispatched plan needs a gated finalize plan."
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, close-out, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
 created: "2026-08-03"
@@ -33,7 +33,7 @@ estimate_calibrated_ai_days: 0.08
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: plans_archive_reference_path_hygiene_2026_08_02_finalize
 depends_on: [plans_archive_reference_path_hygiene_2026_08_02]
 gate_on_depends: true
 sequential: true
@@ -45,7 +45,7 @@ assigned_role: review
 drift_direction: correct-codex
 context_scope:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -53,20 +53,17 @@ context_scope:
 
 # plans_archive_reference_path_hygiene_2026_08_02 — finalize
 
-> **Held by `gate_on_depends: true`, not `status`.** Not dispatched until
-> `plans_archive_reference_path_hygiene_2026_08_02` is fully done (or on explicit operator direction to start
-> reconciling early).
+> **✅ ARCHIVED 2026-08-03, `status: superseded`.** This was one of THREE independent finalize-plan authorings that all
+> gated on the same parent (`plans_archive_reference_path_hygiene_2026_08_02.md`) — a duplicate-plan-authoring defect
+> discovered by `plans_archive_reference_path_hygiene_2026_08_02_finalize.md` while executing its own archival ritual's
+> referrer-fix step. That doc actually did the reconciliation + archival work; this doc's todo below is now redundant
+> and is closed as superseded rather than executed a second time. See
+> `plans_archive_reference_path_hygiene_2026_08_02_finalize.md` for the real done-when evidence.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `plans_archive_reference_path_hygiene_2026_08_02.md`'s checkboxes** against whatever
-      shipped — flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm the `check_reference_paths`
-      format/exist counts genuinely dropped back toward the 161/901 baseline per that plan's own todo 4 done-when (not
-      an exact match — allow for legitimate new refs added elsewhere in the corpus since 2026-08-02), then run the
-      standard 6-step archival ritual (migrate any DEFERRED items, banner, codex-alignment check, update any
-      CLAUDE.md/codex pointer on a new contract, fix every referrer's path corpus-wide, clear lock) since the plan is
-      self-contained (no separate source doc to reconcile). If real work remains, leave
-      `plans_archive_reference_path_hygiene_2026_08_02.md` active and note what's still open here instead.
+- [x] ✅ [REVIEW] P2. **SUPERSEDED — see banner above.** Both reconciliation and archival were independently completed
+      by `plans_archive_reference_path_hygiene_2026_08_02_finalize.md`'s own todos 1-3. Not re-done here.
 
 ## Progress Log
 

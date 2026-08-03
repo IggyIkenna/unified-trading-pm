@@ -840,6 +840,38 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   with the corrected syntax and keep waiting — do NOT launch a second VM; (3) once terminal, run
   `build-continuous --root ES`, re-measure the `continuous_future` hit rate against the ~19% (454/2398) baseline this
   todo exists to beat, and only then flip this checkbox with the before/after evidence. Todo NOT done — do not flip.
+- **2026-08-03T06:49-07:00Z (slot-3, data_engineering) — backfill VM reached genuine terminal state; ONE real
+  per-instrument failure found, isolated; build-continuous relaunched.** `mdps-backfill-tradfi-20260802-175522`
+  self-deleted after processing the FULL `2020-01-01..2026-07-25` range (2398/2398 dates attempted, confirmed via
+  `run.log`'s own `🏁 Date range complete: 2020-01-01..2026-07-25 (2398 date(s) processed)` line) — but the outer
+  handler exited `rc=1`/`EXIT_STATUS=1`, so this is NOT a clean success, investigated before treating it as one. **Root
+  cause, isolated by direct log grep**: exactly ONE per-date failure across the whole run — `2026-05-07`, instrument
+  `ESM6-ESU6`, `overflow encountered in multiply` across all 6 timeframes
+  (`market-data-processing-service.process_chain_streaming`, `[CRITICAL] unknown error`, correlation `7f058ba9`) — a
+  numeric-overflow bug in candle aggregation for this specific contract-roll pair, NOT the listing/timing issue this
+  re-run was testing. Every one of the other 2397 dates succeeded cleanly (`0 errors` in each date's own summary, 30/30,
+  18/18, 12/12 etc. per active-contract count). This is a real, narrow data-completeness gap, distinct in kind from the
+  `_retry_empty_day_listing` mitigation being tested — filed as a new tracked todo below rather than silently absorbed
+  into this todo's scope (data-pipeline-correctness HARD RULE: real findings become `- [ ]` todos, not prose). **Next
+  step taken**: launched `build-continuous --root ES` for the full range via the dedicated launcher
+  (`deployment-service/scripts/vm/launch-mdps-build-continuous-vm.sh ES 2020-01-01 2026-07-25 full`) — first attempt
+  (`mdps-backfill-tradfi-buildcontinuous-es-20260803-065314`) showed a STALE `unified-api-contracts` tarball warning
+  (the exact tarball-SHA-pin-race trap this doc's source issue already documented once, 2026-07-26 slot-3), so it was
+  killed before doing any real work and relaunched with `LC_TARBALL_FRESHNESS=auto` — clean relaunch
+  `mdps-backfill-tradfi-buildcontinuous-es-20260803-065455`, all 3 tarballs (MDPS/UAC/UTL) verified fresh before launch.
+  Watchdog re-armed for this new VM (task id local to this session; corrected byte-range syntax, 5-min poll, checks both
+  non-RUNNING status AND VM-not-found/deleted as terminal signals). **Not yet done**: build-continuous still running,
+  hit-rate re-measure not yet done, this checkbox remains open.
+- [ ] [DATA] P1. **Fix the numeric-overflow bug in candle aggregation for `ESM6-ESU6` on `2026-05-07`.**
+      `market-data-processing-service.process_chain_streaming` raised `overflow encountered in multiply` across all 6
+      timeframes (1m/5m/15m/1h/4h/24h) for this specific instrument/date pair during the 2026-08-03 ES/MES full-range
+      re-run (`mdps-backfill-tradfi-20260802-175522`, correlation `7f058ba9`) — the only failure across 2398 dates
+      processed. Likely an unguarded multiply in the candle-aggregation path overflowing on a specific price/volume
+      combination for this contract-roll pair (ESM6→ESU6, June-2026 expiry). **Done when**: root cause identified (e.g.
+      via a local repro against the exact date/instrument), a fix shipped (widen the dtype, guard the multiply, or
+      handle the overflow as a recoverable per-shard failure rather than a hard error), a regression test added
+      confirmed failing pre-fix, and the single date re-processed to confirm it now succeeds. Repo:
+      market-data-processing-service. Source: this plan's 2026-08-03T06:49Z Progress Log entry.
 
 ## Codex SSOTs
 

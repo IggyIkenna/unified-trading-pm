@@ -113,10 +113,16 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
 
 ## Recommended follow-up (NOT done in this fix — deliberately out of scope, needs judgment)
 
-- [ ] [DATA] P2. Add `wBETH` and `sanctumSOL` to UAC's
+- [x] ✅ [DATA] P2. Add `wBETH` and `sanctumSOL` to UAC's
       `unified_api_contracts.internal.domain.defi.LST_TOKEN_TO_PROTOCOL_ASSET` (both are genuine LSTs currently dropped
       by `_drop_unmapped_tokens` purely because they're missing from the registry) — needs a correctness-minded decision
-      on the exact canonical protocol/asset name pair, not a mechanical fix. Repo: unified-api-contracts.
+      on the exact canonical protocol/asset name pair, not a mechanical fix. Repo: unified-api-contracts. —
+      unified-api-contracts@8f1c11c8: `wBETH` → `("BINANCE", "ETH")` (matches the existing `cbETH` →
+      `("COINBASE",     "ETH")` convention; `instruments-service/.../adapters/defi/wbeth.py` already tags the venue
+      `BINANCE-<CHAIN>`); `sanctumSOL` → `("SANCTUM", "SOL")` (the MTDS/UAC token key for Sanctum's INF meta-LST per
+      `instruments-service/.../adapters/defi/sanctum.py`'s own docstring, matching `jitoSOL`/`mSOL`/`bSOL`'s
+      protocol/SOL convention). Test coverage extended in `tests/unit/test_lst_protocol_asset.py`; full QG green (0
+      errors/warnings beyond pre-existing baselines).
 - [ ] [DATA] P3. Investigate whether `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` belong in
       the MTDS `lst_rates`/`oracle_prices` feed at all — they read as Idle Finance / Pendle yield-tranche tokens, not
       liquid-staking tokens, and may indicate upstream data-scope creep worth tightening at the MTDS handler rather than

@@ -324,12 +324,21 @@ def _clear_field_continuations(fm_lines: list[str], field: str) -> list[str]:
     Call this unconditionally (not just when the field looks empty) so a field whose own
     line already holds a real value still gets its stale continuation cleaned.
 
-    Distinguishes that accidental-fold garbage from a DELIBERATELY-authored quoted multiline
-    scalar (e.g. `last_updated:\n  '2026-07-10 (was: 2026-06-27 -- ...)'`, a real annotation
-    pattern already in this corpus — plans/active/issues/defi_code_codex_drift_2026_05_27.md,
-    plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md): if the
-    FIRST continuation line (after stripping leading whitespace) opens with a quote character,
-    it's an intentional quoted scalar, not this bug's signature — leave it untouched.
+    Distinguishes that accidental-fold garbage from two DELIBERATE patterns:
+
+    1. A quoted multiline scalar (e.g. `last_updated:\n  '2026-07-10 (was: 2026-06-27 -- ...)'`, a
+       real annotation pattern already in this corpus —
+       plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+       plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md): if the
+       FIRST continuation line (after stripping leading whitespace) opens with a quote character,
+       it's an intentional quoted scalar — leave it untouched.
+    2. A real single-line value immediately followed by a `#`-prefixed explanatory comment, itself
+       possibly wrapped across further indented comment-only lines (e.g.
+       `execution_scope:\n  local-only # corrected 2026-08-02 (operator ruling on\n  # ...): was
+       orchestrator-agent, contradicting assigned_vm: NA. Stays NA until ...`,
+       plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md):
+       if the FIRST continuation line has real (non-comment) content before an unquoted `#`, it's a
+       value + trailing comment — leave the whole block untouched rather than deleting the value.
     """
     result: list[str] = []
     i = 0
@@ -339,7 +348,15 @@ def _clear_field_continuations(fm_lines: list[str], field: str) -> list[str]:
         if re.match(rf"^{re.escape(field)}:", ln):
             result.append(ln)
             i += 1
-            if i < n and is_continuation_line(fm_lines[i]) and fm_lines[i].strip()[:1] in ("'", '"'):
+            keep_continuation = False
+            if i < n and is_continuation_line(fm_lines[i]):
+                first_stripped = fm_lines[i].strip()
+                if first_stripped[:1] in ("'", '"'):
+                    keep_continuation = True
+                elif "#" in first_stripped and not first_stripped.startswith("#"):
+                    value_part = first_stripped.split("#", 1)[0].strip()
+                    keep_continuation = bool(value_part)
+            if keep_continuation:
                 while i < n and is_continuation_line(fm_lines[i]):
                     result.append(fm_lines[i])
                     i += 1

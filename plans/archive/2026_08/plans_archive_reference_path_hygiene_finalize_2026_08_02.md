@@ -7,7 +7,7 @@ summary: >-
   follow-ups the parent's own work surfaced). Reconciles the parent's own checkboxes against real evidence
   (self-contained plan, no external source docs to flip back), re-checks the 2 deferred findings for whether their
   blocker has cleared, and archives the parent via the standard 6-step ritual.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -16,13 +16,13 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, ratchet, mechanical, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/task_template.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-03"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -33,7 +33,7 @@ estimate_calibrated_ai_days: 0.08
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: plans_archive_reference_path_hygiene_2026_08_02_finalize
 depends_on: [plans_archive_reference_path_hygiene_2026_08_02]
 gate_on_depends: true
 source: >-
@@ -50,35 +50,23 @@ drift_direction: advance-code
 
 # Scoped reference-path hygiene pass over `plans/archive/` — finalize
 
-> **🔒 GATED, not draft.** `depends_on: [plans_archive_reference_path_hygiene_2026_08_02]` + `gate_on_depends: true`
-> holds every todo below until ALL of that plan's own todos are `done` — currently 6 (the original 4 are closed; 2 new
-> P3 follow-ups the parent's own work surfaced are still open). No separate flip needed for THIS doc. `sequential: true`
-> because todo 2 (archival) must run after todo 1 (reconciliation) confirms there is nothing left open.
+> **✅ ARCHIVED 2026-08-03, `status: superseded`.** This was one of THREE independent finalize-plan authorings that all
+> gated on the same parent (`plans_archive_reference_path_hygiene_2026_08_02.md`) — a duplicate-plan-authoring defect
+> discovered by `plans_archive_reference_path_hygiene_2026_08_02_finalize.md` while executing its own archival ritual's
+> referrer-fix step. That doc actually did the reconciliation + archival work (all 3 of its todos done, evidence in its
+> own Progress Log); this doc's 2 todos below are now redundant with that work and are closed as superseded rather than
+> executed a second time. See `plans_archive_reference_path_hygiene_2026_08_02_finalize.md` for the real done-when
+> evidence.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the parent plan's own checkboxes against real evidence, including its 2 newer P3
-      follow-ups.** The parent plan is self-contained (no external `Source:` docs to flip back — its todos are the work,
-      not an extraction from other docs). For the original 4: verify the cited shipping commit exists and is an ancestor
-      of `origin/live-defi-rollout` (`git merge-base --is-ancestor`), and confirm the claim that `check_reference_paths`
-      format/exist counts dropped back toward baseline against a fresh
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` run rather than trusting the recorded number. For the 2
-      newer P3 todos, re-check whether their blocker has since cleared: (1) the duplicate-named archived docs
-      (`work_split_2026_05_22_ikenna.md`'s 3 cited backfill_phase3 docs;
-      `mock_data_pipeline_benchmarking_2026_05_10.md`) — re-run `diff` on each pair; if still diverged, this needs the
-      parent plan's own todo done first, not this finalize's job to resolve. (2) The pre-existing +1 existence-ratchet
-      gap — re-run `python3 scripts/plan-hygiene/check_reference_paths.py` and confirm whether the live existence count
-      is still exactly baseline+1, or whether some other commit already fixed/re-baselined it. **Done when**: all 6
-      checkboxes are confirmed evidence-backed (or a note explaining why one is still legitimately blocked) and the
-      reference-path ratchet is verified actually cleared (not just claimed).
-- [ ] [DOC] P2. **Archive `plans_archive_reference_path_hygiene_2026_08_02.md`** via the standard 6-step ritual
-      (CLAUDE.md § plan archival) once todo 1 confirms it is fully done: add the archive banner → confirm no codex
-      contract needs updating (this plan only runs an existing script over an existing population; it does not establish
-      a new contract) → grep the corpus for every referrer of `plans_archive_reference_path_hygiene_2026_08_02` and
-      repoint each to the archived path → move to `plans/archive/2026_08/` → clear `locked_by` (already empty; confirm)
-      → archive this finalize doc alongside it in the same commit. **Done when**: the plan is in
-      `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
-      finalize doc is archived alongside it.
+- [x] ✅ [REVIEW] P2. **SUPERSEDED — see banner above.** Reconciliation was independently completed by
+      `plans_archive_reference_path_hygiene_2026_08_02_finalize.md`'s own todos 1-2 (ratchet re-verified format 81/81,
+      existence 87/87, exact match to baseline; AMBIGUOUS/UNRESOLVED triage spot-checked with 0 drift). Not re-done
+      here.
+- [x] ✅ [DOC] P2. **SUPERSEDED — see banner above.** Archival was independently completed by
+      `plans_archive_reference_path_hygiene_2026_08_02_finalize.md`'s own todo 3 (parent + all 4 finalize-plan
+      duplicates archived together, referrers fixed, INDEX regenerated). Not re-done here.
 
 ## Codex SSOTs
 

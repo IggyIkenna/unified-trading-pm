@@ -26,8 +26,8 @@ repos: [features-service, market-tick-data-service]
 scope: [engineer]
 tags: [defi, features-service, delta-one, funding-oi, open-interest, data-availability, hyperliquid]
 related:
-  - /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
-  - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
+  - /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
+  - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
 source: [D1 todo delta_one leg verification-window dry-run, features-delta-one-defi-20260730-234947]
@@ -48,7 +48,7 @@ resolved_by:
   real record_captured rows (features-delta-one-defi-20260803-055219, exit_code=0)"
 context_scope:
   [
-    /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
+    /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     features-service/features_service/delta_one/app/calculators/funding_oi.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
@@ -182,13 +182,20 @@ fixes above.
       separately-dispatched `[DATA] P3` todo directly below (data_engineering craft, its own `Done when` is exactly that
       run), matching the craft-scope split this issue's own prior sessions already established (backend implements +
       unit-tests; data re-verifies against real infra).
-- [x] ✅ [DATA] P3. **RE-ATTEMPTED 2026-08-03 (slot-10, data_pipeline_failure escalation agt-dd3c9e) — DONE, real
-      `record_captured` rows confirmed.** Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
+- [x] ✅ [DATA] P3. **ATTEMPTED 2026-08-03 (slot-2) — still BLOCKED, new root cause found, see Progress Log + new
+      `[BACKEND] P1` todo below.** Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo over the verified-clean manifest window
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
-      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). **MET** — see Progress Log entry
-      below (`features-delta-one-defi-20260803-055219`, exit_code=0, real `funding_oi` partitions written for the
-      majority of the window; `[BACKEND] P1`'s CEFI-bucket fix is confirmed live in production, not just unit tests).
+      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). — **MET 2026-08-03, independently
+      confirmed TWICE within ~90s** after `[BACKEND] P1` below landed (`features-service@6b2282c5`): slot-8's
+      `features-delta-one-defi-20260803-055145` (`EXIT_STATUS=0`, manifest 454/455 shards `captured` across 147 dates)
+      and slot-10's `features-delta-one-defi-20260803-055219` (`exit_code=0`, real `funding_oi` partitions written for
+      the majority of the window) — both slots independently hit the exact same stale-tarball trap first (a launch
+      attempt fetching pre-`6b2282c5` code), fixed it the same way, and reached the same verified-working conclusion;
+      near-simultaneous duplicate dispatch, not a discrepancy. D1's checkbox flipped in
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md` citing this evidence; full detail in
+      `plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s Progress Log, not
+      duplicated here.
 - [x] ✅ [BACKEND] P1. **NEW, this session.** `_enrich_funding_oi_from_derivative_ticker`
       (`features_service/delta_one/app/core/_passthrough_loader.py:345`) is silently failing to find ANY matching
       `derivative_ticker` rows for HYPERLIQUID over `2023-05-12..2023-10-31`, even though real `derivative_ticker` data
@@ -388,3 +395,16 @@ fixes above.
     new issue here (out of this escalation's scope; noted for whoever next touches `deployment_heartbeat.py`'s row
     counters). Pinged the authoring slot (`dp-fleet-monitor`) with this outcome and closed the DP-VM-001 escalation via
     `/done` — no new issue doc needed, this one already covered it end-to-end.
+- **2026-08-03 (slot-8, backend_engineer craft, backlog task `delta_one_candle_loader_no_pass_through_path_defi-003`) —
+  independently reached the SAME conclusion ~90s apart from slot-10 above (duplicate dispatch, not a discrepancy).**
+  Landed on this same `[DATA] P3` verification via a different route (my own dispatched todo in the sibling doc, not a
+  DP-VM escalation) and hit the identical stale-tarball trap slot-10 found — deleted a just-launched VM
+  (`features-delta-one-defi-20260803-054840`) that warned it would fetch pre-`6b2282c5` code, republished the tarball
+  myself before either of us knew the other was doing the same thing, then ran my own verification VM:
+  `features-delta-one-defi-20260803-055145` (`EXIT_STATUS=0`) — manifest shows 454/455 `funding_oi` shards `captured`
+  across 147 dates, corroborating slot-10's independent result exactly. Flipped `[DATA] P3`'s checkbox above (already
+  `[x]` from slot-10 — no double-flip) and D1's checkbox in `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. Full
+  detail (incl. my own tarball-staleness catch) in
+  `plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s Progress Log, not duplicated
+  here. This closes every remaining `[DATA]`/`[BACKEND]` todo in THIS doc — archiving per issue-doc-lifecycle
+  discipline.

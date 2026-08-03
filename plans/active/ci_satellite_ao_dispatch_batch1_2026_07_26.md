@@ -447,18 +447,21 @@ concurrent workers do not collide on this file.
       reads `importlib.metadata.version("orchestrator")`, the established D13 API-2 pattern). Full census recorded in
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
       (2026-07-31)". Source: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
-- [ ] [INFRA] P3. **`check_workspace_pyproject_pin_drift.py` is D13-blind, same bug class as
-      `sync-manifest-versions.py`.** Found via the D13 orphan-reader re-sweep (census in
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-7, infra)** — **`check_workspace_pyproject_pin_drift.py` DELETED**, not
+      fixed, same verdict as the sibling `sync-manifest-versions.py` deletion above. Confirmed genuinely superseded:
+      `assert_version_coherence.py`'s `_check_dep_floors()` (`DEP_FLOOR_UNSATISFIABLE`) already performs the identical
+      peer-pin-drift check — every internal dep edge's declared range must admit the dep's current version — but
+      resolves the peer's current version from the manifest's git-tag-aware `versions{}` cache (kept current by the
+      versions-consolidator) instead of a static pyproject `[project].version` line, so it works correctly for all 22
+      `version_source: git-tag` repos where the deleted script's `_extract_version()` returned nothing. It is also a
+      strict superset (full `packaging.SpecifierSet` range satisfiability vs. the deleted script's `>=`-only regex)
+      sourced from the actively-maintained `repositories{}[repo].dependencies[]` manifest field (kept in sync with real
+      code imports via `fix-internal-dependency-alignment.py`), and already wired (`quality-gates.sh:979` + the
+      scheduled `version-coherence-check.yml` → Firestore verdict store) — unlike the deleted script, which was inert
+      (grep-confirmed zero workflow/script/test referrers before deletion; only historical mentions remained in archived
+      docs/ping logs). unified-trading-pm@bd0e44dd3. Source:
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
-      (2026-07-31)"). `_extract_version()` reads `project.get("version")` from every repo's live pyproject.toml, but
-      21/22 `version_source: git-tag` repos are dynamic (no static line) — `name_to_version` ends up populated only by
-      static-version repos, so the peer-pin-drift comparison silently never fires for any dynamic repo's dependents. NOT
-      currently wired to `quality-gates.sh` or any workflow (grep-confirmed) — inert today, not actively harmful, but
-      the same "trusted exactly when someone reaches for it manually" trap as the original bug. Either make it
-      git-tag-aware (resolve a git-tag repo's current version from `workspace-manifest.json`'s `versions{}` cache
-      instead of the source pyproject, mirroring `assert_version_coherence.py`'s `_version_source()` dispatch) or delete
-      it if genuinely superseded — state which and why. **Done when**: the script either correctly resolves git-tag repo
-      versions or is gone with zero dangling referrers. Repo: unified-trading-pm.
+      (2026-07-31)".
 - [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
       re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
       `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
@@ -622,7 +625,7 @@ which is the ACKED-INTO-PLAN case `/codex/11-project-management/issue-doc-lifecy
 active plan before archival. All 3 source docs were already moved to `plans/archive/issues/` without this step; migrated
 here now, retroactively, to close that gap. Each item cites its source doc + original todo tag/priority.
 
-- [ ] [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
+- [x] ✅ [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
       billing-wall class (2026-06-11, 2026-06-23, 2026-07-29) — the archived doc's own P3 remediation (spend telemetry /
       50-80-95% budget alert) was never unblocked, `BLOCKED-ON-DECISION` pending an operator-minted `Plan: read`
       billing-scoped token. Mint that token so the workspace can self-detect this before it walls CI, or accept
@@ -632,12 +635,55 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       operator-gated twice already: `/na-eligibility-audit ci` 2026-07-30 ("KEEP-NA, valid — gated on an operator-minted
       billing-scoped token") and `ci_satellite_ao_dispatch_batch5_2026_08_02.md`'s D5-4 ("Operator-gated (needs a
       ruling, not a re-triage)"). Filed a /blocked question with the operator to pick a fork; no code change exists for
-      a worker to ship here.
-- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
+      a worker to ship here. **RULED 2026-08-03T06:28:59Z (operator, via main — `blocked_id: BLK-c099ebe5`,
+      `disposition: final`)**: "Rule that recurring manual operator intervention is the accepted standing posture (no
+      token minted) — close this todo as wont-fix, since across all 3 prior recurrences the operator has already handled
+      it manually within hours each time with no lasting harm." No `Plan: read` billing-scoped token was minted
+      (verified — no reference to one exists anywhere in the codebase or CI config as of this check) and none will be;
+      that is the ruled outcome, not a gap. Closed wont-fix per the ruling — no further code or credential action
+      outstanding.
+- [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
       `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal FAILING status
       on a 0-step billing-kill (the archived doc's still-open P1 "outage-aware v2 status dispatch" item) — if not
       shipped, this wall also generates `ldr_qg_failure` escalation spam fleet-wide for every affected repo, a wasted
-      escalation-worker dispatch on a wall no worker can fix.
+      escalation-worker dispatch on a wall no worker can fix. — **CONFIRMED 2026-08-03 (slot-10, backend_engineer),
+      code-read only, no shipped fix needed for THIS specific claim**: the "Record CI status" step
+      (`unified-trading-pm/.github/workflows/python-quality-gates-v2.yml:1063`) does **NOT** fire during either observed
+      billing-wall signature. It is the 9th step of the `quality-gates-v2` aggregation job (after
+      Checkout/Detect-changeset/Aggregate-slice-results/GCP-auth/Save-green-marker/download+compute codebase-health), so
+      it only executes once that job actually starts running steps. (a) **Full 0-step signature** (`jobs: []`, run
+      `conclusion: startup_failure`): GitHub blocks the ENTIRE run before any job is even scheduled — the aggregation
+      job never starts, so none of its steps, incl. this one, run. (b) **Partial signature** (the archived doc's own
+      evidence: `content-gate` + both `qg-slices` legs `success`, only the `quality-gates-v2` aggregation job itself
+      fails in ~11-12s with **0 recorded steps** and an expired log blob) — "0 recorded steps" means the job died before
+      its first step (Checkout) ran, so "Record CI status" (step 9) still never executes either. **So this specific step
+      is not the escalation-spam source the archived doc suspected.** Traced the actual driver instead:
+      `agent-orchestrator/server/ci_reconcile.py`'s independent GH-API poll (`repo_ldr_qg_conclusion()` /
+      `_parse_qg_runs_response()`, `ci_reconcile.py:55,140-183`) reads the WORKFLOW RUN's own top-level `conclusion`
+      field (GitHub's aggregate across all jobs in the run — a signal wholly independent of this workflow's own "Record
+      CI status" step) and escalates a `ldr_qg_failure` fixer whenever it literally equals `"failure"`
+      (`_FAILING_CONCLUSION`, exact string match — `"startup_failure"` does NOT match, so the full 0-step signature is
+      already correctly filtered). The partial signature's run-level `conclusion`, however, DOES read as literal
+      `"failure"` (a real job in the run failed, even though the failure was billing-induced, not a code/test defect) —
+      and `ci_reconcile.py` has a stale-head gate (`failing_run_is_current()`) but **no billing-wall/outage
+      classification at all**, so it escalates identically to a genuine break. This matches the archived doc's own
+      evidence log: the real dispatched `agt-49fba5`/`agt-0518b0` etc. `ldr_qg_failure` escalations during the
+      2026-07-29 wall line up with the partial signature, not the full one — confirming `ci_reconcile.py`'s
+      literal-`"failure"` match, not this workflow step, is the actual wasted-dispatch source. Per-repo cooldown
+      (`ci_reconcile_cooldown_seconds`) bounds the spam to one wasted dispatch per repo per cooldown window, not
+      unbounded, but it is real and recurring for every repo hit by the partial signature during a sustained wall.
+      Follow-up fix filed as a new todo below (adjacent finding, same plan) rather than implemented here — a
+      billing-wall detection heuristic (e.g. correlating the GH `timing` API's `run_duration_ms`/`billable` fields with
+      the run, or the 0-recorded-steps + expired-log-blob signature) is a real code change outside this confirm-scoped
+      P3's 1h estimate.
+- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md` investigation, 2026-08-03)** Teach
+      `agent-orchestrator/server/ci_reconcile.py`'s `repo_ldr_qg_conclusion()`/escalation path to distinguish a
+      billing-wall-induced run `conclusion: "failure"` (the "partial" signature: sibling jobs succeed, only the
+      `quality-gates-v2` aggregation job fails in ~11-12s with 0 recorded steps + an expired log blob) from a genuine QG
+      break, and skip the `ldr_qg_failure` escalation dispatch for the former (a worker cannot fix an account-level
+      billing block). Candidate signal: the GH `timing` API's `run_duration_ms`/`billable` fields for the failing run,
+      or a direct check for the 0-recorded-steps pattern via the jobs list. See the confirmed root-cause analysis in the
+      todo immediately above this one for full evidence + code citations.
 - [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
       `ldr_qg_failure` escalation passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a real numbered slot, so a dispatched `cicd` worker's

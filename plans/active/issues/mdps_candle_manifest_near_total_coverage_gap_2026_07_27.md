@@ -166,8 +166,18 @@ the candle layer instead of raw-tick.
       explicitly optional); the audit-parquet + VERDICT evidence is accepted per this plan's own acceptance bar. Newly
       recorded rows will land in each bucket's consolidated `_index/availability_index.parquet` on the consolidator's
       normal cadence.
-- [ ] [DATA] P2. **Complete the sports full-corpus sweep** (only a bounded 200-object sample has been run) to confirm
-      the ~100% coverage pattern holds across sports's entire historical corpus, not just a recent-day sample.
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-13, `data_engineering`).** Ran the real full-corpus sports
+      candle-orphan-sweep via a Tier-2 SPOT VM (`canonical-migration-sports-cdlorph-20260803-070805`, e2-standard-8
+      SPOT, `asia-northeast1-c`, LC_TARBALL_FRESHNESS=auto confirmed all 4 code tarballs current, completed in ~13s
+      wall-clock, `exit_code=0`, no preemption, self-shutdown) —
+      `market-data-processing-service/scripts/candle_orphan_sweep.py --asset-group sports --manifest-fix-cutover     2026-07-27 --report-out gs://deployment-scripts-central-element-323112/canonical-migration-candle-orphan-sweep/20260803-070805/canonical-migration-sports-cdlorph-20260803-070805/orphan_sweep_sports.parquet`.
+      Confirms the ~100% coverage pattern holds across sports's ENTIRE historical corpus, not just the earlier bounded
+      200-object sample: `A_canonical_manifested=59,540`, `B_legacy_duplicate=0`, `C_manifest_infra=0`, `D_junk=0`,
+      `E_orphan_real=0`, `F_ambiguous_pre_fix=0` — 59,540/59,540 candle objects manifested (100% coverage), zero
+      orphans, zero ambiguous, acceptance bar (`orphan_class_E==0`) met. Report parquet wrote 0 actionable rows, as
+      expected with E=F=0. No code changes were needed — sports's manifest-write wiring (unlike
+      cefi/tradfi/prediction/defi) was already confirmed correct in the earlier bounded sample; this todo was purely the
+      missing full-corpus verification run.
 - [x] ✅ [REVIEW] P2. **DONE 2026-07-31 (slot-5, `review`).** Cross-check confirmed: YES, superseded. Live-verified via
       a single-day, row-group-pushdown `read_availability_index` read (not a corpus walk,
       `filters=[("date",">=",     "2026-05-03"),("date","<=","2026-05-03")]`) that the narrower doc's exact named shards
@@ -225,6 +235,13 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03** (AO dispatch, slot 13, `data_engineering`) — Completed the P2 sports full-corpus sweep todo. Launched
+  `canonical-migration-sports-cdlorph-20260803-070805` (Tier-2 SPOT VM, `sports-candle-orphan-sweep` launcher category,
+  read-only/no-`--apply`-path, `LC_TARBALL_FRESHNESS=auto` confirmed 4 tarballs current) — completed in ~13s, exit_code
+  0, no preemption, self-shutdown. Result: `A=59,540 B=0 C=0 D=0 E_orphan_real=0 F_ambiguous_pre_fix=0` — 100% coverage
+  across the entire sports historical corpus, confirming the earlier bounded 200-object sample's pattern held at full
+  scale. No remediation needed for sports. Remaining open work on this doc is only the P2 source-mistag remediation todo
+  (cefi/prediction/defi, unrelated to sports) — doc stays active, not yet archival-eligible.
 - **2026-07-27** (AO dispatch, slot 9) — Filed while running the first full-corpus validation of
   `candle_orphan_sweep.py` (todo 1 of `mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`). Real numbers
   captured above from 4 completed Tier-2 SPOT VM runs against live prod data; spot-verified the cefi gap directly

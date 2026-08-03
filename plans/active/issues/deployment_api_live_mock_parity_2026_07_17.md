@@ -174,9 +174,17 @@ mock parity — the drift is historical, not systemic.
       consumer reads either field today, so this is stale-fixture hygiene, not a functional bug — but leaving it
       diverged means deployment-ui's dev/Playwright surface no longer matches deployment-api's real (both live and
       now-fixed-mock) response shape. (repo: deployment-ui)
-- [ ] [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
+- [x] ✅ [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
       2026-06-10 · inventory 2026-06-22 · escalations 2026-06-27) — a fixture that never moves silently trains the UI on
-      stale shapes.
+      stale shapes. — **DONE 2026-08-03 (slot-6, backend_engineer), `deployment-api@c0aabe0`.** Rather than a one-time
+      date bump (which would just re-freeze on the next measurement), each fixture now COMPUTES its timestamps relative
+      to `datetime.now(UTC)`: `cloud_builds.py`'s mock trigger `last_build`, `repo_gh_rate_limit.py`'s
+      `_mock_rate_limit` (`fetched_at` + all three `reset` epochs), `_repo_ci_mocks.py`'s `_mock_alerts()` (the
+      `git_health` alert powering `/api/alerts`'s fleet-git-health signal) and `_mock_escalations()`, and
+      `deployments_inventory/_mock_data.py`'s `_mock_inventory()` (which already took a `now: datetime` PARAMETER from
+      its caller but never used it — a latent dead-parameter bug; now wired through). Every fixture's original relative
+      spacing between events is preserved, just re-anchored to the present. `quality-gates.sh` green (sentinel
+      `c0aabe0`), shipped via `quickmerge --agent`, verified on origin.
 - [ ] [SERVICE] P3. **Decide whether parity should be a gate, not a script** — if `compare_live_mock_parity.py` were
       wired into a QG/contract test, none of the above could have rotted for four months. That is the durable fix; the
       script is the stopgap. (Cross-ref: deployment-ui@0c817d2 fixed the same rot class on the FRONTEND mock the same
@@ -228,3 +236,12 @@ mock parity — the drift is historical, not systemic.
   frontend dev-mode/Playwright mock (`src/lib/mock-api.ts:4528-4534`, gated by `VITE_MOCK_API` — a separate mechanism
   from deployment-api's `CLOUD_MOCK_MODE`) still returns `total`; out of scope for this backend_engineer task (UI/TS
   work), left for a `ui_developer` pickup.
+- **slot-6 2026-08-03**: Refreshed the four frozen mock fixtures — `deployment-api@c0aabe0`. Checked first whether any
+  unit test pinned the exact frozen date literals (`grep` across `tests/unit/`) — none did, so free to change values.
+  Chose relative-to-now computation over a one-time date bump specifically because a bump just re-freezes at the next
+  measurement, which is the exact rot this todo exists to stop. Found `_mock_inventory(now: datetime)` already had a
+  `now` parameter threaded in from every real caller (`_load_inventory`) that the function body simply never used —
+  fixed that latent gap rather than adding a parallel `datetime.now()` call. Verified all four fixtures produce current,
+  non-frozen output via direct import + a full local `quality-gates.sh` pass (targeted tests +
+  `test_repo_ci_routes.py`/`test_repo_ci_alerts.py`/`test_route_deployments_inventory*.py`/`test_route_builds.py`, 505
+  passed). `quality-gates.sh` green (sentinel `c0aabe0`), shipped via `quickmerge --agent`, verified on origin.
