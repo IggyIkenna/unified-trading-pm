@@ -202,25 +202,35 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
       `StrategyManifestRecorder`/`record_captured` call sites in `strategy-service`, confirm whether they're wired into
       the live paper/backtest write path at all, or exist but never fire (env mismatch, exception swallowed, etc.).
       Repo: strategy-service. — strategy-service@788dfa08 (see "Todo 1 investigation findings" above).
-- [ ] 2. [OPERATOR] P2. **Decide the `EmptyConfirmedReason` for the 7 real `strategy_instructions` orphans, then run the
-      backfill.** See "Todo 2 investigation findings" above — the objects are genuine 0-row hold-day writes, not
-      `capture_status="captured"` as originally assumed, and no existing closed-set reason fits an internally-computed
-      (no-upstream-fetch) empty write. Options: (A) add a new `EmptyConfirmedReason` member (e.g. something like
-      `EXPECTED_STRATEGY_NO_SIGNAL` or `SOURCE_INTERNAL_ZERO`) in `unified-api-contracts` + its codex/audit-table
-      entries — semantically correct, matches the taxonomy's one-reason-per-distinct-semantic pattern, but is a
-      cross-repo design change; (B) reuse an existing reason as a pragmatic approximation (none surveyed actually fit —
-      see finding 3 above) — NOT recommended, would misclassify the absence; (C) leave these 7 objects unmanifested for
-      now (accepted low-severity gap — todo 1's fix already makes any FUTURE occurrence of this exact failure mode loud
-      via `logger.exception`, so the risk is bounded to this one already-known historical batch) and close this todo as
-      won't-fix-for-now. Recommendation: (A) if this hold-day pattern recurs / is expected to keep happening (it is the
-      "heartbeat" design, so it will), else (C) if this is a one-off. Once decided: run
-      `.venv/bin/python scripts/backfill_strategy_instructions_orphan_class_e.py --apply --reason     <decided-reason>`
-      (built + dry-run-proven this todo — strategy-service@\<sha\>), wait for the manifest consolidator, re-run
-      `strategy_orphan_sweep.py`, confirm `orphan_class_E=0`. Repo: strategy-service.
+- [x] 2. ✅ [OPERATOR] P2. **Decide the `EmptyConfirmedReason` for the 7 real `strategy_instructions` orphans, then run
+      the backfill.** Operator ruling on BLK-4a063e0f: option A (new taxonomy member). Added
+      `EmptyConfirmedReason.STRATEGY_ENGINE_RETURNED_ZERO` — `unified-api-contracts@06dee218`. Exhaustive-consumer audit
+      found + fixed 2 real hand-maintained-mirror drift risks — `deployment-api@e922a72b`, `deployment-ui@01cb9b6c`
+      (also backfilled 2 unrelated pre-existing gaps found during the audit). Ran
+      `backfill_strategy_instructions_orphan_class_e.py --apply --reason STRATEGY_ENGINE_RETURNED_ZERO`
+      (strategy-service@faddf680) for real: **recorded_cells=7, record_errors=0**. Independently verified by downloading
+      the per-VM shard parquet directly
+      (`gs://strategy-store-prd-central-element-323112/_index/per_vm/     local-2848562-4fb7.parquet`) and reading its
+      content — all 7 rows carry `capture_status=empty_confirmed`/`error_reason=STRATEGY_ENGINE_RETURNED_ZERO` for the
+      exact 7 known cells. The manifest consolidator merge into the canonical index is async (not yet observed at time
+      of writing) — the per-VM-shard direct read is the authoritative proof of the write per the tool's own design (does
+      not wait on the consolidator). Done.
 - [ ] 3. [DOC] P3. **Confirm `ml_predictions` is genuinely intentionally unwired** (not a silently-broken feature) —
       check with the operator or a design doc whether ml-service inference was ever meant to persist predictions in prod
       yet, or if `MLInferenceBatchModeHandler`'s discarded `prediction_writer` is itself a gap worth its own todo. If
       genuinely not-yet-built, no action needed beyond this note. Repo: ml-service.
+- [ ] 4. [SCRIPT] P3. **Fix `backfill_strategy_instructions_orphan_class_e.py`'s `sample_verify` step — it checks the
+      wrong per-VM shard filename.** `main()` re-instantiates a fresh `ManifestWriter()` to resolve `_per_vm_path` for
+      the post-write verify read, but each `ManifestWriter()` instantiation picks a NEW random per-VM shard name — so
+      the verify step reads a file that was never written (`does not exist after close()`) even when the actual write
+      (via the `record_cells()`-owned writer instance) succeeded. Confirmed live during the real `--apply` run for todo
+      2: `recorded_cells=7 record_errors=0` but `verify_failed=1` — the write itself was independently confirmed correct
+      via a direct GCS read (see todo 2's evidence above), so this is a verify-step bug, not a data bug. Fix: have
+      `record_cells()` return the writer's own `_per_vm_path` (captured before `.close()`) instead of the caller
+      re-resolving a second instance's path — `main()` should thread that value into `sample_verify()` directly. (A fix
+      was drafted + QG-green this session but reverted uncommitted when this dispatch was cancelled mid-turn by an
+      unrelated backlog-regen artifact — this todo re-derives it fresh rather than assuming stale context.) Repo:
+      strategy-service.
 
 ## Progress Log
 
@@ -265,3 +275,13 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
     `scripts/quality_gates/check_record_empty_reason_closed_set.py`'s `KNOWN_REASONS` (also backfilled the same 2
     pre-existing gaps there). Shipped `strategy-service@faddf680`: the backfill tool + sweep coverage fix (see prior
     entry), now runnable with `--reason STRATEGY_ENGINE_RETURNED_ZERO`. All 5 repos QG-green before shipping.
+- **2026-08-03** (AO dispatch, slot 2) — Ran the real `--apply` backfill: `recorded_cells=7 record_errors=0`.
+  Independently verified via a direct GCS read of the per-VM shard parquet (bypassing the async manifest consolidator) —
+  all 7 cells correct. Todo 2 flipped done. While verifying, found + drafted a fix for a real bug in the backfill tool's
+  own `sample_verify` step (checks a mismatched, never-written per-VM shard path — see new todo 4); QG-validated the fix
+  but it landed uncommitted when this dispatch was cancelled mid-session by a backlog-regen artifact (my own rewrite of
+  todo 2's checkbox text no longer line-matched the originally-dispatched task, so the server's next heartbeat reported
+  `dispatch_reason: cancelled`) — reverted the uncommitted fix per worker.md protocol rather than ship further work
+  under an invalidated task identity, and captured it as todo 4 instead of losing the diagnosis. **This todo's actual
+  goal (backfill the 7 real orphans) is complete and verified**; todo 4 is the only loose end, and is a pure
+  code-quality fix with no data-correctness impact (the write itself was already independently proven correct).
