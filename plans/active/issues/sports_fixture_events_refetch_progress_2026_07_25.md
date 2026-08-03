@@ -841,3 +841,34 @@ write/read path mismatch, that backfill could suffer the identical silent-no-op 
 shards) before anyone notices. Next dispatch: read the Explore agent's findings once returned, fix the root cause if
 it's a genuine bug (writer path mismatch, or schema gap in `new_rows`), re-run the recovery pass if a code fix was
 needed, and only then re-census before flipping anything.
+
+**ROOT CAUSE FOUND 2026-08-03T04:35Z (Explore agent, opus) — the WRITER is correct; this campaign's own CENSUS SCRIPT
+has been silently under-targeting since day one.** Full trace confirmed writer + census resolve to the byte-identical
+GCS object path
+(`sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/entity=fixture_events/ league={L}/fixture_events.parquet`
+on both sides, same `_canonical_league_id()`), and every recovery-mode write runs through
+`_normalize_fixture_events_schema` before landing — anything the writer touches IS canonical-13col by construction, no
+exceptions. The actual bug: `census_fixture_events_schema_variants_2026_07_25.py:135` hardcoded
+`pd.read_parquet(..., columns=["fixture_id"])` when building the recovery-ids parquet for non-canonical objects — but
+`af_prefixed_10col` objects carry `af_fixture_id`, not `fixture_id`. The read raised, was swallowed into
+`fixture_ids = []`, and those objects silently contributed ZERO rows to recovery-ids. **Cross-checking this doc's own
+historical census table (line ~58) confirms it**: `af_prefixed_10col` has read **exactly 2,383 on every single census in
+this campaign's history** (2026-07-25 baseline → post-pass-1 → post-pass-2, unchanged) — these 2,383 objects have never
+been targeted by ANY recovery pass since the campaign began. The OTHER non-canonical variant, `degenerate_5col_stub`,
+genuinely DID collapse (7,846 → 1,943) — those fixtures were correctly re-fetched, but API-Football returned zero events
+for them (honest-absence: `_write_per_fixture_entities` takes the empty-entity path, writes nothing, so the stale
+pre-existing stub file survives unchanged at that path). **Also flagged, separate + not currently triggered**:
+`sports_fixtures.py` reads the untagged blob path for its merge-read while the writer writes the tagged path — would
+silently lose merges under any non-default `--run-tag`; this campaign never used `--run-tag` so it hasn't bitten anyone
+yet, but is worth a defensive fix before any future run-tagged sports launch.
+
+**Fix shipped 2026-08-03: `instruments-service@5259ae34`** — probes the actual object schema for whichever id column is
+present (`fixture_id` OR `af_fixture_id`) instead of hardcoding one and swallowing the failure. Re-running the corrected
+census now to rebuild an accurate recovery-ids parquet (should newly include the 2,383 previously-invisible objects).
+Next dispatch: once the corrected census completes, launch a FIXTURE_EVENTS pass-3 targeting the corrected recovery-ids
+list (this should be fast — 2,383 objects vs. the original 19,850), then re-census once more. Expect the final
+non-canonical floor to land near **1,943** (the genuine honest-absence stubs), not exactly 0 — that residual is NOT a
+bug and should not trigger a pass-4; confirm via a spot-check that a sample of those specific fixtures really do return
+zero events from a fresh live API call before accepting that floor as final. Only then flip this issue doc's status +
+the parent plan's `sports_satellite_ao_dispatch_batch2-002` todo, and only then unblock the
+FIXTURE_STATS/FIXTURE_LINEUPS widening backfill.
