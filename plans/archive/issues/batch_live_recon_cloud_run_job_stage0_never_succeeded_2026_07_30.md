@@ -17,7 +17,7 @@ summary: >-
   `t1-recon/ml/`, `t1-recon/strategy/`, `execution-store-prd-.../configs/snapshots/`) returned zero objects — none of
   these three upstream deliverables has EVER been written, at any date, since the job's creation. The T+1 reconciliation
   pipeline has therefore never once advanced past Stage 0 in its entire production life.
-status: open
+status: complete
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,6 +44,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "All 3 todos done: diagnosis + fix-action both resolved to option (b) (real gap, not a live-trading-gated no-op) with
+  hard evidence in `plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md` (updated 2026-07-14,
+  own open P0 todo now owns the actual fix — provisioning the missing execution-service/ml-service Cloud Run Jobs +
+  `_SUCCESS`-marker writers); 3rd item (VM-launcher-vs-Cloud-Run-Job redundancy check) confirmed non-redundant via
+  `plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`'s own
+  resolution. Deployment-mechanism fact (Cloud Run Job is the real live path, the VM launcher is not scheduled) migrated
+  to `/codex/04-architecture/runtime-deployment-topology.md` § 18 before archiving."
 source: >-
   Found 2026-07-30 (plans-corpus reduction marathon, wave 3) while checking whether `launch-batch-live-recon-cron-vm.sh`
   / `launch-disaster-drill-cron-vm.sh` are wired to a live Cloud Scheduler job, per
@@ -59,6 +66,14 @@ context_scope:
     deployment-service/scripts/vm/launch-batch-live-recon-cron-vm.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=complete, all 3 todos done, 0 open todos, moved to
+> `plans/archive/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md`. The actual remaining fix
+> work (provisioning the missing upstream Cloud Run Jobs + `_SUCCESS`-marker writers) lives in and is tracked by
+> `plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md` — read that doc, not this one, for
+> current status. The one durable architecture fact this doc established (the real nightly T+1 recon path is Cloud Run
+> Job `uts-prod-batch-live-reconciliation-service` + Cloud Scheduler, NOT the VM launcher
+> `launch-batch-live-recon-cron-vm.sh`) is now recorded in `/codex/04-architecture/runtime-deployment-topology.md` § 18.
 
 # batch-live-reconciliation Cloud Run job — Stage 0 has never once succeeded
 

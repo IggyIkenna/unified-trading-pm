@@ -20,7 +20,7 @@ tags: [vm-launchers, setup-script, dispatch-gap, batch-live-recon, chaos-drill]
 related:
   [
     /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
-    /plans/active/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md,
+    /plans/archive/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md,
   ]
 created: 2026-07-30
 priority: P2
@@ -142,4 +142,4 @@ whether this is the first real invocation.
       missing upstream config/ML/strategy T+1 snapshots) on every one of the last 30 daily executions checked
       (2026-07-02..2026-07-30) — filed as its own issue doc rather than folded in here since it's a distinct root cause
       (upstream data availability, not a dispatch-branch bug) needing repos outside this session's set:
-      `/plans/active/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md`.
+      `/plans/archive/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md`.

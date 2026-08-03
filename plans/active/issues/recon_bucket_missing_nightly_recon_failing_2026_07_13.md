@@ -177,7 +177,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   `assigned_vm` in place without first splitting it into a proper multi-todo plan would dispatch an ill-formed oversized
   task. **Surfacing prominently rather than leaving this quietly re-stamped**: this is a P0, data-correctness-tagged doc
   that has sat unpromoted for 3+ weeks despite its own 2026-07-30 verdict recommending it "become its own scoped
-  plan/epic item," and the sibling doc `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md`
-  independently confirms the underlying gap is real (not a live-trading-gated no-op) — recommend the operator/main-agent
-  promote this into a real wrapper plan per CLAUDE.md's findings-triage rule (`audit-scope -> wrapper plan -> epic VM`),
-  splitting the bundled todo into its constituent AO-eligible pieces.
+  plan/epic item," and the sibling doc `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md` (now
+  archived, `plans/archive/issues/`) independently confirmed the underlying gap is real (not a live-trading-gated no-op)
+  — recommend the operator/main-agent promote this into a real wrapper plan per CLAUDE.md's findings-triage rule
+  (`audit-scope -> wrapper plan -> epic VM`), splitting the bundled todo into its constituent AO-eligible pieces.

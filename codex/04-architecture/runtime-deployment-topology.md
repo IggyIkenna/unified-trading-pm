@@ -973,6 +973,12 @@ Two separate T+1 reconciliations, aggregated:
 **Aggregated:** Overall PnL = strategy PnL + execution alpha PnL. Answers: wrong strategy or expensive execution? Full
 report, no threshold initially — eventually AI-interpreted.
 
+**Deployment mechanism (confirmed live 2026-07-30)**: the real nightly T+1 recon runs as the Cloud Run Job
+`uts-prod-batch-live-reconciliation-service`, triggered daily 06:00 UTC by Cloud Scheduler
+`uts-prod-batch-live-reconciliation-t1-schedule`. `deployment-service/scripts/vm/launch-batch-live-recon-cron-vm.sh` is
+a SEPARATE, NOT-live-scheduled VM launcher — it is not wired to any Cloud Scheduler job and is manual/backfill-only, not
+the nightly path. Do not assume the VM launcher is what runs the standing recon.
+
 ---
 
 ## 19. Order State Reconciliation

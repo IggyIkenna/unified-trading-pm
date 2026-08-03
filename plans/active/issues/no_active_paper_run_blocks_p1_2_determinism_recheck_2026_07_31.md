@@ -23,7 +23,7 @@ related:
   [
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md,
+    /plans/archive/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md,
   ]
 created: "2026-07-31"
 parent_epic: batch_live_symmetry_master

@@ -697,6 +697,9 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   2026-08-03 verdict markers when read) — no conflicting edits resulted since every agent re-verified content directly
   rather than trusting a pre-existing marker, but it means this manual pass and the standing
   `na-eligibility-auditor.timer` cron overlapped in real time tonight.
-- **Also found, not archived this pass**: `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md` now has
-  0 open todos (closed by a concurrent worker's own audit pass mid-session) — a live 6-step-archival candidate,
-  correctly left for its own independent pass rather than a rider on this one.
+- **Archived (dedicated follow-up pass, 2026-08-03)**:
+  `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md` — the 6-step ritual run in full: no deferred
+  items to migrate (fix work already tracked in `recon_bucket_missing_nightly_recon_failing_2026_07_13.md`); archived
+  banner + `resolved_by` added; the one durable fact (Cloud Run Job is the real live path, not the VM launcher) migrated
+  to `/codex/04-architecture/runtime-deployment-topology.md` § 18; 4 corpus referrers fixed (1 prose citation annotated
+  archived, 3 path references repointed to `plans/archive/issues/`); moved to `plans/archive/issues/`.
