@@ -276,3 +276,24 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   production data under the current naming. Real, separate, higher-risk work matching this doc's own earlier caution
   about this exact reconciliation ("an early pass... produced a false '77 gap days' result") — left for `[DATA] P3`'s
   dedicated pass, not rushed here.
+- **2026-08-03 (slot-12, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`, the plan's
+  `[DATA] P2` re-verify todo)**: precondition not yet met — **no live/backfill collection has run since the code fix
+  landed**, so nothing to verify yet. Ran the same bounded manifest read this todo specifies
+  (`read_availability_index(..., columns=[...], filters=[("venue","=","PYTH"),("data_type","=","oracle_prices"), ("date",">=","2026-07-18")])`,
+  single filtered slim read, no whole-corpus walk, via `scripts/dev/run-bounded-analysis.sh`) and confirmed:
+  `BTC_USD`/`btc/usd`, `ETH_USD`/`eth/usd`, `INF_USD`/`inf/usd` still have zero rows past `2026-07-18` (their
+  `written_at` max is `2026-08-03T10:22:43Z`, hours BEFORE `market-tick-data-service@cd017a1c` (18:08Z) and
+  `instruments-service@dec90cc0` (18:22Z) landed — so even that stale row predates the fix).
+  `JTO`/`RAY`/`WIF`/`JUP`/`USDC` (family-3 `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` rows) are still 100%
+  `expected_unattempted`, `written_at` max `2026-08-03T01:34:37Z` (the original seeder timestamp, also pre-fix). Checked
+  for a routine live/cron path that might pick this up automatically without a manual VM launch — none found
+  (`gcloud compute instances list` shows zero Pyth-named VMs running; grepped
+  `market-tick-data-service/.github/ workflows/*.yml` for a scheduled oracle_prices job, none exists — collection here
+  is via manually-launched `pyth-lst-backfill-*`/`mtds-pyth-archive-*` SPOT VMs, same as the 3 that already
+  ran-to-completion earlier today, all BEFORE the fix). Did not launch a new verification VM myself: this todo's own
+  scope is explicitly "verification only, no code" (a launch is out of scope for the split-off `[DATA] P2` todo), and
+  `launch-mtds-pyth-lst-backfill-vm.sh`'s header gates any launch on an operator `[ack]` (stale pointer to the retired
+  file-ping mechanism, but the underlying caution — don't self-authorize a fresh multi-symbol Hermes-rate-limited
+  collection run — still applies). **Checkbox stays UNFLIPPED** — released via `/skip-current-task` rather than forcing
+  a launch outside this todo's scope; next dispatch should re-check whether a collection has run in the meantime before
+  re-attempting this same bounded read.
