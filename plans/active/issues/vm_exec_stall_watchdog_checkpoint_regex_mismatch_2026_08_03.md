@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                  todos 6 and 7 below.
+                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                      todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -278,21 +278,69 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin. Both `[[ "$cat" == "sports" ]] &&`
       guards on `STALL_TIMEOUT_SEC=7200` and `STALL_PROGRESS_REGEX=Processing|Skipping` removed (now unconditional for
       all 5 categories: cefi/tradfi/defi/sports/prediction).
-- [ ] [INFRA] P2. **Audit + roll out `STALL_PROGRESS_REGEX` for the remaining ~20 `launch-canonical-migration-vm.sh`
+- [x] ✅ [INFRA] P2. **Audit + roll out `STALL_PROGRESS_REGEX` for the remaining ~20 `launch-canonical-migration-vm.sh`
       categories beyond `cefi-content-apply`** (found during todo 2's sweep) — e.g. `defi`/`tradfi`/`prediction`/
       `sports`/`*-candle-census`/`*-candle-apply`/`*-candle-orphan-sweep`/`*-iah`/`*-iah-purge`/`cefi-dedup-apply`/
       `cefi-late-renames`/`cefi-eu-twin-apply`/`cefi-bybit-spot-purge`/`manifest-restamp`/etc (see the launcher's own
-      category list). These are ALL exposed to the same defeated-byte-growth-fallback gap as todo 6 above (the
-      launcher's own comment already says so explicitly: "the other ~20 VM_TASK=canonical-migration categories' scripts
-      have NOT been individually checked ... intentionally do NOT get a regex here yet"), but unlike todo 6, each
-      category here invokes a genuinely DIFFERENT target script (`build_instrument_catalogue.py`,
-      `candle_orphan_sweep.py`, `relabel_solana_dex_pools_fake_history.py`, and others per the launcher's
-      `_migration_cmd()`- style dispatch) — so this needs the SAME per-category read-the-actual-logging-code rigor this
-      doc's todo 2 just applied to the 12 launchers, not a single mechanical widen. Scope precisely per category before
-      adding its regex (grep the launcher for each category's command, find its target script, confirm a
-      per-item/per-day/per-shard log line that recurs well within the timeout, matching the standard this doc's todo 2
-      used). Not filed as its own issue doc — same underlying gap as todo 6, just larger/multi-script, so it stays as a
-      follow-up here. (repo: deployment-service)
+      category list). **DONE** — read the ACTUAL target-script logging source (not the launcher's own prior comments,
+      same rigor as todo 2) for every remaining category, spanning ~35 distinct target scripts across
+      market-tick-data-service, instruments-service, market-data-processing-service, and features-service.
+      `deployment-service@c6c4c09` (+ test fix `deployment-service@f55b16c`), `quality-gates.sh` green (235s),
+      quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin. **Regex ADDED** (genuine
+      per-item/per-day/per-object marker, not a periodic checkpoint, with either an in-source throughput figure or a
+      tiny/fixed population proving the inter-marker gap is well under `STALL_TIMEOUT_SEC`): `tradfi-cme-monolith`
+      (`^day=\S+ groups=[0-9]+ stats=`, unconditional per day, fixed 30-day worklist), `tradfi-cme-monolith-delete`
+      (`DELETED gs://|REFUSING delete|would delete`, unconditional per object, same 30-object worklist),
+      `tradfi-cme-options` (`^day=\S+ options=[0-9]+ futures=[0-9]+ unclassified=`, unconditional per day),
+      `cefi-late-renames` (`Discovery progress: day=`, per day, ~65-90s/day per this doc's own prior measurement),
+      `defi-relabel`/`defi-relabel-lending` (`\.parquet -> `, unconditional per object), `tradfi-cid`/`tradfi-cid-cb`
+      (`progress [0-9]+/[0-9]+`, every 5000/500 rows), `*-candle-census`/`*-candle-apply`
+      (`Pass -?[0-9]/3|apply: [0-9]+ processed`, census stops at the cheap path-classify passes; apply also gets the
+      denser every-5000-object line, ~8,500 parquets/min measured ⇒ ~35s/gap), `*-candle-orphan-sweep`
+      (`candle objects swept`, every 50000 objects, listing-only), `sports-odds-venue-mig`
+      (`resolved [0-9]+/[0-9]+ shards`, every 5000 of 184,242 shards), `sports-odds-reclassify-unresolvable`
+      (`checked [0-9]+/[0-9]+ rows`, every 1000 of a tiny ~3,063-row population), `sports-features-purge`
+      (`scanned [0-9]+/[0-9]+ days`, every 200 of ~2,385 scan-phase days — the dominant-runtime step),
+      `sports-k1k2-casing-revert` (`progress: [0-9]+/[0-9]+`, migrate+report-gen internal tickers over ~260,298
+      objects), `sports-k1k2-uppercase-delete` (`progress: [0-9]+/[0-9]+ objects processed`, same population),
+      `defi-gmx-purge` (`object\(s\) backed up \+ deleted`, every 250 of a small ~5,374-row population),
+      `defi-lst-rates-fold` (`processed in [0-9]+s`, every 50 of a fixed 346-marker population). **Regex deliberately
+      LEFT UNSET** for every other category, for one of three reasons found during the per-script reads: (a)
+      **periodic-checkpoint-only, no proof the gap stays under timeout** — `cefi`/`cefi-drop-stale` (every 2000/1000
+      objects, no throughput evidence), `defi` (path-buckets every 2000, but row-split buckets —
+      lst-rates/oracle-prices/perp-funding — have ZERO progress logging at all in `--apply` mode), `prediction` (every
+      1000, no throughput evidence), `defi-per-instrument`/ `defi-pi-range` (every 500 cells in `--apply`, but the
+      script has its own internal 600s cell-stall self-abandon that already self-heals independent of this launcher),
+      `defi-rebuild` (chunk-level markers exist but per-chunk wall-time is unmeasured for a 90-day `REBUILD_CHUNK_DAYS`
+      default), `defi-glued-reshard` (every 100 files, current invocation scope is only ~34 rows so low-risk either way,
+      but the pattern itself is the same shape as the bug this doc fixes), `defi-marker-cleanup` (dry-run-only via this
+      launcher, so a false-kill wastes time, not data, but still only every-100/500 periodic),
+      `defi-dex-pool-leaf-purge` (every 500 shards over a multi-year, 5-venue-pair corpus, unmeasured),
+      `defi-curve-optimism-reclassify` (tiny 144-row population, essentially atomic, implausible to need stall
+      detection), `tradfi-catalogue-promote`/`defi-catalogue-promote` (`build_instrument_catalogue.py`'s own
+      "BISECT-C-PROGRESS" line fires only every 500 day-partition snapshots — for `defi-catalogue-promote --mode full`'s
+      2,407-partition walk that's only ~4-5 total log lines for a multi-hour run, unmeasured per-gap wall-time); (b)
+      **no per-item loop exists at all** — a single whole-index/whole-manifest vectorized read-transform-write, so no
+      per-item marker can exist in principle: `tradfi-manifest-cas`, `tradfi-manifest-retire`, `cefi-eu-twin-apply`,
+      `cefi-bybit-spot-purge`, `manifest-restamp` (these already rely on their own launcher-level bounded retry-attempt
+      echoes or are simply fast); `cefi-dedup-apply` also falls here in practice — its one real progress line fires only
+      once PER BLOB (~44 blobs total for a 10.6M-row corpus), coarse enough that the dominant `_index` blob alone could
+      plausibly exceed the timeout with no marker in between; (c) **architectural — the real per-item lines never reach
+      the tee'd log the watchdog reads** — `tradfi-catalogue-canon` forks each `CANON_SHARDS` shard to its own
+      `/tmp/canon_shard{i}.log`, only tailed after ALL shards finish, so no `STALL_PROGRESS_REGEX` value can fix this
+      (filed as todo 9 below). `*-iah`/`*-iah-purge` were also left unset even though their script has a genuine
+      `"progress: N/M objects processed"` line (every 5000): the per-asset_group candidate_count is unverified per
+      bucket (452,793 IA + 12,582 ML objects split across 5 buckets total, average well under 5000/bucket for the
+      smaller ML population) — an asset_group whose candidate_count never reaches 5000 would NEVER match the regex,
+      which is WORSE than the current byte-growth fallback (the stall timer would then never reset at all, guaranteeing
+      a false kill at exactly `STALL_TIMEOUT_SEC` regardless of real progress); filed as todo 10 below rather than
+      guessed at. **Incidental finding, filed as todo 11 (not fixed here — needs a design decision, not a mechanical
+      rename)**: the `sports` category's own invocation is independently broken — `_script_for()` invokes
+      `python -m market_tick_data_service.scripts.migrate_sports_canonical`, but no such module exists (verified via
+      `find`/`importlib.util.find_spec`, ModuleNotFoundError-guaranteed) — only `migrate_sports_canonical_v9.py`, whose
+      `main()` also requires a `--surface {mdps,instruments}` argument the launcher never passes at all, and uses
+      `--apply`/dry-by-default (not this launcher's generic `--dry-run` append), so a naive module-name fix alone would
+      still crash on the missing required arg. (repo: deployment-service)
 - [ ] [INFRA] P2. **A genuine `WORKER_STALLED` in-guest self-delete is NOT covered by the same auto-recovery path that
       already handles SPOT preemption for this launcher — confirmed during todo 3's monitoring dispatch.**
       `exit_code_fleet_monitor.py`'s `classify_terminated_vm()` routes `TerminationVerdict.PREEMPTED` (a durable
@@ -312,6 +360,52 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       paging first. This is a real design decision (which launchers qualify, what the relaunch budget should be), not a
       mechanical fix, so it stays a follow-up here rather than being implemented ad hoc under this doc's narrow
       per-instance monitoring scope. (repo: deployment-service)
+- [ ] [INFRA] P3. **`tradfi-catalogue-canon`'s per-shard progress lines never reach the tee'd log the stall watchdog
+      reads — an architectural gap no `STALL_PROGRESS_REGEX` value can fix** (found during todo 5's sweep).
+      `_catalogue_canon_cmd()` (launch-canonical-migration-vm.sh:932-948) forks each of `CANON_SHARDS` (default 16)
+      shards to its OWN redirected file (`> /tmp/canon_shard${i}.log 2>&1 &`), `wait`s for every shard, and only THEN
+      tails the last 6 lines of each into the parent's stdout — which is the ONE stream `vm-exec-with-gcs-tee.sh` tees
+      and watches. `canonicalize_tradfi_catalogue_usd_lin_2026_07_18.py`'s own genuine per-item line (" progress %d/%d
+      files scanned (t=%.1fs)", every 200 files) is real and well-formed, but it is trapped inside the per-shard file
+      for the ENTIRE multi-hour run — the watchdog only ever sees byte growth from the periodic `PIPELINE_HEARTBEAT`
+      emitter, i.e. this category is in the SAME undetected-hang class as the original `10/42 cefi-content-apply` sat-
+      hung incident, silently, for however long CANON_SHARDS>1 is used. Fix requires a real code change (not a metadata
+      tweak): fan the per-shard logs into the parent's own stdout as they're written (e.g. a `tail -F` per shard piped
+      into the parent process, or have each shard write its progress line to both its own file AND a shared fd/FIFO) so
+      the tee'd log actually reflects live per-shard progress, THEN set
+      `STALL_PROGRESS_REGEX=progress [0-9]+/[0-9]+ files scanned`. Scope precisely (which fan-in mechanism, whether it
+      changes shard exit-code aggregation) before implementing — not a one-line fix. (repo: deployment-service)
+- [ ] [INFRA] P3. **`*-iah`/`*-iah-purge`'s progress marker is gated on a per-asset_group candidate_count that is
+      unverified per bucket — setting the regex blind risks a WORSE false-kill than today's fallback** (found during
+      todo 5's sweep). `migrate_instrument_availability_hive_2026_08_03.py` /
+      `purge_flat_instrument_availability_hive_2026_08_03.py` both log
+      `"  progress: {done:,}/{scanned.candidate_count:,} objects processed"` gated `done % 5000 == 0` — a genuine
+      per-item marker in principle, but the doc's own todo 7c/7d sizing found only 452,793 `instrument_availability` +
+      12,582 `market_lifecycle` objects total split across the 5 asset_group buckets (`cefi`/`defi`/`tradfi`/`sports`/
+      `prediction`) — the `market_lifecycle` share alone averages well under 5,000/bucket, so any asset_group whose
+      candidate_count for a given run never reaches 5000 would NEVER emit a single matching line. Setting
+      `STALL_PROGRESS_REGEX` on a marker that can structurally never fire is WORSE than leaving it unset: the watchdog's
+      stall timer would then never reset at all (regex-mode ignores byte growth entirely), guaranteeing a false kill at
+      exactly `STALL_TIMEOUT_SEC` regardless of real progress — the exact bug class this whole issue doc exists to fix,
+      reintroduced via a different category. Fix: get the REAL per-asset_group candidate_count for each bucket (a cheap
+      one-time census, not a full migration run) before deciding whether 5000 is safe per-AG, or lower the modulus in
+      the target script itself so it fires reliably regardless of AG size, before ever setting this launcher's metadata.
+      (repo: deployment-service, instruments-service)
+- [ ] [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design decision,
+      not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
+      (launch-canonical-migration-vm.sh:1164) invokes
+      `python -m market_tick_data_service.scripts.migrate_sports_canonical` — verified via `find` +
+      `python3 -c "importlib.util.find_spec(...)"` that no such module exists; only
+      `market_tick_data_service/scripts/migrate_sports_canonical_v9.py` exists, so every `sports` category launch is
+      guaranteed to fail immediately with `ModuleNotFoundError`. A bare module-name fix is NOT sufficient: `_v9`'s own
+      `main()` declares `--surface {mdps,instruments}` as REQUIRED (`argparse` `required=True`, no default) and the
+      launcher never passes it at all, so the invocation would still crash on a missing required argument; the script
+      also uses `--apply`/dry-by-default (mirroring `--dry-run` is NOT its convention), while `_launch()`'s generic
+      dispatch appends `--dry-run` for this category's `MODE=dry` branch — a flag the script's argparse doesn't define
+      at all. Needs an operator/design decision (does `sports` become two categories,
+      `sports-mdps`/`sports-instruments`, mirroring the script's own `--surface` split? or does the launcher pick one
+      surface by default and expose the other via `MIGRATION_EXTRA_ARGS`?) before implementing — not attempted in this
+      dispatch. (repo: deployment-service)
 
 ## Progress Log
 
@@ -393,3 +487,22 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   background Explore agent and this doc edit; the actual relaunches were performed by the fleet's own automation, not by
   this agent.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **2026-08-03T~14:00-14:40Z** (AO dispatch, slot 8, `infra`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-005`, todo 5) — Completed the full per-category
+  `STALL_PROGRESS_REGEX` sweep for every remaining `launch-canonical-migration-vm.sh` category. Fanned out 6 parallel
+  read-only Explore agents to read the ACTUAL target script source (not launcher comments) for ~35 distinct scripts
+  across market-tick-data-service, instruments-service, market-data-processing-service, and features-service, then
+  personally verified + applied the launcher edit. Added `STALL_PROGRESS_REGEX` for 18 categories with a genuine
+  per-item marker + proven/estimated headroom (see todo 5's writeup for the full per-category regex + rationale);
+  deliberately left the remaining ~20 categories unset where the sweep found either a periodic-checkpoint-only marker
+  with unmeasured cadence (same shape as this doc's own original bug — forcing a regex there risks a NEW false-kill
+  class, since an unmatched regex is strictly worse than the byte-growth fallback), a single-vectorized-operation script
+  with no per-item loop at all, or (one case, `tradfi-catalogue-canon`) an architectural gap where the real per-item
+  lines are trapped in a per-shard redirected file that never reaches the tee'd log the watchdog reads. Filed 3 new
+  follow-up todos (9, 10, 11) for: the `tradfi-catalogue-canon` shard-log fan-in gap, the `*-iah`/`*-iah-purge`
+  unverified-candidate-count risk, and an incidentally-discovered, independently-broken `sports` category invocation
+  (`ModuleNotFoundError` — the launcher calls a module that doesn't exist, plus a missing required `--surface` arg on
+  the real `_v9` script — needs an operator/design decision, not a mechanical fix, so filed rather than attempted here).
+  `deployment-service@c6c4c09` (+ test fix `deployment-service@f55b16c`), `quality-gates.sh` green (235s), quickmerge
+  landed on `live-defi-rollout`, SHA verified ancestor of origin. No GCS/VM mutations — read-only source reads (Explore
+  agents + direct grep/Read) plus the launcher-script edit + its accompanying test-suite update.
