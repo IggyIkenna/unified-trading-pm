@@ -134,17 +134,18 @@ loop parse the `Batch complete: N results collected` line against the chunk's ex
 shortfall the same as `CHUNK_RC≠0` for `HAD_FAILURE` purposes) in both generated chunk-loop scripts. Separately, confirm
 the actual CME ES/MES 2020 gap this incident left behind has been recaptured by the ordinary wave-launcher cadence.
 
-- [ ] [CODE] P2. Fix `HAD_FAILURE`/checkpoint gating in `mtds_chunk_loop.sh`'s generator (`setup-data-pipeline-vm.sh`,
-      `VM_TASK=mtds-backfill` branch, ~line 1740-1800) and the mirrored `cefi_coverage_chunk_loop.sh` generator
-      (`VM_TASK=cefi-coverage-backfill` branch, ~line 1820-1880) so a chunk with partial payload loss (some but not all
-      of that chunk's date-payloads failed) is treated the same as a fully-failed chunk for `HAD_FAILURE`/
-      `[[VM_PROGRESS]]` checkpoint-advancement purposes — the checkpoint must never advance past a date range that
-      didn't fully succeed. Prefer surfacing this at the Python CLI layer (return a distinguishable exit code, e.g. via
-      `market_tick_data_service`'s batch handler, when `results_collected < payloads_submitted`) over shell-side
-      log-scraping of "Batch complete: N results collected" (fragile string match); if the CLI-layer signal isn't
-      readily available, the shell-side parse is an acceptable fallback — just add a regression test either way. Target
-      repo: deployment-service (shell wrapper) and/or market-tick-data-service (CLI exit-code signal), whichever the
-      implementer determines is the cleaner surface.
+- [x] ✅ [CODE] P2. Fix `HAD_FAILURE`/checkpoint gating in `mtds_chunk_loop.sh`'s generator
+      (`setup-data-pipeline-vm.sh`, `VM_TASK=mtds-backfill` branch, ~line 1740-1800) and the mirrored
+      `cefi_coverage_chunk_loop.sh` generator (`VM_TASK=cefi-coverage-backfill` branch, ~line 1820-1880) so a chunk with
+      partial payload loss (some but not all of that chunk's date-payloads failed) is treated the same as a fully-failed
+      chunk for `HAD_FAILURE`/ `[[VM_PROGRESS]]` checkpoint-advancement purposes — the checkpoint must never advance
+      past a date range that didn't fully succeed. Prefer surfacing this at the Python CLI layer (return a
+      distinguishable exit code, e.g. via `market_tick_data_service`'s batch handler, when
+      `results_collected < payloads_submitted`) over shell-side log-scraping of "Batch complete: N results collected"
+      (fragile string match); if the CLI-layer signal isn't readily available, the shell-side parse is an acceptable
+      fallback — just add a regression test either way. Target repo: deployment-service (shell wrapper) and/or
+      market-tick-data-service (CLI exit-code signal), whichever the implementer determines is the cleaner surface. —
+      deployment-service@5478a92 (see Progress Log)
 - [ ] [DATA] P2. Once the in-flight `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260803-180128` relaunch (or its
       wave-launcher successor) completes, spot-check manifest `capture_status` for a sample of the dates this incident
       likely dropped (e.g. 2020-07-01, 2020-09-15, 2020-11-11, 2020-12-30, 2020-12-31 — CME ES/MES
@@ -159,3 +160,22 @@ the actual CME ES/MES 2020 gap this incident left behind has been recaptured by 
   (370k lines) via `gsutil cat` + `grep`/`awk` (no whole-corpus GCS walk — single VM's own log only). Confirmed current
   consolidator health (`gsutil stat` single-object check + `gcloud scheduler jobs describe`, both narrow/bounded reads)
   and the in-flight relaunch's clean progress before filing rather than guessing.
+- **2026-08-03 (slot-2, infra)**: fixed todo 1 via the shell-side fallback, not the CLI-layer exit code. Investigated
+  the CLI-layer option first (`unified_trading_library.service_framework._adapter`'s `_drive_serial`/`_drive_concurrent`
+  - `bootstrap.py`'s `status`→exit-code mapping): the per-date `processed`/`failed` counters already exist there, but
+    they back EVERY `UnifiedServiceHandler`+`BatchIO` batch service (MTDS, MDPS, features-service, …), not just MTDS
+    download — changing `status="ok"` semantics there would flip exit-code behavior for every batch service's wrapper/
+    cron simultaneously, which is out of scope for a P2 fix declared against only `deployment-service` +
+    `market-tick-data-service`. Went with the shell-side fallback the issue doc explicitly sanctioned instead: both
+    `mtds_chunk_loop.sh` and `cefi_coverage_chunk_loop.sh` generators
+    (`deployment-service/scripts/vm/ setup-data-pipeline-vm.sh`) now (a) emit each chunk's expected day-count alongside
+    its date range, (b) tee the CLI subprocess's output to a scratch file (via `PIPESTATUS[0]` to still capture the real
+    exit code), (c) parse the CLI's own `Batch complete: N results collected` line and treat `N < expected_days` the
+    same as `CHUNK_RC≠0` for `HAD_FAILURE`/checkpoint-advancement purposes (new `reason=PARTIAL_PAYLOAD_LOSS` marker,
+    reusing the existing `CHUNK_FAILED:` greppable prefix). Added 8 regression tests
+    (`TestChunkLoopPartialPayloadLossGating` in `tests/unit/test_vm_launcher_scripts.py`) that extract the REAL
+    generated heredoc bodies from the setup script and run them against a stub CLI reporting canned
+    results-collected/exit-code pairs per chunk — covering full success, partial loss, an earlier partial loss blocking
+    a later fully-successful chunk's checkpoint advance (the exact incident pattern), and unchanged full-failure
+    behavior. All 185 tests in the file pass (`quality-gates.sh` run separately before shipping). Todo 2 (spot-check the
+    CME ES/MES 2020 gap) is unclaimed — separate DATA/verification-only scope, left for pickup.
