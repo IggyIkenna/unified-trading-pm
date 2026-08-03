@@ -589,3 +589,10 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   phantom-capture bug) diagnosed and filed for dedicated follow-up rather than left as a bare pass/fail count. No shard
   was left in a "silently wrong" or unexplained state. Checkbox flipped — this todo is DONE per its own done-when
   ("confirm genuine (non-error) verdicts"); the two P1 follow-up docs carry the remaining fix work forward.
+
+  **Note for the next session**: CEFI:multi_timeframe's skip leg (VM `features-e2e-cefi-20260803-165010-38e1b8`,
+  launched ~16:50Z) was still running at the time this verdict was written — expected to reproduce the same
+  phantom-capture pattern the force leg already demonstrated (same underlying cause, already root-caused and filed). Its
+  outcome does not change this verdict or block this todo's closure; the local driver's own audit report
+  (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`) will self-update when it completes —
+  those are regenerable machine artifacts, not durable findings, so they are intentionally not committed mid-flight.
