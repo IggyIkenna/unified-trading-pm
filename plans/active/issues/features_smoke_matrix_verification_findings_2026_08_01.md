@@ -271,11 +271,35 @@ not duplicated here.
       `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-06-28/feature_group=technical_indicators/`
       (previously found none, even after round 1). Confirmed landed on `live-defi-rollout` via
       `git merge-base --is-ancestor 63df3f0 origin/live-defi-rollout`.
-- [ ] [SCRIPT] P2. **e2e-testing** — audit cross_instrument/onchain/sports/volatility's `smoke_matrix.py` verifiers
+- [x] ✅ [SCRIPT] P2. **e2e-testing** — audit cross_instrument/onchain/sports/volatility's `smoke_matrix.py` verifiers
       (`_verify_gcs_parquet` prefix, `_verify_test_manifest` asset_group/feature_group filter) against each family's
       REAL write-path code (writer/orchestrator, not assumptions) — this session only confirmed the bucket NAME is now
       correct for these 4 (via `TEST_BUCKET_TEMPLATE` fixes already shipped), not the object-key PREFIX shape within
-      that bucket. Fix any mismatches found, mirroring the calendar/delta_one pattern above.
+      that bucket. Fix any mismatches found, mirroring the calendar/delta_one pattern above. — All 4 families reproduced
+      BOTH bug classes found in calendar/delta_one, confirmed via real writer source (not the stale UTL `PATH_REGISTRY`
+      constants — cross_instrument and volatility's registry entries are themselves incomplete/dead vs. the live writer,
+      same trap as delta_one's `OUTPUT_PATH_TEMPLATE`). Real prefixes: `cross_instrument` →
+      `xinstrument/{run_tag}/date={date}/{group}/features.parquet` (no `by_date/`, `date=` not `day=`, run_tag defaults
+      `"batch"` since this smoke's CLI invocation never passes `--run-tag`); `onchain` →
+      `onchain/by_date/day={date}/feature_group={group}/features.parquet`; `sports` →
+      `sports_features/by_date/day={date}/[league={league_id}/]feature_group={group}/features.parquet` (league segment
+      present only when the written frame carries a `league_id` column — data-dependent, not fixed per table);
+      `volatility` → `volatility/by_date/day={date}/feature_group={group}/timeframe={tf}/{underlying}.parquet` (registry
+      constant omits `timeframe=`). All 4 previously checked `features/by_date/...` — wrong root for every one.
+      Manifest: all 4 families' write-site callers (`_write_run_manifest`/`_record_group_absence`,
+      `_write_feature_group_manifest`, `_flush_batch_manifest`, `write_volatility_manifest_rows`) never pass
+      `asset_group=` to `ManifestWriter.add()`/`record_empty()`/`record_failed()`, which defaults it to `""` — same
+      blank-asset_group bug as calendar. Switched `_verify_test_manifest` to filter on `feature_group`
+      (`feature_family="cross_instrument"` for cross_instrument, which emits multiple feature_groups per run — no single
+      fixed group name to filter on). Fixed `e2e-testing@fbaa722` (full `quality-gates.sh` green, 66s,
+      sentinel-verified); also fixed 2 `features-service` unit tests
+      (`tests/onchain/unit/test_smoke_matrix.py::test_verify_test_manifest_{rejects_row_from_a_different_feature_group,accepts_matching_feature_group_row}`)
+      that called `_verify_test_manifest` directly with the old 4-arg signature — `features-service@617388c5` (full
+      `quality-gates.sh` green). Both SHAs confirmed landed on `live-defi-rollout` via `git merge-base --is-ancestor`.
+      No live-GCS corroboration available in this session (no `gcloud`/GCS credentials reachable from the sandbox) — all
+      prefixes/manifest-tagging confirmed via direct writer/orchestrator source reads, not live bucket listings; a
+      future real (non-dry-run) smoke run against each family would be the live-verification follow-up, mirroring what
+      findings 2/3 did for calendar/delta_one, but is out of this todo's scope (audit + fix, not a live-run proof).
 - [x] ✅ [DATA] P1. **operator/infra** — investigate why `market-data-tick-tradfi-prd-central-element-323112`'s manifest
       consolidator is ~13h+ behind (age 47,309s vs 7,200s threshold at time of check) — check the Cloud Run Job +
       Scheduler health for this specific bucket per the error's own remediation pointer. **Done when**: consolidated
@@ -431,3 +455,18 @@ not duplicated here.
   (`gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-06-28/feature_group=technical_indicators/`
   found real parquet blobs after the fix, none before). No new code shipped this session — checkbox-only flip. 6
   findings total; 5 closed (this one + findings 1, 2, 5, 6), 1 still open (the sports-`-test-` consolidator gap).
+- 2026-08-03 (slot-14, data_engineering, backlog task `features_smoke_matrix_verification_findings-004`): closed the
+  last remaining `[SCRIPT]` recommended-decision todo — audited cross_instrument/onchain/sports/volatility's
+  `smoke_matrix.py` verifiers against each family's real writer/orchestrator source (dispatched an Explore sub-agent to
+  trace all 4 in parallel; no live GCS access in this sandbox, so confirmation is source-derived, not a live bucket
+  listing). All 4 reproduced both calendar/delta_one bug classes: `_verify_gcs_parquet` checked a `features/by_date/...`
+  prefix that matches none of these families' real kind-prefixed root, and `_verify_test_manifest` filtered on
+  `asset_group`, which is architecturally blank for all 4 (no write-site caller ever populates it). Fixed all 4 in
+  `e2e-testing@fbaa722` (full `quality-gates.sh` green, sentinel-verified) — see the checkbox's own evidence above for
+  per-family prefix/manifest details. Shipping this broke 2 pre-existing `features-service` unit tests that called
+  `_verify_test_manifest` directly with the retired 4-arg signature (`tests/onchain/unit/test_smoke_matrix.py`) — fixed
+  inline (adjacent, directly caused by this change) in `features-service@617388c5`, also full `quality-gates.sh` green.
+  Both SHAs verified landed on `origin/live-defi-rollout` via `git merge-base --is-ancestor`. This closes all 5
+  `[SCRIPT]`-tagged recommended-decision todos in this doc; the only remaining open item is the `[DATA]` P2
+  sports-`-test-` consolidator gap (separate operator/infra scope, not a code fix) — doc stays active until that
+  resolves.
