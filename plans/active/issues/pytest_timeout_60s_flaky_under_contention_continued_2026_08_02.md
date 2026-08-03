@@ -22,7 +22,15 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-api, unified-trading-pm, features-service, market-data-processing-service]
+repos:
+  [
+    unified-trading-api,
+    unified-trading-pm,
+    features-service,
+    market-data-processing-service,
+    deployment-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
@@ -31,7 +39,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T10:48Z
+last_updated: 2026-08-03T11:10Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -317,3 +325,39 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   for a one-shot wall-clearing task). **Disposition: no code or workflow change made or needed** — this is purely a
   runner-queue-depth wait, identical to entries 3, 4 (partial), and 6. Slot left clean (`features-service` on
   `live-defi-rollout`, 0 commits ahead, no local changes). Pinged the authoring slot (`ci-reconcile`) with the outcome.
+
+- **2026-08-03 ~09:30-11:10Z (`cicd` escalation `agt-771546`, slot 4, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=674`)** — a NEW repo, same bug class, both timeout shapes in one run: run `30790899514` (promotion PR
+  `promote/deployment-service/1c19e5e8a8c3`, base `main`) failed via `Type check FAILED/timeout (exit=124)` (checks leg
+  — `[4/6] TYPE CHECK` ran ~2m6s against the shared 120s `PYRIGHT_TIMEOUT` ceiling) AND
+  `Failed: Timeout (>150.0s) from pytest-timeout` on 6 tests (tests leg — 5 in
+  `TestApiFootballLauncherHardenedPreemptionSignal`, all trivial `subprocess.run(["bash","-c",...])` invocations of a
+  mocked VM launcher script, plus `test_cloud_query_client.py::TestParallelScanBuckets::test_success_scans_all_paths`;
+  suite otherwise 2858 passed / 4670s total wall — 15-77x this doc's typical per-test cost). Reproduced locally FIRST:
+  the exact 7 failing tests all passed in 74s (9-10s each); a full `quality-gates.sh --no-fix` run passed in 210s —
+  decisive confirmation of no code/test defect. By the time of diagnosis PR #674 had **already self-merged**
+  (`mergedAt: 2026-08-03T06:39:17Z`, 3s after the failing check run was even created — the same
+  self-merge-before-confirmatory-check-completes pattern this doc documents for instruments-service #1064 and
+  market-data-processing-service #569 above), so the promotion itself needed no further action. LDR's OWN
+  `quality-gates-v2` was nonetheless genuinely red 4 consecutive times today (`workflow_dispatch` runs at
+  03:04Z/03:32Z/05:33Z, plus the 06:39Z promotion-PR run) with no green run recorded — unlike the "still in-flight,
+  wait" disposition of several entries above, this repo showed the SAME "sustained non-self-clearing red" pattern that
+  warranted `unified-trading-api@71cdda0`'s and `features-service@c092df50`'s repo-local fix, not just a queue-depth
+  wait. Applied the identical sanctioned mitigation: `deployment-service@eb131cd` adds
+  `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` and `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-300}` to `scripts/quality-gates.sh`
+  (repo-local, before `LOCAL_DEPS`/further config) — verified green locally post-change (210s,
+  `✅ ALL QUALITY GATES PASSED`), shipped via `quickmerge --agent --files 'scripts/quality-gates.sh'`, confirmed on
+  `origin/live-defi-rollout` via `merge-base --is-ancestor`. A fresh `quality-gates-v2` run (`30808116964`) was
+  auto-triggered by the push (concurrency group `quality-gates-v2-${{ github.ref }}`, `cancel-in-progress: true`,
+  correctly superseding the pre-fix `workflow_dispatch` run) — did not additionally hand-dispatch, per this doc's
+  established precedent against redundant dispatches onto an already-contended runner pool. Fleet-wide snapshot at
+  investigation time (~11:05Z): 10+ `quality-gates-v2` runs queued/in-progress simultaneously across
+  deployment-service/instruments-service/market-tick-data-service/execution-service/
+  features-service/market-data-processing-service — consistent with every prior entry's host-saturation diagnosis, not
+  specific to this repo. `GET /api/repo-blockers` → `open: []`. **Outcome of run `30808116964` not yet observed** — left
+  for a follow-up occurrence per this doc's established pattern. Also noted (not acted on, out of scope): a second,
+  unrelated open promotion PR `deployment-service#675` (`promote/deployment-service/032a8c031b82`) has
+  `mergeStateStatus: DIRTY`/`mergeable: CONFLICTING` — a genuine `merge_conflict` wall, distinct from this
+  `ldr_qg_failure` escalation; not touched here, flagging for whoever picks up that wall. Slot left clean
+  (`deployment-service` on `live-defi-rollout`, 0 commits ahead of `origin`). Pinged the authoring slot (`planning`)
+  with the outcome.
