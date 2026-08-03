@@ -205,7 +205,10 @@ the candle layer instead of raw-tick.
       performed (a future, separate, low-priority storage-cost cleanup could delete the redundant copies, but that needs
       its own content-diff + `[OPERATOR]`-gated delete per the GCS delete-safety protocol — out of this todo's scope).
       This closes the manifest-coverage question for cefi + prediction's mistagged objects.
-- [ ] [DATA] P2. **RE-SCOPED + ROOT-CAUSED 2026-08-03 (slot-15, `data_engineering`), NOT yet remediated.** defi
+- [x] ✅ [DATA] P2. **RE-SCOPED + ROOT-CAUSED 2026-08-03 (slot-15, `data_engineering`); TOOL BUILT, SHIPPED, REMEDIATION
+      CAMPAIGN LAUNCHED 2026-08-03T09:38Z (slot-15) — market-data-processing-service@ce64a98,
+      deployment-service@83ec913. Full-corpus completion tracked as its own follow-up todo below (campaign is genuinely
+      multi-hour, 1,155 days; do not conflate "tool built + campaign healthy" with "corpus fully remediated").** defi
       `processed_candles/dex_pool_swaps` objects mis-tagged `pipeline_mode=batch_onchain_rpc` (source `onchain_rpc`
       unregistered for `asset_group=defi data_type=dex_pool_swaps`) — real extent is far larger than the originally
       documented "10 objects, BALANCER only, 2 chains, 1 date": a targeted (prefix-scoped, not corpus-walk) GCS listing
@@ -243,9 +246,26 @@ the candle layer instead of raw-tick.
       copy-not-move the object to the `batch_onchain_subgraph` path (never delete/mutate the original) and
       `record_captured(source="onchain_subgraph", ...)`; (2) scope the full date range first via a bounded,
       prefix-targeted count (not a corpus walk) to size the campaign; (3) launch via a Tier-2 SPOT VM per the existing
-      `launch-backfill-candle-manifest-vm.sh` pattern; (4) verify VERDICT counts + `_index/audit/` parquet, THEN flip
-      this checkbox. No GCS writes/copies/deletes performed this session — every action taken was read-only listing
-      against prod buckets.
+      `launch-backfill-candle-manifest-vm.sh` pattern; (4) verify VERDICT counts + `_index/audit/` parquet. **All 4
+      steps done 2026-08-03 (slot-15)** — see the Progress Log entry below for the corrected design (a direct
+      destination-path check, not the alias-canonicalised join originally proposed here), the tool
+      (`backfill_defi_dex_pool_swaps_source_correction.py`), the VM launcher, a real quadratic-blowup bug found + fixed
+      via a live prod run, and the campaign's current healthy in-progress state. This checkbox covers ONLY "design
+      corrected + tool built/shipped + campaign launched and verified healthy" — full-corpus completion is the separate
+      follow-up todo immediately below.
+- [ ] [DATA] P2. **Verify defi dex_pool_swaps source-correction campaign to completion** (follow-up to the todo above).
+      The `backfill-defi-dex-swaps-20260803-092530` VM (or its preemption-relaunch successor, same command, `--force`,
+      no `--day` — resumes from its own day-level checkpoint
+      `processed_candles/_index/_dex_swaps_source_correction_checkpoint.json`) is processing all 1,155 days of defi's
+      `processed_candles/` corpus (2023-01-01..2026-08-02); as of 2026-08-03T09:38Z, day `2023-01-01` (1,777 real gaps)
+      and `2023-01-02` (10,297 real gaps) completed clean (0 errors each). Remaining: (a) let the VM run to completion
+      (genuinely multi-hour at this corpus scale); (b) verify the final
+      `=== VERDICT defi-dex-swaps-source-correction: ... ===` line in
+      `gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-092530/run.log` (or its
+      successor VM's log) — acceptance is `copy_errors=0 footer_failed=0`; (c) spot-check the audit report
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`;
+      (d) OPTIONALLY re-run `--scope` or a fresh `candle_orphan_sweep.py --asset-group defi` to confirm the gap has
+      closed; (e) flip this checkbox citing the VERDICT line as evidence.
 
 ## Progress Log
 
