@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                      todos 6 and 7 below.
+                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -506,3 +506,30 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   `deployment-service@c6c4c09` (+ test fix `deployment-service@f55b16c`), `quality-gates.sh` green (235s), quickmerge
   landed on `live-defi-rollout`, SHA verified ancestor of origin. No GCS/VM mutations — read-only source reads (Explore
   agents + direct grep/Read) plus the launcher-script edit + its accompanying test-suite update.
+- **2026-08-03T~17:15-18:00Z** (AO dispatch, slot 6, `infra`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-006`, todo 8) — Implemented: `exit_code_fleet_monitor.py` gains
+  `WORKER_STALLED_EXIT_CODE=124` (the deterministic RC `vm-exec-with-gcs-tee.sh` writes on its own stall self-kill,
+  confirmed by direct read of that script) + `DEFAULT_WORKER_STALL_SAFE_LAUNCHERS` (a narrow, explicit allowlist: this
+  doc's own dex-swaps launcher, `launch-backfill-candle-manifest-vm.sh`, `launch-cefi-sharded-backfill.sh` — all three
+  independently proven idempotent/checkpoint-resumable earlier in this doc). `_finding_for` now routes a WORKER_STALLED
+  verdict on a vetted launcher to `EscalationTier.AUTO_RECOVER` (carrying `launch_env`/ `progress_checkpoint`);
+  `escalation._recover_backfill_vm` delegates that case wholesale to `_recover_stalled_vm` — REUSING the existing
+  `RelaunchStalledVm` actuator + its own budget (≤2/(vm-prefix,day)) the external heartbeat-stall watcher already uses
+  for `DP_VM_STALL`, rather than inventing a new actuator/budget. An unvetted launcher keeps the pre-existing safe
+  default (page_operator) — no behavior change there. 5 new regression tests (2 classify/finding-gating, 1
+  unvetted-stays-paged, 1 default-flag-off-stays-paged, 1 full classify→finding→route_finding delegation test proving
+  the fake `RelaunchStalledVm` actuator gets invoked with the right launch_env/checkpoint) — all pass; 290 existing
+  tests in the two touched test files still pass; basedpyright clean (the pre-existing 15 `reportAny` errors on the
+  dynamic-import lines are unchanged, confirmed via `git stash`/`git stash pop` diff — not a regression). Committed
+  locally (`deployment-service@c111383`). First full `quality-gates.sh` run FAILED (unrelated to correctness):
+  `escalation.py` hit 943 lines, over the repo's 930-line hard file-size cap — trimmed the new docstring to fit
+  (`deployment-service@c0a3221`, `wc -l` confirms exactly 930). **NOT YET PUSHED as of this entry** — a second full
+  `quality-gates.sh` run was launched in the background and was still in flight past this session's context-budget
+  cutoff (3042/3042 unit tests passed on the FIRST run before it failed on the line-cap step; the second run's own
+  test/type-check progress was not yet observed when this entry was written). **Next session: check
+  `/tmp/qg_full_output2.log` (or just re-run `bash scripts/quality-gates.sh` fresh) — if green,
+  `bash scripts/quickmerge.sh "<msg>" --agent --files 'deployment_service/data_pipeline_monitors/escalation.py deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py tests/unit/test_data_pipeline_monitors.py'`
+  then flip this todo's checkbox with the shipped SHA(s); if still red, diagnose the SPECIFIC new failure (re-run
+  standalone to rule out a foreign/transient issue first) before assuming the code itself is wrong — both prior failures
+  were mechanical (a line-cap), not logic bugs.** No GCS/VM mutations this dispatch — pure code change + its own test
+  suite.
