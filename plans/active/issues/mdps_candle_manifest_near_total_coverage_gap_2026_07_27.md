@@ -269,6 +269,32 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T19:52Z** (AO dispatch, slot 15, `data_engineering`) — **Pre-compact checkpoint** (session context hit
+  ~65%, handing off — this entry IS the resume point, not a summary). Fifth campaign VM
+  (`backfill-defi-dex-swaps-20260803-141041`, launched 13:41Z) has run **~2h11m with ZERO preemptions/incidents**,
+  cleanly processing every day from 2023-12-28 through **2024-03-04** (the resumed run's dst-check pass confirmed
+  2023-12-28..2024-01-06 were already fully copied by the prior VMs — zero real work lost across all 3 earlier
+  preemptions), all `errors=0`. **464/1155 days done (~40%)**, steady ~2-4min/day pace for 2024 dates (larger than 2023
+  due to more DeFi venue activity — CAMELOT_V3/PANCAKESWAP_V3/SUSHISWAP_V3(+chain suffixes)/UNISWAP_V3 all now populated
+  vs. mostly BALANCER/CURVE/SUSHISWAP/UNISWAP_V3 in early 2023). **No action needed to resume** — the VM is still
+  running unattended; a fresh session should just re-poll
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-141041/run.log`
+  (grep `day=.*errors=` for progress, watch for the terminal `=== VERDICT defi-dex-swaps-source-correction: ...` line —
+  acceptance is `copy_errors=0 footer_failed=0`) and
+  `gcloud compute instances describe backfill-defi-dex-swaps-20260803-141041 --zone=asia-northeast1-c` for liveness; if
+  terminated without a VERDICT line, check
+  `gcloud compute operations list --filter="targetLink:instances/backfill-defi-dex-swaps-20260803-141041"` for
+  `compute.instances.preempted` (genuine, just relaunch via
+  `bash deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh --force`) vs. a `delete`
+  operation (would indicate the reap-zombies.sh bug recurred despite the fix todo being filed — escalate the P0 issue
+  doc's priority if so). **Lesson for the next session**: background bash watchdogs in this environment occasionally
+  self-terminate early with a non-standard exit code (144) that is NOT one of the polling script's own designed exits
+  (0=VERDICT, 1=30min timeout, 2=VM not running) — always verify the TARGET VM's real status directly via
+  `gcloud compute instances describe` rather than trusting the watchdog's own exit code alone; every occurrence this
+  session was a false alarm (VM was still healthy). **Still NOT flipping this todo's checkbox** — genuinely not done
+  yet, ~691 days remain at the observed pace (order-of-magnitude: several more hours if the 2024+ pace holds, since
+  post-2026-06-08 SOURCE_PRIORITY-fix dates should need zero/near-zero copying and process near-instantly like the early
+  skip-only days did).
 - **2026-08-03T14:10Z** (AO dispatch, slot 15, `data_engineering`) — Third and fourth campaign VMs both preempted
   rapidly: `backfill-defi-dex-swaps-20260803-133142` preempted ~2min after launch (never produced a run.log);
   `backfill-defi-dex-swaps-20260803-133550` ran ~33min, cleanly processed 2 more real days (2024-01-05: copied=17612,
