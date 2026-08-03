@@ -31,7 +31,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -104,7 +104,7 @@ concurrently (no `sequential: true`).
 
 ## Todos
 
-- [ ] [DOCS] P2. **Retire the 2 genuinely-stale bare-name `unified-trading-codex` mentions** in
+- [x] ✅ [DOCS] P2. **Retire the 2 genuinely-stale bare-name `unified-trading-codex` mentions** in
       `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and `.cursor/rules/testing/test-coverage-targets.mdc:80` (per
       `issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s P2-E finding + its own `- [ ] [DOC] P2` todo) — replace
       the bare `unified-trading-codex` name with the current convention already used elsewhere in these same rule trees
@@ -113,7 +113,16 @@ concurrently (no `sequential: true`).
       bare-names the archived repo, and
       `grep -rn "unified-trading-codex" .cursor/rules/ cursor-rules/ | grep -v "unified-trading-pm/codex"` returns no
       new bare-name hits beyond the already-known-correct `pipeline-mode-partition-structure.mdc:79` mention. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — **RESOLVED independently 2026-08-03, before this batch was ever dispatched** (batch is still
+      `status: draft`): the `docs_reconciler` autonomous sweep fixed the SAME two lines directly at their source doc
+      (`issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s own P2-E item, now `[x]` there too) —
+      `act-secrets-setup.mdc:14` now reads `unified-api-contracts`, `test-coverage-targets.mdc`'s exempt-repo table now
+      correctly says "three". Live-verified this run (`/ag-closeout-audit infra`, 2026-08-03): both files confirmed
+      fixed, corpus-wide bare-name grep shows no new hits beyond the already-known-correct
+      `pipeline-mode-partition-structure.mdc:79` mention (4 pre-existing unrelated bare-name hits remain in
+      `sync-system.mdc` (x2), `provider-api-version-manifest.mdc`, `ui-quality-gates-typescript.mdc` — outside this
+      todo's named scope, not touched). Marking done rather than dispatching a redundant worker onto an already-closed
+      item.
 - [ ] [INFRA] P3. **Root-cause why `UV_LINK_MODE=hardlink` (configured in `base-service.sh:322`) is not actually
       deduping `.venv` files across slots** on the shared host (per `host_root_disk_full_transient_2026_07_13.md`'s
       confirmed root driver #2 — identical `numpy.libs/libscipy_openblas64_*.so` content/size across two different
@@ -169,3 +178,9 @@ needs explicit operator sign-off before dispatch" rule, not a signal either todo
 - **2026-08-02** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 11) after the 4
   net-new ex-meta tranche members were classified. Paired with
   `infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md` in the same run per the finalize-plan-coverage rule.
+- **2026-08-03** — `/ag-closeout-audit infra` daily run (slot 12), iterative-drain step 1 (re-checking the prior batch's
+  own content before fresh triage): todo 1 flipped `[x]` — its target was independently resolved by the
+  `docs_reconciler` autonomous sweep earlier today, live-verified against the real files. Todo 2 (hardlink-dedup
+  investigation) re-checked against `issues/host_root_disk_full_transient_2026_07_13.md`'s current state — still open,
+  unchanged, still conflict-clear. This batch is still `status: draft`, still awaiting operator approval; only todo 2
+  remains live if/when it is flipped to active.
