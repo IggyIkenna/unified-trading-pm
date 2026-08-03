@@ -181,3 +181,15 @@ session's shared host.
   all 6 of that venue's surviving snapshot days), so this regen structurally cannot reach them. Flipped todo 1 done (the
   regen itself is correct and complete) and filed the 13-row residual as its own new P3 DECISION todo (root cause + 3
   disposition options, operator judgment) rather than silently absorbing it or falsely claiming 0 remaining.
+- **2026-08-03 (data_pipeline_failure escalation `agt-b0a3db`, DP-VM-001 exit-nonzero relaunch)** — A fleet monitor
+  filed a relaunch escalation for `canonical-migration-defi-catalogue-promote-20260803-082341` (`exit_code=1`,
+  `08:26:14Z`-`08:42:48Z`). Per `rb_infra_relaunch.md`, read `DeploymentsRegistry` before relaunching: `-082341` is one
+  of five same-day `defi-catalogue-promote` attempts on the pre-fix commit (`06be51ec`) that failed the same way
+  (`-075722`, `-080643`, `-081359`, `-082341` — the last two genuine `exit_code=1`, the first two reaper
+  `vm_not_running` sentinels); the runbook's `≤2 relaunches/(vm-prefix, day)` bound was already exceeded by the time
+  this escalation was picked up. More importantly, the underlying task these VMs were all attempting is the **same**
+  regen this doc's todo 1 tracks — and todo 1 is already done: `-084648` (logged above) completed clean post-fix and is
+  verified promoted to `prod/catalog.parquet`. Relaunching `-082341` now would re-run an already-superseded pre-fix
+  attempt against a redundant, already-completed corpus-scale migration. **Did not relaunch** (bound-exceeded +
+  goal-already-achieved, both independently sufficient stop conditions per the runbook); no code change needed. Pinged
+  the authoring monitor slot with this outcome.
