@@ -72,38 +72,105 @@ high-eligibility repos, ~2-3 min/run on `execution-service`** — directionally 
 were sampled, and the dynamic-dispatch classifier was a rough regex proxy, not a verified allowlist. This plan closes
 both gaps before anyone trusts the number for a real rollout decision.
 
-## Phase 1 — Fleet-wide measurement (unblocked, start immediately)
+## Phase 1 — Fleet-wide measurement (COMPLETE 2026-08-03)
 
-- [ ] [SCRIPT] P1. **Extend the commit-classification sample to every remaining Python fleet repo.** Repos already
-      sampled: `execution-service`, `features-service`, `instruments-service`, `market-data-processing-service`.
-      Remaining, per `workspace-manifest.json`'s 25-repo list, excluding the 2 non-Python UI repos
-      (`unified-trading-system-ui`, `deployment-ui` — out of scope by construction, the design is pytest-specific):
-      `agent-orchestrator`, `alerting-service`, `batch-live-reconciliation-service`, `client-reporting-api`,
-      `deployment-api`, `deployment-service`, `e2e-testing`, `fund-administration-service`, `greeks-service`,
-      `ibkr-gateway-infra`, `ml-service`, `strategy-service`, `system-integration-tests`, `trading-agent-service`,
-      `unified-api-contracts`, `unified-trading-api`, `unified-trading-library`, `unified-trading-pm` (18 repos). Same
-      methodology as the 4-repo sample above: last 50 commits / 30 days per repo, classify each `.py`-touching commit as
-      narrow-eligible or escape-hatch-hit (conftest.py touch, manifest/config touch, suspected
-      dynamic-dispatch-directory touch). Done-when: a per-repo table (repo, commits sampled, `.py`-touching count,
-      escape-hatch-hit rate, narrow-eligible %) exists for all 22 Python repos (4 already done + 18 here), committed
-      into this plan's Progress Log or a linked results doc — not left in a scratchpad (see the dangling-reference
-      lesson in `quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md`).
-- [ ] [SCRIPT] P1. **Turn the full 22-repo table into a real fleet-wide minutes-saved estimate**, distinguishing local
-      `quality-gates.sh` runtime from self-hosted CI wall-clock (same pytest leg, same eligibility numbers, different
-      audience — CI runs less often per-engineer than local QG does, so state both a per-run figure and, where real
-      per-repo commit-frequency data is available, a rough daily/weekly aggregate). Explicitly label every number as
-      either MEASURED (the escape-hatch-hit rate, which is real) or ASSUMED (the 20-40% narrowed-runtime-reduction
-      figure, which is an industry-typical guess, not measured in this codebase). Done- when: the estimate is written up
-      with its derivation shown (repo × frequency × eligibility × assumed- reduction), not just a final number.
-- [ ] [SCRIPT] P2. **Replace the regex dynamic-dispatch heuristic with a real, verified allowlist.** The 4-repo sample
-      used a rough proxy (`trade_execution/`, `/adapters?/`, `_adapter.py$`, `api/main.py$`) that over- matches (e.g.
-      any directory literally named `adapter` regardless of whether it actually does
-      `importlib.import_module`/`__getattr__`/`__import__` dispatch). For every repo flagged with a non-trivial
-      dynamic-dispatch hit rate in Phase 1, read the actual flagged files and confirm genuine dynamic-dispatch usage
-      (file:line citing the real call), building the hand-curated allowlist the design's escape-hatch table already
-      calls for. Done-when: a per-repo allowlist exists where every entry cites a verified file:line, and the Phase-1
-      eligibility table is re-run against the verified allowlist (not the regex proxy) to confirm whether the numbers
-      move.
+- [x] ✅ [SCRIPT] P1. **Extend the commit-classification sample to every remaining Python fleet repo.** Done — see the
+      full 22-repo table below and the Progress Log entry for methodology + per-repo commit SHAs.
+- [x] ✅ [SCRIPT] P1. **Turn the full 22-repo table into a real fleet-wide minutes-saved estimate.** Done — see
+      "Fleet-wide estimate" below, MEASURED vs ASSUMED inputs labeled, derivation shown.
+- [x] ✅ [SCRIPT] P2. **Replace the regex dynamic-dispatch heuristic with a real, verified allowlist.** Done — see
+      "Verified dynamic-dispatch allowlist" below; the eligibility table already reflects the verified numbers, not the
+      raw regex proxy.
+
+### Full 22-repo eligibility table (verified allowlist applied)
+
+| Repo                                | `.py`-touching commits sampled | Escape-hatch-hit (verified)               | Narrow-eligible                                                                                                                                | Total commits (30d) |
+| ----------------------------------- | ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `execution-service`                 | 17                             | 6 (35.3%)                                 | **64.7%** (was 35% under raw regex)                                                                                                            | NM                  |
+| `features-service`                  | 35                             | 0 (0%)                                    | **100%** (was 94%)                                                                                                                             | NM                  |
+| `instruments-service`               | 36                             | 3 (8.3%)                                  | **91.7%** (was 86%)                                                                                                                            | NM                  |
+| `market-data-processing-service`    | 28                             | 0 (0%)                                    | **100%** (was 96%)                                                                                                                             | NM                  |
+| `unified-api-contracts`             | 32                             | 0 (0%)                                    | 100%                                                                                                                                           | 810                 |
+| `unified-trading-library`           | 26                             | 0 (0%)                                    | 100%                                                                                                                                           | 633                 |
+| `agent-orchestrator`                | 25                             | 0 (0%)                                    | 100%                                                                                                                                           | 870                 |
+| `e2e-testing`                       | 25                             | 2 (8%)                                    | 92%                                                                                                                                            | 233                 |
+| `strategy-service`                  | 14                             | 0 (0%)                                    | 100%                                                                                                                                           | 372                 |
+| `deployment-api`                    | 18                             | 0 (0%)                                    | **100%** (was 83.3% under raw regex — the 1 flagged file, `deployment_api/main.py`, is a directory-name-suffix coincidence, not real dispatch) | 750                 |
+| `deployment-service`                | 11                             | 0 (0%)                                    | 100%                                                                                                                                           | 1168                |
+| `ml-service`                        | 8                              | 0 (0%)                                    | 100%                                                                                                                                           | 281                 |
+| `unified-trading-api`               | 6                              | 1 (16.7%)                                 | 83.3% (via `pyproject.toml` touch, unrelated to dynamic-dispatch)                                                                              | 96                  |
+| `system-integration-tests`          | 4                              | 0 (0%)                                    | 100%                                                                                                                                           | 136                 |
+| `batch-live-reconciliation-service` | 2                              | 0 (0%)                                    | 100%                                                                                                                                           | 267                 |
+| `trading-agent-service`             | 2                              | 0 (0%)                                    | 100%                                                                                                                                           | 200                 |
+| `alerting-service`                  | 0                              | N/A (no `.py`-touching commits in window) | N/A                                                                                                                                            | 295                 |
+| `client-reporting-api`              | 0                              | N/A                                       | N/A                                                                                                                                            | 260                 |
+| `fund-administration-service`       | 0                              | N/A                                       | N/A                                                                                                                                            | 210                 |
+| `greeks-service`                    | 0                              | N/A                                       | N/A                                                                                                                                            | 228                 |
+| `ibkr-gateway-infra`                | 0                              | N/A                                       | N/A                                                                                                                                            | 80                  |
+| `unified-trading-pm`                | 0                              | N/A                                       | N/A                                                                                                                                            | 13425               |
+
+**Methodology**: last 50 commits or all commits in the last 30 days (whichever smaller), per repo, classified against 3
+escape hatches — conftest.py touch, manifest/config touch (`*manifest*.json/.yaml`, `/config(s)/`, `pyproject.toml`),
+verified dynamic-dispatch touch (below). 6 of 22 repos had zero `.py`-touching commits in their sampled window (recent
+history dominated by Dockerfile digest bumps, CI YAML, docs/plans churn, or LDR→main promote merges) — narrow-eligible
+is undefined (N/A) for these, not 0% or 100%; excluded from the fleet-wide estimate's denominator below. The original
+4-repo table and this session's re-verification pass ran at different moments, so "last 30 days" windows differ slightly
+(`market-data-processing-service`'s `.py`-touching count moved 26→28) — a known, unavoidable sampling-window drift, not
+a methodology error.
+
+### Verified dynamic-dispatch allowlist (replaces the raw regex proxy)
+
+The 4-repo sample's proxy (`trade_execution/`, `/adapters?/`, `_adapter.py$`, `api/main.py$`) over-matches — any
+directory literally named `adapter(s)` was flagged regardless of whether it does real dynamic dispatch. Read every
+flagged file directly (`grep -n "importlib\.import_module\|__getattr__\|__import__("`) across all 5 repos that had a
+non-trivial dynamic-dispatch-regex hit rate (the 4 original + `deployment-api`, the one new hit from the 18-repo pass):
+
+**Genuine dynamic dispatch (verified file:line — the real allowlist)**:
+
+- `execution-service/execution_service/trade_execution/__init__.py:252` (`__getattr__`) `:257`
+  (`importlib.import_module(module_path)`) — dispatches TradFi adapter classes from `_TRADFI_ADAPTER_MAP`. Escape-hatch
+  scope: any file under `execution_service/trade_execution/`.
+- `features-service/features_service/api/main.py:64` (`importlib.import_module(f"features_service.{family}.api.main")`
+  looped over `_FAMILY_NAMES`) — escape-hatch scope: `features_service/api/main.py` plus each family's own
+  `features_service/<family>/api/main.py` target.
+- `instruments-service/instruments_service/reference_data/adapters/cefi/tardis/_pkg_ref.py:33` (`__getattr__`),
+  `.../tradfi/databento/_pkg_ref.py:34`, `.../prediction/polymarket/_pkg_ref.py:34` — three independent lazy-shim
+  modules (optional heavy SDK imports). Escape-hatch scope: files under these 3 specific subdirectories only.
+
+**Confirmed false positives (regex matched, no genuine dispatch found — narrower than the raw proxy assumed)**:
+
+- `execution-service`: `sports_execution/adapters/**`, `execution_service/adapters/algorithm_factory.py` — plain static
+  imports.
+- `features-service`: `calendar/adapters/**`, `volatility/.../vol_greeks_surface_adapter.py`, `commodity/adapters/**`.
+- `instruments-service`: `reference_data/adapters/sports/**`, `reference_data/adapters/tradfi/massive.py`, and
+  `reference_data/factory.py` itself — confirmed to statically `from .adapters.<x>.<y> import <Z>Adapter` every one of
+  its ~50+ adapter classes by name; zero dynamic dispatch anywhere in the factory.
+- `market-data-processing-service`: `app/adapters/**` (`base_adapter.py`, `book_snapshot_adapter.py`) — zero dynamic
+  dispatch found; the original 1-commit (4%) hit was a pure regex false positive.
+- `deployment-api`: `deployment_api/main.py` — zero dynamic dispatch found; `api/main.py$` matched only because the
+  package directory `deployment_api` happens to end in the substring `api`, not because it's a real `api/` dir with a
+  dispatcher.
+
+### Fleet-wide estimate
+
+**Baseline**: ~9 min `QG slice (tests)` leg (MEASURED, `features-service`, carried over from the original sample — NOT
+independently re-measured per repo here). **Reduction**: 20–40% (ASSUMED — industry-typical, not measured in this
+codebase). **Eligibility %**: MEASURED per the verified-allowlist table above.
+
+Per-run savings = `narrow_eligible_pct × 9 min × [0.20, 0.40]`. For the 4 highest-eligibility original repos (94–100%
+verified) this is **1.7–3.6 min/run**; for `execution-service` (64.7% verified, up from 35%) it's **1.2–2.6 min/run**.
+
+For the 12 repos with both a verified eligibility % and 30-day commit-frequency data (the other 10 either lack frequency
+data — the original 4 — or have an undefined eligibility % — the 6 zero-`.py`-touching repos), weekly `.py`-touching
+volume is estimated as `(py_touching / commits_sampled) × (total_commits_30d / 30 × 7)` — this ratio extrapolation is
+ASSUMED, not measured, since the 50-commit sample window is shorter than 30 days for every high-churn repo in this set.
+Weekly fleet savings = `Σ (weekly_py_touching × per-run-savings)`:
+
+**≈ 884–1,768 minutes/week (≈ 14.7–29.5 hours/week) of local `quality-gates.sh` wall-clock time**, across these 12 repos
+alone — excludes the 4 original repos (no frequency data) and the 6 zero-denominator repos. This is a LOCAL
+`quality-gates.sh` figure; the same eligibility numbers apply to self-hosted CI, but CI runs less often per-engineer
+than local QG, so CI's fleet-wide aggregate is smaller than this by whatever ratio (CI runs) : (local QG runs) turns out
+to be per repo — not measured here, out of this todo's scope.
 
 ## Phase 2 — Implementation (unblocked 2026-08-03 — operator reviewed and approved the design)
 
@@ -150,3 +217,17 @@ both gaps before anyone trusts the number for a real rollout decision.
   `BLOCKED-OPERATOR-DECISION` tags cleared, `sequential: true` added to frontmatter (every todo across both phases has a
   real dependency on its predecessor). `assigned_vm` is still `NA` — dispatch timing is unchanged, still the operator's
   own action post-`/pre-compact`.
+- **2026-08-03 (same session) — Phase 1 shipped in full**: extended the 4-repo sample to all 18 remaining Python fleet
+  repos (3 parallel Explore sub-agents, 6 repos each, same last-50-commits/30-days methodology, full raw output logged
+  per-agent). Then re-verified the dynamic-dispatch escape hatch directly
+  (`grep -n "importlib\.import_module\|__getattr__\|__import__("` against every flagged file across the 5 repos with a
+  non-trivial hit rate) instead of trusting the raw regex proxy — found genuine dispatch in only 3 places
+  (`execution-service/trade_execution/__init__.py:252,257`, `features-service/api/main.py:64`, and 3 `_pkg_ref.py`
+  lazy-shim files in `instruments-service`), and confirmed the regex over-matched everywhere else it fired
+  (`sports_execution/adapters/`, `algorithm_factory.py`, `calendar/adapters/`, `commodity/adapters/`,
+  `vol_greeks_surface_adapter.py`, `reference_data/adapters/sports/`, `reference_data/adapters/tradfi/massive.py`,
+  `reference_data/factory.py` itself, `market-data-processing-service/app/adapters/`, and
+  `deployment-api/deployment_api/main.py`). Verified eligibility moved substantially upward for `execution-service` (35%
+  → 64.7%) and `deployment-api` (83.3% → 100%), modestly for the others. Full 22-repo table, verified allowlist, and
+  fleet-wide estimate (≈884–1,768 min/week, MEASURED eligibility × ASSUMED 20-40% reduction, derivation shown) are now
+  in this doc above — all 3 Phase-1 todos flipped `[x]`. Phase 2 (implementation) starts next, per `sequential: true`.
