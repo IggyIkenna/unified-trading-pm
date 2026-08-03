@@ -34,7 +34,7 @@ scope: [engineer, admin]
 tags: [mdps, pipeline-e2e-check, bucket-isolation, data-correctness, iam, sports, odds_horizon_bucket, test-isolation]
 related:
   [
-    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
     /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
     /plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md,
