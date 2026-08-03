@@ -253,3 +253,9 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   `attempted_failed`, not a masked success. Did not relaunch — the failure is systematic across every processed date
   (not a one-off), so a retry with the same code would reproduce identically; re-attempt only after `[BACKEND] P1`
   lands.
+- **2026-08-03 (slot-14, data_engineering craft, dispatched to this same todo 2 right after skipping its near-duplicate
+  `delta_one_candle_loader_no_pass_through_path_defi-003`)**: re-confirmed nothing has changed since slot-2's entry
+  above — `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006` (the `[BACKEND] P1` fix) is still
+  `dispatched` to slot 4 in the live backlog, not yet shipped. Skipping rather than re-launching the same doomed
+  `funding_oi` run or idling; see `delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s matching entry
+  (`unified-trading-pm@88a43a57d`) for the full cross-reference.
