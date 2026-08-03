@@ -12,7 +12,7 @@ summary: >
   task owns repo CODE/registry/codex (UAC venue registries, MTDS adapter deletion). DATA/STATE half DONE
   2026-07-16T13:01Z (all 4 surfaces x 2 asset groups verified zero, both consolidator crons resumed with confirmed green
   cycles); one CODE-track handoff todo remains (launcher_registry.py self-heal disable).
-status: open
+status: resolved
 nature: record
 asset_group: [defi, cefi]
 stage: [data]
@@ -35,14 +35,18 @@ tags:
   ]
 related:
   [
-    plans/active/issues/drift_helius_perp_funding_shards_are_zero_valued_signature_noise_2026_07_16.md,
-    plans/active/issues/drift_helius_path_obsolete_2026_07_15.md,
+    plans/archive/issues/drift_helius_perp_funding_shards_are_zero_valued_signature_noise_2026_07_16.md,
+    plans/archive/issues/drift_helius_path_obsolete_2026_07_15.md,
     plans/archive/solana_perp_dex_adapters_2026_05_13.md,
   ]
 created: 2026-07-16
 parent_epic: defi_master
 priority: P0
-resolved_by:
+resolved_by: >-
+  deployment-service@9b13679 ([CODE] P0 launcher-registry removal, 2026-07-16), instruments-service@ee19f6f3
+  (_REMOVED_VENUES structural exclusion guard, 2026-07-18), and live prod verification 2026-08-03 (5+ real
+  build_instrument_catalogue.py regen cycles + a direct read of catalog.parquet showing 0 kill-set rows on defi/cefi,
+  closing [DATA] P2)
 locked_by:
 context_scope:
   [
@@ -56,8 +60,14 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-18T10:07Z
+last_updated: 2026-08-03T18:30Z
 ---
+
+> 🟢 **ARCHIVED 2026-08-03 — fully resolved, both todos done, no lock.** Every surface (GCS objects, availability
+> manifests, instrument catalogues, launcher registry) verified purged and staying purged. Superseded pointer: none
+> (this doc is the terminal record for the DATA/STATE half of the 2026-07-16 kill ruling). Live follow-up still open
+> elsewhere: `/plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` (stale generated
+> capability bundles, unrelated to the data purge itself).
 
 # Solana perp DEX cull — DRIFT + PACIFICA data/state purge (2026-07-16)
 
@@ -273,7 +283,7 @@ still reference them if needed.
       `deployment-service` `quality-gates.sh --no-fix` run clean at current HEAD —
       **`0a811e82b6d01a6b6f20a60f8966f3b56e4c1b2a`** (2664 passed, 5 skipped, ALL QUALITY GATES PASSED, sentinel
       `.qg_last_passed_sha` matches HEAD exactly). No further code edit was needed or made.
-- [ ] [DATA] P2. Once the sibling's UAC venue removal + instruments-service adapter removal are fully on `origin` (per
+- [x] [DATA] P2. Once the sibling's UAC venue removal + instruments-service adapter removal are fully on `origin` (per
       the coordinator: IS landed `4d65d468`+`b37e9d82`, MTDS deletion still in flight), re-run
       `build_instrument_catalogue.py --asset-group defi` (and `cefi`, if it also derives from a venue-capability
       registry) as a confirmation pass — should be a no-op diff against this task's surgical row-delete purge if both
@@ -294,7 +304,25 @@ still reference them if needed.
       (`gs://instruments-store-{defi,cefi}-prd-.../prod/catalog.parquet`) post-fix to produce a literal 0-diff
       confirmation artifact — that live-prod regen is instruments-service-repo scope and a prod mutation, both outside
       this closing task's bounds (`deployment-service`-only, no-prod-mutations). Left open as a low-priority,
-      non-blocking instruments-service todo for whoever next touches that repo's catalogue pipeline.
+      non-blocking instruments-service todo for whoever next touches that repo's catalogue pipeline. **CLOSED
+      2026-08-03**: rather than triggering a fresh manual `--apply` (a prod mutation that would need
+      `[OPERATOR]`+delete-safety-cite under `task_template.md` finding O — this todo carries neither), found and used
+      STRONGER evidence that was already sitting in prod:
+      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf` runs
+      `build_instrument_catalogue.py --asset-group {defi,cefi}` on a recurring schedule — DAILY `--mode incremental`
+      (01:00 UTC) + WEEKLY `--mode full` (Sat 04:00/03:00 UTC) — and has done so continuously since before the
+      2026-07-16 purge. Verified live via `gcloud run jobs executions list`: BOTH the defi and cefi WEEKLY FULL job (the
+      whole-by_date-history re-aggregation, i.e. the exact confirmation-pass this todo asked for) succeeded multiple
+      times post-`ee19f6f3` (defi: 07-18, 07-19×2, 07-25, 08-01, all `succeededCount=1 failedCount=0`; cefi: 07-18,
+      07-20, 07-25, 08-01, same) — each one a real prod `--apply` regen of the ENTIRE by_date corpus, not a dry-run.
+      Then did a read-only, column-pruned (`columns=["venue"]`, no full-row materialization) direct read of the CURRENT
+      live `gs://instruments-store-{defi,cefi}-prd-central-element-323112/prod/catalog.parquet` (bounded via
+      `run-bounded-analysis.sh --mem-cap 4G`, no write, no `--apply`): **defi 79,032 rows / cefi 431,120 rows, 0 rows
+      matching
+      `{DRIFT, DRIFT-SOLANA, PACIFICA, PACIFICA-SOLANA, MANGO, MANGO-SOLANA, ZETA, ZETA-SOLANA, FLASH,     FLASH-SOLANA}`
+      on either asset group**. This is a stronger confirmation than a single manual run: it proves the no-op-diff
+      property held across 5+ real production regen cycles (both incremental and full-history) over 18 days, not just
+      once. `[DATA] P2` genuinely satisfied — closing.
 
 ## Per-surface counts + purge evidence
 
@@ -619,3 +647,25 @@ Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) a
   outside this task's bounds, so `[DATA] P2` is left open (non-blocking) with this status noted rather than checked off.
 
 - **context-scout 2026-08-03**: reviewed context_scope (4 entries), no change needed — still accurate.
+- **2026-08-03T18:30Z** — Closed the last open todo (`[DATA] P2`, instruments-service). Rather than triggering a fresh
+  manual `--apply` (a prod mutation with no `[OPERATOR]` tag), found
+  `deployment-service/terraform/gcp/ lifecycle_catalogue_scheduler.tf` already runs
+  `build_instrument_catalogue.py --asset-group {defi,cefi}` on a recurring prod schedule (daily incremental 01:00 UTC +
+  weekly full Sat) continuously since before the purge. `gcloud run jobs executions list` confirmed both the defi and
+  cefi WEEKLY FULL jobs (a real prod `--apply` of the entire by_date corpus) succeeded multiple times post-`ee19f6f3`
+  (defi 07-18/07-19×2/07-25/08-01; cefi 07-18/07-20/07-25/08-01, all `succeededCount=1 failedCount=0`). Then did a
+  read-only, column-pruned (`columns=["venue"]`) direct read of the live `catalog.parquet` for both asset groups
+  (bounded via `run-bounded-analysis.sh --mem-cap 4G`, zero writes): defi 79,032 rows / cefi 431,120 rows, 0 rows
+  matching the kill set (`DRIFT`, `DRIFT-SOLANA`, `PACIFICA`, `PACIFICA-SOLANA`, `MANGO`, `MANGO-SOLANA`, `ZETA`,
+  `ZETA-SOLANA`, `FLASH`, `FLASH-SOLANA`) on either asset group. This is stronger evidence than a single manual
+  confirmation run — it proves the no-op-diff property held across 5+ real production regen cycles over 18 days. All
+  todos now done, no lock — archiving per the 6-step ritual
+  (codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fixed every corpus-active referrer's path
+  (`codex/04-architecture/solana-defi-coverage.md`,
+  `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`,
+  `plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `plans/active/cefi_consolidated_closeout_2026_07_18.md`,
+  `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`) to point at `plans/archive/issues/`; no new codex
+  contract established (the durable exclusion guarantee was already shipped + codex-documented via `ee19f6f3`); the one
+  live follow-up (capability-bundle resync) already lives in its own separately-tracked, still-open issue doc. Moving to
+  `plans/archive/issues/`.
