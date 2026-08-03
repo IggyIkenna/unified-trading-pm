@@ -1,0 +1,85 @@
+name: sit-gate-stuck-detector
+
+# Makes the SIT-gate treadmill visible as a STUCK GATE, not generic promotion-lag slowness.
+#
+# `ldr_to_main_fleet_promote.sh` (invoked by `ldr-to-main-promote-fleet.yml`) logs
+# `SIT GATE BLOCK <repo>: ...` when a repo's LDR tree races the whole-workspace SIT digest and
+# never lands on a matching `sit_validated_tree` (issues/
+# sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md [DEVOPS] P3). Today that is
+# only observable via `promotion_lag_monitor.py`'s branch-pair lag alert, which reads as latency —
+# it has no way to say WHY a pair is lagging. This workflow reads the promote-fleet workflow's own
+# run LOGS from the outside (never edits `ldr-to-main-promote-fleet.yml` itself — that file
+# carries unrelated in-flight work gated on an unmade direction ruling) and pages once the SAME
+# repo has posted `SIT GATE BLOCK <repo>` on N consecutive ticks — a standing treadmill, not one
+# slow tick. A block→revalidate→PASS cycle self-silences: the newest tick not blocking the repo
+# resets its streak to 0.
+#
+# SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
+# Source: plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
+#         ([DEVOPS] P3), tracked to completion via
+#         plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md ([INFRA] P3).
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min — cheap history read; well inside a treadmill window
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Consecutive SIT-gate-blocked ticks (same repo) before paging"
+        default: "3"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: sit-gate-stuck-detector
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      stuck: ${{ steps.scan.outputs.stuck }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Scan ldr-to-main-promote-fleet.yml for a SIT-gate-block streak
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          THRESH: ${{ github.event.inputs.threshold || '3' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/sit_gate_stuck_detector.py \
+            --repo "${{ github.repository }}" --threshold "$THRESH" --slack)
+          RC=$?
+          echo "$REPORT"
+          [ "$RC" -eq 1 ] && STUCK=true || STUCK=false
+          {
+            echo "stuck=$STUCK"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: check
+    if: needs.check.outputs.stuck == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.check.outputs.report }}
+      severity: WARNING
+      workflow_name: sit-gate-stuck-detector
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Standing condition (the treadmill persists tick-to-tick until the underlying race
+      # resolves) — page on the false->true transition, re-remind every hour while it persists.
+      # Distinct key from promotion-lag's / startup-failure's / glue-pool-starved's so none share
+      # a cooldown.
+      dedup_key: sit-gate-stuck
+      cooldown_min: 60
+    secrets: inherit
