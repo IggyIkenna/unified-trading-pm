@@ -67,10 +67,12 @@ resolved_by:
 
 # launch-mdps-features-live.sh exec-dispatch was never actually wired up
 
-> **Machine-gated on `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
-> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) will not dispatch
-> until that doc's UAC enumerator extension is done. Ruled 2026-07-30, BLK-fd70b57c: see the second `[SCRIPT]` todo
-> below for the full reasoning.
+> **Machine-gated on `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
+> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) waited on that doc's
+> UAC enumerator extension. **RESOLVED 2026-08-03**: the extension shipped (`unified-api-contracts@724b6633` +
+> `market-data-processing-service@4a5985b`), the gated doc's 5 todos are all done, and it has been archived — the gate
+> is satisfied and this issue's remaining `[SCRIPT]` todos below are unblocked. Ruled 2026-07-30, BLK-fd70b57c: see the
+> second `[SCRIPT]` todo below for the full reasoning.
 
 ## Evidence
 
@@ -183,12 +185,12 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       both ruled out on standards grounds, not preference. **RESOLVED VIA SPLIT, not via shipped code** — this todo's
       own ask (decide the shard-discovery mechanism, or determine why it can't be decided yet) is genuinely done as of
       this ruling; the exec-dispatch branch itself has NOT been written. Forked the UAC extension out to
-      `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
+      `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
       edit), gated this doc on it (`depends_on` + `gate_on_depends: true`, see frontmatter + banner above), and
       re-opened the actual code-writing work below as its own gated todo so it isn't lost — unified-trading-pm, this
       commit.
-- [ ] [SCRIPT] P2. Once `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` lands (this doc is
-      `gate_on_depends`-blocked on it, so it will not dispatch until then): add the `VM_TASK == "mdps-features-live"`
+- [ ] [SCRIPT] P2. `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` has landed (shipped +
+      archived 2026-08-03 — this doc's gate is satisfied, dispatchable now): add the `VM_TASK == "mdps-features-live"`
       (or generic "+"-split) branch to `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing
       tarball-resolution split + the multi-worker sharding pattern at ~line 2031 for backgrounding N python processes
       under one `_launch_with_tee` wrapper) that invokes MDPS and features-service with the CLI flags their actual
@@ -215,6 +217,13 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   remaining [SCRIPT] todos are now unblocked bounded implementation.
 - **2026-07-30 (slot-6, BLK-fd70b57c)**: 2026-07-30's own investigation note (above) correctly flagged the
   shard-discovery mechanism as still undecided. Escalated; operator ruled extend UAC `mdps_mvp_universe()` (option A),
-  executed as a SPLIT — forked `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
+  executed as a SPLIT — forked `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
   prerequisite and gated this doc on it (`depends_on` + `gate_on_depends: true`). The exec-dispatch wiring todo and its
   two P3 followers stay open, now correctly machine-gated rather than falsely dispatchable.
+- **2026-08-03 (slot-5)**: The gating prerequisite shipped + archived
+  (`/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — all 5 todos done, UAC `data_type` axis
+  extension in `unified-api-contracts@724b6633` + the cross-repo caller fix in
+  `market-data-processing-service@4a5985b`). Gate satisfied; repointed this doc's banner/context_scope/body path
+  citations at the archive location (`depends_on`/`gate_on_depends: true` left untouched — bare slug, still correctly
+  resolves against `plans/archive/` per `check_depends_on_graph.py`). The exec-dispatch wiring todo below is now
+  genuinely dispatchable.

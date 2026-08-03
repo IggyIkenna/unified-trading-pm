@@ -11,7 +11,7 @@ summary: >-
   (keeps a single universe definition per the shard-atom-identity + SSOT-in-UAC hard rules) or hand-list a bash array
   (rejected — the exact drift surface those rules exist to prevent) or repurpose the live-VM staleness watcher (wrong
   tool + boot-time ordering hazard).
-status: open
+status: resolved # (was: open) 2026-08-03 -- all 5 todos done, archived per the 6-step ritual
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,6 +44,9 @@ source: >-
   mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md's 2026-07-30 investigation note on the
   never-decided shard-discovery mechanism.
 resolved_by:
+  "slot-5 (backend_engineer, task uac_mdps_mvp_universe_data_type_axis-005), 2026-08-03 -- archived per the 6-step
+  ritual; all 4 substantive todos already shipped (unified-api-contracts@724b6633,
+  market-data-processing-service@4a5985b) across prior sessions, see Progress Log"
 context_scope:
   [
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
@@ -52,6 +55,28 @@ context_scope:
     /plans/epics/infrastructure_master.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-03 — all 5 todos done.** The UAC `data_type` axis extension shipped + promoted
+> (`unified-api-contracts@724b6633`: `mdps_mvp_universe(asset_group)` now returns
+> `frozenset[tuple[venue, instrument_type, data_type]]`, total over every asset_group), and the one missed cross-repo
+> caller was fixed (`market-data-processing-service@4a5985b`). This doc gated
+> `/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` via `depends_on` +
+> `gate_on_depends: true` — that gate is now satisfied. Verified safe to archive despite the gate being a LIVE
+> re-derivation-on-every-tick (not one-time, contra a possible fast reading): `regen_backlog_from_plan.py` rebuilds
+> `stem_to_path` fresh each regen tick by scanning `plans/active/`, but every gating code path degrades to "satisfied"
+> once the upstream file is absent from that scan — `_wire_gate_on_depends_prereqs`'s `upstream_path is None` branch,
+> `_scrub_completed_upstream_prereqs`'s stale-id cleanup, and the dispatch-hot-path
+> `gate_on_depends_unmet_upstreams_on_disk`'s explicit "archived/pruned == done" handling all agree. Corroborated
+> against `scripts/plan-hygiene/check_depends_on_graph.py` (the actual machine check — its docstring states a live doc's
+> `depends_on` resolving to an archived-only slug is the CORRECT terminal state, not a violation) and 8 live corpus
+> precedents (e.g. `bucket_fold_ml_2026_07_17.md` depending on the already-archived
+> `bucket_estate_fold_design_2026_07_13`). Codex-alignment check: **no codex content needed** —
+> `rg -ni 'mdps_mvp_universe|_mvp_scope_mdps'` across all of `codex/` returns zero hits (confirmed both at todo 3 and
+> re-verified here); the function is UAC-internal with no shipped external consumer yet beyond the still-unwired
+> exec-dispatch launcher, so a new codex SSOT would document a contract that hasn't stabilized — premature. Both
+> referrers (`/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
+> `/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`) had their path references
+> to this doc repointed at its new archive location.
 
 # Extend UAC `mdps_mvp_universe()` with a `data_type` axis
 
@@ -130,8 +155,8 @@ ordering hazard).
       `get_mvp_data_types_for_cefi_venue_itype` / `is_mvp` imports dropped. Repro re-run clean post-fix:
       `--dry-enumerate` produces 819/91/1974 shard-cells for cefi/tradfi/defi respectively with no unpack error;
       `bash scripts/quality-gates.sh` PIPELINE-E2E-CHECK DRIVER SMOKE step passes.
-- [ ] [SCRIPT] P3. **Archive this doc per the plan-completion-and-archival-discipline HARD RULE (all 4 todos above are
-      now `[x]`, `locked_by:` empty).** Do NOT just `git mv` it blind:
+- [x] ✅ [SCRIPT] P3. **Archive this doc per the plan-completion-and-archival-discipline HARD RULE (all 4 todos above
+      are now `[x]`, `locked_by:` empty).** Do NOT just `git mv` it blind:
       `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` carries
       `depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]` + `gate_on_depends: true`, and
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_wire_gate_on_depends_prereqs` resolves that upstream
@@ -146,7 +171,20 @@ ordering hazard).
       (`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
       `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` — the latter's
       `depends_on`/`gate_on_depends`/banner all cite this doc by slug), add the archived-banner, `git mv` to
-      `plans/archive/2026_08/`.
+      `plans/archive/2026_08/`. Evidence: read both functions — confirmed the wiring IS a live re-derivation every regen
+      tick (`stem_to_path` is rebuilt from a fresh `plans/active/` scan each call, `regen_backlog_from_plan.py` line
+      ~1920), NOT one-time — but archival is safe anyway because every gating path (the `gate-upstream-open:<stem>`
+      disambiguation in `_wire_gate_on_depends_prereqs`, `_scrub_completed_upstream_prereqs`'s stale-id scrub, and the
+      dispatch-hot-path `gate_on_depends_unmet_upstreams_on_disk`) treats a missing upstream file as "finished, not
+      blocking" by design (`upstream_path is None` → `has_open=False`; explicit comment "archived/pruned == done,
+      mirrors `_completed_task_satisfied`"). Corroborated against the actual machine check
+      `scripts/plan-hygiene/check_depends_on_graph.py` (whose docstring explicitly states a live doc's `depends_on`
+      resolving to an archived-only slug is CORRECT, not a violation — PLAN_FORMAT.md's "Plan Locking" § prose reads
+      more restrictively but the code is ground truth and is corroborated by 8 real current-corpus precedents, e.g.
+      `bucket_fold_ml_2026_07_17.md` → archived-only `bucket_estate_fold_design_2026_07_13`). Fixed both referrers' path
+      references to point at the new archive location (left `depends_on`/`gate_on_depends: true` untouched in the
+      downstream doc — bare slugs, out of path-fixing scope per CLAUDE.md, and proven safe above). Archived to
+      `plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — unified-trading-pm, this commit.
 
 ## Progress Log
 
@@ -176,3 +214,10 @@ ordering hazard).
   derivation (archival-safe) or re-derived every tick by scanning `plans/active/*.md` (archival-risky without first
   re-pointing the dependent plan). Rather than archive blind on a P3 audit task's narrow scope, added a new tracked P3
   todo above scoping the exact check + the 6-step ritual (2 referrers named) for whoever picks it up next.
+- **2026-08-03 (slot-5)**: Ran todo 5. Confirmed the gate-wiring IS a live re-derivation every regen tick (not
+  one-time), but proved archival safe regardless — every gating code path in `regen_backlog_from_plan.py`
+  (`_wire_gate_on_depends_prereqs`, `_scrub_completed_upstream_prereqs`, `gate_on_depends_unmet_upstreams_on_disk`)
+  treats a missing/archived upstream file as satisfied by design, and `scripts/plan-hygiene/check_depends_on_graph.py`
+  (the real machine check) + 8 live corpus precedents confirm a `depends_on` resolving to an archived-only slug is the
+  expected terminal state. Repointed both referrers' path citations at the new archive location, added the
+  archived-banner, flipped `status: open` → `resolved`, `git mv`'d to `plans/archive/2026_08/`.
