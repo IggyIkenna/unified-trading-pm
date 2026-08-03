@@ -1,26 +1,37 @@
 ---
 doc_type: issue
 title:
-  "pytest-timeout-under-contention bug class continues (2nd split — parent hit 1000-line hard cap) — deployment-service
-  agt-a46033 re-fires a 2nd time still mid-flight; corroborates the un-cooldowned re-dispatch waste todo 3 flagged"
+  "pytest-timeout-under-contention bug class continues (2nd split — parent hit its 1000-line hard cap) — two concurrent
+  cicd sessions (deployment-service agt-a46033, features-service agt-c6ccfb) independently split the same parent within
+  minutes of each other; merged here"
 summary: >-
-  Continuation of `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` (937/1000
+  Continuation of `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` (937-938/1000
   lines at split time, its own last entry explicitly stating "the NEXT occurrence for ANY repo MUST split rather than
-  append"). `cicd` escalation `agt-a46033` (`WALL_TYPE=main_ci_red`, `REPO=deployment-service`, `pr_number=0`, slot 12)
-  is itself a re-dispatch of the SAME escalation ID already handled once in the parent doc (~13:04-14:50Z entry): that
-  earlier pass cancelled a genuinely-redundant post-merge runner-hogging run and dispatched a fresh `quality-gates-v2`
-  run against `main` HEAD `ce1239d` (run `30824452052`) plus confirmed `live-defi-rollout`'s own workflow_dispatch
-  re-verify (`30825597344`), then exited with "outcome left for a follow-up occurrence" per this doc-class's established
-  practice (do not synchronously hold a slot for a 30-90min contended CI run). This session IS that follow-up
-  occurrence, re-invoked with the identical `ESCALATION_ID` before either run concluded.
+  append"). Two `cicd` escalations landed on this split within minutes of each other and are merged into this single doc
+  rather than left as a duplicate pair: (1) `agt-a46033` (`WALL_TYPE=main_ci_red`, `REPO=deployment-service`,
+  `pr_number=0`, slot 12) — a re-dispatch of an escalation already handled once in the parent doc (~13:04-14:50Z entry);
+  re-confirmed no code gap, both confirmatory runs (`30824452052` main, `30825597344` LDR) still genuinely
+  progressing/queued behind the repo's sole self-hosted runner. (2) `agt-c6ccfb` (`WALL_TYPE=main_ci_red`,
+  `REPO=features-service`, slot 7) — the ~15th same-day re-fire for this repo; confirmed `main`'s failing run had
+  changed since the parent doc's cited runs (a fresh direct-`main` dispatch, run `30825589070`, failed the same
+  established scheduler-starvation signature on a new random hang site,
+  `test_trendline.py::test_convergence_acceleration_column`); LDR's own true current head (`87942ac0`) had no run
+  in-flight, so dispatched a fresh one (`30829019397`). Both sessions independently confirm: all sanctioned per-repo
+  timeout mitigations remain intact, the single shared self-hosted `glue-ip-172-31-5-118-1` runner is the structural
+  bottleneck (confirmed `busy=true` fleet-wide across every repo spot-checked), and the root-cause fix remains correctly
+  out of scope for a one-shot wall-clearing task
+  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, `status: active`, Phase 2-3 open). Both
+  sessions independently flag the SAME operator-level gap: `main_ci_red`/`ldr_qg_failure` escalations for an unchanged
+  underlying state are re-firing with no cooldown/dedup guard (now a 3rd+ repo showing this waste pattern, on top of the
+  9+ already logged for `features-service` alone in the parent doc).
 status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
 repos:
   [
-    unified-trading-api,
     unified-trading-pm,
+    unified-trading-api,
     features-service,
     market-data-processing-service,
     deployment-service,
@@ -39,14 +50,14 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T15:45Z
+last_updated: 2026-08-03T15:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.1
-estimate_calibrated_ai_days: 0.02
+estimate_calibrated_ai_days: 0.04
 assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
@@ -55,39 +66,49 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
-source: "cicd-role escalation agt-a46033 (WALL_TYPE=main_ci_red, REPO=deployment-service, slot 12) — 2nd re-dispatch"
+source:
+  "cicd-role escalations agt-a46033 (WALL_TYPE=main_ci_red, REPO=deployment-service, slot 12, 2nd re-dispatch) +
+  agt-c6ccfb (WALL_TYPE=main_ci_red, REPO=features-service, slot 7) — merged, concurrent splits of the same parent doc"
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
+    deployment-service/scripts/quality-gates.sh,
+    features-service/scripts/quality-gates.sh,
   ]
 ---
 
-# pytest-timeout-under-contention: 2nd split (parent at hard cap) + a live re-dispatch-waste data point
+# pytest-timeout-under-contention: 2nd split (parent at hard cap) — two concurrent occurrences merged
 
 Parent doc `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` closed out at its
-1000-line hard cap (937 lines) with its final entry explicitly stating "the NEXT occurrence for ANY repo MUST split
-rather than append." This doc is that split — read the parent (and its own parent,
-`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`) for the full bug-class history; not repeated here.
+1000-line hard cap (937-938 lines) with its final entry explicitly stating "the NEXT occurrence for ANY repo MUST split
+rather than append." Two independent `cicd` sessions split it within minutes of each other (a genuine concurrent-write
+race, not a duplicate filing) — merged into this single doc rather than kept as two competing files. Read the parent
+(and its own parent, `pytest_timeout_60s_flaky_under_contention_2026_07_29.md`) for the full bug-class history; not
+repeated here.
 
-## Todos (carried forward from parent, still open)
+## Todos
 
 - [ ] 1. [INFRA] P3. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
       `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phase 2-3 (the single `glue` runner per
-      repo is the structural bottleneck: `deployment-service` confirmed to have exactly ONE online runner,
-      `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed, re-test whether the
-      `main_ci_red`/`ldr_qg_failure` re-fires in this doc stop recurring.
-- [ ] 2. [OPERATOR] P2. **Corroborating data point for the parent doc's todo 3** (un-cooldowned escalation re-fire):
-      `agt-a46033` (`deployment-service`, `main_ci_red`) has now been dispatched at least TWICE for the exact same
-      underlying state (fix already on LDR, waiting on the sole runner to clear the queue) — first pass ~13:04-14:50Z
-      (parent doc), this pass ~15:35-15:50Z, with the dispatched confirmatory run (`30824452052`) still
-      `in_progress`/queued between the two dispatches. Same pattern independently observed for `execution-service`
-      (`agt-956fe9`/`agt-bd0d27`/`agt-e718ef`, 3 re-fires) and `features-service` (9 re-fires) in the parent doc. This
-      is now a THIRD repo showing the identical waste signature — recommend the operator gate `main_ci_red`/
-      `ldr_qg_failure` re-dispatch on a minimum cooldown since the last dispatch for the same repo with an unchanged
-      target-branch HEAD, per `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition
-      principle (fire on change/RESOLVED, never every tick while nothing changed).
+      repo is the structural bottleneck: both `deployment-service` and `features-service` confirmed to have exactly ONE
+      online runner, `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed, re-test whether
+      the `main_ci_red`/`ldr_qg_failure` re-fires in this doc-chain stop recurring.
+- [ ] 2. [OPERATOR] P2. **Corroborating data point for the parent doc's todo 3** (un-cooldowned escalation re-fire), now
+      observed across at least THREE repos: `deployment-service` (`agt-a46033`, 2 dispatches for the same state),
+      `execution-service` (`agt-956fe9`/`agt-bd0d27`/`agt-e718ef`, 3 re-fires, logged in the parent doc), and
+      `features-service` (~15 re-fires, logged across the parent doc and this one). No cooldown/state-transition dedup
+      guard exists on the `main_ci_red`/`ldr_qg_failure` escalation trigger — recommend gating re-fire on either (a) a
+      minimum cooldown since the last dispatch for the same repo with an unchanged target-branch HEAD, or (b)
+      suppressing re-dispatch while `ldr-to-main-promote-fleet`'s own GATE BLOCK reason is unchanged from the prior
+      escalation's, per `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle
+      (fire on change/RESOLVED, never every tick while nothing changed). Operator decision, not something a one-shot
+      wall-clearing session should self-implement.
+- [ ] 3. [INFRA] P3. Once `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3 land,
+      re-check whether this entire doc-chain (3 docs, ~30+ occurrences across 7+ repos) self-resolves — if the ledger
+      coordination fix genuinely closes the class, archive all three docs together rather than leaving them open
+      indefinitely as "still waiting."
 
 ## Progress Log
 
@@ -121,3 +142,45 @@ rather than append." This doc is that split — read the parent (and its own par
   occurrence, per this bug class's established practice — flagging in todo 2 above that this is now the THIRD repo to
   show wasteful un-cooldowned re-dispatch for the identical unresolved-but-progressing state, which the operator should
   address at the escalation-dispatch level rather than each pass re-diagnosing the same wait.
+
+- **2026-08-03 ~15:35-15:50Z (`cicd` escalation `agt-c6ccfb`, slot 7, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — ~15th escalation for this repo's wall, no new code gap, one forward-progress action taken**: read
+  `main`'s current failing run directly rather than assuming the stale cached run from the parent doc's entries still
+  applied — it had genuinely changed: run `30825589070` (created 15:02:36Z, a fresh direct-`main` dispatch from an
+  earlier session per the `ml-service`-established "only main can speak for main" pattern) had superseded the long-stale
+  `30780455914` (02:55Z) the parent doc's entries all cited. This new run failed via the same established signature:
+  `tests` slice hung inside `test_trendline.py::test_convergence_acceleration_column` (`_add_lagged_features`→pandas
+  `Series.name` setter→`validate_all_hashable`) for ~4.3min before timing out — a DIFFERENT random hang site than every
+  previously-logged occurrence (no test-content overlap), matching the established scheduler-starvation signature, not a
+  per-test defect. `main` itself lacks the `PYTEST_TIMEOUT=300` mitigation (it hasn't been promoted since
+  2026-08-02T13:01Z, 28+ commits behind LDR), so a direct main-dispatch is, if anything, MORE likely to hit this shape
+  than an LDR run — consistent with what was observed.
+
+  Checked LDR: confirmed all three sanctioned mitigations (`PYTEST_TIMEOUT=300`, `PYRIGHT_TIMEOUT=300`,
+  `FORMULA_DRIFT_TIMEOUT=240`) intact and unchanged in `scripts/quality-gates.sh` — no regression. LDR HEAD had moved
+  twice since the parent doc's last features-service entry (`8265205c`→`63e97f6a`→`87942ac0`, none touching test-timeout
+  config or `delta_one`/typecheck-relevant paths per `git log --oneline`). The only queued run (`30825603740`,
+  dispatched by an earlier session) targeted a 3-commits-stale head (`fa18180b`) and had been stuck `status=queued` for
+  40+ minutes with no run in-flight against the true current head — unlike most parent-doc entries (which withhold a
+  fresh dispatch to avoid discarding an in-flight run's elapsed contention-survival progress), this was a genuine "no
+  one has tested the current head" case. Dispatched
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/features-service --ref live-defi-rollout` → run `30829019397`,
+  confirmed queued against the true current head `87942ac0` within seconds (the previously-stuck `30825603740` also
+  happened to claim the runner and start `in_progress` at the same moment — coincidental, not caused by this dispatch).
+  Confirmed via 6-repo spot-check (`features-service`, `strategy-service`, `market-tick-data-service`,
+  `market-data-processing-service`, `instruments-service`, `execution-service`) that all report the identical single
+  self-hosted runner name/IP (`glue-ip-172-31-5-118-1`) `status=online busy=true` simultaneously — reconfirms this is
+  genuinely fleet-wide, not features-service-specific. `GET /api/repo-blockers` → `open: []`.
+  `ldr-to-main-promote-fleet`'s latest tick (`30828957778`, 15:45:08Z) unchanged:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — will auto-promote the instant
+  either in-flight LDR run (`30825603740` or `30829019397`) reports green; no manual promotion action needed or taken.
+
+  **Disposition: no code or workflow change made or needed** — every candidate fix already exists on
+  `live-defi-rollout`; the remaining wall is pure runner-queue-depth wait, identical in kind to ~14 prior same-repo
+  entries in the parent doc-chain. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) — per `cicd.md`,
+  skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean
+  (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc).
+  This entry and the `agt-a46033` entry above were independently written as concurrent splits of the same at-cap parent
+  doc within minutes of each other and have been merged here (not left as two competing files). Todo 2 (operator-flagged
+  dedup/cooldown gap) remains open and unaddressed by this entry — now ~15 same-day fires for `features-service` alone,
+  plus corroborating counts for `deployment-service`/`execution-service`.
