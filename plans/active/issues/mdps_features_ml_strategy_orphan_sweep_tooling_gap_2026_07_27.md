@@ -193,3 +193,25 @@ lets each one be built, validated, and run to real completion on its own timelin
   candle-manifest coverage gap (0-2.3% coverage across all 4 non-sports AGs) — filed as its own P0 issue doc
   (`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`) rather than absorbed into this tooling-gap doc's scope.
   Todo 1 flipped — the tool-build+validate deliverable is genuinely complete.
+- **2026-08-03** (AO dispatch, slot 8) — Picked up todo 2. Built `features-service/scripts/feature_orphan_sweep.py`,
+  mirroring todo 1's A-E taxonomy + single-walk + checkpointed-resume pattern, parameterized per `--feature-family` (the
+  features corpus has 8 UAC `FeatureFamily` values, each with its OWN bucket-resolution rule and object-key
+  prefix/partition shape — verified per-family by reading each family's own writer, not guessed). Wired 5 families with
+  a verified bucket+prefix+partition-shape config: `delta_one`, `volatility`, `onchain`, `sports`, `calendar`
+  (calendar's declared path template places `feature_group` as a raw POSITIONAL path segment, not hive
+  `feature_group=...` — handled explicitly, not assumed hive-uniform). `commodity` / `cross_instrument` /
+  `multi_timeframe` are explicitly REJECTED as unwired (commodity writes a flat JSON signal file with no
+  `day=`/`feature_group=` hive keys at all; cross_instrument uses `date=` not `day=` plus a non-hive `run_tag` segment;
+  multi_timeframe's shape was not independently verified this session) — each needs its own design pass, mirroring todo
+  3's own admission for ml/strategy, rather than a guessed-at mechanical port. Added 33 unit tests covering
+  parsing/classification/coverage for all 5 wired families (including calendar's positional segment and the
+  delta_one/volatility timeframe-based legacy-shape discriminator, grounded in the real
+  `candle_feature_canonical_path_divergence_2026_07_20.md` finding 5 bucket-root bug, not invented). Shipped
+  `features-service@b81a6a75`. **Deliberately did NOT flip todo 2's checkbox** — mirrors todo 1's own precedent in this
+  same doc: the task's own wording ("VM-run, never in-session") means the real GCS validation run has NOT happened yet
+  in this session (per STEP 0.56 of this craft's mandatory rules, no bounded real-data smoke either — even todo 1's own
+  200-object validation read a potentially-large manifest, the exact shape that caused 2 of 3 recent shared-host AO
+  outages, so it stays VM-only here rather than risking a repeat on this host). "Validate" is therefore only
+  build+unit-test satisfied, not real-data satisfied — genuinely incomplete per this doc's own bar for todo 1. Follow-up
+  (VM launcher wiring analogous to `<ag>-candle-orphan-sweep`, then the real per-family/per-asset_group Tier-2 SPOT VM
+  runs) is the natural next dispatch against this same todo, not a new issue doc — todo 2 is not done.
