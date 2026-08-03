@@ -214,25 +214,32 @@ jobs:
               repos = levels_affected[lvl]
               print(f"  Level {lvl}: {repos}")
 
-          # ── Helper: dispatch quality-gate-run to a repo ──────────────────────
+          # ── Helper: dispatch a quality-gates-v2 workflow_dispatch run to a repo ──
+          # FIX (2026-08-03, sit_failure agt-34df9c): this used to fire a
+          # `repository_dispatch` event_type=quality-gate-run — but NO consumer repo
+          # has ever had a workflow listening for that event type (only
+          # `update-dependency-version.yml` exists, gated to types: [dependency-update]).
+          # Every cascade level therefore silently dispatched to nothing and always hit
+          # the 900s poll TIMEOUT regardless of the actual repo's health. Fire a real
+          # workflow_dispatch of quality-gates-v2.yml on live-defi-rollout instead — the
+          # same proven mechanism as the Recipe-1 manual recovery
+          # (`gh workflow run quality-gates-v2.yml --repo <owner>/<repo> --ref <ref>`,
+          # codex/15-runbooks/devops-ci-walls.md).
           def dispatch_qg(repo_name: str) -> bool:
-              """Dispatch quality-gate-run event. Returns True on success."""
+              """Dispatch quality-gates-v2 workflow_dispatch on live-defi-rollout. Returns True on success."""
               if dry_run:
-                  print(f"  [DRY RUN] Would dispatch quality-gate-run to {repo_name}")
+                  print(f"  [DRY RUN] Would dispatch quality-gates-v2 workflow_dispatch to {repo_name}")
                   return True
 
               cmd = [
                   "gh", "api",
-                  f"repos/{OWNER}/{repo_name}/dispatches",
+                  f"repos/{OWNER}/{repo_name}/actions/workflows/quality-gates-v2.yml/dispatches",
                   "-X", "POST",
-                  "-f", "event_type=quality-gate-run",
-                  "-f", f"client_payload[source_repo]={source_repo}",
-                  "-f", f"client_payload[source_version]={source_version}",
-                  "-f", "client_payload[triggered_by]=cascade-qg-ordering",
+                  "-f", "ref=live-defi-rollout",
               ]
               result = subprocess.run(cmd, capture_output=True, text=True)
               if result.returncode == 0:
-                  print(f"  Dispatched quality-gate-run to {repo_name}")
+                  print(f"  Dispatched quality-gates-v2 (workflow_dispatch) to {repo_name}")
                   return True
               else:
                   print(f"  WARNING: Failed to dispatch to {repo_name}: {result.stderr.strip()}")
