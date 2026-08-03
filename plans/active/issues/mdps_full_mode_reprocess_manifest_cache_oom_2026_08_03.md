@@ -111,16 +111,42 @@ Two independently-shippable angles (do NOT bundle):
    built, immediately dropping the old reference). This needs design input on which approach fits `ManifestWriter`'s
    existing contract — flagged as its own todo below rather than solved here.
 
+## Second occurrence (2026-08-03T10:11Z) — confirms this is NOT a fixed-peak, machine-size-fixable OOM
+
+Relaunched on `e2-highmem-8` (64GB) with `--workers 8` (down from the original 16). **OOM-killed again**
+(exit_code=137), this time at ~21/571 days (vs ~24/571 on the smaller machine) — further progress before the crash, but
+still crashed. This rules out "just needs a bigger machine": the failure point scaled only slightly with 2x the RAM and
+half the workers, which is consistent with a **thundering-herd** pattern rather than one fixed-size leak:
+
+- `read_availability_index()`'s own docstring states the full-schema sports index decodes to **~6.5GB** in memory (not
+  just the 240MB compressed size).
+- `ManifestWriterIoMixin.lookup()` has **no single-flight/lock guard** around a cache-miss reload — every thread that
+  calls `lookup()` in the same instant the 60s TTL expires independently triggers its OWN full ~6.5GB decode.
+- Worst case at `--workers N` concurrent threads hitting a cache-expiry boundary together: **N × 6.5GB** simultaneous
+  resident copies, on top of base process/pandas overhead. At `N=16` this is up to ~104GB (trivially OOMs any reasonable
+  machine); at `N=8` up to ~52GB (explains surviving longer on a 64GB machine before an unlucky coincidence of
+  concurrent expiries pushed it over).
+- This means naively scaling `MACHINE_TYPE` up is not a viable mitigation path in general — it only buys a probabilistic
+  delay, not a bound. The only mitigation that changes the WORST-CASE bound (not just the observed odds of hitting it)
+  is reducing `--workers` low enough that `N × 6.5GB` fits comfortably (e.g. `--workers 2` → ~13GB worst case, safe even
+  on a standard machine) — genuinely fixing this requires the single-flight/snapshot fix in item 2's P3 todo below.
+
 ## Todos
 
 - [ ] [INFRA] P2. Relaunch `mdps-sports-bucket` shard4's `full`-mode retry
-      (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) with `MACHINE_TYPE=e2-highmem-8`
-      and/or reduced `--workers` (e.g. `WORKERS=8`) to avoid the OOM documented above, then verify the manifest for the
-      26 residual dates (18 `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated,
-      live-reverified 2026-08-03 via `gcloud storage ls -r` showing the 4 dates still only have `instrument_type=sport`
-      meta-snapshot objects, zero real odds — and 4 `LOSS_GUARD_BLOCKED`). Repo: market-data-processing-service,
+      (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) with a LOW worker count
+      (`WORKERS=2`, per the thundering-herd analysis above — this bounds worst-case concurrent-reload memory to ~13GB,
+      not just delays the crash) on the default `e2-standard-8` (32GB is ample at that worker count); accept the
+      correspondingly slower wall-clock time. Verify the manifest for the 26 residual dates afterward (18
+      `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated, live-reverified 2026-08-03 via
+      `gcloud storage ls -r` showing the 4 dates still only have `instrument_type=sport` meta-snapshot objects, zero
+      real odds — and 4 `LOSS_GUARD_BLOCKED`). **Two prior attempts both OOM'd** (e2-standard-8/workers=16 at ~24/571;
+      e2-highmem-8/workers=8 at ~21/571) — do NOT retry with a similarly-high worker count again without first applying
+      this todo's `--workers 2` mitigation or item-2's code fix. Repo: market-data-processing-service,
       deployment-service.
 - [ ] [INFRA] P3. Design + fix `ManifestWriter`/`read_availability_index()`'s cache behavior so a long-running (>>60s),
       many-worker batch job doesn't repeatedly reload the full-schema manifest under concurrency — see "Recommended
-      decision" item 2's three candidate approaches. Add a regression/load test simulating a multi-cycle TTL-expiry run
-      under N concurrent callers, asserting peak RSS stays bounded. Repo: unified-trading-library.
+      decision" item 2's three candidate approaches, informed by the thundering-herd root cause confirmed above (no
+      single-flight lock around a cache-miss reload — candidate (c) is now the most directly-targeted fix). Add a
+      regression/load test simulating a multi-cycle TTL-expiry run under N concurrent callers, asserting peak RSS stays
+      bounded regardless of N. Repo: unified-trading-library.
