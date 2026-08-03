@@ -53,20 +53,39 @@ context_scope:
 
 # context_scout_source_hunting_gap_2026_08_03 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
-
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `context_scout_source_hunting_gap_2026_08_03.md`'s checkboxes** against whatever shipped
-      -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed (including that
-      todo 1's live demonstration actually surfaced the two named source paths, not just that the script ran), then run
-      the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any
-      CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the doc is
+- [x] ✅ [REVIEW] P2. **Reconcile `context_scout_source_hunting_gap_2026_08_03.md`'s checkboxes** against whatever
+      shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed
+      (including that todo 1's live demonstration actually surfaced the two named source paths, not just that the script
+      ran), then run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update
+      any CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the doc is
       fully closed. If real work remains after the AO-dispatched todos land, leave
       `context_scout_source_hunting_gap_2026_08_03.md` active (do not force-archive) and note what's still open here
-      instead.
+      instead. — unified-trading-pm@f55f78f4e, @59e83e2b7. Re-verified all 4 source-doc todos against real evidence (not
+      trusted at face value): confirmed the target tradfi_mdps doc's `context_scope` genuinely carries the 2 new
+      source-path entries (5 total) cited by item 1; confirmed
+      `scripts/plan-hygiene/generate_context_scope_source_lint.py` exists and is wired into `SKILL.md`'s Phase 3 section
+      per item 3; confirmed the structured old-vs-new frontmatter/body diff replacing the line/bracket-scan heuristic
+      landed in `generate_context_scope_inventory.py` per item 4. No residual work found — 0 open todos, no lock. Ran
+      the 6-step archival ritual: (1) no un-migrated deferrals (item 2's scratchpad-script note already points at item 3
+      as its tracked follow-up, which is itself done); (2) `status: open` -> `resolved`, `resolved_by:` filled citing
+      all 4 landing commits, ARCHIVED banner added (unified-trading-pm@f55f78f4e); (3)-(4) codex-alignment check: no new
+      durable contract beyond what item 3 already shipped into `SKILL.md` Phase 3 — no CLAUDE.md/codex update needed;
+      (5) fixed both corpus referrers with a leading-slash path to the old location
+      (`cursor-configs/skills/context-scout/SKILL.md`'s confirmed-miss citation, and this doc's own `related:`/
+      `context_scope:`) — `plans/active/INDEX.md` doesn't list issue docs so it's unaffected, and the
+      `tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` mention is a bare filename in
+      prose, not a path link; (6) `git mv` to `plans/archive/issues/` (unified-trading-pm@59e83e2b7). Also removed this
+      finalize plan's stale body-level "STATUS: draft — NOT dispatched" banner, which contradicted the frontmatter
+      (`status: active` since dispatch) and was left over from authoring.
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-03**: authored alongside the source doc's RECLASSIFY flip (ao tranche run).
+- **2026-08-03 (slot 11, review craft)**: closed the only todo — source doc's 4 items were already all `[x]` with real
+  citations from 2 prior slots; independently re-verified each against the actual repo state (not the doc's own
+  self-report), found no residual work, and ran the 6-step archival ritual to move
+  `context_scout_source_hunting_gap_2026_08_03.md` to `plans/archive/issues/`. This finalize plan itself now has 0 open
+  todos and no lock — archiving it next per the plan-completion-and-archival-discipline "archive immediately" rule
+  (separate commit from this checkbox flip, per RULES.md's never-combine-flip-with-mv rule).
