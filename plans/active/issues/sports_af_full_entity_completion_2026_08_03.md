@@ -155,9 +155,14 @@ not urgent enough to block this campaign.
       (`instruments-service@5db692db`); applied, confirmed via live manifest read (all 8,780 LEAGUES rows =
       `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`, zero `captured`). Census script corrected to 4 entities. Not in
       scope, no LEAGUES backfill will be launched. See "RESOLVED" section above.
-- [ ] [SCRIPT] P1. **Launch FIXTURE_STATS all-leagues backfill** (`--entity FIXTURE_STATS 2020-06-06 <today>`, daily
-      stop-at-quota-exhaustion/resume-at-reset per operator's 2026-07-31 ruling) once the FIXTURE_EVENTS pass-3
-      singleton lock clears. Already-staged census: `census_fixture_stats_lineups_widening_volume_2026_07_31.py`.
+- [x] ✅ [SCRIPT] P1. **Launch FIXTURE_STATS all-leagues backfill** — CONFIRMED RUNNING 2026-08-03: VM
+      `af-backfill-20260803-233053` (launched by `unified-trading-sa`, `purpose=api-football-backfill`,
+      `managed-by=deployment-service`), metadata confirms
+      `entity=FIXTURE_STATS source=API_FOOTBALL     start_date=2020-06-06`. FIXTURE_EVENTS pass-3 singleton lock had
+      cleared (it is the only `af-backfill-*`/ `af-audit-*` VM RUNNING — the prior three are TERMINATED). `run.log`
+      shows healthy per-fixture progress (`[[VM_PROGRESS]] last_completed_date=2020-06-13→2020-06-14`, manifest writes,
+      correct rate-limit backoff handling). No duplicate VM launched — a second concurrent AF-consuming VM would violate
+      the shared singleton lock / quota.
 - [ ] [SCRIPT] P1. **Launch FIXTURE_LINEUPS all-leagues backfill** the same way, after FIXTURE_STATS converges.
 - [ ] [SCRIPT] P1. **Launch PLAYER_STATS MVP-96 backfill** (`--entity PLAYER_STATS 2020-06-06 <today>`) once the
       singleton lock frees up — 17,440 needed shards, same MVP scope as FIXTURE_EVENTS (worth checking this entity's
