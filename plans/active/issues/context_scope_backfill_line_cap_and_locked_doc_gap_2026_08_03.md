@@ -89,8 +89,8 @@ across every future incremental inventory run.
 
 # Plan
 
-- [ ] [SCRIPT] P2. **Trim or split each of the 6 exactly-1000L docs, then re-apply their pre-computed `context_scope`
-      (below).** Preferred approach per this corpus's own precedent
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-12).** Trim or split each of the 6 exactly-1000L docs, then re-apply their
+      pre-computed `context_scope` (below).** Preferred approach per this corpus's own precedent
       (`mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md`, cited by one of this session's own
       scouting agents as the sanctioned pattern): extract a completed/historical Progress Log section into
       `plans/archive/` (status: complete / nature: record docs are unbounded by the cap by design — see
@@ -231,3 +231,15 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   `NEVER_SCOUTED` docs' scouting output could not ship due to the 1000-line hard cap or a `locked_by:` field. See
   `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` Progress Log for that session's full ship record (66/78
   docs shipped clean, `unified-trading-pm@00037ae0c`).
+- **2026-08-03 (slot-12) — DONE.** Trimmed all 6 exactly-1000L docs per the extraction pattern (completed/historical
+  Progress Log entries moved verbatim to a new `plans/archive/2026_08/<doc>_progress_log_history_2026_08_03.md`
+  companion per doc, a pointer note left in place, Todos sections untouched), then re-applied each doc's pre-computed
+  `context_scope` (verified every path still resolves on disk before applying) and bumped `last_updated`. Result line
+  counts (all well under the 1000L cap, no todo dropped): `ao_open_issues_consolidated_close_out_2026_07_17.md`
+  1000→877L, `data_completion_cefi_2026_07_15.md` 1000→801L, `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
+  1000→866L, `data_completion_to_100_all_ag_2026_06_21.md` 1000→778L (a 3rd remediation pass on this doc — the extracted
+  47 entries were themselves already-folded-out stub pointers left over from a 2026-07-24 fold-out, no primary content
+  lost), `instruments_completion_tracker_2026_07_06.md` 1000→697L. Verified each with
+  `bash scripts/plan-hygiene/check_line_caps.sh <path>` (scoped mode, all ✅ within cap) and `check_frontmatter.sh`/YAML
+  parse (all clean). Full quality-gates.sh run clean (warn-only findings unrelated to this change). Checkbox flipped
+  here.

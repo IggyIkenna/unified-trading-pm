@@ -27,6 +27,7 @@ related:
     /plans/archive/2026_07/data_completion_to_100_all_ag_history_2026_07_24.md,
     /plans/archive/2026_07/data_completion_to_100_all_ag_history2_2026_07_24.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/data_completion_to_100_all_ag_history3_2026_08_03.md,
   ]
 created: 2026-06-21
 parent_epic: mtds_mdps_master
@@ -36,12 +37,20 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated: 2026-07-24 # (was: 2026-07-14 -- plan line-cap remediation split 2026-07-24: 2 still-inline folded-in 2026-06-01-era sections extracted to new plans (legacy_bucket_dual_write_decommission_2026_07_24, data_source_provenance_enforcement_2026_07_24); per-AG historical Progress Log entries folded into the cefi/defi/tradfi 2026-07-15 siblings; new sports parity sibling data_completion_sports_2026_07_24 created; locked_by cleared per operator approval, plan_line_cap_remediation_2026_07_23.md) -- FOLLOW-UP 2026-07-24: parent still ~2303 lines after that split (over the 2000-line umbrella cap); verified the 2 still-inline folded sections were already correctly present in their children (legacy_bucket_dual_write_decommission_2026_07_24, data_source_provenance_enforcement_2026_07_24, both verbatim, confirmed by re-read); extracted the remaining fully-completed 2026-06-21..06-24 Progress Log narrative (492 lines, 14 completed todos, 0 open todos) VERBATIM into new plans/active/data_completion_to_100_all_ag_history_2026_07_24.md (status: complete, nature: record, archive-bound) to bring the parent to 1819 lines -- (that file was independently archived to plans/archive/2026_07/ by a later session; related: corrected here) -- FOLLOW-UP-2 2026-07-24: the operator removed the umbrella-exemption entirely (flat 1000L cap for plans/active/*.md, 2000L for plans/epics/*.md, no free pass) and the parent was still ~1820 lines; ran a 2nd extraction pass: (1) the sports-specific "Live/forward data-availability matrix + source-latency validation" section (249L, 2 open todos) moved VERBATIM to new active companion plans/active/sports_live_availability_and_source_latency_2026_07_24.md (kept separate from data_completion_sports_2026_07_24.md, which had no headroom left under its own cap); (2) 4 fully-closed cross-cutting narrative blocks (12-hour sharding strategy note, Wave-1 verify findings, the full asset_group-blank-writer-bug saga, and the 2026-07-13/07-14 GCS bucket-estate cleanup sessions -- minus 3 still-open follow-up todos kept inline) moved VERBATIM to new archive-bound plans/active/data_completion_to_100_all_ag_history2_2026_07_24.md. Parent brought to 943 lines; checkbox-count conservation verified (101 before == 44 parent + 49 history2 + 8 sports-companion after).
+last_updated: 2026-08-03 # line-cap remediation split (3rd pass) -- extracted 47 already-folded-out 06-21/22/24 stub pointers to history3 archive doc; context_scope backfilled. Prior history: (was: 2026-07-14 -- plan line-cap remediation split 2026-07-24: 2 still-inline folded-in 2026-06-01-era sections extracted to new plans (legacy_bucket_dual_write_decommission_2026_07_24, data_source_provenance_enforcement_2026_07_24); per-AG historical Progress Log entries folded into the cefi/defi/tradfi 2026-07-15 siblings; new sports parity sibling data_completion_sports_2026_07_24 created; locked_by cleared per operator approval, plan_line_cap_remediation_2026_07_23.md) -- FOLLOW-UP 2026-07-24: parent still ~2303 lines after that split (over the 2000-line umbrella cap); verified the 2 still-inline folded sections were already correctly present in their children (legacy_bucket_dual_write_decommission_2026_07_24, data_source_provenance_enforcement_2026_07_24, both verbatim, confirmed by re-read); extracted the remaining fully-completed 2026-06-21..06-24 Progress Log narrative (492 lines, 14 completed todos, 0 open todos) VERBATIM into new plans/active/data_completion_to_100_all_ag_history_2026_07_24.md (status: complete, nature: record, archive-bound) to bring the parent to 1819 lines -- (that file was independently archived to plans/archive/2026_07/ by a later session; related: corrected here) -- FOLLOW-UP-2 2026-07-24: the operator removed the umbrella-exemption entirely (flat 1000L cap for plans/active/*.md, 2000L for plans/epics/*.md, no free pass) and the parent was still ~1820 lines; ran a 2nd extraction pass: (1) the sports-specific "Live/forward data-availability matrix + source-latency validation" section (249L, 2 open todos) moved VERBATIM to new active companion plans/active/sports_live_availability_and_source_latency_2026_07_24.md (kept separate from data_completion_sports_2026_07_24.md, which had no headroom left under its own cap); (2) 4 fully-closed cross-cutting narrative blocks (12-hour sharding strategy note, Wave-1 verify findings, the full asset_group-blank-writer-bug saga, and the 2026-07-13/07-14 GCS bucket-estate cleanup sessions -- minus 3 still-open follow-up todos kept inline) moved VERBATIM to new archive-bound plans/active/data_completion_to_100_all_ag_history2_2026_07_24.md. Parent brought to 943 lines; checkbox-count conservation verified (101 before == 44 parent + 49 history2 + 8 sports-companion after).
 locked_by:
 locked_since:
 supersedes: path_to_100pct_backfill_mtds_is_2026_06_17
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+  ]
 source:
 drift_direction: advance-code
 ---
@@ -122,19 +131,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                                                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                                                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                                                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                                                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                                                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                                                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                                                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                                                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                                                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                                                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                                                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                                                                  > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                                                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                                                      > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                                                      > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                                                      > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                                                      > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                                                      > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                                                      > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                                                      > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                                                      > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                                                      > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                                                      > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                                                      > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                                                      > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                                                      > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -476,243 +485,11 @@ exclusions remain in this loop's termination criteria. [SYNCED 2026-07-14, findi
 > analysis) moved VERBATIM to that archive-bound history record — every checkbox there was already `[x]`, none open,
 > nothing dropped or reworded. Read it for the full narrative; this plan keeps only the still-live Progress Log below.
 
-### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + UTL asset_group writer fix COMPLETED+SHIPPED
-
-> **Moved to `data_completion_to_100_all_ag_history2_2026_07_24.md` § (line-cap remediation follow-up, 2026-07-24
-> fold-in, verbatim).** Two dated sub-entries (14:36 per-AG re-stamp, 14:15 UTL asset_group writer fix + the deferred
-> no-blank-asset_group QG ratchet todo, already `[x]`) moved together; nothing dropped or reworded.
-
-### 2026-06-22 13:25 — SPORTS COMPLETION TARGET: ~2026-06-23/24
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 ~13:45 — P1 fix DRAFTED-BUT-INCOMPLETE + P0 scheduler PAUSED + P1 LIVE manifest-writer asset_group bug ROOT CAUSE PINNED
-
-> **Moved to `data_completion_to_100_all_ag_history2_2026_07_24.md` § (line-cap remediation follow-up, 2026-07-24
-> fold-in, verbatim).** Every checkbox in this entry was already `[x]`; nothing dropped or reworded.
-
-### 2026-06-22 13:10 — TM/FS unbounded-HTTP HANG fixed; ETA + hang-detection codified
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 ~12:55 — ✅ TM+FootyStats UNBOUNDED-HTTP HANG fixed (uninherited path) + tarball + relaunch — instruments-service@dcf87f5
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 — empty_confirmed-integrity fix PHASE 2 — manifest DELETE applied + canonical gas reseed (REVERSIBLE, VERIFIED)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 10:55 — API-Football stopped = COMPLETED-not-stalled, BUT real 2026 gap found + now fetching
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 10:05 — memory fix HELD; enrichment 2nd-pass + SFI complete; one relaunch blocked on foreign WIP
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 06:30 — honest-cov is UNDERSTATED fleet-wide: ~1M phantom expected_unattempted (operator caught it on weather)
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 06:05 — wake-fix codified; 300k/day in use; TM/SFI/FootyStats OOM ROOT-CAUSED + fixed
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 05:40 — defi fan-out: 14 new year-sharded VMs launched (dex-pools/swaps/liquidations/lending gaps)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 05:25 — overnight result: 3 sources OOM-crashed (e2-standard-2 too small); relaunched e2-standard-8
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-24 ~05:35 — DIAGNOSIS (no code bug): golden FIXTURE_LINEUPS captured flat because the running backfill uses `--force` (re-fetch already-captured cells)
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 22:55 — skip-fresh verified all sources; odds re-fetch FIXED; 2 follow-ups
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 22:40 — DISPARATE-SOURCE CONCURRENCY (operator insight): all fixture-driven sources fired in parallel
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 ~22:00 — tradfi `live_databento` source-stamp FIXED + 2 manifest cleanups actioned
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 22:00 — "finish the current": parallelized for speed; honest completion picture
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 21:40 — ODDS API UPGRADED (blocker RESOLVED) + API-Football rate analysis
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — SPORTS lane: enrichment OOM fix + final autonomous state
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — SPORTS lane STATE SNAPSHOT (autonomous, operator away 2h) — for context-compression resume
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
-
-> **Moved to `data_completion_cefi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-CeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — SPORTS lane (/autonomous, Opus): odds flowing; API-Football credential block + silent-empty bug FIXED
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: FULL FAN-OUT LAUNCHED + real root-cause of catalog blocker FIXED
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: blocker fixes IN FLIGHT — full dependency chain mapped
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — SPORTS lane: RATE-LIMIT root-caused + fixed (operator: "only ~1k req/hr vs 1.2k/min — way too slow")
-
-> **Moved to `data_completion_sports_2026_07_24.md` § Progress Log (2026-07-24 fold-in, verbatim, per-Sports-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane (/autonomous, Opus): bucket bug is FLEET-WIDE across defi handlers
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — CEFI lane (/autonomous, Opus): triage measured + live-path diagnosed
-
-> **Moved to `data_completion_cefi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-CeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: bucket fix SHIPPED + PROOF found 2 more blockers (gating the fan-out)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — TRADFI lane: launcher bugs diagnosed + fixed; CME-2026 canary verifying
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 15:18 — TRADFI batch fan-out LIVE + PROVEN (15 VMs capturing)
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 15:42 — TRADFI lane: ALL 3 dispatch items launched/done
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 16:25 — ohlcv_1s added (CME+CBOE only; equities don't support it)
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 16:40 — CME event contracts (binary/event markets) — IS + MTDS
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 17:49 — TRADFI LIVE producer launched (live_databento; live==batch)
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: RE-SEQUENCED per operator (IS→100%→rollup→MTDS) + real hang root-cause
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 17:55 — TRADFI live_databento: diagnosed (3 bugs + subscription unknown) — FLAGGED not stomped
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: CATALOG GATE OPEN — capturing real data; full fan-out relaunched
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 19:40 — TRADFI honest-cov re-measured: 5.3% → 13.8% (captured TRIPLED), still climbing
-
-> **Moved to `data_completion_tradfi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-TradFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI lane: capturing works, but honest-cov BLOCKED by venue-format mismatch in expected_unattempted seeding
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-21 — DEFI honest-cov fix LANDED (root-cause in code) + codified
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 05:25 — DEFI status + gas-fees MANTLE BLOCKED-CREDENTIALS
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 07:50 — DEFI lane DONE (fetchable gap closed) + deferred follow-ups
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 12:40 — DEFI REGRESSION found + fixed: stale-enumerator-build re-seeded 1.44M LEGACY-venue phantoms
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
-
-> **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-
-## Sports honest-coverage is ARTIFICIALLY LOW — denominator over-seed (GROUND-TRUTH VERIFIED 2026-06-23)
+> **➡️ EXTRACTED 2026-08-03 →
+> [`data_completion_to_100_all_ag_history3_2026_08_03`](/plans/archive/2026_08/data_completion_to_100_all_ag_history3_2026_08_03.md)**
+> (line-cap remediation). 47 further 2026-06-21/22/24-dated stub entries that used to follow this note (each already
+> just a "Moved to `<sibling>`" pointer left over from the 2026-07-24 fold-out — no primary content) moved VERBATIM, to
+> bring this doc back under the 1000-line hard cap. Nothing dropped or reworded.
 
 > **➡️ SPLIT OUT 2026-07-24 → [`data_completion_sports_2026_07_24`](./data_completion_sports_2026_07_24.md)** (plan
 > line-cap remediation, sports parity-sibling creation, operator-approved — sports never got a 2026-07-15 split like

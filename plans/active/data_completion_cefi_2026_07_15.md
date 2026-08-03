@@ -14,7 +14,11 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, cefi, data-correctness]
-related: [/plans/active/data_completion_to_100_all_ag_2026_06_21.md]
+related:
+  [
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/archive/2026_08/data_completion_cefi_progress_log_history_2026_08_03.md,
+  ]
 created: 2026-07-15
 parent_epic: manifest_master
 assigned_vm: planning
@@ -23,12 +27,20 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-29 # (was: 2026-07-28 deployment-api pipeline_mode dedup+drilldown-filter verified already-shipped, slot-16 -- consolidated 3 overlapping E4-E8 todos into cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md, slot-4; then: 2026-07-29 real cefi candle-coverage gap todo closed via live manifest verification, slot-12; now: 2026-07-29 instruments-store-cefi-prd v8->v9 single-walk todo verified GREEN live, blank-data_type residual filed as its own follow-up, slot-4)
+last_updated: 2026-08-03 # line-cap remediation split -- extracted 06-21/07-27/07-28 corroborating-audit Progress Log history to the archive doc above; context_scope backfilled
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_cefi_manifest.py,
+    unified-trading-library/unified_trading_library/manifest_writer,
+  ]
 assigned_role: data_engineering
 source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, plan-reconcile §8 operator ruling A]
 drift_direction: advance-code
@@ -260,18 +272,18 @@ MTDS consolidation ruling.)**
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
 
       **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
-                                                                                                                                          (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
-                                                                                                                                          `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
-                                                                                                                                          other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
-                                                                                                                                          evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
-                                                                                                                                          dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
-                                                                                                                                          (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
-                                                                                                                                          Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-                                                                                                                                          then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-                                                                                                                                          then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-                                                                                                                                          legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-                                                                                                                                          chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-                                                                                                                                          2026-07-13 per MTDS consolidation ruling.)**
+                                                                                                                                              (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+                                                                                                                                              `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+                                                                                                                                              other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+                                                                                                                                              evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+                                                                                                                                              dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+                                                                                                                                              (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+                                                                                                                                              Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+                                                                                                                                              then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+                                                                                                                                              then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+                                                                                                                                              legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+                                                                                                                                              chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+                                                                                                                                              2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -341,10 +353,10 @@ MTDS consolidation ruling.)**
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-                                                                                                                                              (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-                                                                                                                                              when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-                                                                                                                                              completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-                                                                                                                                              No checkbox flip — criteria still unmet pending that re-run's result.
+                                                                                                                                                  (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                                                                                                                                                  when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                                                                                                                                                  completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                                                                                                                                                  No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [x] ✅ [DECISION] P0. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
       `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase B, which explicitly states
@@ -619,68 +631,68 @@ MTDS consolidation ruling.)**
       with the raised cap and monitor to completion before flipping this checkbox.
 
       **`BLK-708e678d` ANSWERED (2026-07-29, main agent) — Option B: investigate before raising the cap.** Do NOT
-                                                                          raise `--max-writes-per-run` and write 1,000,001 rows on a plausibility hunch — a wrong `expected_unattempted`
-                                                                          seed corrupts ALL downstream coverage math. Three checks required before any re-launch: (1) confirm whether
-                                                                          1,000,001 is the TRUE candidate total or just `cap+1` (many launchers stop counting AT the brake — the real
-                                                                          total could be far larger than what was reported); (2) sample candidate rows to confirm they are genuinely
-                                                                          DISTINCT could-exist cells (instrument×data_type×date), not duplicates or a join/cross-product bug; (3)
-                                                                          reconcile against the expected math (429,518 catalog × ~7 data_types × the multi-year date axis, minus the
-                                                                          8.77M present-set) — if the validated total is much larger than 1M, seed via date-windowed batches
-                                                                          (`ENUM_START_DATE`/`ENUM_END_DATE`) with a per-window count that can be verified, NOT one giant cap raise. Only
-                                                                          once the count is validated-correct does raising the cap become a clean call. **Not yet done this session**
-                                                                          (context checkpoint hit before this investigation could run) — next session picks up here: run the 3 checks
-                                                                          above against `enum-universe-cefi-20260729-150106` (the run_id from the halted VM's own
-                                                                          `ENUMERATOR_FAILED` event) before touching `--max-writes-per-run` at all.
+                                                                              raise `--max-writes-per-run` and write 1,000,001 rows on a plausibility hunch — a wrong `expected_unattempted`
+                                                                              seed corrupts ALL downstream coverage math. Three checks required before any re-launch: (1) confirm whether
+                                                                              1,000,001 is the TRUE candidate total or just `cap+1` (many launchers stop counting AT the brake — the real
+                                                                              total could be far larger than what was reported); (2) sample candidate rows to confirm they are genuinely
+                                                                              DISTINCT could-exist cells (instrument×data_type×date), not duplicates or a join/cross-product bug; (3)
+                                                                              reconcile against the expected math (429,518 catalog × ~7 data_types × the multi-year date axis, minus the
+                                                                              8.77M present-set) — if the validated total is much larger than 1M, seed via date-windowed batches
+                                                                              (`ENUM_START_DATE`/`ENUM_END_DATE`) with a per-window count that can be verified, NOT one giant cap raise. Only
+                                                                              once the count is validated-correct does raising the cap become a clean call. **Not yet done this session**
+                                                                              (context checkpoint hit before this investigation could run) — next session picks up here: run the 3 checks
+                                                                              above against `enum-universe-cefi-20260729-150106` (the run_id from the halted VM's own
+                                                                              `ENUMERATOR_FAILED` event) before touching `--max-writes-per-run` at all.
 
-                                                                  **Investigation resumed (2026-07-29T15:1x-15:2xZ, slot 6) — check #1 CONFIRMED + a bigger reframing found.**
-                                                                  (1) Read the enumerator source directly (`enumerate_expected_universe.py:4310-4334`): the halt-safety check runs
-                                                                  **inside** the per-row accumulation loop (`if len(v2_absent) > max_writes_per_run: ... return 5`), so it breaks
-                                                                  the instant the count exceeds the cap — `1,000,001` is confirmed **`cap+1`, NOT the true total**, exactly the
-                                                                  operator's red flag. There is real precedent for exactly this pattern: a 2026-07-14 tradfi CME-OPTION run hit
-                                                                  the same 1M brake and the root cause was a genuine 3x over-fan bug (un-narrowed `data_types`), fixed by
-                                                                  narrowing the emission, not by raising the cap (see the code comment at line ~790). (2)/(3) **Bigger finding
-                                                                  that reframes the whole approach**: my VM launch used the enumerator's BARE DEFAULTS
-                                                                  (`--start-date` default `2018-01-01` = the full 8-year history, `--max-writes-per-run` default `1,000,000` from
-                                                                  the launcher script) — but the ALREADY-WORKING `expected-universe-v2-cefi-daily` Cloud Run Job (the one that ran
-                                                                  successfully every day 07-25 through 07-28 before the Cloud Build breakage) is configured with **`--start-date
-                                                                  2026-02-20` (a ~5-month trailing window, not full history) and `--max-writes-per-run 50000000`**
-                                                                  (`gcloud run jobs describe expected-universe-v2-cefi --region=asia-northeast1
-                                                                  --format='value(spec.template.spec.template.spec.containers[0].args)'`). cefi already has an existing full seed
-                                                                  (4.1M rows, run around 2026-06-21 per this doc's own earlier note) that the daily job has been incrementally
-                                                                  refreshing since 2026-06-19 — my full-2018-history launch was redundantly re-scanning 8 years of ALREADY-SEEDED
-                                                                  history with a 50x-too-low cap, an apples-to-oranges mismatch against the proven-working daily config, not a
-                                                                  sign of a real data problem. **Launched a `--scan-only` diagnostic** (`expected-universe-v2-cefi-20260729-151931`,
-                                                                  `--max-writes-per-run 50000000`, same full-2018 default window) purely to get the TRUE raw candidate count for
-                                                                  completeness (satisfies check #1/#2 empirically) — running, not yet terminal at last check. **Revised next
-                                                                  step, once the scan-only count is in**: relaunch `--apply-write` matching the daily job's OWN validated params
-                                                                  (`--start-date 2026-02-20`, default end-date=today) rather than the full-history default — this is the
-                                                                  apples-to-apples comparison that should complete cleanly under 1M candidates (it does every day in production),
-                                                                  confirming the mechanism is healthy without needing any cap increase or a redundant full-history reseed. Do NOT
-                                                                  raise `--max-writes-per-run` on the full-2018-history invocation — that was simply the wrong invocation for an
-                                                                  already-seeded asset_group, not a case that needs a bigger cap.
+                                                                      **Investigation resumed (2026-07-29T15:1x-15:2xZ, slot 6) — check #1 CONFIRMED + a bigger reframing found.**
+                                                                      (1) Read the enumerator source directly (`enumerate_expected_universe.py:4310-4334`): the halt-safety check runs
+                                                                      **inside** the per-row accumulation loop (`if len(v2_absent) > max_writes_per_run: ... return 5`), so it breaks
+                                                                      the instant the count exceeds the cap — `1,000,001` is confirmed **`cap+1`, NOT the true total**, exactly the
+                                                                      operator's red flag. There is real precedent for exactly this pattern: a 2026-07-14 tradfi CME-OPTION run hit
+                                                                      the same 1M brake and the root cause was a genuine 3x over-fan bug (un-narrowed `data_types`), fixed by
+                                                                      narrowing the emission, not by raising the cap (see the code comment at line ~790). (2)/(3) **Bigger finding
+                                                                      that reframes the whole approach**: my VM launch used the enumerator's BARE DEFAULTS
+                                                                      (`--start-date` default `2018-01-01` = the full 8-year history, `--max-writes-per-run` default `1,000,000` from
+                                                                      the launcher script) — but the ALREADY-WORKING `expected-universe-v2-cefi-daily` Cloud Run Job (the one that ran
+                                                                      successfully every day 07-25 through 07-28 before the Cloud Build breakage) is configured with **`--start-date
+                                                                      2026-02-20` (a ~5-month trailing window, not full history) and `--max-writes-per-run 50000000`**
+                                                                      (`gcloud run jobs describe expected-universe-v2-cefi --region=asia-northeast1
+                                                                      --format='value(spec.template.spec.template.spec.containers[0].args)'`). cefi already has an existing full seed
+                                                                      (4.1M rows, run around 2026-06-21 per this doc's own earlier note) that the daily job has been incrementally
+                                                                      refreshing since 2026-06-19 — my full-2018-history launch was redundantly re-scanning 8 years of ALREADY-SEEDED
+                                                                      history with a 50x-too-low cap, an apples-to-oranges mismatch against the proven-working daily config, not a
+                                                                      sign of a real data problem. **Launched a `--scan-only` diagnostic** (`expected-universe-v2-cefi-20260729-151931`,
+                                                                      `--max-writes-per-run 50000000`, same full-2018 default window) purely to get the TRUE raw candidate count for
+                                                                      completeness (satisfies check #1/#2 empirically) — running, not yet terminal at last check. **Revised next
+                                                                      step, once the scan-only count is in**: relaunch `--apply-write` matching the daily job's OWN validated params
+                                                                      (`--start-date 2026-02-20`, default end-date=today) rather than the full-history default — this is the
+                                                                      apples-to-apples comparison that should complete cleanly under 1M candidates (it does every day in production),
+                                                                      confirming the mechanism is healthy without needing any cap increase or a redundant full-history reseed. Do NOT
+                                                                      raise `--max-writes-per-run` on the full-2018-history invocation — that was simply the wrong invocation for an
+                                                                      already-seeded asset_group, not a case that needs a bigger cap.
 
-                                                              **✅ DONE (2026-07-29T15:29Z, slot 6, data_engineering)** — relaunched matching the daily job's own proven params
-                                                              (`ENUM_START_DATE=2026-02-20 bash launch-expected-universe-v2-vm.sh cefi --apply-write 50000000`):
-                                                              `expected-universe-v2-cefi-20260729-152546` completed cleanly, `exit_code=0`, no safety-halt.
-                                                              `ENUMERATOR_COMPLETED candidates=410363 written=410363 elapsed_secs=0.7`. Distribution:
-                                                              `EXPECTED_INSTRUMENT_NOT_LISTED=285940 / EXPECTED_INSTRUMENT_DELISTED=95406 / expected_unattempted(blank
-                                                              reason)=17571 / EXPECTED_PRE_SOURCE_COVERAGE_START=10024 / EXPECTED_PRE_VENUE_LAUNCH=1422` — well under the 1M
-                                                              cap, confirming the earlier halt was purely a scope mismatch (full-2018-history vs. the daily job's 5-month
-                                                              window), never a data bug. Verified the write directly against the per-VM shard
-                                                              (`gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/expected-universe-v2-cefi-20260729-152546.parquet`):
-                                                              410,363 rows, 7,061 distinct instrument_ids, all 9 cefi `data_types` represented, `capture_status` split
-                                                              `empty_confirmed=392792` / `expected_unattempted=17571` — genuinely distinct could-exist cells (operator check
-                                                              #2 satisfied), matching the mechanism's designed grain (same regression test's assertions). Consolidator merges
-                                                              this per-VM shard into the canonical `_index` within ~5min of completion per its own standard flow (not
-                                                              separately re-verified post-merge — the per-VM shard write itself, with `exit_code=0` and the manifest-writer's
-                                                              own oscillation guard already active during the run, is the durable evidence this todo's done-when calls for).
-                                                              **Done-when satisfied**: catalog built+verified fresh ✅; `--apply-write` run against canonical `_index` ✅
-                                                              (`instruments-service` current code, via VM launcher, Cloud Build separately tracked as broken —
-                                                              `issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`); row-key/data_types confirmed
-                                                              matching the cefi captured atom ✅ (pre-existing 3.6M+ `expected_unattempted` rows + this run's clean 9-data_type
-                                                              distribution); regression test added ✅ (`instruments-service@1a31edc7`). Evidence:
-                                                              `instruments-service@1a31edc7` (regression test) + VM run `enum-universe-cefi-20260729-152822` /
-                                                              `expected-universe-v2-cefi-20260729-152546` (exit_code=0, 410,363 rows written).
+                                                                  **✅ DONE (2026-07-29T15:29Z, slot 6, data_engineering)** — relaunched matching the daily job's own proven params
+                                                                  (`ENUM_START_DATE=2026-02-20 bash launch-expected-universe-v2-vm.sh cefi --apply-write 50000000`):
+                                                                  `expected-universe-v2-cefi-20260729-152546` completed cleanly, `exit_code=0`, no safety-halt.
+                                                                  `ENUMERATOR_COMPLETED candidates=410363 written=410363 elapsed_secs=0.7`. Distribution:
+                                                                  `EXPECTED_INSTRUMENT_NOT_LISTED=285940 / EXPECTED_INSTRUMENT_DELISTED=95406 / expected_unattempted(blank
+                                                                  reason)=17571 / EXPECTED_PRE_SOURCE_COVERAGE_START=10024 / EXPECTED_PRE_VENUE_LAUNCH=1422` — well under the 1M
+                                                                  cap, confirming the earlier halt was purely a scope mismatch (full-2018-history vs. the daily job's 5-month
+                                                                  window), never a data bug. Verified the write directly against the per-VM shard
+                                                                  (`gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/expected-universe-v2-cefi-20260729-152546.parquet`):
+                                                                  410,363 rows, 7,061 distinct instrument_ids, all 9 cefi `data_types` represented, `capture_status` split
+                                                                  `empty_confirmed=392792` / `expected_unattempted=17571` — genuinely distinct could-exist cells (operator check
+                                                                  #2 satisfied), matching the mechanism's designed grain (same regression test's assertions). Consolidator merges
+                                                                  this per-VM shard into the canonical `_index` within ~5min of completion per its own standard flow (not
+                                                                  separately re-verified post-merge — the per-VM shard write itself, with `exit_code=0` and the manifest-writer's
+                                                                  own oscillation guard already active during the run, is the durable evidence this todo's done-when calls for).
+                                                                  **Done-when satisfied**: catalog built+verified fresh ✅; `--apply-write` run against canonical `_index` ✅
+                                                                  (`instruments-service` current code, via VM launcher, Cloud Build separately tracked as broken —
+                                                                  `issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`); row-key/data_types confirmed
+                                                                  matching the cefi captured atom ✅ (pre-existing 3.6M+ `expected_unattempted` rows + this run's clean 9-data_type
+                                                                  distribution); regression test added ✅ (`instruments-service@1a31edc7`). Evidence:
+                                                                  `instruments-service@1a31edc7` (regression test) + VM run `enum-universe-cefi-20260729-152822` /
+                                                                  `expected-universe-v2-cefi-20260729-152546` (exit_code=0, 410,363 rows written).
 
 - [x] ✅ [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk — VERIFIED GREEN 2026-07-29 (slot-4,
       data_engineering), live re-run.** Ran `unified_trading_library.cf_manifest_audit.audit()` live, read-only,
@@ -718,222 +730,11 @@ MTDS consolidation ruling.)**
 > operator-approved) — every CeFi-lane-tagged dated entry, moved verbatim, in original chronological order. M-1 retains
 > the cross-cutting/multi-AG entries; read M-1's Progress Log too for the full program-level narrative.
 
-### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
-
-First-ever operational live MTDS launch crashed: `NotFound: 404 … market-tick-data-service-events`. UTL
-`_sink_factory.py:44` derives the live lifecycle topic `f"{service_name}-events"` but terraform/enum canonical is the
-shared `service-lifecycle-events` → the per-service topic never existed (live mode has NEVER run on any AG → latent
-fleet-wide). **Created `market-tick-data-service-events`** (unblocks live MTDS for ALL asset groups — one service) +
-relaunched `mtds-live-cefi-hyperliquid-trades-20260621-151424`. Systemic fix (UTL sink → `service-lifecycle-events`, or
-terraform per-service topics; also hits MDPS/features/strategy/execution live) filed:
-`plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Also handled (this lane): shared-tree collisions
-(a sync transiently baked my uncommitted setup-vm edit into the GCS startup script → 1st VM a no-op dud; fixed GCS to
-clean efdb9df + redeployed) + reconciled to the concurrent live-wiring commit deployment-service@efdb9df.
-
-Coverage snapshot above (measured, not memory). Kalshi seed VM re-launched (runner set-u fix mtds@74e228c). Fleet
-launch + monitoring loop starting (this plan is the path-to-100% plan-of-record).
-
-### 2026-06-21 — CEFI lane (/autonomous, Opus): triage measured + live-path diagnosed
-
-Measured cefi from consolidated v9 `_index` (3.87M rows; cov 33.9% = 1.31M cap / 1.28M empty / 802k failed / 482k
-unatt). **802k failed triage (measured):** source=tardis 753,341 + 22,519 `batch_tardis` phantoms = **775,860
-Tardis-gated (96.7%)** → historical re-fetch is billing-gated (operator EXCLUDED) → BLOCKED-CREDENTIALS. Free-venue
-re-fetchable = hyperliquid 30,835 + aster 17,675 = **48,510** (native, no Tardis). Top `error_reasons`:
-`UNCLASSIFIED_ADAPTER_ERROR` 689,899 / `VENUE_FETCH_FAILED` 83,923 / `phantom_no_parquet` 22,700 / `HTTP_429` 3,652.
-**IS cefi VERIFIED 99.9% (36,062/36,084, all v9) — done.**
-
-**BIG FINDING — live path:** operator named `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` for the
-live stream, but BOTH run `--mode batch` → BILLED Tardis replay + `batch_<source>` rows (would violate the
-Tardis-billing exclusion AND not produce `live_<source>`). The genuine FREE live path =
-`launch-mtds-live.sh --asset-group cefi` (`--operation websocket-streaming --mode live`, real-time exchange-WS proxy; 18
-cefi connectors registered since the 2026-05-17 Phase 3.5 rollout — the handler's "registry empty at Phase 3.1"
-docstring is STALE).
-
-Gap: `setup-data-pipeline-vm.sh` has NO `live_websocket` branch (generic fall-through hardcodes `--mode batch`), and the
-handler needs `--shard-spec` + `--instrument-ids` + `streaming_redis_url`. **Plan: wire the live branch + local redis
-into setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0
-fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k
-Tardis-gated.
-
-### 2026-07-27 (slot-14, `data_engineering`) — dispatched the "NEXT SESSION — execute the migration" todo (line 195): STOPPED before executing, standing down
-
-Dispatched task `data_completion_cefi-009` targets the todo bundling: (1) an 8 year-sharded `--also-legacy --apply`
-gap-fill (5,233 legacy-only cells), (2) an irreversible corpus-wide orphan-sweep-delete, (3) E5 manifest rebuild, (4) E7
-verify, (5) E8 **permanent legacy-bucket delete** — as ONE dispatched unit (`est_hours: 1.0`). Did not execute any part
-of it. Reasons:
-
-1. **The todo's own text already says not to**: title is literally "NEXT SESSION — execute the migration", body ends
-   "NOT this session (irreversible)" — this is stale prose carried verbatim from
-   `cefi_manifest_canonicalisation_2026_06_01.md` (2026-06-01 era, migrated 2026-07-13) and was never meant to be picked
-   up as a single atomic dispatch.
-2. **A discovered, pre-existing, unambiguous cross-plan HARD RULE forbids step 5 (E8) right now**:
-   `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` line 134: "**Do NOT delete an AG's legacy bucket
-   while its L3 plan is open** — prediction/cefi hold legacy-only history." THIS plan (cefi's L3 plan) is
-   `status: active` with many other open P0 items beyond this one todo (⑦ catalog-path denominator build, the v8→v9
-   single-walk, E7 verify itself is its own separate unchecked item, several MDPS candle-coverage gaps) — it is not
-   C-GREEN, so E8 is structurally not permitted yet regardless of how steps 1-4 go.
-3. **Steps 1-4 are each independently VM-scale and irreversible-adjacent**: the doc's own text elsewhere describes the
-   legacy listing alone as having "stalled an e2-standard-4, so shard/bigger-mem" and explicitly calls this class of
-   work "**Deliberate execution (irreversible deletes + VM-scale) — not to be rushed**" (same doc, E4 item). An
-   8-year-sharded VM launch fleet + a full-corpus orphan-sweep delete + a manifest rebuild is not something to originate
-   and monitor to completion inside a single ~1-hour interactive dispatch, independent of the E8 gate.
-
-**Recommendation for whoever picks this up next**: this whole todo needs to be split into a properly-scoped, phased,
-VM-launched execution plan (matching the pattern used for the cefi Track-1/Track-2 migrations elsewhere this week), with
-the E8 delete as its own final, separately-gated step confirmed against
-`legacy_bucket_dual_write_decommission_2026_07_24.md`'s L3-open rule at execution time, not bundled into one dispatch.
-Did not flip this todo's checkbox. Filed the same finding via `/blocked` for operator awareness given the scale/stakes.
-
-### 2026-07-28 (slot-8, `data_engineering`) — "Post-walk" audit todo (line 247): re-ran the reusable audit tool live — RED, checkbox correctly NOT flipped (walk still hasn't run)
-
-Dispatched task `data_completion_cefi-012` = the "Post-walk: re-read the canonical `_index` DATA-STATE (re-run the
-reusable audit tool)" todo. Ran `unified_trading_library.cf_manifest_audit.audit()` (the reusable tool named by the
-todo) read-only, `mode=changed` (index-only, no GCS bulk walk — single-walk discipline), directly against both live cefi
-buckets, no `--apply`:
-
-- **`instruments-store-cefi-prd-central-element-323112`** (84,507 rows): CF-1/CF-3/CF-4/CF-5/CF-6/CF-8/CF-13/Era-B all
-  **GREEN** (v9=100%, source blank=0%, pipeline_mode populated=100%). Only CF-2-paths/CF-3-partition RED — the
-  `entity=fixtures` non-hive path already documented as a pre-existing, accepted schema characteristic (2026-07-12
-  finding-144 waiver, quoted above in this same file), not this todo's raw-tick concern.
-- **`market-data-tick-cefi-prd-central-element-323112`** (9,177,562 rows) — the bucket this todo's criteria actually
-  gate — is **still RED on exactly the criteria this checkbox names**: CF-1 v9=**97.4%** (8,943,353/9,177,562; not
-  100%), CF-4 source blank=**24.0%** (2,206,913/9,177,562; not "populated on every cell"), CF-3 pipeline_mode
-  populated=**98.6%** (126,228 blank; CF-3-partition segment itself IS present=GREEN), CF-8 available_at RED (a
-  pre-existing schema-evolution artifact per the same finding-144 waiver, not a fresh defect), Era-B RED (**490,332**
-  rows still carry legacy-form `data_type=options_chain/futures_chain` instead of the post-Era-B `trades` scheme, so not
-  yet 0). CF-13 (source-aware pipeline_mode form) is GREEN on the populated subset.
-
-**Verdict: the "100% of rows v9 / source populated on every cell / pipeline_mode non-blank" acceptance bar is NOT met.**
-This is not a new problem — it reconfirms, with fresh live numbers, the already-tracked fact (2026-07-27/28 entries
-above) that the actual walk this checkbox is "post-" (the C0(b)/(d) source+pipeline_mode riders, the E4 gap-fill/orphan
-sweep, the E5 rebuild) has **not executed yet** and remains blocked on the false-phantom itype/underlying-drift bug
-(`plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`). Did **not** flip this todo's
-checkbox — doing so on a RED audit would be fabricated progress. No new issue doc filed (these findings corroborate, not
-introduce, the already-open blocker). Whoever unblocks the walk should re-run this exact audit command afterward; if
-CF-1/CF-3/CF-4 all read GREEN and Era-B reads 0, that todo can then honestly flip.
-
-### 2026-07-28 (slot-6, `data_engineering`) — E7 Verify todo (line 359): re-ran the audit live — still RED, checkbox correctly NOT flipped
-
-Dispatched task `data_completion_cefi-017` = "E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` →
-CF-1…CF-12 GREEN on data-state; flip CF-coverage rows in `cefi_master_audit_instructions.md`". Ran
-`unified_trading_library.cf_manifest_audit.audit()` (the same reusable tool as the prior entry) directly in Python,
-read-only, `mode="changed"` (index-only, no GCS bulk walk — single-walk discipline preserved), against
-`market-data-tick-cefi-prd-central-element-323112` only (this todo's named target; `instruments-store-cefi-prd` was
-already confirmed GREEN on the relevant CFs in the entry immediately above and was not re-walked).
-
-Fresh live result (9,195,191 rows, up from 9,177,562 a few hours earlier — corpus still growing):
-
-- **CF-1** schema_version RED: v9=8,960,982/9,195,191 (97.5%; dist also carries 108,367 null + 63,226 `v6` + 924 `v5`).
-- **CF-3** pipeline_mode-populated RED: 9,068,963/9,195,191 (98.6%; 126,228 blank).
-- **CF-4** source RED: blank=2,206,880/9,195,191 (24.0%).
-- **CF-8** available_at RED: non-null=1,230,144/9,195,191 (pre-existing schema-evolution artifact per the finding-144
-  waiver already cited above, not a fresh defect).
-- **Era-B** RED: 490,470 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from
-  490,332).
-- **CF-2-paths** RED: no `asset_group=`/`category=` hive segment on the object path scheme (path uses
-  `pipeline_mode=`/`timeframe=`/`data_type=` segments only, no bucket-level asset_group/category prefix segment) — same
-  characteristic as the prior entries' path-scheme finding, not previously called out per-CF in this doc but not a new
-  defect either.
-- **GREEN**: CF-2 (asset_group column present, no `category` column), CF-5 (typed reasons), CF-6 (4-state), CF-13
-  (source-aware pipeline_mode, 100% of populated rows), CF-3-partition (pipeline_mode= path segment present), CF-9 (env
-  bucket naming).
-- **SKIP**: CF-10 (phantom — honest SKIP under `mode=changed`, needs `--mode full`), CF-14 (catalogue not materialised —
-  G1 pending).
-
-**Verdict: identical root cause, identical conclusion as the entry immediately above — CF-1…CF-12 is NOT GREEN on
-`market-data-tick-cefi-prd-…`.** Did **not** flip this todo's checkbox, and did **not** flip any CF-coverage rows in
-`cefi_master_audit_instructions.md` (its own "Canonical-form coverage (CF-1…CF-12)" section, lines 140-154) — both
-actions are explicitly conditioned on GREEN by this todo's own text, and flipping on a RED result would be fabricated
-progress. No new issue doc filed: this corroborates, not introduces, the already-open
-`cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md` blocker that the entry above already names. This todo
-stays open pending that blocker's resolution + the E4 gap-fill/orphan sweep + E5 rebuild; whoever unblocks those should
-re-run this exact audit and flip both this checkbox and the `cefi_master_audit_instructions.md` CF-coverage rows only
-once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN (CF-8 and CF-2-paths pending a decision on whether the
-finding-144-waived characteristics count against this specific acceptance bar or are out of scope for it — flagged for
-whoever picks this up next, not resolved here).
-
-### 2026-07-28 (slot-13, `data_engineering`) — E7 Verify todo (line 383): 3rd re-dispatch of this exact task today — re-ran live, still RED, identical root cause; flagging redispatch churn
-
-Dispatched task `data_completion_cefi-017` again (same task id as the slot-6 entry immediately above — this is the 3rd
-independent dispatch of this exact checkbox today, after slot-8's sibling audit and slot-6's identical run). Before
-re-running, cross-checked whether the blocking chain had moved: `data_completion_cefi_2026_07_15.md`'s "NEXT SESSION —
-execute the migration" P0 todo is still unchecked (retagged `[OPERATOR]`, not dispatched to workers), and the blocking
-issue doc `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own final open todo
-("re-run the full-corpus `--dry-run` a third time... unblock the migration todo") is also still unchecked — no real
-`_index` rebuild/migration has executed since slot-6's run. Re-ran the audit anyway for fresh live evidence (cheap,
-index-only `mode="changed"`, no GCS bulk walk) rather than rely on hours-old numbers, since the live corpus is growing
-incrementally in the background:
-
-Fresh result (9,263,361 rows, up from 9,195,191 a few hours earlier — organic growth, no rebuild involved):
-
-- **CF-1** RED: v9=9,029,152/9,263,361 (97.5%; unchanged dist shape: 108,367 null + 63,226 `v6` + 61,692 `v5` + 924
-  `v4`).
-- **CF-3** RED: populated=9,137,133/9,263,361 (98.6%; 126,228 blank — same absolute blank count as slot-6's run, all
-  organic growth landed correctly-stamped).
-- **CF-4** RED: source blank=2,206,826/9,263,361 (23.8%, down marginally from 24.0% — pure dilution from new correctly-
-  stamped captures, not any fix).
-- **CF-8** RED: non-null=1,306,726/9,263,361 (pre-existing finding-144-waived schema-evolution artifact, as before).
-- **Era-B** RED: 491,146 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from 490,470
-  — organic).
-- **CF-2-paths** RED, same characteristic as both prior entries.
-- **GREEN**: CF-2, CF-5, CF-6, CF-13, CF-3-partition, CF-9 — identical to slot-6's run.
-
-**Verdict: identical root cause, identical conclusion as both entries above — CF-1…CF-12 is NOT GREEN.** Did **not**
-flip this todo's checkbox or any `cefi_master_audit_instructions.md` CF-coverage rows, for the same reason stated twice
-already. No new issue doc filed — this is the 3rd corroboration, not a new finding.
-
-**Process note (why this entry exists beyond the numbers):** this exact backlog task has now been dispatched to 3
-different slots in the same day (slot-8 on the sibling audit todo, slot-6 and slot-13 on this exact todo) with zero
-possibility of a different outcome each time, because the checkbox's blocker is an external, not-yet-run migration gated
-on `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own last open todo. Re-verifying a RED audit
-against an unchanged blocker doesn't move the plan forward and costs a full worker dispatch each time. Filed a
-`/blocked` recommendation (this session) to gate/park `data_completion_cefi-017` in the backlog against that issue doc's
-confirming-rerun todo (or an equivalent condition) so it stops being handed to fresh workers until there's actually new
-signal to check. Whoever unblocks the chain should re-run this audit once more and flip both this checkbox and the
-`cefi_master_audit_instructions.md` CF-coverage rows only once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN.
-
-### 2026-07-28 (slot-3, `data_engineering`) — E4 orphan-sweep todo (line ~307): built the missing `--drop-stale` tool, did NOT run it against prod
-
-Dispatched task `data_completion_cefi-015` = "E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk" — the todo's
-own text already flags it as "**Deliberate execution (irreversible deletes + VM-scale) — not to be rushed**", matching
-the same bundled-irreversible-VM-scale shape the 2026-07-27 (slot-14) entry above correctly declined to rush for the
-sibling "NEXT SESSION — execute the migration" todo. Before rushing the same class of mistake here, checked what tooling
-this todo's part (a) (the irreversible orphan-delete, gated on the PRE-DELETE GUARANTEE) actually requires: **no delete
-mechanism existed for cefi at all** — `migrate_cefi_flat_to_v9_canonical.py` (market-tick-data-service) only ever COPIES
-(day-tree pipeline_mode= insert + L-flat fan-out), it has no `--drop-stale`/delete path, unlike its sibling
-`migrate_sports_canonical_v9.py`, which already has a proven, twin-verified, backup-then-delete E8 sweep
-(`_migrate_drop_stale.py`: snapshot-first → per-object twin-verify → backup-copy → parity-check → delete → verify gone →
-HARD-ABORT on any mismatch, never a naive delete).
-
-**What shipped this session** (`market-tick-data-service@e663d72f`, QG green — 7335/7335 tests incl. 3 new tests I fixed
-after an initial mock-ordering bug in my own test, 238s): added a `--drop-stale` mode to
-`migrate_cefi_flat_to_v9_canonical.py` reusing the SAME shared `_migrate_drop_stale.py` helper (generalised its
-docstring — the module was already bucket/prefix-agnostic, sports was just its only caller until now; zero behavior
-change to the sports E8 sweep). New code: `_cefi_dispatch_day_rel` (adapter matching the shared helper's
-`dispatch_fn(full, bucket, surface=)` signature, delegating to the existing `_canon_day_rel`),
-`_drop_stale_flat_orphans` (the 9 L-flat root orphans need a DIFFERENT check than the day-tree — a flat file fans out
-1-to-many, so this verifies EVERY row's canonical destination exists before allowing the source file's delete, never a
-partial-coverage delete), and `run_drop_stale` (orchestrates: manifest `_index` snapshot → day-tree raw+candle sweep →
-flat-orphan sweep). Wired behind `--drop-stale` (dry-run safe by default, same convention as `--apply`). 3 new unit test
-files/additions covering the adapter, the flat-orphan coverage-gate logic (fully-covered deletes, partial-coverage
-never-deletes, dry-run reports-only, empty/unreadable files skipped), and the orchestration wiring — all mocked at the
-`unified_trading_library.cloud_interface` boundary, no live GCS.
-
-**What did NOT run**: the actual `--drop-stale --apply` sweep against production, and the separate `--also-legacy`
-5,233-cell gap-fill. Both remain genuinely VM-scale (this same doc's E4 text: the legacy listing alone "stalled an
-e2-standard-4"; the `--drop-stale` corpus-wide day-tree walk is ~2,613 days × ~474 objects/day ≈ 1.2M candidate objects)
-and the delete leg is irreversible — running it start-to-finish inside one ~1h interactive dispatch would be exactly the
-same mistake the slot-14 entry above already called out, not a fix for it. The existing
-`launch-canonical-migration-vm.sh cefi <start> <end> {dry|full}` launcher already wires the base migrate-copy pass
-(registered `canonical-migration-cefi-` VM prefix confirmed); it does NOT yet pass `--drop-stale` through — that's the
-next concrete step (either a small launcher change to thread `--drop-stale` for a `cefi-drop-stale` category, or an env
-override), followed by: (1) a fresh `--apply` copy pass over the FULL corpus range (the mandatory PRE-DELETE GUARANTEE —
-confirms every orphan has a migrated dest), (2) `--drop-stale --apply` on a dedicated SPOT VM (per the heavy-I/O +
-backfill-SPOT-default rules), monitored properly (no fire-and-forget), then (3) the `--also-legacy` gap-fill as its own
-separately-launched, sharded VM pass. Did **not** flip this todo's checkbox — the sweep itself hasn't executed against
-prod; flipping now would be the exact false-completion class `check_evidence_backed_completion.py` exists to catch. No
-new issue doc filed (this is in-scope, bounded follow-up already named by the todo's own text, not an out-of-plan
-finding).
+> **Line-cap remediation (2026-08-03)**: the 2026-06-21 live-producer-unblock entries and the 2026-07-27/28
+> E7-Verify/Post-walk redispatch-churn audit entries (slot-14, slot-8, slot-6, slot-13, slot-3 — each superseded by the
+> consolidation below) were extracted verbatim to
+> `/plans/archive/2026_08/data_completion_cefi_progress_log_history_2026_08_03.md` to bring this doc back under the
+> 1000-line hard cap. New entries append below.
 
 ### 2026-07-28 (slot-4, `data_engineering`) — consolidated 3 overlapping E4→E8 todos into one phased plan (main ruling BLK-650261be)
 
