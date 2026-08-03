@@ -240,7 +240,7 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       todo (now also flipped). No code shipped, batch2's `paper_universe.py` MEV-DOCS prerequisite confirmed already
       landed (`strategy-service@8d7c6549`).
 
-- [ ] [DATA] P2. C6 Pyth `oracle_prices` historical backfill — launch a SPOT backfill VM running MTDS Pyth Hermes-API
+- [x] ✅ [DATA] P2. C6 Pyth `oracle_prices` historical backfill — launch a SPOT backfill VM running MTDS Pyth Hermes-API
       collection for the 2026-04-15→present gap window, writing ONLY into the canonical
       env-split/`pipeline_mode=`/`asset_group=defi` layout (never the legacy layout; C0 canonical structure is live).
       Safe-idempotent justification: SPOT + idempotent re-fetch, no GCS delete. Repo: market-tick-data-service. Done
