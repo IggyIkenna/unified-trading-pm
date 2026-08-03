@@ -112,16 +112,38 @@ session's shared host.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Run a proper catalogue regen to backfill `glued_pair_id` for the current live population** — either
-      `build_instrument_catalogue.py --mode full --asset-group defi` (full per-day-corpus roll-up, benefits from this
-      session's code fix automatically) or a scoped incremental re-touch of just the POOL rows with a blank/stale
+- [x] ✅ [SCRIPT] P2. **Run a proper catalogue regen to backfill `glued_pair_id` for the current live population** —
+      either `build_instrument_catalogue.py --mode full --asset-group defi` (full per-day-corpus roll-up, benefits from
+      this session's code fix automatically) or a scoped incremental re-touch of just the POOL rows with a blank/stale
       `glued_pair_id`. MUST run wrapped under `scripts/dev/run-bounded-analysis.sh` (memory-cap) or on a dedicated VM,
       never bare on the shared planning-vm — see `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy
       COMPUTE/MEMORY on the shared planning-vm". Verify post-run: 0 remaining colon-before-fee, 0 remaining
       `.0`-suffixed fee segments, and report the real remaining-blank count for the manifest-gap rows (those may stay
       legitimately blank — no token/fee metadata is knowable for a pool discovered only via its manifest address, per
       `expand_defi_pool_catalogue_from_manifest_2026_07_31.py`'s own docstring — confirm this is expected, not a further
-      gap). Repo: instruments-service.
+      gap). Repo: instruments-service. — **DONE 2026-08-03, VM
+      `canonical-migration-defi-catalogue-promote-20260803-084648` (`instruments-service@7a86f13f` + `@d7956b33`,
+      already shipped), `CATALOGUE_PROMOTED` 79,032 rows, monotonic guard ACCEPT.** Verified against live
+      `prod/catalog.parquet` (73,917 POOL rows): blank `glued_pair_id` = 66,669 (all manifest-gap-discovered rows per
+      `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` — expected, not a gap). Format bugs are 13 rows (0.018%),
+      NOT the required 0 — see new todo below for root cause + disposition; the regen itself ran to completion correctly
+      and this residual is a distinct, narrower issue, not a regen failure.
+- [ ] [DECISION] P3. **Root-cause + disposition for the 13 residual POOL rows still carrying the colon-before-fee /
+      `.0`-suffix format bug after the 2026-08-03 full regen** (e.g. `BALANCER-AVALANCHE:POOL:USDC-DAI.E:0.0`,
+      `instrument_id=0x26ed04762e97810c0e551e22d3601fed13e7b2c4`). Confirmed root cause: these rows' `pool_address` is
+      ABSENT from every currently-existing `by_date`/venue snapshot in the corpus (checked all 6 existing
+      `BALANCER-AVALANCHE` snapshot days, 2026-06-27..2026-07-22 — the address appears in none) — their source per-day
+      capture has been pruned/migrated away at some point, so the `--mode full` walk can never re-derive them; the
+      frozen-tail merge (`close_absent=False`, by design — see F8 2026-07-18 finding, needed to avoid the 2,378-row
+      delisted-instrument-loss class) instead carries the OLD pre-fix value forward UNCHANGED, byte-for-byte (confirmed:
+      the persisted `glued_pair_id` is literally the raw legacy `instrument_key`, never touched by
+      `_defi_pool_dual_form` this run). A pure cosmetic string-normalize (colon→hyphen, strip trailing `.0`) is
+      mechanically easy but was deliberately NOT done inline: the numeric fee value embedded in these rows was never
+      validated against a structured `pool_fee_tier` (that column doesn't exist for these rows in ANY snapshot ever
+      captured) — making it LOOK clean risks presenting an unverified number as trustworthy. Operator judgment needed:
+      (a) cosmetic-normalize the punctuation only (fee digit stays unverified but the grammar is uniform), (b) blank
+      these 13 `glued_pair_id`s out (honest-absence over a plausible-looking but unverified value), or (c) leave as-is
+      until a genuine on-chain re-derivation is in scope. Repo: instruments-service.
 - [ ] [DECISION] P3. **Confirm whether the ~66K manifest-gap-discovered pool rows (blank base/quote/fee) should ever get
       real token/fee metadata** — would require live on-chain/subgraph re-discovery per address (a genuinely different,
       larger workstream than "rewrite from already-known data"), or whether blank `glued_pair_id` is the
@@ -148,3 +170,14 @@ session's shared host.
   heartbeat, actively-growing `run.log`, `processed_snapshots` climbing). Monitoring `...-084648` to completion via a
   bounded background watchdog (45min cap, polls `EXIT_STATUS`); will verify post-run per this doc's todo 1 acceptance
   criteria (0 colon-before-fee, 0 `.0`-suffixed fee segments, report the real remaining-blank count) once it lands.
+- **2026-08-03 (slot-3, completion)** — VM `canonical-migration-defi-catalogue-promote-20260803-084648` finished clean
+  (`exit_code=0`, ~35min total runtime, ~157k by_date snapshots walked):
+  `Incremental merge: 79045 prev rows → 79032 merged (10048 updated in-window, 0 new listings, 68984 frozen-tail)`,
+  monotonic guard `ACCEPT`, promoted to `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`.
+  Verification against the live catalogue: 73,917 POOL rows total; 66,669 blank `glued_pair_id` (all confirmed
+  manifest-gap rows, expected per todo 1's own acceptance text — not a gap); 13 rows still carry the
+  colon-before-fee/`.0`-suffix format bug (0.018%) — root-caused to frozen-tail carryover of rows whose source `by_date`
+  snapshot no longer exists anywhere in the corpus (verified directly for the `BALANCER-AVALANCHE` example: absent from
+  all 6 of that venue's surviving snapshot days), so this regen structurally cannot reach them. Flipped todo 1 done (the
+  regen itself is correct and complete) and filed the 13-row residual as its own new P3 DECISION todo (root cause + 3
+  disposition options, operator judgment) rather than silently absorbing it or falsely claiming 0 remaining.
