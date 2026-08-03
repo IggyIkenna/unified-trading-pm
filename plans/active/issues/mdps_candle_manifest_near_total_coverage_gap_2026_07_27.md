@@ -269,6 +269,20 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T14:10Z** (AO dispatch, slot 15, `data_engineering`) — Third and fourth campaign VMs both preempted
+  rapidly: `backfill-defi-dex-swaps-20260803-133142` preempted ~2min after launch (never produced a run.log);
+  `backfill-defi-dex-swaps-20260803-133550` ran ~33min, cleanly processed 2 more real days (2024-01-05: copied=17612,
+  2024-01-06: copied=14049, both errors=0) before its own genuine preemption at `14:08:27Z`. **3 genuine SPOT
+  preemptions in ~50 minutes in `asia-northeast1-c`** (all confirmed `compute.instances.preempted` system events, NOT
+  the reap-zombies.sh bug) — real, transient SPOT capacity pressure in this zone right now, not a recurring bug.
+  Checkpoint remained at 360 days each time (the next 20-day boundary, ~day-index 380 ≈ mid-January 2024, hadn't been
+  reached yet) — confirms the checkpoint-cadence gap already filed as a fix todo in
+  `/plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` todo 4, but the redo cost stays
+  small in practice since re-verifying already-copied days is a fast idempotent no-op (confirmed: days 2023-12-28
+  through 2024-01-06 all re-verified as `needs_copy=0` except the two genuinely-incomplete days). Relaunched again:
+  `backfill-defi-dex-swaps-20260803-141041`. If preemptions keep recurring in this zone, the next escalation is either a
+  different zone or a temporary `ON_DEMAND=true` override (CLAUDE.md's stated opt-out) — not yet warranted after 3
+  occurrences given each redo cost is minutes, not hours.
 - **2026-08-03T13:31Z** (AO dispatch, slot 15, `data_engineering`) — Second campaign VM
   (`backfill-defi-dex-swaps-20260803-103749`) ran healthy for ~3 hours, cleanly processing 394 days (2023-01-01 through
   2024-01-04 in-progress, all `errors=0`) before hitting a **genuine SPOT preemption** (`compute.instances.preempted` at
