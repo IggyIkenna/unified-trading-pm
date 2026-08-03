@@ -99,6 +99,29 @@ family-level check mask an individual broken adapter" masking risk the parent ta
 4, distinct from the (correctly fail-closed, refuted) case for the 6 adapters actually wired into calendar's +
 commodity's batch paths.
 
+### 3. NEW (found 2026-08-03 verifying the Baker Hughes fix): CL permanently fails factor coverage via `weather_delta`
+
+Re-running
+`python -m features_service.commodity --operation compute --mode batch --start-date 2026-08-01 --end-date 2026-08-01`
+after the Baker Hughes fix (todo 1) landed: NG now gets full factor coverage, but CL still fails —
+`WARNING Data source 'open_meteo_degree_days' returned empty data for commodity=CL — skipping factor.` then
+`ERROR Partial factor coverage for commodity=CL date=2026-08-01: 3/4 factors produced values (1 missing)`.
+
+This is NOT flaky/transient like the Baker Hughes bug was — `OpenMeteoDegreeDayAdapter.fetch()`
+(`features_service/commodity/adapters/open_meteo.py`) is hardcoded: `if commodity.upper() not in {"NG"}: return {}` (its
+own docstring: "Applies to NG; returns {} for unrecognised commodities"). `weather_delta` is in `DEFAULT_FACTOR_GROUPS`
+(`features_service/commodity/config.py`), which applies to ALL `enabled_commodities` (`["NG", "CL"]`) with no
+per-commodity override actually wired in for CL — the field's own docstring says overrides "live in ConfigStore
+CommodityProfile", so either CL's ConfigStore profile was never given a `weather_delta` exclusion, or the per-commodity
+override mechanism isn't consulted by `enabled_factor_groups`'s consumers (`batch_handler.py`, `orchestrator.py`,
+`live_handler.py` all read the flat `config.enabled_factor_groups`, not a per-commodity resolved list — not fully traced
+this session, scope: verification of todo 1, not a new root-cause investigation). Net effect: CL's commodity fail-closed
+guard rejects EVERY batch day, permanently, by construction — not because of a live data outage, but because
+`weather_delta` can never produce a value for CL. Exactly the same failure SHAPE as this doc's Baker Hughes finding (a
+factor-coverage gate silently, permanently unsatisfiable for one commodity), but a different mechanism (structural
+commodity-scope mismatch, not a vendor format change) and a different fix surface (ConfigStore data and/or
+`enabled_factor_groups` resolution code, not an adapter parser).
+
 ## Why it matters
 
 - Baker Hughes: `rig_count` is one of only 4 `DEFAULT_FACTOR_GROUPS` for commodity — its repeated breakage means the
@@ -108,16 +131,30 @@ commodity's batch paths.
   per the workspace's no-shims rule) or they represent real intended functionality (sentiment features,
   corporate-actions calendar) that's silently never run in production either — worth an explicit decision either way
   rather than leaving ambiguous half-wired code in the tree.
+- CL/`weather_delta`: same class of finding as Baker Hughes (a fail-closed guard permanently, silently rejecting every
+  batch day for one commodity) — but CL is BLOCKED on this in a way NG no longer is, so the commodity family is still
+  not producing a full signal for CL even after todo 1's fix.
 
 ## Recommended decision
 
-- [ ] [DATA] P2. **features-service** — root-cause the Baker Hughes "unexpected file format" failure (fetch the
+- [x] [DATA] P2. ✅ **features-service** — root-cause the Baker Hughes "unexpected file format" failure (fetch the
       current-week file directly, inspect actual bytes/content-type returned, compare against what `openpyxl` expects —
       Baker Hughes may have switched to a `.csv`/different `.xlsx` variant, or the landing-page scrape may now be
       resolving a stale/wrong link under some conditions). Fix + add a regression test pinning the new format (mirroring
       the 2026-07-27 fix's own regression-test pattern in `tests/commodity/unit/test_sources*.py`). **Done when**: a
       real `--mode batch` run for a recent date produces `rig_count` factor values (not "unexpected file format"/skip),
-      and `_has_full_factor_coverage` passes for at least one commodity.
+      and `_has_full_factor_coverage` passes for at least one commodity. — **Done 2026-08-03**,
+      `features-service@31b66b81`. Root cause confirmed by fetching the live report file directly: Baker Hughes replaced
+      the flat single-table report with a multi-sheet workbook (`NAM Summary`/`NAM Breakdown`/`NAM Weekly`/...) that has
+      NO gas/oil COLUMN headers at all — gas/oil are now ROW labels inside a `DrillFor` section of the `NAM Breakdown`
+      sheet, broken into one block per region (United States, Canada). `_parse_workbook` now tries the legacy flat-table
+      shape first (existing tests unchanged), then falls back to summing the DrillFor blocks across regions to get the
+      North America total this adapter has always declared as its scope (docstring + the `na-rig-count` source URL) —
+      verified against the real fetched file (US gas=127/oil=451, Canada gas=63/oil=150 -> NA gas=190/oil=601) and a
+      real `--mode batch --start-date 2026-08-01 --end-date 2026-08-01` run: NG now gets full factor coverage
+      (`rig_count` value produced, no "unexpected file format" warning). 2 new regression tests added pinning the new
+      shape (`test_parse_workbook_drillfor_breakdown_shape`,
+      `test_find_drillfor_breakdown_no_drillfor_section_returns_none`).
 - [ ] [SCRIPT] P2. **features-service** — decide + act on calendar's 4 dead-code adapters: EITHER (a) wire
       `SentimentCalculator` into `calendar_orchestrator.py`'s batch path (add `sentiment` to `CALENDAR_FEATURE_GROUPS` +
       the calculator dispatch) and wire `corporate_actions_handler.py`'s mode into `cli/main.py`'s `_OPERATIONS` map
@@ -127,9 +164,25 @@ commodity's batch paths.
       `[OPERATOR]`-gated if the answer isn't obvious from a quick history check (`git log` on
       `sentiment_calculator.py`/`corporate_actions_handler.py` for why they were added and whether anything downstream
       still expects their output).
+- [ ] [DATA] P2. **features-service** — root-cause + fix CL's permanent `weather_delta` factor-coverage failure (see
+      finding 3 above). Determine why `enabled_factor_groups` isn't narrowed for CL despite `config.py`'s own docstring
+      claiming per-commodity overrides live in ConfigStore `CommodityProfile` (trace whether `batch_handler.py` /
+      `orchestrator.py` / `live_handler.py` ever resolve a per-commodity list, or always read the flat global default).
+      Fix EITHER by wiring a real per-commodity `enabled_factor_groups` override that excludes `weather_delta` for CL,
+      OR by giving `DegreeDayFactor`/`weather_delta` a commodity-scoped policy so `_has_full_factor_coverage` doesn't
+      count it as "missing" for a commodity the underlying adapter structurally never serves. **Done when**: a real
+      `--mode batch` run for a recent date produces full factor coverage for CL (not "Partial factor coverage ... 1
+      missing"), and NG's coverage is unaffected. (repo: features-service)
 
 ## Progress Log
 
 - 2026-08-01 (slot-13, data_engineering): Filed as the FINDINGS CLOSURE follow-up for
   `cross_cutting_satellite_ao_dispatch_batch2-002`'s empirical smoke-check-masking test. Neither fix applied inline
   (adapter-format root-cause and the wire-vs-delete decision are both outside the audit todo's own done-when).
+- 2026-08-03 (slot-6, data_engineering): Closed todo 1 (Baker Hughes), `features-service@31b66b81` — see the todo's own
+  entry above for the root-cause + fix detail. While verifying the fix with a real `--mode batch` run, found a second,
+  adjacent factor-coverage bug for CL/`weather_delta` (finding 3 + new todo above) — same failure class as Baker Hughes
+  but a different mechanism (structural commodity-scope mismatch, not a vendor format change) and a different fix
+  surface (ConfigStore data / `enabled_factor_groups` resolution, not an adapter parser); not fixed inline since
+  root-causing which layer owns the per-commodity override is itself the open question. Todo 2 (calendar dead-code
+  decision) untouched — outside this task's scope.
