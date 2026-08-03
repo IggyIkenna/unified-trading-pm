@@ -147,13 +147,15 @@ No design call needed — every piece here is independently checkable, not a jud
 > them — plan_reconciler's own daily corpus read (STEP 3 mechanical-adjudicator / missed-flip hunters) picks these up
 > directly from this doc's text, not via backlog dispatch.
 
-- [ ] [DATA] P1. **Reconcile the source doc's todo-4 item for real** — in
-      `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (currently line 464's
-      "NOT closed here — genuinely contested" item), replace the contested-and-stale framing with the actual verdict now
-      on record (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md`'s flipped todo 4, 2026-08-02) and flip its
-      checkbox. Repo: unified-trading-pm. Done when: the item reads `- [x]` citing the real evidence, and the doc's
-      total open-item count is re-verified (it may now be archival-eligible itself if this was its last genuinely-open
-      item — check, don't assume).
+- [x] ✅ [DATA] P1. **DONE 2026-08-03 — unified-trading-pm@65f653fd9.** **Reconcile the source doc's todo-4 item for
+      real** — in `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (line 472,
+      formerly the "NOT closed here — genuinely contested" item), the checkbox is now `- [x]` with a "DONE
+      (na-eligibility-audit 2026-08-03)" note citing the real verdict on record
+      (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md`'s flipped todo 4, 2026-08-02): (1)
+      `market_data_categories.py`'s `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fixed (`unified-api-contracts@e34afc1d`,
+      removed as stale dead code); (2) `FRED` confirmed correctly placed, not a conflation instance. Re-verified the
+      doc's total open-item count post-flip: **8** remaining `- [ ]` items (not its last genuinely-open item), so it is
+      NOT archival-eligible from this flip alone.
 - **[PLAN_RECONCILER] P2.** ROUTED, not general-backlog-dispatchable. **Append a correction note to the archived
   finalize doc** — `plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`'s todo text
   currently states 3 false/premature claims (see "What I found" above). Add a dated `**CORRECTION 2026-08-02:**` block
@@ -179,6 +181,16 @@ No design call needed — every piece here is independently checkable, not a jud
 
 - **2026-08-02**: Filed while working `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4. Full evidence
   trail above; root cause traced via `git log --follow --name-status`.
+- **2026-08-03 (todo 1 closed, `instruments_satellite_batch1_finalize_false_completion_claim-001`)**: verified the
+  source-doc reconciliation was already carried out by a concurrent `na-eligibility-audit` pass
+  (`unified-trading-pm@65f653fd9`, 2026-08-03 12:09:36+0100) —
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` line 472's item now reads `- [x]` with a "DONE
+  (na-eligibility-audit 2026-08-03)" note citing the real verdict from
+  `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4. Re-verified the source doc's total open-item count
+  post-flip: 8 remaining `- [ ]` items, so it is NOT archival-eligible from this flip alone. Flipped this doc's own todo
+  1 checkbox to reflect the already-shipped fix (no new code needed — reconciliation was substance-complete on ground
+  truth already). 1 real `- [ ]` checkbox remains open in this doc (todo 4, the bounded sweep), plus 2
+  `[PLAN_RECONCILER]`-routed digest bullets not yet closed — not archival-eligible.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, both real `- [ ]` checkboxes ([DATA] P1
   "reconcile the source doc's todo-4 item for real"; [DATA] P2 "bounded sweep for the same false-claim pattern in other
   archived finalize twins") are bounded, worker-determinable (a checkable fact + a scoped grep/spot-check audit with a
