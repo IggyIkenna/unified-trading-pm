@@ -39,7 +39,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T11:15Z
+last_updated: 2026-08-03T11:30Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -392,3 +392,25 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   distinct, actionable gap (unlike the wall itself, which has no action available) and worth fixing so future
   occurrences don't spend a full agent session re-confirming an unchanged state. Slot left clean (`features-service` on
   `live-defi-rollout`, 0 commits ahead, no local changes). Pinging the authoring slot (`ci-reconcile`) with the outcome.
+
+- **2026-08-03 ~11:20-11:30Z (`cicd` escalation `agt-e5e387`, slot 4, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1064`) — SAME escalation id as the 09:47-10:10Z entry above (this is a re-dispatch, likely the prior
+  session's tmux/session lifecycle ending before it reached its own `/done`, not a new occurrence)**: re-verified from
+  scratch rather than trusting the cached entry. `gh pr view 1064` → `state=MERGED`, `mergedAt=2026-08-03T06:31:51Z`
+  (unchanged). `gh pr list --state open` for `instruments-service` → **0 open PRs** — confirms no promotion is actually
+  stuck; the 07:55:38Z run (`promote/instruments-service/06be51ec6e74`) referenced implicitly by the newer `main` push
+  run is ALSO already merged. `main-backmerge-to-ldr` and `Semver Agent` both `success` at `07:55:43Z` (one run PAST the
+  06:31:54Z ones already noted in the prior entry) — the business outcome (promote → backmerge → semver-tag) has now
+  completed successfully TWICE since the original failing run, fully independent of any confirmatory `quality-gates-v2`
+  check. Current `quality-gates-v2` state: `main` run `30795433570` (created 07:55:44Z) still `queued`; LDR run
+  `30808129517` (created 11:05:31Z) still `queued` — both 3+ hours old with no runner slot, consistent with every other
+  entry in this doc-pair (10+ repos, 25-40+ load average, 20-28 concurrent `quality-gates.sh` processes on this shared
+  host). `GET /api/repo-blockers` → `open: []`. LDR HEAD in this slot advanced one commit past the prior entry's repro
+  point (`dabbb1a3`, `fix(deps): resolve prek from patched fork` — `pyproject.toml`/`uv.lock` only, no test-affecting
+  change per `git show --stat`); did not re-run the full local suite since the prior entry's clean 5159-passed/0-failed
+  repro at the immediate parent commit (`d7276438`) already stands and this new commit touches nothing test-relevant.
+  **Disposition: no code or workflow change made or needed** — confirms the prior entry's verdict still holds 1h10m
+  later; root cause remains fleet-wide runner contention, tracked and out of scope for a one-shot wall-clearing task
+  (root-cause fix in flight at `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Slot left
+  clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean). Pinged the
+  authoring slot (`ci`) with the outcome.
