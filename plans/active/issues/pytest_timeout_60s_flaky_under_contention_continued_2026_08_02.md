@@ -476,3 +476,42 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `GET /api/repo-blockers` → `open: []`. Slot left clean (`ml-service` on `live-defi-rollout`, 0 commits ahead of
   origin, no local changes — no code fix needed, the existing LDR content is already correct). Pinging the authoring
   slot (`ci-reconcile`) with the outcome.
+
+- **2026-08-03 ~11:30-11:41Z (`cicd` escalation `agt-1e081d`, slot 8, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 10th escalation for the same wall, but the state actually moved this time**: `main` still red at the
+  same already-diagnosed run `30780455914` (pre-`c092df50` 150s-timeout shape, fix on LDR, pending promotion — nothing
+  new). Checked LDR: unlike every entry since the 10:48Z one, the run flagged in-flight there (`30804251677`, headSha
+  `d387ba7f`) had ACTUALLY COMPLETED by this session (no longer in-progress) — genuinely FAILED, not just still-queued.
+  Read its `tests` slice log directly: pytest made clean progress through `test_cross_source_bar_edge_equivalence.py`
+  (12%) at 10:33:17Z, then `tests/delta_one/unit/test_cross_timeframe_sanity.py::test_output_index_matches_input` hung
+  for ~12.5min before the faulthandler dump fired (10:45:50Z) — stack trapped inside
+  `_add_lagged_features`→`pd.concat`→pandas' `concatenate_managers`/`Block.copy()`. Confirmed this is the SAME
+  scheduler-starvation class this doc tracks, not a new code defect: `pytest-timeout` is configured
+  `timeout_method = "thread"` (a watchdog thread, not SIGALRM) at the now-raised 300s budget — a clean 12.5min stall
+  before the watchdog even fires means the watchdog thread itself couldn't get scheduled, i.e. the SAME starved-host
+  signature as every other entry, just manifesting through the thread-watchdog path instead of the SIGALRM path other
+  repos hit. `ldr-to-main-promote-fleet`'s own latest tick (`30809782549`, 11:30Z) independently corroborates: 9 OTHER
+  repos (`instruments-service`, `alerting-service`, `execution-service`, `market-data-processing-service`,
+  `market-tick-data-service`, `ml-service`, `strategy-service`, `client-reporting-api`, plus `features-service`) all
+  simultaneously `GATE BLOCK … ci_status=FAILING (live='FAILING')` in the same 15-min gate tick — fleet-wide, not
+  features-service-specific.
+
+  Crucially, LDR HEAD had ALSO moved twice since the last entry's check (`9fb37033` → `90fc1d81` → `eaf99c9a`, two new
+  commits, neither touching `delta_one`/test timeout config) and — unlike every recent entry — **no run was in-flight**
+  for the new head (the only prior condition that justified withholding a fresh dispatch). Triggered
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/features-service --ref live-defi-rollout` → run `30810458524`,
+  confirmed queued against the true current head `eaf99c9a` (a slot pushed 2 more commits mid-check, confirmed the
+  dispatch picked up the newer SHA, not a stale one). Verified all three timeout mitigations (`PYTEST_TIMEOUT=300`,
+  `PYRIGHT_TIMEOUT=300`, `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at this head — no
+  regression. `GET /api/repo-blockers` → `open: []`. Did NOT raise any timeout further (would only move the threshold
+  per this doc's own established conclusion; root-cause fix remains
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, confirmed still open/Phase 2-3, correctly
+  out of scope for a one-shot task). Also note the sibling `ml-service` entry immediately above (`agt-2336b3`) found a
+  DISTINCT "only main can speak for main" `ci_status` CAS gap that applies once LDR promotes — not yet relevant here
+  since features-service's fleet-gate block is still upstream of that (LDR itself hasn't reported green yet, per the
+  gate's own "LDR CI is red" message, not a stale main-side cache).
+
+  **Disposition: no code change — the only action this session took beyond re-diagnosis was dispatching the first fresh
+  run against an untested head since the wall started recurring**; outcome of `30810458524` not yet observed, left for a
+  follow-up occurrence per this doc's pattern. Slot left clean (`features-service` on `live-defi-rollout`, 0 commits
+  ahead of origin). Pinged the authoring slot (`ci-reconcile`) with the outcome.
