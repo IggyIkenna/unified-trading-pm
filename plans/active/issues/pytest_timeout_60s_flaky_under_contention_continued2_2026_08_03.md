@@ -73,6 +73,7 @@ source:
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
     deployment-service/scripts/quality-gates.sh,
@@ -315,7 +316,6 @@ repeated here.
   authoring-slot ping. Slot left clean (`market-tick-data-service` and `unified-trading-pm` both on `live-defi-rollout`,
   0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Added
   `market-tick-data-service` to this doc's `repos:` frontmatter (1st occurrence for this repo in the doc-chain).
-
 - **2026-08-03 ~15:48-16:30Z (`cicd` escalation `agt-d12ed0`, slot 3, `instruments-service`, `wall_type=ldr_qg_failure`,
   `pr_number=0`) — this repo's own first full write-up in this doc (previously cited only by reference, in the
   `market-tick-data-service` entry above, as an earlier low-base-rate precedent), no code gap, two-run comparison
@@ -353,7 +353,6 @@ repeated here.
   0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Another repo
   (`instruments-service`, alongside `deployment-service`/`features-service`/`execution-service`/`alerting-service`/
   `market-tick-data-service`) showing this identical bug-class signature.
-
 - **2026-08-03 ~16:00-16:20Z (`cicd` escalation `agt-2482ca`, slot 7, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — ~16th same-day fire for this repo, re-confirms `agt-c6ccfb`'s disposition + adds one new clarifying
   detail on the `checks` leg**: re-verified from scratch rather than trusting the cached diagnosis. `main` run
@@ -382,3 +381,8 @@ repeated here.
   slot) — per `cicd.md`, skipped the authoring-slot ping. Slot left clean (`features-service` and `unified-trading-pm`
   both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either
   repo).
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the grandparent issue doc
+  (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`), which this doc's own body explicitly instructs readers to
+  consult ("Read the parent (and its own parent, ...) for the full bug-class history; not repeated here") but which the
+  prior context_scope omitted.
