@@ -24,7 +24,7 @@ tags:
   [canonicalisation, instrument-availability, hive, sports, prediction, content-mismatch, data-correctness, migration]
 related:
   [
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 created: 2026-08-03
@@ -42,7 +42,7 @@ locked_by:
 context_scope:
   [
     /codex/02-data/cross-asset-canonical-target-ssot.md,
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py,
     instruments-service/instruments_service/engine/orchestrator/process_write.py,
   ]

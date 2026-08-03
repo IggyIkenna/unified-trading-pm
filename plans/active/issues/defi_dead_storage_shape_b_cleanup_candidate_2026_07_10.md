@@ -21,7 +21,7 @@ tags: [dead-storage, cleanup, gcs, cost, defi]
 related:
   [
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master
@@ -38,7 +38,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
     market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -265,9 +265,9 @@ deletion of this shape without re-reading `instrument_availability_hive_canonica
 **What happened.** This doc's every entry through 2026-07-26 (including the "frozen 2020-01-20→2026-06-29" root-cause
 finding and the operator's 2026-07-29 "delete, do not finish the migration" ruling on the todo below) was accurate **as
 of the date it was written**, but a separate, more recent operator HARD RULE — R2, 2026-07-21,
-`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` — flipped which shape is canonical **5
-days before this doc's last edit and 8 days before the delete was executed**, and nobody cross-referenced the two docs
-before executing the delete. R2 requires every data-at-rest tree to use the FULL canonical hive grammar
+`plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` — flipped which shape is canonical
+**5 days before this doc's last edit and 8 days before the delete was executed**, and nobody cross-referenced the two
+docs before executing the delete. R2 requires every data-at-rest tree to use the FULL canonical hive grammar
 (`pipeline_mode=`/`asset_group=` included); the instruments-service writer was fixed to comply
 (`instruments-service@a9be6ce9`, `_write_venue` → `_instrument_availability_sink_for`, "full canonical hive (operator
 HARD RULE R2, 2026-07-21)") and **has written ONLY the hive shape since 2026-07-21 — ZERO flat writes confirmed on every

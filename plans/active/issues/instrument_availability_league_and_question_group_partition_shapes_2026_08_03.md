@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -54,7 +54,7 @@ drift_direction: advance-code
 locked_by:
 context_scope:
   [
-    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py,
   ]
@@ -74,7 +74,7 @@ sequential: true
 
 ## What I found
 
-Executing todo 7c of `/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` (the flat
+Executing todo 7c of `/plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` (the flat
 `day=/venue=` -> full-hive copy migration), I ran
 `instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py --asset-group <ag>` in dry-run mode
 (VM-side, bounded prefix listing — not a new corpus walk) against all 5 `instruments-store-{ag}-prd` buckets. Results:

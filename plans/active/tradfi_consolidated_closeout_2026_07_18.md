@@ -814,7 +814,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **Newly discovered (2026-07-24 completeness sweep — `grep -l '^asset_group:.*tradfi'` hits not previously named in
   this section; several were already mentioned inline in the Phase A2 prose above but never carried a real entry
   here)**:
-  - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  - [`plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
     - **[DATA] P1.** PROVE the fixed writers green on one real day, then migrate the historical flat objects UP into
       full hive
     - **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date in the

@@ -292,7 +292,7 @@ context_scope:
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument, ~2.3-year gap).
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + decide the AAVE_V3 chain-axis question.
     - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys.
-  - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  - [`plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
     - 7. **[DATA] P1.** PROVE the fixed writers green on one real day, then migrate historical flat
       `instrument_availability`/`market_lifecycle`/`futures_contracts` objects into full hive.
     - 8. **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date in the
