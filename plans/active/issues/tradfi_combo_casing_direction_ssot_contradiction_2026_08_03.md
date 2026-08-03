@@ -49,6 +49,15 @@ depends_on: []
 # dispatched and -003 was dispatched to slot-8, both while -001 sat
 # status=blocked awaiting a human decision).
 sequential: true
+context_scope:
+  [
+    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
+    unified-api-contracts/unified_api_contracts/_instrument_enums.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
+    market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
+  ]
 ---
 
 ## What I found
@@ -214,3 +223,6 @@ production data.
   it under the same todo (no separate checkbox — the todo's own outcome wasn't actually fully closed until this commit).
   `-001` (casing-direction) and `-003` (`--apply`) remain OPEN, still gated on the human operator — no manifest write
   attempted this session.
+- **context-scout 2026-08-03**: populated context_scope (6 entries) — the two contradictory "resolved" migration threads
+  this doc reconciles, the UAC enum that's the actual schema SSOT, the seeding function flagged as possibly-stale, the
+  UTL canon function the casing-direction fix hinges on, and the script todo 3 would re-run.
