@@ -92,9 +92,10 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
 
 ## What to check next
 
-1. **[OPERATOR] Confirm the actual billing/reset terms of this odds-api-key subscription directly with The Odds API
-   dashboard/billing page (operator-only access)** — is 5,000,000 a recurring monthly figure or a one-time signup
-   credit? Not answered by anything in this pass — still needs the operator to check the vendor dashboard directly.
+1. ✅ **DONE (operator, 2026-08-03)** — confirmed directly via The Odds API billing dashboard: the 5,000,000/month
+   figure IS a recurring monthly allocation, not a one-time signup credit. Operator has also purchased a 10,000,000
+   credit top-up separately (see item 4 below) — so hypothesis (c) in "Why this matters" above is ruled out; the account
+   genuinely had real quota, all of which the item-3 relaunch history burned through.
 2. ✅ **DONE (root-caused via corpus cross-reference, 2026-08-03)** — Audit every caller of this secret across the
    fleet. See Progress Log below: this is NOT a code-level runaway/no-backoff loop. The only two real callers are the
    live WS connector (`odds_api_ws.py`, confirmed not running) and the batch `OddsApiAdapter` (has a working
@@ -125,16 +126,27 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
    has no equivalent credit-budget or concurrent-VM guard, and `--allow-parallel`/`RESUME_ALLOW_PARALLEL=true` exists
    specifically to bypass its only guard (the singleton lock) for legitimate sharded runs — which is exactly what
    happened with `split1..split5`.
-4. **Not yet actioned** — the operator has, separately, already ruled on this exact quota exhaustion (same evidence,
-   found via the sibling doc): **2026-08-02, answering `BLK-6728ec9a`: Option B — purchase additional credits / upgrade
-   the plan now.** As of the last live check (`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, slot 13,
-   2026-08-02), the top-up had NOT yet landed (`x-requests-remaining` still `-772`). This session has no gcloud/
-   Secret-Manager credentials to re-verify live quota state — **next dispatch with live access should re-curl
-   `/v4/sports` to check whether the top-up landed before resuming the live VM** per
-   `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo. Recommend, independent of the top-up: add a
-   concurrency/cost guard to `launch-mtds-sports-odds-backfill-vm.sh` (mirroring the Tardis pattern) so a future OOM-
-   crash-retry cycle can't silently re-multiply credit spend the same way — not yet filed as its own todo, worth doing
-   before the next backfill attempt on this launcher.
+4. ✅ **DONE (operator, 2026-08-03)** — per the 2026-08-02 `BLK-6728ec9a` Option-B ruling (purchase additional credits),
+   the operator has added a 10,000,000-credit top-up on top of the recurring 5,000,000/month base. Quota exhaustion is
+   resolved. **Not yet verified live** (this session still has no gcloud/Secret-Manager credentials) — next dispatch
+   with live access should curl `/v4/sports` to confirm `x-requests-remaining` reflects the top-up before resuming the
+   live VM per `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo. The concurrency/cost-guard
+   recommendation for `launch-mtds-sports-odds-backfill-vm.sh` (mirroring the Tardis pattern) is still open and worth
+   filing as its own todo — with real quota now restored, an uncoordinated relaunch could repeat the same burn against
+   the fresh 10M credits.
+
+## Follow-up todos
+
+- [ ] [SCRIPT] P2. Add a concurrency/cost guard to
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-     vm.sh`, mirroring the Tardis pattern
+      (`tardis-concurrency-guard.sh`, hard cap 1 concurrent both clouds): before launching, count currently-RUNNING
+      `mtds-backfill-odds-*` instances and refuse (or require an explicit `--allow-parallel`-equivalent override,
+      already present but currently ungated on any count) past a small cap. Prevents a repeat of this doc's root cause
+      (5+ uncoordinated/parallel relaunches burning ~5M credits in 4 days) now that the account has fresh 5M/month + 10M
+      top-up quota to protect.
+- [ ] [DATA] P2. Once live/gcloud access is available: curl `/v4/sports` with the current `odds-api-key` to confirm
+      `x-requests-remaining` reflects the 10M top-up, then resume the live VM per
+      `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo.
 
 ## Progress Log
 
@@ -165,3 +177,8 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
   that decision to whoever next touches this doc with live access to confirm the top-up status first (filing a guard
   todo before knowing if the top-up landed would be premature — the guard's urgency depends on whether more backfill
   attempts are imminent).
+- **2026-08-03 (operator)**: Confirmed directly via The Odds API billing dashboard that the 5,000,000/month figure is a
+  genuine recurring monthly allocation (not a one-time signup credit — closes item 1). Also purchased a
+  10,000,000-credit top-up per the 2026-08-02 `BLK-6728ec9a` Option-B decision already on record in the sibling doc
+  (closes item 4's credit-purchase half). Filed both remaining actions as tracked todos above (live re-verification; the
+  concurrency/cost-guard fix) rather than leaving them as prose, per this workspace's follow-up discipline.
