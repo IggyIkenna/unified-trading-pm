@@ -248,34 +248,36 @@ to be per repo — not measured here, out of this todo's scope.
       the 2-week window itself, only running it meaningfully does). Done-when: run against the CI history accumulated so
       far and produces a clean per-run divergence table (even if the window isn't complete yet) — this is what the
       single-repo trial todo's done-when actually reads to determine "zero observed divergences."
-- [ ] [SCRIPT] P1. **Accelerate validation via a historical-commit backtest (operator decision 2026-08-03 — see Progress
-      Log)**, run ALONGSIDE the live single-repo trial above, not instead of it — the live trial keeps running unchanged
-      (it's zero-cost, purely-additive logging; nothing here stops it). Goal: get the same zero-divergence evidence the
-      design's safety model requires, but in days instead of the full 2-week live window, by replaying the ALREADY-BUILT
-      `test_impact_selector.py` (`unified-trading-pm@1452d5da1`) against commits that already happened, where the real
-      outcome is already known — never against unknowable future commits. Concretely: (1) FIRST check whether historical
-      CI pass/fail + failing-test-name data is actually queryable for a meaningful window
-      (`gh run list`/`gh run view --log-failed` per repo, or the Firestore `ci_status` store referenced in
-      `/codex/08-workflows/ci-cd-flow.md` — confirm which is real and queryable before assuming either is; this is a
-      genuine unknown, not a formality) — if neither is practically queryable at volume, STOP and report that as the
-      finding, do not force a smaller/fabricated sample to make the todo look done. (2) If queryable: for each
-      historical commit across the Phase-1-verified-eligible repos where the REAL full suite FAILED, compute what
-      `test_impact_selector.py` would have narrowed the diff to, and check whether the actual failing test(s) fall
-      inside that narrowed set. A failing test OUTSIDE the narrowed set is a real divergence — the same
-      design-bug-not-noise severity the live trial's own rule already states, not a lesser finding because it came from
-      a backtest. (3) Aim for as large a historical sample as the queryable window allows (more commits = stronger
-      evidence than the 2-week live window would produce in the same calendar time) — state the actual sample size
-      achieved, do not imply it matches "2 weeks of coverage" if it doesn't. Done-when: a report per repo — sample size,
-      divergences found (ideally zero; if any, each one filed as its own issue doc, same severity as a live-trial
-      divergence, and this backtest does NOT count as passing until they're resolved) — committed into this plan's
-      Progress Log, not left in a scratchpad.
-- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency**, gated on EITHER the live single-repo trial
-      (`market-data-processing-service`, done-when 2026-08-17) OR the historical backtest above clearing with zero
-      divergences over a sample the reviewer judges large enough to trust — this plan's `sequential: true` only encodes
+- [x] ✅ [SCRIPT] P1. **Accelerate validation via a historical-commit backtest — DONE, but did NOT clear the evidence
+      bar (see Progress Log for the full report).** `scripts/quality_gates/test_impact_backtest.py` +
+      `test_test_impact_backtest.py` (unified-trading-pm) built and run for real against `execution-service`,
+      `features-service`, `instruments-service`, `market-data-processing-service` (last 40 `quality-gates-v2` runs
+      each). **Finding: historical CI data is queryable (`gh run list`/`gh run view --log`), but the current fleet is
+      mid an already-tracked resource-contention crisis
+      (`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, status open) that makes
+      almost every recent "failure" run an infra-level SIGINT/OSError kill or a known contention-induced pytest-timeout
+      (`/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md`,
+      both open, both already naming the exact test this backtest also hit) — NOT a genuine content-level test failure
+      attributable to a specific diff.** Usable backtest sample size: `execution-service` 0/1, `instruments-service`
+      0/5, `market-data-processing-service` 0/11 (100% unattributable infra kills in all three, even at a 40-run
+      window); `features-service` showed 1 nominally-attributable failure that turned out to be the SAME already-tracked
+      `test_cross_timeframe_sanity.py` contention-timeout (confirmed by cross-referencing 4 other unrelated commits with
+      the identical signature) firing on a commit that only touched unrelated `commodity/` files — explained
+      pre-existing flakiness, not a selector divergence, so NOT filed as a new issue (already tracked). **Net result: 0
+      usable samples, 0 genuine divergences, but also 0 evidence — the backtest cannot currently produce the accelerated
+      evidence the operator asked for, because the fleet's own CI health (not the selector) is the limiting factor.**
+      This does NOT mean promote, and does NOT mean the selector is unsafe — it means the live single-repo trial (below,
+      clock to 2026-08-17) remains the only viable evidence path until the capacity crisis resolves enough to produce
+      clean historical samples.
+- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency — STILL BLOCKED, backtest did NOT clear it.**
+      Gated on EITHER the live single-repo trial (`market-data-processing-service`, done-when 2026-08-17) OR the
+      historical backtest clearing with zero divergences over a sample the reviewer judges large enough to trust — the
+      backtest above ran for real but returned a 0-usable-sample result (see its writeup), which does NOT satisfy "large
+      enough to trust"; it is evidence of nothing, not evidence of safety. This plan's `sequential: true` only encodes
       file-order, not this OR; a human/reviewing-worker must read both todos' actual state and decide which (if either)
-      satisfies the bar, not just check that the prior todo in file order is `[x]`. If the backtest clears first, it
-      does NOT skip the fleet-wide question — it only removes the requirement to wait until 2026-08-17 before extending
-      validation from one repo to the rest of the Phase-1 table with the current allowlists. Done-when: zero observed
+      satisfies the bar, not just check that the prior todo in file order is `[x]`. If the backtest is re-run later
+      (once the capacity crisis resolves) and clears with a genuinely trustworthy sample, it does NOT skip the
+      fleet-wide question — it only removes the requirement to wait until 2026-08-17. Done-when: zero observed
       divergences fleet-wide, from whichever evidence source actually satisfies the reviewer.
 - [ ] [REVIEW] P2. **Promotion decision** — once the fleet-wide evidence bar above is met, decide whether to let the
       selector actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand up the
@@ -347,3 +349,38 @@ to be per repo — not measured here, out of this todo's scope.
   both todos' state, not just check the immediately-prior checkbox, before deciding the bar is met. **Per explicit
   operator instruction, this update is DOC-ONLY** — the backtest itself is scoped as a todo for a future (fresh-context)
   session/agent to execute, not started here.
+- **2026-08-03 (same session) — Backtest EXECUTED, full honest report.** `unified-trading-pm` —
+  `scripts/quality_gates/test_impact_backtest.py` (+ `test_test_impact_backtest.py`, 5 unit tests covering the two real
+  attribution shapes + the unattributable case). Methodology: `gh run list --workflow quality-gates-v2.yml` per repo
+  (last 40 runs), filter to `conclusion=failure`, fetch each run's full log (`gh run view --log`), try to attribute the
+  failure to a specific test file (pattern 1: a clean pytest `FAILED <nodeid>` + short-summary section; pattern 2
+  fallback: a Timeout/crash mid-test — the last traceback frame naming a `tests/` file is where execution was stuck),
+  then replay `test_impact_selector.py` against that commit's real diff (this workspace's own local clones) and check
+  whether the real failing test falls inside the narrowed set.
+  - **`execution-service`**: 40 runs listed, 1 failure, unattributable (infra kill) → 0 usable.
+  - **`instruments-service`**: 40 runs listed, 5 failures, all 5 unattributable → 0 usable.
+  - **`market-data-processing-service`**: 40 runs listed, 11 failures, all 11 unattributable (same SIGINT →
+    `graceful shutdown` → `OSError: cannot send (already closed?)` signature every time) → 0 usable.
+  - **`features-service`**: 15 runs listed (didn't need 40 — plenty of failures already), 6 failures, all 6 attributed
+    to `tests/delta_one/unit/test_cross_timeframe_sanity.py` (pytest-timeout), across only 4 distinct commits (one
+    retried 3× via `workflow_dispatch` — a manual re-trigger pattern, consistent with someone hoping the flake would
+    clear). 5 of 6 showed literally no `.py` diff (the retries landed on later, unrelated doc-only HEAD commits — the
+    flake fires independent of what's even in the diff). The 1 with a real diff (commit `d387ba7f78`, "fix(commodity):
+    scope weather_delta to NG...") touched only `commodity/` files — completely unrelated to `delta_one` — yet still hit
+    the identical timeout signature, confirming this is diff-independent flakiness, not a regression this specific
+    commit introduced. Cross-referenced against 4 OTHER commits with the same signature (unrelated diffs, same test,
+    same timeout) to confirm — this is not a one-off coincidence.
+  - **Root cause, already tracked, not new**:
+    `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (status open) — ~20+ repos'
+    self-hosted QG runners colocated on ONE oversubscribed 16-vCPU/64GB EC2 instance, causing exactly this class of
+    hung/SIGINT-killed run and contention-induced timeouts;
+    `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md` (both
+    open) already name `test_cross_timeframe_sanity.py` by name as a known recurring casualty. Neither issue needed a
+    new doc — this backtest is corroborating evidence of their ongoing impact, not a new discovery, so no duplicate
+    filed.
+  - **Bottom line for the operator's acceleration ask**: the backtest mechanism works exactly as designed (real gh CLI
+    data, real selector replay, real cross-referencing to rule out a false-positive) — but the fleet's CURRENT CI health
+    is the limiting factor, not the selector. 0 usable samples across 3 repos and 1 explained-away false-positive in the
+    4th is not "clean, zero divergences" — it's "no evidence either way." **The backtest does NOT accelerate anything
+    right now; the live single-repo trial (clock to 2026-08-17) remains the only real evidence path**, unless the
+    capacity crisis resolves and a re-run produces a genuinely large, clean sample.
