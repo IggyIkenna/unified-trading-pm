@@ -729,3 +729,30 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `30817783411`. `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
   clean (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
   origin beyond this doc edit).
+
+- **2026-08-03 ~14:00-14:10Z (`cicd` escalation `agt-b8bcdb`, slot 3, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — re-dispatch of the SAME escalation id `agt-b8bcdb` already handled once at 11:05-11:15Z by slot 10
+  (this is the ~14th same-day fire of this exact wall for `features-service`)**: re-verified from scratch rather than
+  trusting the cached entry. `main`'s failing run is still the identical pre-mitigation `30780455914`
+  (formula-hash-drift STEP 5.91 shape — confirmed already fixed on LDR: the `checks` job is green on LDR's last two
+  completed runs). LDR HEAD has advanced further since the 13:52Z entry (`8265205c`, one more commit —
+  candle-dtype/TRADFI-TIMEFRAME only, no test-timeout-config touch). The run `agt-1e081d` found in-flight against
+  `abff85a3` (`30818407385`) is STILL `queued` (not started) ~40min after dispatch — the `content sentinel` sub-job
+  completed instantly but both `QG slice` jobs have not begun; the repo's one registered self-hosted runner
+  (`glue-ip-172-31-5-118-1`) is `status=online busy=true` serving other repos' in-progress runs
+  (`market-data-processing-service` `30817783411`, `instruments-service` `30816252648` both `in_progress` at check time)
+  — consistent with the established single-shared-runner-pool contention diagnosis, this time manifesting as pre-start
+  queue depth rather than a mid-test hang. Did NOT redispatch (would cancel `30818407385`'s ~40min queue position for
+  zero benefit; a redispatch does not skip the queue). Verified all three timeout mitigations (`PYTEST_TIMEOUT=300`,
+  `PYRIGHT_TIMEOUT=300`, `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at LDR HEAD — no
+  regression. `GET /api/repo-blockers` → `open: []`. `ldr-to-main-promote-fleet`'s latest tick (`30820580141`,
+  14:00:49Z) unchanged: `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — will
+  auto-promote the instant any LDR run reports green, no manual action needed; 13 repos fleet-wide currently blocked at
+  this same Tier-A gate, confirming the crisis remains fleet-wide, not features-service-specific. **Disposition: no code
+  or workflow change made or needed** — identical verdict to every prior `features-service` entry in this doc.
+  Root-cause fix remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3, out of
+  scope for a one-shot task). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping.
+  Slot left clean (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
+  beyond this doc edit). Todo 3's operator-flagged dedup/cooldown gap remains open and unaddressed — this entry is
+  further evidence for it (now ~14 same-day fires for this one repo+wall pairing, several within a 10-15min window of
+  each other).
