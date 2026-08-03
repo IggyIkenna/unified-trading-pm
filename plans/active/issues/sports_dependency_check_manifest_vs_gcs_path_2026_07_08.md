@@ -53,14 +53,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
-    instruments-service/instruments_service/reference_data/sports_dependency.py,
-  ]
+context_scope: [/codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md, /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md, instruments-service/instruments_service/reference_data/sports_dependency.py]
 resolved_by:
 ---
 
@@ -286,6 +279,7 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
   (verified on `origin/live-defi-rollout`). Manifest-slice performance work for `check_api_football_dependency()` and
   `sports_fixtures.py:356`, plus the real backfill-speedup verification, remain open (out of this pass's assigned scope)
   — see updated todos above.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 
 ## RE-TRIAGE (2026-07-23)
 

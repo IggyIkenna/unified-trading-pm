@@ -43,14 +43,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /codex/02-data/lst-exchange-rate-surfaces.md,
-  ]
+context_scope: [/plans/active/lst_rate_honest_coverage_2026_07_21.md, /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md, /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, /codex/02-data/lst-exchange-rate-surfaces.md]
 ---
 
 # oracle_prices capture stalled since 2026-07-22 (all 3 venues)
@@ -178,3 +171,4 @@ rows, that's a separate write-path bug to diagnose via its logs.
   touched file, so the referrer edit cannot land until the plan is trimmed below the cap first. Deciding what content is
   safe to cut from an active 1000+-line plan is a judgment call, not a mechanical fix — correctly skipped.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

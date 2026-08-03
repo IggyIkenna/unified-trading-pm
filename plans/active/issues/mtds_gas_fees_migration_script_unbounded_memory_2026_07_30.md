@@ -53,14 +53,7 @@ source: >-
   same session.
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    unified-trading-library/unified_trading_library/manifest_writer/_state.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
-    market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py,
-  ]
+context_scope: [/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md, /codex/02-data/availability-manifest-and-data-status.md, unified-trading-library/unified_trading_library/manifest_writer/_state.py, unified-trading-library/unified_trading_library/manifest_writer/_writer.py, market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py]
 locked_since:
 ---
 
@@ -215,3 +208,4 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   check is an undecided design fork in its own text ("log a loud one-time warning ... OR refuse construction outside a
   recognized deployed-service context"), and the per-slot RSS-ceiling item is self- flagged "Out of scope to
   design/implement here — flagging the pattern". Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

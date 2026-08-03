@@ -35,12 +35,7 @@ execution_scope:
   # (condition mdps-e2e-shared-host-teardown-fixed) is also closed, not just the partial root-cause on todo 1.
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
-  ]
+context_scope: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, /codex/04-architecture/agent-orchestrator-worker-liveness.md]
 ---
 
 # Worker interactive-session teardown repeatedly kills long-running data-pipeline-check-* driver processes
@@ -470,6 +465,7 @@ tracked here rather than silently claimed complete.
   established recovery pattern) — no data lost, just wall-clock cost re-scanning a small already-clean range each time.
   Full narrative: `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s Progress Log (search "confirmed
   killed" and "session-end handoff... CORRECTED").
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
 
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Sole open item is directly covered by
   an explicit, dated 2026-08-02 operator RULING (option A) in this doc's own Progress Log, which keeps `assigned_vm: NA`

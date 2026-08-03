@@ -41,13 +41,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/02-data/honest-coverage-model.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md,
-    instruments-service/instruments_service/engine/orchestrator/footystats.py,
-  ]
+context_scope: [/codex/02-data/honest-coverage-model.md, /codex/02-data/honest-absence-downstream-handling.md, /plans/active/issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md, instruments-service/instruments_service/engine/orchestrator/footystats.py]
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 2.5
@@ -418,6 +412,7 @@ code-fix task). A data_engineering slot with a full session budget should:
   todo in the 2026-07-27 doc (`[CODE] P2`, two candidate directions) rather than here, to keep the fix-tracking in one
   place; this doc's todo #4 should stay open/blocked on that new todo, not re-dispatch a bare re-verify again (it would
   just reproduce this same finding).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03**: re-read (a new 2026-08-03 Progress Log entry landed since the 07-30 marker;
   `last_updated` frontmatter is stale/unmaintained at 2026-07-27, not a reliable skip signal for this doc). **KEEP-NA
   stands, verdict unchanged.** Sole open todo (#4, re-verify+re-dispatch) still carries its `BLOCKED-PREREQUISITES`

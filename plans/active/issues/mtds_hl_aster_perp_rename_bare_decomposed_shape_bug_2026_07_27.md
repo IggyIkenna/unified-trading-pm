@@ -46,12 +46,7 @@ source:
   ]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
-    market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py,
-  ]
+context_scope: [/plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md, /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md, market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py]
 locked_since:
 ---
 
@@ -172,3 +167,7 @@ sibling todo reads `[x]`.
 - [ ] [SCRIPT] P2. Once confirmed fixed + no double-suffix + cross-checked against the sibling closure, execute
       `--apply --stamp <stamp>` for the 1,496 real renames (small, bounded scale — a direct execution, not a VM launch)
       with the standard idempotent copy→verify→delete safety this script already implements.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

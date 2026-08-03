@@ -60,13 +60,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    agent-orchestrator/server/worker_liveness/_respawn.py,
-    agent-orchestrator/server/worker_liveness/__init__.py,
-    /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-  ]
+context_scope: [agent-orchestrator/server/worker_liveness/__init__.py, agent-orchestrator/server/routes/slots_worker.py, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 depends_on: []
 ---
 
@@ -163,3 +157,4 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
   open `[REVIEW] P3` remains explicitly observation-gated ("act only if this scenario is ever observed live"). No change
   since the 2026-07-31 re-triage above.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

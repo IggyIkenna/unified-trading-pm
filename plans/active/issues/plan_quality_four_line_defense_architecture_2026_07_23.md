@@ -47,15 +47,7 @@ drift_direction: advance-code
 source: [operator request, sports_consolidated_closeout hygiene audit session 2026-07-23]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
-    /plans/active/task_template.md,
-    /plans/active/issues/reference_path_convention_2026_07_23.md,
-    scripts/plan-hygiene/run_hygiene_sweep.sh,
-  ]
+context_scope: [/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /codex/04-architecture/agent-orchestrator-alerting.md, /codex/11-project-management/doc-frontmatter-schema.md, /plans/active/task_template.md, /plans/active/issues/reference_path_convention_2026_07_23.md, scripts/plan-hygiene/run_hygiene_sweep.sh]
 depends_on: []
 ---
 
@@ -321,6 +313,10 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
   dispatch-scope-eligibility rule". Confirmed on that citation; not re-derived. **Reported, not fixed**: the 2026-07-30
   re-check block has runaway leading whitespace that renders as a code block — a prose-integrity defect in
   `/plan-reconcile`'s corpus, outside this skill's apply set.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Sole open item (the initiative's
   acceptance test) remains gated on the same unresolved repo-wide CI-policy question, re-measured and re-affirmed
   still-open across 4+ sessions (raised via `/blocked` 2026-07-30, still unresolved; a 2026-08-02 cross-reference from

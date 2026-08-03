@@ -39,14 +39,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    agent-orchestrator/server/db.py,
-    agent-orchestrator/server/autospawn.py,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-  ]
+context_scope: [agent-orchestrator/server/db.py, agent-orchestrator/server/autospawn.py, /codex/04-architecture/autonomous-recovery-matrix.md]
 depends_on: []
 ---
 
@@ -282,3 +275,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   supersedes the resize direction'; only the git-status write batching/serialisation leg still stands. Doc stays NA
   because the `[BACKEND] P2` readiness-probe todo embeds a `/codex/04-architecture/autonomous-recovery-matrix.md` edit,
   which is never autonomous.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

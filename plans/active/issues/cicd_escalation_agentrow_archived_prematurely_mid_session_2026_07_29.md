@@ -68,15 +68,7 @@ superseded_by:
 resolved_by:
 drift_direction: advance-code
 source: "slot 3, cicd escalation agt-a14109 (wall_type=plan_health, repo=unified-trading-pm#1780), 2026-07-29"
-context_scope:
-  [
-    agent-orchestrator/server/routes/slots_worker.py,
-    agent-orchestrator/server/state_store/agents.py,
-    agent-orchestrator/server/tmux_pruner.py,
-    /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
-    /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
-    /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
-  ]
+context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/state_store/agents.py, agent-orchestrator/server/tmux_pruner.py, /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md, /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md, /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md]
 ---
 
 # `one_shot_complete` — AgentRow archived ~40 min before the session ever called `/done`, a third distinct trigger
@@ -303,6 +295,7 @@ cleanly instead of ending on an issue-doc corroboration.
   needs a request-schema change plus full slot-reuse-lifecycle tracing on the fleet-wide `/done` endpoint. Doc is
   `sequential: true` behind the shipped P2, and the 2026-08-01 slot-4 recurrence (7th instance, new `main_ci_red`
   wall_type) confirms the finding is live, not moot.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Sole open todo remains explicitly
   DECLINED-for-now backend design work (a `/done`-endpoint identity-matching change touching every worker's completion
   path), unchanged since the 2026-08-02 marker. Only file change since is a mechanical `context_scope` path fix — no

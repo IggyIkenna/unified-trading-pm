@@ -37,13 +37,7 @@ depends_on: []
 assigned_vm: NA
 resolved_by: ""
 locked_by: ""
-context_scope:
-  [
-    /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
-    /plans/archive/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
-    /plans/PLAN_FORMAT.md,
-    scripts/quality_gates/check_plan_commit_sha_evidence.py,
-  ]
+context_scope: [/plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md, /plans/archive/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md, /plans/PLAN_FORMAT.md, scripts/quality_gates/check_plan_commit_sha_evidence.py]
 ---
 
 # Plan-flip cited a fabricated commit SHA as completion evidence
@@ -156,6 +150,7 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   contradiction' triage"), with a done-when that only an operator can satisfy ("operator has reviewed and either
   confirms isolated-incident or directs a process fix"). Also covered by the 2026-07-31 operator directive
   `unified-trading-pm@14478ca26`. The machine half already shipped (`check_plan_commit_sha_evidence.py`).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Independently re-verified the cited
   `unified-trading-pm@14478ca26` commit directly via `git show`: it is real and does touch this doc (4 lines changed),
   but its content is a bulk `assigned_vm: planning -> NA` capacity-management reclassification across 25 unrelated docs,

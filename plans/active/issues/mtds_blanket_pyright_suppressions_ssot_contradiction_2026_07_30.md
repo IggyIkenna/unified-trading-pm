@@ -58,14 +58,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
-    /codex/06-coding-standards/README.md,
-    /codex/06-coding-standards/quality-gates.md,
-    market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py,
-  ]
+context_scope: [/plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md, /codex/06-coding-standards/README.md, /codex/06-coding-standards/quality-gates.md, market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md, market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py]
 locked_since:
 depends_on: []
 source:
@@ -189,3 +182,4 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   ratchet) and STEP 5.95 (DTZ/TID251 ratchet), which also run in the same QG pass — cosmetically confusing in the log
   (two different checks both print "STEP 5.94"/"STEP 5.95") but functionally harmless, and consistent with this file's
   pre-existing convention. Todo 3 (operator policy call) remains open, not in this task's scope.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -110,3 +110,4 @@ corpus actually uses was never brought into the checker's purview.
   checklist, and P1 is explicitly flagged as needing a live violation-count measurement before its baseline-seed size is
   known. Choosing between them is a real scope/risk judgment call on a change to shared QG infra, not a bounded,
   worker-determinable outcome — stays NA.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

@@ -42,13 +42,7 @@ depends_on: []
 last_updated: 2026-07-30
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/features_service/onchain/app/calculators/block_priority_gas_distribution_calculator.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py,
-    /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [features-service/features_service/onchain/app/calculators/block_priority_gas_distribution_calculator.py, market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py, plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md, codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 supersedes:
 superseded_by:
 resolved_by:
@@ -142,3 +136,4 @@ green.
   unnoticed. No test hardcoded the list contents, so no test changes were needed
   (`tests/onchain/unit/test_defi_pipeline_extension_calculators.py` only exercises `calculate_features`/`source_name`,
   confirmed by reading it, same as the original 2026-07-30 fix's note).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

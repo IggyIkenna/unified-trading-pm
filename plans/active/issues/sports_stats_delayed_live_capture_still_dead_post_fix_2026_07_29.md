@@ -53,14 +53,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    deployment-service/deployment_service/sports_latency_observation.py,
-    deployment-service/deployment_service/sports_trigger_scheduler.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
-  ]
+context_scope: [/codex/04-architecture/instruments-service-as-ssot-for-mtds.md, /codex/02-data/data-pipeline-correctness-hard-rule.md, deployment-service/deployment_service/sports_latency_observation.py, deployment-service/deployment_service/sports_trigger_scheduler.py, unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py]
 ---
 
 # Sports `stats_delayed`/XG live capture still dead after the lookback fix — two further root causes

@@ -38,13 +38,7 @@ estimate_class: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
-  ]
+context_scope: [/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md, /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md, /codex/04-architecture/autonomous-recovery-matrix.md, /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md]
 depends_on: []
 ---
 
@@ -191,6 +185,7 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   same single open `[INFRA] P2` reclaim-and-push item, still a genuine architectural fork (no new evidence favoring
   either design). The only file change since the 2026-08-01 verdict was an unrelated corpus-wide reference-path fix
   (`unified-trading-pm@17b53df1e`) — no content drift.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — but the doc's own framing is now stale/narrower,
   worth a rewrite by whoever next touches it. Verified directly against the agent-orchestrator codebase (not just this
   doc's text): the "two unbuilt competing designs" framing is inaccurate —

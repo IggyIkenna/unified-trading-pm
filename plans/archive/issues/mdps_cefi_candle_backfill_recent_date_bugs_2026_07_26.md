@@ -37,13 +37,7 @@ source: >-
   prod data on live SPOT VMs (mdps-backfill-cefi-20260726-*), not inferred.
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py,
-  ]
+context_scope: [/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/honest-absence-downstream-handling.md, market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py, market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py]
 resolved_by:
   slot-12 (todo 1, 2026-07-26, market-data-processing-service@335e9cc), slot-7 (todo 3, 2026-08-03,
   market-data-processing-service@e3fc539), slot-6 (todo 2, 2026-08-03, market-data-processing-service@f23e75f), slot-10
@@ -267,6 +261,7 @@ on-chain-CLOB wire format.
   (`15s`/`1m`/`5m`/`15m`/`1h`/`4h`/`1d`). Todo 1 flipped `[x]`. Todos 2/3 (bugs 2/3,
   `derivative_ticker`/`book_snapshot_5`) remain untouched — separate, smaller fixes, not started this session.
 
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - 2026-08-03 (slot-7, `data_engineering`): **Fixed todo 3 (book_snapshot_5 HYPERLIQUID column mapping).** Root cause:
   `CefiBookSnapshotAdapter._normalize_column_names` (`app/adapters/cefi/book_snapshot_adapter.py`) only mapped the
   market-tick-data-service generic bracket wire format (`asks[0].price`/`asks[0].amount`/etc.); HYPERLIQUID's actual raw

@@ -46,14 +46,7 @@ assigned_role: data-engineer
 drift_direction: none
 depends_on: []
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
-    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
-    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
-    market-tick-data-service/tests/unit/test_prediction_universe_prod_catalogue_gating.py,
-    market-tick-data-service/scripts/quality-gates.sh,
-  ]
+context_scope: [/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md, /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md, unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py, market-tick-data-service/tests/unit/test_prediction_universe_prod_catalogue_gating.py, market-tick-data-service/scripts/quality-gates.sh]
 locked_since:
 source: >-
   Discovered 2026-07-23 attempting to quickmerge scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py (an
@@ -348,3 +341,4 @@ investigation" guidance) — retrying with real spacing (not back-to-back) per t
   empirically falsified test-level fixes, a falsified "structural guarantee" (`PYTEST_WORKERS=1` reproduced 5/5), and a
   leading-but-unproven cascade-step theory across 14+ occurrences. Outcome is not determinable by a worker alone —
   correctly NA.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

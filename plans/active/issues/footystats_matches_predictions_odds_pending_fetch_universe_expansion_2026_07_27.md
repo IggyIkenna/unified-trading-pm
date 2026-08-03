@@ -42,14 +42,7 @@ source: sports_satellite_ao_dispatch_batch4-001 (data_engineering slot re-check,
 assigned_vm: planning
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
-    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
-    /codex/02-data/honest-coverage-model.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-  ]
+context_scope: [/plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md, /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md, /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md, /codex/02-data/honest-coverage-model.md, /codex/02-data/honest-absence-downstream-handling.md]
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
@@ -278,3 +271,7 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
   green, shipped via `quickmerge --agent`, verified reachable from `origin/live-defi-rollout` before flipping the
   checkbox above. Filed the `[DIAG] P3` production-holds-over-2-days follow-up todo above rather than blocking this flip
   on calendar time this session doesn't have.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -27,13 +27,7 @@ drift_direction: advance-code
 source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/06-coding-standards/ui-testing-layers.md,
-    unified-trading-system-ui/app/(public)/login/page.tsx,
-    unified-trading-system-ui/lib/auth/personas.ts,
-    unified-trading-system-ui/tests/e2e/user-management.spec.ts,
-  ]
+context_scope: [/codex/06-coding-standards/ui-testing-layers.md, unified-trading-system-ui/app/(public)/login/page.tsx, unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/tests/e2e/user-management.spec.ts]
 depends_on: []
 ---
 
@@ -119,6 +113,7 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   human/design decision on demo-vs-UAT redirect behavior; doc explicitly flags risk of unintended prod login-flow
   changes if touched carelessly.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. All 3 items form a single sequential
   chain gated on a genuine, still-unresolved diagnostic/design call about prod-security-adjacent login redirect
   behavior. Independently re-verified LIVE today against the `unified-trading-system-ui` sibling clone: `?persona=`

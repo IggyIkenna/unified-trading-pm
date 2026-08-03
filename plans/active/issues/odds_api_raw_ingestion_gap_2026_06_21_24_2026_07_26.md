@@ -31,12 +31,7 @@ estimate_class: research
 source: sports_satellite_ao_dispatch_batch5_2026_07_26.md, escalation todo
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
-  ]
+context_scope: [/plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -141,3 +136,7 @@ human-ownership-routing question — it converts to a normal, bounded engineerin
 dates via the existing backfill path (the vendor's historical endpoint may still serve real data even though the
 internal logs are gone), and only mark this a genuine permanent absence once that concrete check comes back empty too.
 See the retagged `[DATA] P3` todo for the full task.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

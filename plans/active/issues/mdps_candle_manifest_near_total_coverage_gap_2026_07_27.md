@@ -44,14 +44,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /codex/02-data/orphan-object-detection.md,
-    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
-  ]
+context_scope: [/plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md, /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md, /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md, /codex/02-data/orphan-object-detection.md, /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md]
 depends_on: []
 ---
 
@@ -499,3 +492,4 @@ the candle layer instead of raw-tick.
   doc's own todo 1 tracks — see its Progress Log entry for the todo 1 checkbox flip. Handing back to
   `mdps_candle_manifest_population_disconnect_2026_07_25.md` todo 5 to do its own manifest-coverage spot-check and flip
   against this evidence.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

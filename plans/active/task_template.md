@@ -26,14 +26,7 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/PLAN_FORMAT.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/PLAN_FORMAT.md, /codex/11-project-management/doc-frontmatter-schema.md, agent-orchestrator/server/regen_backlog_from_plan.py, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 supersedes:
 superseded_by:
 depends_on:
@@ -489,3 +482,7 @@ commit + push + flip the plan checkbox in the SAME turn (`docs(plans):` prefix) 
 
 **This template is a LOCAL doc (not ingested). Copy §2 into a new `<slug>_<YYYY_MM_DD>.md` in `plans/active/` to
 start.**
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

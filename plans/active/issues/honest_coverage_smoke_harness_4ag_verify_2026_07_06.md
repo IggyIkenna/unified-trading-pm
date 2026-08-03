@@ -35,13 +35,7 @@ source: layer1_remeasure_and_certify_2026_07_06.md task 007 live-verify session 
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/02-data/honest-coverage-model.md,
-    /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
-    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
-    e2e-testing/scripts/build_smoke/live_manifest_reader.py,
-  ]
+context_scope: [/codex/02-data/honest-coverage-model.md, /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md, /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md, e2e-testing/scripts/build_smoke/live_manifest_reader.py]
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: high
@@ -295,3 +289,4 @@ numbering.)**
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole todo self-parked BLOCKED-PREREQUISITES after 4 bounces,
   with an explicit 'Operator action required (any one of)' list and a prerequisite chain in another plan.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

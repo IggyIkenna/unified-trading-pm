@@ -52,12 +52,7 @@ estimate_calibrated_ai_days: 0.72
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
-    /codex/02-data/cross-asset-canonical-target-ssot.md,
-    instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py,
-  ]
+context_scope: [/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, /codex/02-data/cross-asset-canonical-target-ssot.md, instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py]
 locked_since:
 supersedes:
 superseded_by:
@@ -173,3 +168,7 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 - [ ] 5. [DATA] P2. IF todo 2 finds prediction's `canonical_question_group=` shape still live: fix that writer too (same
       pattern as todo 3) and migrate its historical objects (same pattern as todo 4). IF todo 2 confirms
       historical-only: just run the historical migration (no writer fix needed). Depends on todo 1 + todo 2.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

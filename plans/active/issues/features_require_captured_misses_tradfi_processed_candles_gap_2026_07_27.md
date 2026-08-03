@@ -29,13 +29,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/scripts/pipeline_e2e_check.py,
-    features-service/features_service/delta_one/app/core/dependency_checker.py,
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-  ]
+context_scope: [features-service/scripts/pipeline_e2e_check.py, features-service/features_service/delta_one/app/core/dependency_checker.py, plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md, plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 ---
 
 # require-captured missed a TRADFI candle gap that the VM's own dependency check caught (2026-07-27)
@@ -237,3 +231,4 @@ input gap didn't change.
   fix's push landed first at `features-service@4fbf4dc7`) — same stated intent as this fix's reconciliation of slot-14's
   probe. Not coordinated with directly; whoever rebases second will find their change already subsumed and should drop
   the now-redundant hunks rather than re-applying an equivalent fix on top.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -45,14 +45,7 @@ source:
   ]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    strategy-service/strategy_service/engine/backtest/paper_run_passive.py,
-    strategy-service/strategy_service/engine/backtest/paper_run_attribution.py,
-    strategy-service/strategy_service/engine/backtest/index_ratio_accrual.py,
-    /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
-  ]
+context_scope: [/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, strategy-service/strategy_service/engine/backtest/paper_run_passive.py, strategy-service/strategy_service/engine/backtest/paper_run_attribution.py, strategy-service/strategy_service/engine/backtest/index_ratio_accrual.py]
 ---
 
 # DeFi interest PnL — wrong engine named, and the real one uses a banned formula
@@ -795,3 +788,7 @@ code.
 - **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed independently, no content change since 2026-08-01.
   The sole open checkbox (Option B) is still unstarted and still explicitly under this doc's own OPERATOR GATE. Doc
   stays `assigned_vm: NA`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

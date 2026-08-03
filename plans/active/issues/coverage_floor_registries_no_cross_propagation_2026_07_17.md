@@ -63,15 +63,7 @@ model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
-context_scope:
-  [
-    unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
-    unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py,
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
-  ]
+context_scope: [unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py, unified-api-contracts/unified_api_contracts/registry/venue_mapping.py, unified-api-contracts/scripts/check_coverage_floor_registry_drift.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py, /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md, /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md]
 ---
 
 ## What I found
@@ -276,3 +268,4 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

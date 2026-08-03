@@ -40,15 +40,7 @@ source:
   sports_closeout_track_s2_foldin_2026_07_25.md todo "Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe"
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    instruments-service/scripts/delete_noncanonical_sports_leagues_2026_06_25.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md, /plans/active/instruments_foundation_completeness_2026_06_24.md, instruments-service/scripts/delete_noncanonical_sports_leagues_2026_06_25.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -204,6 +196,7 @@ script was run; no snapshots, no writes, no GCS deletes.
   clone, so a dispatched worker genuinely cannot perform that edit itself (root-clone reads are READ-ONLY per RULES.md §
   1); did not fabricate a `POST /api/prerequisites/...` call ahead of the actual attachment since an unattached
   condition would be inert. Did NOT flip item-3's checkbox.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **2026-08-03 (slot 11, worker)**: Applied the operator ruling for item-1 (full 383-league registry is authoritative,
   not MVP-96). Ran the fixed `delete_noncanonical_sports_leagues_2026_06_25.py` (`instruments-service@7409c5b1`) in
   dry-run mode against the live prod index (bounded via `run-bounded-analysis.sh`, 24G cap — the unfiltered

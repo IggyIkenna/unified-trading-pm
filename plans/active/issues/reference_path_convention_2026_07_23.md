@@ -34,13 +34,7 @@ drift_direction: advance-code
 source: [operator request 2026-07-23]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/PLAN_FORMAT.md,
-    /plans/active/task_template.md,
-    scripts/plan-hygiene/check_reference_paths.py,
-  ]
+context_scope: [/codex/11-project-management/cross-reference-path-convention.md, /plans/PLAN_FORMAT.md, /plans/active/task_template.md, scripts/plan-hygiene/check_reference_paths.py]
 depends_on: []
 ---
 
@@ -199,6 +193,7 @@ convention's scope).
       `python3 scripts/plan-hygiene/check_reference_paths.py` fresh, diff against this doc's last-known-good baseline
       number, find + fix the specific new dangling ref, `--update-baseline`.
 
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, but this is a REVISED read,
   not a re-stamp.** In scope because the doc was edited since the 2026-08-02 marker. The P2 REVIEW item (line 85,
   archival physical-move-vs-banner policy) is real, unresolved, and VALID_JUDGMENT — confirmed fresh, doc must stay NA

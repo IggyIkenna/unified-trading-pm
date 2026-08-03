@@ -35,13 +35,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
-context_scope:
-  [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    instruments-service/scripts/cleanup_legacy_twins.py,
-    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
-  ]
+context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/scripts/cleanup_legacy_twins.py, /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md, /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md]
 drift_direction: advance-code
 depends_on:
 locked_by:
@@ -239,3 +233,4 @@ restated here.
   moved verbatim; no new work performed. The parent plan's remaining task (Folded-in-scope Layer-1 certify) moved to
   `tradfi_consolidated_closeout_2026_07_18.md` in the same pass, leaving the parent with 0 open todos — it was archived
   to `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

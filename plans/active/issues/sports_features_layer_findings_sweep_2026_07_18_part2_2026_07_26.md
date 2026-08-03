@@ -63,15 +63,7 @@ depends_on: []
 last_updated: 2026-07-27
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
-  ]
+context_scope: [/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md, /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/05-infrastructure/spot-vms-for-backfill.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, deployment-service/scripts/vm/launch-api-football-backfill-vm.sh]
 ---
 
 # Sports features-layer findings sweep — PART 2 of 3 (2026-07-18, split 2026-07-26)
@@ -781,3 +773,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
   authoring rule (an operator ruling this run cannot obtain, and codex edits are out of scope); and `[DATA] P2` on
   `emit_empty_gaps_for_entity` states its own alternative as 'or an operator decision accepts the wider denominator as
   intentional'
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

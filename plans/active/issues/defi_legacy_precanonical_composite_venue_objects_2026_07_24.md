@@ -48,16 +48,7 @@ source: >-
   Operator question 2026-07-24, mid-session, prompted by a specific GCS path they encountered directly and asked whether
   it was really canonical / how downstream code reads it.
 resolved_by:
-context_scope:
-  [
-    /codex/02-data/orphan-object-detection.md,
-    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
-    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
-    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
-    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/codex/02-data/orphan-object-detection.md, market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py, /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md, /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md, /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 ---
 
 ## What was found (measured, not inferred)
@@ -254,3 +245,4 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
   reclassification. Closed by citation. The remaining `[PM] P2` item stays KEEP-NA valid and was narrowed to the
   delete-the-legacy-copies phase only (prod-bucket delete = human-only unless reversibility-qualified; plan-destination
   is still an operator ask). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (7 entries).

@@ -50,14 +50,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
-    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py, market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py, unified-api-contracts/unified_api_contracts/registry/possible_manifest.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -529,3 +522,4 @@ Two secondary findings:
     code — there is no code fix available here (the endpoint itself has no historical surface to call). This closes the
     § 3 "plausible but not confirmed" hedge with a definitive "confirmed cannot." Flips the corresponding todo in
     `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

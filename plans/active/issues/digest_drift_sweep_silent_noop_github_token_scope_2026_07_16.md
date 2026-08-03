@@ -68,13 +68,7 @@ assigned_role: devops
 drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
-context_scope:
-  [
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    .github/workflows/digest-drift-sweep.yml,
-  ]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md, /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md, .github/workflows/digest-drift-sweep.yml]
 resolved_by:
 depends_on: []
 ---
@@ -326,3 +320,7 @@ still an unresolved root-cause investigation with no bounded fix identified; gre
 "dormant"+"cascade" — the only hit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md:142`) explicitly states this
 investigation "remains open and out of this todo's scope," corroborating it is un-owned, not duplicated. Not
 RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

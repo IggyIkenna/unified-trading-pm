@@ -60,15 +60,7 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py,
-    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-  ]
+context_scope: [instruments-service/scripts/reconcile_phantom_manifest_rows_all.py, unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py, /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/04-architecture/instruments-service-as-ssot-for-mtds.md, /plans/active/sports_consolidated_closeout_2026_07_19.md]
 ---
 
 # Sports phantom audit targets the reference manifest, not market-data
@@ -325,3 +317,4 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
   treat the `assigned_vm: planning` reclassification as license to dispatch this checkbox independently of batch7's
   decision-16 investigation.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

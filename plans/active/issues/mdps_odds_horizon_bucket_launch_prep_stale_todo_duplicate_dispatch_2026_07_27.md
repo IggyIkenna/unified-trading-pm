@@ -38,13 +38,7 @@ estimate_class: refactor
 source: mdps_odds_horizon_bucket_reprocess_launch_prep-001 (slot 9, 2026-07-27) — discovered mid-task, after launch
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
-    /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-  ]
+context_scope: [/plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md, /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md, /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md, agent-orchestrator/server/regen_backlog_from_plan.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -115,6 +109,7 @@ described work was already done, complete, and separately documented.
   for whoever owns backlog-regen, not a prescribed fix', and the body repeats it ('not scoped/executed here — a design
   question, not this todo's job… not proposing a specific mechanism here'). No mechanism is specified, so the outcome is
   not determinable by a worker alone — the dispatch-scope eligibility bar excludes it.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-stamp, unchanged. Confirmed via git that the
   only change since the 2026-07-30 marker is a mechanical `context_scope` frontmatter backfill (2026-08-03) — no content
   drift. Same reasoning holds: the sole open item is an explicitly-unscoped design question, not a bounded task.

@@ -33,13 +33,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
-    /cursor-configs/skills/context-scout/SKILL.md,
-    /cursor-configs/AUTONOMOUS_AGENT_RULES.md,
-  ]
+context_scope: [/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /codex/11-project-management/doc-frontmatter-schema.md, /cursor-configs/skills/context-scout/SKILL.md, /cursor-configs/AUTONOMOUS_AGENT_RULES.md]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -142,3 +136,4 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   rendering / RULES.md STEP 0 / a QG-style first-tool-call gate) AND to answer the ask-before-creating HARD RULE's
   LOCAL-vs-AO track question; todo 2 is gated behind todo 1 shipping. In scope this run only because of the 2026-08-01
   prose correction (`307b55bd8`) and the 2026-08-02 retag sweep — neither changed the open todos.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

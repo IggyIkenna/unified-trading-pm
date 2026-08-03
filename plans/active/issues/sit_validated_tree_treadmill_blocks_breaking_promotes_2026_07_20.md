@@ -42,13 +42,7 @@ source:
   ]
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    .github/workflows/ldr-to-main-promote-fleet.yml,
-    /codex/08-workflows/ci-cd-flow.md,
-  ]
+context_scope: [/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md, /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md, .github/workflows/ldr-to-main-promote-fleet.yml, /codex/08-workflows/ci-cd-flow.md]
 resolved_by:
 ---
 
@@ -212,6 +206,7 @@ decide "already promoted".
   self-inflicted-status-race sub-finding (a cancelled run's status clobbering an already-successful run's status when
   dispatches overlap) is a DISTINCT, independently fixable bug from the moving-tree race itself — worth its own todo
   line rather than folding into "tighten cadence".
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## na-eligibility-audit verdict
 

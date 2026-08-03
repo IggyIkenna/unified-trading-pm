@@ -304,3 +304,7 @@ Both QG-green + quickmerge-landed + verified on `origin/live-defi-rollout`.
 
 `/codex/05-infrastructure/vm-launcher-runbook.md`,
 `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (1 entries).

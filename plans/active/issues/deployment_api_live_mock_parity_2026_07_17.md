@@ -47,15 +47,7 @@ source:
     deployment-api/deployment_api/routes/health_overview.py#L131,
   ]
 depends_on: []
-context_scope:
-  [
-    deployment-api/scripts/compare_live_mock_parity.py,
-    deployment-api/deployment_api/services/data_status/rollup_cache.py,
-    /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
-    /codex/05-infrastructure/deployment-observability.md,
-    deployment-api/Dockerfile,
-    deployment-api/deployment_api/routes/_gcp_cloud_functions.py,
-  ]
+context_scope: [deployment-api/scripts/compare_live_mock_parity.py, deployment-api/deployment_api/services/data_status/rollup_cache.py, deployment-ui/src/lib/mock-api.ts, /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md, /codex/05-infrastructure/deployment-observability.md, deployment-api/deployment_api/routes/_gcp_cloud_functions.py]
 ---
 
 # deployment-api mock mode has drifted from live
@@ -296,6 +288,7 @@ mock parity — the drift is historical, not systemic.
   `MagicMock()` stubs (not awaitable, so any route touching them false-positives 500 regardless of real correctness).
   Shelved rather than shipped flaky; filed as a new, properly-scoped follow-up todo above rather than bundled into this
   one. `quality-gates.sh` green (sentinel `6027b54`), shipped via `quickmerge --agent`, verified on origin.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **slot-14 2026-08-03**: Closed the adjacent `[UI]` finding slot-7 filed — `deployment-ui@7f5f850`. deployment-ui's own
   frontend dev-mode/Playwright mock (`src/lib/mock-api.ts`, `VITE_MOCK_API`-gated — separate from deployment-api's
   `CLOUD_MOCK_MODE`) still returned `total` for `GET /api/deployments` after the backend standardized on

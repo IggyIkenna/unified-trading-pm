@@ -42,12 +42,7 @@ model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
-context_scope:
-  [
-    /plans/epics/infrastructure_master.md,
-    /codex/02-data/honest-coverage-model.md,
-    /plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md,
-  ]
+context_scope: [/plans/epics/infrastructure_master.md, /codex/02-data/honest-coverage-model.md, /plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md]
 ---
 
 ## What I found
@@ -338,3 +333,4 @@ capture zero rows for its entire assigned range.
   `mdps-backfill-tradfi-` relaunch found for this exact shard today; well under the ≤2/(vm-prefix,day) cap counting
   distinct shards).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

@@ -75,14 +75,7 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
-    /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
-    /codex/08-workflows/ci-cd-flow.md,
-    scripts/workflow-templates/self-hosted-qg-repos.txt,
-    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
-  ]
+context_scope: [/plans/active/github_actions_operator_gated_followups_2026_07_17.md, /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md, /codex/08-workflows/ci-cd-flow.md, scripts/workflow-templates/self-hosted-qg-repos.txt, /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md]
 ---
 
 # Fleet-wide quality-gates-v2 self-hosted-runner capacity crisis (2026-07-27)
@@ -700,6 +693,7 @@ duplicate dispatch to an already-saturated single-runner pool doesn't help). No 
 (`GET /api/repo-blockers` → `{"open": []}`). No code/test/workflow change made or needed; slot never diverged from
 `live-defi-rollout` (no commits, no branch changes) other than this doc-only corroboration append. Pinged
 `AUTHORING_SLOT=planning` with the outcome.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 
 **2026-08-03 ~10:53 UTC corroboration + automation-gap finding (instruments-service, slot-11, data_engineering craft,
 via `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` todo 12)**: same

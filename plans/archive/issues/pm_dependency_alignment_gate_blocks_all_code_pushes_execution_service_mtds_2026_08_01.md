@@ -44,7 +44,7 @@ source:
 execution_scope: orchestrator-agent
 assigned_role: cicd
 drift_direction: advance-code
-context_scope: [/codex/08-workflows/ci-cd-flow.md]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, scripts/manifest/check-dependency-alignment.py, scripts/manifest/dependency-exceptions.yaml, unified-api-contracts/unified_api_contracts/registry/service_contract_map.py]
 depends_on: []
 assigned_vm: planning
 resolved_by:
@@ -155,6 +155,7 @@ premature).
   `execution-service@050ed797`-author sanity check that nothing else silently relied on that manifest entry (the
   recommendation's own stated risk) — flip to `resolved` once that's confirmed, or if a downstream break surfaces,
   reopen with the specifics.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **2026-08-03, slot 9**: Investigated directly per operator ruling (investigate rather than ask around). Findings: (1)
   `execution-service/pyproject.toml` still carries ONLY the intentional `basedpyright extraPaths` hint
   (`"../market-tick-data-service"`, line 117) — no `[tool.uv.sources]` or `dependencies=[...]` entry exists or was ever

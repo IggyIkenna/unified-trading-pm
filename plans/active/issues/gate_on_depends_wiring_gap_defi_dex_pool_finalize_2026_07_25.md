@@ -50,14 +50,7 @@ execution_scope: local-only
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
-    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
-    /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md,
-    /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-  ]
+context_scope: [/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md, /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md, /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md, agent-orchestrator/server/regen_backlog_from_plan.py]
 depends_on: []
 ---
 
@@ -707,6 +700,7 @@ note above already covers. Independently re-verified before declining:
     false premise that batch8 shipped; not touching `lst_rate_honest_coverage_2026_07_21.md`'s Phase-3 checkbox.
     Skipping via `POST /api/slots/15/skip-current-task` (`reason_code: GATED`) per this doc's established disposition
     rather than filing a duplicate `/blocked` or issue doc.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. The doc's `## Todos` section is fully
   `[x]` done; the 5 grep-matched `- [ ]` lines are a confirmed false positive (verbatim quotation of a now-archived

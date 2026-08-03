@@ -44,13 +44,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    deployment-ui/src/data/capability-manifest.json,
-    deployment-ui/src/components/CapabilityTab.tsx,
-    /codex/04-architecture/solana-defi-coverage.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [deployment-ui/src/data/capability-manifest.json, deployment-ui/src/components/CapabilityTab.tsx, /codex/04-architecture/solana-defi-coverage.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -145,6 +139,7 @@ rg -n '"venue:drift"|"collateral:drift"|"venue": "drift"' deployment-ui/src/data
   session). TreasuryTab dropdown + mocks + specs fixed and shipped separately
   (`deployment-ui@<sha-filled-in-by-quickmerge>`); this capability-bundle finding filed as its own issue per the
   findings-triage HARD RULE (cross-repo, data-correctness-adjacent, too large to hand-fix in the same pass).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 
 ## Second instance — `unified-trading-system-ui/lib/registry/ui-reference-data.json` (coordinator, 2026-07-16)
 

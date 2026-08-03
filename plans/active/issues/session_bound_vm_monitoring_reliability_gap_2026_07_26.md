@@ -44,13 +44,7 @@ estimate_class: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-  ]
+context_scope: [/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md, /codex/05-infrastructure/vm-launcher-runbook.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md]
 depends_on: []
 ---
 
@@ -105,3 +99,4 @@ in the same way and at the same time when they're the same physical connection.
   self-declared as a design/judgment call (which reliability model to commit to for ad hoc backfill VMs) with no
   decision made yet — stays NA as a whole; the secondary measurement/audit todo is an individually plausible future
   RECLASSIFY candidate, not actioned this run.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -47,13 +47,7 @@ source:
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /cursor-configs/skills/docs-reconcile/SKILL.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/06-coding-standards/strategy-identity-versioning.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-  ]
+context_scope: [/cursor-configs/skills/docs-reconcile/SKILL.md, /codex/11-project-management/doc-frontmatter-schema.md, /codex/06-coding-standards/strategy-identity-versioning.md, /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md]
 supersedes:
 superseded_by:
 ---
@@ -359,6 +353,7 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   bulk-stamped `last_reviewed: 2026-05-17` cross the 90-day limit together; it is a HARD PM QG gate and a shrinking
   ratchet cannot absorb it. Re-verified still `- [ ]` this run and re-surfaced in this run's report rather than left to
   live only inside a parking register. Options A-D with a worker recommendation are already in §P0-A.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): **KEEP-NA, stale item closed.** In scope because the doc was edited
   since the 2026-08-02 marker (`context_scope` backfill, commit 9cfc2d4d5-adjacent). Read end-to-end;
   `grep -cE '^- \[ \]'` = **2** now (was 4 at the last marker). Found the P1-D bold-span item (line 248) was already

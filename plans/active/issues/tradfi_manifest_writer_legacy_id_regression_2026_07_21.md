@@ -32,15 +32,7 @@ source:
   root-cause investigation agent
 locked_by:
 resolved_by:
-context_scope:
-  [
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
-    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
-    /plans/epics/tradfi_master.md,
-  ]
+context_scope: [/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md, /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md, /codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py, market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py, /plans/epics/tradfi_master.md]
 ---
 
 # TradFi manifest writer — live legacy-id regression (not historical debt)
@@ -449,3 +441,4 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   registration/recovery script identification step remains open-ended investigation, and the remediation is a
   live-manifest CAS-write lacking a stated safe-idempotent justification or `[OPERATOR]` tag. No content drift. Nothing
   to reclassify.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

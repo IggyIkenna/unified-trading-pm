@@ -31,8 +31,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [/codex/06-coding-standards/documentation-standards.md, /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md]
+context_scope: [/codex/06-coding-standards/documentation-standards.md, /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -113,3 +112,4 @@ the dispatch-scope-eligibility ruling):
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
   self-classifies as a scoping judgment ('should S5.1 tier its required set by repo type?'), not a bounded worker todo,
   per the doc's own text citing the dispatch-scope-eligibility ruling.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

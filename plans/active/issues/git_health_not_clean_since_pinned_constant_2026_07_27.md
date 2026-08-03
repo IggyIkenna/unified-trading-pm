@@ -115,6 +115,7 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   unchanged. All 3 `[BACKEND] P3` todos are diagnostics feeding the doc's own unresolved field-design choice (keep the
   hysteresis-gated `not_clean_since` and ADD a separate "last observed dirty transition" field, vs. bugfix the existing
   field's reset semantics) — a genuine judgment call.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): **KEEP-NA, valid — citation fix only, no reclassify.** In scope
   because the doc was edited since the 2026-08-02 marker (`context_scope` backfill). New finding this run: todos #1 and
   #2 (the two diagnostic instrument/audit tasks) are already duplicated — combined into one open `[BACKEND] P3` todo in

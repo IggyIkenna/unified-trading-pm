@@ -57,14 +57,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
-    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /codex/02-data/external-data-always-available-rule.md,
-  ]
+context_scope: [plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md, plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md, features-service/features_service/multi_timeframe/cli/main.py, features-service/features_service/cross_instrument/app/calculators/regime_calculator.py, codex/02-data/data-pipeline-correctness-hard-rule.md]
 resolved_by:
 ---
 
@@ -416,6 +409,7 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   (upstream data gaps, not a driver bug) rather than a stall — confirmed via continuously-advancing `run.log` timestamps
   right up to the preemption instant. CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) remains healthy
   and running. Still not done; continuing to monitor both.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - 2026-08-03 ~11:25Z (slot-16, data_engineering, INTERIM #3 — TRADFI:delta_one VERDICT): TRADFI:delta_one's relaunched
   VM (`features-e2e-tradfi-20260803-053515-b3b034`) ran to a genuine terminal `EXIT_STATUS=1` after ~5h48m of real,
   continuously-advancing compute — **failed, not a genuine PASS**. Root-caused via direct `run.log` read + a code read

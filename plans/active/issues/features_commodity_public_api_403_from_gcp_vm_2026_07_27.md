@@ -39,14 +39,7 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/features_service/commodity/adapters/base_source.py,
-    features-service/features_service/commodity/adapters/eia_ng.py,
-    features-service/features_service/commodity/adapters/cftc.py,
-    /codex/02-data/external-data-always-available-rule.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-  ]
+context_scope: [features-service/features_service/commodity/adapters/base_source.py, features-service/features_service/commodity/adapters/eia_ng.py, features-service/features_service/commodity/adapters/cftc.py, codex/02-data/external-data-always-available-rule.md, plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 ---
 
 # features-service `commodity` — public/no-auth data sources 403ing from a GCP VM
@@ -100,3 +93,7 @@ environment-level cause (VM IP / headers) than 3 independent site outages.
       range is on any of EIA/CFTC/Baker Hughes' block-lists (unlikely to be operator-actionable beyond routing through a
       different egress path); not urgent — commodity is a P1/lower-priority family, not currently gating anything else
       in the matrix.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

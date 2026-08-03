@@ -49,13 +49,7 @@ resolved_by:
 source:
   "scheduled /na-eligibility-audit defi run 2026-08-02 (autonomous, na_eligibility_auditor) — hit while trying to write
   a Phase-0 incremental-skip verdict marker into an in-scope doc"
-context_scope:
-  [
-    /plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
-    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    scripts/plan-hygiene/check_line_caps.sh,
-  ]
+context_scope: [/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md, /plans/active/lst_rate_honest_coverage_2026_07_21.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, scripts/plan-hygiene/check_line_caps.sh]
 ---
 
 # An over-cap LIVE plan cannot carry an audit verdict marker, so it is re-read forever
@@ -148,3 +142,4 @@ than acted on:
   operator-gated). **That verdict could not be persisted into the doc** for the reason this issue documents — it is
   recorded here instead so the audit result is not lost, and so whoever resolves the cap question can paste it back. The
   extraction itself is unaffected and stands: batch8 + its gated finalize twin were created normally.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

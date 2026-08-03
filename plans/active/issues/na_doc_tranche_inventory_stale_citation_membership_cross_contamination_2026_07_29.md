@@ -60,14 +60,7 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.16
 locked_by:
 resolved_by:
-context_scope:
-  [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
-    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
-  ]
+context_scope: [/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /cursor-configs/skills/na-eligibility-audit/SKILL.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
 depends_on: []
 source: >-
   `/na-eligibility-audit infra` run 2026-07-29 (na_eligibility_auditor scheduled worker, slot 7) — Phase 0 inventory
@@ -224,6 +217,7 @@ class in a third script.
   total (5 original FP + 1 original FN + 3 new FP), materially more than the issue doc's original estimate — strengthens
   the case for the shared-helper extraction in the remaining P3 todo (a single well-tested membership module is less
   likely to leak silently a third time than two independently-maintained near-duplicates).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Codex SSOTs
 

@@ -34,14 +34,7 @@ depends_on: []
 resolved_by:
 locked_by:
 source: ["discovered live during defi_consolidated_closeout_2026_07_18.md's manifest rebuild work, 2026-07-23"]
-context_scope:
-  [
-    /codex/02-data/defi-canonical-naming-ssot.md,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
-    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
-  ]
+context_scope: [/codex/02-data/defi-canonical-naming-ssot.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py, /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py]
 ---
 
 # KALSHI_PERP perp_funding manifest emits fail — source not registered
@@ -142,3 +135,4 @@ concrete, currently-failing symptom; the classification question is the census a
   reroute / accept as a historical gap). The 2 `[DIAG] P2` checkboxes are bounded but secondary, and the same gap-day +
   `_migrated_kalshi_perp_*` forensics are already claimed by an active planning plan
   (`defi_satellite_ao_dispatch_batch6_2026_07_30.md:310`), so flipping this doc would dispatch a duplicate.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

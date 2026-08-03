@@ -53,15 +53,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
-context_scope:
-  [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
-    /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
-  ]
+context_scope: [/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /codex/02-data/data-pipeline-correctness-hard-rule.md, /cursor-configs/skills/na-eligibility-audit/SKILL.md, /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md, /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md]
 depends_on: []
 source:
   [
@@ -282,6 +274,7 @@ scope on every run. Fix belongs with Finding 3's script todo.
 
 ## Progress Log
 
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA-STALE items closed + RECLASSIFY. Findings 1 and
   2's `[OPERATOR]` todos both verified resolved with hard evidence (see checkboxes above) and closed. The remaining open
   todos — Finding 4 (`[OPERATOR]` P2, still genuinely open: re-verified live,

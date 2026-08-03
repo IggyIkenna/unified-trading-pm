@@ -51,12 +51,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-context_scope:
-  [
-    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
-    scripts/plan-hygiene/check_na_corpus_ratchet.py,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-  ]
+context_scope: [scripts/plan-hygiene/generate_na_doc_tranche_inventory.py, scripts/plan-hygiene/check_na_corpus_ratchet.py, scripts/plan-hygiene/check_todo_format.sh, /cursor-configs/skills/na-eligibility-audit/SKILL.md]
 ---
 
 # NA inventory counts fenced-code-block checkboxes as real open todos
@@ -180,3 +175,4 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
   corrected `execution_scope: local-only -> orchestrator-agent` (was stale for a now-dispatchable doc). No finalize-plan
   companion authored: `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule
   (`check_finalize_plan_coverage.py` only globs `plans/active/*.md` plan docs).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

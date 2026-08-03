@@ -45,16 +45,7 @@ source:
 locked_by:
 locked_since:
 resolved_by:
-context_scope:
-  [
-    scripts/propagation/rollout-cloudbuild.py,
-    configs/cloudbuild-service-template.yaml,
-    scripts/quality_gates/check_cloudbuild_template_drift.py,
-    /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
-    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-  ]
+context_scope: [scripts/propagation/rollout-cloudbuild.py, configs/cloudbuild-service-template.yaml, scripts/quality_gates/check_cloudbuild_template_drift.py, /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md, /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md, /codex/08-workflows/ci-cd-flow.md, /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md]
 ---
 
 # The rollout tool would have regressed the fleet
@@ -200,6 +191,7 @@ silently regresses the fleet again.
   shipped in this change; the 15/19 drift figures quoted in the re-scoped todo were re-verified against
   `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` at the time of writing (19 consumers listed, 15 with a
   non-zero count) and the batch-5 todo instructs its worker to re-measure live before acting on them.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (7 entries).
 
 ## na-eligibility-audit verdict
 

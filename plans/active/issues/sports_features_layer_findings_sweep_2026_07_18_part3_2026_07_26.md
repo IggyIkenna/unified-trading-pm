@@ -53,15 +53,7 @@ depends_on: []
 last_updated: 2026-07-26
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    instruments-service/scripts/derive_sports_fixture_round_2026_07_18.py,
-    features-service/features_service/sports/exporters/derived_features_helpers.py,
-  ]
+context_scope: [/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md, /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, instruments-service/scripts/derive_sports_fixture_round_2026_07_18.py, features-service/features_service/sports/exporters/derived_features_helpers.py]
 ---
 
 # Sports features-layer findings sweep — PART 3 of 3 (2026-07-18/19, split 2026-07-26)
@@ -903,6 +895,7 @@ overwrite.
   ... Left open here intentionally; do not flip it from this doc'. The 4th (`[PROCESS] P1`, codify an
   entity-rename/split consumer-migration rule) needs a codex authoring ruling. NOTE: the two `[DIAG] P0`s at ~line 387
   and ~line 440 are literal duplicates of each other within this same doc
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **na-eligibility-audit 2026-08-03**: re-read (a 2026-07-30 addendum added detail to the line-782 `[CODE] P2` todo
   since the marker; context_scope backfill otherwise, not verdict-relevant). **KEEP-NA stands, verdict unchanged from
   07-30** — same 4 open todos: 2 `[DIAG] P0` duplicates intentionally left open (owned by

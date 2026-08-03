@@ -34,14 +34,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
-    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
-    unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py,
-    deployment-service/scripts/vm/launch-mtds-backfill-vm.sh,
-  ]
+context_scope: [/plans/active/lst_rate_honest_coverage_2026_07_21.md, /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md, /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md, unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py, deployment-service/scripts/vm/launch-mtds-backfill-vm.sh]
 assigned_vm: NA
 resolved_by:
 ---
@@ -591,3 +584,4 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   hypothesis remains neither confirmed nor refuted — next resumer should re-run either the lightweight sampler
   (preferred — near-zero overhead) or a `memray --aggregate` (much smaller/faster output mode, untried this session)
   once credits are available again, rather than assuming the hypothesis from the 2026-07-31 entries above is settled.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

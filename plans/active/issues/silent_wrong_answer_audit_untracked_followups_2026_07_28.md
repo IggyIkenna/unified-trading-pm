@@ -52,12 +52,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
-    e2e-testing/scripts/validation/validate_shards_4pillar.py,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-  ]
+context_scope: [/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md, e2e-testing/scripts/validation/validate_shards_4pillar.py, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 ---
 
 # Silent-wrong-answer audit — the untracked schema-contract follow-up
@@ -105,3 +100,4 @@ should be filed as its own todo against that decision's outcome.
   per-pair schema/NaN-tolerance contract exists to check against'). NOTE the P0 gas-fee reader fix IS bounded and
   specific — worth an operator call on splitting it out. (That call was made the same day — see the split-out entry
   above.)
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

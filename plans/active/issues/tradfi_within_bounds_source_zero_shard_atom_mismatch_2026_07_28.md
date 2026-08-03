@@ -80,14 +80,7 @@ source: >-
   WithinBoundsTradfiSourceZero trigger), worked 2026-07-28 (slot 6): live VM run.log + GCS-events grep (0 hits) + direct
   availability_index.parquet cross-reference (59.3-100% false-positive match rate) + code trace
   (instruments-service@f6d479f8, market_tick_data_service/scripts/_rebuild_tradfi_cf11.py).
-context_scope:
-  [
-    /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/scripts/_rebuild_tradfi_cf11.py,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-  ]
+context_scope: [/plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md, /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md, /codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/market_tick_data_service/scripts/_rebuild_tradfi_cf11.py, /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md]
 ---
 
 # WithinBoundsTradfiSourceZero — root-caused as a stale bundle-grain shard-atom mismatch, not a Databento bug
@@ -340,3 +333,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `[x]` DONE (still no live `--apply` run) — updated the NOTE block above to correct the stale wording. Todo 1's
   independently-sufficient operator-gate ground (81,454-row measured drop still awaiting go-ahead) is unaffected; todos
   3/4 unchanged (conditional / sequenced-after). Nothing to reclassify.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

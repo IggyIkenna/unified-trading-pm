@@ -49,13 +49,7 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
-    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
-    features-service/features_service/common/live_runner.py,
-    market-data-processing-service/market_data_processing_service/cli/parser.py,
-  ]
+context_scope: [/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md, deployment-service/scripts/vm/setup-data-pipeline-vm.sh, features-service/features_service/common/live_runner.py, market-data-processing-service/market_data_processing_service/cli/parser.py]
 supersedes:
 superseded_by:
 depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]
@@ -245,6 +239,7 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   citations at the archive location (`depends_on`/`gate_on_depends: true` left untouched — bare slug, still correctly
   resolves against `plans/archive/` per `check_depends_on_graph.py`). The exec-dispatch wiring todo below is now
   genuinely dispatchable.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **2026-08-03 (slot-6)**: Shipped the exec-dispatch wiring todo — `deployment-service@e7d17f2` (see the flipped
   checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
   scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.

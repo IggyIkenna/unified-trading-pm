@@ -39,13 +39,7 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
-context_scope:
-  [
-    /codex/02-data/cross-asset-canonical-target-ssot.md,
-    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
-    instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py,
-    instruments-service/instruments_service/engine/orchestrator/process_write.py,
-  ]
+context_scope: [/codex/02-data/cross-asset-canonical-target-ssot.md, /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py, instruments-service/instruments_service/engine/orchestrator/process_write.py]
 locked_since:
 supersedes:
 superseded_by:
@@ -418,6 +412,7 @@ This needs the same kind of operator/architecture ruling todo 1 required for spo
       rows, while a hive-shape copy from the same day has 306 — determine whether this is isolated to that one (day,
       venue) or a systemic gap in the historical-backfill/reconciliation path for DERIBIT options, and fix the
       writer/backfill if systemic (repo: instruments-service).
+
 - [ ] 8. [OPERATOR] P2. Rule on prediction's third legacy shape surfaced by todo 3's investigation:
       `instrument_availability/by_date/day={D}/market={M}/venue={V}/...` (`market=BTC`/`ETH`/`OTHER`, ~12,463 objects,
       sampled from 2025-03 — see §4 in "What I found" above). This shape predates the `canonical_question_group`
@@ -438,3 +433,7 @@ This needs the same kind of operator/architecture ruling todo 1 required for spo
       sample the actual row-level diff to determine if this is a real data-quality issue (e.g. instrument churn within
       the same day) or a symbol-normalization artifact, then decide per-pair which side (or a union) is authoritative
       and apply the fix via `gcs_copy_object`/a hand-written union write (repo: instruments-service).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

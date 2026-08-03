@@ -35,14 +35,7 @@ execution_scope: local-only
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
-    agent-orchestrator/server/orphan_reap.py,
-    agents/worker.md,
-    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
-  ]
+context_scope: [/codex/12-agent-workflow/async-wait-and-poll-discipline.md, /codex/04-architecture/agent-orchestrator-worker-liveness.md, agent-orchestrator/server/orphan_reap.py, agents/worker.md, /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md]
 depends_on: []
 ---
 
@@ -190,3 +183,4 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
   worker-shell-parented process (there might not be a legitimate use case)", and todo 3 is a cross-doc root-cause
   RE-ATTRIBUTION judgment (deciding whether `shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s occurrences
   are actually this bug misdiagnosed). Neither has a worker-determinable done-state.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

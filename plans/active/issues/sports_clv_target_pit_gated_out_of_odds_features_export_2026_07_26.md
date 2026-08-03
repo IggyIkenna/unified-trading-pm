@@ -44,14 +44,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
-    /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
-    /codex/04-architecture/tier-and-import-architecture.md,
-    features-service/features_service/sports/exporters/odds_features_exporter.py,
-    ml-service/ml_service/training/app/core/sports_target_generator.py,
-  ]
+context_scope: [/plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md, /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md, /codex/04-architecture/tier-and-import-architecture.md, features-service/features_service/sports/exporters/odds_features_exporter.py, ml-service/ml_service/training/app/core/sports_target_generator.py]
 ---
 
 # ml-service's CLV target has no leakage-safe source — features-service correctly refuses to emit it
@@ -299,3 +292,7 @@ will auto-push a held commit the moment it reclaims a session it considers dead 
   mechanical execution against an already-ruled decision. Conflict-check CLEAR: the sibling
   `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (planning) claims the FAMILY-route column
   check, a different, adjacent claim.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

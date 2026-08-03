@@ -47,12 +47,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    ml-service/ml_service/training/app/core/sports_target_generator.py,
-  ]
+context_scope: [/plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md, ml-service/ml_service/training/app/core/sports_target_generator.py]
 ---
 
 # CLVTargetBuilder (family route) may share the legacy CLVTargetGenerator's PIT-gate emptiness
@@ -90,3 +85,7 @@ they would silently inherit the same architecture gap this whole chain exists to
       `resolved` as moot. If populated: close this doc, no gap exists. Repo: ml-service. Done when: the
       populated-vs-null verdict is recorded with real-data evidence, and either a follow-up fix chain is filed or the
       doc is closed as moot/non-issue.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

@@ -57,14 +57,7 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/02-data/orphan-object-detection.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
-    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
-    market-data-processing-service/scripts/candle_orphan_sweep.py,
-  ]
+context_scope: [/codex/02-data/orphan-object-detection.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /plans/active/issues/estate_orphan_assessment_2026_07_21.md, /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md, market-data-processing-service/scripts/candle_orphan_sweep.py]
 depends_on: []
 ---
 
@@ -264,6 +257,7 @@ lets each one be built, validated, and run to real completion on its own timelin
   in the SAME dispatch), split todo 2 the same way the parent doc's own "Why this needs a split" section argues for:
   reworded todo 2 to scope BUILD only (now genuinely done, flipped) and added todo 2b for the real-data VM-run
   validation + the 3 still-unwired families (open, next dispatch against this doc).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **2026-08-03** (AO dispatch, slot 2) — Picked up todo 2b. Wired `cross_instrument` + `multi_timeframe` (both write
   `date=` not `day=`; cross_instrument's `feature_group` is day-anchored positional since its preceding `run_tag`
   segment varies) — `features-service@9fb37033`, 21 new unit tests, 43 total green. Built

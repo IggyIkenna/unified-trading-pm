@@ -50,17 +50,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 locked_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
-    /codex/02-data/defi-data-types-catalog.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
-    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
-    market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
-  ]
+context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md, /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md, /codex/02-data/defi-data-types-catalog.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py, deployment-service/terraform/gcp/defi_collection_scheduler.tf, market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py]
 locked_since:
 assigned_vm: planning
 resolved_by:
@@ -270,3 +260,4 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
   planning docs; no open todo elsewhere duplicates this claim) - precondition (S6.1 scheduler wiring) shipped
   2026-07-26; both residual todos are bounded leaf-name verification + a named-target capability scoping pass
 - **context-scout 2026-08-01**: populated context_scope (6 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (8 entries).

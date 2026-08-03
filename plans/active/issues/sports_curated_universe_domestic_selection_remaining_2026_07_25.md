@@ -33,14 +33,7 @@ sequential: false
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data_other.py,
-    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
-  ]
+context_scope: [/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md, /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md, /codex/02-data/sports-2020-06-data-floor.md, unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data_other.py, deployment-service/scripts/vm/launch-api-football-backfill-vm.sh]
 assigned_vm: planning
 resolved_by:
 ---
@@ -474,3 +467,7 @@ inherited from the first shipped batch:
 No new durable contract — this executes Directive A/B from
 `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`, already the SSOT for the selection rules
 themselves.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

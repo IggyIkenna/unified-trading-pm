@@ -50,14 +50,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
-    /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
-  ]
+context_scope: [/plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md, /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md]
 locked_since:
 supersedes:
 superseded_by:
@@ -307,6 +300,9 @@ regression) is worse.**
   manifest read to be genuine decaying noise (day-bucketed: 75/07-30 → 35/07-31 → 1/08-01), not a resurgence — pipeline
   is healthy (13,775 captured book_snapshot_5 rows in the last 24h). All 5 fix commits still ancestors of
   `origin/live-defi-rollout`. Combined across both tracked conditions, this backlog has now consumed 29+ full
+  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C. Full writeup in the
+  book_snapshot_5 doc's own Progress Log.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
   orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C.
 - **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 4) — `(cefi, book_snapshot_5)` now at its
   19th+ dispatch, trickle ticked UP (1→215/24h) but confirmed to be a DIFFERENT already-tracked mechanism, not a

@@ -36,15 +36,7 @@ locked_by:
 resolved_by:
 drift_direction: none
 depends_on: []
-context_scope:
-  [
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
-    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md,
-    /plans/epics/tradfi_master.md,
-  ]
+context_scope: [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md, /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md, /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md, /plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md, /plans/epics/tradfi_master.md]
 ---
 
 # TradFi /autonomous session (2026-07-25) — queued operator decisions
@@ -323,3 +315,4 @@ every day narrows or closes it permanently.
   reconciled (2/2). All 10 numbered decision items are genuine operator escalations (authority/design/blast-radius
   calls), and the 2 open checkboxes are meta-propagation todos explicitly gated on the operator answering them first —
   fails the bounded-outcome bar by design. No content drift since 2026-08-01. Nothing to reclassify.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

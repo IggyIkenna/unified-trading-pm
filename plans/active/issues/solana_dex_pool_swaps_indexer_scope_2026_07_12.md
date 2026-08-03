@@ -33,13 +33,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-12
 locked_by:
-context_scope:
-  [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-  ]
+context_scope: [/plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md, /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md, market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py]
 resolved_by:
 ---
 
@@ -126,3 +120,4 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole todo is 'author a dedicated implementation plan when this
   becomes a priority' — plan-authoring + prioritisation, both operator calls
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

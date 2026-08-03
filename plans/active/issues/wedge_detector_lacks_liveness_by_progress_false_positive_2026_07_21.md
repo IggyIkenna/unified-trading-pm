@@ -51,7 +51,7 @@ source: [main-orchestrator-observation]
 resolved_by:
 locked_by:
 depends_on: []
-context_scope: [/plans/epics/agent_operating_framework_master.md]
+context_scope: [/plans/epics/agent_operating_framework_master.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, agent-orchestrator/server/worker_liveness/_git_alerts.py]
 ---
 
 # What I found
@@ -156,3 +156,4 @@ progress-signal half.
   careless suppression predicate blinds genuine wedge detection), and one of the 3 open todos is an explicit
   `[REVIEW] P3` operator sign-off gate. In scope only via the 2026-08-02 meta-retag sweep (`0409fa053`); content
   unchanged.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

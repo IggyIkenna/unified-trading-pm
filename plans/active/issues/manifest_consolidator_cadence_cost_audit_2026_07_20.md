@@ -50,12 +50,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-context_scope:
-  [
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf,
-    deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf,
-  ]
+context_scope: [/codex/05-infrastructure/manifest-consolidator-ssot.md, deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf, deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf]
 resolved_by:
 ---
 
@@ -274,3 +269,4 @@ with a post-change cost verification showing the expected reduction and zero new
   `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) are both different topics under the same subsystem name,
   not claims on this billing-verification todo — cleared. Added `assigned_role: infra` (was missing). `doc_type: issue`
   — exempt from the finalize-plan-coverage rule, no companion finalize doc authored.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

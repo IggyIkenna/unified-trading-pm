@@ -40,12 +40,7 @@ locked_by:
 source:
   ["na-eligibility-audit defi tranche, 2026-08-03 — found while classifying lst_rate_honest_coverage_2026_07_21.md"]
 depends_on: []
-context_scope:
-  [
-    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    scripts/plan-hygiene/check_line_caps.sh,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-  ]
+context_scope: [/plans/active/lst_rate_honest_coverage_2026_07_21.md, scripts/plan-hygiene/check_line_caps.sh, /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md]
 ---
 
 # lst_rate_honest_coverage over-cap findings — ready-to-apply closes + a stalled backfill VM
@@ -112,3 +107,7 @@ operator-approved wider edit.
 All shas, VM log tails, and doc cross-references above were verified directly (not inferred) during the 2026-08-03
 na-eligibility-audit defi-tranche run. See `lst_rate_honest_coverage_2026_07_21.md`'s own 2026-08-03 Progress Log marker
 for the compact pointer back to this doc.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

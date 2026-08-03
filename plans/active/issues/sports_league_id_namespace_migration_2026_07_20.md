@@ -22,14 +22,7 @@ created: "2026-07-20"
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
-    deployment-service/scripts/rebuild_sports_manifest.py,
-  ]
+context_scope: [/plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py, market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py, deployment-service/scripts/rebuild_sports_manifest.py]
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -826,3 +819,4 @@ offered to the queue once these are the only real blockers.
   Track H's registry-aware honest-coverage denominator ONCE its 2 remaining blockers land' — and the doc's own
   2026-07-28 re-dispatch checks (slot-7, then slot-10) confirm both blockers still unshipped. It also carries an
   unanswered 'OPERATOR DECISION NEEDED — China Super League + Russia Premier League' section
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

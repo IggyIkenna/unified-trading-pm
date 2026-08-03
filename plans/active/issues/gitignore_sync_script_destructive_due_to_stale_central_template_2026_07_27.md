@@ -41,13 +41,7 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    scripts/workspace/sync-gitignore-cursorignore.py,
-    scripts/templates/.gitignore.central,
-    scripts/workspace/untrack-ignored-files.py,
-    /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md,
-  ]
+context_scope: [scripts/workspace/sync-gitignore-cursorignore.py, scripts/templates/.gitignore.central, scripts/workspace/untrack-ignored-files.py, /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md]
 resolved_by:
 ---
 
@@ -131,3 +125,4 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Central remaining item
   (reconciling the template against PM's live .gitignore) is explicitly self-described as real diffing/merging work
   needing human judgment, not mechanical.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

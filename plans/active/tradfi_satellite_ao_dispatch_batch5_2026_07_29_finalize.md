@@ -52,14 +52,7 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/PLAN_FORMAT.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-  ]
+context_scope: [/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/PLAN_FORMAT.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md]
 ---
 
 # TradFi satellite AO batch 5 — finalize
@@ -145,3 +138,4 @@ No new durable contract is created by this plan. `/codex/11-project-management/`
   until batch5 is approved", both contradicting `status: active` — the 2026-07-30 flip (`233ebd614`, corpus-wide removal
   of the redundant finalize double-gate) changed frontmatter only and left the prose behind. No todo checkbox flipped;
   this plan's todos remain machine-gated on batch5's completion.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

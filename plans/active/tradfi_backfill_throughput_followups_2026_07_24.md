@@ -34,13 +34,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
-context_scope:
-  [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md, /codex/05-infrastructure/spot-vms-for-backfill.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md]
 drift_direction: none
 locked_by:
 locked_since:
@@ -620,6 +614,7 @@ than left buried here per PLAN_FORMAT.md's structural-order rule: re-shard equit
   MTDS gate was red at the origin tip on an unrelated concurrent-agent regression — the durability `fail-on-raw`
   canonical-stem guard rejecting an un-updated `book_microstructure` CEFI test fixture; the peer's fix `mtds@953679de`
   landed mid-session and I rebased onto it, then the gate went green.)
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Backfill drive — Progress Log (2026-07-21, autonomous session)
 

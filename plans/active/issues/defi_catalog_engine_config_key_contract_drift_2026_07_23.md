@@ -39,15 +39,7 @@ resolved_by:
 locked_by:
 source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep, 2026-07-23)
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/,
-    strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
-    strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-  ]
+context_scope: [/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md, /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md, strategy-service/strategy_service/engine/strategies/v2/target_universe/, strategy-service/strategy_service/engine/strategies/v2/orchestrator.py, strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py, strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]
 ---
 
 # strategy-service catalog/engine config-key contract has no validation — systemic, cross-archetype
@@ -752,3 +744,4 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   archetypes — a textbook judgment call (trading-parameter/outcome-id/option-strike rulings), correctly held as visible
   `xfail(strict=True)` pending a human ruling, not a bounded worker task. Only diff since the 2026-08-01 marker was the
   context-scout metadata backfill (no content change). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

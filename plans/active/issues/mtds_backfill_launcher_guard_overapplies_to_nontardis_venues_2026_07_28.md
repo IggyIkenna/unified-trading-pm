@@ -28,13 +28,7 @@ execution_scope: orchestrator-agent
 priority: P1
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
-    deployment-service/scripts/vm/launch-mtds-backfill-vm.sh,
-    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
-  ]
+context_scope: [/plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, /plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md, deployment-service/scripts/vm/launch-mtds-backfill-vm.sh, deployment-service/scripts/vm/tardis-concurrency-guard.sh]
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
 drift_direction: advance-code
 depends_on: []
@@ -144,3 +138,4 @@ checker/launcher-tooling accuracy gap, not a pipeline correctness regression.
   `tardis_venue_list_needs_guard` against empty/single/mixed/case-insensitive venue lists. P2/P3 left open — P2 (re-run
   the MID-BACKFILL checker leg) needs a live Track-2 backfill window to be meaningful; P3 (skill doc note) is a separate
   unified-trading-pm-repo todo.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

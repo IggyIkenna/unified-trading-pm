@@ -38,12 +38,7 @@ source: >-
   HYPERLIQUID:PERPETUAL:ADA-USD@LIN, data_type=derivative_ticker).
 locked_by:
 locked_since:
-context_scope:
-  [
-    market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py,
-    market-data-processing-service/market_data_processing_service/app/calculators/fast_candle_aggregation.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
-  ]
+context_scope: [/plans/active/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md, market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py, market-data-processing-service/market_data_processing_service/app/calculators/fast_candle_aggregation.py, market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py]
 resolved_by:
 depends_on: []
 ---
@@ -106,3 +101,7 @@ genuine defect — hence P3, not P1 like todo 1.
       instrument — escalate to P1 and root-cause the specific aggregation step responsible (bisect by commenting out
       timeframes one at a time, or profile with `tracemalloc`/`memray`), following the same "unscoped listing/retention"
       investigation pattern as todo 1. Repo: market-data-processing-service.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -50,13 +50,7 @@ source: >-
   entity=fixtures/ READ-fallback migration; the adjacent sports_closeout_track_s2_foldin_2026_07_25.md owns the legacy
   WRITE-path elimination (Track S) and its 7 open todos are all BLOCKED-PREREQUISITES on other parents, none of them
   this migration.
-context_scope:
-  [
-    /plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md,
-    /codex/02-data/sports-gcs-path-ssot.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-  ]
+context_scope: [/plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md, /codex/02-data/sports-gcs-path-ssot.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md]
 ---
 
 # Sports legacy fixtures-path migration — finalize
@@ -127,3 +121,4 @@ reclassification landed 2026-08-02 with `sequential: true` in the same edit.
   2026-07-31 finding, the reconciliation todo and the archival todo deliberately carry DIFFERENT tag+priority prefixes
   (`[REVIEW] P0` vs `[DOC] P1`) so the AO done-gate's tag disambiguator cannot find two same-tag-priority checked lines
   and fail closed.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

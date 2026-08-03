@@ -35,16 +35,7 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    instruments-service/scripts/expected_universe.py,
-    instruments-service/tests/unit/scripts/goldens/expected_universe/sports.json,
-    /plans/archive/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md,
-    /codex/02-data/external-data-always-available-rule.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
-  ]
+context_scope: [unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, instruments-service/scripts/expected_universe.py, instruments-service/tests/unit/scripts/goldens/expected_universe/sports.json, /plans/archive/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md, /codex/02-data/external-data-always-available-rule.md]
 ---
 
 # Sports odds markets/outcomes/settlements/arbitrage_opportunity — live expected-vs-captured gap
@@ -325,3 +316,4 @@ confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

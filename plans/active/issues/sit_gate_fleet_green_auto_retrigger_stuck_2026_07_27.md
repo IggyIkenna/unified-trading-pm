@@ -42,13 +42,7 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
-    .github/workflows/ldr-to-main-promote-fleet.yml,
-    /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
-  ]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md, .github/workflows/ldr-to-main-promote-fleet.yml, /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md]
 assigned_vm: planning
 resolved_by:
 ---
@@ -149,3 +143,7 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 
 - `/codex/08-workflows/ci-cd-flow.md` §"The MVP gate set" / §"sit-gate/fleet-green" — the promoter's documented
   re-dispatch behavior this finding says didn't fire.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

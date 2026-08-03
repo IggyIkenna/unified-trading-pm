@@ -73,14 +73,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
-    instruments-service/scripts/migration_orphan_sweep_sports.py,
-    instruments-service/scripts/migrate_sports_per_league.py,
-  ]
+context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/02-data/sports-2020-06-data-floor.md, /plans/active/issues/estate_orphan_assessment_2026_07_21.md, instruments-service/scripts/migration_orphan_sweep_sports.py, instruments-service/scripts/migrate_sports_per_league.py]
 supersedes:
 superseded_by:
 resolved_by:
@@ -434,3 +427,4 @@ point, per this data_type/day/league key."
   self-verifying, so it needs no `[OPERATOR]` delete-safety gate. Conflict-check CLEAR: the
   `sports_satellite_ao_dispatch_batch2_2026_07_24.md` grep hit was an unrelated curated-universe todo, not this
   migrate-forward.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

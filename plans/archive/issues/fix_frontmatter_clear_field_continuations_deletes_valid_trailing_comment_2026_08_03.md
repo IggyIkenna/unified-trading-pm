@@ -52,11 +52,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    scripts/plan-hygiene/fix_frontmatter.py,
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
-  ]
+context_scope: [scripts/plan-hygiene/fix_frontmatter.py, /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md]
 ---
 
 > **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
@@ -187,3 +183,4 @@ intentionally-changed files won't surface it either.
     was mistyped as `c8e07871e`, which doesn't resolve; the commit's own message, "is_field_empty() no longer
     re-corrupts a continuation-preserved execution_scope/last_updated value", matches this entry's narrative exactly, so
     this correction is verified, not guessed), full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

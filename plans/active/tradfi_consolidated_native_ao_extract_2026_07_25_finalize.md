@@ -42,13 +42,7 @@ source: >-
   Fresh AO-eligibility triage session, 2026-07-25, per `task_template.md` §4's finalize-plan-coverage rule — every
   AO-dispatched plan needs a companion gated finalize plan.
 assigned_role: data_engineering
-context_scope:
-  [
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
-  ]
+context_scope: [/plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md]
 sequential: true
 drift_direction: advance-code
 ---
@@ -96,3 +90,7 @@ drift_direction: advance-code
       `tradfi_consolidated_native_ao_extract_2026_07_25` and fix each path to point at the archived location → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus
       referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
