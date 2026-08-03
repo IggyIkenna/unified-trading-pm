@@ -628,16 +628,13 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       of the dashboard is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
-- [ ] [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** The FF-pull cron
-      already regenerates `DOC_INDEX.generated.md` across every PM clone with `gen_doc_index.py --stale-check`
-      (`pm@b4d75366d`, fleet-wide 2026-07-04), but that leaves an inter-tick gap: an agent grepping the index within a
-      5-minute window of a doc change reads a stale map. Ship a thin wrapper an agent invokes first that runs the
-      existing `--stale-check` and regenerates only if stale (regen is ~1.4s), so the "grep the L0 index FIRST" rule
-      never routes off a stale index. Must be safe to call concurrently from multiple slots (the generator is already
-      deterministic and per-host, so guard against two simultaneous regens clobbering each other mid-write). **Done
-      when**: the wrapper exists, is documented in the retrieval SSOT
-      (`/codex/11-project-management/doc-frontmatter-schema.md` § 1 or the CLAUDE.md § "Doc retrieval" one-liner), and a
-      test proves concurrent invocation cannot leave a truncated index on disk. Repo: unified-trading-pm. Source:
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-03 (slot-12) — Add the on-demand L0-index stale-check wrapper an agent calls before
+      grepping.** — shipped in this same commit (unified-trading-pm). New `scripts/dev/ensure-doc-index-fresh.sh` shells
+      out to `gen_doc_index.py --stale-check`. `gen_doc_index.py` now writes via a new `_atomic_write()` (temp file +
+      `os.replace`) instead of `Path.write_text()`, so a regen racing the FF-pull cron's own tick or another slot can
+      never leave a truncated file for a concurrent reader — proved by 2 new concurrency tests in
+      `test_gen_doc_index.py` (5/5 pass). Documented in `/codex/11-project-management/doc-frontmatter-schema.md` § 1
+      (CLAUDE.md was 4 B under its hard cap — no room to extend it). Repo: unified-trading-pm. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
 - [x] ✅ [TEST] P3. **DONE 2026-07-31 (slot-13) — NOT REPRODUCIBLE, closing.** Re-ran the reproduction recipe against

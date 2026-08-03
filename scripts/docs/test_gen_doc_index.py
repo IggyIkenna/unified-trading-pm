@@ -12,8 +12,11 @@ Run: .venv/bin/python -m pytest scripts/docs/test_gen_doc_index.py -q
 
 from __future__ import annotations
 
+import concurrent.futures
+import threading
+
 import gen_doc_index
-from gen_doc_index import _fmt_val, build_index
+from gen_doc_index import _atomic_write, _fmt_val, build_index
 
 
 def test_fmt_val_list_is_comma_joined():
@@ -82,3 +85,56 @@ def test_build_index_has_sections_and_entries():
     assert "\n- [" in out  # at least one doc entry
     # facets render as a greppable bracketed group on seeded docs
     assert "doc_type" not in out or "asset_group=" in out  # if any facets present, they're key=val form
+
+
+def test_atomic_write_readers_never_see_truncated_content(tmp_path):
+    # Multiple slots can call `ensure-doc-index-fresh.sh` concurrently against the SAME
+    # per-clone DOC_INDEX.generated.md (or race the FF-pull cron's own --stale-check tick), so
+    # `_atomic_write` must guarantee a concurrent reader never observes a partial/interleaved
+    # file. Distinct, differently-sized payloads make any interleaving or truncation show up as
+    # content that matches none of the writers' full payloads.
+    out = tmp_path / "DOC_INDEX.generated.md"
+    payloads = [f"payload-{i}\n" + ("x" * (i + 1) * 20_000) + f"\nend-{i}\n" for i in range(6)]
+    stop = threading.Event()
+    bad_reads: list[str] = []
+
+    def _reader() -> None:
+        while not stop.is_set():
+            if out.exists():
+                content = out.read_text()
+                if content and content not in payloads:
+                    bad_reads.append(content[:80])
+
+    def _writer(content: str) -> None:
+        _atomic_write(out, content)
+
+    readers = [threading.Thread(target=_reader) for _ in range(4)]
+    for t in readers:
+        t.start()
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(payloads)) as pool:
+            list(pool.map(_writer, payloads))
+    finally:
+        stop.set()
+        for t in readers:
+            t.join()
+
+    assert not bad_reads, f"reader observed a truncated/interleaved write: {bad_reads[0]!r}"
+    assert out.read_text() in payloads
+
+
+def test_main_stale_check_concurrent_invocation_never_truncates(tmp_path):
+    # Exercises the real CLI entrypoint (what the wrapper script actually shells out to), not
+    # just the helper: several concurrent `--stale-check` regens against one shared --out path
+    # must all leave a complete, valid index behind -- never a truncated file.
+    out = tmp_path / "DOC_INDEX.generated.md"
+
+    def _run() -> int:
+        return gen_doc_index.main(["--out", str(out), "--stale-check"])
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        results = [f.result() for f in [pool.submit(_run) for _ in range(6)]]
+
+    assert all(code == 0 for code in results)
+    expected = build_index(gen_doc_index._pm_root())
+    assert out.read_text() == expected

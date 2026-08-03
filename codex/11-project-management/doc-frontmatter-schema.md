@@ -61,6 +61,12 @@ rg -l '^repos:.*\bmtds\b'    plans/active                                       
 rg '^(title|summary):'        codex/02-data/<slug>.md                                  # 2-line gist, no full read
 ```
 
+The rendered L0 map these greps run against (`DOC_INDEX.generated.md`, per-clone, gitignored) is refreshed by the 5-min
+FF-pull cron, which leaves an inter-tick staleness gap. Before grepping it, call `scripts/dev/ensure-doc-index-fresh.sh`
+— a thin `gen_doc_index.py --stale-check` wrapper (no-op if already fresh, ~1.4s regen otherwise) safe to call
+concurrently from multiple slots: the generator writes the index atomically (temp file + `os.replace`), so a racing
+regen can never leave a truncated file for a concurrent reader.
+
 ## 2. Universal core — on EVERY doc type
 
 Every non-exempt doc (§9) carries all of these. Empty optionals are present-but-empty (§6), never omitted.
