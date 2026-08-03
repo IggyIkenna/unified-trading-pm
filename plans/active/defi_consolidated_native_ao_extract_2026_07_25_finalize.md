@@ -57,15 +57,16 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `defi_consolidated_closeout_2026_07_18.md`'s own native checkboxes** for the 4 shipped
-      todos: (1) flip the Track 3 `--apply` nested item + verify the Track 3 `[BACKEND] P1` parent
-      (EXPECTED_SUBGRAPH_DEINDEXED) now has zero remaining sub-items and can be flipped to `[x]` too; (2)/(3) note in
-      Track 8's prose that the "honest-coverage-nightly right-size" portion of its `[INFRA] P1` cron-resume item is now
-      addressed (do NOT flip that whole todo — the cron-resume action itself is still gated on Track 1 and stays open;
-      only annotate that its right-size sub-clause is done, citing the shipped commit); (4) flip the bottom-of-file
-      `[DOC] P1` digest-entry todo. Verify the actual shipped commit(s) exist before citing them
-      (`git log --oneline -1 <sha>` in the relevant repo). **Done when**: all 4 corresponding checkboxes/annotations in
-      `defi_consolidated_closeout_2026_07_18.md` accurately reflect the shipped state, each citing its real commit sha.
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-03 (slot-2, review craft).** Reconciled
+      `defi_consolidated_closeout_2026_07_18.md`'s own native checkboxes for the 4 shipped todos: (1) Track 3's
+      `--apply` nested item + the `[BACKEND] P1` parent (EXPECTED_SUBGRAPH_DEINDEXED) were **already flipped `[x]`** by
+      a prior `na-eligibility-audit 2026-08-03` pass (line ~448) — verified, no further edit needed. (2)/(3) added the
+      missing annotation to Track 8's `[INFRA] P1` cron-resume item noting the "honest-coverage-nightly right-size"
+      sub-clause is now DONE (citing `instruments-service@12825e81` + `deployment-service@fec7946`/`d880de3`, all
+      verified live via `git log --oneline -1`), while leaving the todo itself open (cron-resume still gated on
+      Track-1/2 + the migration VM) — the codex-drift-doc sub-clause also stays open. (4) The bottom-of-file `[DOC] P1`
+      digest-entry todo was **already flipped `[x]`** 2026-07-28 (slot 8) — verified, no further edit needed. Evidence:
+      this commit's diff to `defi_consolidated_closeout_2026_07_18.md` (Track 8 annotation) in `unified-trading-pm`.
 - [ ] [DIAG] P3. **Re-check the 2 staleness findings recorded in the extraction plan's "Conflicts / staleness found"
       section for whether they're now independently actionable.** (a) Re-verify whether
       `issues/defi_adapter_dead_code_audit_2026_07_24.md` is still the complete, current answer to Track 8's "audit defi
