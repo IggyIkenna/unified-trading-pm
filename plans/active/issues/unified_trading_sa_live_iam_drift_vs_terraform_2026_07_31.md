@@ -214,15 +214,19 @@ confirm no further self-grants happened in the interim.
       itself, today, outside terraform); 21/24 (incl. both self-escalation-capable roles) predate the 400-day Cloud
       Audit Log retention floor and are permanently untraceable via this mechanism. No further audit-log query will
       recover more — investigation exhausted the available evidence.
-- [ ] [OPERATOR] P1. Rule on `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` specifically:
-      genuinely needed (name the workflow) vs. revoke. These two are self-escalation-capable and should not sit
-      undecided long. (repo: unified-trading-pm)
-- [ ] [TERRAFORM] P2. Once P0/P1 resolve, either `terraform import` the genuinely-needed undeclared roles into `main.tf`
-      (so `tofu plan` catches future drift) or remove the rest via scoped `google_project_iam_member` deletions — never
-      a blanket `set-iam-policy` policy overwrite. (repo: deployment-service) — **BLOCKED on P1** (2026-07-31, slot 7):
-      P1's `[OPERATOR]` ruling on `projectIamAdmin`/`serviceAccountAdmin` is still open, and this todo's own text gates
-      all 24 roles on "P0/P1 resolve" as one unit — do not split scope without an operator ruling. `sequential: true`
-      now set on this doc so P2 stops re-dispatching to fresh slots until P1 flips.
+- [x] [INFRA] P1. ✅ RULED (2026-08-03, operator): **KEEP both** `roles/resourcemanager.projectIamAdmin` and
+      `roles/iam.serviceAccountAdmin` for now — insufficient certainty to safely revoke either, given the audit-log
+      evidence is exhausted (21/24 undeclared roles, incl. both self-escalation-capable ones, predate the 400-day
+      retention floor per the Audit findings above). `projectIamAdmin` plausibly enables this workspace's own documented
+      "both cloud identities are IAM-self-service — grant a missing role yourself" pattern
+      (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), so revoking it carries real live-break
+      risk. `iam.serviceAccountAdmin` has no found justification but is ALSO kept for now rather than revoked
+      speculatively. Revisit revocation only with stronger evidence later — do not revoke speculatively. (repo:
+      unified-trading-pm)
+- [ ] [TERRAFORM] P2. **UNBLOCKED (2026-08-03)** — P1 ruled KEEP on both `projectIamAdmin` and `serviceAccountAdmin`
+      (see P1 above): `terraform import` ALL 24 currently-live undeclared roles into `main.tf` as-is, matching the
+      "keep, document, no removal" ruling, so `tofu plan` stops showing drift and future changes are caught — never a
+      blanket `set-iam-policy` policy overwrite. (repo: deployment-service)
 - [ ] [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
       already scopes "remove the god-SA objectAdmin" — note there that even a completed P2.1b leaves
       `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm)
@@ -230,3 +234,6 @@ confirm no further self-grants happened in the interim.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **slot-8 2026-08-03**: applied operator ruling on P1 (KEEP both `projectIamAdmin` and `serviceAccountAdmin` —
+  insufficient certainty to safely revoke given exhausted audit-log evidence; revisit only with stronger evidence
+  later). Flipped P1 done, retagged `[OPERATOR]`→`[INFRA]`, and unblocked P2's terraform-import scope accordingly.
