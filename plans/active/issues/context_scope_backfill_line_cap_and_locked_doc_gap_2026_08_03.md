@@ -281,3 +281,40 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the sibling
   `ao_satellite_ao_dispatch_batch3_2026_07_31.md` (the plan whose context_scope FieldSpec flip todo this issue directly
   unblocks).
+- **2026-08-03 (same interactive session, continued)**: root-caused why STALE was so much larger than NEVER_SCOUTED —
+  `generate_context_scope_inventory.py`'s git-fallback (docs with no `last_updated:` frontmatter) treated ANY commit
+  touching the file as proof of real content drift, with no concept of "mechanical reference-field repoint" (a cited doc
+  archives/moves → every referrer's `context_scope`/`related`/`supersedes`/`superseded_by`/`depends_on` gets a
+  bot-driven path rewrite, which isn't a content change). Measured: 169/304 STALE docs were on this fallback path, and
+  103/169 (61%, ~34% of the corpus-wide STALE count) had ONLY this class of commit as their most recent touch. Fixed by
+  walking bounded history (`_MAX_HISTORY_WALK=5`) and classifying each commit's diff against the reference-field block
+  boundaries in the file's content AT that commit (not current HEAD's positions — an earlier same-session attempt reused
+  current-file line offsets and made the count worse, reverted). Shipped `unified-trading-pm@256db458e`; validated clean
+  (`ruff check`, `ruff format --check`, `basedpyright`) and via 2 consecutive full-corpus runs (3:19 wall-clock, down
+  from an initial always-correct-but-slow 12:05). A different slot (slot-10) independently found + fixed a complementary
+  false-**UP_TO_DATE** edge case in the same heuristic the same day (`unified-trading-pm@8470b3a70`) — the two fixes
+  compose; final numbers below reflect both. Then re-scouted the full STALE+NEVER_SCOUTED backlog this fix surfaced (289
+  docs; 1 excluded — `master_data_canonicalisation_migration_catalogue_2026_06_07.md`, tracked above as its own open
+  todo) via a 24-batch `Workflow` fan-out (sonnet, 12 docs/batch) — 288/288 docs scouted clean, 0 errors, 0 skips
+  (~5.25M subagent tokens, ~23 min). Verified every resulting diff was scoped to `context_scope:` + one Progress Log
+  marker line before shipping (max single-file diff: 17 lines). Shipped in 6 quickmerge batches of ~50 files:
+  `unified-trading-pm@657466188`, `@c394cd49e`, `@9463578a6`, `@3fac05949`, `@d4f9c0a09`, `@b3caa670a`. Final
+  post-rescout inventory: **634 UP_TO_DATE / 7 STALE / 2 NEVER_SCOUTED** of 643 in-scope docs (down from 355/284/5 of
+  644 pre-fix) — the residual 9 are new/touched-mid-session docs from other concurrent slots' work, the normal small
+  backlog the hourly `context-scout.timer` picks up next run, not a gap in this pass.
+  - **Recurring incident this stretch, now with a root cause**: shipping into this shared, heavily-concurrent clone hit
+    real `git stash`-pop conflicts (quickmerge's own STAGE 0.4/5 auto-reconcile stashes the working tree, pulls, pops) —
+    every single conflict across ~15 files was the SAME shape: another autonomous process (na-eligibility-audit, an
+    operator-executed sweep, a todo-flip) appended its own Progress Log entry at the exact same end-of-file point my
+    context-scout marker did. All were pure append/append collisions (verified via the 3-way `|||||||` base before
+    resolving), safely resolved by keeping both sides; one delete/modify conflict (a doc archived mid-session by another
+    process) resolved by accepting the archival, since an archived doc is out of `context_scope`'s in-scope status set
+    anyway. Also hit the documented `shared_clone_concurrent_commit_message_swap_2026_07_28.md` class (quickmerge
+    amended a foreign commit's trailer, content untouched, no data lost — caught via its own WARN, content re-verified
+    via `git show --stat HEAD` before trusting anything) and transient `index.lock` contention from the standing
+    `slot-cron-ff-pull.sh` 5-min cron plus another slot's own concurrent quickmerge (both benign, resolved on retry).
+    Separately: `quickmerge.sh --files` takes SPACE-separated paths, not comma-separated — passing a comma-joined list
+    makes its internal path-splitting treat the whole string as one literal (non-existent) path, which silently
+    short-circuits to "no uncommitted changes, already committed" and can cause it to amend whatever commit happens to
+    be at HEAD instead of committing your files. Caught before any content was lost (post-hoc `git show --stat`
+    verification after every batch), but cost 2 wasted quickmerge cycles before switching to space-separation.
