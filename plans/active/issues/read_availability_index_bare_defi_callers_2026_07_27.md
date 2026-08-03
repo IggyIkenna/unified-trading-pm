@@ -469,3 +469,6 @@ not a mechanical column-list copy.
   this closes the repo-blocker slot-8 declared. Re-verified
   `check_bare_read_availability_index.py --scope instruments-service` clean-tree post-fix: 0 baselined, 0 new
   occurrences.
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (UTL
+  reader + deployment-api wrapper + codex SSOT + related plan + archived sibling issue + the dead-code-investigation
+  target file) — no changes.

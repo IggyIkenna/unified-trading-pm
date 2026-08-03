@@ -260,6 +260,9 @@ above.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [OPERATOR-DECISION] P3 todo; the [CODE] P2
   half is AO-ready but the doc cannot flip as a unit
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries, unchanged) — all six still resolve and remain the
+  minimal set covering the open [CODE] P2 (tracked in batch6) and [OPERATOR-DECISION] P3 (derivative_ticker demote todo)
+  items.
 
 ### 2026-07-28 — data_engineering (slot-6): data_type-axis denominator trace
 

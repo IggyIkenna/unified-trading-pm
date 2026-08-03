@@ -55,8 +55,9 @@ source: >-
 context_scope:
   [
     /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/scripts/migration_orphan_sweep.py,
   ]
 ---
 
@@ -100,6 +101,9 @@ checked, not assumed.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the archival-discipline codex doc for the
+  actual live-check tool (`migration_orphan_sweep.py`, GCS→manifest orphan sweep) + the corroborating
+  already-resolved-precedent plan the doc's own "Why" section cites.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, the sole remaining todo is a bounded,
   worker-determinable live GCS check (grep 8 named legacy bucket-stems for a specific object-shape pattern, then
   close-as-moot-with-evidence or draft a scoped follow-up) — no design/judgment call left. Conflict-check: grepped

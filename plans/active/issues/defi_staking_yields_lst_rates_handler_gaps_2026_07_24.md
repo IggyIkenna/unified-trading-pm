@@ -52,14 +52,11 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
-    /codex/02-data/defi-data-types-catalog.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
-    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
     market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /codex/02-data/defi-data-types-catalog.md,
   ]
 locked_since:
 assigned_vm: planning
@@ -271,3 +268,7 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
   2026-07-26; both residual todos are bounded leaf-name verification + a named-target capability scoping pass
 - **context-scout 2026-08-01**: populated context_scope (6 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (8 entries).
+- **context-scout 2026-08-03 (re-scout)**: trimmed to 5 entries (was 8, over the 2-6 minimal-list target) — dropped
+  `lst_rates_handler.py` (its finding is fully resolved, docstring-only), the shipped terraform file, the closeout plan,
+  and the canonical-path-oracle sibling doc; added `capability_declarations/_defi.py` (the 14-protocol declaration the
+  remaining §6.3 capability-completion todo needs).

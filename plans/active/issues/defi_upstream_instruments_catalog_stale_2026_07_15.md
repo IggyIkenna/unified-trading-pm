@@ -528,3 +528,5 @@ redeploy+launch+before-evidence, not on VM self-termination. Status left `open` 
 mode-threading residual and `[DESIGN] P3` completion-signal items remain genuinely unaddressed.
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries, unchanged) — all resolve; still the right minimal
+  set for the sole remaining [DESIGN] P3 nice-to-have (catalogue-completion-signal retry-sweep).

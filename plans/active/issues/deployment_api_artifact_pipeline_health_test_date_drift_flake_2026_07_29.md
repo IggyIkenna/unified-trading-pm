@@ -107,3 +107,5 @@ mid-dispatch.
   (`issue_docs_zero_checkbox_sweep_2026_07_24.md`): its 'Fix direction (not yet done)' is prose, never converted to a
   tracked checkbox.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — test file, the `service.py` owning
+  `_resolve_window()`, and the discovery-context archive doc still resolve and remain the minimal correct set.

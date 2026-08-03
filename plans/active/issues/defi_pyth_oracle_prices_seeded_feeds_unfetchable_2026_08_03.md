@@ -38,10 +38,11 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
+    instruments-service/instruments_service/reference_data/adapters/defi/pyth.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/data_completion_defi_2026_07_15.md,
   ]
 ---
 
@@ -202,6 +203,10 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   the manifest to determine real remaining gap. Filed this issue; C6 itself proceeds on its own achievable scope (the
   7-symbol fetchable universe) with a Progress Log note pointing here for the structurally-separate gap.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-03 (re-scout)**: refreshed context_scope (5 entries) — swapped
+  `data_completion_defi_2026_07_15` (no longer relevant) for the IS-side `pyth.py` (PYTH_PRICE_FEEDS, root of the
+  BTC/ETH/INF regression fix) + `canonical_write.py` (SPOT_ASSET/SPOT_PAIR schema-contract path the remaining [DATA] P3
+  naming-reconciliation todo touches).
 - **2026-08-03 (slot-11, data_engineering craft)**: Re-dispatched onto C6, found all 3 in-flight/relaunched Pyth
   backfill VMs from earlier today (`074918`, `081601`, `093121`) completed cleanly (`EXIT_STATUS=0` each, live-verified
   via `gsutil cat`, not from memory) with `081601`/`093121` covering the full `2026-04-15..2026-08-03` C6 window. Ran a

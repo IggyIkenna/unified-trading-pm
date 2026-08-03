@@ -49,11 +49,10 @@ drift_direction: advance-code
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
-    /plans/archive/issues/defi_plasma_chain_onboarding_gap_2026_07_26.md,
-    deployment-api/deployment_api/services/data_status/defi.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    deployment-api/deployment_api/services/data_status/defi.py,
   ]
 ---
 
@@ -370,3 +369,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   — but the underlying instinct ("the dashboard's 0/0 might not be honest") was correct for 3 of the 6 venues checked.
   No files edited; the GCS read was read-only (download + pandas, no writes).
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — dropped the tracker/plasma-onboarding docs (both
+  spun-out or upstream context, not needed for the sole remaining open [CODE] P1 item); added
+  `defi_venue_capabilities.py` (DEFI_VENUE_DATA_TYPE_CAPABILITIES — the durable HYPERLIQUID/ASTER declaration still
+  needs both this and `defi_venues.py`'s ALL_DEFI_VENUES).

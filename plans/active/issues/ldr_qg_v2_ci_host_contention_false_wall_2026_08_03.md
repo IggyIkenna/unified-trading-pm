@@ -44,6 +44,14 @@ drift_direction: advance-code
 locked_by:
 source: [agt-aa84f7]
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+    deployment-service/tests/unit/test_vm_launcher_scripts.py,
+  ]
 ---
 
 # quality-gates-v2 false-red on a contended self-hosted runner host (LDR + promotion PR)
@@ -132,3 +140,9 @@ Did not touch any deployment-service code or tests (nothing was wrong with eithe
 `MAX_DURATION` or the pytest-timeout, did not disable the resource-drift check. Did not re-trigger the CI workflow given
 the host is still visibly oversubscribed right now — a retrigger would very likely fail again for the identical reason
 and just burn more contended compute.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries) — codex CI-flow + CI-walls-runbook SSOTs, the
+  governor plan this doc found not preventing recurrence, the governor script itself, and the specific failing test
+  file.

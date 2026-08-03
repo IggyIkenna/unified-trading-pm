@@ -70,10 +70,8 @@ context_scope:
   [
     instruments-service/scripts/enumerate_expected_universe.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 ---
 
@@ -350,6 +348,11 @@ is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GRO
 `enumerate_v2` cross-join contract).
 
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, was 6) — Path A fully shipped 2026-08-02
+  (instruments-service@942e0808, unified-api-contracts@28c7102d), leaving only a moot/superseded Path B checkbox open;
+  dropped the two "deliberately not touched, collision-avoidance-only" referrers (master canonicalisation catalogue,
+  perp_daily_ctx sibling), kept the shipped-code files + the source audit + the completeness_pct terminology-collision
+  caution.
 
 ### 2026-08-02 (slot-6) — Path A executed: guard + registry addition, delta measured zero
 

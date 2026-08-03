@@ -208,3 +208,5 @@ activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned 
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (SSOT + 2
+  related issue docs + quickmerge.sh + the 2 opposite-default config files at the bug's core) — no changes.
