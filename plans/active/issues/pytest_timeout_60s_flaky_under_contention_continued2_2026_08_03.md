@@ -40,6 +40,7 @@ repos:
     alerting-service,
     execution-service,
     market-tick-data-service,
+    unified-api-contracts,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
@@ -51,7 +52,11 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
+<<<<<<< Updated upstream
 last_updated: 2026-08-03T17:55Z
+=======
+last_updated: 2026-08-03T17:50Z
+>>>>>>> Stashed changes
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -493,6 +498,7 @@ repeated here.
   already-recorded disposition). `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) —
   skipped the authoring-slot ping. Slot left clean (`deployment-service` and `unified-trading-pm` both on
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo).
+<<<<<<< Updated upstream
 
 - **2026-08-03 ~17:35-17:50Z (`cicd` escalation `agt-83db42`, slot 9, `ml-service`, `wall_type=ldr_qg_failure`,
   `pr_number=333`) — this repo's 2nd occurrence in the doc-chain (1st: `agt-2336b3`, `main_ci_red`,
@@ -581,3 +587,48 @@ repeated here.
   authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
   `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch
   changes in either repo). Adding no new todo — todo 2 already fully covers this.
+=======
+- **2026-08-03 ~17:40-17:50Z (`cicd` escalation `agt-55b55a`, slot 12, `unified-api-contracts`, `wall_type=main_ci_red`,
+  `pr_number=0`) -- 7th repo added to the corroboration list, and the first ROOT-dependency repo (blocks ~10 downstream
+  repos' promotion via bottom-up dep-order drain), no code gap**: classified per the `main_ci_red` boot brief's A/B split
+  first -- `gh pr list --base main` -> 0 open PRs (rules out (A) promotion-stuck); `main` HEAD (`fededd42`) content-diffs
+  only 5 files / 414 lines against LDR HEAD (`693314d3`) -- `pyproject.toml`, `uv.lock`, and one new
+  `tradfi_roots`/`_honest_coverage_clusters` feature + its test, none touching the failing test or its dependency chain
+  -- so main is NOT meaningfully stale, ruling out (B)'s stale-workflow/missing-check shape too (the raw
+  `git log main..LDR` ancestry count reads 725 due to main's squash-merge promotion history, not 725 real content gaps --
+  verified via `git diff --stat`, not commit count, per this doc-chain's established practice of reading actual content
+  drift). Both today's `main` failures hit the exact SAME test --
+  `tests/internal/unit/test_sports_prediction_contracts.py::test_prediction_market_trades_validates_sample_dataframe`,
+  `Failed: Timeout (>150.0s) from pytest-timeout` (run `30810979867`, promote-push @11:48, `1053.97s` slice runtime; run
+  `30830936327`, workflow_dispatch @16:10, `1935.11s` slice runtime) -- read the test: a single-row in-memory
+  `pd.DataFrame` schema-validation call (`validate_dataframe`), no I/O, no network, trivially sub-second in isolation;
+  the test FILE itself is byte-identical between `main` and LDR (`git diff` empty). `unified-api-contracts/scripts/
+  quality-gates.sh` pins `PYTEST_WORKERS=1` (not xdist-parallel, sequential collection) -- explains why the SAME test
+  repeats across both runs rather than a different random test each time (as seen on xdist-parallel repos elsewhere in
+  this doc-chain): a single-worker sequential run hits whatever host-contention spike is happening at a similar
+  wall-clock offset each time, landing on roughly the same collection-order test -- consistent with, not contradictory
+  to, the established scheduler-starvation signature. Confirmed `gh api .../actions/runners`: TWO online runners for
+  this repo (`glue-ip-172-31-3-59-1`, `glue-ip-172-31-5-118-1`), both `busy=true` -- same fleet-wide bottleneck already
+  documented for `execution-service` above. Checked this repo's own base rate before accepting "same class, no action":
+  LDR had 2 clean `success` runs today (`30808141962` @11:05, `30800104629` @09:08) and `main` had a `success` @06:38 --
+  NOT the sustained "100% failure, no green for 13.5-36h+" bar that justified adding `PYTEST_TIMEOUT` overrides
+  elsewhere in this doc-chain; per the `market-tick-data-service`/`instruments-service` precedent, deliberately did NOT
+  add a `PYTEST_TIMEOUT` override here. `GET /api/repo-blockers` -> `open: []`. `ldr-to-main-promote-fleet`'s freshest
+  tick (`30838152842`, 17:45:07Z) confirms `GATE BLOCK unified-api-contracts: ci_status=FAILING (cached='FAILING',
+  live='FAILING')` -- correctly withheld pending a genuine LDR green (not stuck on anything actionable) -- and, being a
+  Tier-A root dependency, is currently bottom-up-blocking 10 downstream repos' own promotion
+  (`instruments-service`/`execution-service`/`features-service`/`market-data-processing-service`/
+  `market-tick-data-service`/`deployment-api`/`deployment-service`/`agent-orchestrator` + others) until it reaches
+  `MAIN_GREEN` -- flagging the blast radius here since this is the first Tier-A-root occurrence in this doc-chain, but
+  the underlying cause and correct non-action are identical to every prior entry. A fresh LDR re-verify run was already
+  in-flight at investigation start (`30837397727`, `in_progress` since 17:34:55Z) with a `main` run queued behind it
+  (`30837867269`) -- left both running rather than cancel/redispatch (would forfeit real elapsed queue/run position for
+  zero benefit), consistent with this doc-chain's established practice. **Disposition: no code or workflow change made
+  or needed** -- every prerequisite is already correct on `live-defi-rollout`; the remaining wall is pure
+  runner-queue-depth/host-contention wait; outcome of `30837397727`/`30837867269` left for the next occurrence.
+  Added `unified-api-contracts` to this doc's `repos:` frontmatter (1st occurrence for this repo). Slot left clean
+  (`unified-api-contracts` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this
+  doc's own commit; no branch changes in either repo). `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot
+  per `cicd.md`'s `^[0-9]+$` check) -- skipped the authoring-slot ping (the dispatch-time Slack alert already covers the
+  FYI).
+>>>>>>> Stashed changes
