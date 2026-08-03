@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T21:05Z
+last_updated: 2026-08-03T21:35Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -784,3 +784,60 @@ repeated here.
   clean (`instruments-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
   this doc's own commit; no branch changes in either repo). `instruments-service` already present in this doc's `repos:`
   frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~20:52-21:35Z (`cicd` escalation `agt-892a1c`, slot 2, `market-tick-data-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=817`) — 2nd occurrence for this repo (1st: `agt-72552a` above), PR already
+  moot, one genuine code regression found+already-resolved by others, both remaining failures are this doc-chain's
+  established signature, plus a NEW direct root-cause exclusion (ruled out cgroup-OOM and session/pgid-kill as the
+  local-repro-death mechanism via cgroup inspection, not just inferred from CI-run patterns)**: escalation cited failing
+  run `30830057533` (`promote/market-tick-data-service/fa991f12a6c1`) with BOTH `checks` and `tests` slices red.
+  Confirmed PR #817 was **already MERGED** (`mergedAt: 2026-08-03T15:59:21Z`, ~3.5h before this escalation was worked) —
+  the same self-merge-before-confirmatory-check-completes pattern this doc-chain documents repeatedly; 0 open PRs for
+  this repo, nothing actually blocked. `checks` slice had TWO distinct failures: (a) **STEP 5.95 type:ignore ratchet
+  regression** (live count 659 vs frozen baseline 658) — this is NOT the capacity-side class, a genuine code-adjacent
+  gate; bisected independently via `git grep -c` across the commit range (no checkout, avoided a destructive-command
+  mistake mid-bisect) and found the HEAD commit `06cd3ca5` (unrelated sports work) tipped a then-exactly-658 parent to
+  659 via one new `# type: ignore[import-not-found]` in a fresh test file's `sys.path.insert`+bare-import — wrote a fix
+  using this repo's own established pattern (`test_drop_sports_odds_phantom_uppercase.py`'s
+  `importlib.util.spec_from_file_location` dynamic-load, which basedpyright never statically resolves, needing no
+  suppression at all) to remove the ignore rather than raise the baseline. Mid-ship, discovered **slot-10 had
+  independently already landed a different, equally valid fix 40min earlier** (`840c816d`, bumped
+  `_MTDS_TYPE_IGNORE_BASELINE` 658→659 after a broader 9-commit bisection showing genuine cumulative drift, not a single
+  bad add — see `plans/archive/issues/mtds_type_ignore_ratchet_regression_2026_08_03.md`, already `status: resolved`) —
+  since their fix already fully resolves the gate (0 bare/broad ignores, all exact-rule-coded), abandoned my own
+  competing fix as redundant rather than spend another full contended QG cycle re-shipping equivalent value; reset my
+  local branch to match origin exactly (no force-flags, non-destructive `reset --soft`+`restore` since the commit was my
+  own, never pushed/shared). (b) **typecheck timeout** (`exit=124`, ~121s hang matching the repo's bare 120s
+  `PYRIGHT_TIMEOUT` default — confirmed via `grep` this repo has NEITHER `PYRIGHT_TIMEOUT` nor `PYTEST_TIMEOUT`
+  overridden, unlike `features-service`/`deployment-service`/`execution-service` elsewhere in this doc-chain) — the
+  established wall-clock-timeout signature, noted as a candidate gap for the next occurrence to weigh, not actioned for
+  a single non-sustained occurrence per established practice. `tests` slice: xdist `INTERNALERROR`
+  (`RuntimeError: Unexpectedly no active workers available`, a `pytest-timeout` SIGALRM firing mid-flush of the xdist
+  report channel) after `2949 passed, 7 skipped, 1 xpassed` — the identical channel-corruption variant already logged
+  for `instruments-service`/`execution-service` above. **New direct evidence for this doc-chain's capacity-side
+  diagnosis**: attempted 3 local reproduction passes via backgrounded `quickmerge.sh` (a real ship attempt, not just a
+  read-only repro), each progressively more isolated — (1) plain `nohup ... &` monitored from a separate tool call, (2)
+  launch+monitor combined in one atomic backgrounded call, (3) full `setsid`+`disown` session detachment (confirmed via
+  `ps -o ... state` showing `Ss`, a genuine new session leader) — all three died `Terminated` at ~6-10min wall-clock, at
+  wildly different test-progress points (53%/22%/68%), ruling out a fixed test-count boundary. Before concluding
+  "generic host contention" by default, checked TWO specific alternative mechanisms directly rather than assuming: (i)
+  cgroup OOM — `/proc/self/cgroup` shows this whole slot's session lives in `system.slice/orchestrator.service`'s shared
+  cgroup; `memory.events` read `oom 0, oom_kill 0` and `memory.current` (13.2GB) was well under both `memory.high`
+  (49.4GB) and `memory.max` (58GB) — definitively ruled out; (ii) a session/pgid-level watchdog kill — the `setsid`
+  attempt (fully detached into its own session/pgid) died on the same ~6-10min schedule as the non-detached attempts,
+  ruling this out too. Neither of the two mechanisms I could directly test explains the kills; genuine host-wide CPU
+  contention (load avg 25-35 sustained on 16 cores across the observation window, 10-15+ concurrent
+  `quality-gates.sh`/`pytest` processes visible host-wide at every check) remains the only fitting explanation, but this
+  entry narrows what it ISN'T for the next investigator. `gh api .../actions/runners`: 2 online runners
+  (`glue-ip-172-31-3-59-1`, `glue-ip-172-31-5-118-1`), both `busy=true` — same fleet-wide bottleneck. A fresh run
+  (`30854610738`) was already `queued` against the true current LDR HEAD (`840c816d`) at investigation end — left it
+  alone. `GET /api/repo-blockers` → found ONE open: `RB-9732d071` (filed by slot-8, `created_at` 21:04:47Z — 16min AFTER
+  `840c816d` had already landed at 20:48:42Z, apparently checked against a stale/uncached tree) — resolved it via
+  `POST /api/repo-blockers/RB-9732d071/resolve` (1 waiter notified) since the underlying condition was already fixed.
+  **Disposition: no code change shipped** (the genuine regression was already fixed by another agent before I could land
+  my own equivalent fix; the two remaining failures are this doc-chain's established capacity-side class) — outcome of
+  `30854610738` left for the next occurrence. `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left
+  clean (`market-tick-data-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin in
+  either repo; no branch changes; no orphaned processes remaining under the slot's working directory, confirmed via
+  `ps`). `market-tick-data-service` already present in this doc's `repos:` frontmatter — no frontmatter change needed.
