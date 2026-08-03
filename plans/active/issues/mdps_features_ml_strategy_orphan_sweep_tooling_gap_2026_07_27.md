@@ -228,11 +228,35 @@ lets each one be built, validated, and run to real completion on its own timelin
       the 8 UAC `FeatureFamily` members wired (`_UNSUPPORTED_FAMILIES` now empty). Real-data VM-run validation
       (mirroring todo 1's + todo 2b's own real-prod-data validation pattern) is split to todo 2d below, not a gate on
       this todo (which scoped BUILD + WIRE only, per this todo's own title).
-- [ ] 2d. [SCRIPT] P2. **Validate the `commodity` feature_orphan_sweep wiring against real GCS data** (Tier-2 SPOT VM,
-      never in-session — per STEP 0.56 of `unified-trading-pm/agents/data_engineering.md`) — mirrors todo 1's + todo
+- [x] 2d. ✅ [SCRIPT] P2. **Validate the `commodity` feature_orphan_sweep wiring against real GCS data** (Tier-2 SPOT
+      VM, never in-session — per STEP 0.56 of `unified-trading-pm/agents/data_engineering.md`) — mirrors todo 1's + todo
       2b's own real-prod-data validation (which each caught a genuine bug: todo 1's sports bucket-resolution bug, todo
       2c's case-mismatch bug caught by reading the code — a real VM run against the live `features-commodity` bucket may
-      surface further gaps this session's code-reading alone could not). Repo: features-service.
+      surface further gaps this session's code-reading alone could not). Repo: features-service. **2026-08-03**
+      (`deployment-service@87d9d17` + `features-service@63e97f6a`+`@3b0c0b05`): found the launcher itself was stale
+      first — `launch-feature-orphan-sweep-vm.sh` still hard-refused `--feature-family commodity` citing todo 2c's OWN
+      now-superseded "no verified config yet" rationale (todo 2c had already wired it in the sweep tool itself); wired
+      it in as a global family (no `--asset-group`, same shape as `calendar`) + fixed the matching stale
+      `vm_prefix_registry.py` comment. Also hit + fixed the wrong gcloud CLI identity active on this host
+      (`github-deploy`, missing `compute.instances.create`) — activated `unified-trading-sa` (already held
+      `compute.admin` per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, no new grant needed)
+      and republished a stale `features-service` code tarball (predated the commodity wiring commit). Ran the real
+      Tier-2 SPOT VM (`feat-orph-cm-gl-20260803-143206`, `e2-standard-4` SPOT, completed in ~3 min, no preemption)
+      against the live `commodity-signals-batch-central-element-323112` bucket: resolved the bucket correctly, walked
+      the whole-bucket prefix, classified via the manifest — `A=1 B=0 C=1 D=0 E=4` (1 captured manifest cell, 4 real
+      orphan objects: `cl/2017-01-01`, `cl/2026-04-14`, `ng/2017-01-01`, `ng/2026-04-14`). The wiring itself is
+      genuinely validated: no crash, correct bucket resolution, correct A-E classification against real data. Found +
+      fixed one more real bug surfaced by the run: `backfill_feature_orphan_class_e.py`'s footer-read step assumed
+      parquet universally — every real commodity object failed with `ArrowInvalid` ("Parquet magic bytes not found")
+      since commodity writes flat JSON `signal.json`. Branched on `FamilyConfig.object_suffix` (non-parquet families
+      count `row_count=1` per object, mirroring the live commodity writer's own
+      `_write_signal_and_manifest     (row_count=1, ...)` convention) — 3 new unit tests, 19/19 green. Applied the
+      backfill for real (additive-only, 4 objects, tiny enough for in-session per STEP 0.56): all 4 orphans now
+      `capture_status=captured` with `row_count=1`, sample-verified via the writer's own per-VM shard readback
+      (`verify_failed=0`). `commodity` is now the last of the 8 UAC `FeatureFamily` members fully built + validated
+      against real GCS data — todos 1-3 of `features_service_manifest_coverage_gap_2026_08_03.md`'s sibling doc (which
+      this run's tiny finding was folded into rather than filed separately, given its trivial 4-object scope) now covers
+      every wired family.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
       not day-sharded); scope the actual shard key first before writing the sweep (may need its own design pass, not a
       mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.

@@ -236,3 +236,13 @@ not something an AO worker should guess at.
   features-service suite green (`.qg_last_passed_sha` matches `7f487699`). Todo 3 checkbox flipped above. Todo 4
   ([OPERATOR] calendar phantom-row root-cause) is the only remaining open item — genuinely operator-gated, left
   untouched.
+
+- **2026-08-03** (AO dispatch, slot 7) — Filed while validating the `commodity` family's real-GCS wiring (todo 2d of the
+  parent tooling-gap doc, not a todo of this doc — folded in here since the finding is trivial: 4 objects, vs this doc's
+  own 783/67,077-object gaps). Real Tier-2 SPOT VM run against `commodity-signals-batch-central-element-323112` found 4
+  real class-E orphans (`cl/2017-01-01`, `cl/2026-04-14`, `ng/2017-01-01`, `ng/2026-04-14`). Backfilled + verified
+  (`features-service@63e97f6a` + `@3b0c0b05`): all 4 now `capture_status=captured`. En route, found + fixed
+  `backfill_feature_orphan_class_e.py`'s footer-read step assuming parquet universally (commodity's flat JSON
+  `signal.json` always failed the footer read with `ArrowInvalid`) — branched on `FamilyConfig.object_suffix`, counting
+  `row_count=1` per non-parquet object per the live writer's own convention. No new todo needed here — commodity is now
+  fully covered (built, wired, validated, backfilled) alongside the other 7 wired families.
