@@ -409,6 +409,20 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
   todos 7-8.
 
+  > **sports exception — `league=` is a legitimate trailing key (RULED 2026-08-03, operator ruling on todo 1 of
+  > [`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)).**
+  > Sports's `instrument_availability` grain is per (day, pipeline_mode, asset_group, venue, **league**), not just (day,
+  > pipeline_mode, asset_group, venue) — the operator ruled option (a) of that doc's todo 1: keep the per-league split
+  > (no writer grain rollup) and add `league=` to the canonical key set as an additional TRAILING key, appended
+  > **after** `venue=` and before the leaf file, preserving the base template's existing key ORDER:
+  > `instrument_availability/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group=sports/venue={V}/league={L}/instruments.parquet`.
+  > This is `migration_pending`, same as the base template above — the live sports writer as of 2026-08-02 still emits a
+  > flat, un-hived shape (`day={D}/league={L}/venue={V}/instruments.parquet`, no `pipeline_mode=`/`asset_group=`, and
+  > `league=` positioned BEFORE `venue=` rather than trailing after it), so a writer fix + migration-tool extension are
+  > both still required to reach this ruled target — tracked as todo 2 of the same issue doc. `market_lifecycle` /
+  > `futures_contracts` are not sports-scoped (sports has no analogous surfaces in those trees today) and are unaffected
+  > by this exception.
+
 ## 9. empty_confirmed vs out-of-scope (the denominator basis)
 
 - **`empty_confirmed`** — a cell INSIDE the could-exist universe, attempted, source PROVABLY returned 0 (typed
@@ -500,6 +514,15 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   is tradfi-only. This resolves the "cefi chain-tail v5 vs v6 — two live-written shapes" contested axis → **RULED v6**.
   Fix + migration:
   [`../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+
+### 11c. Operator decisions log — 2026-08-03
+
+- **`league=` is a legitimate trailing key in sports's `instrument_availability` hive template.** Ruled on todo 1 of
+  [`../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)
+  — operator chose option (a) (add `league=` to the canonical key set) over option (b) (roll the sports writer up to
+  drop the per-league split). Full statement + rationale: §8's sports-exception banner above. `migration_pending` — the
+  sports writer still needs the shape fix + the migration tool needs a `league=`-aware shape extension (todo 2 of the
+  same issue doc).
 
 ## 12. Where the work lives
 

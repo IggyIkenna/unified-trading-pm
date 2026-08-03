@@ -170,12 +170,15 @@ discarding real data.
 
 ## Todos
 
-- [ ] 1. [OPERATOR] P1. Rule on sports's target full-hive shape for `instrument_availability` (`league=` as a trailing
-      key vs. a writer grain change) — `cross-asset-canonical-target-ssot.md` §8 amendment either way (repo:
-      unified-trading-pm).
-- [ ] 2. [DATA] P1. Fix the sports `instrument_availability` writer to emit the ruled shape from todo 1, then extend
+- [x] ✅ 1. [OPERATOR] P1. **RULED 2026-08-03 — option (a): `league=` is a legitimate trailing key.** Operator ruling:
+      "League= yes" — add `league=` to sports's `instrument_availability` canonical key set as an additional trailing
+      key (appended after `venue=`, before the leaf file), keeping the writer's existing per-league split rather than
+      rolling it up to a per-venue grain. `cross-asset-canonical-target-ssot.md` §8 amended (sports-exception banner) +
+      §11c decision log entry added (repo: unified-trading-pm). `migration_pending` — unblocks todo 2 below.
+- [ ] 2. [DATA] P1. Fix the sports `instrument_availability` writer to emit the ruled shape from todo 1 (trailing
+      `league=`, plus the still-missing `pipeline_mode=`/`asset_group=` keys), then extend
       `migrate_instrument_availability_hive_2026_08_03.py` to recognize + migrate the sports `league=` shape (~172,595
-      objects) (repo: instruments-service). Depends on todo 1's ruling.
+      objects) (repo: instruments-service). Todo 1's ruling is now resolved — no longer gated.
 - [ ] 3. [DATA] P2. Investigate whether prediction's `canonical_question_group=`-before-`day=` shape is still being
       written post-2026-07-21; extend the migration tool to recognize + migrate it (~25,745 objects) (repo:
       instruments-service).
