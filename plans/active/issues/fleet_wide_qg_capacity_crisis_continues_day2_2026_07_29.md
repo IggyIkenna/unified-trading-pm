@@ -776,7 +776,10 @@ not just noting.
   the repo-local `PYTEST_TIMEOUT` raise mitigation that doc applies was not yet warranted here per its own stated
   threshold; a fresh FIFO-queued run is already progressing toward its own natural resolution on the current LDR HEAD,
   and retriggering would only cancel it via the `cancel-in-progress` concurrency group. `GET /api/repo-blockers` →
-  `open: []` — nothing to fast-path. Pinged `AUTHORING_SLOT=planning` with the outcome. Slot left clean on
-  `live-defi-rollout` in both `instruments-service` and this PM worktree (only this doc touched in PM; the same
-  pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this slot, referenced in the
-  `agt-c82335` entry above, was again left untouched as out-of-scope for this one-shot escalation).
+  `open: []` — nothing to fast-path. `AUTHORING_SLOT=ci-reconcile` (this wall's boot context) is not a live numeric
+  worker slot — `POST /api/slots/{slot_id}/message` requires an int `slot_id` and rejected the ping (a direct-push
+  `ldr_qg_failure` wall with `pr_number=0` has no attributable authoring worker to page); this doc entry is the outcome
+  record instead. Slot left clean on `live-defi-rollout` in both `instruments-service` and this PM worktree (only this
+  doc touched in PM; the same pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this
+  slot, referenced in the `agt-c82335` entry above, was again left untouched as out-of-scope for this one-shot
+  escalation).
