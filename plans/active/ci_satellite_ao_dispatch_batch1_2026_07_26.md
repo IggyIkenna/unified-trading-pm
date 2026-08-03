@@ -374,7 +374,7 @@ concurrent workers do not collide on this file.
       acceptance cases directly on synthetic tick histories — `test_stuck_repos_fires_on_exact_threshold_streak` (fires
       on a synthetic 3-tick block) and `test_stuck_repos_silent_on_block_revalidate_pass_cycle` (silent once a
       block→revalidate→PASS cycle completes), plus insufficient-history / multi-repo-independent-streak /
-      report-formatting coverage. Full `quality-gates.sh` green. — unified-trading-pm@020b50dc8 Source:
+      report-formatting coverage. Full `quality-gates.sh` green. — unified-trading-pm@409c35437 Source:
       `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
       Applied the identical first-push-wins guard from `cloudbuild.yaml` to both `cloudbuild-tier3.yaml` and
