@@ -152,11 +152,22 @@ on-chain-CLOB wire format.
       candle build — filed as `/plans/active/issues/mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md`
       (P3, root cause unconfirmed — the host was independently under severe contention, swap ~22GB in use + load avg
       ~41, before this job started).
-- [ ] [DATA] P2. **Fix the `book_snapshot_5` column-name mapping for on-chain-perp venues.** Map HYPERLIQUID's (and
+- [x] [DATA] P2. **Fix the `book_snapshot_5` column-name mapping for on-chain-perp venues.** Map HYPERLIQUID's (and
       check LIGHTER-ZKSYNC/EXTENDED-STARKNET's) `bid_px_NN`/`ask_px_NN` raw columns to the `bid_price_0`/`ask_price_0`
       the book-candle aggregator expects. Repo: market-data-processing-service. **Done when**: a real `book_snapshot_5`
       backfill for at least one HYPERLIQUID instrument produces a valid candle instead of the "Missing bid_price_0"
-      warning + refused honest-absence write.
+      warning + refused honest-absence write. — ✅ **DONE 2026-08-03** — `market-data-processing-service@e3fc539`. Root
+      cause: `CefiBookSnapshotAdapter._normalize_column_names` only mapped the market-tick-data-service generic bracket
+      format (`asks[0].price` etc.); HYPERLIQUID's raw wire format
+      (`market_tick_data_service/adapters/hyperliquid_s3.py`) emits `bid_px_00..04`/`ask_px_00..04`/`bid_sz_00..04`/
+      `ask_sz_00..04` (2-digit zero-padded level), which never matched. Fixed by adding the `bid_px_NN`→`bid_price_N`,
+      `ask_px_NN`→`ask_price_N`, `bid_sz_NN`→`bid_volume_N`, `ask_sz_NN`→`ask_volume_N` mapping for all 5 levels.
+      Checked LIGHTER-ZKSYNC/EXTENDED-STARKNET per this todo's own instruction: both already write `bid_price_N`/
+      `ask_price_N` directly (`_umi_lighter.py`/`_umi_extended.py`), so they need no mapping. Regression tests added
+      (`tests/unit/test_book_snapshot_column_normalization.py`): all 5 HYPERLIQUID levels map correctly, raw wire
+      columns don't survive normalization, `_calculate_book_features` produces a valid non-NaN `mid_price`/ `spread_bps`
+      from HL columns, and both the pre-existing bracket format and the already-standard `bid_price_N`/`ask_price_N`
+      pass-through remain unaffected. `quality-gates.sh` green (94s, full run).
 - [ ] [DATA] P2. **Found while fixing bug 1 (2026-07-26) — same unscoped-listing bug class in a SEPARATE, un-fixed
       file.** `market_data_processing_service/app/core/orchestration_scheduling.py::_list_instrument_files` (a distinct
       implementation from `orchestration_scanner.py`'s, used by the live/scheduled candle-processing path rather than
@@ -238,3 +249,25 @@ on-chain-CLOB wire format.
   `HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet` and `HYPERLIQUID:PERPETUAL:ETH-USD@LIN.parquet` under every timeframe
   (`15s`/`1m`/`5m`/`15m`/`1h`/`4h`/`1d`). Todo 1 flipped `[x]`. Todos 2/3 (bugs 2/3,
   `derivative_ticker`/`book_snapshot_5`) remain untouched — separate, smaller fixes, not started this session.
+
+- 2026-08-03 (slot-7, `data_engineering`): **Fixed todo 3 (book_snapshot_5 HYPERLIQUID column mapping).** Root cause:
+  `CefiBookSnapshotAdapter._normalize_column_names` (`app/adapters/cefi/book_snapshot_adapter.py`) only mapped the
+  market-tick-data-service generic bracket wire format (`asks[0].price`/`asks[0].amount`/etc.); HYPERLIQUID's actual raw
+  format (`market_tick_data_service/adapters/hyperliquid_s3.py::_row[f"bid_px_{i:02d}"]` etc.) writes
+  `bid_px_00..04`/`ask_px_00..04`/`bid_sz_00..04`/`ask_sz_00..04` (2-digit zero-padded level, the same tardis/databento-
+  style naming `tbbo_adapter.py` already special-cases for TradFi) — never matched, so every HYPERLIQUID
+  `book_snapshot_5` shard hit "Missing bid_price_0 or ask_price_0" and got REFUSED by the honest-absence gate. Fix:
+  added the `bid_px_NN`→`bid_price_N`, `ask_px_NN`→`ask_price_N`, `bid_sz_NN`→`bid_volume_N`, `ask_sz_NN`→`ask_volume_N`
+  mapping for all 5 levels inside the existing `_normalize_column_names`. Per this todo's own instruction, checked
+  LIGHTER-ZKSYNC/EXTENDED-STARKNET (`market_tick_data_service/adapters/_umi_lighter.py`, `_umi_extended.py`) for the
+  same wire convention — both already write `bid_price_N`/`ask_price_N` directly (not the HL `_px_NN`/`_sz_NN` form), so
+  neither needed a change; only HYPERLIQUID was affected. Added `tests/unit/test_book_snapshot_column_normalization.py`:
+  all 5 HL levels map to the standard names, the raw `bid_px_NN`/`ask_px_NN`/`bid_sz_NN`/`ask_sz_NN` columns don't
+  survive normalization, `_calculate_book_features` produces a non-NaN `mid_price`/`spread_bps` from HL input
+  (end-to-end proof the "Missing bid_price_0" warning path is no longer hit), and both the pre-existing bracket format
+  and the already-standard `bid_price_N`/`ask_price_N` pass-through (LIGHTER/EXTENDED's case) are unaffected.
+  `quality-gates.sh` green (94s, full run, sentinel on the shipped SHA). Shipped:
+  `market-data-processing-service@e3fc539` (verified reachable on `origin/live-defi-rollout` via
+  `merge-base --is-ancestor`). Todo 3 flipped `[x]`. Todo 4 (the separate
+  `orchestration_scheduling.py::_list_instrument_files` unscoped-listing bug) remains untouched — out of scope for this
+  task.
