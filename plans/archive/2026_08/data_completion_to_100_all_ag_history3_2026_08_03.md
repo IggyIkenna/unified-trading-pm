@@ -282,5 +282,4 @@ just a pointer to where its real narrative lives (per the 2026-07-24 fold-out); 
 ### 2026-06-22 13:00 — DEFI 2nd defect found+fixed: 441k blank-asset_group captures (honest_cov 10.67%→18.66%)
 
 > **Moved to `data_completion_defi_2026_07_15.md` § Progress Log (2026-07-24 fold-in, verbatim, per-DeFi-lane; plan
-> line-cap remediation).**
-> </content>
+> line-cap remediation).** </content>
