@@ -39,6 +39,7 @@ related:
     ../canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../canonical_id_p0_strategy_reconciliation_2026_07_08.md,
     ../prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/active/issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master
@@ -341,15 +342,25 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **DEX-pool catalog regeneration (finding 2, all 13 protocols)** — real code is already correct for
-      every protocol (see the per-protocol table in finding 2, 2026-07-08 update); the ONLY gap is that
-      `prod/catalog.parquet`'s 6,180 DEX-pool rows predate the current adapter code and still show bare on-chain
-      addresses with no `-CHAIN` venue suffix. Scope: re-run instrument discovery for all 13 protocol×chain combinations
-      in the table above and rewrite/backfill the catalog rows in place (per the migration-mechanics decision below:
-      rewrite already-captured rows from already-known data, not a fresh re-download) so `instrument_id` reflects the
-      current adapter's structured `VENUE-CHAIN:POOL:BASE-QUOTE[:FEE]` shape. Do this AFTER (or together with) the 2
-      Uniswap-V3/V4 fee-tier-delimiter code fixes noted in finding 2, so the regeneration produces the FINAL target
-      shape (dash-separated bps fee tier) rather than needing a second regen pass immediately after.
+- [x] [SCRIPT] P2. **DEX-pool catalog regeneration (finding 2, all 13 protocols) — REFRAMED + code-fixed 2026-08-03,
+      retroactive backfill split to a follow-up issue doc.** The todo AS ORIGINALLY WRITTEN (rewrite `instrument_id` to
+      the structured `VENUE-CHAIN:POOL:BASE-QUOTE[:FEE]` shape) is SUPERSEDED by the operator's later two-id-model
+      ruling (Option A, already shipped `instruments-service@4e072d93`, documented in `docs/DEFI_INSTRUMENTS.md`'s "DEX
+      pools" section): `instrument_id` for a POOL row stays `pool_address.lower()` PERMANENTLY — it is the live
+      `market-tick-data-service` join key (`engine/defi_catalog_reader.py`); rewriting it would silently break that join
+      for all 13 protocols. Executing this todo literally would have been a regression, not a fix. The REAL symbolic
+      canonical form is a separate column, `glued_pair_id` (= `canonical_instrument_id` for a POOL row) — a 2026-08-03
+      re-check found ITS 2026-07-09 "fully resolved" write-back was not durable either (population grew ~11.5x via a
+      manifest-gap backfill script that leaves it blank; 3 previously-fixed format bugs had regressed for
+      Balancer/PancakeSwap_V3/Camelot_V3/GMX/Aerodrome_V3 rows — root cause: the catalogue-rollup's fee precedence
+      preferred a row's legacy raw instrument_key fee token over the already-correct structured `pool_fee_tier` bps
+      column, and the 2026-07-09 fix only ever rewrote existing rows, never that CODE path). **Fixed for real this
+      session**: `instruments-service@7a86f13f` (quality-gates green) — `_defi_pool_dual_form()` now prefers
+      `pool_fee_tier` via a new `_bps_fee_str()` helper (also strips a pandas-float `.0` artifact), with a regression
+      test reproducing the exact live-observed garbage shape. This is a CODE fix only (self-heals every future regen);
+      it does NOT retroactively rewrite the current live catalog (needs a real per-day-corpus regen, out of scope for
+      inline execution per the memory-bounding guardrail) — that remaining scope is tracked in
+      [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]].
 - [ ] [DECISION] P2. **Confirm exact target quote-currency per on-chain-perp venue** (finding 4) — ASTER/PACIFICA/
       LIGHTER-ZKSYNC's real settlement currency needs a quick per-venue API check before the illustrative targets in
       this doc become real implementation targets (e.g. confirm ASTER really settles BTC-USDT in USDT, not some other
@@ -563,6 +574,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   (persisted tests + honest-absence follow-up). That doc is the SSOT for this specific write-path defect + its remaining
   todos (VM relaunch, relabel `--apply` sign-off, a newly-filed Tier-3 sentinel scheme-mismatch finding) — not
   duplicated here.
+
+- **2026-08-03 — DEX-pool catalog-regeneration todo (finding 2) reframed + root-cause code-fixed, not literally executed
+  as originally written.** Dispatched as task `instrument_id_format_canonicalization-001`. Found the literal ask
+  (rewrite `instrument_id` to the structured form) was superseded by the operator's later two-id-model ruling (Option A,
+  already shipped `instruments-service@4e072d93`, documented in `docs/DEFI_INSTRUMENTS.md`) — `instrument_id` for a POOL
+  row must stay `pool_address.lower()` (the live MTDS join key); executing the todo literally would have been a
+  regression. The real symbolic form (`glued_pair_id`) had its own 2026-07-09 "fully resolved" write-back go stale:
+  population grew ~11.5x via a manifest-gap backfill script (leaves it blank), and 3 previously-fixed format bugs
+  (colon-before-fee, raw-not-bps fee, plus a newly-found pandas-float `.0` artifact) had regressed for
+  Balancer/PancakeSwap_V3/Camelot_V3/GMX/Aerodrome_V3 — root cause: the catalogue-rollup's fee precedence never got a
+  CODE fix in 2026-07-09, only the then-existing rows did, so every later regen re-introduced the bug. Fixed the code
+  this session: `instruments-service@7a86f13f` (quality-gates green, `_defi_pool_dual_form()` now prefers the structured
+  `pool_fee_tier` bps column via a new `_bps_fee_str()` helper, regression test added). Retroactive backfill of the
+  current live catalog (needs a real per-day-corpus regen, out of scope for inline execution per the memory-bounding
+  guardrail) tracked in [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]].
 
 ## Orchestration state, 2026-07-09 — split to archive (2026-07-27, line-cap remediation)
 
