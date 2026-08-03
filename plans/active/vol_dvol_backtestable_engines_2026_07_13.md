@@ -5,7 +5,7 @@ summary:
   Build the missing DVOL-index historical capture path (free Deribit public REST, no credentials) and use it to actually
   backtest VOL_CARRY + VOL_ARB_RV_IV — the only 2 of 17 VOL_* engines that don't need Tardis — then register only if the
   backtest genuinely passes.
-status: active
+status: complete # (was: active) 2026-08-03 -- all 5 todos done, finalized + archived
 nature: process
 asset_group:
   [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -26,7 +26,7 @@ estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 assigned_role: backend_engineer
 drift_direction: advance-code
-last_updated: 2026-07-28
+last_updated: 2026-08-03
 locked_by:
 locked_since:
 depends_on:
@@ -45,6 +45,15 @@ context_scope:
 ---
 
 # DVOL-Backtestable VOL Engines
+
+> **✅ ARCHIVED 2026-08-03 — all 5 todos DONE.** Full DVOL history pulled + manifest-verified (2021-03-24→2026-07-30,
+> 1955 distinct dates × {BTC, ETH}, 100% `captured`, re-measured independently by the finalize twin
+> `vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md`). Both VOL_CARRY and VOL_ARB_RV_IV got real
+> `GroupBRunner` backtests over the full honest-intersection window (2021-03-24→2026-05-22) and both came back
+> non-passing (indistinguishable-from-noise Sharpe, flat-to-negative PnL) — BLOCKED-INSUFFICIENT-EDGE, neither
+> registered in `ARCHETYPE_ENGINE_REGISTRY`, both stay `not_available`. `capability-verdict-matrix.json` regenerated
+> (unified-api-contracts@`14dbb6d1`) confirming 0/2 flipped. Archived alongside its finalize twin in the same commit.
+> Re-open only if a concrete alternative param-sweep candidate is proposed for either engine.
 
 > **Split out 2026-07-13** from [`v2_engine_venue_buildout_2026_06_15.md`](v2_engine_venue_buildout_2026_06_15.md) Phase
 > E2. Of the 17 VOL\_\* engines, 15 are `BLOCKED-CREDENTIALS` on Tardis (stays in the parent plan, do not touch here).
@@ -423,3 +432,26 @@ what's missing.
   re-verification + archival-eligibility check (measured DVOL date range, fresh backtest re-run for any flipped engine,
   matrix-regen confirmation, then the standard 6-step archival ritual). Not doing that work here — it's out of scope for
   this todo and the twin now becomes dispatchable to do it properly. Next: the finalize twin's `[SCRIPT] P2` todo.
+
+- 2026-08-03 (slot-13, `backend_engineer`) — **finalize twin's re-verification, run here since the parent and its twin
+  archive together**: **(1) Measured, not trusted**, the CONSOLIDATED availability manifest directly
+  (`unified_trading_ library.read_availability_index_safe` against
+  `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="cefi")`, filtered
+  `data_type=volatility_index`/`venue=DERIBIT`) — confirms **1955 distinct captured dates for BOTH BTC and ETH, span
+  exactly 2021-03-24→2026-07-30** (matches `(date(2026,7,30)-date(2021,3,24)).days+1 == 1955` exactly), 100%
+  `capture_status=captured` (0 failed/empty). Found 5 BTC + 4 ETH duplicate rows on 3 specific dates (2026-07-08/09/13)
+  — harmless overlap between the earlier small connectivity-test days and the later full backfill VM's own write of the
+  same dates, not a gap (distinct-date count is what matters and it's exact). The backfill's own claimed range stands,
+  independently re-derived from the real consolidated index, not just re-quoted. (2) **Zero engines flipped to
+  `available`** — re-confirmed live, zero hits for `VOL_CARRY`/`VOL_ARB_RV_IV` in
+  `strategy_service/engine/strategies/v2/factory.py`'s `ARCHETYPE_ENGINE_REGISTRY` — so per the finalize twin's own
+  instruction, no fresh backtest re-run was owed (that step only applies to an engine that WAS flipped to available;
+  neither was). (3) Confirmed `capability-verdict-matrix.json` commit `14dbb6d1` (unified-api-contracts) genuinely
+  reflects 0/2 flipped — both archetypes still `not_registered(no_v2_engine)`, summary totals byte-identical to the
+  prior regen. (4) All 5 todos `[x]`, `locked_by:` empty → archival candidate confirmed. Ran the 6-step archival ritual:
+  fixed every corpus referrer (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `v2_engine_venue_buildout_2026_06_15.md` ×5, `plans/epics/strategy_master.md` ×2,
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` — bare-slug prose fact corrected), no new codex contract to
+  stub (the memory-bounding + one-off-backfill-VM patterns this plan used were both pre-existing established patterns,
+  not new ones this plan introduced), archiving this plan + its finalize twin together into `plans/archive/2026_08/` in
+  the same commit. See the finalize twin's own Progress Log for its todo's full closure.

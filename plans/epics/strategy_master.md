@@ -129,8 +129,10 @@ Construction, Signal Research & Paper-Trading POC
 
 ### [`vol_dvol_backtestable_engines_2026_07_13`](../active/vol_dvol_backtestable_engines_2026_07_13.md)
 
-**status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: DVOL-Backtestable VOL Engines —
-VOL_CARRY + VOL_ARB_RV_IV register-or-honest-absent
+**status**: ✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/` — all 5 todos done; both VOL_CARRY and VOL_ARB_RV_IV
+backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE), stay `not_available`; matrix regen confirmed 0/2 flipped
+**estimate**: 5.0 cal AI-days (class: brand-new) **title**: DVOL-Backtestable VOL Engines — VOL_CARRY + VOL_ARB_RV_IV
+register-or-honest-absent
 
 ## P2 — useful; opportunistic
 

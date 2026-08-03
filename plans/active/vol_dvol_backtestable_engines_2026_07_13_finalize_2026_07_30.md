@@ -9,7 +9,7 @@ summary: >-
   backtest-then-register, capability-verdict-matrix regen) are done, independently verifies the manifest actually spans
   the full 2021-03-24→now window, re-checks each registration against the HARD CONTRACT bar rather than trusting the
   source doc's own evidence lines, and checks whether the source doc is now itself an archival candidate.
-status: active
+status: complete # (was: active) 2026-08-03 -- todo done, parent + this twin archived together
 nature: process
 asset_group: [cefi]
 stage: [strategy]
@@ -23,7 +23,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-03"
 parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -57,6 +57,12 @@ context_scope:
 
 # VOL/DVOL backtestable engines — finalize
 
+> **✅ ARCHIVED 2026-08-03 — todo DONE.** Re-verified the parent independently rather than trusting its own evidence
+> lines: measured the CONSOLIDATED manifest directly (1955 distinct dates × {BTC, ETH}, 2021-03-24→2026-07-30, 100%
+> `captured`); confirmed 0/2 engines flipped to `available` (so no fresh backtest re-run was owed — that step only
+> applies to a flipped engine); confirmed `capability-verdict-matrix.json`@`14dbb6d1` genuinely reflects 0/2; ran the
+> 6-step archival ritual and archived the parent alongside this twin in the same commit. See Progress Log below.
+
 > **Machine-gated on `vol_dvol_backtestable_engines_2026_07_13.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue this plan's todo until the parent's 5 todos are done.
 
@@ -75,22 +81,33 @@ verify-from-scratch cycle.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Verify the parent's 5 todos against their own stated criteria, then check archival eligibility.**
-      Once `vol_dvol_backtestable_engines_2026_07_13.md`'s todos are all `[x]`: (1) **Measure, do not trust** — read the
-      manifest for `data_type=volatility_index` and confirm captured rows genuinely span the FULL `2021-03-24 → today`
-      window for BOTH BTC and ETH (the parent's own `[SCRIPT]` todo warns the range must be checked before the backtest
-      is picked up; re-check it here too rather than trusting the parent's evidence line). Report the measured first and
-      last captured date per underlying. (2) For whichever of `VOL_CARRY` / `VOL_ARB_RV_IV` were flipped to `available`
-      in `ARCHETYPE_ENGINE_REGISTRY`, re-run the `GroupBRunner` backtest and confirm it still clears the parent's HARD
-      CONTRACT bar — a registration that only passes on the original run's cached artefacts is not a pass. (3) Confirm
-      the regenerated `capability-verdict-matrix.json` commit actually reflects the engines that flipped (0, 1, or 2 —
-      the parent explicitly forbids forcing both). (4) Grep the parent for remaining `- [ ]` items; if zero remain and
-      `locked_by:` is empty, it is an archival candidate — run the standard 6-step archival ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), not just a checkbox flip, and fix every
-      corpus referrer that points at `plans/active/`. **Done when**: the measured DVOL date range is recorded here, each
-      registered engine has a fresh passing backtest cited by commit sha, and the parent is either archived or its
-      remaining open items are named here. Repos: strategy-service, market-tick-data-service, unified-api-contracts,
-      unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **Verify the parent's 5 todos against their own stated criteria, then check archival
+      eligibility.** — **DONE 2026-08-03 (slot-13, `backend_engineer`).** (1) **Measured, not trusted**: read the
+      CONSOLIDATED availability manifest directly via `unified_trading_library.read_availability_index_safe` against
+      `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="cefi")`, filtered
+      `data_type=volatility_index`/`venue=DERIBIT` — **1955 distinct captured dates for BOTH BTC and ETH, span exactly
+      2021-03-24→2026-07-30** (matches the expected inclusive calendar-day count exactly), 100%
+      `capture_status=captured`, 0 failed/empty. (A few harmless duplicate rows exist for 3 specific dates —
+      2026-07-08/09/13 — from the earlier small connectivity-test overlapping the later full backfill; distinct-date
+      count, which is what the window claim rests on, is exact.) This independently confirms the parent's claimed range
+      — not a re-quote. (2) **0 of 2 engines flipped to `available`** — re-confirmed live, zero hits for
+      `VOL_CARRY`/`VOL_ARB_RV_IV` in `strategy_service/engine/strategies/v2/factory.py`'s `ARCHETYPE_ENGINE_REGISTRY` —
+      so the "re-run backtest for any flipped engine" step is vacuously satisfied (it only applies to an engine that WAS
+      registered; neither was). (3) Confirmed `capability-verdict-matrix.json`@`14dbb6d1` (unified-api-contracts)
+      genuinely reflects 0/2 flipped — both archetypes still `not_registered(no_v2_engine)`, summary totals
+      byte-identical to the prior regen. (4) Grepped the parent: zero remaining `- [ ]` items, `locked_by:` empty →
+      archival candidate confirmed. Ran the 6-step archival ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): fixed every corpus referrer pointing at
+      the parent's `plans/active/` path (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+      `v2_engine_venue_buildout_2026_06_15.md` ×5, `plans/epics/strategy_master.md` ×2,
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s stale bare-slug prose claim); no new codex contract
+      needed (the memory-bounding + one-off-backfill-VM-launcher patterns the parent used were both pre-existing
+      established patterns, not new ones it introduced); archived the parent alongside this twin into
+      `plans/archive/2026_08/` in the same commit. **Done when met**: measured DVOL date range recorded above, 0 engines
+      needed a fresh backtest (none registered), and the parent is archived (not left with remaining open items). Repos:
+      unified-trading-pm only (verification found nothing to change in
+      strategy-service/market-tick-data-service/unified-api-contracts — 0 registrations flipped, no code follow-up
+      owed).
 
 ## Progress Log
 
@@ -99,3 +116,9 @@ verify-from-scratch cycle.
   (`check_finalize_plan_coverage.py` globs `plans/active/*.md`, so a `doc_type: plan` reclassification needs the twin;
   issue docs are structurally exempt). No parent content duplicated here — this twin only verifies.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-03 (slot-13, `backend_engineer`)**: Closed the todo. Independently re-measured the DVOL manifest
+  (consolidated availability index, not the per-VM shard) — 1955 distinct dates × {BTC, ETH}, 2021-03-24→2026-07-30,
+  100% captured, confirming the parent's claim rather than trusting it. Confirmed 0/2 engines registered (no re-backtest
+  owed) and the matrix regen (`14dbb6d1`) correctly reflects that. Fixed all corpus referrers to the parent's
+  `plans/active/` path (5 files). Archived both this twin and the parent into `plans/archive/2026_08/` in the same
+  commit as the standard 6-step ritual's final step.

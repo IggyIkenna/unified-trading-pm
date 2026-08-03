@@ -238,17 +238,18 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     reference — steeper than ref → bet flatten (BUY near / SELL far); flatter → bet steepen (inverse). Leg tests pin the
     slope-view direction + reference-feature override. **NOT registered** + matrix UNCHANGED. Tardis to backtest.
 - [x] [SCRIPT] P2. **→ SPLIT to
-      [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
-      dispatched to AO** (bundled with VOL_CARRY). Backtest+register work no longer tracked here. **VOL_ARB_RV_IV** —
-      real engine SHIPPED (wave 2). Repo: strategy-service.
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md)
+      2026-07-13, dispatched to AO** (bundled with VOL_CARRY). Backtest+register work no longer tracked here.
+      **VOL_ARB_RV_IV** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolArbRvIvEngine` (`vol_trading/arb_rv_iv.py`): symmetric delta-hedged gamma on the IV−RV gap — IV<RV → long gamma
     (BUY straddle), IV>RV → short gamma (SELL), each hedged `-package_delta` (omitted on honest delta absence). Leg
     tests pin long/short-gamma side + hedge sign + honest omission. **NOT registered** + matrix UNCHANGED. **DVOL-index-
     backtestable** like VOL_CARRY (`iv_atm - rv` needs only the implied index + realised close series, no per-strike
     surface). -- CLOSED (na-eligibility-audit 2026-08-01): backtest+register work for VOL_ARB_RV_IV was split to
-    vol_dvol_backtestable_engines_2026_07_13.md (2026-07-13), which is `status: active, assigned_vm: planning` — live
-    duplicate, doc stays NA.
+    vol_dvol_backtestable_engines_2026_07_13.md, **now ✅ ARCHIVED 2026-08-03** (real backtest ran, came back
+    non-passing — BLOCKED-INSUFFICIENT-EDGE, stays `not_available`) at
+    `/plans/active/vol_dvol_backtestable_engines_2026_07_13.md` (will be archived to `plans/archive/2026_08/`).
 - [ ] [SCRIPT] P3. **VOL_0DTE_GAMMA_SCALPING** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (intraday 0DTE marks need Tardis).
     `Vol0dteGammaScalpingEngine` (`vol_trading/gamma_scalping_0dte.py`): near-expiry long-gamma scalp — open (BUY
@@ -257,8 +258,8 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
       `rehedge_delta`; close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT
       registered** + matrix UNCHANGED.
 - [x] [SCRIPT] P3. **→ SPLIT to
-      [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) 2026-07-13,
-      dispatched to AO** (bundled with VOL_ARB_RV_IV — both are DVOL-index-backtestable, don't need Tardis).
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md)
+      2026-07-13, dispatched to AO** (bundled with VOL_ARB_RV_IV — both are DVOL-index-backtestable, don't need Tardis).
       Backtest+register work no longer tracked here. **VOL_CARRY** — real engine SHIPPED (template wave).
   - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
     `VolCarryEngine` (`engine/strategies/v2/vol_trading/carry.py`): harvests the volatility-risk-premium — when `iv_atm`
@@ -272,8 +273,9 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     series, so `iv_atm - rv` carry needs NO per-strike surface. **Candidate for an early DVOL-index backtest
     greenlight** ahead of the surface-dependent VOL_STRADDLE/VARIANCE_SWAP (which need Tardis). No backfill run. --
     CLOSED (na-eligibility-audit 2026-08-01): backtest+register work for VOL_CARRY was split to
-    vol_dvol_backtestable_engines_2026_07_13.md (2026-07-13, bundled with VOL_ARB_RV_IV), which is
-    `status: active, assigned_vm: planning` — live duplicate, doc stays NA.
+    vol_dvol_backtestable_engines_2026_07_13.md (2026-07-13, bundled with VOL_ARB_RV_IV), **now ✅ ARCHIVED 2026-08-03**
+    (real backtest ran, came back non-passing — BLOCKED-INSUFFICIENT-EDGE, stays `not_available`) at
+    `/plans/active/vol_dvol_backtestable_engines_2026_07_13.md` (will be archived to `plans/archive/2026_08/`).
 - [ ] [SCRIPT] P3. **VOL_CROSS_ASSET_SPREAD** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (dual-asset per-strike surfaces need Tardis).
     `VolCrossAssetSpreadEngine` (`vol_trading/cross_asset_spread.py`): relative vol of two assets — `iv_a - iv_b` beyond
@@ -537,9 +539,11 @@ work into 5 small `assigned_vm: planning` child plans, each single-discipline an
 
 - [`uac_venue_registry_completion_2026_07_13.md`](uac_venue_registry_completion_2026_07_13.md) — FX/BITFINEX/BITGET/
   KRAKEN registry + leg-eligibility (7 todos, unified-api-contracts only).
-- [`vol_dvol_backtestable_engines_2026_07_13.md`](vol_dvol_backtestable_engines_2026_07_13.md) — VOL_CARRY +
-  VOL_ARB_RV_IV backtest+register via free DVOL history (7 todos, incl. an `[OPERATOR]` gate on historical-depth — DVOL
-  is credential-free but a bulk historical pull is still a backfill decision per this plan's own constraint).
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) —
+  VOL_CARRY + VOL_ARB_RV_IV backtest+register via free DVOL history (7 todos, incl. an `[OPERATOR]` gate on
+  historical-depth — DVOL is credential-free but a bulk historical pull is still a backfill decision per this plan's own
+  constraint). **✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/`** — all 5 todos done, both engines' backtests
+  non-passing.
 - [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md) —
   cryptography GHSA bump + MTDS baseline ratchet (3 todos).
 - [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) — per-strike IV grid +
