@@ -170,23 +170,30 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       `GET /api/activity?type=blocked_answered`). The ruling never reached this doc because the filer (slot-9) pivoted
       to an unrelated one-shot CI dispatch and was recycled 3× before consuming its own blocked-answer; surfaced by
       review (agt-07ff49, msg #3565) and propagated by main. (repo: unified-trading-pm, decision only)
-- [ ] [BACKEND] P2. Per the ruling (EXTEND): add real, LIVE-VERIFIED Hermes feed-ids for JTO/RAY/WIF/JUP/USDC to
-      `market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py` (`_PYTH_FEEDS`) —
-      verify each id resolves against `hermes.pyth.network/v2/price_feeds?query=<SYM>` FIRST (this file documents 2
-      prior transcription-slip incidents where a well-formed-but-wrong id 404'd a whole batch) — AND reconcile
-      `_write_oracle_rows`'s `instrument_id` derivation so newly-fetched SOL/JitoSOL/mSOL/bSOL rows land under (or
-      migrate to) the seeder's `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` key. NOTE: this doc is `execution_scope: local-only`
-      (NA) so this todo does not auto-dispatch — the code fix needs a dispatchable (`assigned_vm: planning`) home to
-      actually be worked (see Progress Log). (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P2 (extend-ids half only) → market-tick-data-service@cd017a1c (2026-08-03, slot-8). Added real,
+      live-verified Hermes feed-ids for JTO/RAY/WIF/JUP/USDC to `_oracle_prices_constants.py`'s `_PYTH_FEEDS` (each
+      verified 2026-08-03 against `hermes.pyth.network/v2/price_feeds?query=<SYM>`, filtered to the exact
+      `Crypto.<SYM>/USD` symbol — JUP/USDC each also return a distinct near-miss feed, JUPUSD/USD and SYRUPUSDC/USD
+      respectively, correctly NOT picked). All 5 pass `test_all_feed_ids_are_canonical_64_hex`'s exact-64-hex regression
+      guard. **The `instrument_id`-reconciliation half of this todo's original text is NOT done** — that is real,
+      separate, higher-risk work (changes `write_defi_rows`'s `instrument_type` from `SPOT_ASSET` to `SPOT_PAIR`, which
+      also drives `SchemaContract` lookup + partition-path derivation for 17+ days of already-written production data) —
+      it is the SAME work `[DATA] P3` below already tracks, not duplicated here.
 - [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
       form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
       market-tick-data-service, unified-api-contracts)
-- [ ] [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss). Restore BTC/ETH/INF to IS's `PYTH-SOLANA`
-      `instrument_availability` enumerated set (or change `_filter_pyth_rows_to_is` to never drop a symbol `_PYTH_FEEDS`
-      statically supports). This is MANDATORY under BOTH extend and prune (§"Recommended decision" pt 3), so it does NOT
-      depend on the extend-vs-prune ruling and should be fixed IMMEDIATELY / independently — real Pyth Hermes prices for
-      these 3 symbols have been fetched-then-silently-discarded every day since 2026-07-19 (15+ days and counting). NOT
-      fixed by extending `_PYTH_FEEDS` alone. (repo: instruments-service or market-tick-data-service)
+- [x] ✅ [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss) → instruments-service@dec90cc0 (2026-08-03,
+      slot-8). Rebased my local commit onto slot-6's `a325da86` (which cleared repo-blocker `RB-48c5820b` — the
+      unrelated STEP 5.106 gate failure this fix was blocked behind), re-ran `quality-gates.sh` clean, verified
+      `dec90cc0` on `origin/live-defi-rollout` (`merge-base --is-ancestor`). Restored BTC/USD, ETH/USD, INF/USD to
+      `PYTH_PRICE_FEEDS` (the dict `get_instruments()` uses to publish IS's `PYTH-SOLANA` `instrument_availability`
+      catalogue) — ids are the Hermes REST feed-id (live-verified, byte-identical to MTDS's own already-verified values
+      for these 3 symbols) rather than a Pythnet on-chain account address like the file's other entries, since
+      `raw_symbol` is traceability-only and never parsed/dereferenced as an on-chain address by this adapter. This is
+      the higher-priority, decision-independent half of the fix — real Hermes prices for these 3 symbols were being
+      fetched successfully and then silently discarded by `_filter_pyth_rows_to_is` every day since 2026-07-19 (will
+      resolve going forward once shipped; does NOT backfill the already-lost 2026-07-19..2026-08-03 window, which is
+      unrecoverable — Hermes only serves recent history per feed availability).
 
 ## Progress Log
 
@@ -241,3 +248,26 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   did not author a new dispatchable plan unilaterally (plan-destination is operator's call) nor hand-edit the C6 backlog
   task brief (derived from `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`; backlog is not
   hand-editable). Main cannot push code, so shipping the fix itself requires a worker dispatch.
+- **2026-08-03 (slot-8, backend_engineer craft, dispatched via `defi_satellite_ao_dispatch_batch3-013`)**: wrote both
+  decision-independent halves of the code fix. The extend-ids half of `[BACKEND] P2` (JTO/RAY/WIF/JUP/USDC) SHIPPED —
+  `market-tick-data-service@cd017a1c`, `quality-gates.sh` green, verified on `origin/live-defi-rollout`
+  (`merge-base --is-ancestor`). `[DATA] P1` (BTC/ETH/INF restoration) initially committed locally only
+  (`instruments-service@8a5fcdce`) and blocked: `quality-gates.sh` FAILED on that repo (STEP 5.106, 3 bare
+  `read_availability_index` sites in `cli/main.py`, confirmed pre-existing/unrelated to my diff via a clean re-run of
+  `check_bare_read_availability_index.py` — these came from CLI-subcommand commits landed earlier 2026-08-03, after the
+  checker's own 2026-07-31 zero-new-occurrences re-verify). Tracked the 3 new sites as a todo in
+  `read_availability_index_bare_defi_callers_2026_07_27.md` and declared repo-blocker `RB-48c5820b` rather than fixing
+  that unrelated regression inline (out of scope for this task) or force-shipping past a failing gate. **Resolved same
+  session**: slot-6 fixed the 3 sites (`instruments-service@a325da86`), clearing the blocker; rebased my commit onto it
+  (`dec90cc0`), re-ran `quality-gates.sh` clean, and shipped — verified on `origin/live-defi-rollout`. `[DATA] P1`
+  flipped above citing the landed `dec90cc0`. Live-verified all 8 Pyth ids (3 cross-checked against MTDS's existing
+  values — byte-identical, confirming no drift; 5 new) directly against `hermes.pyth.network/v2/price_feeds`, not from
+  memory, given this exact file's documented history of transcription-slip incidents. **Deliberately did NOT attempt**
+  the `instrument_id`-naming reconciliation (the other half of `[BACKEND] P2`'s original text, and all of `[DATA] P3`):
+  traced `write_defi_rows`'s call (`instrument_type=SPOT_ASSET` → `_build_defi` code path) against IS's seeder
+  (`instrument_type=SPOT_PAIR` → `_build_cefi_simple` code path) and confirmed the two are genuinely different code
+  paths — `write_defi_rows`'s `instrument_type` also drives its `SchemaContract` lookup (strict-mode, would need a NEW
+  registered `defi/spot_pair/oracle_prices` contract) and partition-path derivation for 17+ days of already-written
+  production data under the current naming. Real, separate, higher-risk work matching this doc's own earlier caution
+  about this exact reconciliation ("an early pass... produced a false '77 gap days' result") — left for `[DATA] P3`'s
+  dedicated pass, not rushed here.
