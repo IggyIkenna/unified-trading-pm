@@ -99,3 +99,4 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-07-30 (only a
   context-scout frontmatter backfill since); sole open todo bundles an unbounded root-cause trace with a 9,733-object
   GCS migration carrying no `[OPERATOR]` tag or delete-safety citation.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

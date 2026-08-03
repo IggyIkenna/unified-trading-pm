@@ -289,3 +289,4 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
   CONFIRMED RESOLVED per that doc's own 2026-07-31 ownership-map commit. Revisit RECLASSIFY only if batch4 stalls
   without activating — content is otherwise bounded/deterministic.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

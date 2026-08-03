@@ -156,3 +156,7 @@ group doesn't consume that data_type.
   and confirmed f932908b is an ancestor of `origin/live-defi-rollout`. Flipped the checkbox; no new code needed. The
   remaining `[DATA] P3` re-verification todo (fresh relaunch throughput check) is out of this task's scope.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

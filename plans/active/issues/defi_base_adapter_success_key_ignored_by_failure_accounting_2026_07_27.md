@@ -161,3 +161,4 @@ adapters' venues.
   planning docs; no open todo elsewhere duplicates this claim) - primary fix shipped mtds@df3d55dd; residual is a
   bounded production blast-radius audit over 12 named adapters
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
