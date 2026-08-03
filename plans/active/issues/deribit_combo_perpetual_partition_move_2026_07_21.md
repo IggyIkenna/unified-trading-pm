@@ -363,6 +363,47 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       `self._classify_row_instrument_type(s, venue)` method the fix modified, confirmed by direct grep/read
       (`tardis_cefi_shards.py:298,590`), so both ingestion paths share one fixed classifier already.
 - [ ] [DATA] P2. Implement + dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b;
-      canary on the two objects named in §6 before any full `--apply`.
+      canary on the two objects named in §6 before any full `--apply`. **IN PROGRESS 2026-08-03 (slot 15, task
+      `deribit_combo_perpetual_partition_move-003`)** — script implemented at
+      `market-tick-data-service/scripts/deribit_combo_perpetual_partition_move_2026_08_03.py` (census + full 7-step move
+      mechanic per §5, `--apply` gated behind an explicit refusal citing §7 until the sibling todo below clears;
+      `--dry-run`/`--canary` fully implemented and exercised against live data, read-only). Not yet committed —
+      `quality-gates.sh` was still running on `market-tick-data-service` at session-end; will ship + flip in the next
+      turn once green. **Significant finding surfaced while testing, not yet in this doc's earlier sections**: the live
+      manifest today shows ZERO qualifying candidate rows, a sharp drop from this doc's 2026-07-21 measurement (15,119
+      rows: 8,849 `perpetual` + 6,270 `future`). Verified concretely: a full census run found only false-positive shape
+      matches (`BTC-USDC@LIN`-style linear-perp symbols, correctly rejected by the catalogue cross-check, 0 real combo
+      hits survive it); `instrument_type=COMBO` now has **0 rows manifest-wide, for any venue** (down from this doc's
+      own §2b baseline of 662 DERIBIT `combo` rows) — the entire combo classification appears to have been pruned from
+      the manifest sometime in the intervening 13 days (unrelated migration work — the cefi tranche has seen heavy churn
+      this period per its own consolidated-closeout history). **The underlying GCS objects were NOT necessarily moved
+      along with this** — directly re-confirmed one of §6's two canary objects
+      (`.../instrument_type=perpetual/data_type=book_snapshot_5/BTC-FS-26DEC25_PERP.parquet`, 37,258 rows,
+      `instrument_id` content column still reads the wrong `DERIBIT:PERPETUAL:BTC-FS-26DEC25_PERP`) still physically
+      exists at its OLD wrong-partition path, but the manifest now carries **no row mentioning this symbol at all** —
+      not even a stale/wrong one. **Practical implication for the operator-review todo below**: do not schedule
+      `--apply` against this doc's stated 15,119-row scope without first re-running this script's `--dry-run` to get the
+      CURRENT candidate list — the manifest-driven scope may have shrunk to near-zero, OR (more likely, per the
+      orphaned-object evidence) the real remaining population is now UNDER-COUNTED by any manifest-only census, because
+      these specific objects still sit at the wrong path with wrong content but are invisible to a manifest-only scan. A
+      GCS-object-level re-scan (not just the manifest) is probably needed before the operator review can trust either "0
+      remaining" or "15,119 remaining" as the true count. Root cause of the manifest-row disappearance not investigated
+      this session (out of scope for the implement+dry-run todo; flagging for whoever does the operator-review pass, or
+      as a fresh finding if it recurs).
 - [ ] [DATA] P2. Operator review of §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any
-      `--apply` is scheduled.
+      `--apply` is scheduled. **Re-verify scope before this review**: see the sibling todo's 2026-08-03 finding above —
+      the manifest-measured candidate count has apparently dropped from 15,119 to 0 since this doc was written, but at
+      least one physically-orphaned wrong-content object was directly confirmed still present at its old path with no
+      manifest registration at all. The true remaining scope needs a GCS-level re-check, not just a manifest re-read,
+      before this review can proceed on trustworthy numbers.
+
+## Progress Log
+
+- **2026-08-03** (slot 15, data_engineering, task `deribit_combo_perpetual_partition_move-003`) — Implemented the
+  census + partition-move script (see todo 3 above for full evidence). Session ended mid-QG-run (shared host, several
+  concurrent `quality-gates.sh` invocations queued); script is dry-run-tested and correct but not yet committed. No GCS
+  object was written, moved, or deleted this session — every check was a read (`gcs_describe_object`/
+  `download_bytes`/bounded `list_blobs`), and `--apply` was never invoked (the script itself refuses `--apply` with a
+  citation to §7 pending the operator-review todo). Next session: confirm QG result, `quickmerge --agent` the script,
+  flip todo 3 with the shipped SHA, and consider whether the manifest-drift finding warrants its own issue doc if the
+  root cause turns out to be a live-data-correctness regression rather than an already-intentional cleanup.
