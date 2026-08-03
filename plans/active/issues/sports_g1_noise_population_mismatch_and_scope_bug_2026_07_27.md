@@ -74,17 +74,20 @@ exact canonical-set derivation the G1 delete script
 
 **Neither cited figure matches current reality, under any canonical-set cut**:
 
-| Canonical set used                                                                       | Non-canonical rows | Unique league_ids |
-| ---------------------------------------------------------------------------------------- | -----------------: | ----------------: |
-| Plan's G1 figure (as originally measured, 2026-06-27)                                    |           ~106,000 |             1,437 |
-| §U's approved purge (Track V, 2026-07-20)                                                |             10,869 |               489 |
-| **Live: FULL registry (383 leagues) as canonical**                                       |        **268,094** |           **780** |
-| **Live: MVP-scope (96 leagues) as canonical**                                            |      **1,476,781** |         **1,067** |
-| **Live: FULL registry, football data_types only (2026-07-27 manual census)**             |         **17,767** |           **734** |
-| **Live: FULL registry, football-only, FIXED SCRIPT dry-run (2026-08-03, authoritative)** |         **11,403** |           **755** |
+| Canonical set used                                                                                               | Non-canonical rows | Unique league_ids |
+| ---------------------------------------------------------------------------------------------------------------- | -----------------: | ----------------: |
+| Plan's G1 figure (as originally measured, 2026-06-27)                                                            |           ~106,000 |             1,437 |
+| §U's approved purge (Track V, 2026-07-20)                                                                        |             10,869 |               489 |
+| **Live: FULL registry (383 leagues) as canonical**                                                               |        **268,094** |           **780** |
+| **Live: MVP-scope (96 leagues) as canonical**                                                                    |      **1,476,781** |         **1,067** |
+| **Live: FULL registry, football data_types only (2026-07-27 manual census)**                                     |         **17,767** |           **734** |
+| **Live: FULL registry, football-only, FIXED SCRIPT dry-run (2026-08-03, authoritative)**                         |         **11,403** |           **755** |
+| **Live: `FIXTURES_SCHEDULE`-only non-registry blank-`round` rows (2026-08-03, §U's own data_type, scoped walk)** |          **7,573** |           **296** |
 
 (MVP-scope is the wrong cut for a "not in registry" wipe — it also flags genuinely-registered, just non-MVP leagues, so
-it over-counts by design; included for completeness only.)
+it over-counts by design; included for completeness only. The `FIXTURES_SCHEDULE` row is NOT comparable to the two rows
+above it — `_FOOTBALL_DATA_TYPES` excludes `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` entirely, so it is a disjoint
+data_type population, included here only as the honest 2026-08-03 equivalent of §U's own original figure.)
 
 **Critical safety finding — the full-registry non-canonical set contains real, in-scope canonical-league data under
 stale symbolic names.** The 5 exact aliases already named as a P0 delete risk in
@@ -164,17 +167,45 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
       the 2026-07-27 manual census's 17,767/734 figure for the same cut (index grew to 11,853,040 total rows in the
       intervening week, and the manual census pre-dated the fixed script). Read-only: no `--apply`, no writes, no GCS
       object scan. (repo: `instruments-service`)
-- [ ] [DIAG] P2. **Reconcile §U's exact population** — a fresh, scoped, SINGLE-WALK read of raw FIXTURES parquet content
-      (`af_league_id` + `round`) to determine whether §U's 10,869/489 population is in fact a subset of the
-      football-only 17,767/734 manifest-index cut measured here. **Done-when**: the subset question is answered yes/no
-      with the measured counts recorded in this doc. Until it is answered, §U's original approval must NOT be treated as
-      covering any part of the current residual. Read-only — no `--apply`, no deletes. (repo: `instruments-service`)
-- [ ] [REVIEW] P3. **⏸ PARKED (2026-08-02, main's BLOCKED-answer, Option A) — behind items 1+2 above; do NOT flip until
-      BOTH land.** Corpus hygiene — update the closeout's G1 sub-item. After the two todos above land, update
-      `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item with the corrected figures and a
-      citation to this doc. The plan's own text ("§U... already-approved... the scale differs by ~10x, so this must not
-      be assumed") anticipated exactly this outcome. Ordering: do this LAST — it records the other two's results. (repo:
-      `unified-trading-pm`)
+- [x] ✅ [DIAG] P2. **Reconciled 2026-08-03 — ANSWER: NO, not a subset; the two populations are DISJOINT BY
+      CONSTRUCTION, not merely different-sized.** `instruments-service@153063e4`
+      (`scripts/reconcile_sports_g1_fixtures_schedule_population_2026_08_03.py`, read-only, no `--apply`). **Structural
+      finding (decisive)**: `delete_noncanonical_sports_leagues_2026_06_25.py`'s own `_FOOTBALL_DATA_TYPES` frozenset —
+      the exact scope the G1 census/delete script applies — does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES`
+      (confirmed both by reading the frozenset and by a live manifest-index probe: `FIXTURES_SCHEDULE` carries 991,204
+      rows in the index today, entirely separate from the `_FOOTBALL_DATA_TYPES`-scoped 11,403/755 figure above). §U's
+      ENTIRE population is drawn from `FIXTURES_SCHEDULE` raw content. So the manifest-index cut structurally contains
+      **zero** `FIXTURES_SCHEDULE` rows — §U's population can never overlap with it, regardless of league_id content.
+      This also explains why neither historical figure ever matched: the two efforts were always scoped to disjoint
+      `data_type` universes (G1's 106k/1,437 predates the 2026-07-14+ `FIXTURES_SCHEDULE` writer cutover entirely), not
+      a shrinking/growing view of the same population. **Measured (today's fresh equivalent of §U's figure)**: the UAC
+      league registry has grown from ~94 leagues (at §U's 2026-07-19 measurement) to **383** today
+      (`sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md`'s own table already shows this shift for the G1
+      side). The manifest index shows 363 distinct non-registry `FIXTURES_SCHEDULE` league_ids today (2,167 manifest
+      cells — bookkeeping rows, not fixture-row counts). A SCOPED single walk of the raw `fixtures_schedule` corpus
+      restricted to those 363 leagues' partitions (2,111 blobs identified, 2,051 read successfully) found **7,573
+      non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
+      10,869/489 figure, smaller because of the registry's 94→383 growth plus the intervening § T/§ W backfills
+      (`sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`) and the 2026-07-23 pre-floor wipe (some of
+      §U's original in-window population fell in the since-wiped 2019-01-01..2020-06-05 band). **Encountered, NOT new**:
+      60 of the 2,111 scoped blobs (all under `day=2026-04-14`) failed the `af_league_id`/`round` column projection with
+      an `instrument_key`/venue/`instrument_type` catalogue-row schema instead — this is the SAME
+      already-fully-investigated contamination incident tracked in
+      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (root-caused, guarded against future recurrence via
+      `_assert_not_cross_domain_contamination` in `instruments-service@b3cb6f8c`, and remediated for all 36 leagues that
+      had a legitimate canonical target). That doc's own text already documents these raw-named objects as
+      **deliberately left untouched** pending an operator prod-delete decision (35 of the 85 have no canonical registry
+      match at all; its one remaining open todo is exactly that `[OPERATOR]` decision) — so my 60 unreadable blobs are
+      that doc's known residue, not a fresh defect. Cross-linked, no duplicate issue doc filed. Until any future purge
+      is scoped to `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` specifically (a different todo, not this one), §U's original
+      approval still covers nothing the G1 script would ever touch. Read-only: no `--apply`, no deletes, no writes.
+      (repo: `instruments-service`)
+- [ ] [REVIEW] P3. **UNPARKED 2026-08-03 — items 1+2 above both landed, this is now actionable** (was ⏸ PARKED
+      2026-08-02, main's BLOCKED-answer Option A, behind items 1+2). Corpus hygiene — update the closeout's G1 sub-item.
+      After the two todos above land, update `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item
+      with the corrected figures and a citation to this doc. The plan's own text ("§U... already-approved... the scale
+      differs by ~10x, so this must not be assumed") anticipated exactly this outcome. Ordering: do this LAST — it
+      records the other two's results. (repo: `unified-trading-pm`)
 - [ ] [OPERATOR] P2. **Apply the RULES.md §4 mechanical park to the item-3 backlog task** (`priority: 999` +
       `priority_override: true` + a false `prereqs.prerequisites: [sports-g1-rebaseline-decided]` condition on the
       derived backlog task for the todo immediately above) so the dispatcher stops offering it before items 1+2 land.
@@ -211,5 +242,18 @@ script was run; no snapshots, no writes, no GCS deletes.
   writes). Fresh baseline: 11,403 non-canonical rows / 755 league_ids (football-only, full-registry). Added this as the
   authoritative row in the census table and flipped item-1's checkbox. Items 2 ([DIAG] §U reconciliation) and 4
   ([OPERATOR] mechanical park) remain open; item-3 stays PARKED (still behind item-2).
+- **2026-08-03 (slot 8, worker)**: Resolved item-2 — §U's population is NOT a subset of the manifest-index cut; the two
+  are disjoint by construction (`_FOOTBALL_DATA_TYPES` excludes `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` entirely, and
+  §U's whole population is `FIXTURES_SCHEDULE`). Shipped
+  `instruments-service/scripts/reconcile_sports_g1_fixtures_schedule_population_2026_08_03.py` (read-only; structural
+  check + a manifest-scoped single walk of the raw corpus) with unit tests, QG green. Measured today's equivalent of
+  §U's figure: 7,573 non-registry blank-`round` `FIXTURES_SCHEDULE` rows / 296 leagues (down from the original
+  10,869/489 — registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the intervening §T/§W backfills and
+  the 2026-07-23 pre-floor wipe). Flipped item-2's checkbox. 60 of the 2,111 scoped raw blobs (all `day=2026-04-14`) hit
+  wrong-schema content — checked first, this is NOT new: it's the already-tracked, already root-caused-and-guarded
+  contamination in `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (its own text confirms these raw-named
+  objects are deliberately left untouched pending an operator delete decision), so no duplicate issue doc was filed,
+  just cross-linked. Item-3 (parked behind items 1+2) can now be un-parked; item-4 ([OPERATOR] mechanical park) still
+  needs the operator/main-side backlog edit.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
