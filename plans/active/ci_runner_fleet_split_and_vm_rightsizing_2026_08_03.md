@@ -192,10 +192,18 @@ new pool is confirmed green, (3) only then resize AO down.
       (the new VM's, online); a fleet-wide sweep across all 21 allowlisted repos confirmed zero collateral damage beyond
       the PM incident (which was fully restored). - **Gate met**: real CI run `success`, claimed by the new VM's runner
       (`glue-ip-172-31-3-59-1`); old runner cleanly deregistered; PM's pool restored + verified; fleet-wide sweep clean.
-- [ ] [INFRA] P1. Migrate the remaining enumerated repos in verified batches (mirror the original migration's
-      canary→10→remaining phasing) — each batch: register on new VM, verify green, THEN deregister the old runner for
-      those repos. Do not batch-migrate without verifying the prior batch first. Gate: per-batch, a passing CI run per
-      migrated repo cited by run URL.
+- [ ] [INFRA] P1. **Batch migration IN PROGRESS.** Batch 1 (5 repos) DONE 2026-08-03: `strategy-service`,
+      `trading-agent-service`, `unified-api-contracts`, `unified-trading-api`, `execution-service` — each registered on
+      the new VM (`POOL_TAG=<repo>`), verified via a real `quality-gates-v2` dispatch (2 landed clean-green immediately;
+      3 hit an unrelated "supersede check" cancellation from genuine concurrent CI activity on those repos,
+      re-dispatched clean; `unified-api-contracts` additionally proven via REAL organic production traffic already
+      landing on the new runner — a semver-agent run + a promotion-PR's Cloud-Build gate, both success, before I even
+      finished verifying), then old runner deregistered via the safe exact-unit-name + `gh api DELETE` method (not
+      `teardown` — see the canary todo's incident note). PM's pool re-checked healthy after the batch (0 offline).
+      Combined with the canary: **6 of 21 pools done** (13 single-runner repos + PM's 8-runner pool + AO's 3-runner pool
+      remain). Mirror the original migration's canary→10→remaining phasing — each batch: register on new VM, verify
+      green, THEN deregister the old runner for those repos. Do not batch-migrate without verifying the prior batch
+      first. Gate: per-batch, a passing CI run per migrated repo cited by run URL.
 - [ ] [INFRA] P1. Once every repo's runner is confirmed migrated and no runner-claimed job has landed on
       `i-0c9b283b31d6b5ca7` for a full day, tear down the old runner pool there (`setup-glue-runners.sh teardown` or
       equivalent). Gate: `gh api .../actions/runners` shows zero runners registered against the old VM fleet-wide.
