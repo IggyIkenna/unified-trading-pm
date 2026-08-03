@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-pm, instruments-service]
+repos: [unified-trading-pm, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
 related:
@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T22:55Z
+last_updated: 2026-08-03T23:12Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -163,3 +163,35 @@ here.
   clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead; no code changes made in that repo this session —
   only this doc in `unified-trading-pm`). `AUTHORING_SLOT=ci` (sentinel) — skipped the authoring-slot ping per
   `cicd.md`'s `^[0-9]+$` check.
+
+- **2026-08-03 ~23:00-23:12Z (`cicd` escalation `agt-681f6e`, slot 6, `market-data-processing-service`,
+  `wall_type=main_ci_red`) — new repo + first `main_ci_red` (not `ldr_qg_failure`) occurrence for this doc-chain;
+  disposition: already resolved via re-fire, no code action needed**: `main`'s post-promote `quality-gates-v2` (run
+  `30859621125`, headSha `37aea56` — the `chore(promote): LDR → main (Option-B direct)` push, PR#573 already `MERGED`)
+  was `failure` on its `QG slice (tests)` job. The escalation's own framing assumed LDR was green and the fix "already
+  exists" there — checked live state instead of trusting that: `live-defi-rollout`'s own most recent `quality-gates-v2`
+  `workflow_dispatch` runs were ALSO failing (`30858480894` etc., same `tests`-leg pattern, hours of alternating
+  pass/fail all day) — same bug-class, not a main-specific regression, so the (A) promotion-stuck / (B)
+  stale-workflow-on-main classification in `cicd.md` didn't apply; this is a 3rd distinct failure _signature_ variant of
+  the same host-contention class: `main`'s narrowed-file run (`TEST_IMPACT_GATE` →
+  `tests/unit/scripts/test_restamp_sports_candle_venue.py` only) produced no test failure output at all — just a silent
+  ~5m20s gap then `exit=1`; LDR's own concurrent full-suite run (narrowed set empty → fell through to full suite) showed
+  the mechanism directly: `PluggyTeardownRaisedWarning` / `OSError: cannot send (already closed?)` in
+  `pytest_sessionfinish` on TWO xdist workers before the runner reported `exit=1` — an xdist inter-process channel dying
+  under host contention during teardown, not a real test failure (no `FAILED`/`AssertionError` anywhere, coverage
+  combine warned `No data was collected` — consistent with the run completing but the reporting channel being severed).
+  Ran a full local reproduction before touching any code: the narrowed file (6 tests) passed clean, `6 passed in 0.44s`,
+  no hang, no failure — ruling out a code/test defect for `main`'s specific failure. Re-triggered `quality-gates-v2` on
+  `main`'s current HEAD (`gh workflow run quality-gates-v2.yml --ref main`) rather than declare done via
+  local-repro-only, since `main_ci_red` (unlike the PR-scoped `ldr_qg_failure` cases in prior entries) means the actual
+  required-check state on `main` stays red until something re-runs it: the re-fire (run `30861199746`) went green in 45s
+  via the content-hash green-marker fast path (tree hash matched an already-verified state, short-circuiting past the
+  flaky `tests` slice entirely) — confirms the tree content was never the problem. `main` is now `success`/green
+  (verified via `gh run list`). `live-defi-rollout` itself remains red on its own most recent `workflow_dispatch` runs
+  as of this session — noted, explicitly out of scope for a `main_ci_red` wall (this doc-chain's todo 1 capacity-side
+  fix is the actual owner of that). No open `repo-blockers` for `market-data-processing-service` to fast-path.
+  Incidental `uv.lock` rewrite from the local `uv run pytest` repro (dependency-graph resolution-marker/version drift,
+  unrelated to any real dep change) was reverted (`git checkout -- uv.lock`) before leaving the slot.
+  `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) — skipped the authoring-slot ping per `cicd.md`'s
+  `^[0-9]+$` check. Slot left clean (`market-data-processing-service` + `unified-trading-pm` both on
+  `live-defi-rollout`, no code changes, only this doc entry).
