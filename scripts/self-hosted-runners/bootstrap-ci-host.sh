@@ -82,6 +82,10 @@ fi
 #                 exactly that. Silent until the slot build.
 #
 # libicu-dev is required by the Actions runner binary itself (installdependencies.sh).
+# ripgrep found MISSING on a real bare-VM run (2026-08-03, ci_runner_fleet_split_and_vm_rightsizing
+# canary): base-service.sh's own [0/6] ENVIRONMENT check hard-requires `rg` and fails every QG
+# invocation immediately if absent — this is exactly the "assumed present" class this script exists
+# to kill, just never hit until a real fresh VM ran quality-gates.sh for real.
 install_base() {
   log "apt-get update + base packages"
   export DEBIAN_FRONTEND=noninteractive
@@ -89,7 +93,7 @@ install_base() {
   apt-get install -y -qq --no-install-recommends \
     sudo ca-certificates curl gnupg lsb-release \
     git jq python3 python3-venv python3-pip \
-    libicu-dev
+    libicu-dev ripgrep
   log "base packages OK"
 }
 
@@ -223,7 +227,7 @@ install_claude_code() {
 verify() {
   local missing=0 t
   log "verifying toolchain parity vs ubuntu-latest:"
-  for t in git jq python3 gh gcloud aws curl; do
+  for t in git jq python3 gh gcloud aws curl rg; do
     if have "${t}"; then printf '  \033[32m✓\033[0m %-10s %s\n' "${t}" "$(command -v "${t}")"
     else printf '  \033[31m✗\033[0m %-10s MISSING\n' "${t}"; missing=$((missing + 1)); fi
   done

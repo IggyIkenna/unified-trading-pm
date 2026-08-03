@@ -158,10 +158,40 @@ new pool is confirmed green, (3) only then resize AO down.
       intended for the new VM ran on the old box instead; caught it (via the error message's own instance ID), cleaned
       up the harmless empty artifact it left there, and used `SSM_INSTANCE=<id>` explicitly from then on. Consider
       fixing the script to accept `$1` for real, so this can't bite the next person.
-- [ ] [INFRA] P0. Migrate ONE canary repo's runner registration to the new VM (pick the smallest/lowest-risk repo from
-      the enumeration), verify its next CI run claims the new VM's runner and goes green, THEN deregister that repo's
-      old runner on `i-0c9b283b31d6b5ca7`. Gate: a real CI run on the canary repo shows `success`, claimed by the new
-      VM's runner name.
+- [x] ✅ [INFRA] P0. **Canary migration (`system-integration-tests`) — DONE, verified green on the new runner, AND a
+      real self-caused incident found + fixed along the way.** Chose it: has `workflow_dispatch`, not one of the
+      operator's 6 explicitly-protected repos, test-only (not execution-critical). - `setup-glue-runners.sh install`
+      with `POOL_TAG=system-integration-tests` (own isolated slot/env-file/systemd units, disjoint from every other
+      pool) → runner `glue-ip-172-31-3-59-1` registered online alongside the old box's `glue-ip-172-31-5-118-1` (both
+      online, same labels — GitHub splits jobs non-deterministically between them until the old one is removed). - First
+      real `workflow_dispatch` run: `checks` slice landed on the NEW runner and FAILED — root cause
+      `❌ ripgrep       required` (base-service.sh's own `[0/6] ENVIRONMENT` hard-check; `bootstrap-ci-host.sh` never
+      installed it — a genuine gap, not contention/flakiness). Fixed: `apt-get install ripgrep` on the live VM, AND
+      folded back into `bootstrap-ci-host.sh install_base()` + `verify()`'s tool list (its own documented discipline:
+      "fold every discovery back in immediately"). Re-dispatched: **all green**, `tests` slice claimed by the new runner
+      (`glue-ip-172-31-3-59-1`), full run `success`. - **Real incident, self-caused and self-fixed**: deregistering the
+      OLD box's runner via `setup-glue-runners.sh teardown` with
+      `POOL_TAG=system-integration-tests OWNER=IggyIkenna       REPO=system-integration-tests` silently operated on
+      **PM's own default (no-POOL_TAG) pool instead** — removed PM's `github-glue-runner@.service` template unit, slice,
+      and slot-refresh timer files, taking **all 8 of PM's own runners offline** (confirmed via a live GitHub API check,
+      caught within minutes via a routine post-teardown verification, not by a wider alert). **Root cause traced but not
+      fully resolved**: a `bash -x` trace of the SAME invocation pattern against the (non-destructive) `status`
+      subcommand showed `OWNER`/`REPO` correctly picked up my CLI-supplied values but `POOL_TAG` silently resolved empty
+      — `sudoers` has no active `env_keep`/`env_check` entries that would explain a selective drop, and a separate
+      dry-run (`sudo POOL_TAG=... bash -c 'echo $POOL_TAG'`) showed the var DOES propagate through `sudo` correctly in
+      isolation — so something specific to `setup-glue-runners.sh`'s own execution silently drops `POOL_TAG`
+      specifically, not `sudo` in general. **Not chased further given the live-incident context** (deprioritized safe
+      restoration over root-causing precisely) — flagged as a real, reproducible bug needing investigation before anyone
+      reuses `teardown`/`install` with `POOL_TAG` via this exact CLI-env-var invocation pattern. - **Fix + safe path
+      taken instead**: re-ran `setup-glue-runners.sh install` for PM's own default pool (no POOL_TAG) — idempotently
+      regenerated the missing unit/slice/timer files — confirmed via live API all 8 PM runners back `online`. For the
+      canary's actual old-runner teardown, used a NAME-EXACT, non-script path instead (avoids the same bug entirely):
+      `systemctl stop/disable` the exact confirmed unit name
+      (`github-glue-runner-system-integration-tests@glue-1.service`) + `gh api -X DELETE` the specific runner ID — both
+      zero ambiguity, no environment-variable resolution involved. Verified: canary repo now shows exactly ONE runner
+      (the new VM's, online); a fleet-wide sweep across all 21 allowlisted repos confirmed zero collateral damage beyond
+      the PM incident (which was fully restored). - **Gate met**: real CI run `success`, claimed by the new VM's runner
+      (`glue-ip-172-31-3-59-1`); old runner cleanly deregistered; PM's pool restored + verified; fleet-wide sweep clean.
 - [ ] [INFRA] P1. Migrate the remaining enumerated repos in verified batches (mirror the original migration's
       canary→10→remaining phasing) — each batch: register on new VM, verify green, THEN deregister the old runner for
       those repos. Do not batch-migrate without verifying the prior batch first. Gate: per-batch, a passing CI run per
