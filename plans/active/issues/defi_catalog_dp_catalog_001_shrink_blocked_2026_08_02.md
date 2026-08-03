@@ -268,3 +268,24 @@ slow:
   R3 (option A per main's interim guidance) is still pending, consider whether the standing escalation needs a more
   direct operator nudge than another re-fired CRITICAL page, since paging alone has not produced a decision across 5
   cycles. Pinging `dp-fleet-monitor` (authoring slot) with the outcome and completing this one-shot escalation.
+- **slot-5 (data_pipeline_failure escalation agt-8e318a) 2026-08-03, SIXTH dispatch (age now 2954min/49.2h)**: Read this
+  doc in full before touching anything; did not re-derive the diagnosis. Independently re-verified all four load-bearing
+  facts via fresh `gcloud`/`gsutil` calls (as `unified-trading-sa`): (1) `gsutil stat` on `catalog.parquet` — unchanged
+  `Creation/Update time: Fri, 31 Jul 2026 22:47:16 GMT`, byte-identical generation `1785538036682790` — zero writes
+  since slot-9's last check; (2) `gcloud run jobs executions list --job=lifecycle-catalogue-regen-defi` — the 2026-08-01
+  and 2026-08-02 01:00 UTC executions are still `0/1` (failed), 2026-07-31 remains the last `1/1` success, no
+  new/retried execution; (3) `gcloud scheduler jobs list --location=asia-northeast1` — all 6 gated crons
+  (`uts-prod-mtds-collect-{dex-pools,oracle-prices,evm-defi,solana-defi}-cron` +
+  `defi-fwd-{dex-pools,oracle-prices}-prd`) still `PAUSED`; (4)
+  `gcloud compute instances list --filter="name~'canonical-migration-defi-per-instrument'"` (+ `operations list`) —
+  still zero results, R3 still confirmed dead. Cross-checked `defi_track01_per_instrument_and_canon_id_2026_07_24.md`
+  R3's own todo — still `[~] STALLED, confirmed DEAD 2026-08-02`, no relaunch recorded. `GET /api/slots/5/messages` —
+  empty, no operator/main answer has landed. Every fact matches slot-9's last snapshot exactly — **nothing has changed**
+  in the ~3h since the last dispatch. The `[OPERATOR] P0` todo remains unchecked, `resolved_by:` still blank. Per main's
+  standing generic guidance already recorded in this doc ("hold, apply nothing, await operator go on R3"), did **not**
+  re-file a duplicate `/blocked` and did **not** apply any of A/B/C. Applied nothing — no scheduler change, no VM
+  relaunch, no `--allow-catalogue-shrink`. This is now the **sixth** automated escalation dispatch against the same
+  unresolved operator decision (slots 7, 5, 9, 8, 9, 5-again) spanning ~49.2h with the underlying gate untouched every
+  time; flagging again that paging alone has not produced an operator decision across 6 cycles — worth a more direct
+  nudge (not a worker-decidable action; noted for main/operator visibility only). Pinging `dp-fleet-monitor` (authoring
+  slot) with the outcome and completing this one-shot escalation.
