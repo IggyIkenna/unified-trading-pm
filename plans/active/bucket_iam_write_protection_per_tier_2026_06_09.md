@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                          > (or any other role) without going through terraform at all. See
-                                                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                          > actually complete until that doc's P1/P2 also land.
+                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                              > (or any other role) without going through terraform at all. See
+                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -547,7 +547,7 @@ Two independent gates because Group A and Group B are at different stages:
       pre-existing SC1091 info-level note every launcher carries for its `lib/launcher_common.sh` source line).
       `quality-gates.sh` green (219s); SHA verified reachable on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor`.
-- [ ] [CODE] P2.2i. **NEW 2026-08-03 (interactive session), split from P2.2g.** Delete the 2 confirmed-dead migration
+- [x] ✅ [CODE] P2.2i. **NEW 2026-08-03 (interactive session), split from P2.2g.** Delete the 2 confirmed-dead migration
       launchers found by P2.2g: `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` and
       `launch-gcs-migration-bundle-vm.sh` (both target scripts long deleted — see P2.2f/g's DONE entries for the exact
       commits). Mirrors the precedent `market-tick-data-service@4d235caf`/`f8276e22` already set for the script side.
@@ -562,7 +562,24 @@ Two independent gates because Group A and Group B are at different stages:
       from that list (a deleted launcher has no VMs to protect) rather than leaving a stale reference. **Done when**:
       both scripts + all registry/test/doc references are gone, `deployment-service`'s `quality-gates.sh` is green, and
       a grep for either launcher's filename across both repos returns only this plan's own historical Progress Log
-      entries.
+      entries. **DONE 2026-08-03 (slot-7)** — `deployment-service@d407b8b` (deleted both scripts),
+      `deployment-service@244f494` (registry/test refs in `vm_prefix_registry.py`, `launcher_registry.py`,
+      `tarball_pins.py`, `test_tarball_pins.py`), `deployment-service@b2ed2ca` (2 more stray refs the first QG run
+      surfaced: a leftover generic `"gcs-migration-bundle-": None` key in `launcher_registry.py`'s
+      `VM_PREFIX_TO_LAUNCHER` — a separate dict section from the per-AG entries, caught by
+      `test_no_extra_registry_prefixes` — and a now-unreferenced `canonical-migration-legacy-` entry in
+      `test_vm_zombie_watchdog.py`'s `_TEMPLATE_FAMILY_PREFIXES` exemption set). Also updated
+      `issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (removed `gcs-migration-bundle-*` from the P2
+      6-launcher list), `plans/epics/infrastructure_master.md` (closed the now-moot `launch-gcs-migration-bundle-vm.sh`
+      GCS-script-staging P3 todo as MOOT — the launcher no longer exists) and
+      `codex/05-infrastructure/vm-tarball-deployment.md` (dropped its stale Pattern-B-exception table row) — all
+      adjacent stale references to the deleted launcher, found while verifying scope. `deployment-service`'s
+      `quality-gates.sh` green (224s, `.qg_last_passed_sha=557247c`); all 3 commits verified reachable on
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Repo-wide grep for both launcher filenames in
+      `deployment-service` now returns zero hits; the `scripts/vm/launch-ec2-vm.sh` AWS-side
+      `_register     "gcs-migration-bundle"` entry was investigated and deliberately left alone — it is a separate AWS
+      EC2 task-name→instance-profile registry with no test coupling to either deleted GCP launcher's filename, so
+      removing it was out of this todo's verified scope (not proven dead).
 - [ ] [INFRA][OPERATOR] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
       (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
       step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails

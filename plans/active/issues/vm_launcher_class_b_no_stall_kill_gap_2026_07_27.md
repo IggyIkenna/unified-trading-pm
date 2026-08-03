@@ -144,12 +144,14 @@ watchdog. The real fix here is either (a) migrating these 8 launchers off `lc_lo
       byte-growth watchdog). Done when: a deliberately-wedged workload under one of the 8 launchers is killed within a
       configured timeout instead of running indefinitely.
 - [ ] [HUMAN] P2. **Extend the naming heuristic (or add an explicit allowlist) so the 6 doubly-unprotected launcher
-      VM_NAMEs** (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `gcs-migration-bundle-*`,
-      `prediction-features-*`, `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) **route through
-      `heartbeat_stall_watcher.py`'s run-log-freshness liveness path**, once the whole-fleet naming-collision review the
-      parent issue doc's blast-radius rule requires has been done (this doc intentionally does NOT ship that change — it
-      was out of scope for the narrowly-verified Gap-3 fix). Done when: `_is_backfill_vm()` returns `True` for all 6
-      without any newly-introduced false positive against a legitimately-continuous live/paper VM name.
+      VM_NAMEs** (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `prediction-features-*`,
+      `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) **route through `heartbeat_stall_watcher.py`'s
+      run-log-freshness liveness path**, once the whole-fleet naming-collision review the parent issue doc's
+      blast-radius rule requires has been done (this doc intentionally does NOT ship that change — it was out of scope
+      for the narrowly-verified Gap-3 fix). Done when: `_is_backfill_vm()` returns `True` for all 6 without any
+      newly-introduced false positive against a legitimately-continuous live/paper VM name. **NOTE 2026-08-03 (slot-7,
+      `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i)**: `gcs-migration-bundle-*` removed from this list —
+      `launch-gcs-migration-bundle-vm.sh` was confirmed-dead code and deleted, so it no longer needs a stall-kill fix.
 - [ ] [HUMAN] P3. **Re-prioritize `cefi-fwd-daily-cron-*` / `tradfi-fwd-daily-cron-*`** — lower priority than the other
       4 since they're short daily cron polls with a much smaller wedge-exposure window, but still genuinely unprotected.
 

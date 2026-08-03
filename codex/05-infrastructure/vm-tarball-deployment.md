@@ -237,7 +237,6 @@ Use this table to decide which startup pattern to use when writing a new `launch
 | `launch-prediction-features-vm.sh`               | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |
 | `launch-features-sports-parallel-backfill-vm.sh` | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |
 | `launch-prediction-pipeline-vm.sh`               | startup-script-url       | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
-| `launch-gcs-migration-bundle-vm.sh`              | startup-script-url       | Per-run GCS script staging; PM migration script not in any service tarball   |
 
 ---
 
@@ -345,8 +344,7 @@ The singleton-lock pattern grew from 3 anchor launchers (2026-04-20) to **~36 la
   `launch-defi-phantom-recon-vm.sh`, `launch-fixtures-truthset-audit-vm.sh` — singleton prevents double-counting of
   manifest flips.
 
-Incident reference: the 2026-04-19 SFI herd that produced ~4
-successful writes across 10 VMs in 6 hours.
+Incident reference: the 2026-04-19 SFI herd that produced ~4 successful writes across 10 VMs in 6 hours.
 
 **If you build a new launcher for a rate-limited / shared-quota / shared-feed adapter**: copy the singleton-lock pattern
 from any of the above (the closest-shape anchor is the best starting point), not just the
@@ -487,9 +485,9 @@ needed) — those can use `gcloud storage ls` safely.
 ```
 
 Honest-coverage `capture_status` taxonomy (introduced at schema v5; current schema v7 — see
-[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)) means every attempted shard has a manifest row: `captured` (data
-written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted, raised — with `error_reason`
-populated).
+[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md))
+means every attempted shard has a manifest row: `captured` (data written), `empty_confirmed` (attempted, zero rows), or
+`attempted_failed` (attempted, raised — with `error_reason` populated).
 
 ### Exit codes
 

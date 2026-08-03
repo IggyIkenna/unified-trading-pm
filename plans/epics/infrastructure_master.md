@@ -660,10 +660,12 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       include lowercase asset-group choices (`cefi`/`defi`/`tradfi`/`sports`/`prediction`) to match canonical vocabulary
       per CLAUDE.md. Small UTL change; no urgency for May-23. — ✅ **DONE 2026-05-26 slot-7** | UTL@c7294847 | Added
       lowercase + uppercase variants; uppercase kept for backward compat with launcher scripts.
-- [ ] [AGENT] P3. **`launch-gcs-migration-bundle-vm.sh` GCS script staging** (**MIGRATED FROM:**
+- [x] ✅ [AGENT] P3. **`launch-gcs-migration-bundle-vm.sh` GCS script staging** (**MIGRATED FROM:**
       `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
-      is correct for now.
+      is correct for now. **MOOT 2026-08-03 (slot-7)** — the launcher itself was deleted as dead code (both target
+      scripts long removed; see `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i), so there is no
+      Pattern-B script left to convert.
 - [x] ✅ [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop
       `-m`).** **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07).
       The VM startup script's final "Caching compiled wheels to GCS" step runs
