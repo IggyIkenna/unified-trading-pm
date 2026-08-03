@@ -153,7 +153,7 @@ ground to open up, and it did:
       the forward-poll launcher — operator-ruled 2026-07-29. Source:
       `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`.
 
-- [ ] [DATA] P1. **Re-run the ES/MES per-contract backfill a third time now that the listing-retry mitigation is live,
+- [x] [DATA] P1. **Re-run the ES/MES per-contract backfill a third time now that the listing-retry mitigation is live,
       then re-measure the continuous_future hit rate.** Launch `launch-mdps-backfill-vm.sh` for tradfi ES/MES over the
       full 2020-01-01..2026-07-25 history (the same window the prior 2 attempts covered), then re-run MDPS
       `--operation build-continuous --root ES`, then compare the 1d/24h `continuous_future` hit rate against the ~19%
@@ -162,10 +162,26 @@ ground to open up, and it did:
       market-data-processing-service, deployment-service. **Done when**: a dated measurement section in the issue doc
       reports the new hit rate, states whether `_retry_empty_day_listing` resolved, further-reduced, or did not move the
       mismatch, and either flips the doc's open item or restates the precise remaining gap. Source:
-      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. **NOT YET DISPATCHABLE
-      (2026-07-31, slot-2, data_engineering craft)**: a fresh ES/MES per-contract "process" step launch already
-      genuinely satisfies this todo's "launch" half — see Progress Log below; still mid-backfill, gated on that fleet
-      finishing before build-continuous + the re-measure can run.
+      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. — ✅ DONE 2026-08-03 (slot-3,
+      data_engineering): both phases completed end-to-end and independently `gcloud`-verified. Backfill
+      (`mdps-backfill-tradfi-20260802-175522`) processed the full `2020-01-01..2026-07-25` range (2398/2398 dates), then
+      build-continuous (`mdps-backfill-tradfi-buildcontinuous-es-20260803-065455`) ran clean (`exit_code=0`,
+      `total_rows=1302812 days=2398 shards=11990`). **Measured against the fresh per-VM manifest shard** (this run's own
+      `_index/per_vm/mdps-backfill-tradfi-buildcontinuous-es-20260803-065455.parquet`, not the possibly-stale
+      consolidated index, per this doc's own precedent): `timeframe=1d`/`underlying=ES` =
+      `captured=499`/`empty_confirmed=1899` (2398 total, **20.8%**) — UP from the ~19% (454/2398, 18.9%) baseline that
+      was flat/byte-identical across the prior 2 re-runs (2026-07-26, both timing-race-theory tests). **Verdict**: the
+      `_retry_empty_day_listing` mitigation (`market-data-processing-service@22b926c`, shipped after both prior
+      measurements) DID move the hit rate — +45 captured dates, +1.9 percentage points — a real, if partial,
+      improvement. This is genuinely new information: the mitigation helps but does not close the gap; ~1899 dates
+      (79.2%) remain `empty_confirmed`. Manifest data is `24h`-timeframe-absent for this run (writer only emitted
+      1m/5m/15m/1h/1d for this shard, confirmed via direct schema probe of the manifest's own `timeframe` column values
+      — no `24h` rows exist to measure, `1d` is the correct/only daily-granularity axis here). No new code shipped for
+      this todo (a pure re-run/re-measure per its own scope) beyond a real numeric-overflow bug found and isolated as
+      its own tracked todo (see immediately above) rather than silently absorbed. **NOT YET DISPATCHABLE (2026-07-31,
+      slot-2, data_engineering craft)**: a fresh ES/MES per-contract "process" step launch already genuinely satisfies
+      this todo's "launch" half — see Progress Log below; still mid-backfill, gated on that fleet finishing before
+      build-continuous + the re-measure can run.
 
 - [x] ✅ [DATA] P0. **Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden
       the script against recurrence — combined into ONE todo because both edit the same script.** (1) Run a
