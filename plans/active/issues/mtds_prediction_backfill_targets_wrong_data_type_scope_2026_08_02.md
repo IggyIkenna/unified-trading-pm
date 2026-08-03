@@ -32,7 +32,8 @@ related:
   ]
 created: 2026-08-02
 parent_epic: manifest_master
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: data_engineering
 locked_by:
 priority: P3
 resolved_by:
@@ -41,10 +42,10 @@ source: >-
   backfill's `2025-01-01..2026-08-01` continuation (PID 153615) finally reached its terminal `Elapsed...Summary` line
   this session and the post-apply fill-rate re-verification came back far below the "near 100%" the plan's own checklist
   required before flipping -001/-006.
-execution_scope: local-only
+execution_scope: orchestrator-agent # was: local-only — corrected 2026-08-03, na-eligibility-audit prediction tranche RECLASSIFY
 drift_direction: correct-docs
 depends_on: []
-last_updated: 2026-08-02
+last_updated: 2026-08-03
 ---
 
 # Prediction backfill only fills `prediction_canonical_question_group`, not `trades`/`book_snapshot_5`
@@ -166,3 +167,20 @@ Same session: redefined the parent plan's done-when criterion, flipped `-001`/`-
 for the parent-plan-side evidence. Remaining open work here is narrow: todo 3 (P3, whether `trades`/`book_snapshot_5`
 `available_at` is actually needed by any downstream consumer) — not urgent, not blocking the parent plan, kept open for
 whoever wants to close the loop.
+
+- **na-eligibility-audit 2026-08-03 (prediction tranche, autonomous)**: RECLASSIFY, conflict-cleared — `assigned_vm: NA
+  → planning`, `execution_scope: local-only → orchestrator-agent`, `assigned_role: data_engineering` (validated against
+  the live `agents/data_engineering.md` registry entry; this doc's own Progress Log already used that exact worker
+  role). Sole open todo (3, `[DATA] P3`) is a bounded, worker-determinable fact-finding check — grep
+  `features-service`/strategy/execution/UI consumer code for any read of `available_at` scoped to
+  `data_type in {trades, book_snapshot_5}` on prediction-venue rows, report yes/no + evidence — not a design/judgment
+  call (the follow-on scope decision the doc's own text gestures at is explicitly deferred to a SEPARATE future todo,
+  not bundled into this one). Conflict-check (`ao-dispatch-batch-naming-and-conflict-check.md` § 3) cleared: (a) the
+  parent plan `mtds_available_at_cross_asset_backfill_2026_07_13.md` (same `parent_epic: manifest_master`,
+  `assigned_vm: planning`) explicitly states this exact question "is tracked separately in the new issue doc, not
+  blocking this plan further" — its own remaining open todos (`MANIFEST_COLUMN_FILL_REGRESSION`, two retagged items) are
+  unrelated; (b) no sibling batch/finalize doc drafted this run; (c) `prediction_consolidated_closeout_2026_07_18.md`
+  and a corpus-wide grep show no prior claim on this specific check. No finalize-plan twin authored — `doc_type: issue`
+  docs are structurally exempt from `check_finalize_plan_coverage.py` (globs `plans/active/*.md` only, non-recursive,
+  never descends into `issues/`), and this is independently a genuinely-single-open-todo doc under `task_template.md`'s
+  own finalize-plan exemption.
