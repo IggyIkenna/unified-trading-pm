@@ -126,6 +126,27 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 Services write to the manifest via `ManifestWriter` (UTL). The deployment-api reads it via `read_availability_index()`.
 The deployment-ui renders it as the data status page.
 
+### Reading the manifest safely — `read_availability_index_safe()` for NEW one-off call sites
+
+`read_availability_index(bucket, columns=None, filters=None)` decodes the FULL schema (~50 columns, up to 29M+ rows for
+the DeFi bucket) when called bare — the standing `check_bare_read_availability_index.py` QG gate (STEP 5.106 in every
+repo's `quality-gates.sh`) refuses a NEW bare production-code call site, but that gate excludes `scripts/`/`tests/` by
+design and cannot see a raw `pd.read_parquet()` bypass of the reader entirely. FOUR incidents in ~36 hours
+(2026-07-30/31) — two read-side (`delta_one`'s `LookbackValidator`, UTL's `get_captured_instruments`), one write-side
+(`ManifestWriter` missing `per_vm_shards=True`), one hybrid one-off script (`expand_defi_pool_catalogue_from_manifest`)
+— all independently rediscovered that `columns=` alone does NOT bound memory on a large unfiltered index (only
+`filters=` row-group pushdown does; see the docstring on `read_availability_index` itself for the measured ~14.86 GiB →
+~5 MB single-day-filter result). Full incident record + design decision:
+[`plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md`](../../plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md).
+
+**For a NEW one-off script/backfill/audit reading the index**, prefer
+`read_availability_index_safe(bucket, columns, filters=None)` (`unified_trading_library.manifest_writer`) over the raw
+function: `columns` is a required parameter (no `None` default) so a caller cannot silently fall through to the
+full-schema decode, and it logs one loud per-bucket WARNING when `filters` is omitted (not a hard refusal — a
+columns-only read is still legitimate for a small/medium index or a genuine full-corpus scan). Already-compliant
+existing call sites (ones already passing explicit `columns=`/`filters=` to the raw function) are NOT required to
+migrate — no safety difference, only churn.
+
 ### ⚠️ DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture
 
 A common misread (incident 2026-05-07 — sub-agent + main-agent both miscounted): MTDS DeFi data is **split across
@@ -367,21 +388,21 @@ the manifest, never treat "one object" and "one manifest row" as the same thing.
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                                                                                                                                                                                                                                                                                                                                                 | Successor plan                                                                                                                                    | Successor phase                                                                                                                  |
-> | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated)                                                                                                                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                            | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep                                                     |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                                                                                                                                                                                                                                   | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                            | Phase 7 reader-fallback deletion (~2026-06-15)                                                                                   |
+> | Temporary state                                                                                                                                                                                                                                                                                                                                                                                 | Successor plan                                                                                                                                     | Successor phase                                                                                                                  |
+> | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated)                                                                                                                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                    | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep                                                     |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                                                                                                                                                                                                                                   | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                    | Phase 7 reader-fallback deletion (~2026-06-15)                                                                                   |
 > | ~~v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)~~ **RESOLVED 2026-07-21** — TradFi source is write-stamped `databento`-only at capture via `ManifestWriter._stamp_producer_source` / `--source databento`; the Massive dual-source drain (BLK-b00254d7) is CLOSED — Massive removed as a source 2026-07-19 and purged 2026-07-21. | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/archive/tradfi_massive_dual_source_2026_05_28.md) (now `status: superseded`) | ~~Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7)~~ MOOT — no Massive backfill pending |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
 (maximalist final gate per
-[`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md):8-15) which
-adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`: `PUBLISHED_OK` /
-`PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`** (ISO-8601 UTC timestamp
-of the most recent `publish_with_policy()` decision for this row), and **`expected_window_completeness_fraction`**
-(0.0-1.0 fraction of the expected per-row window that was actually populated; denominator-aware coverage metric; renamed
-from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
+[`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md):8-15)
+which adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`:
+`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`**
+(ISO-8601 UTC timestamp of the most recent `publish_with_policy()` decision for this row), and
+**`expected_window_completeness_fraction`** (0.0-1.0 fraction of the expected per-row window that was actually
+populated; denominator-aware coverage metric; renamed from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
 [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg convention).
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is

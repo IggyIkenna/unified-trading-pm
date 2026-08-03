@@ -18,7 +18,7 @@ summary: >-
   THIRD distinct script in ONE DAY (2026-07-31) confirmed hitting the identical "read the whole/wide manifest instead of
   a filtered/projected slice" anti-pattern (delta_one's dependency_checker.py, UTL's get_captured_instruments, and this
   script) — a strong signal for a shared, systemic fix rather than three independent one-off patches.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -47,10 +47,18 @@ depends_on: []
 source: >-
   Incident report relayed from slot-16 to review via main (chat, 2026-07-31 ~13:00-13:04Z); review independently
   verified current process/host state and read the in-flight (uncommitted) fix directly from slot 16's worktree.
-resolved_by:
+resolved_by: unified-trading-library@0957f764
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos (all 3 closed); archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> Resolution evidence: `unified-trading-library@0957f764` (`read_availability_index_safe()` — todo 3's design decision).
+> The design decision + recommended pattern are also recorded in
+> [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+> "Reading the manifest safely" so the fact survives this doc's archival. Every corpus referrer's path updated to this
+> archive location in the same commit.
 
 # expand_defi_pool_catalogue_from_manifest_2026_07_31.py — unbounded memory on first run, fixed in-flight, verified
 
@@ -146,14 +154,63 @@ locked_since:
       required invocation. Verified: `bash -x` dry-run confirms the wrapper resolves the sibling `unified-trading-pm`
       path, invokes `run-bounded-analysis.sh --mem-cap 12G`, and the host's `ulimit -v` fallback engages at `12582912K`
       (~12G). (repo: instruments-service)
-- [ ] [DATA] P2. Cross-cutting: with FOUR incidents against the same availability manifest in ~36 hours (this doc + the
-      3 related docs above), evaluate whether a shared, safe-by-default read helper (a thin wrapper around
+- [x] [DATA] P2. ✅ Cross-cutting: with FOUR incidents against the same availability manifest in ~36 hours (this doc +
+      the 3 related docs above), evaluate whether a shared, safe-by-default read helper (a thin wrapper around
       `read_availability_index()` that requires an explicit `columns=`/`filters=` argument, or logs a loud warning on an
       unbounded call — mirroring the write-side `ManifestWriter.__init__` safety-check todo already open in
       `mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) would close this whole class at the source
       instead of each one-off script rediscovering it independently. Done-when: a design decision is recorded (build the
       helper, or explicitly decide the cost/benefit doesn't justify it) and, if built, this script + its 3 siblings are
       migrated to it. (repo: unified-trading-library)
+
+      **Decision: BUILD, but layered rather than blanket-migrated.** Added `read_availability_index_safe(bucket,
+              columns, filters=None)` to `unified_trading_library/manifest_writer/_read_index.py` (re-exported through the
+              normal `manifest_writer/__init__.py` + top-level `unified_trading_library/__init__.py` facade, matching
+              `read_availability_index`'s own convention). Two layered floors: (1) `columns` is a REQUIRED parameter (no
+              `None` default like the underlying function has) — raises `ValueError` if omitted/empty, closing the
+              "silently falls through to the full ~50-column/29M+-row schema" failure mode that caused 2 of the 4 incidents;
+              (2) when `filters` is omitted, logs one loud WARNING per bucket (not a hard raise) citing that `columns=`
+              alone does not bound memory on a large unfiltered index (per `read_availability_index`'s own docstring) —
+              a warning rather than a refusal because a columns-only read is a legitimate, still-supported pattern (e.g.
+              `get_captured_instruments(date=None)` in this same repo, verified below).
+
+              **Migration scope, deliberately NOT blanket**: read `unified_trading_library/feature_service_base/
+              manifest_discovery.py` end-to-end (the in-repo home of `get_captured_instruments`, one of the "3 siblings")
+              directly — every one of its 4 `read_availability_index()` call sites (`read_manifest_rows`,
+              `get_captured_instruments`, `check_dependency_via_manifest`, `resolve_spot_perp_from_manifest`) ALREADY passes
+              explicit `columns=` and conditional `filters=` correctly (the `utl_get_captured_instruments_unfiltered_manifest_
+              read_2026_07_31.md` fix). Migrating already-compliant, already-verified-in-production call sites to the new
+              wrapper is a non-functional rename with zero safety benefit and real regression risk (and would spuriously
+              warn on the legitimate `date=None` all-dates path) — declined per efficiency/correctness craft north-star
+              ("don't add abstractions beyond what's needed"). Same reasoning applies to delta_one's `dependency_checker.py`
+              (features-service, cross-repo, already fixed with `filters=`) — not touched; a future NEW one-off script in
+              either repo is the wrapper's actual target population, not code that already got the lesson the hard way.
+              The 4th sibling (`mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) is write-side
+              (`ManifestWriter.__init__`) — a different mechanism, out of scope for a read helper; its own `__init__`
+              safety-check todo remains separately open in that doc.
+
+              **Incidental fix found + shipped in the same commit**: while investigating call sites, ran the standing
+              `check_bare_read_availability_index.py` QG gate (STEP 5.106 in `base-service.sh`, wired into EVERY repo's
+              `quality-gates.sh`) directly against `unified-trading-library` and found it was CURRENTLY FAILING — 2 baseline
+              entries (`_writer_io.py:164 lookup()` and `pipeline_e2e_check/shard_verify.py:154 verify_manifest_row()`) had
+              drifted to lines 196 and 161 respectively after unrelated later commits added lines above them; the checker
+              matches baseline entries by exact `(repo, file, line, function)` tuple with no fuzzy/line-drift tolerance, so
+              both genuinely-still-bare-on-purpose sites were misread as brand-new violations, red-gating every
+              `unified-trading-library` ship via `quality-gates.sh`. Fixed by updating the 2 line numbers in
+              `read_availability_index_bare_call_baseline.yaml` to their current positions (both sites' `status` /
+              justification unchanged — confirmed by direct read, still genuinely unprojectable per their existing in-code
+              comments). Re-ran the checker standalone post-fix: `OK — 9 baselined occurrence(s); 0 new occurrences.`
+
+              Also added a short "Reading the manifest safely" section to
+              `/codex/02-data/availability-manifest-and-data-status.md` documenting the new wrapper as the recommended
+              pattern for future one-off scripts, per the post-phase codex-alignment step.
+
+              Shipped: unified-trading-library@0957f764 (`_read_index.py` + both `__init__.py` re-export files + new
+              `tests/unit/test_manifest_read_index_safe_wrapper.py`, 4 cases covering the required-columns raise, the
+              columns+filters delegate path, the once-per-bucket warning, and the no-warning-when-filtered path — all
+              passing, plus the 62 pre-existing sibling manifest-read tests re-run clean; verified present on origin via
+              `git merge-base --is-ancestor`) + unified-trading-pm (baseline line-number fix + codex section, this commit).
+              `quality-gates.sh` green on the shipping SHA. (repo: unified-trading-library)
 
 ## Codex SSOTs
 
@@ -218,3 +275,27 @@ locked_since:
   time a plain `sys.exit()` against the real workload. `os._exit()` remains the correct defensive backstop regardless of
   the exact hang mechanism. Todo 3 (shared safe-by-default manifest-read helper) is the only remaining open item in this
   doc.
+- **2026-08-03 (data_engineering, slot 5)**: closed todo 3 (the last open item) — decision: BUILD
+  `read_availability_index_safe(bucket, columns, filters=None)` in
+  `unified_trading_library/manifest_writer/ _read_index.py` (required `columns`, loud once-per-bucket warning when
+  `filters` omitted), re-exported through the standard facade. Read `manifest_discovery.py` (UTL, home of sibling
+  `get_captured_instruments`) directly and found all 4 of its call sites already correctly project `columns=`/`filters=`
+  — declined to force-migrate already-safe, already-verified code (no safety benefit, real churn/regression risk, would
+  spuriously warn on the legitimate `date=None` all-dates path); same reasoning applies to the cross-repo delta_one
+  sibling (features-service, not touched). Incidental finding while investigating: the standing
+  `check_bare_read_availability_index.py` QG gate (STEP 5.106, wired into every repo's `quality-gates.sh`) was CURRENTLY
+  FAILING for unified-trading-library — 2 baseline entries had drifted line numbers (164→196, 154→161) after later
+  unrelated commits, so the exact-tuple match misread 2 genuinely-still-bare-on-purpose sites as new violations; fixed
+  the baseline's line numbers (status/ justification unchanged, confirmed by direct read) —
+  `read_availability_index_bare_call_baseline.yaml`, checker now reports
+  `OK — 9 baselined occurrence(s); 0 new occurrences.` Added a "Reading the manifest safely" section to
+  `/codex/02-data/availability-manifest-and-data-status.md` per the post-phase codex-alignment step, and added 4
+  regression tests (`tests/unit/test_manifest_read_index_safe_wrapper.py`, all passing; 62 pre-existing sibling
+  manifest-read tests re-run clean). Shipped `unified-trading-library@0957f764`, verified present on origin via
+  `git merge-base --is-ancestor`; `quality-gates.sh` green (184s). All 3 todos now closed with no lock — archiving this
+  doc in the same turn per the archival hard rule (6-step ritual: no deferred items to migrate; archived banner added;
+  codex-alignment done above; every corpus referrer's `/plans/active/issues/...` path repointed to
+  `/plans/archive/2026_08/...` in the same commit — active referrers
+  `mtds_gas_fees_migration_script_unbounded_ memory_2026_07_30.md` and
+  `features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md`; 3 already-archived referrers
+  left as historical record, unmodified).
