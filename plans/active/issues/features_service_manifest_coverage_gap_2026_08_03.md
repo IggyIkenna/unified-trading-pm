@@ -140,11 +140,15 @@ not something an AO worker should guess at.
       `gs://features-defi-prd-central-element-323112/_index/per_vm/feature-orphan-backfill-onchain.parquet`. Awaits the
       manifest consolidator to merge into the canonical index; a re-run of
       `feature_orphan_sweep.py     --feature-family onchain` after that should read `orphan_class_E=0`.
-- [ ] 2. [SCRIPT] P1. **Backfill `record_captured` manifest rows for sports/sports's 67,077 real orphan objects** — same
-      pattern as todo 1, reading
+- [x] 2. ✅ [SCRIPT] P1. **Backfill `record_captured` manifest rows for sports/sports's 67,077 real orphan objects** —
+      same pattern as todo 1, reading
       `gs://deployment-scripts-central-element-323112/feature-orphan-sweep/20260803-104314/feat-orph-spt-sports-20260803-104314/orphan_sweep_sports_sports.parquet`.
       At this volume, run on a Tier-2 SPOT VM, never in-session (STEP 0.56 memory-bounding guardrail). Repo:
-      features-service.
+      features-service. — features-service@abff85a3 + deployment-service@b09e660. Applied via
+      `feat-orph-bf-spt-sports-20260803-124614` (VERDICT `recorded_cells=67077 errors=0 verify_failed=0`), consolidated,
+      RE-SWEPT via `feat-orph-spt-sports-20260803-133632`: `orphan_class_E=0` (target 0), `A_canonical_manifested=95153`
+      (=28,076 original + 67,077 newly recorded, exact). See Progress Log for the 3 real bugs found + fixed en route
+      (data-floor guard, VM dispatch branch, O(n^2) verify loop).
 - [ ] 3. [SCRIPT] P2. **Diagnose sports' 96,678-object `C_manifest_infra` classification** — confirm via a bounded
       sample (list + inspect ~20 of the classified-infra object paths) whether these are genuinely `_index/`-prefix
       administrative objects (expected, inert) or a real-data shape `_infra_label()` is mis-classifying (which would
@@ -187,9 +191,14 @@ not something an AO worker should guess at.
      `("cefi", "trades")` correctly resolve via `SOURCE_PRIORITY` (`batch_tardis`) instead of masking that registered
      pair behind the case bug and falling through to the `features-service` fallback this test asserted. Swapped in a
      genuinely-unregistered synthetic `data_type` so the test still exercises its real intent (same commit,
-     features-service@abff85a3). Next: run the manifest consolidator for `features-sports-prd-central-element-323112`,
-     re-run `feature_orphan_sweep.py --feature-family sports` to confirm `orphan_class_E` dropped near 0, then flip this
-     todo.
+     features-service@abff85a3). **DONE.** Ran the manifest consolidator
+     (`python -m unified_trading_library.manifest_consolidator --bucket features-sports-prd-central-element-323112 --force`)
+     — clean, `rows_out=309764` (already included the new sports rows; the scheduled Cloud Scheduler consolidator cycle
+     appears to have merged the per-VM shard before the manual run). Re-ran
+     `feature_orphan_sweep.py --feature-family sports` fresh (VM `feat-orph-spt-sports-20260803-133632`, fresh tarball):
+     `=== ACCEPTANCE: orphan_class_E=0 (target 0) ===`, `A_canonical_manifested=95153` (=28,076 original + 67,077 newly
+     recorded, exact match). `C_manifest_infra=96,678` unchanged — that's todo 3's open question, untouched by this
+     backfill. Todo 2 checkbox flipped above.
 
 - **2026-08-03** (AO dispatch, slot 2) — Filed while validating `feature_orphan_sweep.py` against real GCS data (todo 2b
   of the parent tooling-gap doc). All 10 (family, asset_group) cells swept clean-or-orphaned in under 3 minutes each on
