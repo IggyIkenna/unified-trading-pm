@@ -435,16 +435,24 @@ not a mechanical column-list copy.
       import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
       caller and this todo is closed as not-applicable.
 
-- [ ] [SCRIPT] P1. **instruments-service** — 3 NEW bare `read_availability_index(bucket)` call sites in
-      `instruments_service/cli/main.py` (lines 82 `_run_coverage_status()`, 154 `_run_refresh_league_entity_coverage()`,
-      294 `_run_reprocess_shards()`), introduced by CLI subcommand additions landed 2026-08-03 (after the 2026-07-31
-      gate-add + re-verify sweep found 0 new occurrences) — confirmed via
-      `check_bare_read_availability_index.py --scope instruments-service` on a clean-tree HEAD unrelated to any other
-      in-flight diff. Each needs `columns=`/`filters=` added per this doc's caution (confirm via a DIRECT read of each
-      function's downstream column usage, do not guess/copy a list from another site), or a
-      `# QG-allow: bare-read-availability-index` marker if genuinely unprojectable. Currently blocking
-      `quality-gates.sh` for ANY instruments-service change (a repo-blocker was declared for this — see this doc's
-      Progress Log below).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-03 (slot-6)** — `instruments-service@a325da86`. **instruments-service** — 3 NEW
+      bare `read_availability_index(bucket)` call sites in `instruments_service/cli/main.py` (lines 82
+      `_run_coverage_status()`, 154 `_run_refresh_league_entity_coverage()`, 294 `_run_reprocess_shards()`), introduced
+      by CLI subcommand additions landed 2026-08-03. Confirmed by direct read of each function's own downstream column
+      usage (not a guessed/copied list): `_run_coverage_status` only ever reads `data_type` (the unique-value scan
+      feeding per-data_type coverage rows) → `columns=["data_type"]`; `_run_refresh_league_entity_coverage` reads
+      `data_type`/`capture_status`/`league_id` (the entity/league coverage scan) →
+      `columns=["data_type", "capture_status", "league_id"]`. `_run_reprocess_shards` stays deliberately BARE with a
+      `# QG-allow: bare-read-availability-index` marker + in-code comment — its `reprocess_shards()` callee writes the
+      SAME DataFrame back to GCS VERBATIM (`df.to_parquet(...)`) on `--apply`, so projecting columns here would silently
+      truncate the production manifest's full schema on write-back, a correctness regression, not a memory win (same
+      class as this doc's unified-trading-library P2 finding for `reconcile_manifest()`/`rebuild_manifest()`). Added 3
+      regression tests (`tests/unit/cli/test_read_availability_index_column_projection.py`) pinning the exact `columns=`
+      call signatures for the two projected sites, confirmed the existing `test_reprocess_shards_cli.py` suite (6 tests)
+      still passes unchanged for the deliberately-bare third site.
+      `check_bare_read_availability_index.py --scope     instruments-service` — 0 baselined, 0 new occurrences. Full
+      `quality-gates.sh` green (117s), shipped via quickmerge --agent; clears the repo-blocker declared in this doc's
+      Progress Log below.
 
 ## Progress Log
 
@@ -457,3 +465,7 @@ not a mechanical column-list copy.
   `8a5fcdce` only touches `reference_data/adapters/defi/pyth.py` + its test). Added the 3-site todo above (new since the
   2026-07-31 zero-new-occurrences re-verify — these came from CLI subcommands added 2026-08-03) and declared a
   repo-blocker (`qg_red`) rather than fixing this out-of-scope regression inline.
+- **2026-08-03 (slot-6)**: fixed the 3-site todo above — `instruments-service@a325da86`. Full detail in the todo itself;
+  this closes the repo-blocker slot-8 declared. Re-verified
+  `check_bare_read_availability_index.py --scope instruments-service` clean-tree post-fix: 0 baselined, 0 new
+  occurrences.
