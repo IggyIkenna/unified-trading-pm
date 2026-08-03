@@ -109,7 +109,7 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
       (repo: `unified-trading-pm`) **RESULT: keep-both — every pair is genuine sequential history, not an accidental
       duplicate.** Read all 4 pairs in full: (1) `instruments/mtds/mdps_backfill_phase3_2026_05_22.md` — the
       `plans/archive/2026_05/` copy carries `archived: 2026-05-23` (the original archival) and a smaller, earlier-state
-      task list (several `DEFERRED-OPERATOR-DECISION` items still open); the `plans/archive/2026_06/` copy is materially
+      task list (several operator-decision-qualifier items still open); the `plans/archive/2026_06/` copy is materially
       larger (211 vs 202 / 387 vs 250 / 368 vs 311 lines) and carries a dated "✅ ARCHIVED 2026-06-26 — instruments/MTDS
       consolidation" banner plus many additional resolved `[SCRIPT]`/`[CODE]` todos (VM OOM root-causes, relaunches,
       verifications) that only happened AFTER the 2026-05-23 archival — i.e. work genuinely continued on these plans
