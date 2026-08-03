@@ -6,7 +6,7 @@ summary: >-
   test_tradfi_manifest_shard.py additions only). Isolated re-runs show 3 are full-suite-order-dependent flake (pass
   standalone) and 2 are a real, reproducible, CeFi-only pipeline_e2e_check sampler bug — none touch
   tradfi/manifest-shard code.
-status: open
+status: resolved
 nature: record
 asset_group: tradfi
 created: 2026-07-31
@@ -25,7 +25,7 @@ source: >-
   tradfi_satellite_ao_dispatch_batch5_2026_07_29 todo 4, slot 3 data_engineering, 2026-07-31 — discovered while shipping
   a test-only commit unrelated to any of the 5 failing tests.
 locked_by:
-resolved_by:
+resolved_by: market-tick-data-service@418bf53f (slot 11, 2026-08-03)
 context_scope:
   [
     /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
@@ -88,10 +88,10 @@ scope for a tradfi manifest-shard todo).
       `test_lst_rates_handler.py`'s 2 failing tests only failing inside the full suite (pass in isolation) — most likely
       a shared module-level/global state leak from an earlier test. Repo: market-tick-data-service. —
       market-tick-data-service@3309780b
-- [ ] [DATA] P2. Fix the CeFi `pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing` sampler so it
+- [x] ✅ [DATA] P2. Fix the CeFi `pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing` sampler so it
       deterministically prefers a `captured` instrument over `empty_confirmed` and reports the correct
       `prod_manifest`/`prod_parquet_listing` sample-source label, per `test_pipeline_e2e_sampler_prefers_captured.py`'s
-      2 failing assertions. Repo: market-tick-data-service.
+      2 failing assertions. Repo: market-tick-data-service. — market-tick-data-service@418bf53f
 
 ## Progress Log
 
@@ -167,3 +167,24 @@ scope for a tradfi manifest-shard todo).
   fixture should now also cover going forward, since it isolates the shared root for every test in this repo's suite,
   not just the one that surfaced it.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **2026-08-03 (slot 11, data_engineering) — ROOT-CAUSED + FIXED todo 2.** Reproduced the original "sampled
+  `ADA-USDT@LIN`, source `prod_parquet_listing`" failure exactly by re-running the two tests under
+  `GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp` (the same contaminated-env pattern the 2026-07-31
+  self-correction entry above identified for the OTHER 3 flaky tests) — confirming this is the same class of bug, not a
+  genuinely nondeterministic sampler. Root cause: `test_pipeline_e2e_sampler_prefers_captured.py` mocked
+  `read_availability_index` but never mocked `get_storage_client`, so `sample_live_instrument`'s PRIMARY leg
+  (`_sample_raw_symbol_from_prod_listing`, which runs BEFORE the manifest-index fallback by design — see that function's
+  own docstring on index staleness) made a REAL GCS listing call. Under an ambient `CLOUD_PROVIDER=gcp` env this
+  genuinely lists PROD and samples whatever real parquet exists for BINANCE-FUTURES/trades/2026-02-02 — non-hermetic,
+  test outcome depends on live production data. **Fix**: added `_EmptyStorageClient` (a `list_blobs` returning `[]`) and
+  mocked `get_storage_client` in both tests, mirroring the pattern the sibling `test_pipeline_e2e_raw_symbol_sampler.py`
+  already uses for every one of its tests. Verified deterministic pass under both a clean shell AND the
+  `CLOUD_PROVIDER=gcp` env that previously reproduced the failure. Shipped `market-tick-data-service@418bf53f` via
+  quickmerge, verified on origin. **Aside**: while shipping, hit the now-resolved
+  `mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` repo-blocker (STEP 5.95 ratchet 1-over its frozen
+  baseline) — root-caused it the same way (a false-positive prose match + ordinary compliant `# type: ignore[code]`
+  churn since the 2026-07-30 freeze, not a banned bare ignore) and committed a baseline re-freeze fix, but before
+  shipping found slot 2 had independently landed a more surgical fix upstream in the interim
+  (`market-tick-data-service@5893ae3e` + `@d072b035`'s sibling `@d3260d2f`, rephrasing the false-positive comment +
+  dropping an unnecessary ignore) — rebased onto their fix and dropped my now-redundant baseline-bump commit before
+  shipping this one.
