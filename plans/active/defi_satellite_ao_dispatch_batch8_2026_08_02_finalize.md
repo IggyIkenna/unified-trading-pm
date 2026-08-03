@@ -80,3 +80,4 @@ these until batch8 is fully done.**
 - 2026-08-02 (scheduled `na_eligibility_auditor`, tranche=defi, autonomous): Drafted alongside batch8, both
   `status: active`, gated on batch8's todo via `depends_on` + `gate_on_depends: true`. No work started — waiting on
   batch8's todo to land.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

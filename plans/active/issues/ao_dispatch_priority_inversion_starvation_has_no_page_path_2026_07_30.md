@@ -176,3 +176,4 @@ this, each time invisible until someone reads the backlog by hand.
   `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` todo, not standalone). The only file change
   since the 2026-08-01 verdict was an unrelated corpus-wide reference-path fix (`unified-trading-pm@17b53df1e`) — no
   content drift.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

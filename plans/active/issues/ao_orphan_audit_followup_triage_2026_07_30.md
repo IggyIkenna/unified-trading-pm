@@ -36,8 +36,6 @@ context_scope:
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 source:
   "interactive session, 2026-07-30 — operator ran the ao-tranche orphan audit, had the tracker's related: links +
@@ -102,3 +100,4 @@ source:
   other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
   docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

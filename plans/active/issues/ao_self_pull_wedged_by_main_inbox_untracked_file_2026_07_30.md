@@ -47,8 +47,7 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/scripts/ao-self-pull.sh,
-    /agents/main.md,
-    unified-trading-pm/agents/main.md,
+    agents/main.md,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
   ]
 ---
@@ -217,3 +216,4 @@ follows correctly — only the webhook config is missing).
   `generate_na_doc_tranche_inventory.py --tranche ao` returns 61 docs and does not include this one, so the tranche the
   retag is reserved for provably cannot see it. Tranche-level BLOCKED-OPERATOR-DECISION with options recorded in
   `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

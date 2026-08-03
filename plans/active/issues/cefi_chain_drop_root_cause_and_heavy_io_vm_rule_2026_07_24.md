@@ -541,3 +541,4 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   byte-identical to the 07-30 reading (verified `git diff eaa6bfd1e..HEAD` = the `context_scope` block only). Verdict
   unchanged: the sole todo resumes a migration explicitly PAUSED 2026-07-25 on operator request (host contention) and
   wraps prod GCS renames in a consolidator-cron pause/resume. Not worker-determinable.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

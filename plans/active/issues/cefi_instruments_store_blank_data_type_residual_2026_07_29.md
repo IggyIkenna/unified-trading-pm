@@ -151,3 +151,4 @@ No code change, no waiver doc needed — this todo is closed by evidence.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

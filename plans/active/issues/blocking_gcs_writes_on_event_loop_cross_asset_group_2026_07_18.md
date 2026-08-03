@@ -155,3 +155,4 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   handlers: dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
   liquidations_handler.py, liquidation_events_hand...
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

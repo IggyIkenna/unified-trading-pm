@@ -144,3 +144,4 @@ candidate for that tranche's next pass, not just a retag-only finding.
   parked finding this run, 1 entry written above — balanced. No Phase 3 batch draft (zero genuine orphans found;
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
   to dispatch — not flipped by this run per the "ASK BEFORE CREATING"/never-auto-flip HARD RULE).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -160,3 +160,4 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   no gap and no double-claim. Extraction banner added above the todos. `assigned_vm: NA` unchanged. Also merged a stray
   second `## Progress Log (na-eligibility-audit)` heading back into the single `## Progress Log` section (structural
   fix, no content change).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
