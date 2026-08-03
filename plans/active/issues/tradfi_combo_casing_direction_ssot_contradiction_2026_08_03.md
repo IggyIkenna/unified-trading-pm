@@ -40,6 +40,14 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: investigate
 depends_on: []
+# 2026-08-03 (slot-8): the 4 todos below are a REAL dependency chain, not
+# independent parallel work — -002/-003 both read on the [OPERATOR] ruling in
+# -001, and -004 (cross-reference) only makes sense once -001..-003 are
+# resolved. sequential=true wires prereqs.completed_tasks in plan_order so the
+# dispatcher stops offering -002/-003 while -001 is still open (it already did
+# once: -002 was dispatched and -003 was dispatched to slot-8, both while -001
+# sat status=blocked awaiting the operator — see BLK-17ef2351).
+sequential: true
 ---
 
 ## What I found
@@ -145,3 +153,17 @@ production data.
   root-caused to the archived 07-28/29 lowercase migration via GCS backup-snapshot filenames
   (`_index/backups/availability_index.pre_combo_casing_relabel_2026072*`) cross-referenced to the archived issue's
   Progress Log. No code changed, no manifest write attempted.
+- 2026-08-03 (slot-8): worked `-003` (re-run the migration). Confirmed via `/boot` that this todo is itself gated by
+  `-001` ([OPERATOR] direction ruling — status=blocked, awaiting answer) and `-002` (seeding-function fix — status=
+  dispatched to another slot); the backlog dispatcher offered `-002` and `-003` concurrently while `-001` was still
+  open, which is the exact out-of-order dispatch this doc's own "Once the direction is ruled..." phrasing was meant to
+  prevent. Filed `BLK-17ef2351` rather than force `--apply` a third time. Added `sequential: true` to this doc's
+  frontmatter so the dispatcher stops offering `-002`/`-003`/`-004` while an earlier todo in the chain is unresolved.
+  Also read-confirmed (no code changed) the `-002` suspicion:
+  `instruments-service/scripts/ enumerate_expected_universe.py::_canonical_writer_instrument_type` (line 1754) still
+  returns `(instr.instrument_type or "").strip().lower()` for passthrough leaves, and the combo bundle leaf resolves to
+  lowercase `combo` via `bundle_instrument_type_for_leaf` — both predate the UTL seam
+  (`unified-trading-library@688e49bc`) that now canonicalizes the WRITER to UPPERCASE, so the seeding function is
+  confirmed stale relative to current writer behavior (docstring at line 1719-1738 still documents the pre-seam
+  lowercase writer convention). This is evidence for whoever works `-002`, not a fix — the correct target casing for the
+  seed still depends on `-001`'s ruling. No manifest write attempted; no `--apply` run.
