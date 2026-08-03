@@ -118,3 +118,31 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   `pm-repo-context.mdc`'s "unresolved — flagged for operator review" note (line 29) both need a one-line update to say
   RESOLVED instead of leaving both artifacts stale.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): ARCHIVE-eligible on content, still PARKED — not archiving this run.
+  Independently re-verified BOTH items resolved on disk: item 1 — the entire top-level `cursor-rules/` tree is confirmed
+  physically absent (`find`), moved verbatim to `plans/archive/cursor-rules_2026_08_02/` by
+  `unified-trading-pm@b45eab084`/`@d4f7fab9d`, exactly Option A. Item 2 —
+  `macro_micro_econ_data_capture_audit_2026_06_05.md`'s `source:` field brace-expansion string is confirmed expanded
+  into 6 separate `/codex/02-data/<filename>.md` leading-slash entries (full diff read, not just `git blame`), exactly
+  Option A. BUT went one step further than the 2026-08-03 docs-reconcile entry above and checked
+  `plan_reconcile_parked_operator_decisions_2026_08_02.md` — the doc both commits' messages point to as the "2026-08-02
+  scheduled-audit-batch operator-decision queue" source of truth — for an explicit ruling entry on either item: **zero
+  hits for "cursor-rules", "macro_micro_econ", or this doc's own filename.** Separately, item 2's fix landed as a side
+  effect of a BROADER 3-string brace-expansion cleanup in the same commit (2 of the 3 expanded strings — the
+  `unified-api-contracts` registry ones — were never even flagged by this issue), not a targeted fix — further weakening
+  the "this was a deliberate ruling on THIS item" reading vs. "a general mechanical cleanup pass happened to also
+  satisfy it." Three independent read-only passes now (docs-reconcile 2026-08-03, this audit) agree the evidence is
+  strong but not traceable to a recorded ruling, and item 2 involves a `locked_by:` doc's frontmatter edit with no
+  sign-off record found — staying conservative on a semi-irreversible action (archival = `git mv` + corpus-wide referrer
+  rewrites) rather than resolving the ambiguity myself. Leaving `.cursor/rules/pm-repo-context.mdc:29`'s "unresolved"
+  note untouched too, for the same reason — let one operator confirmation trigger both updates together, as this doc's
+  own 2026-08-03 entry already anticipated. **Escalating for explicit confirmation:**
+
+  Should this doc be archived now, given both BLOCKED-OPERATOR-DECISION items appear resolved on disk but neither traces
+  to a recorded ruling?
+
+  A: Confirm both resolutions ARE the intended outcome — archive this doc now (6-step ritual). [Evidence supports this,
+  but item 2 touching a locked doc's frontmatter without a traceable sign-off record makes it genuinely the operator's
+  call, not a worker inference.] B: The resolutions are coincidental/unrelated to this doc's specific asks — reopen with
+  corrected framing reflecting what actually happened. C: Something else — operator has context these three read-only
+  passes don't. Other: operator can type a custom answer.
