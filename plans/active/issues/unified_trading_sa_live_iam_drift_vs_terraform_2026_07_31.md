@@ -259,9 +259,10 @@ confirm no further self-grants happened in the interim.
   `roles/pubsub.publisher` binding for `unified-trading-sa` is actually declared under a different resource address,
   `unified_trading_sa_pubsub_publisher`, in the separate `live_event_log/` OpenTofu root) — `tofu plan` on the parent
   root wants to destroy it, which would revoke a live IAM binding on next `apply`. See
-  `issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md`. **Not re-litigated**: the
-  pre-existing "17 to add / 5 to change / 3 to destroy" unrelated drift visible in the same `tofu plan` output (other
-  slots' in-flight defi-collection/instruments-t1-recon/secret-rotation work) was left untouched — did not run
-  `tofu apply` on the full plan, only relied on `plan`'s own state-write for the clean-diff imports (verified
-  empirically: `tofu plan` alone persisted the 28 imports to the real GCS state object, no `apply` needed since none of
-  them had any drift beyond the import itself).
+  `/plans/archive/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md` (resolved
+  2026-08-03: orphaned entry removed from the parent root's state via `tofu state rm`, no GCP API call). **Not
+  re-litigated**: the pre-existing "17 to add / 5 to change / 3 to destroy" unrelated drift visible in the same
+  `tofu plan` output (other slots' in-flight defi-collection/instruments-t1-recon/secret-rotation work) was left
+  untouched — did not run `tofu apply` on the full plan, only relied on `plan`'s own state-write for the clean-diff
+  imports (verified empirically: `tofu plan` alone persisted the 28 imports to the real GCS state object, no `apply`
+  needed since none of them had any drift beyond the import itself).

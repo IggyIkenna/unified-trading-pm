@@ -20,7 +20,7 @@ summary: >-
   in-flight work) would call the GCP API to remove unified-trading-sa from roles/pubsub.publisher, a live binding still
   relied on by services publishing to the event-log Pub/Sub topics outside VM contexts (local dev, Cloud Run jobs — per
   publisher_iam.tf's own comment).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -48,6 +48,10 @@ source: >-
   Surfaced 2026-08-03 (slot-8, infra) while executing unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md P2 —
   a side-observation in the `tofu plan` diff, not that task's own scope.
 resolved_by:
+  "todo done 2026-08-03: orphaned google_project_iam_member.unified_trading_pubsub_publisher removed from the parent
+  root's state via `ENV=prod ./tofu.sh state rm` (state-only op, no GCP API call); re-verified via `ENV=prod ./tofu.sh
+  plan` that the destroy no longer appears and the pending plan dropped from 3 to 2 destroys with no other diff
+  introduced (deployment-service, no code commit needed)."
 locked_by:
 locked_since:
 depends_on: []
@@ -130,15 +134,27 @@ ENV=prod ./tofu.sh plan   # verify: this destroy no longer appears
 `live_event_log`'s separate state, which continues to own and correctly reflect the live binding. No
 `google_project_iam_member` create/delete call happens on either side.
 
-(Out of scope for this doc, worth a separate follow-up if the operator wants it: whether `live_event_log/` being a
-disconnected root instead of an actual `module` block was intentional. Not investigated here.)
+(Out of scope for this doc: whether `live_event_log/` being a disconnected root instead of an actual `module` block was
+intentional — tracked as its own follow-up at
+`/plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`.)
 
 ## Todos
 
-- [ ] [TERRAFORM] P2. Run
+- [x] [TERRAFORM] P2. ✅ Ran
       `ENV=prod deployment-service/terraform/gcp/tofu.sh state rm     google_project_iam_member.unified_trading_pubsub_publisher`,
       then verify via `ENV=prod ./tofu.sh plan` that the destroy no longer appears and no other diff was introduced. No
       commit needed unless the state-rm needs to be logged (evidence in this doc's Progress Log is sufficient). (repo:
       deployment-service)
 
 ## Progress Log
+
+- 2026-08-03 (slot-12, infra): Re-confirmed the orphaned entry via `ENV=prod ./tofu.sh plan` (destroy-pending, identical
+  to the doc's evidence). Ran `ENV=prod ./tofu.sh state rm google_project_iam_member.unified_trading_pubsub_publisher` —
+  succeeded ("Removed google_project_iam_member.unified_trading_pubsub_publisher / Successfully removed 1 resource
+  instance(s)."). Re-ran `ENV=prod ./tofu.sh plan`: the parent root's pending plan dropped from 17 add/5 change/3
+  destroy to **17 add/5 change/2 destroy** — the orphaned `unified_trading_pubsub_publisher` no longer appears anywhere
+  in the diff (`grep -c` = 0), and the 2 remaining destroys are pre-existing unrelated drift
+  (`google_secret_manager_secret_iam_member.t1_batch_gh_pat_accessor`, `...t1_batch_slack_webhook_accessor`), confirming
+  no new diff was introduced. `state rm` only edits local state tracking via the GCS backend — no GCP API create/delete
+  call was made, and `live_event_log/`'s separate root/state was not touched. No code change in `deployment-service`
+  (state-only op); this plan-doc edit is the full evidence trail.
