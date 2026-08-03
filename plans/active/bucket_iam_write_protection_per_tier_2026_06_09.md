@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                      > (or any other role) without going through terraform at all. See
-                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                          > (or any other role) without going through terraform at all. See
+                                                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                          > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -520,7 +520,7 @@ Two independent gates because Group A and Group B are at different stages:
       observability writes, same as every other launcher — wired via `lc_tier_service_account`. Both `bash -n` +
       shellcheck clean; `quality-gates.sh` green; CI verified. **The 3 migration-SA-blocked launchers remain undone,
       split out below as P2.2d2c2** (not silently dropped — mirrors P2.2d2b's own split precedent).
-- [ ] [CODE] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on the
+- [x] ✅ [CODE] P2.2d2c2. **NEW, split from P2.2d2c 2026-08-02 (slot-13).** Wire the 3 launchers still blocked on the
       migration-SA write-grant gap: `launch-legacy-bucket-migration-sharded.sh`, `launch-gcs-migration-bundle-vm.sh`,
       `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered, flat) bucket name that no tier SA's
       `startsWith` IAM condition matches. Gated on P2.2f (still open — `[OPERATOR]` grant not yet made).
@@ -541,7 +541,12 @@ Two independent gates because Group A and Group B are at different stages:
       do not leave `[OPERATOR]` stale now that the grant is live. Same structural gap as P2.1b above — this checkbox has
       no structured `depends_on`/`gate_on_depends` link to P2.2f (same-plan todos can't express a per-todo prereq —
       CLAUDE.md), so the backlog regenerator will keep re-offering it to workers who can only re-derive the same "not
-      yet" verdict.
+      yet" verdict. **DONE 2026-08-03 (slot-9) — `deployment-service@3c5acfb`.** Added
+      `--service-account="uts-migration-sa@${PROJECT}.iam.gserviceaccount.com"` to `launch-bucket-rsync-vm.sh`'s
+      `gcloud compute instances create` call, exactly as scoped above. `bash -n` clean, `shellcheck` clean (only the
+      pre-existing SC1091 info-level note every launcher carries for its `lib/launcher_common.sh` source line).
+      `quality-gates.sh` green (219s); SHA verified reachable on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`.
 - [ ] [CODE] P2.2i. **NEW 2026-08-03 (interactive session), split from P2.2g.** Delete the 2 confirmed-dead migration
       launchers found by P2.2g: `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` and
       `launch-gcs-migration-bundle-vm.sh` (both target scripts long deleted — see P2.2f/g's DONE entries for the exact
