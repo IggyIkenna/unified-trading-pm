@@ -15,7 +15,7 @@ summary: >-
   this session, up from the 29,956,737 that same prior audit's evidence cited on 2026-07-27/08-01). The pandas/pyarrow
   read path this helper uses appears to still materialise substantially more than the 2 requested columns' worth of data
   for a DeFi-scale index.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -31,7 +31,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-08-01
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +39,7 @@ priority: P1
 estimate_class: research
 assigned_role: data_engineering
 drift_direction: advance-code
-resolved_by:
+resolved_by: "slot-11 (data_engineering), read_availability_index_slim_read_oom_at_defi_scale-002, 2026-08-03"
 locked_by:
 source: >-
   data_engineering worker (slot-15, planning VM), 2026-08-01, task defi_v2_expected_universe_enumerator_oom-002
@@ -58,6 +58,14 @@ context_scope:
     unified-trading-pm/scripts/dev/run-bounded-analysis.sh,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-03 -- both todos done: Todo 1 (the `columns=` slim-read path materialising 19 columns instead of
+> the requested 2 at DeFi scale) fixed via a self-shard-first read order (`unified-trading-library@65ae1e89`); Todo 2
+> (the RLIMIT_AS/`ulimit -v` fallback in `scripts/dev/run-bounded-analysis.sh` spuriously killing pyarrow/grpc-heavy
+> workloads well below their real RSS need) fixed by replacing it with a `setsid` + `/proc/<pid>/status` VmRSS
+> poll-and-kill loop (`unified-trading-pm@3efe60c65`), verified live on this host against both a runaway-RSS case
+> (killed) and a large-virtual/low-RSS case mimicking pyarrow's own allocation shape (survives). Archived per
+> issue-doc-lifecycle.**
 
 # `read_availability_index(columns=[...])` OOMs on the live DeFi manifest at current scale
 
@@ -138,12 +146,12 @@ callers that only need counts/distinct-values rather than a full DataFrame.
       `instruments-service@66adbc1d` already applied for the same class of problem in `enumerate_expected_universe.py`.
       Re-verify against the live DeFi bucket with an RSS-monitored run (not a whole corpus walk — one real read). (repo:
       unified-trading-library) — unified-trading-library@65ae1e89
-- [ ] [DATA] P2. Fix `scripts/dev/run-bounded-analysis.sh`'s RLIMIT_AS fallback path (used whenever `systemd-run` is
+- [x] ✅ [DATA] P2. Fix `scripts/dev/run-bounded-analysis.sh`'s RLIMIT_AS fallback path (used whenever `systemd-run` is
       unavailable) to not spuriously fail on pyarrow/grpc-heavy workloads — either document the incompatibility
       prominently (so agents route pyarrow-heavy ad-hoc scripts to a manual RSS-monitor pattern instead, as done in this
       session) or find an RSS-based (not RLIMIT_AS-based) fallback mechanism that doesn't require systemd (e.g. a
       background poll-and-kill loop on `/proc/<pid>/status` VmRSS, exactly what this session improvised). (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@3efe60c65
 
 ## Progress Log
 
@@ -199,3 +207,18 @@ callers that only need counts/distinct-values rather than a full DataFrame.
   attempted in this session — scoped as its own follow-up.
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- 2026-08-03 (slot-11, data_engineering): Todo 2 shipped — `unified-trading-pm@3efe60c65`. Replaced the RLIMIT_AS
+  (`ulimit -v`) fallback with an RSS-poll cap: the wrapped command now runs under `setsid` (own session/process group),
+  and a background monitor polls `/proc/<pid>/status` VmRSS every `ANALYSIS_POLL_INTERVAL_S` seconds (default 2),
+  SIGKILLing the whole process group the first time RSS exceeds the cap — the exact manual pattern both slot-15 and
+  slot-2 improvised ad-hoc per the Progress Log above, now generalized into the wrapper itself. Chose the RSS-poll
+  option over documentation-only because the wrapper's whole purpose is to protect the shared host from a real memory
+  blowup, and RLIMIT_AS demonstrably does not do that for this craft's typical workloads (pyarrow/grpc-heavy) — leaving
+  it in place with just a warning would mean the sanctioned wrapper still spuriously fails the exact scripts it exists
+  to protect. Verified live on this host (`systemd-run --user` confirmed unavailable here too — "Failed to connect to
+  bus: No medium found", so this host hits the same fallback path in production): (1) a script growing RSS past a 300M
+  cap was killed (exit 137) within one poll interval; (2) a script staying under cap completed cleanly (exit 0); (3) a
+  script reserving a 2GB mostly-untouched `mmap` region (mimicking pyarrow/grpc's large-virtual-address-space-low-RSS
+  behavior — the exact shape that caused RLIMIT_AS's false-positive kill in this issue's own evidence) was NOT killed,
+  since RSS stayed low even though virtual address space did not. `shellcheck` clean; full `quality-gates.sh --no-fix`
+  green (sentinel `3efe60c65`).
