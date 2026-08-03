@@ -442,3 +442,25 @@ assembles a ci satellite batch once this doc's Progress Log stabilizes.
   that doc's own note on why continuations land here) should be marked resolved on this fix alone. A ~90min live soak of
   the ledger fix specifically is running in the background at time of writing; see
   `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`'s Progress Log for its outcome.
+
+- **2026-08-03 ~21:20Z (cicd agent slot-5, escalation `agt-31303a`, wall_type=ldr_qg_failure, strategy-service#485)** —
+  same signature, same repo, third corroboration this week (see the `~15:40Z 2026-08-02` entry above, `agt-6f553d`).
+  Dispatched on `quality-gates-v2` FAILURE, run
+  [30843816625](https://github.com/IggyIkenna/strategy-service/actions/runs/30843816625): job-level breakdown shows
+  `QG slice (tests)` SUCCESS (19:01:45→19:12:10) but `QG slice (checks)` FAILURE — its own log shows the `qg-governor`
+  CPU-admission wait alone ran 1526s (~25.4min, `WAIT_CPU 30s`→`WAIT_CPU 1500s` ticks) before basedpyright even started,
+  then basedpyright hit the documented hard `Type check FAILED/timeout (exit=124)` at exactly 120s (`PYRIGHT_TIMEOUT`
+  default) with 0 errors/0 warnings extracted — the canonical host-contention-timeout signature this doc tracks, not a
+  code regression. Confirmed via live host check: `uptime` load average 30.80/29.54/28.96 on the same implicated box,
+  consistent with the crisis still being active. Did NOT need a local repro or code fix — PR #485 was **already
+  `MERGED`** (`mergedAt=2026-08-03T19:00:21Z`) by the time this escalation was triaged: the actual `push:main`
+  `quality-gates-v2` run for the merge commit
+  ([30843825878](https://github.com/IggyIkenna/strategy-service/actions/runs/30843825878)) ran independently and
+  completed SUCCESS (29m11s), and `live-defi-rollout`'s own latest `quality-gates-v2` `workflow_dispatch` run is green
+  (36s, content-sentinel hit). `gh pr list --state open` → `[]`, `/api/repo-blockers` → no `strategy-service` entries —
+  nothing is currently blocked. Same "merged via an already-satisfied required-check path independent of this specific
+  run" pattern as every prior corroboration in this doc. No code/test/workflow change made or needed; did not touch
+  `self_hosted_runner_labels` (`strategy-service` stays on the operator's protected-6, per the 2026-07-28 ruling).
+  `$AUTHORING_SLOT` was the literal sentinel `ci` (not a numbered slot) — skipped the authoring-slot ping per
+  `cicd.md`'s rule (no real originator to notify; the dispatch-time Slack alert already covered the FYI). Slot left
+  clean on `live-defi-rollout` (only this doc touched).
