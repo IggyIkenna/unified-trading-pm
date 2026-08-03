@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                  chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                  pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                  the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                  chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                  2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                  6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                  timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                  `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                              `returns`/onchain reconfirmed). Evidence:
-                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                  **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                  `returns`/onchain reconfirmed). Evidence:
+                                  `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -607,3 +607,18 @@ part of this plan was migrated elsewhere.
   operator decision — not re-running the investigation a 4th time. **Checkbox stays UNFLIPPED.** Releasing this dispatch
   (`reason_code=BLOCKED`) so the fleet-scoped cooldown holds it rather than immediately re-offering the same no-op check
   to the next slot.
+- **2026-08-03 (slot-8, backend_engineer craft, dispatched via `defi_satellite_ao_dispatch_batch3-013`)** — the operator
+  ruling landed (direction 1 "extend", see the issue doc's `[OPERATOR] P2`) and this became a genuine code task. Shipped
+  both decision-independent code fixes: BTC/ETH/INF restored to IS's `PYTH-SOLANA` enumerated set
+  (`instruments-service@dec90cc0`) and `_PYTH_FEEDS` extended with live-verified Hermes ids for JTO/RAY/WIF/JUP/USDC
+  (`market-tick-data-service@cd017a1c`) — full detail + Progress Log in
+  `/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`. **Checkbox stays UNFLIPPED**:
+  this todo's own done-when ("BTC/ETH/INF captures resume ... AND family-3 rows reconcile") isn't fully met by this
+  commit alone — (a) "captures resume" needs a FUTURE live/backfill run to actually re-verify against real GCS data (a
+  code fix today doesn't retroactively produce tomorrow's capture rows); (b) "family-3 rows reconcile" needs the
+  `instrument_id`-naming reconciliation between `_write_oracle_rows` (writes `{symbol}/usd`) and the seeder's
+  `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` key — deliberately NOT attempted here (real, separate, higher-risk work: changes
+  `write_defi_rows`'s `instrument_type` from `SPOT_ASSET` to `SPOT_PAIR`, which also drives `SchemaContract` lookup +
+  partition-path derivation for 17+ days of already-written production data — tracked as its own `[DATA] P3` todo in the
+  issue doc). Next dispatch on this todo: re-verify BTC/ETH/INF capture resumption via a bounded manifest read once a
+  Pyth collection has run post-`dec90cc0`/`cd017a1c`; do not redo the feed-id work above.
