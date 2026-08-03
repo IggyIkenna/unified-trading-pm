@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-14"
-last_updated: 2026-07-16
+last_updated: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -681,12 +681,15 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   Distinct failure mode from the 2026-07-27 fleet-soak's "false 80% abort" check (that soak ran single-repo, single
   ledger — this is cross-repo ledger fragmentation, only reachable on the GHA glue-runner topology, not the slot
   worktree topology the soak covered).
-- [ ] [INFRA] P1. Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA glue-runner jobs across DIFFERENT repos on
-      the SAME physical host share one ledger — e.g. derive the shared root from the stable `/opt/github-glue-runners-*`
-      parent (or a host-identity env var set once per VM at runner-install time) instead of `WORKSPACE_ROOT`, which is
-      per-repo-job on this topology. Until fixed, the governor provides NO cross-repo admission control on glue-runner
-      hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also per-repo) RAM-pressure watchdog apply, which
-      is why 10 repos could pile up here.
+- [ ] [INFRA] P1. **FORKED 2026-08-03 — see `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`**
+      (dedicated scoped plan, per this doc's own note below that a one-shot task is the wrong place to redesign ledger
+      scoping across the whole glue-runner fleet). Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA
+      glue-runner jobs across DIFFERENT repos on the SAME physical host share one ledger — e.g. derive the shared root
+      from the stable `/opt/github-glue-runners-*` parent (or a host-identity env var set once per VM at runner-install
+      time) instead of `WORKSPACE_ROOT`, which is per-repo-job on this topology. Until fixed, the governor provides NO
+      cross-repo admission control on glue-runner hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also
+      per-repo) RAM-pressure watchdog apply, which is why 10 repos could pile up here. Leave this checkbox `[ ]` until
+      the forked plan ships and closes it back here.
 - **Not fixed in this session** — flagged via `cicd` `/blocked` (`BLK-7eedce54`) rather than fixed in-scope: a one-shot
   wall-clearing task is the wrong place to redesign ledger scoping across the whole glue-runner fleet: real blast radius
   (every repo's CI), needs its own scoped plan/PR + a fleet soak on the GHA topology specifically (the existing 93-min
