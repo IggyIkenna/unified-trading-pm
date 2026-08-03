@@ -10,7 +10,7 @@ summary: >
   derives instrument_type from the GCS PATH via regex, so a manifest-only COMBO relabel that never physically moved the
   object would be silently clobbered back to perpetual/future by the next rebuild pass. Gates the deribit doc's pending
   [OPERATOR] --apply sign-off (also cited live in main's BLK-fe7f6669 deferral).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -35,6 +35,9 @@ locked_by:
 locked_since:
 context_scope:
 resolved_by:
+  "slot-2 (data_engineering, task cefi_manifest_combo_instrument_type_rebuild_overwrite-001), 2026-08-03 — leading
+  hypothesis refuted; true root cause already independently confirmed in
+  deribit_combo_perpetual_partition_move_2026_07_21.md by slot-14 (task -005)"
 ---
 
 # CEFI manifest instrument_type=COMBO rows vanished — likely rebuild-overwrite of a manifest-only relabel
@@ -104,22 +107,53 @@ sweeps for combo/manifest/prune/purge/consolidat/rebuild; NOT exhaustive — a q
 
 ## Todos
 
-- [ ] [DIAG] P1. **Root-cause the instrument_type=COMBO manifest-row disappearance.** Confirm or refute the
-      rebuild-overwrite hypothesis above: (a) determine whether `rebuild_cefi_manifest.py` or an equivalent path-derived
-      consolidator/rebuild pass actually ran against the CEFI manifest between 2026-07-21 and 2026-08-03 (VM
-      launch/deployment history, or the affected rows' manifest provenance timestamps if available); (b) if confirmed,
-      verify the mechanism end-to-end on at least the one re-confirmed canary object (`BTC-FS-26DEC25_PERP`, currently
-      at `.../instrument_type=perpetual/.../BTC-FS-26DEC25_PERP.parquet`); (c) determine SCOPE — is this isolated to the
-      two S6 canary objects / DERIBIT combo rows specifically, or systemic (any manifest-only relabel anywhere in cefi's
-      history that predates a later rebuild pass is equally at risk)? State the confirmed scope precisely (see "Scope
-      precision" above — do not reuse "fleet-wide" without stating which asset_group(s) were actually checked). (d)
-      Recommend next step: re-run the relabel WITH a physical move this time (may fold into
-      `deribit_combo_perpetual_partition_move_2026_07_21.md`'s existing `--apply` design), a general process fix to
-      `rebuild_cefi_manifest.py` (e.g., don't silently overwrite an `instrument_type` that disagrees with path when the
-      disagreement looks intentional/recent), or both. Repo: market-tick-data-service. Done when: the mechanism is
-      confirmed or refuted with direct evidence (not inference), the scope question is answered with a stated confidence
-      level, and a concrete follow-up (new todo in this doc, or a fold-in to the deribit doc) is proposed with enough
-      detail to dispatch without further investigation.
+- [x] ✅ [DIAG] P1. **DONE 2026-08-03 (slot-2, task `cefi_manifest_combo_instrument_type_rebuild_overwrite-001`).**
+      **This doc's own leading hypothesis (`rebuild_cefi_manifest.py` path-derived overwrite) is REFUTED.** The actual
+      root cause was independently found — with stronger direct evidence than this todo produced — by a sibling task
+      (`deribit_combo_perpetual_partition_move-005`, slot-14, same day) working
+      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s own copy of this exact question (that
+      doc's `[DATA] P2.` operator-review todo spawned an identical root-cause todo independently of this doc; both were
+      in flight concurrently). Full evidence trail lives there (§ its `[DATA]     P1.` todo + Progress Log, 2026-08-03
+      slot-14 entry) — summary:
+
+      - **Confirmed mechanism**: the 662→0 drop happened during the **2026-07-24 Surface C v2 canonical-dedup `--apply`**
+            (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, VM `canonical-migration-cefi-dedup-apply-20260724-232055`),
+            NOT `rebuild_cefi_manifest.py` — that script was never implicated; no evidence any of its runs touched this
+            population. Proven by a byte-diff between the dedup script's OWN pre-apply manifest snapshot
+            (`_index/snapshots/pre_d4_20260724T232332Z/availability_index.parquet`, 662 `combo`/`empty_confirmed`/DERIBIT rows,
+            100% baseline-matching) and the current live manifest (0 rows), cross-checked against the apply's `run.log`: the
+            only REVIEWED combo-labeled drop in that run was a different, correctly-scoped `venue=DERIBIT-COMBO` purge (196
+            rows) — the 662 bare-`venue=DERIBIT` rows were never a named target; they were silently swept into one of the
+            run's large itype-unbroken-down bulk counters (`eu-dropped=261630` / `de-dup-collapsed=1267269`), most likely via
+            `_dedup_blob`'s per-blob duplicate-collapse (exact colliding line not pinned — ruled correctly out of scope for a
+            bounded root-cause pass). Verdict: a genuine manifest-consolidation correctness bug in that one-off migration
+            script, not an intentional purge, and NOT a general `rebuild_cefi_manifest.py` hazard.
+          - **Mechanism verified end-to-end on the canary**: independently re-confirmed live BY THIS TASK (2026-08-03, same
+            session) — 0/9,912,045 rows in the current CEFI `_index/availability_index.parquet` carry `instrument_type=combo`
+            (any venue, any `capture_status` — direct bounded column-pruned read via `run-bounded-analysis.sh`, not a
+            whole-corpus walk); 0 rows of ANY `instrument_type` reference `BTC-FS-26DEC25` (full disappearance, not a
+            reclassification); the physical object is still present, byte-for-byte unchanged, at
+            `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2025-01-15/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=book_snapshot_5/BTC-FS-26DEC25_PERP.parquet`
+            (confirmed via a single-day bounded `gsutil ls`, not a corpus scan). This matches the sibling doc's findings
+            exactly — independent corroboration from a second read path.
+          - **Scope, confirmed precisely (closes this doc's own "Scope precision" open question)**: the 0-combo-rows result is
+            CEFI-manifest-wide (all venues in `market-data-tick-cefi-prd-*`'s `_index`, verified by direct query, not just a
+            DERIBIT sample). TradFi is confirmed OUT of scope — `gcloud storage buckets list` confirms
+            `market-data-tick-cefi-prd-central-element-323112` and `market-data-tick-tradfi-prd-central-element-323112` are
+            physically separate buckets/manifests, so TradFi's own COMBO relabel (`132ea6b1`) cannot be the same event; ruled
+            out with certainty, not just architectural inference.
+          - **Follow-up**: no NEW todo needed from this doc — the sibling doc already carries the two live follow-ups this
+            finding produces: an `[OPERATOR] P2.` decision (restore `"COMBO"` to `CeFiMvpRule.instrument_types` for bare
+            `venue=DERIBIT`, since `uac@11adf279`'s removal premise is now disproven — 70,128 real catalogue-confirmed
+            bare-DERIBIT COMBO instruments exist) and a `[DATA] P3.` low-priority bookkeeping-regen todo for the 662 lost
+            `empty_confirmed` rows. Nothing further to dispatch from here.
+
+          **Why this doc still resolves as DONE rather than a bare duplicate-closure**: the todo's own done-bar required
+          confirming or refuting the hypothesis with direct evidence, stating scope with a confidence level, and proposing a
+          dispatchable follow-up — all three are satisfied, just by refuting this doc's hypothesis in favor of the
+          already-proven one, plus this task's own independent corroboration (separate manifest read, separate GCS listing)
+          that the finding is solid rather than a stale/unverified claim. Repo: none (PM-doc-only; no code change — the
+          actual fix candidates, if any, belong to the sibling doc's `[OPERATOR]`/`[DATA] P3.` todos).
 
 ## Progress Log
 
@@ -131,3 +165,21 @@ sweeps for combo/manifest/prune/purge/consolidat/rebuild; NOT exhaustive — a q
   `instrument_type` parsing as the leading unconfirmed hypothesis — NOT independently verified against live
   manifest/deployment history (that's Todo 1's job). **Not committed by review** (zero commits, ever — role boundary) —
   handed as fully-drafted content to main to route to a live worker for the `docs(plans):` quickmerge.
+- **2026-08-03** (slot-2, data_engineering, task `cefi_manifest_combo_instrument_type_rebuild_overwrite-001`) — Worked
+  Todo 1. Read `rebuild_cefi_manifest.py` + its CF-11 re-emit module (`_rebuild_cefi_cf11.py`) end-to-end and confirmed
+  the code IS structurally capable of dropping a manifest-only relabeled row (pre-2026-07-28 phantom-reclassification;
+  post-2026-07-28 shadow-suppression that trusts-but-doesn't-restore the object-scan's own emission) — but found no
+  direct evidence this script actually ran against the affected date/rows. Before finishing the investigation, a full
+  read of the related `deribit_combo_perpetual_partition_move_2026_07_21.md` doc (fresh-pulled at task start, so
+  current) revealed a sibling task (slot-14, `-005`) had ALREADY root-caused this exact question that same day with
+  stronger direct evidence (a pre/post manifest snapshot diff + the actual migration VM's run.log), landing on a
+  DIFFERENT mechanism (the 2026-07-24 Surface C v2 canonical-dedup `--apply`, not `rebuild_cefi_manifest.py`).
+  Independently re-verified the live manifest (bounded column-pruned read of the 9.9M-row consolidated `_index`,
+  `run-bounded-analysis.sh`-wrapped) and a targeted single-day GCS listing myself rather than taking either doc's word
+  for it — both corroborate: 0 combo rows anywhere in CEFI, the canary symbol has 0 rows of any instrument_type, the
+  physical object is untouched. Also independently confirmed CEFI/TradFi bucket isolation live via
+  `gcloud storage buckets list` (closes this doc's own "2-minute confirm" ask). Resolved this doc by citing the
+  sibling's root cause + my own corroborating evidence rather than re-deriving it a third time. No code changes needed
+  (repos: [] on this task — pure diagnostic); the two live follow-ups (MVP-scope operator decision, bookkeeping-regen)
+  stay tracked solely in the sibling doc to avoid a duplicate-todo fork. Next: archive this doc per the 6-step ritual
+  (all todos done, unlocked) in a separate follow-up commit.
