@@ -356,9 +356,13 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       (lines 164-179) — add logging (`logger.debug`/`warning`) consistent with the other catch blocks in the same files.
       Repo: instruments-service.
 
-- [ ] [BACKEND] P3. **Narrow residual broad except in MTDS `tardis_bulk_download.py::_download_bulk`** (Finding M-5,
+- [x] [BACKEND] P3. ✅ **Narrow residual broad except in MTDS `tardis_bulk_download.py::_download_bulk`** (Finding M-5,
       lines 533-541) to the same explicit transport/HTTP error tuple used one block above (lines 520-532, the CF-11 fix)
-      instead of a bare `except Exception`. Repo: market-tick-data-service.
+      instead of a bare `except Exception`. Repo: market-tick-data-service. — market-tick-data-service@4dc7bf9f:
+      `except Exception as exc:` at line 533 narrowed to
+      `except (TardisHTTPError, CanonicalError, ConnectionError, TimeoutError, OSError) as exc:`, the exact tuple used
+      by the sibling CF-11-fixed block at line 520. `bash scripts/quality-gates.sh` green (all 6 gate stages passed);
+      shipped via `quickmerge.sh --agent`.
 
 - [ ] [BACKEND] P3. **Narrow `ibkr_tradfi.py::close()`'s bare `except BaseException`** (Finding E-3, lines 638-643) to a
       specific exception type and bump the log level from `debug` to `warning`. Repo: execution-service.
@@ -367,10 +371,14 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       mention all 10 exported adapter/converter classes (currently narrates only 6 of 10) once todos for M-2/M-3 above
       are resolved — the stale docstring is corroborating evidence for those findings. Repo: market-tick-data-service.
 
-- [ ] [BACKEND] P3. **Add a one-line clarifying comment in MTDS `market_interface/factory.py`** near line 151's
+- [x] [BACKEND] P3. ✅ **Add a one-line clarifying comment in MTDS `market_interface/factory.py`** near line 151's
       `"tardis": ("tradfi", TardisAdapter)` registration, noting `tradfi/` groups by data-vendor/transport (Tardis is a
       market-data vendor) rather than by asset-category (Tardis's write path lands under `category=cefi`) — see the
-      directory-naming observation in Finding-B. Repo: market-tick-data-service.
+      directory-naming observation in Finding-B. Repo: market-tick-data-service. — market-tick-data-service@4dc7bf9f:
+      added
+      `# "tradfi" groups by data-vendor/transport (Tardis=vendor), not     asset-category — writes land under category=cefi.`
+      immediately above the `"tardis": ("tradfi", TardisAdapter)` line. Shipped via `quickmerge.sh --agent` in the same
+      commit as the M-5 fix.
 
 ## Reconciliation
 
@@ -393,3 +401,9 @@ that plan's own stated reconciliation pattern.
   `factory.py::TRADFI_VENUES` and `ibkr_tradfi.py`'s module docstring, each cross-referencing this finding + the
   still-open backfill=paper=live wiring-proof todo. No behavior change — documentation only, gates stay closed.
   `execution-service@d87002da`, `unified-api-contracts@e39170d5`.
+- **2026-08-03 (backend_engineer)**: shipped Findings M-5 + B (both P3, mechanical). `_download_bulk`'s residual
+  `except Exception` (line 533) narrowed to the same
+  `(TardisHTTPError, CanonicalError, ConnectionError, TimeoutError, OSError)` tuple as the CF-11-fixed sibling block one
+  block above; added the one-line `tradfi/`-groups-by-vendor clarifying comment above `factory.py`'s `"tardis": (...)`
+  registration. `market-tick-data-service@4dc7bf9f` (`quality-gates.sh` full green, shipped via
+  `quickmerge.sh --agent`). Both checkboxes flipped above.
