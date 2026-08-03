@@ -38,6 +38,10 @@ last_updated: 2026-07-31
 
 # `managed-by` launcher label standardization (deferred from cost-provenance)
 
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Both todos shipped: deployment-service@db67173 (launcher label) + deployment-api@95a7a19
+> (managed_by echo).
+
 > **Migrated from** `deployment_full_estate_cost_provenance_2026_07_09.md` on archival (2026-07-13). The parent plan
 > shipped `launched_by` provenance (adhoc / control-plane / fleet-reconciliation, the REVIEW parity signal) and
 > deliberately deferred `managed_by_label`: a `labels`-derived `managed_by` echo on the deployment inventory item is a
