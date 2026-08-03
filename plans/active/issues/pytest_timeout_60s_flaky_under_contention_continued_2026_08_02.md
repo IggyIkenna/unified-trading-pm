@@ -31,7 +31,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T10:10Z
+last_updated: 2026-08-03T10:48Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -262,3 +262,38 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   one found and closed an actual code gap rather than re-confirming "wait it out," so it's not pure duplication of the
   standing operator concern about agent-fleet throttling, but that concern (noted in the entry above) remains open and
   unaddressed by this entry.
+
+- **2026-08-03 ~10:07-10:48Z (`cicd` escalation `agt-3bc731`, slot 3, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 6th escalation for this repo's wall, and the first live confirmation of todo 1's "still red past the
+  300s raise" branch (previously only anticipated, for unified-trading-api)**: `main` still red at run `30780455914`
+  (02:55Z, pre-`c092df50` 150s-timeout shape, already-diagnosed/fixed on LDR — nothing new there). Checked LDR itself —
+  NOT green either: latest completed run `30800328624` (09:11Z, headSha `fd84f90a`, i.e. testing the commit AFTER both
+  prior mitigations: `c092df50`'s `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT=300` and `fd84f90a`'s `FORMULA_DRIFT_TIMEOUT=240`)
+  still failed BOTH slices: `tests` hung 18m35s inside `test_cross_timeframe_sanity.py` (last stderr line 09:38:14,
+  `Timeout` fired 09:56:49 — pure scheduler starvation, not a slow-but-progressing test) with a DIFFERENT random hang
+  site than the earlier `main` run's `test_signal_composer.py` (no content overlap → contention signature, not a
+  per-test defect, matching this doc's established pattern); `checks` slice's basedpyright run hit
+  `❌ Type check FAILED/timeout (exit=124)` at exactly the 300s `PYRIGHT_TIMEOUT` ceiling (09:15:56→09:20:57) — the
+  ALREADY-RAISED budget is now the one timing out, not a pre-raise stale value. (Also inspected the 96 `reportAny`
+  errors from the `e2e-testing` peripheral-dir check on the same run — confirmed `log_warn`-only per
+  `scripts/quality-gates.sh:145-146`, non-blocking, ruled out as the actual cause before finding the real one at the
+  STEP-4 typecheck timeout.) Host corroboration: `uptime` load average `29.85, 27.81, 28.60` (16 vCPUs), 20 concurrent
+  `quality-gates.sh` processes — identical signature to every other entry in this doc-pair. This is exactly the scenario
+  todo 1 anticipated ("if RED again with the same timeout signature even at 300s... escalate to the parent
+  capacity-crisis doc rather than raising the timeout further in isolation") — did NOT raise
+  `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT` a third time; a further raise only moves the threshold and does not close the
+  class, and the actual fix for this exact root cause (cross-repo QG-governor ledger coordination on this one shared
+  glue-runner host) is already forked, scoped, and mid-flight in
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phases 0-1 shipped
+  `unified-trading-pm@fada7dc20`; Phase 2 live-validation + Phase 3 rollout still open) — duplicating that effort here
+  would be scope creep for a one-shot wall-clearing task. A newer LDR run was already in flight at investigation time
+  (`30804251677`, headSha `d387ba7f`, queued→in_progress during this session) — did not trigger a redundant dispatch
+  (would only cancel-in-progress via the concurrency group and reset elapsed contention-survival time, per this doc's
+  established precedent). `GET /api/repo-blockers` → `open: []`. No code or workflow change made — every candidate fix
+  already exists on `live-defi-rollout`; the remaining wall is pure runner-queue-depth/host-CPU-scheduling delay
+  (classification (A) from this escalation's own boot context, but the causal chain is infra capacity, not a
+  stuck/missing promotion PR — none exists yet because LDR `ci_status` hasn't reported green;
+  `ldr-to-main-promote-fleet` ticks every ~15min and will auto-create+merge the promotion PR the moment any LDR run
+  does). Slot left clean (`features-service` on `live-defi-rollout`, 0 commits ahead). Pinged the authoring slot
+  (`ci-reconcile`) with the outcome. Todo 2 remains open/unaddressed by this entry (scope stayed bounded to this one
+  escalation, per prior-entry precedent).
