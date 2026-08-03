@@ -230,51 +230,51 @@ This needs the same kind of operator/architecture ruling todo 1 required for spo
       below).
 
       **Methodology gotcha caught mid-sample (material to the ruling): `instrument_key` is NOT a stable identity
-                                      column across writer generations** — e.g. `DERIBIT:FUTURE:BTC-27SEP19` (flat, older key format) vs
-                                      `DERIBIT:FUTURE:BTC@INV-20190927` (hive, newer key format) are the SAME instrument (`raw_symbol=BTC-27SEP19`
-                                      both sides). Comparing on `instrument_key` alone falsely reads as 100% disjoint; `raw_symbol` (+
-                                      `contract_symbol` for tradfi futures) is the stable cross-generation identity key and is what the table below
-                                      uses.
+                                          column across writer generations** — e.g. `DERIBIT:FUTURE:BTC-27SEP19` (flat, older key format) vs
+                                          `DERIBIT:FUTURE:BTC@INV-20190927` (hive, newer key format) are the SAME instrument (`raw_symbol=BTC-27SEP19`
+                                          both sides). Comparing on `instrument_key` alone falsely reads as 100% disjoint; `raw_symbol` (+
+                                          `contract_symbol` for tradfi futures) is the stable cross-generation identity key and is what the table below
+                                          uses.
 
-                                      | asset_group | venue | day | flat rows | hive rows | relationship (by `raw_symbol`) |
-                                      |---|---|---|---:|---:|---|
-                                      | tradfi | CME | 2020-01-02 | 154 | 154 | tied (full overlap) |
-                                      | tradfi | CME | 2026-06-28 | 32 | 216 | **hive is a strict superset** — flat missing 184 real contracts |
-                                      | tradfi | NYSE | 2026-07-22 | 535 | 535 | tied (full overlap) |
-                                      | cefi | DERIBIT | 2019-03-31 | 6 | 312 | **hive is a strict superset** — flat missing 306 real DERIBIT options |
-                                      | cefi | BITFINEX-SPOT | 2023-12-16 | 284 | 284 | tied (full overlap) |
-                                      | cefi | DERIBIT-COMBO | 2026-06-04 | 568 | 31 | **flat is a strict superset** — hive missing 537 instruments |
-                                      | defi | UNISWAP_V2-ETHEREUM | 2020-05-20 | 11 | 9 | **flat is a strict superset** — hive missing 2 (root-cause sample from "What I found" §3 above) |
-                                      | defi | AAVE_V3-AVALANCHE | 2022-06-01 | 8 | 8 | tied (full overlap) |
-                                      | defi | AERODROME_V3-BASE | 2024-06-01 | 12 | 12 | tied (full overlap) |
-                                      | defi | AAVE_V3-ETHEREUM | 2026-06-27 | 36 | 36 | tied (full overlap) |
+                                          | asset_group | venue | day | flat rows | hive rows | relationship (by `raw_symbol`) |
+                                          |---|---|---|---:|---:|---|
+                                          | tradfi | CME | 2020-01-02 | 154 | 154 | tied (full overlap) |
+                                          | tradfi | CME | 2026-06-28 | 32 | 216 | **hive is a strict superset** — flat missing 184 real contracts |
+                                          | tradfi | NYSE | 2026-07-22 | 535 | 535 | tied (full overlap) |
+                                          | cefi | DERIBIT | 2019-03-31 | 6 | 312 | **hive is a strict superset** — flat missing 306 real DERIBIT options |
+                                          | cefi | BITFINEX-SPOT | 2023-12-16 | 284 | 284 | tied (full overlap) |
+                                          | cefi | DERIBIT-COMBO | 2026-06-04 | 568 | 31 | **flat is a strict superset** — hive missing 537 instruments |
+                                          | defi | UNISWAP_V2-ETHEREUM | 2020-05-20 | 11 | 9 | **flat is a strict superset** — hive missing 2 (root-cause sample from "What I found" §3 above) |
+                                          | defi | AAVE_V3-AVALANCHE | 2022-06-01 | 8 | 8 | tied (full overlap) |
+                                          | defi | AERODROME_V3-BASE | 2024-06-01 | 12 | 12 | tied (full overlap) |
+                                          | defi | AAVE_V3-ETHEREUM | 2026-06-27 | 36 | 36 | tied (full overlap) |
 
-                                      **Finding: in all 10/10 sampled pairs, the smaller side's instrument set is a clean SUBSET of the larger
-                                      side's — zero genuinely-irreconcilable (mutually-exclusive) divergence once compared on the stable identity
-                                      key.** 6/10 tied, 2/10 hive strictly more complete, 2/10 flat strictly more complete. This rules out BOTH
-                                      blanket options (a) and (b) from the original menu — either would silently discard real, verified-present
-                                      instrument rows in ~40% of sampled cases, which is exactly the risk the original finding warned about
-                                      ("force-overwriting either direction... risks silently discarding real data"). It also rules out a *naive*
-                                      "newest GCS write wins" reading of option (c): the tradfi CME 2026-06-28 pair shows flat's GCS write is ~1 day
-                                      NEWER than hive's yet flat has 184 FEWER contracts — a newer write was measurably worse there, so recency
-                                      alone is not a safe completeness proxy.
+                                          **Finding: in all 10/10 sampled pairs, the smaller side's instrument set is a clean SUBSET of the larger
+                                          side's — zero genuinely-irreconcilable (mutually-exclusive) divergence once compared on the stable identity
+                                          key.** 6/10 tied, 2/10 hive strictly more complete, 2/10 flat strictly more complete. This rules out BOTH
+                                          blanket options (a) and (b) from the original menu — either would silently discard real, verified-present
+                                          instrument rows in ~40% of sampled cases, which is exactly the risk the original finding warned about
+                                          ("force-overwriting either direction... risks silently discarding real data"). It also rules out a *naive*
+                                          "newest GCS write wins" reading of option (c): the tradfi CME 2026-06-28 pair shows flat's GCS write is ~1 day
+                                          NEWER than hive's yet flat has 184 FEWER contracts — a newer write was measurably worse there, so recency
+                                          alone is not a safe completeness proxy.
 
-                                      **RULED POLICY (refined option (c))**: per-object, resolve content_mismatch by **completeness** (superset by
-                                      `raw_symbol`/`contract_symbol` identity), not by side-label or timestamp:
-                                      - One side's instrument set ⊇ the other's → the superset side's content is authoritative; the migration
-                                        target ends up holding the superset side's bytes (whichever original path had them).
-                                      - Sets are equal-membership but bytes still differ (schema_version / column-order / float-precision drift,
-                                        the tied rows above) → no data-loss risk either way; default to the flat side's bytes for the hive target
-                                        (keeps single-writer provenance, matches the tool's existing copy direction, avoids a special case).
-                                      - (Not observed in this sample, but keep as a backstop) neither side is a superset of the other (genuinely
-                                        disjoint, non-overlapping instruments on both sides) → do NOT auto-resolve; flag for manual per-object
-                                        review/union. 0/10 sampled pairs hit this case, so it is expected to be rare, not the common path.
+                                          **RULED POLICY (refined option (c))**: per-object, resolve content_mismatch by **completeness** (superset by
+                                          `raw_symbol`/`contract_symbol` identity), not by side-label or timestamp:
+                                          - One side's instrument set ⊇ the other's → the superset side's content is authoritative; the migration
+                                            target ends up holding the superset side's bytes (whichever original path had them).
+                                          - Sets are equal-membership but bytes still differ (schema_version / column-order / float-precision drift,
+                                            the tied rows above) → no data-loss risk either way; default to the flat side's bytes for the hive target
+                                            (keeps single-writer provenance, matches the tool's existing copy direction, avoids a special case).
+                                          - (Not observed in this sample, but keep as a backstop) neither side is a superset of the other (genuinely
+                                            disjoint, non-overlapping instruments on both sides) → do NOT auto-resolve; flag for manual per-object
+                                            review/union. 0/10 sampled pairs hit this case, so it is expected to be rare, not the common path.
 
-                                      **Separate finding surfaced by this same sampling, NOT a migration-policy question — flagged as todo 7
-                                      below**: the cefi DERIBIT 2019-03-31 pair shows the CURRENT flat writer's own most recent rewrite of that
-                                      historical day (GCS write 2026-07-13) is missing all 306 options a same-day-but-earlier hive copy has — i.e.
-                                      the live backfill/reconciliation path that re-generates historical `instrument_availability` snapshots may
-                                      have a real option-coverage regression, independent of which side wins this migration's copy-up.
+                                          **Separate finding surfaced by this same sampling, NOT a migration-policy question — flagged as todo 7
+                                          below**: the cefi DERIBIT 2019-03-31 pair shows the CURRENT flat writer's own most recent rewrite of that
+                                          historical day (GCS write 2026-07-13) is missing all 306 options a same-day-but-earlier hive copy has — i.e.
+                                          the live backfill/reconciliation path that re-generates historical `instrument_availability` snapshots may
+                                          have a real option-coverage regression, independent of which side wins this migration's copy-up.
 
 - [x] ✅ 5. [REVIEW] P2. **Corrected 2026-08-03.** `cross-asset-canonical-target-ssot.md` §8's sports-exception banner
       updated to record `ba87cc32`'s writer fix + tool extension as shipped, WITH the deploy-lag caveat found while
@@ -345,20 +345,29 @@ This needs the same kind of operator/architecture ruling todo 1 required for spo
       "Central CI watcher"), did NOT run the sports migration (writer fix still not live in prod). The still-pending
       re-verify + migration-application work is tracked as todo 12 below (repo: instruments-service +
       unified-trading-pm). Depends on todo 10.
-- [ ] 12. [DATA] P1. Re-verify `instruments-service@ba87cc32` (or whatever later LDR SHA carries the sports writer fix)
-      has reached `main` AND the `uts-prod-instruments-service-sports-fixtures` Cloud Run Job is running an image built
-      after it (same two checks as todos 9-11). Once confirmed live: run a fresh dry-run + apply the sports
-      historical-backlog migration (~172,595 objects, `--asset-group sports`) and update `canonical-cutover-register.md`
-      §6b's "live writer" + "Residual" rows to reflect the confirmed-live + migrated state. If still behind, repeat
-      todos 9-11's hold (do not force-promote, do not escalate for the shared-runner/v2-never-reported stuck-promote
-      pattern) — but if the SAME `quality-gates-v2` run (30800087100) is STILL queued with zero job-status change across
-      a 4th consecutive check, that is no longer "self-recovering, just slow" — file a P1 issue doc flagging the
-      `ci-health.yml` `*/15` auto-recover cron itself as possibly not clearing this specific stall (a genuinely-red LDR,
-      not a v2-never-reported/no-check-fired case — `ci_failure_watcher.py`'s `auto_recover_stuck_prs()` close+reopen
-      remedy is scoped to `v2_present==false`, which does NOT describe this run: `content sentinel` completed and the v2
-      check DID fire, it's just stuck queued behind the single shared `glue` runner — a distinct failure mode this
-      plan's prior todos may have mis-classified as the same self-recovering pattern) before spawning the next pass
-      (repo: instruments-service + unified-trading-pm). Depends on todo 11.
+- [x] ✅ 12. [DATA] P1. **Re-verified 2026-08-03T10:53Z — still NOT confirmed live, correctly held; 4th-consecutive-
+      check threshold hit, automation gap filed (this todo's verify-and-hold + escalation scope is complete).**
+      `git merge-base --is-ancestor ba87cc32 origin/main` still fails: `main` still 767 commits behind
+      `live-defi-rollout` (LDR HEAD unchanged at `f1403733`, same SHA todos 9-11 observed — LDR has not advanced across
+      the whole ~1h45m span of todos 9-12). The exact same `quality-gates-v2` run (`30800087100`) is STILL `queued`:
+      `content sentinel` completed 09:12:01Z, both QG-slice jobs (`tests`, `checks`) unchanged `queued` since 09:12:02Z
+      — same job IDs, same timestamps as todos 10-11's reads, confirming a genuine stall (not slow drain) across this
+      4th consecutive check. Per this todo's own instruction at that threshold: did NOT file a NEW duplicate P1 issue
+      doc — grepped first and found this exact repo/root-cause already tracked at **P0** in
+      `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (`repos:` already lists
+      `instruments-service`), so folded this finding in there instead: a new dated corroboration entry PLUS a new
+      `[SCRIPT] P1` follow-up todo documenting, with file:line citations, that NEITHER `ci_failure_watcher.py`'s
+      `auto_recover_stuck_prs()` (PR-`BLOCKED`-scoped, three signatures, none matching "jobs queued behind a busy
+      runner") NOR `glue_pool_starvation_monitor.py` (hardcoded `--repo unified-trading-pm` only, and its own rule
+      treats queued-behind-busy as normal backlog even in-scope) would ever catch this exact stall class — a genuine,
+      confirmed automation gap, not a misdiagnosis by todos 9-11. Did NOT force-promote, did NOT manually
+      cancel/retrigger the stuck run (same established reasoning: a duplicate dispatch to an already-saturated
+      single-runner pool doesn't help). Did NOT run the sports migration (writer fix still not live in prod). **Not
+      spawning a mechanical "todo 13: check again"** — a 5th identical timed re-poll would add no new information (same
+      root cause, same fix already tracked at P0 elsewhere); resumption of this todo's remaining work (fresh dry-run +
+      apply once `ba87cc32`-or-successor is confirmed live) should be triggered by real movement on the P0
+      capacity-crisis doc or the LDR→main promote gate clearing, not another blind timed check — repo: instruments-
+      service + unified-trading-pm. Depends on todo 11.
 - [ ] 6. [DATA] P2. Implement todo 4's ruled per-object "superset wins" resolver and run it across the ~32,846
       content_mismatch objects (defi 31,315 / cefi 1,494 / tradfi 37): for each pair, download + parse both parquets,
       compare by `raw_symbol` (+ `contract_symbol` for tradfi futures/futures_contracts) identity set, write the
