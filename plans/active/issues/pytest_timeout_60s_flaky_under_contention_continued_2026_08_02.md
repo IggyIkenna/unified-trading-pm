@@ -808,6 +808,36 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean (`execution-service` and
   `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc edit and the shipped fix).
 
+- **2026-08-03 ~14:30-15:00Z (`cicd` escalation `agt-bd0d27`, slot 6, `execution-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=538`) — re-dispatch of the SAME wall `agt-956fe9` (immediately above) already fixed; this session's boot
+  context still cited the original pre-fix failing run (`30790876666`), so verified from scratch rather than trusting
+  the cache**: confirmed `agt-956fe9`'s fix is live — `scripts/quality-gates.sh` at current LDR HEAD `7803a634` carries
+  both `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` and the pre-existing `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-300}`. Promotion
+  PR #538 (`chore(promote): LDR → main (Option-B direct)`) is `state=MERGED` (`mergedAt=2026-08-03T06:38:49Z`, ~2s after
+  the failing check run was created — the same self-merge-before-confirmatory-check-completes pattern this doc tracks
+  for instruments-service#1064/deployment-service#674/market-data-processing-service#569); `main-backmerge-to-ldr` and
+  `Semver Agent` both `success` at `06:38:51Z` — the real business outcome (promote → backmerge → semver-tag) has been
+  fully complete since before this escalation was even dispatched. Independently read the original failing run
+  (`30790876666`) to characterize the two crash shapes it hit (not previously logged in this exact combination):
+  `checks` slice failed in ~36s via `uv` cache corruption
+  (`error: Failed to install: vcrpy-8.2.1... Caused by: failed to read directory /home/ubuntu/.cache/uv/archive-v0/...: No such file or directory`)
+  — a shared-runner concurrent-uv cache race, not a code defect; `tests` slice progressed cleanly to 42% then hit this
+  doc's established xdist-worker-dies-inside-its-own-SIGALRM-handler `INTERNALERROR` (pytest-timeout firing after a
+  silent stall, corrupting the `execnet` channel mid-flush) — identical mechanics to the `agt-e5e387`/`agt-771546`
+  entries above. Both are pre-fix-era artifacts of the same fleet-wide host contention this doc-pair tracks, already
+  covered by `agt-956fe9`'s `PYTEST_TIMEOUT` raise. The two confirmatory runs `agt-956fe9` triggered are both still
+  alive, not dead: LDR `30822100465` `status=queued` (~40min elapsed, no runner claimed yet) and `main` `30822051928`
+  `status=in_progress`. Host corroboration: `uptime` load average `27.46, 27.89, 27.62` (16 vCPUs), 19 concurrent
+  `quality-gates.sh` processes — same signature, no improvement. `GET /api/repo-blockers` → `open: []`. **Disposition:
+  no further code or workflow change made or needed** — the fix already landed, the promotion/backmerge/semver-tag
+  outcome was already complete before this escalation fired, and both confirmatory runs are genuinely progressing
+  (queue-starved, not stuck); did not redispatch either (would cancel elapsed queue position via the concurrency group
+  for zero benefit) and did not hold the slot waiting on multi-hour-class runs, per this doc's established practice.
+  Root cause remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope for a
+  one-shot task). `AUTHORING_SLOT=ci` (sentinel, not a live numbered slot) — per `cicd.md`, skipped the authoring-slot
+  ping. Slot left clean (`execution-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
+  origin beyond this doc edit).
+
 - **2026-08-03 ~14:26-14:33Z (`cicd` escalation `agt-d12ed0`, slot 4, `instruments-service`, `wall_type=ldr_qg_failure`,
   `pr_number=0`) — a NEW occurrence for this repo (bare LDR push gate, no PR — distinct from the now-fully-resolved
   #1064/#1065 entries above)**: run `30816252648` (`workflow_dispatch`, created 13:04:24Z, headSha `823f0878` = current
