@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T21:35Z
+last_updated: 2026-08-03T21:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -841,3 +841,35 @@ repeated here.
   clean (`market-tick-data-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin in
   either repo; no branch changes; no orphaned processes remaining under the slot's working directory, confirmed via
   `ps`). `market-tick-data-service` already present in this doc's `repos:` frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~21:37-21:50Z (`cicd` escalation `agt-5ea4c7`, slot 14, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=934`) — PR already self-merged before the failing run even started, moot post-merge artifact, identical
+  doc-chain signature on a new random hang site**: escalation cited failing run `30840835293`
+  (`promote/features-service/b0be030bd8e2`, `pull_request`, `createdAt: 18:20:35Z` — 3s AFTER PR#934's own
+  `mergedAt: 18:20:32Z`) — the same self-merge-before-confirmatory-check-completes pattern this doc-chain documents
+  repeatedly. Confirmed `main` == the merge commit (`compare/main...e6dfb41f` → `identical`, 0 ahead/behind); 0 open PRs
+  for this repo (`gh pr list --base main`) — nothing actually blocked. Read the failing job's raw log directly rather
+  than trusting the summary: the `tests` slice hung inside `tests/delta_one/unit/test_cli_parser.py` — a pure-`argparse`
+  unit-test file (18 tests, zero I/O/mocks/fixtures that could genuinely hang; read the full file to confirm) — for
+  ~10min (`21:10:53Z`→`21:21:06Z`) before `pytest-timeout` fired mid `pytest_runtest_call`→ `evaluate_xfail_marks` on
+  MainThread, with collection stalled at only 12% (item ~2266/18450+1skipped) despite ~28min of real elapsed session
+  time — the established scheduler-starvation signature (random hang site, no code-content overlap with any prior-logged
+  occurrence), not a per-test defect. Confirmed both sanctioned mitigations intact + unchanged on current LDR HEAD
+  (`5275fef1`): `PYTEST_TIMEOUT=300`/`PYRIGHT_TIMEOUT=300` (`features-service/scripts/quality-gates.sh:40-41`) — did NOT
+  raise either further, per this doc-chain's established todo-1 practice (root cause is capacity-side;
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` still `status: active`, Phase 2-3 open, re-confirmed
+  unchanged). `gh api .../actions/runners`: `features-service` has 2 online runners (`glue-ip-172-31-3-59-1` idle,
+  `glue-ip-172-31-5-118-1` `busy=true`) — consistent with the fleet-wide bottleneck; host `uptime` load average **23.68,
+  26.65, 27.50** on 16 cores at investigation time, corroborating the contention diagnosis. `GET /api/repo-blockers` →
+  `open: []`. A fresh run (`30854599037`) was already `in_progress` against the true current LDR HEAD (`5275fef1`,
+  confirmed matches local `git log`) at investigation end — left it running rather than cancel/redispatch (would forfeit
+  real elapsed queue/run position for zero benefit), per established practice. **Disposition: no code or workflow change
+  made or needed** — the specific PR#934 wall is fully moot (already merged, main identical), every sanctioned
+  mitigation already exists and is intact, remaining state is a genuinely in-flight LDR re-verify; outcome of
+  `30854599037` left for the next occurrence. `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left
+  clean (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this
+  doc's own commit; no branch changes in either repo). `features-service` already present in this doc's `repos:`
+  frontmatter — no frontmatter change needed. Now the ~17th+ same-day escalation for `features-service` alone across
+  this doc-chain — further corroborates todo 2's operator-flagged missing cooldown/dedup guard on `ldr_qg_failure`
+  re-dispatch for an already-resolved/moot state.
