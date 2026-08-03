@@ -340,3 +340,8 @@ specific to any one task.
   directories "before proposing any action"), any resulting cleanup is unconditionally blocked for autonomous workers by
   `block_destructive_commands.py`, and this doc itself records a `du -sh` census being killed by host pressure before
   completing — so even the measurement half is not reliably completable from a slot session.
+- **na-eligibility-audit 2026-08-03** (infra tranche, incremental run, dispatch agt-a41abf): **KEEP-NA, valid —
+  unchanged from the 2026-08-02 verdict.** In scope only because a context_scope frontmatter backfill (batch 4/5)
+  touched the file; `git show` confirms no other diff in that commit. `grep -cE '^- \[ \]'` = **2**, matching this
+  verdict — same 2 open-ended investigation items, same `block_destructive_commands.py` autonomous-cleanup block. No
+  action needed.

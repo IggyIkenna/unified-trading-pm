@@ -293,3 +293,13 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
   prior-output meta-docs; the 2 "maybe" candidates (finding 13) need dedicated scoping before a future run drafts them.
   **Ledger**: 4 new parked findings + 1 in-line-shipped fix + 6 re-verified carry-forwards, 4 entries written above —
   balanced.
+
+- **na-eligibility-audit 2026-08-03** (infra tranche, dispatch agt-a41abf): **KEEP-NA, valid.** First verdict for this
+  doc. Read end-to-end; `grep -cE '^- \[ \]'` = **4**, matching this verdict's item count. Todos 1-2 are explicitly
+  `[OPERATOR]`-tagged with a stated reason a worker cannot self-resolve (todo 1: re-applying a live `assigned_vm` flip
+  on an active plan needs operator confirmation each time, not a standing approval; todo 2: whether the missing stash
+  bundle was durably relocated or genuinely lost is external knowledge no worker here has). Todos 3-4 are `[DOCS] P3`
+  but both explicitly self-describe as NOT yet bounded: todo 3 is framed "Design/tooling-priority call, not urgent" (a
+  `Consider adding...` suggestion, not a decided spec); todo 4 explicitly states "neither is ready to batch as-is" and
+  one half needs "a design decision... that this run did not make." None of the 4 clears the bounded/deterministic bar
+  for RECLASSIFY. No other action.

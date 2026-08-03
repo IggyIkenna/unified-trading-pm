@@ -25,10 +25,11 @@ scope: [engineer]
 tags: [features-service, multi-timeframe, cli, argparse, test-hardening, regression-test, cloud-mock-mode, cosmetic]
 related: []
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 priority: P3
 drift_direction: advance-code
 source: [review-role-finding-agt-35d7d3, main-orchestrator-triage-agt-26fe12]
@@ -110,3 +111,22 @@ Two blind spots the in-process test has, that the subprocess test closes:
         )
         assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
 ```
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-03** (infra tranche, dispatch agt-a41abf): **RECLASSIFY -> planning.** First verdict
+  for this doc. Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's single item. The sole open todo
+  is fully bounded and deterministic: exact target file (`tests/multi_timeframe/unit/test_cli_main.py`), exact test body
+  given verbatim in this doc (no judgment call on what to write), exact done-when (passes against the landed fix, fails
+  if the fix is reverted), exact commit-citation requirement (this doc + source SHA `b0a58bb9`). No redirect banner, no
+  `depends_on` gate, no prior-revert marker, no operator-only action — a worker can execute this alone. Conflict-check
+  (`ao-dispatch-batch-naming-and-conflict-check.md` §3) run: grepped `plans/active/*.md` + `plans/active/issues/*.md`
+  for `b0a58bb9` / `test_cli_help_exits_zero_via_subprocess` / `multi_timeframe.*argparse` — no other active doc claims
+  this test-port work; `infra_consolidated_closeout_2026_07_25.md` doesn't mention it either. Independently confirmed
+  live in `features-service` (clean worktree, `live-defi-rollout`, `39cc8653` present): the weaker
+  `test_main_help_exits` test exists, the stronger subprocess-based test this todo ports does NOT exist yet — genuinely
+  undone, not stale. Flipped `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`, filled
+  `assigned_role: backend_engineer` (matches the todo's own `[BACKEND]` tag; validated against the live `agents/*.md`
+  registry). `doc_type: issue` living under `plans/active/issues/` is structurally exempt from the
+  finalize-plan-coverage rule (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only, non-recursive —
+  confirmed by direct source read) — no companion finalize doc authored.

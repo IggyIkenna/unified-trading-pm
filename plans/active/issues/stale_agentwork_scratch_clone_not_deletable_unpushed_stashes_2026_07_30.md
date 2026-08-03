@@ -30,6 +30,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
   ]
 created: 2026-07-30
 parent_epic: infrastructure_master
@@ -109,14 +110,18 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
       git-tracked — a 94% reduction from the 1.2 GB source directory). **Done when** criteria met: bundle verifies, path
       is cited here (above), all 10 stash SHAs confirmed present by direct unbundle-and-cat-file test (not just
       `bundle verify`).
-- [ ] [OPERATOR] P2. Delete `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are
+- [ ] [OPERATOR] P2. **Done-when NO LONGER SATISFIABLE AS WRITTEN — see 2026-08-03 Progress Log entries before acting.**
+      Original text: delete `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are
       durably bundled + verified above. **This step cannot be done by an agent**: the workspace's own
       `agent-orchestrator/scripts/hooks/block_destructive_commands.py` PreToolUse guardrail unconditionally blocks any
       `rm -rf`/recursive delete for autonomous workers (by design, with no override — its own docstring says not to
       circumvent it), and this is exactly the "filesystem command, no SDK equivalent" case its own block message names
-      as an operator-escalation, not a workaround. Run:
-      `rm -rf     .tabs/3/instruments-service-agentwork-sports-2026-07-13/`. **Done when**: directory is gone,
-      `du -sh .tabs/3/stash-bundles/` confirms the bundle is the only remaining trace.
+      as an operator-escalation, not a workaround. Original done-when: directory is gone,
+      `du -sh .tabs/3/stash-bundles/` confirms the bundle is the only remaining trace. **As of 2026-08-03, BOTH the
+      directory AND the bundle are already absent** (see Progress Log) — the directory-gone half is met, but the
+      bundle-survives half is NOT, and no agent here performed this delete. Do NOT flip this to `[x]` until the
+      `ag_closeout_audit_infra_parked_2026_08_03.md` finding-11 investigation (durable relocation vs. genuine loss of
+      the 10 stash entries) resolves — flipping now would silently certify a done-when that isn't actually met.
 
 ## Progress Log
 
@@ -133,3 +138,20 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   `issues/ag_closeout_audit_infra_parked_2026_07_31.md` finding 2 observes this directory already absent from a sandbox
   `.tabs/3`, but that observation is explicitly non-authoritative for the real target host and does not license flipping
   this checkbox.
+- **na-eligibility-audit 2026-08-03** (infra tranche, dispatch agt-a41abf): **KEEP-NA, valid — but content updated, do
+  not treat as a routine unchanged-refresh.** In scope only because a context-scope backfill touched the file (2 lines
+  appended to `context_scope:`, confirmed via `git show` — no content/todo/status change from that commit itself).
+  However, `ag_closeout_audit_infra_parked_2026_08_03.md` finding 11 (same day, different scheduled process)
+  independently discovered that the "durably bundled" stash backup this doc's sole open todo depends on is now ALSO
+  absent, not just the source directory. Independently re-verified here before writing this marker (not trusting the
+  other doc's claim secondhand): direct `ls` on both `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` and
+  `.tabs/3/stash-bundles/` — both "No such file or directory"; a bounded
+  `find /home/ubuntu/unified-trading-system-repos/.tabs -maxdepth 3` sweep (all slots, not just slot 3) for either name
+  — zero hits anywhere; confirmed this is the genuine long-running shared host (`ip-172-31-5-118`, uptime 5d9h, load
+  24-26 — consistent with many concurrent agent slots, not an ephemeral sandbox), same identity check finding 11 itself
+  ran. Updated the sole open todo's text above to flag its done-when as no longer satisfiable as written and
+  cross-referenced finding 11's pending `[OPERATOR]` investigation rather than flip the checkbox myself — whether this
+  is a durable off-host relocation or a genuine loss of 10 real stash entries (~5,000 lines of unpushed WIP) is external
+  knowledge no worker session has, exactly the operator-gated judgment call this doc's own `[OPERATOR]` tag already
+  anticipated, just not the specific gap it originally named. Verdict stays KEEP-NA (if anything, more clearly
+  operator-gated now, not less) — this is a content-accuracy update, not a reclassification.

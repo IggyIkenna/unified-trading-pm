@@ -157,3 +157,10 @@ workaround is written down for whoever hits it next before the grant lands.
   fix.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03** (infra tranche, incremental run, dispatch agt-a41abf): **KEEP-NA, valid —
+  unchanged from the 2026-08-02 verdict.** In scope only because the context-scout backfill above touched the file;
+  `git show` confirms zero content/todo/status change from that commit. 0 open checkboxes (a diagnostic/workaround doc,
+  not a checkbox-tracked one), matching Phase 0's inventory. Re-verified live: the conflicting sibling plan
+  (`bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`) is still `status: open`,
+  `assigned_vm: planning`, `priority: P0` — the 2026-08-02 conflict-check's basis for staying parked still holds. No
+  action needed.

@@ -150,6 +150,29 @@ verified: the fetch-path repoint itself works correctly) and directly overlaps a
 whoever next works either the P0 SA-rewiring plan or this doc sees the honest-coverage caller as a third affected
 identity alongside the two already documented.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide (a) vs (b) above.** (a) fold the `instruments-service-cloud-run@` caller into
+      `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`'s P3.1/P3.2 scope when that
+      still-open P0 plan (`status: open`, `assigned_vm: planning`, confirmed live 2026-08-03) executes its VM-launcher
+      SA rewiring; or (b) apply the narrow `iam.serviceAccountUser` grant on `uts-prd-sa` for
+      `instruments-service-cloud-run@` directly now (exact command above) + mirror into `honest_coverage_scheduler.tf`,
+      if restoring the honest-coverage data-status panel is more urgent than waiting on the P0 plan's sequencing. This
+      is a genuine urgency-vs-scope-overlap tradeoff, not a mechanical fix — a worker should not guess which side wins.
+      Until decided, the honest-coverage data-status panel stays silently stale (failing since ~2026-08-01/08-02).
+
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03** (infra tranche, dispatch agt-a41abf): **KEEP-NA, valid.** First verdict for this
+  doc. Read end-to-end. On arrival the doc's only actionable content was prose under "## Recommended decision" / "##
+  Status" — no `- [ ]` checkbox anywhere, so `open_todos` read 0 in this run's Phase 0 inventory. Per CLAUDE.md's HARD
+  RULE ("every follow-up is a `- [ ]` todo, never prose"), added an explicit `## Todos` section above capturing the
+  doc's own already-well-reasoned (a)/(b) decision as one `[OPERATOR] P1` item — no new judgment introduced, the two
+  options and their tradeoff are exactly as this doc's author already stated them. Verdict is KEEP-NA (not RECLASSIFY):
+  the choice between (a) fold into the active P0's scope vs (b) apply a narrow grant now is an urgency/scope-overlap
+  tradeoff a worker cannot resolve alone, and the doc's own "Why I am NOT self-fixing this here" section already
+  explains why applying (b) unilaterally risks contradicting the active P0 plan's direction. Confirmed
+  `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` is still `status: open`,
+  `assigned_vm: planning`, `priority: P0` (live check, not stale citation). No conflict-check needed (KEEP-NA, not a
+  RECLASSIFY).
