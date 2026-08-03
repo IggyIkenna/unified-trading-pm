@@ -190,8 +190,8 @@ sibling todo reads `[x]`.
       dedup over ~10M rows) transiently used 14-16GB RSS on the shared host — watched closely given this exact shape
       caused 2 prior OOM outages on this host (`RULES.md` § 1), but it plateaued/oscillated rather than climbing
       unboundedly and the host retained double-digit GB "available" throughout; did not require killing. Evidence:
-      `unified-trading-pm@<this commit>` (plan flip only — no code changed in market-tick-data-service for this todo,
-      pure runtime execution against already-shipped code from todo 1).
+      `unified-trading-pm@25cdf1b1f` (plan flip only — no code changed in market-tick-data-service for this todo, pure
+      runtime execution against already-shipped code from todo 1).
 - [ ] [SCRIPT] P3. **Follow-up (not this task's scope)**: investigate whether HL/ASTER batch capture is still actively
       WRITING new objects in the bare (no `VENUE:` prefix) filename shape this migration just cleaned up — the 1,048
       `deleted_dup_source` outcomes above show canonical-named counterparts already existed for most of the 1,970
