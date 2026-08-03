@@ -43,7 +43,7 @@ related:
     /plans/active/task_template.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-27"
+last_updated: "2026-08-03"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -486,22 +486,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                          from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                          404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                          of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                          correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                          compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                          count > 0) rather than a blanket `empty_confirmed`.
+                                                                                                      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                                                                      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                                                                      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                                                                      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                                                                      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                                                                      count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                          **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                          the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                          never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                          report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                          defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                          instance's result was independently verified correct, not corrupted by it): filed
-                                                                                          `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                          todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                          day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                                                                      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                                                                      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                                                                      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                                                                      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                                                                      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                                                                      instance's result was independently verified correct, not corrupted by it): filed
+                                                                                                      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                                                                      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                                                                      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -576,16 +576,17 @@ context_scope:
       by default per the workspace backfill-VM hard rule. (repo: instruments-service). **Done when**: the prerequisite
       is confirmed shipped AND the TEAMS full-history backfill completes with a fresh coverage census cited. Source:
       `sports_consolidated_closeout_2026_07_19.md:911-913`.
-- [ ] [INFRA] P2. **Track S2 — investigate + partially close the legacy-CAS aggregate-manifest-gate question, combined
-      with the independent 205-227 cell re-fetch.** (1) Read `unified_trading_library.manifest_consolidator`'s
-      merge-source code to confirm or deny the hypothesis that the shard-fallback aggregate gate structurally never
-      folds in a prior legacy-CAS (non-per-VM-shard) write — a one-off closer script closed 5,288 cells via legacy CAS
-      write, verified correct at the cell level 3× independently, but the shard-fallback aggregate gate never reflected
-      it even after a full consolidator-cadence window. (2) Separately (independent of (1)'s outcome) re-fetch the
-      ~205-227 genuine gap cells from that closer's own dry-run — a normal targeted re-fetch. (repo:
-      unified-trading-library / instruments-service). **Done when**: a written confirm/deny of the hypothesis citing the
-      exact code path is recorded, AND the ~205-227 cell re-fetch completes with a fresh count. Source:
-      `sports_consolidated_closeout_2026_07_19.md:914-920`.
+- [x] ✅ [INFRA] P2. **Track S2 — legacy-CAS gate question + 205-227 cell re-fetch. DONE 2026-08-03 (slot-7).** **(1)
+      CONFIRMED**: `_read_and_merge_per_vm_shards()` (UTL `manifest_writer/_read_index.py:1133`) never reads the
+      canonical blob, so a legacy-CAS write stays invisible to it — but 2 fixes since 2026-07-19 (opt-in-only stale
+      fallback since 06-01; `instruments-service@d0e4e5a3` 08-02 gave the exact closer this bug's script
+      `per_vm_shards=True`) mean it can't recur via that script today. Write-up:
+      [issue](/plans/active/issues/sports_legacy_cas_shard_fallback_gate_investigation_2026_08_03.md). **(2) Re-fetch
+      verified via 4 VM logs**: FIXTURE_LINEUPS/STATS/PLAYER_STATS closed (0 stuck); FIXTURE_EVENTS residual (162 cells,
+      07-12/13/14) confirmed genuine no-fixture false-positive (0 API calls queued on a scoped follow-up), not an
+      execution bug. Detail:
+      [issue](/plans/active/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md). (repo:
+      unified-trading-library / instruments-service). Source: `sports_consolidated_closeout_2026_07_19.md:914-920`.
 - [ ] [VERIFY] P2. **Track S2 — reconcile the post-07-13 rebuild delta** (`PLAYER_VALUES` −10,934, `ODDS` −3,180
       captured cells vs the 2026-07-12 verified state) against real GCS objects, via a per-key manifest-vs-GCS diff —
       determine phantom-correction vs data loss. **Flagged as important**: a genuine data-loss verdict here would be a
