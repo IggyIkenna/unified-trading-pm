@@ -137,13 +137,20 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
 
 ## Follow-up todos
 
-- [ ] [SCRIPT] P2. Add a concurrency/cost guard to
-      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-     vm.sh`, mirroring the Tardis pattern
-      (`tardis-concurrency-guard.sh`, hard cap 1 concurrent both clouds): before launching, count currently-RUNNING
-      `mtds-backfill-odds-*` instances and refuse (or require an explicit `--allow-parallel`-equivalent override,
-      already present but currently ungated on any count) past a small cap. Prevents a repeat of this doc's root cause
-      (5+ uncoordinated/parallel relaunches burning ~5M credits in 4 days) now that the account has fresh 5M/month + 10M
-      top-up quota to protect.
+- [x] ✅ [SCRIPT] P2. Add a concurrency/cost guard to
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`, mirroring the Tardis pattern
+      (`tardis-concurrency-guard.sh`) — deployment-service@28c8d5f. Added
+      `deployment-service/scripts/vm/odds-api-concurrency-guard.sh` (fail-closed count of RUNNING/PROVISIONING/STAGING
+      `mtds-backfill-odds-*` instances) and wired it into the launcher's old singleton-lock block: default cap stays 1
+      (matches the prior no-flag behaviour), `--allow-parallel` now raises the cap to a small documented ceiling
+      (`ODDS_API_MAX_CONCURRENT_VMS`, default 5 — the largest legitimate parallel shard-set actually run,
+      `split1..split5`) instead of removing it entirely, and `--force` no longer implicitly bypasses the guard (that
+      implicit bypass was part of this doc's root cause — it only controls `VM_FORCE` reprocessing metadata now); an
+      explicit `ODDS_API_GUARD_FORCE=1` is the operator override. Verified via dry-run against a stubbed `gcloud`: (1)
+      default/0-running → proceeds, (2) default/1-already-running → refuses over cap 1, (3) `--allow-parallel`/1-running
+      → proceeds under cap 5, (4) unenumerable fleet → fails closed, (5) `ODDS_API_GUARD_FORCE=1` overrides a refusal.
+      QG green on deployment-service; no unit-test harness exists for the sibling `tardis-concurrency-guard.sh` either
+      (bash-sourced guards in this repo are dry-run-verified, not pytest-covered).
 - [ ] [DATA] P2. Once live/gcloud access is available: curl `/v4/sports` with the current `odds-api-key` to confirm
       `x-requests-remaining` reflects the 10M top-up, then resume the live VM per
       `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo.
@@ -182,3 +189,7 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
   10,000,000-credit top-up per the 2026-08-02 `BLK-6728ec9a` Option-B decision already on record in the sibling doc
   (closes item 4's credit-purchase half). Filed both remaining actions as tracked todos above (live re-verification; the
   concurrency/cost-guard fix) rather than leaving them as prose, per this workspace's follow-up discipline.
+- **2026-08-03 (slot 9, data_engineering)**: Shipped the first follow-up todo — see the flipped checkbox above for the
+  full change description (`deployment-service@28c8d5f`). The second todo (live re-verification of the 10M top-up +
+  resuming the live VM) remains open; it still needs live gcloud/Secret-Manager access this sandboxed session does not
+  have.
