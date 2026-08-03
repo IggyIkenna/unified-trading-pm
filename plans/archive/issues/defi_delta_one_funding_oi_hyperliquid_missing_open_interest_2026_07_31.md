@@ -18,7 +18,7 @@ summary: >-
   NaN` rejection) on every date, deterministically, until either (a) MTDS's HYPERLIQUID adapter starts capturing OI (if
   Hyperliquid's API even exposes it at this grain), or (b) the calculator's column requirement is relaxed/reworked to
   not need OI.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -43,6 +43,9 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  "all 4 todos DONE 2026-08-03: OI-availability confirmed + fix direction B ruled (operator); B-implementation shipped
+  features-service@0699c5db; bucket-resolution root cause fixed features-service@6b2282c5; live verification confirmed
+  real record_captured rows (features-delta-one-defi-20260803-055219, exit_code=0)"
 context_scope:
   [
     /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
@@ -51,6 +54,10 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. No content was rewritten.
 
 # ⚠️ 2026-08-02 UPDATE — VERDICT OVERTURNED: OI _IS_ available at source (already in the corpus under `derivative_ticker`)
 

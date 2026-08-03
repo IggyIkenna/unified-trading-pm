@@ -13,7 +13,7 @@
 # inline backtick code span present — so despite the originating issue doc's framing, this is not
 # specifically an inline-code-unbreakable-token bug, it's a broader list-item-continuation
 # idempotency bug in prettier's markdown proseWrap printer. Root-cause + repro recipe:
-# plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
+# plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
 #
 # Corpus impact discovered while root-causing (2026-08-03): NOT limited to the 2 originally-
 # flagged instances — a corpus-wide survey found 80+ active plan/issue/codex docs already carrying
@@ -133,7 +133,7 @@ if [ "$QUIET" -eq 0 ]; then
   if [ "$OK" -eq 1 ]; then
     echo "✅ check_prosewrap_padding: ${TOTAL} violating line(s) (baseline ${BASELINE_COUNT})"
   else
-    echo "❌ check_prosewrap_padding: ${TOTAL} violating line(s) (baseline ${BASELINE_COUNT}) — a NEW prosewrap-padding instance landed (or an existing one grew). See plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe. Never raise the baseline."
+    echo "❌ check_prosewrap_padding: ${TOTAL} violating line(s) (baseline ${BASELINE_COUNT}) — a NEW prosewrap-padding instance landed (or an existing one grew). See plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe. Never raise the baseline."
   fi
 fi
 
@@ -144,7 +144,7 @@ if [ -n "$UPDATE_BASELINE" ]; then
   fi
   cat > "$BASELINE_PATH" <<EOF
 # Baseline for check_prosewrap_padding.sh — prettier proseWrap continuation-padding corruption
-# (see plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the
+# (see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the
 # root cause + repro recipe, and
 # plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md for the corpus-wide
 # remediation backlog this baseline tracks down over time).

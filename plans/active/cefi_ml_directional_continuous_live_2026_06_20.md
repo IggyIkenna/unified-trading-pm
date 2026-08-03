@@ -142,9 +142,9 @@ context_scope:
 
 - [ ] [RESEARCH] P2. **DEFERRED — Volume as a first-class feature for the cs/ext ML models** (operator 2026-06-24).
       **Current state (audited 2026-06-24):** the cs panel uses volume EXACTLY ONCE — `volz` =
-      `log(v) − log(rolling-96     mean v)` (a single volume-momentum/surprise term); **ext uses NO volume at all.**
-      Price and volume are badly under-paired despite 1m candles giving rich volume data, and volume↔price confluence is
-      a classic edge. **Build + ablation-test over multiple horizons:** (1) **VWAP** from 1m (typical-price × volume,
+      `log(v) − log(rolling-96 mean v)` (a single volume-momentum/surprise term); **ext uses NO volume at all.** Price
+      and volume are badly under-paired despite 1m candles giving rich volume data, and volume↔price confluence is a
+      classic edge. **Build + ablation-test over multiple horizons:** (1) **VWAP** from 1m (typical-price × volume,
       rolling) + price-vs-VWAP distance; (2) **multi-horizon volume momentum** (volume vs trailing average at several
       windows) + volume z-score/surprise; (3) **volume × price confluence** (volume confirming vs diverging a price move
       — a confluence filter); (4) **volume-based price-prediction** assumptions + price↔volume correlation features; (5)

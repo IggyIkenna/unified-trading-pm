@@ -73,7 +73,7 @@ context_scope:
       `terraform/gcp/bigquery_feature_external_tables.tf` — dataset `uts_feature_external` + a `for_each` BQ external
       table per `(asset_group, data_type)` (6-entry seed: cefi/tradfi/defi trades/ohlcv_1m/dex_swaps + 3 feature
       groups), `source_format=PARQUET` + `hive_partitioning_options` over the canonical
-      `{pipeline_mode}/{asset_group}/{data_type}/     {timeframe}/{day}` prefix, `require_partition_filter=true` (cost
+      `{pipeline_mode}/{asset_group}/{data_type}/{timeframe}/{day}` prefix, `require_partition_filter=true` (cost
       guardrail). Read-only over GCS — no copy. Full `(asset_group, data_type)` set rides the canonical v9 migration
       landing (stable schema). **NOT applied** (land-the- code; operator applies post-migration).
 - [ ] [CODE] P2. **Feature compute on BQ** — a BQ-SQL expression path for the delta_one feature registry (start with the

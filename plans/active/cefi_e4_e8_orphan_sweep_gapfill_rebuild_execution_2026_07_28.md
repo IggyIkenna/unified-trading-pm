@@ -181,8 +181,8 @@ step.
       deletion, this phase is DONE-BY-FAIT-ACCOMPLI (nothing left to gap-fill) — flip with that citation. If it finds a
       genuine residual gap, this phase must be RE-SCOPED to a from-snapshot restore (there is no live bucket left to
       `--also-legacy` read from) rather than run as currently written. ~~The 5,233-cell legacy-only gap-fill:
-      `MIGRATION_EXTRA_ARGS="--also-legacy" bash     launch-canonical-migration-vm.sh cefi <start> <end> full` (bare
-      `cefi` category — additive-only, no `--drop-stale` in this phase; `--also-legacy` reads the legacy
+      `MIGRATION_EXTRA_ARGS="--also-legacy" bash launch-canonical-migration-vm.sh cefi <start> <end> full` (bare `cefi`
+      category — additive-only, no `--drop-stale` in this phase; `--also-legacy` reads the legacy
       `market-data-tick-cefi` bucket as an additional source and copies any still-missing cell forward to canonical).
       Shard/bigger-mem: the 1.9M legacy-object listing previously stalled an `e2-standard-4` (use
       `MACHINE_TYPE=e2-standard-16` or shard the date range across multiple VMs). Done when: a fresh legacy-only-cells

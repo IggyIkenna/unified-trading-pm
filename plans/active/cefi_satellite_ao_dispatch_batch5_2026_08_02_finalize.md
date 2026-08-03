@@ -99,7 +99,7 @@ context_scope:
       `_finalize` sibling that both the naming SSOT's shape (b) and `task_template.md` § 4's finalize-plan-coverage rule
       require of an AO-dispatched doc — batch5 identified this gap and deliberately left it to this plan rather than
       inventing a doc mid-batch. Author `execution_service_bitfinex_bitget_native_unreachable_finalize_<today>.md`
-      following shape (b): `depends_on:     [execution_service_bitfinex_bitget_native_unreachable_2026_07_28]` +
+      following shape (b): `depends_on: [execution_service_bitfinex_bitget_native_unreachable_2026_07_28]` +
       `gate_on_depends: true` + `sequential: true`, tagged `[ao-dispatch, close-out, reclassification, na-audit]`, whose
       todos reconcile that doc's factory.py wiring checkbox and run the 6-step archival ritual on it. **Check first
       whether another worker has since created it** — this is a known-shared corpus gap, a sibling audit may have closed
