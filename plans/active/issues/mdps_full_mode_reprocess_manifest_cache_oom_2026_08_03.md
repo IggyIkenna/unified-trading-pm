@@ -166,19 +166,34 @@ not another blind resource-scaling guess — see the P1 todo below.
 
 ## Todos
 
-- [ ] [INFRA] P1. **Escalated from P3 — this is now the confirmed SOLE blocker on the parent doc's shard4 retry, not a
-      nice-to-have.** Root-cause the actual memory growth in `reprocess_sports_odds.py --full` (or the
-      `ManifestWriter`/`read_availability_index()` path it calls) using real memory profiling — e.g. `tracemalloc`
-      snapshots taken every N processed dates, or `objgraph.show_growth()` between iterations — run on a SMALL date
-      range (e.g. 30-50 days, enough to observe the growth trend without a full 571-day/hours-long run) so the profiling
-      loop itself completes quickly. Confirm whether the leak is in the manifest-cache path (candidate 1 above) or the
-      per-date reprocess/adapter path (candidate 2) before designing a fix. A promoted local tracemalloc profiler
-      already exists for a related odds_api backfill OOM (`git log` `market-tick-data-service`, commit
-      `86da3fa1 chore(sports): promote local tracemalloc profiler for     the odds_api backfill OOM`) — check whether
-      it's reusable here before writing a new one. Once root-caused, apply the fix (candidate approaches from the
-      original "Recommended decision" section above still apply if the manifest cache is confirmed as the culprit) and
-      add a regression/load test asserting peak RSS stays bounded over a multi-cycle run. Repo: unified-trading-library,
-      market-data-processing-service.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-03 — root-caused + fixed (candidate 1, the manifest-cache path, confirmed).** Wrote
+      a local tracemalloc/RSS reproduction
+      (`market-data-processing-service/scripts/profile_reprocess_sports_odds_memory_2026_08_03.py`, bounded to 20G via
+      `run-bounded-analysis.sh` — since deleted per its own `Delete-when:` marker now that the fix has shipped) with two
+      isolated arms: Arm A repeated `ManifestWriter.lookup()`'s exact Pre-flight-2 call with
+      `_INDEX_CACHE_TTL`/`_CANONICAL_CACHE_TTL` patched down to 2s (so many reload cycles fit in a short run); Arm B ran
+      the real `reprocess_date(..., dry_run=True)` (skips the manifest lookup + write entirely) over real dates to
+      isolate candidate 2. Arm A's iteration 0 alone measured ~12.4GB RSS for ONE `lookup()` call (`malloc_trim(0)`
+      recovered only ~54MB — ruling OUT arena/allocator retention, i.e. this was genuinely referenced, not just
+      unreturned-to-OS); iteration 1 (the next 60s-equivalent reload cycle) OOM'd outright with
+      `numpy._core._exceptions._ArrayMemoryError: Unable to allocate 3.36 GiB for an array with shape (38, 11853040)` —
+      direct proof the sports manifest is ~11.85M rows / 38 columns and `lookup()`'s bare, unfiltered
+      `read_availability_index(bucket)` decodes the FULL schema on every cache-miss cycle, process-global regardless of
+      `--workers` (explaining why worker-count scaling never helped in any of the 3 VM attempts). **Fix**
+      (unified-trading-library@4dc12dbe, was landed as 2 local commits then rebased+pushed by quickmerge):
+      `ManifestWriter.lookup()` now derives `filters=[("date", "==", key["date"])]` from the row_key (every row_key
+      already requires a non-empty `date` — `_coerce_row_key` raises otherwise, so this fires on every real call) and
+      threads it into `read_availability_index(bucket, filters=...)`. Extended the row-group-pushdown mechanism (already
+      proven on the slim/`columns=` path, `mtds_backfill_vm_startup_oom_rc137_2026_07_14`: ~14.86 GiB → ~5 MB for a
+      single-day filter) to the full-schema (`columns=None`) path too via a new `_read_availability_index_full_filtered`
+      — `lookup()`'s own reasoning against `columns=` narrowing (needs ~25 of ~30 columns for the returned
+      `ManifestRow`) only rules out column pruning, not row pruning; the two are orthogonal. Bypasses
+      `_INDEX_CACHE`/`_CANONICAL_CACHE` when filtered (mirrors the slim path's own cache-bypass). Added 6 regression
+      tests (`tests/unit/test_manifest_full_read_date_filter.py`): full V8 schema still returned (not narrowed), filter
+      correctly isolates the matching date only (no cross-date leak), filtered reads bypass both caches, an unfiltered
+      bare call is completely unaffected (back-compat), and `lookup()` actually derives + passes the filter end-to-end.
+      unified-trading-library's full `quality-gates.sh` passed both before and after (149s / 205s). Repos:
+      unified-trading-library@4dc12dbe.
 - [ ] [INFRA] P2. Once the P1 root-cause + fix above lands, re-run shard4's `full`-mode retry
       (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) and verify the manifest for the 26
       residual dates (18 `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated, live-reverified
