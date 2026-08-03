@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [data-correctness, mdps, candle, manifest-completeness, orphan-real, honest-absence, big-finding]
 related:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/orphan-object-detection.md,
@@ -50,7 +50,7 @@ context_scope:
     deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
     /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
   ]
 depends_on: []
 ---

@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [data-correctness, features, manifest-completeness, orphan-real, honest-absence, phantom-row, big-finding]
 related:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
   ]
@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
     features-service/scripts/feature_orphan_sweep.py,

@@ -24,7 +24,7 @@ tags: [orphan, orphan-real, lineage, manifest-completeness, mdps, features, ml, 
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
