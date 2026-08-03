@@ -260,16 +260,26 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       defect is already 0, the newly-found adjacent issue needs its own investigation before any write) — so the
       reversibility pre-clearance above was not exercised. Repo: market-tick-data-service / instruments-service
       (read-only verification only, no code shipped this task).
-- [ ] [DATA] P2. **market-tick-data-service** — investigate the KALSHI-venue scaffold-row provenance mislabel surfaced
-      by the P1 close-out above: 129,227 `market-data-tick-pred-prd-central-element-323112` rows carry `venue=KALSHI`
-      with `pipeline_mode`/`source` stamped `polymarket_clob`/`polymarket_gamma_api` (128,349 `empty_confirmed`, 828
-      `expected_unattempted`, 50 `attempted_failed`; 0 `captured` — this is NOT the captured-row defect
-      `market-tick-data-service@3397e7ae` already fixed), spanning dates back to 2018 (pre-dating Kalshi's real launch),
-      across `trades`/`book_snapshot_5`/`prediction_canonical_question_group`/ `market_lifecycle` data_types. Root-cause
-      where these scaffold/expected rows are seeded (likely the manifest's expected-row enumerator, not
+- [x] ✅ [DATA] P2. **market-tick-data-service** — investigate the KALSHI-venue scaffold-row provenance mislabel
+      surfaced by the P1 close-out above: 129,227 `market-data-tick-pred-prd-central-element-323112` rows carry
+      `venue=KALSHI` with `pipeline_mode`/`source` stamped `polymarket_clob`/`polymarket_gamma_api` (128,349
+      `empty_confirmed`, 828 `expected_unattempted`, 50 `attempted_failed`; 0 `captured` — this is NOT the captured-row
+      defect `market-tick-data-service@3397e7ae` already fixed), spanning dates back to 2018 (pre-dating Kalshi's real
+      launch), across `trades`/`book_snapshot_5`/`prediction_canonical_question_group`/ `market_lifecycle` data_types.
+      Root-cause where these scaffold/expected rows are seeded (likely the manifest's expected-row enumerator, not
       `rebuild_prediction_manifest.py`'s per-capture write site) and correct the provenance stamp at the write site,
       then re-emit or directly correct the historical rows following the same snapshot-then-write, stop-on-surprise
-      precedent as this doc's prior purges.
+      precedent as this doc's prior purges. — instruments-service@afdb1ad6 + market-tick-data-service@ce275975 +
+      evidence in "Update 2026-08-03" below.
+- [ ] [DATA] P3. (found while fixing the todo above) **instruments-service** — audit `enumerate_expected_universe.py`'s
+      `_derive_pm_source_transport` for the SAME bug class (venue-blind `SOURCE_PRIORITY[0]` stamping) against every
+      OTHER `_VENUE_OVERRIDES` venue outside `asset_group="prediction"` (e.g. `tradfi` FRED/ECB/OFR/IBKR, `defi`
+      CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS) — spot-checked live 2026-08-03:
+      `_derive("tradfi", "ohlcv_1d", venue="IBKR")` currently returns `batch_fred`/`fred` (wrong — should be
+      `batch_ibkr`/`ibkr` per the venue override), an untouched sibling instance of this exact defect, out of scope for
+      this P2's prediction-only fix (rule-11 cross-AG verification not yet run for those asset_groups). Verify + fix at
+      the source, then backstamp affected historical rows following this todo's
+      `restamp_prediction_kalshi_scaffold_     provenance_2026_08_03.py` precedent.
 
 ## Update 2026-07-27 (slot-16) — combined residual-row diagnosis (batch2 todo): both sub-items already resolved, 0 rows to purge/backfill
 
@@ -298,3 +308,24 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **data_engineering 2026-08-03 (slot-2)**: closed todo 3 (KALSHI scaffold-row provenance mislabel). Root-caused to
+  `instruments-service/scripts/enumerate_expected_universe.py`'s `_derive_pm_source_transport` — it took
+  `SOURCE_PRIORITY[("prediction", data_type)][0]` (Polymarket-first) unconditionally instead of venue-resolving, so
+  every KALSHI scaffold row was stamped with Polymarket's provenance. Fixed by venue-resolving via
+  `derive_pipeline_mode_for_row` FIRST for `asset_group="prediction"` (its `_VENUE_OVERRIDES["KALSHI"] == BATCH_KALSHI`,
+  the same table the already-fixed real capture writer uses) — provable safe superset for POLYMARKET rows and every
+  other asset_group (unreachable branch there); 13 new unit tests. `instruments-service@afdb1ad6`. Then backstamped the
+  live corpus via a new `market-tick-data-service/scripts/restamp_prediction_kalshi_scaffold_provenance_2026_08_03.py`
+  (additive per-VM-shard write — race-free vs the live per-minute consolidator, since `pipeline_mode`/`source` aren't
+  consolidator dedup-key columns): dry-run measured 12,006 live target rows (this todo's originally-cited 129,227 had
+  already collapsed via unrelated ongoing corpus maintenance — same churn pattern as this doc's earlier "Class-B...
+  13,292 -> 51" finding), 0 captured (confirms scope is disjoint from the already-fixed captured-row defect), applied,
+  consolidator-merge verified clean (0 residual mismatched KALSHI rows) 2026-08-03T17:1x.
+  `market-tick-data-service@ce275975` (+`d3260d2f` dropping 2 unneeded `# type: ignore` the precedent script's pattern
+  didn't actually need here since basedpyright's `include=["market_tick_data_service"]` never typechecks repo-root
+  `scripts/`). Also found + fixed a PRE-EXISTING, unrelated repo-wide QG false-positive blocking ship
+  (`market-tick-data-service@5893ae3e`): STEP 5.95's naive `# type: ignore` text-count ratchet was tripped by a
+  docstring in `scripts/pipeline_e2e_check.py` merely _mentioning_ the phrase in prose (landed 2026-08-03 in `bccb95ea`,
+  after the 2026-07-30 ratchet freeze) — rephrased, no behavior change. Filed a new P3 todo above for the sibling bug
+  class in OTHER `_VENUE_OVERRIDES` venues (spot-checked live: `tradfi`/IBKR currently mis-stamps `batch_fred` — out of
+  this P2's scope, needs its own rule-11 cross-AG verification).
