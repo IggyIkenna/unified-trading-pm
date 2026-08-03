@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                      > (or any other role) without going through terraform at all. See
-                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                              > (or any other role) without going through terraform at all. See
+                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -442,7 +442,32 @@ Two independent gates because Group A and Group B are at different stages:
       `launch-gcs-migration-bundle-vm.sh`; the other 2 need their own enumeration), or (c) extend
       `lc_tier_service_account` with a migration mode AND scope the grant narrowly to match. Recommend (b) — mirrors
       this plan's own least-privilege design intent for the tier SAs. Once ruled + granted, live-verify via a real write
-      (not just `get-iam-policy`) before unblocking P2.2d2c2.
+      (not just `get-iam-policy`) before unblocking P2.2d2c2. **2026-08-03 — the "other 2 need their own enumeration"
+      half is NOT a quick lookup, and one may be stale:** (1) `launch-legacy-bucket-migration-sharded.sh` invokes
+      `migrate_legacy_tick_buckets_to_canonical.py`, which does **not exist anywhere in the current
+      market-tick-data-service checkout** (confirmed by a repo-wide filename search, not just the expected path) — the
+      launcher's own header declares
+      `Lifecycle: oneoff / Delete-when: after     prod-run verified + GCS orphan-sweep=0`, so this is plausibly a
+      COMPLETED migration from an earlier phase (`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 5)
+      rather than a currently-live blocker on `uts-migration-sa`. (2) `launch-bucket-rsync-vm.sh` is a GENERIC rsync
+      tool taking `--source-bucket`/ `--dest-bucket` as CLI args, not fixed to one bucket — its own usage examples show
+      it used across several unrelated flat-bucket families (`market-data-tick-{ag}`, `strategy-store-{ag}`,
+      `manual-audit`, ...), so there is no single prefix to scope a CEL condition around; it would need to match the
+      GENERAL flat/legacy naming convention, a real IaC design question in its own right, not an enumeration.
+- [ ] [DATA] P2.2g. **NEW 2026-08-03 — resolve the staleness/scope question the P2.2f finding above raised, per operator
+      direction: "naming conventions should match reality and script should exist else docs update."** (1) Confirm
+      whether `launch-legacy-bucket-migration-sharded.sh`'s Phase-5 migration is actually complete (check the referenced
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` plan's own status/todos, and whether
+      `migrate_legacy_tick_buckets_to_canonical.py` was deleted post-completion vs. never committed/misnamed). If
+      complete: delete the launcher (its own `Lifecycle: oneoff` header already says so) and drop it from P2.2f/
+      P2.2d2c2's scope — it needs no IAM grant. If genuinely still needed: restore or correctly re-reference the script
+      so the launcher is actually runnable, and keep it in scope. Either way, fix every doc (this plan +
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`) so the launcher's documented state matches
+      reality. (2) For `launch-bucket-rsync-vm.sh`: since it's generically parameterized across multiple flat bucket
+      families rather than one fixed name, decide the CEL condition shape for P2.2f option (b) that covers "any
+      flat/legacy-named bucket" (e.g. absence of the `-{env}-` tier suffix) rather than trying to enumerate a
+      per-launcher prefix list. **Done when**: P2.2f's "the other 2 need their own enumeration" is either resolved with
+      a concrete condition/decision for both, or one is confirmed out of scope with docs updated to match.
 - [x] ✅ [CODE] P2.2d2c. **NEW, split from P2.2d2b 2026-08-01 (slot-7).** Wire the 3 launchers blocked on the
       migration-SA write-grant gap (P2.2f above): `launch-legacy-bucket-migration-sharded.sh`,
       `launch-gcs-migration-bundle-vm.sh`, `launch-bucket-rsync-vm.sh` — all three read/write a LEGACY (non-env-tiered,
@@ -565,6 +590,15 @@ Two independent gates because Group A and Group B are at different stages:
 
 ## Progress Log
 
+- **2026-08-03 (interactive session)**: operator asked to apply P2.2f's recommended (b) grant for the 3 launchers.
+  Confirmed `launch-gcs-migration-bundle-vm.sh`'s pattern was already usable, but the other 2 needed real research, not
+  a lookup — found `launch-legacy-bucket-migration-sharded.sh`'s script is missing entirely (likely a completed,
+  deletable one-off) and `launch-bucket-rsync-vm.sh` is generically parameterized across multiple bucket families (no
+  single prefix to condition on). Did NOT apply a guessed/overly-broad IAM grant given this is a live GCP security
+  change — filed P2.2g above instead of forcing it through. Separately, ruled
+  `unified_trading_sa_live_iam_drift_vs_ terraform_2026_07_31.md`'s P1 (keep both self-escalation-capable roles for now,
+  insufficient evidence to safely revoke either) and dispatched its P2 (terraform-import all 24 as-is) via the live
+  blocked-queue.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **slot-6 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
   `uts-shared- deployment-api` live-traffic cutover). Did NOT proceed — confirmed both gating docs are still
