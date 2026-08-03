@@ -171,3 +171,7 @@ RECLASSIFY bar since it reads more action-shaped than a pure root-cause hunt —
 instrumentation (print-based env/pid tracing) is already documented as tried and clean across 8 runs in the sibling
 monkeypatch-leak doc, and this doc's own bisection found non-deterministic clean/dirty outcomes even under confirmed-
 serial execution. Surface-bounded, substance-unbounded — stays KEEP-NA. No RECLASSIFY, no ARCHIVE.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope, still accurate (4 entries) — no changes.

@@ -118,3 +118,4 @@ described work was already done, complete, and separately documented.
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-stamp, unchanged. Confirmed via git that the
   only change since the 2026-07-30 marker is a mechanical `context_scope` frontmatter backfill (2026-08-03) — no content
   drift. Same reasoning holds: the sole open item is an explicitly-unscoped design question, not a bounded task.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

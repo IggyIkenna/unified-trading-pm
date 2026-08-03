@@ -189,3 +189,4 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   ratchet) and STEP 5.95 (DTZ/TID251 ratchet), which also run in the same QG pass — cosmetically confusing in the log
   (two different checks both print "STEP 5.94"/"STEP 5.95") but functionally harmless, and consistent with this file's
   pre-existing convention. Todo 3 (operator policy call) remains open, not in this task's scope.
+- **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.

@@ -37,6 +37,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    features-service/tests/multi_timeframe/unit/test_cli_main.py,
+    features-service/tests/multi_timeframe/integration/test_mtf_deps_integration.py,
+    features-service/tests/unit/test_cli_dispatch.py,
+  ]
 ---
 
 # What
@@ -130,3 +136,4 @@ Two blind spots the in-process test has, that the subprocess test closes:
   registry). `doc_type: issue` living under `plans/active/issues/` is structurally exempt from the
   finalize-plan-coverage rule (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only, non-recursive —
   confirmed by direct source read) — no companion finalize doc authored.
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

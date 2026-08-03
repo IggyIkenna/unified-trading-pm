@@ -226,4 +226,10 @@ poisoning to `github-actions-deploy@…` during unrelated IAM work, worked aroun
 That entry explicitly self-classifies as "no new candidate direction — logged as further frequency evidence only", and
 the Todos section is untouched. The head todo still carries `[OPERATOR-DECISION]` with four unadopted directions (a)-(d)
 for a shared-infrastructure auth design affecting every CI job on the host; todo 2 is still stated blocked on that
-decision; todo 3 is still a partial mitigation of the same surface. Correctly NA.
+decision; todo 3 is still a partial mitigation of the same surface.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged from prior scout — still accurate: the 2
+  sibling same-day incident docs, the 2 codex SSOTs the root-cause section cites, and `bootstrap_vm.sh` STEP 5.5).
+  Correctly NA.

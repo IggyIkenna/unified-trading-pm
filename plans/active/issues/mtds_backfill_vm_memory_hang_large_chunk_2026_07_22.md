@@ -37,10 +37,11 @@ locked_since:
 context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
+    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
     unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py,
-    deployment-service/scripts/vm/launch-mtds-backfill-vm.sh,
   ]
 assigned_vm: NA
 resolved_by:
@@ -591,3 +592,9 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   hypothesis remains neither confirmed nor refuted — next resumer should re-run either the lightweight sampler
   (preferred — near-zero overhead) or a `memray --aggregate` (much smaller/faster output mode, untried this session)
   once credits are available again, rather than assuming the hypothesis from the 2026-07-31 entries above is settled.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the sports odds_api adapter
+  (`odds_api_adapter.py`, the current active root-cause target) and `setup-data-pipeline-vm.sh` (the shared
+  `mtds_chunk_loop.sh` fail-loud generator used by both incidents), replacing `launch-mtds-backfill-vm.sh` to make room
+  given the doc has grown to cover a second, still-open sports/odds_api OOM investigation. The promoted
+  `market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py` profiling script no longer exists on
+  disk (checked; likely deleted per the one-off-script lifecycle convention) — not added.

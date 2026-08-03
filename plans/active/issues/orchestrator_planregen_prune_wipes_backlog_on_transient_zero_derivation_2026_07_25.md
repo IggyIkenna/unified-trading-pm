@@ -152,3 +152,6 @@ incident window.
   banner-guarded, local-only-homed fleet-core rewrite). Annotated in place so the next reader cites the current status
   instead of the now-superseded "active planning doc" framing. Conclusion unchanged (do not dispatch). `assigned_vm`
   untouched.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the
+  duplicated-content doc, the archived batch1 plan that shipped the two DONE todos, and the pool-exhaustion trigger
+  doc).

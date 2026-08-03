@@ -41,6 +41,8 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
     market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
     market-data-processing-service/market_data_processing_service/app/core/canonical_writer_manifest.py,
+    market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py,
+    market-data-processing-service/market_data_processing_service/app/core/batch_workers.py,
   ]
 ---
 
@@ -403,3 +405,7 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   AO-backlog round-trip would. Flagging the now-clear `[DATA] P2` blocker here as an actionable note for the
   operator/main agent rather than leaving it silently unremarked. The 3 `[DIAG]` crash-hunt todos and Finding 5's own 2
   todos remain live-investigation work with stated done-whens, consistent with the prior pass's reasoning.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `candle_write_mixin.py` (Finding 5's
+  root-cause file, open `[CODE] P2` todo) and `batch_workers.py` (Findings 3/4's `_collect_future_result` crash-hunt,
+  open `[DIAG]` todos); the original 4 entries (Finding 2's FetchEvidence-gate call sites) remain accurate and kept.

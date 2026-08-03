@@ -206,3 +206,7 @@ not another blind resource-scaling guess — see the P1 todo below.
       manifest-verification + residual-date accounting is tracked in the sibling parent doc
       (`mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`'s P2 todo, its own action item) rather than
       duplicated here. Repo: market-data-processing-service, deployment-service — no new code, verification only.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

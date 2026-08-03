@@ -253,3 +253,4 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   (`market-tick-data-service@cd8ce74e2362d529323e7c4f0b3c06cc3dc6a101`, verified via `git show` + `quality-gates-v2`
   promotion-PR history) — this was purely a dual-flip gap, not missing work. Flipped the checkbox, no code changes
   needed.
+- **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.

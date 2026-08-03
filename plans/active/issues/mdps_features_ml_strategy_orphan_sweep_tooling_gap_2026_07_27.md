@@ -61,9 +61,10 @@ context_scope:
   [
     /codex/02-data/orphan-object-detection.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
-    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
     market-data-processing-service/scripts/candle_orphan_sweep.py,
+    features-service/scripts/feature_orphan_sweep.py,
+    ml-service/ml_service/training/app/core/manifest_gap_handler.py,
   ]
 depends_on: []
 ---
@@ -337,3 +338,8 @@ lets each one be built, validated, and run to real completion on its own timelin
   (mirrors todo 2's own build/validate split), genuinely done. Added todo 2d for the real-data Tier-2 SPOT VM validation
   (never in-session per STEP 0.56), mirroring todo 1's + todo 2b's own real-prod-data validation pattern, rather than
   skip it silently.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — swapped the two MDPS-candle-layer-specific entries
+  (`estate_orphan_assessment_2026_07_21.md`, `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`, both about
+  todo 1, now DONE) for entries matching the doc's current open work in features/ml/strategy:
+  `features_service_manifest_coverage_gap_2026_08_03.md`, `features-service/scripts/feature_orphan_sweep.py`,
+  `ml-service/.../manifest_gap_handler.py`).

@@ -162,3 +162,4 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the sole
   open `[REVIEW] P3` remains an open design/judgment call (new cgroup-v2 memory-stat reader + a new deployment-ui
   dashboard tile), correctly left NA/unbuilt per the 2026-07-30 self-assessment. No change.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

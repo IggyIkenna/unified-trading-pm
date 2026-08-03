@@ -50,6 +50,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
+    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     ml-service/ml_service/training/app/core/cloud_feature_provider.py,
     ml-service/ml_service/training/cli/handlers/pipeline_handler.py,
@@ -203,3 +204,6 @@ same CLI path would hit the identical wall.
   doc fixed the dtype crash) but its value is still contingent on an unresolved judgment call — that same archived doc
   found the CLV target resolves 100% flat for the 2026-04 window, so a bounded "just retrain" todo would first need a
   human call on window selection before it is genuinely worker-determinable.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, the doc directly explaining the "unresolved
+  judgment call" the 2026-08-03 na-eligibility-audit entry above references.

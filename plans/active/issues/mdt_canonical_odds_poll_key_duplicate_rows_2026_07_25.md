@@ -209,3 +209,5 @@ for this exact bug. Ran dry-run → `--apply` → re-verify dry-run against the 
 untouched (different mechanism — both legs vary simultaneously, not the single-team-resolution-split this rule targets).
 Filed the 216-residual as a new follow-up todo above (P3, scoped + done-when'd) rather than guessing a fix for a pattern
 this rule wasn't built for.
+
+**context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

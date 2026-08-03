@@ -77,7 +77,7 @@ context_scope:
   [
     /codex/05-infrastructure/deployment-observability.md,
     deployment-api/deployment_api/routes/_vm_health.py,
-    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-api/deployment_api/routes/deployments_inventory/,
     deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
   ]
@@ -549,3 +549,7 @@ resolution); todo 5's audit deliverable is complete but its own follow-up tracki
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries — fixed a stale path,
+  `deployment-api/.../routes/deployments_inventory.py`, which has since been refactored from a single file into a
+  package (`deployments_inventory/__init__.py` + `_classification.py` + `_aggregation.py` + ...); repointed to the
+  directory. The other 4 entries were unchanged/still accurate).

@@ -161,3 +161,4 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   but its content is a bulk `assigned_vm: planning -> NA` capacity-management reclassification across 25 unrelated docs,
   not a substantive answer to the isolated-incident-vs-pattern question this todo asks. The open governance question
   remains genuinely unresolved; doc correctly stays NA.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

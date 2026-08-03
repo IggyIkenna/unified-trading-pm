@@ -148,3 +148,5 @@ than acted on:
   operator-gated). **That verdict could not be persisted into the doc** for the reason this issue documents — it is
   recorded here instead so the audit result is not lost, and so whoever resolves the cap question can paste it back. The
   extraction itself is unaffected and stands: batch8 + its gated finalize twin were created normally.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the two
+  prior over-cap-blocks-edit instances, the over-cap doc itself, and `check_line_caps.sh`).

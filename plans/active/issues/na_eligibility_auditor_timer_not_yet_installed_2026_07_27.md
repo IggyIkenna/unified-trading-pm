@@ -134,3 +134,4 @@ which is why it's tracked here instead of folded into the code commits above.
   this exact surface and nothing material has changed since). Flagging as a process note for whoever next touches this
   skill's own Phase 3: a "RECLASSIFY, conflict-cleared" Progress Log entry is not sufficient proof of an applied flip —
   always diff the entry's stated verdict against the doc's ACTUAL current frontmatter before trusting it.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

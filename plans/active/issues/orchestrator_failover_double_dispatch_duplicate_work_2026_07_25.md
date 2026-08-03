@@ -60,10 +60,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md,
+    /plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md,
+    /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
     agent-orchestrator/server/routes/slots_worker.py,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/dispatch.py,
   ]
 depends_on: []
 ---
@@ -256,3 +257,7 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   alongside it — correctly left NA as a doc, with the current_task-clearing item flagged as a candidate for its own
   future scoped AO-dispatch batch (a decision for `/ag-closeout-audit` or a future satellite-batch draft, not this run's
   verdict rubric, which only flips `assigned_vm` in place — never splits a doc).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the now-archived `batch1` plan and the
+  general single-vm-architecture codex (background, not load-bearing for the 2 remaining todos); added the 2 sibling
+  docs sharing the `/done`-handler file-collision gate on `slots_worker.py` plus `dispatch.py` (the
+  current_task-clearing item's other touched file).

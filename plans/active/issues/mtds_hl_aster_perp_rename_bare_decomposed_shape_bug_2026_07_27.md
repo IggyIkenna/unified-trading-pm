@@ -201,3 +201,7 @@ sibling todo reads `[x]`.
       bare-filename write site (repo: market-tick-data-service). If confirmed still active, file a proper fix todo; if
       it was a one-time historical artifact (e.g. from the original 2026-06-22 migration's own incomplete pass), this
       todo resolves as `no-issue-found`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope, still accurate (3 entries) — no changes.

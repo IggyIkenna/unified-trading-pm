@@ -48,6 +48,7 @@ context_scope:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
     market-data-processing-service/market_data_processing_service/app/adapters/tradfi/trades_adapter.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
   ]
 ---
 
@@ -138,3 +139,9 @@ dropped/flagged as a single bad-row anomaly.
       features-service and any other reader of the `timestamp` column before changing the alias).
 - [ ] [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
       confirm the candle path now degrades gracefully instead of failing outright.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `market-tick-data-service`'s
+  `symbol_rules.py`, the confirmed root of the `ts_event`→`timestamp` naming collision the open P3 todo targets; the 4
+  pre-existing entries were unchanged/still accurate).

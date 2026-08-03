@@ -55,12 +55,12 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    scripts/plan-hygiene/check_line_caps.sh,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
+    /plans/active/task_template.md,
   ]
 depends_on: []
 source:
@@ -293,3 +293,7 @@ scope on every run. Fix belongs with Finding 3's script todo.
   `parent_epic: agent_operating_framework_master` claims Finding 3's specific fix (marker-format consolidation +
   `task_template.md` exclusion) — CLEAR. Flipped `assigned_vm: NA -> planning`, `execution_scope` to
   `orchestrator-agent`. No finalize-plan companion needed (`doc_type: issue`, structurally exempt).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — retargeted onto the doc's now-remaining open work
+  (Finding 3's marker-format script + `task_template.md` exclusion, Finding 4's line-cap gate) since Findings 1 and 2
+  are now closed; added the two concrete script targets (`generate_na_doc_tranche_inventory.py`, `check_line_caps.sh`)
+  and `task_template.md` that were previously named in prose but not cited.

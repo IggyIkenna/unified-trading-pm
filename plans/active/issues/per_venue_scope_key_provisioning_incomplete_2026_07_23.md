@@ -166,3 +166,5 @@ All three are real design/priority calls, not something determinable from code o
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — One item is genuinely
   human-only (operator's own exchange-login credential creation, doc-confirmed); other two are explicit design/priority
   judgment calls the doc itself labels as such.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the
+  secret-naming SSOT, the archived source plan, and the `AdapterScope`/`ScopedCLOBAdapter` enforcement file).

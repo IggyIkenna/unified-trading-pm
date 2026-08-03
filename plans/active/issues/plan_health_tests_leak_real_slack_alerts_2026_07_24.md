@@ -47,6 +47,8 @@ context_scope:
     agent-orchestrator/tests/test_plan_health.py,
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/notifications/slack.py,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    scripts/dev/slack-read-channel.py,
   ]
 depends_on: []
 ---
@@ -225,3 +227,4 @@ whole suite (1609 passed).
   `secretmanager.versions.access` grant to `unified-trading-sa` plus REMOVING the fallback. Deliberately NOT
   reclassified: dispatching the todo as written would ship banned-pattern code, and rewriting its substance is a scope
   change beyond a mechanical citation fix.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

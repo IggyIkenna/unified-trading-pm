@@ -126,3 +126,4 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   operator keep/delete decision (options) A/B/C' block; todos 1, 2 and 8 each say 'pending operator' / 'operator-design
   adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
   launcher-deletion blast radius is exactly what the A/B/C ask covers
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

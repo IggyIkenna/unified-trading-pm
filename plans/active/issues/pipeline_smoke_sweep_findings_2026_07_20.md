@@ -123,3 +123,6 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
   `/data-pipeline-reconciliation`'s scope, not a plan-hygiene classification pass), so sub-items 2-3 remain unverified,
   not resolved. Given this doc is P1 and now 2+ weeks stale with an unexecuted self-instruction, flagging in this run's
   report for operator/main-agent attention rather than leaving it quietly re-marked KEEP-NA.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the
+  bucket-consolidation + disk-starvation archived sibling docs and the batch1 satellite plan that analysed this doc's
+  "Still open" section).

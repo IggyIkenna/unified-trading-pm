@@ -248,3 +248,4 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
 - **2026-08-03 (slot-6)**: Shipped the exec-dispatch wiring todo — `deployment-service@e7d17f2` (see the flipped
   checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
   scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
