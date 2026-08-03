@@ -250,4 +250,5 @@ path") without needing a separate runner-install-time env var.
 - **Regression sweep**: ran all 14 existing `test-qg-*.sh`/`test-trap-release.sh` governor suites — 13/14 green, 1
   (`test-qg-mem-cap.sh`) exits non-zero on a macOS-only `systemd-run`-absent SKIP, confirmed **identical** via
   `git stash` before this change (pre-existing environment gap, not a regression).
-- **Committed**: `unified-trading-pm@<pending — see next commit>`.
+- **Committed**: `unified-trading-pm@fada7dc20` (landed on LDR trunk; `ldr-to-main-promote.yml` drains PM→main,
+  ~15-30min SLA).
