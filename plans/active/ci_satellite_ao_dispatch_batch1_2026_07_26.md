@@ -744,10 +744,27 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       confirmation that the current codebase state, including these commits' content, is CI-clean. No residual defect
       traced to these specific commits; verification closed, no follow-up fix required. Evidence: gh API run IDs cited
       above, all queryable via `gh api repos/IggyIkenna/<repo>/actions/runs/<id>`.
-- [ ] [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
+- [x] ✅ [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
       elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
       by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
-      in the record for future triage.
+      in the record for future triage. — **DONE 2026-08-03 (slot 13, data_engineering).** Answer: **both, additively,
+      and in OPPOSITE directions per wall_type** — so "elevated ldr_qg_failure/plan_health" needed splitting, not just
+      confirming. Queried AO `escalation_queue`+append-only `activity_log` directly
+      (`agent-orchestrator/data/state/state.db`; `activity_log` is the reliable source — `resolved_at` gets overwritten
+      on re-escalation). Outage onset ≈18:22-19:44Z 07-29 (`github_actions_billing_wall_recurrence_2026_07_29.md`). 6h
+      buckets straddling onset (pre 12-18Z → outage-evening 18-24Z): `ldr_qg_failure` resolved-`qg_v2_green` **26→1**
+      (~26x collapse) while dispatch/re-attempts stayed flat-or-higher (29→36) — attempts decoupled from resolutions is
+      the zero-job-outage signature (workers reproduce clean locally per ~10 corroborating entries that evening, CI
+      never confirms), layered ON TOP of the separately-tracked host-contention baseline
+      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`/`..._continues_day2_2026_07_29.md`) that was
+      already producing real if slow resolutions hours earlier the same day (26 in 12-18Z, pre-wall). `plan_health` went
+      the OPPOSITE way: new-escalation creation dropped 9→1 (fewer real PR-check transitions once GHA stopped returning
+      results) while its backlog kept draining fine (17→11 resolved) — the outage suppressed `plan_health` creation, it
+      did not elevate it. Corroborating: `github_actions_billing_wall_recurrence_2026_07_29.md` L194-201 already
+      self-flags escalation `agt-dfdd5b` (billing-wall signature) as misfiled into the sibling host-contention doc's
+      Progress Log, unresolved until now — not editing either archived/resolved doc (archival authority is
+      plan_reconciler/main's, not a worker's); recording the separation here instead. No code change — pure
+      historical-record analysis, evidence = the cited SQL against `state.db` + existing doc citations above.
 - [x] ✅ [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a
       lightweight standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
       `ldr-to-main-promote-fleet.yml`/`ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this
