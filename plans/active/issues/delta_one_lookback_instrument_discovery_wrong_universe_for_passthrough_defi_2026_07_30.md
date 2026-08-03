@@ -259,3 +259,12 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   `dispatched` to slot 4 in the live backlog, not yet shipped. Skipping rather than re-launching the same doomed
   `funding_oi` run or idling; see `delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s matching entry
   (`unified-trading-pm@88a43a57d`) for the full cross-reference.
+- **2026-08-03 (slot-9, data_engineering craft, dispatched to this same todo 2)**: re-checked from scratch (not trusting
+  the prior slots' snapshot) — `features-service` fresh-pulled to HEAD `18fd5181`; `git log` on `_passthrough_loader.py`
+  still shows `0699c5db` as the newest commit touching that file (no new commit past the `[BACKEND] P2`
+  join-implementation landed). Cross-checked the live local backlog (`curl localhost:8765/api/backlog`, not just
+  re-reading this doc) directly: `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006` (`[BACKEND] P1`, the
+  symbol-match fix) is still `status: "dispatched", dispatched_to: 5` — genuinely in flight, not stalled/abandoned.
+  Block persists; not a new finding. Did NOT relaunch `funding_oi` (same deterministic failure the prior 2 attempts
+  already reproduced) and did NOT touch `[BACKEND]`-scoped code (craft-scope, not mine to freelance). Skipping this task
+  rather than idling — `[BACKEND] P1` landing is what unblocks re-attempt.
