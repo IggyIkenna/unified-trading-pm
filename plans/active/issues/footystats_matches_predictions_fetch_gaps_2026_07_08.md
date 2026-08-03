@@ -400,3 +400,21 @@ code-fix task). A data_engineering slot with a full session budget should:
   itself stale (it says 'only todo #6 remains', but #6 is `[x]`); the real blocker is the 2026-07-27 doc. Also
   `execution_scope: orchestrator-agent` contradicts `assigned_vm: NA` — left alone, since Phase 3 only corrects
   `execution_scope` on a RECLASSIFY
+- **2026-08-03 (slot-14, data_engineering craft, dispatched via
+  `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`)**: re-ran the typing pass
+  (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py` +
+  `type_footystats_odds_non_covered_leagues_2026_06_29.py`, both `--apply`, consolidator-merge confirmed) per that doc's
+  own todos 1-2 — full details + evidence there. **Still NOT flipping this doc's todo #4** — a genuine residual remains,
+  but it is now precisely explained: the live `pending_fetch` remainder (422 rows as of today: 69 MATCHES + 254
+  PREDICTIONS + 99 ODDS) is EXACTLY this doc's own todo #1 4-league subscription-exclusion population
+  (CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA — MATCHES and ODDS remainders are precisely these 4 leagues and
+  nothing else; PREDICTIONS' remainder is these 4 plus 11 cup/lower-division leagues in the same countries, likely the
+  same mechanism). Root cause: todo #1's write-gate fix (`instruments-service@1af6c92`) only stops FUTURE incidental
+  `captured` writes — it does not and structurally cannot make the typing scripts' `_covered_leagues_for()` heuristic
+  (`≥1 ever-captured row = covered`) forget the historical incidental rows these 4 leagues already accumulated BEFORE
+  the fix shipped, so they read "covered" forever and `pending_fetch` grows by a few rows daily with no re-typing pass
+  ever able to clear it. This is a NEW understanding beyond what todo #4's own park-note anticipated (it expected a
+  one-time re-verify-and-close once #6/#7 landed, not a permanently-regenerating gap) — filed the concrete fix-needed
+  todo in the 2026-07-27 doc (`[CODE] P2`, two candidate directions) rather than here, to keep the fix-tracking in one
+  place; this doc's todo #4 should stay open/blocked on that new todo, not re-dispatch a bare re-verify again (it would
+  just reproduce this same finding).
