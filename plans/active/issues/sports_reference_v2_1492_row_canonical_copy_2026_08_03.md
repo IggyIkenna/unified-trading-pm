@@ -30,6 +30,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
+sequential: true
 drift_direction: advance-code
 depends_on: []
 resolved_by:
@@ -111,3 +112,9 @@ pending exactly this migration.
   - New finding filed as todo 5 above (adjacent to this doc's own scope, not a separate issue doc): an unexplained,
     apparently one-time (not ongoing) migration-script side-effect wrote pipeline_mode-tagged duplicates into the wrong
     (legacy v2, not canonical) tree — low urgency, tracked for a follow-up trace-and-retire pass.
+  - **Dispatch-order gap found + fixed**: this doc had no `sequential: true`, so AO dispatched todo 3 (VERIFY, this
+    session's -003) to slot 14 at 00:31 while todo 2 (COPY, -002) was still actively `dispatched` and in-progress on
+    slot 15 (dispatched 00:25, not yet `done`) — the same sequential-dispatch-order bug class already tracked in
+    `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Added `sequential: true` to this doc's
+    frontmatter to prevent todo 4/5 from suffering the same premature dispatch. Filed a `/blocked` on task -003 rather
+    than duplicate slot 15's in-flight copy work.
