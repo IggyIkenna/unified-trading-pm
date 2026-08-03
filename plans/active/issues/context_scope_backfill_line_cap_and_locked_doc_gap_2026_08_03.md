@@ -103,24 +103,43 @@ across every future incremental inventory run.
   - `plans/active/data_completion_to_100_all_ag_2026_06_21.md` (1000L pre-commit)
   - `plans/active/github_actions_operator_gated_followups_2026_07_17.md` (1000L pre-commit)
   - `plans/active/instruments_completion_tracker_2026_07_06.md` (1000L pre-commit)
-- [ ] [SCRIPT] P2. **Trim or split the 2 near-1000L docs** (same extraction pattern), then re-apply:
-  - `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (999L pre-commit, +10L would-be
-    addition)
-  - `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (999L pre-commit, +12L would-be
-    addition — this doc already has a documented 2026-07-24 split history per its own banner and will likely need
-    another extraction pass)
-- [ ] [SCRIPT] P3. **Trim `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`** (1000L pre-commit,
-      +11L would-be addition — discovered separately during this session's final scoped line-cap re-verification, not
-      part of the original 6+2), then re-apply its pre-computed `context_scope` (below).
-- [ ] [OPERATOR] P3. **Resolve the 2 locked docs** — either confirm the lock is stale/expired and safe to release (per
-      the multi-agent-safety liveness-gating pattern: a dead `locked_by` claim can be inherited), or explicitly
-      authorize scouting a locked doc's `context_scope` field as an exception, or leave them `NEVER_SCOUTED`
-      indefinitely as a deliberate, documented exclusion (in which case
-      `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own `FieldSpec` flip todo needs a stated carve-out for locked
-      docs, since its done-when is corpus-wide 0/0):
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (same session).** Trim
+      `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (999L pre-commit) — extracted the
+      full 2026-08-02→2026-08-03 corroboration-wave history (677 lines, round 2 of this doc's own recurring remediation
+      pattern) to
+      `/plans/archive/2026_08/fleet_wide_qg_capacity_crisis_continues_day2_progress_log_history_2026_08_03.md`, kept
+      only the 2 most recent live entries, re-applied `context_scope` (5 entries) — `unified-trading-pm@fcfd66f5e`.
+      Verified via word-level (whitespace-normalized) diff: zero content removed across live+archive vs the original.
+- [ ] [SCRIPT] P3. **`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — STILL OPEN,
+      deliberately not attempted mechanically 2026-08-03.** This doc already went through TWO prior line-cap extraction
+      rounds (2026-07-23 umbrella-split, 2026-07-24 second-tier extraction) — every major section is already down to a
+      short verdict-pointer stub pointing at an archive doc. What remains is either (a) a LIVE operational runbook (the
+      "Pre-migration drain" section's exact resume commands — 48 GCP schedulers + 26 AWS EventBridge rules to re-enable
+      post-migration, still needed, not history) or (b) active coordination content (Gate-State Board, Dispatch waves,
+      Sub-plan registry, Master coordination todos) that the orchestrator reads as current state, not narrative history.
+      Forcing a mechanical trim here risks removing something still load-bearing rather than genuine closed history.
+      **Needs a dedicated, careful read-through by whoever picks this up next — not a mechanical batch trim** — to find
+      a genuinely safe extraction candidate (or conclude none exists and this doc needs a different remediation shape,
+      e.g. promotion to `plans/epics/` at the 2000L epic cap instead of the 1000L active-plan cap, given its role as the
+      migration's own coordinator).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-03 (same session).** Trimmed
+      `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md` (1000L pre-commit) — extracted the full
+      "2026-07-21/22 continuation" Progress Log section (140 lines, zero open todos, round 2 of this doc's own recurring
+      remediation pattern) to
+      `/plans/archive/2026_07/tradfi_manifest_content_recovery_completion_history_2026_08_03.md`, re-applied
+      `context_scope` (6 entries) — `unified-trading-pm@f7b4c03d6`. Verified via exact `diff` (byte-identical
+      extraction) + line-count reconciliation (860 kept + 140 extracted = 1000 original).
+- [x] ✅ [OPERATOR] P3. **RESOLVED 2026-08-03 — no operator action was actually needed.** Re-read `plans/PLAN_FORMAT.md`
+      § "Plan Locking": `locked_by:` blocks ARCHIVAL only ("Agents MUST NOT archive locked plans"), not ordinary
+      additive frontmatter edits. `context_scope` is exactly such an edit — applied to both locked docs directly, no
+      unlock needed, no archival attempted:
   - `plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`
-    (`locked_by: live-defi-rollout`)
-  - `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (`locked_by: harsh-fleet-audit`)
+    (`locked_by: live-defi-rollout`, 1 open todo — genuinely not archival-eligible, but that's irrelevant here)
+  - `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (`locked_by: harsh-fleet-audit`, an
+    explicit human "let it be" parking doc with 4 open todos — same reasoning, still not archived, just scouted)
+  - Both shipped `unified-trading-pm@fcfd66f5e`. The earlier framing of this as `[OPERATOR]`-gated was itself the
+    finding: it over-read the lock's scope. No carve-out is needed in `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s
+    own `FieldSpec` flip todo — both docs are now genuinely scouted, same as any other doc.
 
 # Pre-computed `context_scope` (verified to resolve on disk 2026-08-03 — re-verify if this issue sits long enough for
 
@@ -243,3 +262,18 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   `bash scripts/plan-hygiene/check_line_caps.sh <path>` (scoped mode, all ✅ within cap) and `check_frontmatter.sh`/YAML
   parse (all clean). Full quality-gates.sh run clean (warn-only findings unrelated to this change). Checkbox flipped
   here.
+- **2026-08-03 (same interactive session, slot 1, continued after slot-12's dispatch landed)**: trimmed + re-scouted
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (round 2 of its own recurring extraction pattern) and
+  `tradfi_manifest_content_recovery_completion_2026_07_24.md` (round 2, same pattern); applied `context_scope` to both
+  locked docs after re-reading `plans/PLAN_FORMAT.md` and confirming `locked_by:` only blocks archival, not additive
+  frontmatter edits — no unlock needed, no archival attempted. Shipped `unified-trading-pm@fcfd66f5e` (locked docs +
+  fleet_wide) and `@f7b4c03d6` (tradfi). Deliberately did NOT force a trim on
+  `master_data_canonicalisation_migration_catalogue_2026_06_07.md` — already twice-extracted, no safe historical content
+  left, remaining bulk is live operational/coordination content; left as a genuinely open, clearly-scoped todo above
+  rather than risk removing something load-bearing. **This doc still has 1 open todo, so it stays `active` per the
+  archival ritual's zero-open-todos gate** — do not archive until that todo lands. **Lesson from this stretch**: making
+  a new uncommitted edit to an unrelated file WHILE a different background quickmerge is still mid-flight in the same
+  working directory can get that edit silently clobbered by the other run's own pull/stash cycle (confirmed once this
+  session — a completed edit reverted to HEAD with no trace in `git stash list`, no data lost since the recipe +
+  archive-doc target were still reconstructable, but redo work was needed); the fix is procedural — never touch this
+  repo's working tree while a quickmerge you started is still running.
