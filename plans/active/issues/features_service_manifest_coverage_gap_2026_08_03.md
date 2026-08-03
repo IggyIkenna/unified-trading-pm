@@ -159,6 +159,38 @@ not something an AO worker should guess at.
 
 ## Progress Log
 
+- **2026-08-03** (AO dispatch, slot 7, todo 2) — Sports backfill APPLIED to prod and VERIFIED:
+  `feat-orph-bf-spt-sports-20260803-124614` VERDICT
+  `already_covered=0 recorded_cells=67077 junk=0 footer_failed=0 record_errors=0 verify_failed=0`. Report:
+  `gs://features-sports-prd-central-element-323112/_index/audit/feature_orphan_backfill_sports_sports.parquet`. Chain of
+  work + real bugs found/fixed along the way (not pre-existing — all hit live during this exact run):
+  1. `backfill_feature_orphan_class_e.py` (todo 1's generic script, covers every wired family incl. sports) had no
+     sports 2020-06-06 data-floor guard — added `split_pre_floor` (features-service@7aca28ce; 0 pre-floor rows in the
+     real report, but the guard is now permanent for re-runs / other AGs' data).
+  2. Wrote + registered `launch-feature-orphan-backfill-vm.sh` (`feat-orph-bf-{family}-{ag}-`, longest-prefix split from
+     `feat-orph-`) since sports' 67,077-object/13.1GB volume must run on a VM, not in-session
+     (deployment-service@d68a49c).
+  3. **First VM launch self-deleted within ~3 min, empty log.** Root cause: `VM_TASK=feature-orphan-backfill` had no
+     dispatch branch in the shared `setup-data-pipeline-vm.sh` — the generic-fallback guard (added after 3 PRIOR
+     identical incidents) correctly fails fast rather than silently misrouting, so the VM exit-1'd before writing any
+     log, then self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`. Added the missing dispatch branch, republished the
+     tarball + VM script bundle, relaunched clean (deployment-service@b09e660).
+  4. `sample_verify()` in the shared backfill script recomputes 5 full-column `.astype(str)` conversions INSIDE the
+     per-cell loop over every recorded cell — a real O(n^2) inefficiency (67,077^2-ish redundant conversions) that
+     stretched the verify step to ~25+ minutes of silent CPU-bound work with zero progress logging (confirmed VM stayed
+     RUNNING throughout, not hung). Vectorized to build (all_keys, captured_keys) sets ONCE, O(1) lookup per cell —
+     behavior-preserving, existing test suite passes unchanged (features-service@abff85a3).
+  5. Incidentally hit a genuinely pre-existing but UNRELATED red test
+     (`tests/delta_one/unit/test_resolve_read_pipeline_mode.py::test_unrecognized_venue_falls_back_rather_than_crashing`)
+     during full-QG runs — root-caused to a concurrent, CORRECT fix (`unified-trading-library@597def48`, landed by
+     slot-3 mid-session) that fixed `resolve_pipeline_mode`'s asset_group case-sensitivity bug; the fix made
+     `("cefi", "trades")` correctly resolve via `SOURCE_PRIORITY` (`batch_tardis`) instead of masking that registered
+     pair behind the case bug and falling through to the `features-service` fallback this test asserted. Swapped in a
+     genuinely-unregistered synthetic `data_type` so the test still exercises its real intent (same commit,
+     features-service@abff85a3). Next: run the manifest consolidator for `features-sports-prd-central-element-323112`,
+     re-run `feature_orphan_sweep.py --feature-family sports` to confirm `orphan_class_E` dropped near 0, then flip this
+     todo.
+
 - **2026-08-03** (AO dispatch, slot 2) — Filed while validating `feature_orphan_sweep.py` against real GCS data (todo 2b
   of the parent tooling-gap doc). All 10 (family, asset_group) cells swept clean-or-orphaned in under 3 minutes each on
   `e2-standard-4` SPOT VMs, zero preemptions, zero sweep-tool bugs found in the classification logic itself (the one
