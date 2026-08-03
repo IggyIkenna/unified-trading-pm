@@ -687,3 +687,17 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc
   edit). This is the 12th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains
   open and unaddressed by this entry.
+
+- **2026-08-03 ~13:55Z (`cicd` escalation `agt-1f1e67`, slot 11, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`) — 5th escalation for this exact repo's wall, zero state change since
+  `agt-876d77`'s 13:15-13:25Z entry immediately above**: re-verified from scratch — `gh pr list --state open` → 0 open
+  PRs (unchanged); `main`'s failing run still the same pre-mitigation `30790880111` (unchanged, business outcome already
+  complete via self-merge + backmerge + semver-tag); the run `agt-876d77` dispatched against current LDR HEAD `8fa00db`
+  (`30817783411`) is still `in_progress`, no newer LDR commit exists to test. `GET /api/repo-blockers` → `open: []`. Per
+  this doc's established precedent, did NOT redispatch (would cancel elapsed contention-survival progress for zero
+  benefit) and did NOT raise `PYTEST_TIMEOUT` further (already at the sanctioned 300s ceiling; a further raise only
+  moves the threshold, root-cause fix remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`,
+  out of scope for a one-shot task). **Disposition: no code or workflow change made or needed** — purely a wait on
+  `30817783411`. `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
+  clean (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
+  origin beyond this doc edit).
