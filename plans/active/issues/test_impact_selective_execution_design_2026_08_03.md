@@ -10,7 +10,7 @@ summary: >-
   dynamic-import and fixture-inheritance patterns exist that would silently under-test. The design compensates with
   explicit, enumerable fallback triggers and a mandatory shadow-mode trial before the selector is ever allowed to skip a
   real CI run. Design only — no implementation shipped here, per the parent todo's own explicit gate.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -34,6 +34,9 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  "Operator, 2026-08-03 (interactive session) — reviewed and approved the safety model directly ('im fine with the
+  design unblock Phase 2'); implementation staged as sequential todos in
+  test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md Phase 2."
 locked_by:
 locked_since:
 ---
@@ -181,10 +184,13 @@ bounded, checkable unit of work — not one big "implement selective testing" to
 
 ## Follow-up
 
-- [ ] [REVIEW] P2. **Operator review of this design** — confirm the safety model (conservative-superset, enumerable
-      escape hatches, mandatory shadow-mode trial with a zero-divergence promotion bar) before any implementation todo
-      is authorized. This is the review gate the original P2 todo named.
-- [ ] [SCRIPT] P3. **Once reviewed: author the implementation-authorization todo(s)**, scoped per the "Rollout model"
-      section above (walker + allowlists → golden-set selector tests → single-repo shadow trial → fleet shadow trial →
-      promotion), each independently checkable — do not author one big "implement selective testing" todo, per the
-      plan-authoring discipline (AO-eligible todos need a determinable outcome).
+- [x] ✅ **Operator review of this design — APPROVED 2026-08-03 (interactive session).** Operator confirmed the safety
+      model (conservative-superset, enumerable escape hatches, mandatory shadow-mode trial with a zero-divergence
+      promotion bar) — "im fine with the design unblock Phase 2." Implementation is now authorized to begin per the
+      staged rollout below; the companion plan's Phase 2 `BLOCKED-OPERATOR-DECISION` tags are cleared in the same edit
+      (`test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`).
+- [x] ✅ **Implementation-authorization todos — already scoped, not re-authored here.** The companion plan
+      (`test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`, Phase 2) already carries the staged rollout as
+      independently-checkable todos (walker + allowlists → golden-set selector tests → single-repo shadow trial → fleet
+      shadow trial → promotion) — that plan is the live dispatch surface now that review has cleared; nothing further
+      needed here.

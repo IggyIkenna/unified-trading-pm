@@ -5,9 +5,10 @@ summary: >-
   Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
   market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
   estimate from a guess into a real, per-repo measured number — then stages the design's own already-scoped
-  implementation rollout (walker, allowlists, golden-set tests, single-repo shadow trial, fleet trial, promotion) behind
-  an explicit operator-review gate. Phase 1 (measurement) is immediately actionable; Phase 2 (implementation) is
-  BLOCKED-OPERATOR-DECISION until the design doc's own review todo closes.
+  implementation rollout (walker, allowlists, golden-set tests, single-repo shadow trial, fleet trial, promotion) —
+  design REVIEWED AND APPROVED by the operator 2026-08-03, so both phases are now unblocked (dispatch timing is still a
+  separate operator action, post-`/pre-compact`). Every todo across both phases has a real dependency on its predecessor
+  (`sequential: true`).
 status: active
 nature: process
 asset_group: [ci]
@@ -32,6 +33,7 @@ estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 assigned_role: infra
 drift_direction: advance-code
+sequential: true
 depends_on: []
 source:
   "Interactive session: after publishing the selective-test-execution design doc, the operator asked for a rough
@@ -103,45 +105,48 @@ both gaps before anyone trusts the number for a real rollout decision.
       eligibility table is re-run against the verified allowlist (not the regex proxy) to confirm whether the numbers
       move.
 
-## Phase 2 — Implementation (BLOCKED-OPERATOR-DECISION — do not start)
+## Phase 2 — Implementation (unblocked 2026-08-03 — operator reviewed and approved the design)
 
-> Every todo below is gated on the "Operator review of this design" todo already tracked in
-> `test_impact_selective_execution_design_2026_08_03.md` (not duplicated here as a checkbox — that doc's own checkbox is
-> the real one). None of these are dispatchable, regardless of this plan's `assigned_vm`, until that review closes and
-> explicitly authorizes implementation. Scoped here now so the roadmap is complete and each stage is independently
-> checkable once unblocked — not so any of it starts early.
+> **Unblocked 2026-08-03**: the "Operator review of this design" todo in
+> `test_impact_selective_execution_design_2026_08_03.md` is now `[x]` — operator approved the safety model interactively
+> ("im fine with the design unblock Phase 2"). The `BLOCKED-OPERATOR-DECISION` tags below are cleared. These todos are
+> STRICTLY sequential — the walker must exist before allowlists can wire into it, the golden-set tests need the wired
+> walker to test against, and the shadow trials need the tested selector — see `sequential: true` in this plan's
+> frontmatter, which serializes the whole plan (Phase 1's own todos have the same real dependency shape, so this is
+> correct for both phases, not just Phase 2).
 
-- [ ] [INFRA] P1. BLOCKED-OPERATOR-DECISION: **Build the workspace-wide import-graph walker**, extending
-      `check_removed_symbols.py`'s existing `ast.walk()`-over-`Import`/`ImportFrom` pattern into a
-      `file → {imported files}` edge table, inverted to `file → {transitive importers}`, cached via the same
-      content-sentinel key pattern `content-gate` already uses. Done-when: the walker runs against a real repo and
-      produces a verifiably-correct edge table for a hand-checked sample of files (cross-referenced against
-      `grep -rn "^import\|^from"` for the same files).
-- [ ] [INFRA] P1. BLOCKED-OPERATOR-DECISION: **Wire the Phase-1 verified allowlists (dynamic-dispatch, conftest tree,
-      config/data artifacts) into the walker as escape-hatch checks**, producing the binary
-      `RUN_FULL_SUITE=true`/narrowed-set output the design's fallback rule specifies. Done-when: given a synthetic diff
-      touching each escape-hatch category, the walker emits `RUN_FULL_SUITE=true`; given a synthetic self-contained
-      diff, it emits a correctly-narrowed set.
-- [ ] [REVIEW] P1. BLOCKED-OPERATOR-DECISION: **Build the golden-set selector regression tests** (design doc layer 1) —
-      a fixture repo/frozen snapshot with known import relationships, a known dynamic-dispatch file, a known multi-level
-      `conftest.py` tree, and a known config-driven test, asserting the selector's exact expected output for every safe
-      case and every escape-hatch category. Done-when: this suite is wired into the SAME repo's own `quality-gates.sh`
-      so a regression in the selector itself is caught the same way any other code regression is.
-- [ ] [REVIEW] P1. BLOCKED-OPERATOR-DECISION: **Single-repo shadow-mode trial**, on the highest-eligibility repo from
-      the Phase-1 measurement (candidates per the 4-repo sample: `market-data-processing-service` or `features-service`,
-      ~94-96% eligible) — run the selector in parallel with the real full suite for 2 weeks, always actually executing
-      the full suite, logging any divergence. Done-when: zero observed divergences over the full 2-week window; a single
-      divergence resets the trial and is filed as its own issue doc (a design bug, not noise).
-- [ ] [REVIEW] P2. BLOCKED-OPERATOR-DECISION: **Fleet-wide shadow-mode trial**, only after the single-repo trial passes
-      clean — same methodology, 2 weeks, across every repo from the Phase-1 table with the current allowlists.
-      Done-when: zero observed divergences fleet-wide over the full window.
-- [ ] [REVIEW] P2. BLOCKED-OPERATOR-DECISION: **Promotion decision** — once the fleet shadow trial is clean, decide
-      whether to let the selector actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand
-      up the post-promotion nightly full-suite canary the design specifies. This is itself an operator call, not a
-      worker todo — state the shadow-trial evidence and ask.
+- [ ] [INFRA] P1. **Build the workspace-wide import-graph walker**, extending `check_removed_symbols.py`'s existing
+      `ast.walk()`-over-`Import`/`ImportFrom` pattern into a `file → {imported files}` edge table, inverted to
+      `file → {transitive importers}`, cached via the same content-sentinel key pattern `content-gate` already uses.
+      Done-when: the walker runs against a real repo and produces a verifiably-correct edge table for a hand-checked
+      sample of files (cross-referenced against `grep -rn "^import\|^from"` for the same files).
+- [ ] [INFRA] P1. **Wire the Phase-1 verified allowlists (dynamic-dispatch, conftest tree, config/data artifacts) into
+      the walker as escape-hatch checks**, producing the binary `RUN_FULL_SUITE=true`/narrowed-set output the design's
+      fallback rule specifies. Done-when: given a synthetic diff touching each escape-hatch category, the walker emits
+      `RUN_FULL_SUITE=true`; given a synthetic self-contained diff, it emits a correctly-narrowed set.
+- [ ] [REVIEW] P1. **Build the golden-set selector regression tests** (design doc layer 1) — a fixture repo/frozen
+      snapshot with known import relationships, a known dynamic-dispatch file, a known multi-level `conftest.py` tree,
+      and a known config-driven test, asserting the selector's exact expected output for every safe case and every
+      escape-hatch category. Done-when: this suite is wired into the SAME repo's own `quality-gates.sh` so a regression
+      in the selector itself is caught the same way any other code regression is.
+- [ ] [REVIEW] P1. **Single-repo shadow-mode trial**, on the highest-eligibility repo from the Phase-1 measurement
+      (candidates per the 4-repo sample: `market-data-processing-service` or `features-service`, ~94-96% eligible) — run
+      the selector in parallel with the real full suite for 2 weeks, always actually executing the full suite, logging
+      any divergence. Done-when: zero observed divergences over the full 2-week window; a single divergence resets the
+      trial and is filed as its own issue doc (a design bug, not noise).
+- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial**, only after the single-repo trial passes clean — same methodology, 2
+      weeks, across every repo from the Phase-1 table with the current allowlists. Done-when: zero observed divergences
+      fleet-wide over the full window.
+- [ ] [REVIEW] P2. **Promotion decision** — once the fleet shadow trial is clean, decide whether to let the selector
+      actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand up the post-promotion nightly
+      full-suite canary the design specifies. This is itself an operator call, not a worker todo — state the
+      shadow-trial evidence and ask.
 
 ## Progress Log
 
-- **2026-08-03**: Plan authored as a LOCAL/human plan (`assigned_vm: NA`) per operator instruction — Phase 1 is ready to
-  dispatch (flip to `assigned_vm: planning`) once the operator does so after their own `/pre-compact` checkpoint; Phase
-  2 stays non-dispatchable regardless via its `BLOCKED-OPERATOR-DECISION` tags until the design review closes.
+- **2026-08-03**: Plan authored as a LOCAL/human plan (`assigned_vm: NA`) per operator instruction — ready to dispatch
+  (flip to `assigned_vm: planning`) once the operator does so after their own `/pre-compact` checkpoint.
+- **2026-08-03 (same session)**: Operator reviewed and approved the design interactively — Phase 2's
+  `BLOCKED-OPERATOR-DECISION` tags cleared, `sequential: true` added to frontmatter (every todo across both phases has a
+  real dependency on its predecessor). `assigned_vm` is still `NA` — dispatch timing is unchanged, still the operator's
+  own action post-`/pre-compact`.
