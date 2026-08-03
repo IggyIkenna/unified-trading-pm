@@ -124,3 +124,8 @@ its own review):
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc states its todos 'name the investigation + design work,
   not a pre-committed implementation, since this is a shared-infra performance change needing its own review', and the
   P3 alternative needs an explicit durability-vs-throughput tradeoff call.
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Today's edit that
+  put this doc back in incremental scope was a cosmetic `context_scope`/reference-path-repointing commit, not a content
+  change to the 3 open todos; the 2026-07-30 rationale (shared-infra concurrency-critical performance design work,
+  needing its own review) still holds.

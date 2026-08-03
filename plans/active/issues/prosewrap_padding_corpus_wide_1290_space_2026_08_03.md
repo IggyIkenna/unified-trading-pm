@@ -22,8 +22,8 @@ tags: [prettier, prosewrap, tooling, plan-hygiene, cosmetic, corpus-cleanup]
 related: [/plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md]
 created: 2026-08-03
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: refactor
 assigned_role: backend_engineer
@@ -112,7 +112,12 @@ Mechanical, bounded remediation — not a design/judgment call:
       `bash scripts/plan-hygiene/check_prosewrap_padding.sh` for the live list), collapsing over-indented continuation
       lines back to their structurally-correct indent and any 3+-space run inside a backtick span back to a single
       space. Verify content-only via `git diff -w` per file before committing. Fine to split across multiple
-      commits/sessions — not a single-commit requirement. (repo: unified-trading-pm)
+      commits/sessions — not a single-commit requirement. **Known narrow overlap (na-eligibility-audit 2026-08-03,
+      conflict-check § 3): `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` carries its own P3 todo to
+      hand-fix ONE of these 82 files (`issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`,
+      still flagged as of this run's live check). Not treated as a blocking conflict — both fixes converge on the
+      identical whitespace-only repair, so whichever lands first makes the other a no-op; skip re-touching that file if
+      batch3's todo has already landed by the time this todo executes.** (repo: unified-trading-pm)
 - [ ] [BACKEND] P3. Once the flagged-line count reaches 0 (or a deliberately-accepted lower plateau), run
       `check_prosewrap_padding.sh --update-baseline` to lower the ratchet from 4472 toward 0 and commit the updated
       `scripts/plan-hygiene/prosewrap_padding_baseline.yaml`. (repo: unified-trading-pm)
@@ -127,3 +132,11 @@ Mechanical, bounded remediation — not a design/judgment call:
   reclassify to `planning` if this precisely-scoped mechanical remediation should be AO-dispatched.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: RECLASSIFY, conflict-check CLEAR — this doc's own
+  Progress Log explicitly invited reclassification, and the sole open todo is bounded/mechanical (run an existing
+  script, collapse whitespace per its output, verify content-only via `git diff -w`) with a stated done-when. Cleared
+  against the shared conflict-check protocol: the only overlap found is a narrow, single-file one with
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`'s hand-fix todo (noted inline above, not blocking — an
+  idempotent mechanical fix). No finalize-plan companion needed (`doc_type: issue`, structurally exempt per
+  `check_finalize_plan_coverage.py`). Flipped `assigned_vm: NA -> planning`, `execution_scope` to `orchestrator-agent`.

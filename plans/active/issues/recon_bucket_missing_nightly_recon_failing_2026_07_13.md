@@ -170,3 +170,14 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc's own conclusion is that the residual is multi-repo
   feature work 'correctly out of scope for the bucket-consolidation plan this issue is filed under' and 'should become
   its own scoped plan/epic item' — an ask-before-creating operator call.
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed; not RECLASSIFY-eligible as
+  written because the single todo bundles ~5 distinct deliverables (provision 2 Cloud Run Jobs, implement 2 different
+  `_SUCCESS`-marker writers, add a date-fallback, un-pause 7 schedulers) rather than one bounded outcome — flipping
+  `assigned_vm` in place without first splitting it into a proper multi-todo plan would dispatch an ill-formed oversized
+  task. **Surfacing prominently rather than leaving this quietly re-stamped**: this is a P0, data-correctness-tagged doc
+  that has sat unpromoted for 3+ weeks despite its own 2026-07-30 verdict recommending it "become its own scoped
+  plan/epic item," and the sibling doc `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md`
+  independently confirms the underlying gap is real (not a live-trading-gated no-op) — recommend the operator/main-agent
+  promote this into a real wrapper plan per CLAUDE.md's findings-triage rule (`audit-scope -> wrapper plan -> epic VM`),
+  splitting the bundled todo into its constituent AO-eligible pieces.

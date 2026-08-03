@@ -40,8 +40,8 @@ related:
   ]
 created: 2026-07-30
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -238,14 +238,25 @@ scope on every run. Fix belongs with Finding 3's script todo.
       implemented in `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
       `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0, and the three docs in the table above carry a
       readable verdict. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P1. Rule on Finding 1 (A / B / C / D) — how concurrent per-tranche audits arbitrate ownership of a
+- [x] ✅ [OPERATOR] P1. Rule on Finding 1 (A / B / C / D) — how concurrent per-tranche audits arbitrate ownership of a
       legitimately multi-tranche doc. **Done when**: the ruling is recorded here and, if A, `primary_tranche` is emitted
       by `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` with a unit test, and both skills' Phase 3 sections
-      cite it as the apply-scope gate. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P0. Rule on Finding 2 (A / B / C) — how the parked `prediction.py:95` CQG P0 gets dispatched. **Done
+      cite it as the apply-scope gate. -- CLOSED (na-eligibility-audit 2026-08-03): Option A shipped in full. Directly
+      confirmed live: `generate_na_doc_tranche_inventory.py --tranche cross-cutting --json` emits an `owning_tranche`
+      field per doc, derived from `parent_epic` exactly as Option A specified;
+      `tests/unit/test_generate_na_doc_tranche_inventory.py` covers it;
+      `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s own Phase 0 now states the primary-owner rule as HARD, and
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md` (lines ~508/513) cites the same rule rather than duplicating
+      it. All "done when" criteria met. (repo: unified-trading-pm)
+- [x] ✅ [OPERATOR] P0. Rule on Finding 2 (A / B / C) — how the parked `prediction.py:95` CQG P0 gets dispatched. **Done
       when**: batch6 is either `status: active` (with the batch4/batch6 duplicate resolved if option A) or the fix is
-      dispatched by another named route, and this todo cites the resulting SHA. (repo: unified-trading-pm,
-      instruments-service)
+      dispatched by another named route, and this todo cites the resulting SHA. -- CLOSED (na-eligibility-audit
+      2026-08-03): Option A executed. Directly confirmed live: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+      is `status: active` + `assigned_vm: planning`; its todo 1 shows
+      `[x] ✅ [CODE] P0. DONE 2026-07-30 —     instruments-service@e0f7aaad` (the CQG mis-bucketing fix); the
+      batch4/batch6 duplicate (todo 7) was resolved via that doc's own
+      `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section, citing an explicit 2026-07-30 operator
+      ruling. (repo: unified-trading-pm, instruments-service)
 - [ ] [SCRIPT] P2. Resolve Finding 3: pick ONE canonical verdict-marker format, state it explicitly in
       `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0/3 (recommend the name-then-date form
       `**na-eligibility-audit YYYY-MM-DD (<tranche> tranche)**:`, which also carries the tranche needed by Finding 1's
@@ -268,3 +279,17 @@ scope on every run. Fix belongs with Finding 3's script todo.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — the bar every
   verdict in this run's Phase 1 was measured against.
 - `/codex/02-data/data-pipeline-correctness-hard-rule.md` — why Finding 2's parked item is P0 rather than routine.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA-STALE items closed + RECLASSIFY. Findings 1 and
+  2's `[OPERATOR]` todos both verified resolved with hard evidence (see checkboxes above) and closed. The remaining open
+  todos — Finding 4 (`[OPERATOR]` P2, still genuinely open: re-verified live,
+  `master_data_canonicalisation_migration_catalogue_2026_06_07.md` is at 999/1000 lines with no `## Progress Log`
+  section, i.e. still physically unable to carry a marker, exactly as this finding predicted) and Finding 3 (`[SCRIPT]`
+  P2, still open: SKILL.md's Phase 0 does not yet document multi-format marker tolerance, and `task_template.md` is
+  still not excluded from the inventory population) — are bounded/mechanical (Finding 3) or correctly gated (Finding 4,
+  stays non-dispatchable regardless of this flip). Conflict-check (§3): no active `assigned_vm: planning` doc under
+  `parent_epic: agent_operating_framework_master` claims Finding 3's specific fix (marker-format consolidation +
+  `task_template.md` exclusion) — CLEAR. Flipped `assigned_vm: NA -> planning`, `execution_scope` to
+  `orchestrator-agent`. No finalize-plan companion needed (`doc_type: issue`, structurally exempt).

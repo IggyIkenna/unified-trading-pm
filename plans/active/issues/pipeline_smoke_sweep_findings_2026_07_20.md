@@ -115,3 +115,11 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
   DUPLICATE/STALE — the same BucketNamingError class already root-caused and fixed elsewhere. Citation fix, not a
   reclassification: re-verify the remaining 2 sub-items (DeFi migration gate, sports staleness cause) before treating
   this as live.
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — **the 2026-07-30 entry's own "re-verify
+  the remaining 2 sub-items" instruction is still outstanding** (no evidence found of anyone completing it in the 2+
+  weeks since). Confirming this honestly rather than silently re-stamping the doc: this run did not attempt a live
+  GCS/manifest check of current DeFi-migration-gate or sports-recency state (that class of live-infra verification is
+  `/data-pipeline-reconciliation`'s scope, not a plan-hygiene classification pass), so sub-items 2-3 remain unverified,
+  not resolved. Given this doc is P1 and now 2+ weeks stale with an unexecuted self-instruction, flagging in this run's
+  report for operator/main-agent attention rather than leaving it quietly re-marked KEEP-NA.

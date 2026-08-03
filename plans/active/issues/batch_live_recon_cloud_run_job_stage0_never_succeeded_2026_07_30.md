@@ -161,3 +161,13 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
   (recon_bucket_missing_nightly_recon_failing_2026_07_13.md, updated 2026-07-14) that this doc apparently never
   cross-referenced. That older doc traces th...
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: superseded mid-run by a concurrent worker's own
+  na-eligibility-audit pass, which landed (via this run's own rebase) closing the 3rd and final open todo — see the
+  `[x]` checkbox immediately above, closed 2026-08-03 citing
+  `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`'s resolution. **This doc now has 0
+  open todos** — no longer a KEEP-NA target under this skill's own rubric (`>=1 open todo` precondition), and is now a
+  live **ARCHIVE candidate**. Not archived by this run: the 6-step archival ritual (locked_by check, corpus-wide
+  referrer fixups) is a bigger, more deliberate action than this incremental-scope pass budgeted for, and this file was
+  mid-edit by another concurrent worker moments earlier in this same run — flagging for a dedicated follow-up pass
+  rather than racing a `git mv` against still-warm concurrent activity.

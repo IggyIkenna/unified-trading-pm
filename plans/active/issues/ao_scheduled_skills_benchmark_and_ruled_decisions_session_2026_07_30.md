@@ -325,3 +325,16 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   and hourly thereafter; manually triggered once to prove the dispatch wiring end-to-end (HTTP 200, `agt-434d0a`
   genuinely active on `orch-slot-4`). Todo flipped `[x]` above with full evidence; a new follow-up todo filed for a
   separately-discovered anomaly (VM's shared PM checkout 404 commits behind origin).
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — the remaining open items (two internal
+  benchmark re-run asks, the PM-checkout-staleness follow-up, and the benchmark-artifact update) are soft/low-value or
+  gated on the others, none individually a bounded worker-executable outcome on its own. **Independently reconfirmed the
+  PM-checkout-staleness premise with fresh, first-hand evidence this run**: this very dispatch's own boot message set
+  `PM_REPO_PATH` to the ROOT PM clone, and `unified-trading-pm/agents/na_eligibility_auditor.md`'s STEP 1 is a bare
+  `cd $PM_REPO_PATH` with no preceding `git pull`/fetch-rebase — confirming the P2 todo's premise is still live, not
+  just plausible. This run avoided the exposure entirely by operating from its own always-rebased slot clone instead
+  (per `RULES.md`'s root-read-only guardrail), which is a viable interim mitigation but not a fix for the other
+  scheduled skills that `cd $PM_REPO_PATH` directly. Recommend this graduate to its own small, precisely-scoped
+  `[SCRIPT]` todo/plan (add a fetch+rebase to each `plan_health`-family skill's STEP 0) rather than staying a buried P2
+  line here — flagged prominently in this run's chat report for operator attention, not resolved unilaterally since it
+  touches every scheduled skill's boot sequence.

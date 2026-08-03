@@ -155,3 +155,8 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   handlers: dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
   liquidations_handler.py, liquidation_events_hand...
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Today's edit that
+  put this doc back in incremental scope was a cosmetic `context_scope` backfill commit, not a content change; the
+  2026-08-01 rationale (a concurrency-critical shared-writer change needing per-handler verification, not a mass edit)
+  still holds.
