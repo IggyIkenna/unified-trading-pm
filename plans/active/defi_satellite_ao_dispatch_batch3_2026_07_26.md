@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                  chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                  pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                  the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                  chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                  2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                  6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                  timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                  `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                  **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                  `returns`/onchain reconfirmed). Evidence:
-                  `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                      `returns`/onchain reconfirmed). Evidence:
+                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -574,3 +574,25 @@ part of this plan was migrated elsewhere.
   background watch; will re-verify the consolidated `market-data-tick-defi` `_index` shows the full
   `2026-04-15..present` window `captured`/`empty_confirmed` with zero gap days before flipping this checkbox. **Checkbox
   stays UNFLIPPED** pending that verification.
+- **2026-08-03 (slot-11, data_engineering craft) — completed the verification slot-10 left pending; found a SECOND
+  correctness gap beyond the already-filed family-3 issue, so checkbox stays UNFLIPPED.** All 3 Pyth backfill VMs live
+  today (`mtds-pyth-archive-20260803-074918`, `pyth-lst-backfill-20260803-081601`, `pyth-lst-backfill-20260803-093121` —
+  the latter launched after slot-10's dispatch, presumably by slot-12) completed cleanly, `EXIT_STATUS=0` each
+  (live-verified via `gsutil cat .../vm-logs/<vm>/EXIT_STATUS`), with `081601` and `093121` both covering the full
+  `2026-04-15..2026-08-03` C6 window; the two earlier attempts (`070759`, `074121`) were preempted mid-run with no
+  `EXIT_STATUS` and are superseded (harmless, idempotent). Ran a bounded manifest read (single `read_availability_index`
+  `filters=` predicate-pushdown query on `venue=PYTH, data_type=oracle_prices`, no whole-corpus walk) to check the
+  achievable 7-symbol scope `plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` carved
+  out for C6. Found: `SOL`/`JitoSOL`/`mSOL`/`bSOL` have full `2026-04-15..2026-08-03` coverage (the one apparent-gap
+  day, `2026-05-22`, is a genuine whole-day `empty_confirmed` row, not a real gap). But `BTC`/`ETH`/`INF` have ZERO
+  manifest rows (any naming family, any status) for 17 straight days, `2026-07-19..2026-08-01` — confirmed even in the
+  freshest, full-window, `exit_code=0` VM's own per-VM shard, so this is not a backfill-completeness gap. Root-caused
+  (evidence + full detail in the issue doc's new "UPDATE 2026-08-03 (slot-11)" section) to the SAME IS `PYTH-SOLANA`
+  catalogue the filed issue already covers: that catalogue (first published 2026-07-19) enumerates 9 pairs, none of them
+  BTC/ETH/INF, and `_filter_pyth_rows_to_is` silently drops any fetched row IS doesn't enumerate — an active, ongoing
+  data-loss regression, not just a false-pending signal. Updated the issue doc (bumped its `priority` to P1, added a new
+  `[DATA] P1` regression-fix todo) rather than filing a duplicate — same root mechanism, same open `[OPERATOR]` gate.
+  Did not attempt an inline fix (genuinely gated on that operator ruling, per findings triage — this is a big/cross-repo
+  data-correctness finding, not a bounded worker fix). **Checkbox stays UNFLIPPED**: C6's "zero remaining gap days"
+  done-when is false for BTC/ETH/INF independent of the already-known family-3 issue; both resolve together once the
+  operator rules on the issue doc's pending decision.

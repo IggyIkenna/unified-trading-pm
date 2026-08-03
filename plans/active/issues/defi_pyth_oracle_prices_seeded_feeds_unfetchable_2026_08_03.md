@@ -9,19 +9,23 @@ summary: >-
   2026-08-01, 9 pairs incl. JTO/RAY/WIF/JUP/USDC) that is 100% expected_unattempted and structurally unsatisfiable — the
   collector's static _PYTH_FEEDS dict only has Hermes feed-ids for 7 symbols (SOL/BTC/ETH/JitoSOL/mSOL/bSOL/INF), none
   of which include JTO/RAY/WIF/JUP, and even the 4 overlapping symbols write under a DIFFERENT instrument_id key than
-  the seeder expects. This blocks C6's own done-when ("zero remaining gap days") from ever being fully true.
+  the seeder expects. UPDATE 2026-08-03 (slot-11): the SAME IS PYTH-SOLANA catalogue is ALSO causing an ACTIVE
+  REGRESSION — BTC/ETH/INF oracle_prices real captures stopped dead on 2026-07-19 (the exact day IS started publishing
+  this catalogue) because `_filter_pyth_rows_to_is` drops any fetched row not in IS's enumerated set, and that set never
+  included BTC/ETH/INF. This blocks C6's own done-when ("zero remaining gap days") from ever being fully true, via TWO
+  distinct mechanisms now (seeded-unfetchable rows, AND a live regression dropping previously-working symbols).
 status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
 repos: [market-tick-data-service, unified-api-contracts, instruments-service]
 scope: [engineer]
-tags: [defi, oracle-prices, pyth, manifest, expected-unattempted, honest-absence]
+tags: [defi, oracle-prices, pyth, manifest, expected-unattempted, honest-absence, regression]
 related:
   [/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md, /plans/active/data_completion_defi_2026_07_15.md]
 created: 2026-08-03
 parent_epic: defi_master
-priority: P2
+priority: P1
 source:
   "worker analysis (slot-12, data_engineering craft) while executing defi_satellite_ao_dispatch_batch3-006 (C6 Pyth
   oracle_prices backfill), 2026-08-03"
@@ -76,6 +80,41 @@ drive what gets fetched (the static feed dict does). This means IS's own PYTH-SO
 wider universe (including JTO/RAY/WIF/JUP/USDC) than the collector's static Hermes feed-id list supports, and the
 manifest seeder used that wider IS catalogue as its "expected" set.
 
+## UPDATE 2026-08-03 (slot-11): a second, active regression — BTC/ETH/INF real captures stopped 2026-07-19
+
+While verifying C6's done-when after this session's 3 completed Pyth backfill VMs (`mtds-pyth-archive-20260803-074918`,
+`pyth-lst-backfill-20260803-081601`, `pyth-lst-backfill-20260803-093121` — all `exit_code=0`, `081601`/`093121` covering
+the full `2026-04-15..2026-08-03` C6 window), a bounded manifest read
+(`read_availability_index(bucket, columns=[...], filters=[("venue","=","PYTH"),("data_type","=","oracle_prices"), date range])`
+— single filtered read, no whole-corpus walk) showed a real, code-caused gap distinct from the family-3 rows documented
+above:
+
+- `BTC_USD`/`btc/usd`, `ETH_USD`/`eth/usd`, `INF_USD`/`inf/usd` have **zero** manifest rows (any naming family, any
+  `capture_status`) for **17 consecutive days, 2026-07-19 → 2026-08-01** — confirmed even in
+  `pyth-lst-backfill- 20260803-093121`'s own per-VM shard (`_index/per_vm/pyth-lst-backfill-20260803-093121.parquet`),
+  the FRESHEST, full-window, `exit_code=0` run: `btc/usd`'s rows stop dead at `2026-07-18` and never resume, despite the
+  VM processing every date through `2026-08-03`. This is not a backfill-completeness gap (re-running does not fix it) —
+  it is the collector actively skipping these 3 symbols on every date in the window.
+- `SOL`/`JitoSOL`/`mSOL`/`bSOL` are unaffected (continuous coverage across the same dates) — this is symbol-specific,
+  not a wholesale Pyth outage.
+- Root cause: `oracle_prices_handler.py`'s `_filter_pyth_rows_to_is` (`:314-354`) restricts every fetched Pyth row to
+  the `(base_asset, quote_asset)` set IS enumerates for `venue=PYTH-SOLANA` on that date (`load_oracle_feeds_for_date`,
+  `_instruments_metadata.py:478`) — when IS's set is non-empty, only the overlap is kept.
+  `instruments-store-defi-prd-central-element-323112/instrument_availability/by_date/day=2026-07-19/.../venue= PYTH-SOLANA/instruments.parquet`
+  is the **first ever PYTH-SOLANA blob IS published** (no blob exists for any earlier date — confirmed via `gsutil ls`),
+  and its `(base_asset, quote_asset)` set is EXACTLY the 9-pair family-3 catalogue from the finding above:
+  `SOL/JITOSOL/MSOL/BSOL/JUP/RAY/WIF/JTO/USDC` — USD. **No BTC, ETH, or INF entry at all.** Before 2026-07-19,
+  `load_oracle_feeds_for_date` returned `None` (no blob found) so the filter was a no-op (kept every fetched row, per
+  its own documented fallback); from 2026-07-19 onward the filter actively fires and silently drops BTC/ETH/INF even
+  though the collector successfully fetches them from Hermes every single date (their static `_PYTH_FEEDS` entries are
+  unchanged, 64-hex-valid, and the canonical SOL id in the same dict still resolves live against
+  `hermes.pyth.network/v2/price_feeds?query=SOL` — so this is not a feed-id break, purely the IS-catalogue filter).
+- This is the SAME root mechanism as the finding above (IS's new PYTH-SOLANA catalogue), just the other side of it: that
+  catalogue is simultaneously too NARROW (silently drops 3 previously-working symbols) and too WIDE (seeds 5 unfetchable
+  symbols as `expected_unattempted`). Whichever direction the operator rules on below must ALSO restore BTC/ETH/INF to
+  IS's enumerated set (or otherwise stop `_filter_pyth_rows_to_is` from dropping statically-supported symbols IS doesn't
+  enumerate) — extending `_PYTH_FEEDS` for the 5 new symbols alone does NOT fix this regression.
+
 ## Why it matters
 
 - **A permanently-unsatisfiable `expected_unattempted` row is a false "still pending" signal, not a genuine gap awaiting
@@ -89,6 +128,11 @@ manifest seeder used that wider IS catalogue as its "expected" set.
 - **Data-pipeline correctness heartbeat**: per CLAUDE.md's data-correctness HARD RULE, an audit's issues get fixed in
   full — but resolving this requires a real design/operator call (see below), not a mechanical worker fix, so it is
   filed rather than force-fixed inline.
+- **The 2026-08-03 update above is a genuine, ONGOING DATA-LOSS regression, not just a false-pending signal**: real
+  BTC/ETH/INF Pyth Hermes prices ARE being fetched successfully every day and then silently discarded by
+  `_filter_pyth_rows_to_is` — 17 consecutive days lost so far and counting every day this stays unfixed. This is a big
+  finding per CLAUDE.md's findings-triage rule (data-correctness, cross-repo) — flagged for operator attention, not just
+  filed passively.
 
 ## Recommended decision (operator/design ruling — not a bounded worker fix)
 
@@ -103,7 +147,13 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 2. **OR prune the seeder's input**: if IS's PYTH-SOLANA catalogue enumerating JTO/RAY/WIF/JUP/USDC for `oracle_prices`
    was itself an over-broad seed (these tokens may not actually need on-chain oracle price collection), correct the IS
    catalogue / the seeder's scope back to the 7 symbols the collector supports.
-3. **Either way**: reconcile the pre-existing 3-way `instrument_id` naming split (`{SYM}_USD` / `{sym}/usd` /
+3. **Either way, BTC/ETH/INF MUST be restored to IS's `PYTH-SOLANA` enumerated `(base,quote)` set** (or
+   `_filter_pyth_rows_to_is` changed to never drop a symbol the static `_PYTH_FEEDS` dict supports) — direction 1 alone
+   (extending the collector for the 5 new symbols) does NOT fix the active BTC/ETH/INF regression; only direction 2
+   naturally fixes it (by construction, restoring "the 7 symbols the collector supports" to the catalogue). This is the
+   highest-urgency half of the fix (real ongoing data loss vs. a false-pending signal for tokens that were never
+   captured).
+4. **Either way**: reconcile the pre-existing 3-way `instrument_id` naming split (`{SYM}_USD` / `{sym}/usd` /
    `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD`) onto one canonical form, so a future coverage read doesn't need hand-rolled
    cross-naming normalization (a real risk of a wrong verdict — an early pass at reconciling these families in-session
    produced a false "77 gap days" result before the bug was caught, because normalizing `PYTH-SOLANA:SPOT_PAIR:SOL-USD`
@@ -123,6 +173,11 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 - [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
       form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
       market-tick-data-service, unified-api-contracts)
+- [ ] [DATA] P1. Regression fix: restore BTC/ETH/INF to IS's `PYTH-SOLANA` `instrument_availability` enumerated set (or
+      change `_filter_pyth_rows_to_is` to never drop a symbol `_PYTH_FEEDS` statically supports) — real Pyth captures
+      for these 3 symbols have been silently discarded every day since 2026-07-19 (see 2026-08-03 update above). Gated
+      on the same `[OPERATOR]` ruling above; NOT fixed by extending `_PYTH_FEEDS` alone. (repo: instruments-service or
+      market-tick-data-service, per ruling)
 
 ## Progress Log
 
@@ -131,3 +186,16 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   the manifest to determine real remaining gap. Filed this issue; C6 itself proceeds on its own achievable scope (the
   7-symbol fetchable universe) with a Progress Log note pointing here for the structurally-separate gap.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **2026-08-03 (slot-11, data_engineering craft)**: Re-dispatched onto C6, found all 3 in-flight/relaunched Pyth
+  backfill VMs from earlier today (`074918`, `081601`, `093121`) completed cleanly (`EXIT_STATUS=0` each, live-verified
+  via `gsutil cat`, not from memory) with `081601`/`093121` covering the full `2026-04-15..2026-08-03` C6 window. Ran a
+  bounded manifest read (single `filters=` predicate-pushdown query, no whole-corpus walk) to check C6's own
+  zero-remaining-gap-days done-when and found a SECOND, distinct issue beyond the seeded-unfetchable family documented
+  above: a real, active regression silently dropping BTC/ETH/INF captures since 2026-07-19 (root-caused to
+  `_filter_pyth_rows_to_is` filtering against the same IS PYTH-SOLANA catalogue this issue already covers — full
+  evidence + root cause in the "UPDATE 2026-08-03 (slot-11)" section above). Added todo `[DATA] P1` for this regression,
+  bumped this doc's frontmatter `priority` to `P1` (ongoing data loss, not just a false-pending signal), and left the
+  plan's C6 checkbox **UNFLIPPED** (zero-remaining-gap-days is false for BTC/ETH/INF, independent of the family-3
+  issue). Did not attempt an inline fix — both directions in "Recommended decision" above remain gated on the same open
+  `[OPERATOR]` ruling; this update only strengthens the evidence for why direction 2 (prune to the 7 fetchable symbols)
+  is the cleaner fix, since it fixes both problems at once.
