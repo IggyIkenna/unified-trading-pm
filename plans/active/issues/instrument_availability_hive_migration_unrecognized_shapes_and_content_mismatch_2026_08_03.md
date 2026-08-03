@@ -132,6 +132,30 @@ human authoritative-source decision** (does the flat or the pre-existing hive co
 listing for that day?) — not a mechanical fix; force-overwriting either direction without that decision risks silently
 discarding real data.
 
+### 4. Prediction: a third, even older non-canonical shape (`market=`, ~12,463 objects)
+
+Investigating todo 3 (the `canonical_question_group=`-before-`day=` shape) confirmed via a live GCS sample that it — and
+a second, previously-undocumented shape, `market_lifecycle`'s `day={D}/group={G}/venue={V}/...` (venue THIRD, not
+immediately after `day=`, so it never matched `_FLAT_RE` either) — both stopped being written at
+**2026-07-22T00:37:29Z**, the last batch run before the `a9be6ce9` writer-fix deploy (03:20:56Z same day). Neither is
+still being written post-2026-07-21. Both are now recognized + migratable (`instruments-service@aaa0866c`); a live
+dry-run for `asset_group=prediction` confirms `unrecognized` drops from 25,745 to **12,463**.
+
+The residual 12,463 is a **third**, even older flat shape found while classifying the leftover unrecognized objects:
+`instrument_availability/by_date/day={D}/market={M}/venue={V}/...` (e.g. `market=BTC`/`market=ETH`/`market=OTHER`),
+sampled from as far back as 2025-03. Unlike the `league=`/`group=` cases above, this is **not a safe mechanical path
+rename**:
+
+- A content sample (`day=2025-03-15/market=BTC/venue=POLYMARKET/instruments.parquet`, downloaded + parsed) has **no
+  `canonical_question_group` column at all** — this shape predates the canonical-group bundling scheme entirely.
+- `market=BTC` is a coarser bucket than any single `canonical_question_group` — the sampled file's `raw_symbol`s (e.g.
+  `bitcoin-up-or-down-on-march-15-noon`) correspond to what is now `BTC_UP_DOWN_DAILY`, but the SAME `market=BTC` file
+  could plausibly also hold rows belonging to `BTC_UP_DOWN_HOURLY` / `BTC_PRICE_RANGE_DAILY` / etc. — there's no per-row
+  column to split on today, so a correct migration would need to re-derive `canonical_question_group` per row via
+  `_extract_prediction_canonical_group` (or an equivalent), not just rewrite the path.
+
+This needs the same kind of operator/architecture ruling todo 1 required for sports `league=` — see todo 8 below.
+
 ## Why it matters
 
 - Sports's writer being un-fixed means the 2026-07-21 operator HARD RULE ("every data-at-rest tree uses the full
@@ -184,9 +208,16 @@ discarding real data.
       extended with `_SPORTS_LEAGUE_FLAT_RE` to recognize + map the legacy `day=/league=/venue=` flat shape to its hive
       target. 125 targeted unit tests green (incl. new regression coverage for both the writer's sink call args and the
       migration tool's sports-league mapping); full QG green.
-- [ ] 3. [DATA] P2. Investigate whether prediction's `canonical_question_group=`-before-`day=` shape is still being
-      written post-2026-07-21; extend the migration tool to recognize + migrate it (~25,745 objects) (repo:
-      instruments-service).
+- [x] ✅ 3. [DATA] P2. **Investigated 2026-08-03 — NOT still being written; extended + shipped.** Live GCS confirms the
+      `canonical_question_group=`-before-`day=` shape's last write was 2026-07-22T00:37:29Z, the batch run immediately
+      before the `a9be6ce9` writer-fix deploy (03:20:56Z same day) — it stopped exactly at cutover, same as sports's
+      shape. Extended `migrate_instrument_availability_hive_2026_08_03.py`'s `hive_target_for()` with
+      `_PREDICTION_GROUP_FIRST_FLAT_RE` to recognize + migrate it, PLUS an adjacent second legacy shape found during the
+      same investigation (`market_lifecycle`'s `day=/group=/venue=` — venue third, never matched `_FLAT_RE` either, same
+      2026-07-22T00:37:29Z cutover) via `_PREDICTION_LIFECYCLE_DAY_GROUP_VENUE_FLAT_RE`. 8 new targeted unit tests
+      (hive_target_for + scan, both shapes × both venues + cross-asset-group non-recognition guards); full QG green.
+      Live dry-run: prediction `unrecognized` 25,745 → 12,463 (residual is a third, older `market=` shape — see the new
+      §4 finding above and todo 8 below, NOT part of this todo's scope). — instruments-service@aaa0866c.
 - [x] ✅ 4. [OPERATOR] P1. **RULED 2026-08-03 — per-pair "superset wins", NOT a blanket flat-always/hive-always rule.**
       Sampled real parquet CONTENT (downloaded + parsed via pandas/pyarrow, not just crc32c/size metadata) for 10 pairs
       spread across all 3 affected asset_groups and the full 2019–2026 date range (tradfi ×3, cefi ×3, defi ×4; PROD
@@ -196,51 +227,51 @@ discarding real data.
       below).
 
       **Methodology gotcha caught mid-sample (material to the ruling): `instrument_key` is NOT a stable identity
-          column across writer generations** — e.g. `DERIBIT:FUTURE:BTC-27SEP19` (flat, older key format) vs
-          `DERIBIT:FUTURE:BTC@INV-20190927` (hive, newer key format) are the SAME instrument (`raw_symbol=BTC-27SEP19`
-          both sides). Comparing on `instrument_key` alone falsely reads as 100% disjoint; `raw_symbol` (+
-          `contract_symbol` for tradfi futures) is the stable cross-generation identity key and is what the table below
-          uses.
+              column across writer generations** — e.g. `DERIBIT:FUTURE:BTC-27SEP19` (flat, older key format) vs
+              `DERIBIT:FUTURE:BTC@INV-20190927` (hive, newer key format) are the SAME instrument (`raw_symbol=BTC-27SEP19`
+              both sides). Comparing on `instrument_key` alone falsely reads as 100% disjoint; `raw_symbol` (+
+              `contract_symbol` for tradfi futures) is the stable cross-generation identity key and is what the table below
+              uses.
 
-          | asset_group | venue | day | flat rows | hive rows | relationship (by `raw_symbol`) |
-          |---|---|---|---:|---:|---|
-          | tradfi | CME | 2020-01-02 | 154 | 154 | tied (full overlap) |
-          | tradfi | CME | 2026-06-28 | 32 | 216 | **hive is a strict superset** — flat missing 184 real contracts |
-          | tradfi | NYSE | 2026-07-22 | 535 | 535 | tied (full overlap) |
-          | cefi | DERIBIT | 2019-03-31 | 6 | 312 | **hive is a strict superset** — flat missing 306 real DERIBIT options |
-          | cefi | BITFINEX-SPOT | 2023-12-16 | 284 | 284 | tied (full overlap) |
-          | cefi | DERIBIT-COMBO | 2026-06-04 | 568 | 31 | **flat is a strict superset** — hive missing 537 instruments |
-          | defi | UNISWAP_V2-ETHEREUM | 2020-05-20 | 11 | 9 | **flat is a strict superset** — hive missing 2 (root-cause sample from "What I found" §3 above) |
-          | defi | AAVE_V3-AVALANCHE | 2022-06-01 | 8 | 8 | tied (full overlap) |
-          | defi | AERODROME_V3-BASE | 2024-06-01 | 12 | 12 | tied (full overlap) |
-          | defi | AAVE_V3-ETHEREUM | 2026-06-27 | 36 | 36 | tied (full overlap) |
+              | asset_group | venue | day | flat rows | hive rows | relationship (by `raw_symbol`) |
+              |---|---|---|---:|---:|---|
+              | tradfi | CME | 2020-01-02 | 154 | 154 | tied (full overlap) |
+              | tradfi | CME | 2026-06-28 | 32 | 216 | **hive is a strict superset** — flat missing 184 real contracts |
+              | tradfi | NYSE | 2026-07-22 | 535 | 535 | tied (full overlap) |
+              | cefi | DERIBIT | 2019-03-31 | 6 | 312 | **hive is a strict superset** — flat missing 306 real DERIBIT options |
+              | cefi | BITFINEX-SPOT | 2023-12-16 | 284 | 284 | tied (full overlap) |
+              | cefi | DERIBIT-COMBO | 2026-06-04 | 568 | 31 | **flat is a strict superset** — hive missing 537 instruments |
+              | defi | UNISWAP_V2-ETHEREUM | 2020-05-20 | 11 | 9 | **flat is a strict superset** — hive missing 2 (root-cause sample from "What I found" §3 above) |
+              | defi | AAVE_V3-AVALANCHE | 2022-06-01 | 8 | 8 | tied (full overlap) |
+              | defi | AERODROME_V3-BASE | 2024-06-01 | 12 | 12 | tied (full overlap) |
+              | defi | AAVE_V3-ETHEREUM | 2026-06-27 | 36 | 36 | tied (full overlap) |
 
-          **Finding: in all 10/10 sampled pairs, the smaller side's instrument set is a clean SUBSET of the larger
-          side's — zero genuinely-irreconcilable (mutually-exclusive) divergence once compared on the stable identity
-          key.** 6/10 tied, 2/10 hive strictly more complete, 2/10 flat strictly more complete. This rules out BOTH
-          blanket options (a) and (b) from the original menu — either would silently discard real, verified-present
-          instrument rows in ~40% of sampled cases, which is exactly the risk the original finding warned about
-          ("force-overwriting either direction... risks silently discarding real data"). It also rules out a *naive*
-          "newest GCS write wins" reading of option (c): the tradfi CME 2026-06-28 pair shows flat's GCS write is ~1 day
-          NEWER than hive's yet flat has 184 FEWER contracts — a newer write was measurably worse there, so recency
-          alone is not a safe completeness proxy.
+              **Finding: in all 10/10 sampled pairs, the smaller side's instrument set is a clean SUBSET of the larger
+              side's — zero genuinely-irreconcilable (mutually-exclusive) divergence once compared on the stable identity
+              key.** 6/10 tied, 2/10 hive strictly more complete, 2/10 flat strictly more complete. This rules out BOTH
+              blanket options (a) and (b) from the original menu — either would silently discard real, verified-present
+              instrument rows in ~40% of sampled cases, which is exactly the risk the original finding warned about
+              ("force-overwriting either direction... risks silently discarding real data"). It also rules out a *naive*
+              "newest GCS write wins" reading of option (c): the tradfi CME 2026-06-28 pair shows flat's GCS write is ~1 day
+              NEWER than hive's yet flat has 184 FEWER contracts — a newer write was measurably worse there, so recency
+              alone is not a safe completeness proxy.
 
-          **RULED POLICY (refined option (c))**: per-object, resolve content_mismatch by **completeness** (superset by
-          `raw_symbol`/`contract_symbol` identity), not by side-label or timestamp:
-          - One side's instrument set ⊇ the other's → the superset side's content is authoritative; the migration
-            target ends up holding the superset side's bytes (whichever original path had them).
-          - Sets are equal-membership but bytes still differ (schema_version / column-order / float-precision drift,
-            the tied rows above) → no data-loss risk either way; default to the flat side's bytes for the hive target
-            (keeps single-writer provenance, matches the tool's existing copy direction, avoids a special case).
-          - (Not observed in this sample, but keep as a backstop) neither side is a superset of the other (genuinely
-            disjoint, non-overlapping instruments on both sides) → do NOT auto-resolve; flag for manual per-object
-            review/union. 0/10 sampled pairs hit this case, so it is expected to be rare, not the common path.
+              **RULED POLICY (refined option (c))**: per-object, resolve content_mismatch by **completeness** (superset by
+              `raw_symbol`/`contract_symbol` identity), not by side-label or timestamp:
+              - One side's instrument set ⊇ the other's → the superset side's content is authoritative; the migration
+                target ends up holding the superset side's bytes (whichever original path had them).
+              - Sets are equal-membership but bytes still differ (schema_version / column-order / float-precision drift,
+                the tied rows above) → no data-loss risk either way; default to the flat side's bytes for the hive target
+                (keeps single-writer provenance, matches the tool's existing copy direction, avoids a special case).
+              - (Not observed in this sample, but keep as a backstop) neither side is a superset of the other (genuinely
+                disjoint, non-overlapping instruments on both sides) → do NOT auto-resolve; flag for manual per-object
+                review/union. 0/10 sampled pairs hit this case, so it is expected to be rare, not the common path.
 
-          **Separate finding surfaced by this same sampling, NOT a migration-policy question — flagged as todo 7
-          below**: the cefi DERIBIT 2019-03-31 pair shows the CURRENT flat writer's own most recent rewrite of that
-          historical day (GCS write 2026-07-13) is missing all 306 options a same-day-but-earlier hive copy has — i.e.
-          the live backfill/reconciliation path that re-generates historical `instrument_availability` snapshots may
-          have a real option-coverage regression, independent of which side wins this migration's copy-up.
+              **Separate finding surfaced by this same sampling, NOT a migration-policy question — flagged as todo 7
+              below**: the cefi DERIBIT 2019-03-31 pair shows the CURRENT flat writer's own most recent rewrite of that
+              historical day (GCS write 2026-07-13) is missing all 306 options a same-day-but-earlier hive copy has — i.e.
+              the live backfill/reconciliation path that re-generates historical `instrument_availability` snapshots may
+              have a real option-coverage regression, independent of which side wins this migration's copy-up.
 
 - [ ] 5. [REVIEW] P2. Once todos 1-4 land, correct the writer-fix scope claim in `cross-asset-canonical-target-ssot.md`
       §8 (repo: unified-trading-pm). Depends on todos 1-4.
@@ -256,3 +287,14 @@ discarding real data.
       rows, while a hive-shape copy from the same day has 306 — determine whether this is isolated to that one (day,
       venue) or a systemic gap in the historical-backfill/reconciliation path for DERIBIT options, and fix the
       writer/backfill if systemic (repo: instruments-service).
+- [ ] 8. [OPERATOR] P2. Rule on prediction's third legacy shape surfaced by todo 3's investigation:
+      `instrument_availability/by_date/day={D}/market={M}/venue={V}/...` (`market=BTC`/`ETH`/`OTHER`, ~12,463 objects,
+      sampled from 2025-03 — see §4 in "What I found" above). This shape predates the `canonical_question_group`
+      bundling scheme (confirmed via content sample: no `canonical_question_group` column) and is a COARSER bucket that
+      can span multiple canonical groups per file — unlike sports `league=`, this is not a safe structural rename.
+      Options: (a) content-level reclassify each row into today's `canonical_question_group` grain (mirrors
+      `_extract_prediction_canonical_group`) before migrating, (b) preserve `market=` as its own distinct trailing key
+      (parallel taxonomy to `canonical_question_group=`, alongside it — may confuse downstream readers expecting one
+      canonical grain), or (c) treat this ~2025-03-era snapshot as superseded by later, correctly-bundled data and
+      exclude it from the 7c migration (verify no downstream reader still depends on it first). Blocks extending the
+      migration tool for this residual shape (repo: instruments-service).
