@@ -130,10 +130,36 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
       test coverage (`tests/cloud_interface/unit/test_gcp_providers.py::test_list_blobs_size_none_reload_is_bounded` +
       updated `test_list_blobs_reloads_when_size_none`'s side-effect stub, which previously only tolerated a zero-arg
       `reload()` call). QG green, SHA verified on `origin/live-defi-rollout`.
-- [ ] [DIAG] P3. Check whether this is `-test-`-bucket-specific (a smaller bucket that's grown unusually dense from
-      repeated same-day re-check runs across a short interval) or would also reproduce against a PROD-scale bucket with
-      a naturally large `day=` tree. If `-test-`-specific, consider whether cross_instrument's e2e check driver should
-      periodically prune old `-test-` runs' partial trees, or the finding is a false alarm.
+- [x] ✅ [DIAG] P3. **Checked — this is test-bucket-_pattern_-specific, not test-bucket-_tier_-specific; not a false
+      alarm.** The `size=None` reload-race density is a function of "how many objects were written in roughly the last
+      few seconds/minutes at listing time," not total tree size. `features-service/scripts/pipeline_e2e_check.py` takes
+      `--day` as an explicit CLI arg and this session's re-check runs deliberately repeated `--day 2026-07-05` across
+      ~1-2h (each invocation itself runs a force leg + a skip leg + an optional canonical leg against the same prefix in
+      quick succession); the script has no delete/prune/cleanup call anywhere over old `-test-` runs' partial trees
+      (`deployment-service/smoke_test_framework.py::clean_test_bucket` exists as a generic helper but is never invoked
+      from this script), so data accumulates indefinitely and each re-run maximizes "recently-written density" in that
+      one prefix. By contrast, PROD's delta_one writer (`feature_writer.py::check_exists`, ~line 764) short-circuits
+      reprocessing once a day is written — `force_reprocess=False` scheduled/backfill runs over an already-written day
+      skip recomputation entirely, so a mature PROD `day=` tree (despite being far larger — many more
+      instruments×timeframes) rarely has many objects in a fresh-write state simultaneously. A PROD tree WOULD still hit
+      this same failure mode during an actively in-flight backfill/relaunch of that exact day — this is a "how many
+      objects are hot right now" issue, not a bucket-tier issue per se — but `-test-`'s repeated-same-day-rerun pattern
+      makes triggering it disproportionately more likely than PROD's write-once-then-stable steady state. Net: the P2
+      bounded-`reload(timeout=30, retry=...)` fix already closes the hang risk in BOTH environments (this was never a
+      residual correctness/reliability gap) — the follow-up value here is purely reducing how often the e2e re-check
+      path exercises the now-bounded-but-still-slower path. Filed the pruning improvement as its own P3 todo below
+      rather than implementing inline (touches a test-bucket delete path, out of scope for a diagnostic-only todo).
+      Evidence: static read of `pipeline_e2e_check.py` (`--day` CLI arg usage ~L80-90, force leg ~L1279/1396, skip leg
+      ~L1580, no delete/prune grep hits) + `feature_writer.py::check_exists` (~L764-808) + orchestrator
+      `force_reprocess` short-circuit.
+- [ ] [INFRA] P3. **Prune stale `-test-` day prefixes before a CEFI:cross_instrument e2e re-check run.** Have
+      `features-service/scripts/pipeline_e2e_check.py` delete (or reset to a fresh `--day`) the target
+      `delta_one/by_date/day=<day>/` prefix in the `-test-` bucket before starting a new force/skip/canonical leg
+      sequence, so repeated same-day re-checks don't accumulate recently-written objects that maximize the
+      `size=None`-reload density found in the P3 diagnostic above. `-test-` bucket only (never touch PROD paths); wire
+      through the existing `deployment-service/smoke_test_framework.py::clean_test_bucket` helper if its shape fits,
+      else a scoped `list_blobs`+`delete_blob` loop restricted to the exact `day=` prefix being re-checked. Repo:
+      features-service.
 - [ ] [BACKEND] P3. **Follow-up optimization (deferred, not required for the P2 fix above):** eliminate the reload() tax
       at its root for callers that never use blob size — add an opt-in `resolve_size: bool = True` parameter to
       `StorageClient.list_blobs()` (default `True` preserves existing behavior for size-sensitive callers like
@@ -161,3 +187,8 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
   to 44 minutes to observe — not a good use of a bounded diagnostic task once the static evidence chain was conclusive.
   Shipped the bounding fix + regression test; filed the root-elimination optimization as a separate P3 follow-up todo
   (not required for this task's done-when, which only asked for "a fix or a bounded-timeout/retry wrapper").
+- 2026-08-03 (slot-5, worker): answered the test-bucket-vs-PROD P3 diagnostic — confirmed test-bucket-_pattern_-specific
+  (repeated `--day` re-check runs with no pruning maximize recently-written-object density), not a false alarm, and not
+  neutralized by tree scale (PROD's `check_exists` short-circuit keeps mature day= trees' recent-write density low
+  regardless of total size). Filed the pruning fix as its own P3 todo rather than implementing inline. See checkbox
+  above for full evidence chain.
