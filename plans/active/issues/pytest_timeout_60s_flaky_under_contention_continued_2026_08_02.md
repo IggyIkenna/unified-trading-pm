@@ -30,6 +30,7 @@ repos:
     market-data-processing-service,
     deployment-service,
     instruments-service,
+    ml-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
@@ -39,7 +40,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T11:30Z
+last_updated: 2026-08-03T11:38Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -414,3 +415,64 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (root-cause fix in flight at `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Slot left
   clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean). Pinged the
   authoring slot (`ci`) with the outcome.
+
+- **2026-08-03 ~11:15-11:38Z (`cicd` escalation `agt-2336b3`, slot 10, `ml-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — NEW repo added to this doc's `repos:` list, and a NEW diagnostic finding: why `main` doesn't
+  self-clear even after LDR is provably green**. `main`'s only recent failing run (`30790881348`, headSha `5672fdd`,
+  push at 10:11:53Z) hit
+  `FAILED tests/training/unit/test_training_control_api.py::TestControlTrainingPost:: test_pause_returns_accepted — Failed: Timeout (>150.0s) from pytest-timeout`
+  (1 failed, 2110 passed, 4 skipped, 32min29s wall). Read the actual endpoint under test
+  (`ml_service/training/api/training_control_api.py`) — the route is a trivial synchronous dict-mutation + a mocked
+  `_persist_audit_log`, no I/O, no lock; a genuine 150s+ hang is not plausible from the code itself. Cross-checked LDR's
+  own recent history: 4 DIFFERENT prior red runs today (03:05Z/16:35Z/19:05Z/20:21Z-equivalent UTC, each "1 failed, 2110
+  passed") each failed a DIFFERENT test (`test_shap_explainer.py` ×3, `test_gcs_feature_reader_column_pushdown.py` ×1) —
+  no test-content overlap, exactly this doc's established scheduling-induced-timeout signature, not a per-test defect.
+  LDR HEAD (`6019e52`, one commit ahead of the failing main commit,
+  `fix(tests): raise test_prediction_all_zero_features timeout 150s->300s` — the SAME precedent-fix pattern as this
+  doc's `unified-trading-api`/`features-service` entries, just per-test markers here instead of a repo-wide
+  `PYTEST_TIMEOUT` env) ran its OWN `quality-gates-v2` clean (`30805148327`, `tests` slice passed) — so the code is fine
+  and self-clearing, matching this doc's "first occurrence, let it self-clear" posture; did NOT add a repo-local
+  `PYTEST_TIMEOUT` bump (ml-service has zero prior occurrences of this class — a single non- sustained red does not yet
+  warrant the repo-local mitigation per todo 1's own "only after sustained non-self-clearing red" bar).
+
+  **The actual finding**: despite LDR's tests slice passing at `6019e52` and its `Record CI status` step correctly
+  posting `STATUS=FEATURE_GREEN` (confirmed via the raw run log:
+  `Recording ci_status=FEATURE_GREEN for ml-service (trigger=live-defi-rollout ...)`), the `ldr-to-main-promote-fleet`
+  gate stayed `GATE BLOCK ml-service: ci_status= FAILING (cached='FAILING', live='FAILING')` across TWO ticks (11:16:24Z
+  and 11:31:19Z). Traced into `unified-trading-pm@scripts/cicd/ci_status_store.py`'s `resolve_status()`: there is a
+  hard, unconditional rule (not the commit-timestamp `is_stale_write` guard — a DIFFERENT, simpler carve-out) —
+  `if prev_status == "FAILING" and prev_branch == "main" and branch != "main": return prev_status` — "only main can
+  speak for main." Confirmed live via the `update-ci-status` run (`30808752162`) triggered by LDR's own green write: its
+  Firestore-write step logged `ci_status/ml-service: FAILING -> FAILING (branch=live-defi-rollout)` — the FEATURE_GREEN
+  write was accepted and processed but explicitly REJECTED by this rule, by design (a green LDR tree cannot prove main's
+  own tree — which may differ — is fixed; only a real `main`-branch QG run can clear a `main`-originated FAILING). This
+  is NOT the fleet-wide runner-contention root cause this doc otherwise tracks — it is a SEPARATE, deterministic
+  gate-logic reason main stays red even once the code-level flake has already cleared on LDR, and it explains why
+  several of this doc's `features-service` entries (4, 6, 8, 9 above) kept finding "still FAILING" for hours after their
+  own diagnosed fix had already landed on LDR: the missing ingredient in every one of those waits was never "wait for an
+  LDR run to go green" alone — it was specifically waiting for a **`main`-branch** QG run (via the eventual LDR→main
+  promotion PR, which only fires once Tier-A already passes — a real chicken-and-egg once main goes FAILING with no
+  pending PR).
+
+  **Action taken**: re-triggered `quality-gates-v2` directly on `main`
+  (`gh workflow run quality-gates-v2.yml --repo IggyIkenna/ml-service --ref main`), NOT on LDR — this is the only write
+  that can flip a main-originated FAILING per the rule above. New run `30810298836` (workflow_dispatch, created
+  11:38:00Z); verified started cleanly (content sentinel passed, checks/tests slices claimed runners within 45s — not
+  queue-stuck). Did not wait for its ~30-90min completion (host-contention precedent in this doc), consistent with this
+  doc's established practice of not holding the slot for a multi-hour QG run. **If this run reports MAIN_GREEN:
+  ci_status clears, `ldr-to-main-promote-fleet`'s next tick (~15min) auto-creates+merges the next LDR→main promotion PR,
+  done.** If it reports FAILING again (a DIFFERENT random test per the established pattern): re-trigger once more is
+  reasonable (unlike LDR, no concurrency-group elapsed-progress is lost by a workflow_dispatch retry on main since each
+  is a fresh attempt against the same static commit); if it becomes a SUSTAINED (3+) same-day main-only red, apply this
+  doc's own repo-local `PYTEST_TIMEOUT` mitigation to `ml-service/scripts/quality-gates.sh` per the todo-1 template.
+
+  **Possible cross-doc follow-up (not actioned here, flagging only)**: consider adding a todo recommending the fleet
+  promote's Tier-A gate ALSO auto-dispatch a fresh `main`-branch QG run itself when it finds `ci_status=FAILING` with no
+  pending promotion PR (rather than relying on a human/cicd-agent to notice and manually re-trigger) — this would close
+  the "who re-tests main" gap this entry found live. Left for the operator /
+  `qg_governor_glue_runner_ledger_ coordination_2026_08_03.md` owner to decide if in scope; not done here (one-shot
+  wall-clearing task, scope-bounded).
+
+  `GET /api/repo-blockers` → `open: []`. Slot left clean (`ml-service` on `live-defi-rollout`, 0 commits ahead of
+  origin, no local changes — no code fix needed, the existing LDR content is already correct). Pinging the authoring
+  slot (`ci-reconcile`) with the outcome.
