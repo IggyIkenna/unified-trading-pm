@@ -78,34 +78,95 @@ candle-derived), so a different root cause (MTDS-side, not the MDPS candle-write
 `odds_horizon_bucket` — the largest single chunk (1,106 rows) — IS one of the 4 registered sports candle adapters, so
 the MDPS-side hypothesis is more plausible for that data_type specifically.
 
-## Recommended decision
+## Root-cause finding (2026-08-03)
 
-1. Root-cause: read a real captured blank-venue row's `instrument_id` content directly (pick one from each data_type
-   group) to determine whether the bookmaker/venue segment is genuinely empty in the source id, or whether the
-   manifest-recording path independently lost it.
-2. If MDPS-side (candle path): confirm whether `_venue_token_from_canonical_id`'s empty-string fallback should instead
-   raise/skip-record rather than silently write `venue=""` — a design question, not a re-stamp (there is no "correct"
-   venue to re-stamp TO if the source id genuinely lacks one).
-3. If MTDS-side (raw capture): a separate, unrelated bug in the raw ingestion path needs its own root-cause.
-4. Not sized here whether this is safely re-stampable, needs a delete, or needs a writer-side fix + accept-as-is for
-   historical rows — that determination needs step 1 first.
+**Both prior hypotheses (MDPS `_venue_token_from_canonical_id` parsing bug / an MTDS-side raw-capture bug) are
+DISPROVEN.** Confirmed via a live corpus read + independent code verification (all citations re-read directly, not taken
+on trust): every one of the 2,490 captured blank-venue rows carries `service_name="instruments-service"`,
+`source="instruments_service"`, `pipeline_mode="batch_instruments_service"`, `schema_version=9`, a real (non-blank)
+`league_id`, and a real non-zero `row_count` — this population is `trades`=1,273 + `odds_horizon_bucket` =1,106 +
+`trades_inplay`=111 = exactly 2,490, i.e. these 3 data_types fully account for every captured blank-venue row (the doc's
+other 8 blank-venue rows, `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` × 2 casings, are ALL `empty_confirmed`, not `captured` — a
+separate, lower-severity honest-absence population, not investigated further here).
 
-- [ ] [DIAG] P2. Root-cause the 2,490 captured `venue=""` sports manifest rows (repo: market-tick-data-service /
-      market-data-processing-service, read-only: read actual captured row content for a sample of each affected
-      data_type — `trades`, `trades_inplay`, `odds_horizon_bucket`, `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (both casings) — to
-      determine whether the instrument_id's bookmaker segment is genuinely blank at the source or lost in
-      manifest-recording). **Done when**: a written root-cause finding for each affected data_type is recorded, with a
-      recommendation (re-stampable / needs writer fix / accept-as-is) for each. **PARTIAL PROGRESS 2026-07-29 (batch
-      closeout pass), NOT closing — done-when not yet met.** Live manifest sample (`read_availability_index`,
-      `market-data-tick-sports-prd-central-element-323112`,
-      columns=[date,venue,data_type,instrument_id,capture_status]): for all 3 populated affected data_types
-      (`trades`=1273, `odds_horizon_bucket`=1106, `trades_inplay`=111 — the `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` casings are
-      too small, 2 rows each, to sample meaningfully), **`instrument_id` is ALSO `None`/null on every sampled row**, not
-      just `venue`. This narrows the hypothesis space (both the venue token AND the instrument_id are blank together,
-      not a venue-only parsing gap) but does not itself distinguish "genuinely blank at the source" from "lost in
-      manifest-recording" per the todo's own done-when — that needs a read of the actual RAW parquet content (not just
-      the manifest row) for one of these shard atoms, which was not attempted this pass (would need locating the exact
-      GCS object per sampled row, out of this session's time-box). Left `- [ ]` — root cause still open.
+**Actual writer**: `instruments-service/scripts/backfill_orphan_class_e_sports.py::record_cells()` (line ~240-262), NOT
+MTDS or MDPS. This is a standing (not one-time) IS-owned "orphan recorder" — its sibling
+`migration_orphan_sweep_sports.py` walks the MTDS tick bucket for real, un-manifested `trades`/`trades_inplay`/
+`odds_horizon_bucket` objects (grain: `(day, data_type, league_id)`, `data_type` = the raw lower-case GCS path segment)
+and `backfill_orphan_class_e_sports.py` writes IS-provenance manifest rows to cover them. Confirmed run against prod:
+`estate_orphan_assessment_2026_07_21.md:93` ("odds — 4 cells recorded", 2026-07-22) and it is explicitly recommended for
+RE-RUN in still-open work as late as 2026-07-26 (`sports_prelaunch_cf5_verify_residual_2026_07_24.md:93`,
+`sports_satellite_ao_dispatch_batch5_2026_07_26.md:659,665,681`) — every future re-run repeats this exact mis-stamp on
+any newly-found orphan cell.
+
+**Exact mechanism** (every observed field accounted for):
+
+1. `build_cells()` (`:190-209`) groups orphan objects into
+   `CellPlan(day, data_type, league_id, source= SPORTS_DATA_TYPE_TO_SOURCE.get(dt, ""), members=[...])` — `dt` is the
+   raw lower-case path segment (`trades`/`trades_inplay`/`odds_horizon_bucket`). `SPORTS_DATA_TYPE_TO_SOURCE`
+   (`unified_api_contracts/canonical/domain/sports/league_data.py:209-249`, verified directly) has NO entry for any of
+   these 3 keys (it only covers IS-owned reference entities — MATCHES/ODDS/PREDICTIONS/XG/FIXTURES*/TEAMS/
+   STANDINGS/etc.) — so `cell.source = ""`.
+2. `footer_verify()` (`:211-219`) footer-reads every real member parquet and sums real row counts into `cell.row_count`
+   — this is why `row_count` is a real, plausible non-zero integer (matches real MTDS tick data, not a sentinel).
+3. `record_cells()` (`:240-262`) instantiates `ManifestWriter(service_name="instruments-service", ...)` — the source of
+   the observed `service_name`. Per cell it calls `resolve_source_and_mode(cell.data_type, cell.source)` (`:98-119`,
+   verified directly) then `writer.add(..., venue="", source=source, pipeline_mode=pipeline_mode)` (`:251-260`) —
+   **`venue=""` is a hardcoded literal**; `instrument_id`/`instrument_type` are simply never passed (default blank/None
+   in the writer).
+4. `resolve_source_and_mode()` (`:98-119`, verified) calls `get_source_priority("sports", data_type)` — UAC's
+   `SOURCE_PRIORITY` (`unified_api_contracts/canonical/crosscutting/_source_priority_data.py`, verified directly)
+   registers `("sports","TRADES"): ["odds_api"]` (line 77) and
+   `("sports","ODDS_HORIZON_BUCKET"): ["mdps_odds_horizon_bucket"]` (line 97) — **UPPER-CASE keys only**, and
+   `TRADES_INPLAY` is not registered under ANY casing. `get_source_priority()` (`_source_priority_core.py:22-48`,
+   verified) is an exact-string dict lookup (`key = (asset_group, data_type)`) with NO case normalization — so the
+   lower-case `"trades"`/`"trades_inplay"`/ `"odds_horizon_bucket"` cell keys ALWAYS miss, raising `KeyError` → caught
+   at `:116-117` → `allowed = []` → `source` resolves to `""` (line 118, since `fallback_source=""` and `not allowed`) →
+   line 119 falls back `_SOURCE_TO_PIPELINE_MODE.get("", PipelineMode.BATCH_INSTRUMENTS_SERVICE)` →
+   `BATCH_INSTRUMENTS_SERVICE`.
+5. Inside UTL `ManifestWriter.add()`, the blank `source` + batch `pipeline_mode` trips the "universal-provenance
+   fallback for PRODUCER (batch) captured rows" (`_stamp_producer_source()`), which auto-stamps
+   `source_string_for(BATCH_INSTRUMENTS_SERVICE)` = `"instruments_service"` — exactly the observed
+   `source="instruments_service"`.
+
+**The cells themselves are legitimate** (real MTDS tick data, correctly grain-keyed) — only the
+`service_name`/`source`/`pipeline_mode` PROVENANCE columns are wrong, corrupting any downstream per-source/ per-producer
+coverage rollup (undercounts real `odds_api`/`mdps_odds_horizon_bucket` captures, inflates
+`instruments-service`-attributed captures with data IS never fetched).
+
+**Recommendation per data_type** (per the todo's own done-when):
+
+- `trades`: **needs writer fix** in `resolve_source_and_mode()` — uppercase `data_type` before the
+  `get_source_priority`/`SPORTS_DATA_TYPE_TO_SOURCE` probes (or probe both casings) so it resolves the
+  already-registered `("sports","TRADES") → odds_api`/`BATCH_ODDS_API`. Then **re-stampable**: a small, bounded
+  corrective backfill (find rows with `service_name="instruments-service" AND data_type="trades"`, re-stamp
+  `source`/`pipeline_mode` to `odds_api`/`BATCH_ODDS_API`) once the fix ships — not a wholesale re-record
+  (`venue`/`league_id`/`row_count` are already correct).
+- `odds_horizon_bucket`: same writer fix (case-normalization) resolves the already-registered
+  `("sports","ODDS_HORIZON_BUCKET") → mdps_odds_horizon_bucket`. **Re-stampable** the same way, targeting
+  `mdps_odds_horizon_bucket`/`BATCH_MDPS_ODDS_HORIZON_BUCKET`.
+- `trades_inplay`: **needs writer fix + a new UAC registration** — `TRADES_INPLAY` has no `SOURCE_PRIORITY` entry under
+  any casing, so case-normalization alone won't fix it; a real vendor/source needs to be registered for it first (same
+  vendor as `trades`, `odds_api`, is the obvious candidate — not confirmed here, needs a human/owner check since it's a
+  new UAC registry entry, not a pure code fix). **Re-stampable** once that registration + the writer fix both ship.
+
+Follow-up code-fix work is tracked as new todo 2 below (this todo's own scope was read-only root-cause per the doc's
+stated done-when).
+
+- [x] 1. ✅ [DIAG] P2. Root-cause the 2,490 captured `venue=""` sports manifest rows. **Done** — see "Root-cause finding
+      (2026-08-03)" above: the actual writer is
+      `instruments-service/scripts/backfill_orphan_class_e_sports.py::record_cells()` (a case-sensitivity gap in its
+      `resolve_source_and_mode()` helper, `:98-119`), not MTDS/MDPS as originally hypothesized. All 3 affected
+      data_types have a written finding + recommendation.
+- [ ] 2. [SCRIPT] P2. **Fix `resolve_source_and_mode()`'s case-sensitivity gap** in
+      `instruments-service/scripts/backfill_orphan_class_e_sports.py` (uppercase `data_type` before the
+      `get_source_priority`/`SPORTS_DATA_TYPE_TO_SOURCE` probes) so `trades`→`odds_api` and
+      `odds_horizon_bucket`→`mdps_odds_horizon_bucket` resolve correctly on the next re-run. Register `TRADES_INPLAY` in
+      UAC `SOURCE_PRIORITY` (owner/vendor TBD — likely `odds_api` matching `trades`, needs confirmation) so it also
+      resolves. Then run a bounded corrective backfill re-stamping the 2,490 already-recorded rows'
+      `source`/`pipeline_mode` columns (not `venue`/`league_id`/`row_count`, which are already correct) — see the
+      per-data_type recommendation above. Repo: instruments-service (fix) + unified-api-contracts (TRADES_INPLAY
+      registration).
 
 ## Progress Log
 
@@ -118,3 +179,17 @@ the MDPS-side hypothesis is more plausible for that data_type specifically.
   planning doc claims the blank-`venue` root cause.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (4 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **2026-08-03** (AO dispatch, slot 2) — Todo 1 done. Both prior hypotheses (MDPS candle-shaping parser bug / MTDS-side
+  raw-capture bug) DISPROVEN — a live corpus read (5-6 wide columns, bounded read via `run-bounded-analysis.sh`) found
+  every captured blank-venue row carries `service_name="instruments-service"`, `source="instruments_service"`,
+  `pipeline_mode="batch_instruments_service"`, real `league_id`/`row_count`. Traced
+  - independently re-verified (every file:line re-read directly, not taken on trust) to
+    `instruments-service/scripts/backfill_orphan_class_e_sports.py::resolve_source_and_mode()` — a case-sensitivity gap:
+    it probes UAC `SOURCE_PRIORITY`/`SPORTS_DATA_TYPE_TO_SOURCE` with the raw lower-case GCS path segment
+    (`trades`/`trades_inplay`/`odds_horizon_bucket`) but both registries key on UPPER-CASE data_type strings, so the
+    lookup always misses and falls through to the `instruments-service` producer-fallback.
+    `TRADES`/`ODDS_HORIZON_BUCKET` ARE already registered (uppercase) with correct real sources
+    (`odds_api`/`mdps_odds_horizon_bucket`) — only the case mismatch blocks resolution; `TRADES_INPLAY` has no
+    registration at all under any casing. The underlying cells/row_counts are real and correct; only the provenance
+    columns are wrong. Filed follow-up todo 2 (writer fix + UAC registration + bounded re-stamp backfill) since this
+    todo's own scope was read-only root-cause.
