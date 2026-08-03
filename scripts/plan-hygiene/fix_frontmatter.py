@@ -759,11 +759,16 @@ def _apply_field_defaults(  # noqa: C901
             ]
             changes.append(f"set last_updated={TODAY}")
 
-    # locked_by + locked_since (existing behaviour preserved)
+    # locked_by + locked_since: present-but-empty placeholders, matching every other optional
+    # key in this function (supersedes/superseded_by, etc.) — a doc with no genuine lock claim
+    # must not get one fabricated. The prior hardcoded "live-defi-rollout" / "2026-05-21" values
+    # were bogus on any doc they touched (a branch name is not a lock-holder identity, and the
+    # date predates most docs entirely) — real bug, not a stand-in worth preserving. Found live
+    # 2026-08-03 stamping garbage onto a freshly-authored plan.
     if not has_field(new_fm, "locked_by"):
-        new_fm.append("locked_by: live-defi-rollout\n")
-        new_fm.append("locked_since: 2026-05-21\n")
-        changes.append("added locked_by")
+        new_fm.append("locked_by:\n")
+        new_fm.append("locked_since:\n")
+        changes.append("added empty locked_by/locked_since")
 
     # Present-but-invalid enum remapping (runs last, over the fully-populated frontmatter).
     normalize_invalid_enums(new_fm, changes)

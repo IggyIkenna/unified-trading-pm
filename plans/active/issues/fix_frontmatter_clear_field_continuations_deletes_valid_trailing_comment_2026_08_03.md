@@ -112,7 +112,9 @@ intentionally-changed files won't surface it either.
       "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior fixer run
       before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an indented
       non-quote-non-comment line, and cross-check each hit's git blame for a fixer commit that removed an adjacent
-      operator-ruling comment. Repo: unified-trading-pm. — unified-trading-pm@c8e07871e
+      operator-ruling comment. Repo: unified-trading-pm — SHA recorded here does not resolve in any local clone (likely
+      a transcription typo, same class as flagged in `docs_reconcile_autonomous_sweep_2026_07_30.md`); flagged
+      2026-08-03 by `check_plan_commit_sha_evidence.py`, not re-derived further.
 
 ## Progress Log
 
@@ -175,4 +177,7 @@ intentionally-changed files won't surface it either.
     coverage (continuation-carries-value → not empty, for both the value+comment and quoted-scalar shapes; genuinely
     bare field with no continuation → still correctly empty) plus an end-to-end `fix_active_plan()` test reproducing the
     exact live-corpus shape and asserting the full fixer pass is a byte-for- byte no-op.
-  - Repo: unified-trading-pm@c8e07871e, full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
+  - Repo: `unified-trading-pm@fde8179ae8619fa755debd4c75cafea9b7b16f83` (corrected 2026-08-03 — the SHA recorded here
+    was mistyped as `c8e07871e`, which doesn't resolve; the commit's own message, "is_field_empty() no longer
+    re-corrupts a continuation-preserved execution_scope/last_updated value", matches this entry's narrative exactly, so
+    this correction is verified, not guessed), full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
