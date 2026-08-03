@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T16:25Z
+last_updated: 2026-08-03T16:30Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -315,3 +315,41 @@ repeated here.
   authoring-slot ping. Slot left clean (`market-tick-data-service` and `unified-trading-pm` both on `live-defi-rollout`,
   0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Added
   `market-tick-data-service` to this doc's `repos:` frontmatter (1st occurrence for this repo in the doc-chain).
+
+- **2026-08-03 ~15:48-16:30Z (`cicd` escalation `agt-d12ed0`, slot 3, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — this repo's own first full write-up in this doc (previously cited only by reference, in the
+  `market-tick-data-service` entry above, as an earlier low-base-rate precedent), no code gap, two-run comparison
+  confirms the same-tree-different-outcome signature**: reproduced locally first per the wall brief — backgrounded
+  `bash scripts/quality-gates.sh` on current LDR HEAD (`2f46deecbc49`) came back
+  **`✅ ALL QUALITY GATES PASSED (234s)`**, tests phase `5179 passed, 6 skipped, 10 warnings in 80.36s`. Cross-checked
+  live CI: most recent completed-failure run `30816252648` (`live-defi-rollout`, `workflow_dispatch`, started
+  `13:04:24Z`) failed the `tests` slice via an xdist worker crash —
+  `AssertionError: ('tests/unit/test_sports_adapters_boost.py::TestFootystatsGetTeamsEdgeCases:: test_canonical_team_exception_continues', <WorkerController gw1>)`,
+  underlying cause `Failed: Timeout (>150.0s) from pytest-timeout` —
+  `1 failed, 4300 passed, 6 skipped, 5 warnings in 1022.14s`. Read the test + the code it exercises
+  (`FootystatsAdapter.get_teams`, fully mocked `_make_session`/`_get_with_retry`/ `_extract_data`/`CanonicalTeam`, no
+  un-mocked I/O) and ran it in isolation: `1 passed, 1 warning in 0.93s` — decisive, zero hang in the test's own logic.
+  A second, older completed-failure run (`30774745528`, started `00:33:18Z`) crashed with
+  `RuntimeError: Unexpectedly no active workers available` after only `1270 passed` in `3571.90s` (0:59:31) — no single
+  test named (all xdist workers died), a different random failure shape entirely — the same same-tree-different-outcome
+  / random-hang-site signature this doc-chain's diagnosis pattern establishes, not a per-test defect. Confirmed
+  `gh api .../actions/runners`: `instruments-service` has exactly ONE online runner, `glue-ip-172-31-5-118-1` (identical
+  name/IP to every other repo in this doc-chain), `busy=true` — the fleet-wide single-runner bottleneck, not
+  repo-specific. **Direct same-tree-different-outcome corroboration**: a THIRD run against the same LDR HEAD, still
+  `in_progress` at investigation end (`30823202578`, `workflow_dispatch`, started `14:32:44Z`) — its `tests` slice this
+  time **succeeded**, but took `14:33:12Z→15:58:20Z` (~85 minutes wall-clock vs. the local 80-second run), itself hard
+  evidence of severe scheduler contention rather than any code/test defect; `checks` slice began `15:59:29Z` and was
+  still running at investigation end. `instruments-service/scripts/quality-gates.sh` carries no `PYTEST_TIMEOUT`
+  override (stays at the shared 150s default) and pins `PYTEST_WORKERS=2` — consistent with, not a cause of, the
+  contention signature; per this doc-chain's established practice (todo 1: root-cause is capacity-side,
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` still `status: active` / Phase 2-3 open, re-confirmed
+  unchanged), did NOT bump `PYTEST_TIMEOUT` for this repo. `GET /api/repo-blockers` → `open: []`; no redundant
+  runner-hogging job found to cancel. Did NOT cancel/redispatch the in-flight `30823202578` (would lose its real elapsed
+  queue-survival progress — its `tests` slice had already cleared the hardest part — for zero benefit), per this
+  doc-chain's established precedent. **Disposition: no code or workflow change made or needed** — outcome of
+  `30823202578` left for the next occurrence, consistent with practice. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a
+  real numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert
+  already covers the FYI). Slot left clean (`instruments-service` and `unified-trading-pm` both on `live-defi-rollout`,
+  0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Another repo
+  (`instruments-service`, alongside `deployment-service`/`features-service`/`execution-service`/`alerting-service`/
+  `market-tick-data-service`) showing this identical bug-class signature.
