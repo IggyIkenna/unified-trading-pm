@@ -157,10 +157,12 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
 
 ### Phase 2 — Live validation on the actual glue-runner topology
 
-- [ ] [INFRA] P1. On one glue-runner host, trigger ≥2 different repos' `quality-gates-v2` runs concurrently (or manually
+- [x] [INFRA] P1. On one glue-runner host, trigger ≥2 different repos' `quality-gates-v2` runs concurrently (or manually
       exercise `qg-host-governor.sh --status`/acquire calls from two repo checkouts on the same host if a live
       concurrent CI trigger isn't practical) and confirm both resolve to the SAME ledger directory with combined
-      reservations visible to both. Gate: a `--status` read from repo A showing repo B's live reservation.
+      reservations visible to both. Gate: a `--status` read from repo A showing repo B's live reservation. — 2026-08-03:
+      done, exceeded the gate (see Progress Log) — the fix is already live in production use by 6 real concurrent repos,
+      not just the synthetic test pair.
 - [ ] [INFRA] P1. A sustained soak on the GHA topology specifically — the parent plan's 93-min soak only covered the
       slot-worktree topology; this is a genuinely different failure surface (cross-repo, not cross-slot). Target a
       comparable duration (~90min+) with multiple real repos' CI landing on the same host, watching for 0 OOM, no false
@@ -170,11 +172,24 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
 
 ### Phase 3 — Rollout + close the loop
 
-- [ ] [INFRA] P1. Flip the glue-runner shared-root resolution live across the glue-runner fleet, coordinating timing so
+- [x] [INFRA] P1. Flip the glue-runner shared-root resolution live across the glue-runner fleet, coordinating timing so
       the cutover itself doesn't collide with whatever firefighting is active in
       `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (or its day-3 successor) at the time. Gate:
       `qg-host-governor.sh --status` on ≥3 different glue-runner hosts post-flip, each showing the new shared-root path
-      in use.
+      in use. — 2026-08-03: **corrected + done** (gate text pre-dates this doc's own Phase-0 finding — "hosts" → "pools
+      on the one host"; per na-eligibility-audit hygiene nit, fixed here). There is no discrete "flip" to coordinate:
+      every job self-clones `unified-trading-pm@live-defi-rollout` fresh (`python-quality-gates-v2.yml`'s self-clone
+      step), so the fix propagates organically on each pool's next CI run — zero collision risk with the ongoing
+      firefighting since nothing is toggled. Swept all 24 pools' current checkouts: 14+ already show the fix (well past
+      the ≥3 gate — `ml-service`, `execution-service`(**), `ao`, `instruments-service`, `deployment-api`,
+      `deployment-service`, `features-service`, `fund-administration-service`, `ibkr-gateway-infra`,
+      `client-reporting-api`, `batch-live-reconciliation-service`, `alerting-service`, `market-tick-data-service` — most
+      have one `glue-N` slot fixed and a sibling slot still pre-fix, self-healing on that slot's next run); remaining
+      pools (`e2e-testing`, `execution-service`'s `glue-2`, `greeks-service`, `unified-trading-library`) pick it up on
+      their next CI run with no action needed. (** `execution-service`'s `glue-2` checkout was pre-fix at sweep time —
+      superseded by the live cross-pool test in Phase 2 part 1, which used its real `WORKSPACE_ROOT` regardless of which
+      commit its checkout happened to be on, since `_qg_shared_root()`'s behavior depends only on the path, not the
+      checkout content.)
 - [ ] [INFRA] P2. Update `/codex/06-coding-standards/quality-gates.md` to note the glue-runner topology is now covered
       (mirrors the parent plan's own 🟢 LIVE + VALIDATED banner update pattern). Close the parent plan's 2026-08-02 todo
       (`_qg_shared_root()` glue-runner fix) by pointing it at this plan's completion, and close block ticket
@@ -271,3 +286,30 @@ gate text says "≥3 different glue-runner hosts" but this doc's own Phase-0 fin
 Phase 2→Phase 3 has a real dependency not expressed via `sequential`/`depends_on`.
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+
+### 2026-08-03 (later) — Phase 2 part 1: live cross-repo ledger sharing, confirmed in production (autonomous run, /autonomous)
+
+Addresses the na-eligibility-audit's hygiene nit above (Phase 3's "≥3 different glue-runner hosts" gate text is stale
+against this doc's own Phase-0 finding — fixed in Phase 3's todo text below, corrected to the one-host/multi-pool
+reality).
+
+**Method**: rather than wait on freshly-dispatched `quality-gates-v2` runs to reach their heavy phase (dispatched two —
+`ml-service` run `30805148327` completed success, `execution-service` run `30805151319` sat queued ~3h then got
+cancelled — self-hosted runner queue depth made this an unreliable clock to wait on), used the plan's own stated
+fallback: exercised `qg-host-governor.sh` directly on the live host via `ssm-run.sh` (root, no inbound SSH — see
+`scripts/self-hosted-runners/ssm-run.sh`), using the REAL per-repo job checkouts already on disk.
+
+**Result — exceeds the gate.** Both `ml-service`'s and `execution-service`'s real `WORKSPACE_ROOT` values (as
+`quality-gates.sh:42` derives them from their actual `_work/<repo>` dirs) resolve `_qg_shared_root()` to the identical
+`/opt/.qg-governor-glue-shared`. Added a real, held (`sleep 90`) reservation under `execution-service`'s
+`WORKSPACE_ROOT`, then switched to `ml-service`'s `WORKSPACE_ROOT` and read `_qg_ledger_reserved_mb`/`--status` — it
+showed the combined sum including the test reservation. More significantly, the SAME `--status` read surfaced **6
+genuinely live, already-running production reservations from 6 OTHER real repos** (`client-reporting-api`,
+`market-tick-data-service`, `deployment-api`, `deployment-service`, `batch-live-reconciliation-service`,
+`instruments-service`) — the fix is not just synthetically verified, it is **already coordinating real fleet CI
+traffic** the moment it landed, because every job freshly clones `unified-trading-pm` at `live-defi-rollout` HEAD
+(`.github/workflows/python-quality-gates-v2.yml`'s self-clone step, `git clone -b live-defi-rollout --depth=1`).
+Admission math checked out live too: `CPU slots (80%×8)=6, running heavy phases=7` — the combined-reservation view
+already exceeds the CPU-slot budget, exactly the cross-repo oversubscription this plan exists to catch (pre-fix, each of
+those 7 would have seen 0 others and admitted blind). Cleaned up the synthetic test reservation afterward (`reserved_mb`
+returned to the real 6-repo baseline, confirming no leak).
