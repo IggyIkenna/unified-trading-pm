@@ -134,3 +134,17 @@ session's shared host.
   discovering the 2026-07-09 `glued_pair_id` fix was not durable at the code level. Code fix shipped
   `instruments-service@7a86f13f` (quality-gates green). Retroactive backfill of the current live catalog is the
   remaining open scope, deliberately not attempted inline this session (memory-bounding guardrail).
+- **2026-08-03 (slot-3, task `defi_dex_pool_glued_pair_id_backfill_gap-001`)** — A prior incarnation of this task had
+  already found `deployment-service`'s `defi-catalogue-promote` category (launcher `launch-canonical-migration-vm.sh`,
+  wired 2026-08-03) and launched `canonical-migration-defi-catalogue-promote-20260803-084648` (`--mode full`, dedicated
+  VM per the heavy-compute-on-shared-host rule). That first run hit the vanished-by_date-snapshot 404 crash (exit 1) —
+  root-caused + fixed same-day as `instruments-service@d7956b33`. On resuming this task I found TWO VMs RUNNING
+  concurrently: `...-084648` (already ~52% through the by_date walk, healthy, climbing `processed_snapshots`) and a
+  second, `...-090438`, launched ~2 min earlier with the identical command/launch params (a redundant duplicate
+  dispatch, 0 progress — PID had just started). Stopped the duplicate
+  (`gcloud compute instances delete canonical-migration-defi-catalogue-promote-20260803-090438`, confirmed 0 real work
+  lost) per the craft's efficiency north-star (avoidable duplicate corpus-scale GCS walk = a defect, not a detail); kept
+  `...-084648` running — it is genuinely alive, not stale, per the VM-delete guardrail's own 3-part check (fresh
+  heartbeat, actively-growing `run.log`, `processed_snapshots` climbing). Monitoring `...-084648` to completion via a
+  bounded background watchdog (45min cap, polls `EXIT_STATUS`); will verify post-run per this doc's todo 1 acceptance
+  criteria (0 colon-before-fee, 0 `.0`-suffixed fee segments, report the real remaining-blank count) once it lands.
