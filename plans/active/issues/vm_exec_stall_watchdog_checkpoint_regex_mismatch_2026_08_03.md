@@ -155,12 +155,76 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       `checkpoint` to `day=` (the tool's actual per-day log marker), and correct the stale comment that claimed
       `"checkpoint"` recurs throughout a run. (repo: deployment-service) — `deployment-service@b38130d`,
       `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
-- [ ] [INFRA] P1. **Sanity-sweep every other launcher's `STALL_PROGRESS_REGEX` against its target script's actual log
+- [x] ✅ [INFRA] P1. **Sanity-sweep every other launcher's `STALL_PROGRESS_REGEX` against its target script's actual log
       cadence** — for each of the ~12 launchers setting `STALL_PROGRESS_REGEX` (grep `deployment-service/scripts/vm/`
       for the metadata key), confirm the chosen token appears on essentially every processed item/day/shard, not just at
       a periodic checkpoint or a one-time startup line. Cross-reference against each target script's actual logging code
       (not just the launcher's own comment, which was WRONG in this exact case). File any additional mismatches found as
-      follow-up todos in this doc. (repo: deployment-service)
+      follow-up todos in this doc. (repo: deployment-service) — **DONE, no shipped code change needed**: all 12
+      launchers that set `STALL_PROGRESS_REGEX` were individually checked against their target script's actual logging
+      source (not just the launcher's own comment): 1. `launch-sfi-backfill-vm.sh` (`league`, target
+      `instruments-service/.../orchestrator/sfi.py`) — OK. The one truly unconditional per-date line for the live
+      `SFI_PROGRESSIVE_STATS` entity, `"SFI progressive: %d/%d matches        in mapped prediction leagues for date=%s"`
+      (sfi.py:358), fires on every date that isn't skipped by the pre-coverage-start/off-season guards; those
+      guard-skips are fast no-API short-circuits, not slow-and-silent, so they can't reproduce the DEX-swaps failure
+      shape. 2. `launch-feature-orphan-sweep-vm.sh` / `launch-orphan-sweep-vm.sh` (both `swept`, targets
+      `features-service/scripts/feature_orphan_sweep.py` + `instruments-service/scripts/migration_orphan_sweep.py`) —
+      OK, with a noted near-miss. Both only print their `"swept"` progress line every 50,000 objects
+      (`seen % 50000 == 0`) — structurally the SAME periodic-marker shape as the DEX-swaps bug. The archived
+      `migration_orphan_sweep_performance_decay_2026_07_22.md` incident shows this actually got close: pre-fix
+      throughput decay pushed the gap between "swept" lines to 44-48 minutes (vs. the 3600s/60min `STALL_TIMEOUT_SEC`
+      default) — a genuine near-miss, not yet a false-kill. That doc's own throughput fix
+      (`instruments-service@78dccd8c` + later follow-ups) restored ~380-5700 objects/s, i.e. ≤~131s per 50K-object step
+      — ~27x headroom under 3600s. No further action needed, but worth citing here since another regression to the
+      pre-fix throughput would reproduce this exact bug class again. 3.
+      `launch-backfill-defi-dex-swaps-source-correction-vm.sh` (`day=`) — the bug this doc exists for; fixed by todo 1
+      above. 4. `launch-canonical-migration-vm.sh` (`progress:|files/sec`, but ONLY for the `cefi-content-apply`
+      category) — OK for that category (the launcher's own comment cites a measured 2.9-9.9 files/sec, ~20-70s between
+      lines, >>25x headroom, already independently verified this session against
+      `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`). **But this surfaced a related, more severe gap —
+      see follow-up todo 6 below**: the other ~20 `VM_TASK=canonical-migration` categories in this SAME launcher set NO
+      `STALL_PROGRESS_REGEX` at all (the launcher's own comment says so explicitly), so they fall back to raw
+      log-BYTE-GROWTH stall detection — which is permanently defeated by the always-on 60s `PIPELINE_HEARTBEAT` emitter
+      wired into every tee'd command via `setup-data-pipeline-vm.sh` (confirmed unconditional, line ~1199). This is the
+      EXACT mechanism already root-caused for the "10/42 cefi-content-apply VMs sat hung 1-2.5h+ with GCE reporting
+      RUNNING and nothing paging" incident that motivated `cefi-content-apply`'s own fix — it's just not yet fixed for
+      the other ~20 categories. 5. `launch-backfill-candle-manifest-vm.sh` (`footer-read`, target
+      `market-data-processing-service/scripts/backfill_candle_manifest.py`) — OK. Progress line prints every 1000
+      futures resolved; `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` measured ~100-150 footer-reads/s
+      aggregate (16 threads) on a real prod run, i.e. ~7-10s per 1000-object step — enormous headroom under 3600s. 6.
+      `launch-mdps-sharded-backfill.sh` (`Processing|Skipping`, but ONLY for the `sports` category) — OK for sports (the
+      launcher's own comment cites a "proven invariant" against `process_handler.py:517/540/582`, spot-checked and
+      confirmed: every real per-date iteration logs `"Processing candles for %s"` or a `"Skipping ..."` line before
+      advancing). **Same class of gap as #4 — see follow-up todo 7 below**: `cefi`/`defi`/`tradfi`/ `prediction`
+      categories of this SAME launcher run the IDENTICAL command
+      (`python -m market_data_processing_service --operation process --mode batch`, confirmed by direct read) through
+      the SAME `process_handler.py` per-date loop, so the exact same `Processing|Skipping` invariant already proven for
+      `sports` applies to them too — but the launcher currently gates BOTH `STALL_PROGRESS_REGEX` and the longer
+      `STALL_TIMEOUT_SEC=7200` to `cat == "sports"` only, leaving the other 4 categories on the DEFAULT 1800s timeout
+      with zero regex (defeated by the same `PIPELINE_HEARTBEAT` mechanism as #4) — i.e. weaker AND more exposed than
+      sports, for no apparent reason. 7. `launch-mtds-gas-fees-backfill-vm.sh` (`sampled|Wrote`, target
+      `market-tick-data-service/market_interface/clients/gas_fee_client.py` + `cli/handlers/gas_fee_handler.py`) — OK.
+      `"...sampled %d/%d blocks..."` prints every 50 blocks (`heartbeat_every=50`) inside a 16-worker concurrent fetch
+      of ~288 blocks/chain/day; launcher comment states markers were verified against a live run.log for the 2026-06-19
+      incident this fix addressed. 8. `launch-cefi-funding-timestamp-fix-vm.sh` (`action=`) — OK, already fixed +
+      shipped (`deployment-service@727e3ca` per `migration_vm_hung_detection_monitoring_gap_2026_07_27.md`),
+      re-confirmed present in the current launcher source. 9. `launch-backfill-orphan-e-vm.sh` (`convert`, target
+      `instruments-service/scripts/backfill_orphan_class_e.py`) — OK. `"  converted %d/%d"` prints every 1000
+      conversions, same order of magnitude as #5's verified footer-read cadence; no dedicated throughput doc found for
+      this specific tool, but no incident history either and the 2026-06-11 tradfi migration (14,707 converted objects)
+      completed without a reported stall. 10. `launch-cefi-sharded-backfill.sh` (`uploaded`, default) — OK. This is the
+      ORIGINAL, most mature convention in the fleet (`StreamingParquetWriter: uploaded ...`, fires once per finalized
+      shard file); extensively incident-hardened already (`cefi_bf_2021_heavy_vm_stalled_2026_07_12` and others cited in
+      the launcher's own comments). 11. `_tradfi-ohlcv-launcher-lib.sh` (`uploaded|streamed`) — OK. The launcher's own
+      comment states both markers were "verified EMPIRICALLY against a real tradfi databento run.log" (2026-07-19), and
+      explains why BOTH terms are needed (a long CME-expiry fetch phase can run >30min before its first `uploaded`
+      write, so `streamed` covers the fetch-phase gap).
+
+      **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
+          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+          todos 6 and 7 below.
+
 - [ ] [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
       verify via `gcloud compute instances describe ... --format='value(status)'` or its absence (self-delete removes
@@ -176,6 +240,39 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       hardening improvement, not the fix for why the original VM died. Update that doc's Progress Log to reference this
       correction (this doc's own filing already cross-references it via `related:`; this todo is a light consistency
       pass, not new investigation). (repo: unified-trading-pm)
+- [ ] [INFRA] P1. **Extend `launch-mdps-sharded-backfill.sh`'s `Processing|Skipping` stall-progress marker from
+      `sports`-only to the `cefi`/`defi`/`tradfi`/`prediction` categories of the SAME launcher** (found during todo 2's
+      sweep). All 5 categories invoke the identical entrypoint
+      (`python -m market_data_processing_service --operation     process --mode batch`, confirmed by direct read of the
+      launcher's command-construction code) through the same `process_handler.py` per-date loop that already carries the
+      "proven invariant" cited for `sports` (every real date logs `"Processing candles for %s"` or a `"Skipping ..."`
+      line — `process_handler.py`, spot-checked this session). Today only `cat == "sports"` gets
+      `STALL_PROGRESS_REGEX=Processing|Skipping` + the longer `STALL_TIMEOUT_SEC=7200`; the other 4 categories get
+      NEITHER, so they fall back to the DEFAULT 1800s byte-growth-only stall check — permanently defeated by the
+      always-on 60s `PIPELINE_HEARTBEAT` marker wired into every tee'd command (`setup-data-pipeline-vm.sh`, confirmed
+      unconditional). Net effect: a genuine hang in these 4 categories currently runs undetected indefinitely (same
+      root-cause class as the archived "10/42 cefi-content-apply VMs sat hung 1-2.5h+ with GCE reporting RUNNING and
+      nothing paging" incident) — the opposite failure mode from this doc's own DEX-swaps bug (false-kill vs.
+      never-kill), but the same underlying gap. Fix: widen both metadata conditions in
+      `scripts/vm/launch-mdps-sharded-backfill.sh` (currently `[[ "$cat" == "sports" ]] && md=...`) to cover all 5
+      categories, since the target script and its logging invariant are identical across them — this is a low-risk,
+      mechanical change (same regex, same script, just currently gated needlessly narrow), not a new per-category
+      investigation. (repo: deployment-service)
+- [ ] [INFRA] P2. **Audit + roll out `STALL_PROGRESS_REGEX` for the remaining ~20 `launch-canonical-migration-vm.sh`
+      categories beyond `cefi-content-apply`** (found during todo 2's sweep) — e.g. `defi`/`tradfi`/`prediction`/
+      `sports`/`*-candle-census`/`*-candle-apply`/`*-candle-orphan-sweep`/`*-iah`/`*-iah-purge`/`cefi-dedup-apply`/
+      `cefi-late-renames`/`cefi-eu-twin-apply`/`cefi-bybit-spot-purge`/`manifest-restamp`/etc (see the launcher's own
+      category list). These are ALL exposed to the same defeated-byte-growth-fallback gap as todo 6 above (the
+      launcher's own comment already says so explicitly: "the other ~20 VM_TASK=canonical-migration categories' scripts
+      have NOT been individually checked ... intentionally do NOT get a regex here yet"), but unlike todo 6, each
+      category here invokes a genuinely DIFFERENT target script (`build_instrument_catalogue.py`,
+      `candle_orphan_sweep.py`, `relabel_solana_dex_pools_fake_history.py`, and others per the launcher's
+      `_migration_cmd()`- style dispatch) — so this needs the SAME per-category read-the-actual-logging-code rigor this
+      doc's todo 2 just applied to the 12 launchers, not a single mechanical widen. Scope precisely per category before
+      adding its regex (grep the launcher for each category's command, find its target script, confirm a
+      per-item/per-day/per-shard log line that recurs well within the timeout, matching the standard this doc's todo 2
+      used). Not filed as its own issue doc — same underlying gap as todo 6, just larger/multi-script, so it stays as a
+      follow-up here. (repo: deployment-service)
 
 ## Progress Log
 
@@ -201,3 +298,16 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   distinguishes `DEPLOYMENT_COMPLETED` (no action) from a stall/preemption kill (auto-relaunches via the now-fixed
   launcher and keeps tracking the new VM name). No GCS deletes/mutations performed this entry — read-only checks + one
   background monitoring process armed.
+- **2026-08-03T~12:15Z** (AO dispatch, slot 6, `infra`, task `vm_exec_stall_watchdog_checkpoint_regex_mismatch-001`) —
+  Completed todo 2's sweep: read the actual target-script logging source (not just each launcher's own comment) for all
+  12 launchers that set `STALL_PROGRESS_REGEX`, per the per-launcher writeup now in todo 2 above. No further regex
+  MISMATCHES found (the DEX-swaps one was the only live one, already fixed by todo 1) — but the sweep surfaced two
+  related **missing-regex** gaps, both stemming from the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism already
+  root-caused for `cefi-content-apply`: (1) `launch-mdps-sharded-backfill.sh` gates its already-proven
+  `Processing|Skipping` marker to `sports` only, despite `cefi`/`defi`/`tradfi`/`prediction` running the IDENTICAL
+  entrypoint through the same per-date loop — filed as todo 6 (mechanical, low-risk, ready to ship); (2) the ~20 OTHER
+  `launch-canonical-migration-vm.sh` categories (beyond `cefi-content-apply`) still have no regex at all and each needs
+  its own target-script read before a regex can be added safely — filed as todo 7 (larger, multi-script audit, same
+  shape as this doc's own todo 2 but scoped to that one launcher's remaining categories). Read-only this session
+  (grep/read across deployment-service, instruments-service, features-service, market-data-processing-service,
+  market-tick-data-service, unified-trading-library source + plans/codex docs) — no code shipped, only this doc edited.
