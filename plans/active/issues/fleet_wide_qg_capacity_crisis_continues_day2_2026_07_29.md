@@ -891,3 +891,38 @@ not just noting.
   `AUTHORING_SLOT=ci-reconcile` is not a live numeric slot (same non-int rejection as `agt-05a7fe`/`agt-15e651`) — this
   entry is the outcome record. Left `market-data-processing-service` and this PM worktree on `live-defi-rollout`,
   nothing else touched.
+
+- **2026-08-03 ~03:05-05:10Z (cicd escalation `agt-ff3f0c`, slot 5, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — dispatched against run `30777261237` (LDR HEAD `fd290224`, 01:36:11Z). Both slices failed with the
+  doc's two established shapes: `QG slice (checks)` hit `❌ Type check FAILED/timeout (exit=124)` at 02:18:28Z on its
+  first attempt, then the SAME run's `lint-codex` selector re-ran the full pipeline including typecheck moments later
+  and it passed clean (self-healed within one run — a scheduling-timeout signature, not a real basedpyright finding).
+  `QG slice (tests)` genuinely hung: last progress marker
+  `tests/delta_one/unit/test_feature_groups/test_microstructure.py` at 02:33:45Z (16%), then 8 minutes of total silence
+  before `pytest-timeout` fired inside `test_momentum.py::test_roc_columns_present` → `_add_lagged_features` →
+  `pd.concat(...)` — on a 50-row synthetic dataframe (`_make_ohlcv_df(n=50)`), i.e. not an algorithmic-complexity hang;
+  the code path itself is trivial at that scale. By the time this was investigated, LDR HEAD had advanced 10 commits to
+  `18fd5181` (fd290224 was stale) — confirmed none of the 10 touch `_add_lagged_features`/`base.py`, but one
+  (`2aea0e59`, slot-12, already on HEAD) independently fixed an unrelated-looking-but-plausibly-compounding
+  "lingering-non-daemon-thread hang class" in `cross_instrument/__main__.py` (`os._exit()` after
+  `ServiceBootstrap.run()`), the same failure family this doc's `market-data-processing-service` `OSError: cannot send`
+  entries also trace to abnormal pytest teardown/thread behavior under load.
+
+  **Did not add a redundant local repro or CI retrigger.** Host reading at investigation time: `uptime` load average
+  **31.47/35.30/36.40** (>2x the 16-vCPU nominal capacity), swap **23Gi/47Gi** used, **39** concurrent
+  `quality-gates.sh`-family processes already live — the identical whole-host-thrashing signature every entry in this
+  doc-pair tracks. Confirmed via direct process inspection (this session runs ON `ip-172-31-5-118`, the same box as
+  `features-service`'s `glue-ip-172-31-5-118-1` runner, `busy=true`): the `K=1` runner was occupied by `main`'s own
+  confirmatory `quality-gates-v2` run (`30780455914`, same `main` HEAD `4bbc25eb` that had already failed twice earlier
+  the same day) — `checks` leg failed again (same timeout signature), `tests` leg genuinely running (not `D`-state,
+  actively burning CPU, not a dead wedge) — real FIFO progress, not a deadlock, so no kill-to-unwedge intervention
+  warranted (unlike the `agt-f70a66` `features-service` entry above). A `live-defi-rollout` run (`30780475199`, HEAD
+  `52e80959`) was already genuinely queued behind it at investigation start. Two other slots (12, 14) were independently
+  running local `quality-gates.sh` against `features-service` at the same time for unrelated feature work (confirmed via
+  `GET /api/escalations/active` — no other slot currently holds a `features-service` escalation), not a
+  dispatcher-dedupe gap this time. **Disposition: no code/test/workflow change made or needed** — 14th repo-specific
+  corroboration of the fleet-wide contention root cause, first to combine both established failure shapes (`checks`-leg
+  timeout + `tests`-leg hang) in the same run for the same repo. `GET /api/repo-blockers` → `open: []`. Pinged
+  `AUTHORING_SLOT=ldr-ci-monitor` per the standard completion step (expect the same non-numeric-literal rejection this
+  doc's `ci`/`ci-reconcile` precedents hit). Slot left clean on `live-defi-rollout` (only this doc touched;
+  `features-service` and `e2e-testing` working trees already clean, no commits made).
