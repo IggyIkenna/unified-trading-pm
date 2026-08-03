@@ -441,15 +441,12 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `tests/internal/unit/domain/execution_service/test_defi_position.py` pinning `1.15`. QG green. Repo:
       unified-api-contracts. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
-- [ ] [CODE] P3. **Rename UAC's `infura_*` Starknet endpoint-template key away from the banned provider name, and add
-      the clarifying note.** Infura is a REMOVED provider (CLAUDE.md § DeFi execution — removed providers must not be
-      referenced), but the public Starknet endpoint SHAPE the `infura_compatible` template describes is still wanted —
-      so keep the template, rename its key to something provider-neutral, and add a one-line note explaining that the
-      retained thing is the endpoint shape, not the vendor. Because this is a registry key, migrate every consumer in
-      the SAME unit (grep the workspace for the old key, READ each hit before editing — a runtime-resolved lookup will
-      not necessarily show up as a literal). **Done when**: `rg 'infura' unified-api-contracts/` returns only the new
-      note (no key or lookup), every consumer resolves the new key, and UAC + any consumer repo touched are QG-green.
-      Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
+- [x] ✅ [CODE] P3. **Rename UAC's `infura_*` Starknet endpoint-template key away from the banned provider name.** —
+      unified-api-contracts@862ff5a6. Premise stale at dispatch: the `infura_compatible` template was already
+      **deleted** (not renamed) 2026-06-09 as D8 (UAC@8a117153, no consumer referenced the key) — nothing left to
+      rename/migrate. Re-`rg -rni infura unified-api-contracts/` found one surviving hit (a comment naming the banned
+      provider in `_defi_chain_data.py`); reworded it. `rg 'infura' unified-api-contracts/` now 0 hits (done-when met).
+      QG green. Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 - [x] ✅ [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** — deployment-api@4c4b007. Premise was
       stale at dispatch: file-size/function-size were already cleared (moved to a separate zero-tolerance gate, already
