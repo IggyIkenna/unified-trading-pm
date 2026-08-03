@@ -11,21 +11,22 @@ summary: >-
   data_type="FIXTURES" rows) is NOT met — a read-only prod census shows 337,464 legacy FIXTURES rows still in the sports
   manifest vs. 114,497 combined FIXTURES_SCHEDULE/FIXTURES_OUTCOMES rows. Closing this requires a genuine backfill with
   open design questions (not a mechanical find/replace) — see below.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [instruments-service, unified-trading-library]
+repos: [instruments-service, unified-trading-library, deployment-api]
 scope: [engineer, admin]
 tags: [sports, fixtures, manifest, data_type-atom, backfill, honest-coverage]
 related:
   [
     /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/archive/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md,
+    /plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: "2026-08-03"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,14 +44,31 @@ context_scope:
     /plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    deployment-api/scripts/census_manifest_data_type_2026_07_24.py,
     instruments-service/scripts/restamp_fixtures_manifest_legacy_atom_2026_07_24.py,
   ]
-resolved_by:
+resolved_by: |
+  All 4 todos closed 2026-08-03 (slot-3). The final open todo (re-verify the census, confirm the
+  10th-call-site leak fix held) is CONFIRMED: FIXTURES=100,801, byte-identical to the 2026-07-26
+  reading across >1 week and multiple enum-universe-sports-*/consolidator cycles — zero growth.
+  A restamp-script dry-run shows SAFE=0/ESCALATE=100,801 for the current residual, i.e. it is
+  entirely collision-duplicate rows of the same kind the 2026-07-30 decision on the original
+  55,233 residual already dispositioned (leave as permanent noise) — that decision's rationale
+  extends to the larger population without a new operator/main call. See "Update (2026-08-03)"
+  below for full evidence. The now-fully-used verification tool
+  (deployment-api/scripts/census_manifest_data_type_2026_07_24.py) was deleted per its own
+  Delete-when clause (deployment-api@93105ed).
 source:
   found while shipping sports_closeout_batch1_ao_ready_2026_07_24.md todo 1 (fixtures manifest atom migration),
   2026-07-24
 ---
+
+> **🟢 ARCHIVED 2026-08-03 — all todos closed; leak-fix-held verified + residual disposition covered by existing
+> precedent, no delete executed.** The `FIXTURES` legacy-atom census is stable (frozen at 100,801, zero growth since
+> 2026-07-26), confirming the 10th-call-site leak fix (`instruments-service@ca8bd7b3ab`) held. The remaining rows are
+> 100% collision-duplicates (restamp dry-run: SAFE=0) — the same row-shape the sibling
+> `fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (archived 2026-07-30, option (b): leave as permanent
+> noise) already dispositioned; that decision covers this larger population without modification. See "Update
+> (2026-08-03)" below for full evidence.
 
 ## What I found
 
@@ -212,15 +230,76 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
       restamp is still the right long-term fix (retires the need for the alias set entirely); the routing patch is a
       stopgap that works correctly either way.
-- [ ] [DATA] P1. **Resolve the 55,233 collision-residual decision + re-verify the census** — per the 2026-07-26 update,
-      the `FIXTURES` census did NOT stabilize at the expected 55,233 (it was growing due to a 10th call site, since
-      fixed); ~~decide delete-vs-leave for the stable 55,233-row collision residual (tracked in
-      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`)~~ **STALE (na-eligibility-audit 2026-08-03)** —
-      already decided: that doc (now archived, `status: resolved`) recorded option (b) 2026-07-30 — leave the 55,233
-      rows as permanent noise, no delete executed, `SCHEDULE_DEFINING_DATA_TYPES` stays additive permanently as the
-      accepted cost. Remaining open here: re-run the census after the next `enum-universe-sports-*` run + ≥2
-      consolidator cycles to confirm decay/stabilization toward the 55,233 figure (verifies the 10th-call-site leak fix
-      actually held — unrelated to the delete-vs-leave choice, which is settled).
+- [x] ✅ [DATA] P1. **Re-verified the census 2026-08-03 (slot-3) — growth-halt CONFIRMED, decay-to-55,233 is
+      structurally impossible via the restamp mechanism, no new operator decision needed.** See "Update (2026-08-03)"
+      below for the full evidence. Summary: the sanctioned census re-run shows `FIXTURES=100,801` — byte-identical to
+      the 2026-07-26 reading, i.e. **zero growth** across >1 week and multiple `enum-universe-sports-*` + consolidator
+      cycles, which is the direct proof the 10th-call-site leak fix (`instruments-service@ca8bd7b3ab`) held. A read-only
+      dry-run of the existing restamp script against the current corpus additionally shows `SAFE=0 / ESCALATE=100,801` —
+      every remaining `FIXTURES` row is now a collision-duplicate (an existing `FIXTURES_SCHEDULE` row already occupies
+      the same dedup key), so the restamp mechanism can never touch any of them; "decay toward 55,233" was never going
+      to happen on its own — this population is now the SAME kind of row as the original 55,233 collision residual, just
+      a larger one (the leak burst before its fix wrote MORE duplicate legacy rows into cells that already had
+      `FIXTURES_SCHEDULE` captures). The 2026-07-30 operator/main decision on the original 55,233 residual
+      (`fixtures_manifest_duplicate_collision_residual_2026_07_24.md`, option (b): leave collision-duplicate rows as
+      permanent noise, `SCHEDULE_DEFINING_DATA_TYPES` stays additive, do not re-derive the delete-safety proof) applies
+      verbatim to this larger 100,801 population — same row-shape, same rationale, no new judgment call. Todo done-when
+      met: the leak-fix-held fact is verified; the residual is dispositioned by existing precedent.
+
+## Update (2026-08-03, slot-3) — census re-verification + restamp dry-run
+
+**Re-ran the sanctioned census**
+(`deployment-api/scripts/census_manifest_data_type_2026_07_24.py --service instruments-service --asset-group sports --filter-prefix FIXTURES`,
+live against `instruments-store-sports-prd-central-element-323112`, `row_count=11,853,052`):
+
+```
+FIXTURES_SCHEDULE: 992,516   (was 461,881 on 2026-07-26 — grew, as expected from ongoing live captures)
+FIXTURES_OUTCOMES: 105,287   (was 102,086 on 2026-07-26 — grew, as expected)
+FIXTURES:          100,801   (was 100,801 on 2026-07-26 — BYTE-IDENTICAL, zero change)
+```
+
+`FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` both grew over the >1-week gap as expected from ordinary live capture traffic,
+but `FIXTURES` is frozen at the exact same count as the 2026-07-26 reading. Across that gap the sports
+`enum-universe-sports-*` enumerator and the `instruments-sports` manifest consolidator (`*/1 * * * *` cron) both ran
+many times — far more than the "≥2 consolidator cycles" bar this todo asked for — so a frozen count is strong,
+directly-measured evidence that no new legacy `FIXTURES` rows have been created since the 10th-call-site fix
+(`instruments-service@ca8bd7b3ab`) landed. **This is the growth-halt proof the todo asked to verify.**
+
+**Ran a read-only dry-run of the existing restamp script**
+(`instruments-service/scripts/restamp_fixtures_manifest_legacy_atom_2026_07_24.py`, no `--apply`, no write) against the
+current corpus to understand why the count hasn't also decayed toward 55,233:
+
+```
+affected rows (legacy data_type='FIXTURES'): 100,801
+internal collisions: 0
+external collisions (post-restamp key collides with an existing row): 100,801
+SAFE to re-stamp: 0
+ESCALATE (left untouched): 100,801
+```
+
+**Every single remaining `FIXTURES` row is a collision-duplicate** — its post-restamp
+`(date, venue, data_type, service_name, ...)` key already matches an existing `FIXTURES_SCHEDULE` row. `SAFE=0` means a
+restamp `--apply` run right now would restamp precisely zero rows and change nothing. This rules out "decay toward
+55,233" as something that happens passively (there's no mechanism that would ever reduce this count without a delete,
+which is the already-decided-against option) or something a restamp re-run would achieve (there's nothing left for it to
+touch).
+
+**Why this doesn't need a new decision.** The population's defining property — external-collision, i.e. a row that's a
+byte-identical duplicate of an already-migrated `FIXTURES_SCHEDULE` capture — is EXACTLY the property
+`fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (archived, `status: resolved`) already adjudicated for
+the original 55,233-row residual on 2026-07-30 (option (b): leave as permanent noise; delete is the workspace-wide
+banned pattern for this manifest family absent a fresh `_legacy_seed.parquet`-resurrection-safety re-derivation, which
+that doc explicitly declined to do as out-of-scope). The 10th-call-site leak (fixed 2026-07-26) grew this SAME
+collision-duplicate population from 55,233 to 100,801 before its fix landed — it didn't create a new kind of problem, it
+just added more instances of the kind already dispositioned. The existing decision's rationale (correctness is
+unaffected — the additive `SCHEDULE_DEFINING_DATA_TYPES` frozenset already resolves coverage-math correctly regardless
+of these rows' presence; only storage/row-count cost, which is accepted) covers the larger number without modification.
+
+**Conclusion**: leak fix confirmed held (zero growth, exceeds the ≥2-cycle verification bar). Residual disposition:
+covered by the existing 2026-07-30 leave-as-permanent-noise decision, no new operator/main call needed. This todo's
+done-when (confirm the leak fix held) is met; "decay toward 55,233" in the prior update's phrasing was an assumption
+that turned out false once the restamp mechanism was checked directly (0 SAFE rows) — corrected here so a future pass
+doesn't re-ask the same question expecting a different mechanism to eventually kick in.
 
 ## Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_batch4-002)
 
