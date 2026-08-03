@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T16:30Z
+last_updated: 2026-08-03T16:35Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -353,3 +353,32 @@ repeated here.
   0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Another repo
   (`instruments-service`, alongside `deployment-service`/`features-service`/`execution-service`/`alerting-service`/
   `market-tick-data-service`) showing this identical bug-class signature.
+
+- **2026-08-03 ~16:00-16:20Z (`cicd` escalation `agt-2482ca`, slot 7, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — ~16th same-day fire for this repo, re-confirms `agt-c6ccfb`'s disposition + adds one new clarifying
+  detail on the `checks` leg**: re-verified from scratch rather than trusting the cached diagnosis. `main` run
+  `30825589070` (the same run `agt-c6ccfb` already read) — confirmed BOTH slices failed, not just `tests`: the `checks`
+  leg's actual failing selector is `typecheck` (`##[error]QG selector 'typecheck' FAILED (leg=checks, exit=1)`, preceded
+  by `❌ Type check FAILED/timeout (exit=124)` after a ~121s hang in the `[4/6] TYPE CHECK` section) — i.e. the **same
+  exit-124 wall-clock-timeout signature as the `tests` leg**, not a distinct bug. Flagging this because the run's log is
+  easy to misread: the peripheral-consumer basedpyright scan over `e2e-testing/scripts/{delta_one, commodity,...}/` that
+  runs later in the same job prints 96+ genuine `reportAny` errors against
+  `e2e-testing/scripts/features/snapshot_instrument_universe.py` and several `smoke_matrix.py` files — but every one of
+  those is wrapped in `run_timeout 120 basedpyright ... || log_warn "..."` (`features-service/scripts/quality-gates.sh`
+  ~L145), i.e. WARN not FAIL by design (catches cross-repo import-rot without gating on a sibling repo's own type
+  hygiene) — confirmed this is not new/blocking by checking `e2e-testing`'s own `quality-gates-v2` (green, 5 most recent
+  runs all `success`) and by confirming the primary `features_service`-source typecheck itself reported
+  `✅ STEP 5.21/5.22` clean in this exact run. 121s is consistent with `main` still lacking the `PYRIGHT_TIMEOUT=300`
+  raise (`c092df50`, LDR-only, unpromoted — same 28+-commits-behind gap `agt-c6ccfb` already diagnosed for the `tests`
+  leg's missing `PYTEST_TIMEOUT=300`). Re-confirmed promotion state unchanged: `ldr-to-main-promote-fleet` still emits
+  `GATE BLOCK features-service: ci_status=FAILING` every ~15min tick; single runner `glue-ip-172-31-5-118-1`
+  `status=online busy=true`; the LDR re-verify run `agt-c6ccfb` dispatched (`30829019397`) was still genuinely
+  progressing (`checks` leg `in_progress`, `tests` leg `queued` behind it) at investigation end — did not cancel or
+  redispatch. **Disposition: no code or workflow change made or needed** — this pass's only incremental value is
+  confirming the `checks` leg is the identical timeout class (not a second bug) and ruling out the loud-but-non-blocking
+  peripheral warn as a distraction for the next reader. This is now corroboration #4 for todo 2 (features-service alone
+  is ~16 same-state re-fires) — no dedup/cooldown guard exists yet on `main_ci_red` re-dispatch for an unchanged
+  in-flight state. `GET /api/repo-blockers` → `open: []`. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered
+  slot) — per `cicd.md`, skipped the authoring-slot ping. Slot left clean (`features-service` and `unified-trading-pm`
+  both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either
+  repo).
