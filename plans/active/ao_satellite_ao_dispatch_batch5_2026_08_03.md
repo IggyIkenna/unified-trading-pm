@@ -6,12 +6,12 @@ summary: >-
   autonomous mode, scheduled dispatch, real `Workflow` fan-out over all 41 currently mechanically-flagged never-cited
   candidates — up from 41/42 at prior runs since new docs were created 2026-08-01..08-03). Of the 41: 1 is
   `archivable_now` (pure bookkeeping), 1 is `archivable_after_planned_work` (already covered by
-  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own open Phase-5 todo, not batch material), 29 are
-  `orphaned_never_touched`/`orphaned_partial_coverage` but NOT AO-eligible (operator-gated design forks,
-  credential/host-access gaps, unscoped design questions, or already-claimed-by-a-live-cluster's-own-sequencing), and 10
-  are genuinely orphaned AND AO-eligible bounded work — this batch extracts those 10, each conflict-checked against the
-  whole `plans/active` corpus before drafting (2 same-file adjacencies found and handled via a sequencing rule rather
-  than exclusion, matching batch3/batch4's own precedent).
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own open Phase-5 todo, not batch material), 39 are
+  `orphaned_never_touched`/`orphaned_partial_coverage`, of which 30 are NOT AO-eligible (operator-gated design forks,
+  credential/host-access gaps, unscoped design questions, or already-claimed-by-a-live-cluster's-own-sequencing) and 9
+  ARE AO-eligible bounded work — this batch extracts those 9 plus the 1 `archivable_now` bookkeeping item (10 todos
+  total), each conflict-checked against the whole `plans/active` corpus before drafting (2 same-file adjacencies found
+  and handled via a sequencing rule rather than exclusion, matching batch3/batch4's own precedent).
 status: draft
 nature: process
 asset_group: [ao]
@@ -76,14 +76,15 @@ A fresh `/ag-closeout-audit ao` run (2026-08-03) re-derived the tranche's 41 cur
 `generate_ag_closeout_audit_candidates.py`-flagged never-cited members and ran a real per-doc `Workflow` fan-out over
 all of them (a first — prior single-doc-agent runs existed, but this is the first run where every one of the 41 got an
 independent fresh read in the same pass). Verdict counts: 1 `archivable_now`, 1 `archivable_after_planned_work`, 10
-`orphaned_partial_coverage`, 29 `orphaned_never_touched`. Of the 39 genuinely-orphaned docs, only 10 clear the
+`orphaned_partial_coverage`, 29 `orphaned_never_touched` (39 orphaned total). Of those 39, only 9 clear the
 AO-dispatch-scope eligibility bar (bounded, worker-determinable-alone outcome, no operator ruling / credential gap /
-calendar gate / open design fork) — this batch extracts those 10. The remaining 29 stay exactly where they are:
-operator-gated design forks (the largest class — several explicitly self-labelled `[OPERATOR]` or "not yet decided, for
-operator review"), credential/host-access gaps, unscoped design questions that need a `/plan-brainstorm` pass first, or
-work already claimed/sequenced by the still-active worker-liveness/watchdog cluster the operator ruled on 2026-07-29.
-Full per-doc reasoning for all 41 (including the 29 declined) lives in this run's own Workflow journal, cited in the
-Progress Log below rather than duplicated here.
+calendar gate / open design fork) — this batch extracts those 9, plus the 1 separately-eligible `archivable_now`
+bookkeeping item (10 todos total). The remaining 30 orphaned docs stay exactly where they are: operator-gated design
+forks (the largest class — several explicitly self-labelled `[OPERATOR]` or "not yet decided, for operator review"),
+credential/host-access gaps, unscoped design questions that need a `/plan-brainstorm` pass first, or work already
+claimed/sequenced by the still-active worker-liveness/watchdog cluster the operator ruled on 2026-07-29. Full per-doc
+reasoning for all 41 (including the 30 declined) lives in this run's own Workflow journal, cited in the Progress Log
+below rather than duplicated here.
 
 ## Rules for every worker on this plan
 
@@ -294,33 +295,60 @@ Progress Log below rather than duplicated here.
       reaper-overeagerness fix only — its other 2 items stay held/deferred per that doc's own state). Repo:
       agent-orchestrator.
 
-## Deferred — full per-doc disposition of the 29 declined orphaned candidates
+## Deferred — full per-doc disposition of the 30 declined orphaned candidates
 
-The 29 orphaned-but-not-AO-eligible docs from this run's Phase 1 fan-out are NOT individually re-listed here (their full
-reasoning is in this run's Workflow journal, cited in the Progress Log below) — every one falls into one of these
-non-batchable categories per the skill's own taxonomy: **operator-gated** (an explicit `[OPERATOR]` tag or "not yet
-decided, for operator review" framing — the largest class, e.g.
-`ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`,
-`ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`,
-`ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`, `blocked_questions_ux_redesign_context_loss_and_scale`,
-`long_lived_vm_logs_not_backed_up`, `orchestrator_vm_e2e_hardening_2026_07_24.md`); **too-large/unscoped-design** (needs
-a `/plan-brainstorm` pass before it's dispatch-ready, e.g. `ahead_push_sentinel_stale_after_amend`,
-`utl_shared_clone_commits_repeatedly_reset`'s items 4/5, `regen_positional_task_ids_not_content_stable` per its own
-already-ruled full-scope mandate sitting at its source doc); **already claimed by the still-executing
-worker-liveness/watchdog cluster's own 2026-07-29 operator sequencing** (`killed_slot_orphans_committed_unpushed_work`,
-`wedge_detector_lacks_liveness_by_progress_false_positive`, `slot_recurring_wedge_at_context_pct_75`); **credential/
-host-access gaps beyond a standard dev checkout** (`nohup_detached_background_process_killed_by_orphan_reap`'s optional
-leg, `git_health_not_clean_since_pinned_constant`); and a handful of newly-created (2026-08-01..08-03) docs
-(`ao_non_dispatchable_regex_swallows_resolved_retags`, `cicd_escalation_agentrow_archived_prematurely_mid_session`,
-`dp_escalation_worker_dispatch_no_open_issue_check`, `mtds_plan_flip_fabricated_commit_sha_evidence`,
-`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout`'s items 2-4,
-`orchestrator_host_memory_exhaustion_4th_recurrence`, `qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge`,
-`review_role_boot_read_unconfirmed_stuck_loop`'s own still-open cross-role-file item,
-`tradfi_finding_e1_unsourced_operator_ruling_citation`, `worker_session_teardown_kills_long_running_pipeline_check`)
-each independently gated on a design fork or operator decision per their own text. None are re-triageable by re-running
-this same mechanical filter again without new information — the next `/ag-closeout-audit ao` pass should re-check each
-one's _specific named gate_ (per the skill's iterative-drain methodology step 1), not re-derive the classification from
-scratch.
+**Ledger check**: 41 candidates − 1 `archivable_now` − 1 `archivable_after_planned_work` − 9 orphaned-and-eligible
+(drafted as todos 1, 3-10 above) = 30 orphaned-and-declined, all named below (count verified against the Workflow
+journal, not eyeballed). Every one falls into one of these non-batchable categories per the skill's own taxonomy:
+
+- **Operator-gated** (an explicit `[OPERATOR]` tag or "not yet decided, for operator review" framing — the largest
+  class): `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`,
+  `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`,
+  `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`,
+  `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`,
+  `long_lived_vm_logs_not_backed_up_2026_07_02.md`, `orchestrator_vm_e2e_hardening_2026_07_24.md`,
+  `ao_residuals_after_dispatch_hardening_2026_07_17.md` (its residual UI-design item — three prior design attempts
+  already rejected, remaining fallback is itself an operator ruling: keep waiting vs. abandon the P3),
+  `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` (its fix is explicitly pulled off the AO queue by a
+  standing operator directive, `unified-trading-pm@14478ca26`, to work it interactively — its OTHER concern, the
+  duplicate-doc bookkeeping, IS in scope via todo 3 above),
+  `blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` (needs a plan-destination ruling plus
+  orchestrator-server-side `backlog.yaml` file access a worker's slot clone doesn't have),
+  `deepseek_claude_blended_provider_routing_2026_07_28.md` (every remaining item needs either operator-held DeepSeek
+  credentials + a production `accounts.json` edit under a standing operator hold, elapsed calendar time, or a brand-new
+  third-party API key nobody has provisioned).
+- **Too-large/unscoped-design** (needs a `/plan-brainstorm` pass before it's dispatch-ready):
+  `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md`,
+  `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`'s items 4/5,
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md` per its own already-ruled full-scope mandate sitting at
+  its source doc, `backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` (a "Consider whether to build an
+  alerting surface at all" fork, no Done-when), `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md` (a
+  "Consider whether... is worth..." fork its own author declined to make standalone).
+- **Already claimed** by the still-executing worker-liveness/watchdog cluster's own 2026-07-29 operator sequencing:
+  `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`,
+  `wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`,
+  `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`; or by another doc's own already-owned
+  todo: `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` (its remaining item
+  duplicates `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s own todo — both that doc's annotation and
+  batch1's archived Deferred section explicitly forbid drafting a competing todo here).
+- **Credential/host-access gaps** beyond a standard dev checkout:
+  `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg,
+  `git_health_not_clean_since_pinned_constant_2026_07_27.md`.
+- **Newly-created (2026-08-01..08-03) docs**, each independently gated on a design fork or operator decision per their
+  own text: `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`,
+  `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`,
+  `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`,
+  `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s items 2-4,
+  `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`,
+  `qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`,
+  `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own still-open cross-role-file item,
+  `tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`,
+  `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`.
+
+None are re-triageable by re-running this same mechanical filter again without new information — the next
+`/ag-closeout-audit ao` pass should re-check each one's _specific named gate_ (per the skill's iterative-drain
+methodology step 1), not re-derive the classification from scratch.
 
 ## Codex SSOTs (read before starting a todo)
 
@@ -335,11 +363,25 @@ scratch.
   batch3+finalize, batch4+finalize, `ao_open_issues_consolidated_close_out_2026_07_17.md`). Phase 1 ran a real
   `Workflow` fan-out (41 agents, one per `generate_ag_closeout_audit_candidates.py`-flagged never-cited candidate — all
   41 succeeded, 0 errors): 1 `archivable_now`, 1 `archivable_after_planned_work`, 10 `orphaned_partial_coverage`, 29
-  `orphaned_never_touched`. Of the 39 orphaned, 10 cleared AO-dispatch-scope eligibility. Phase 3's conflict-check ran
-  against the whole `plans/active` corpus for every eligible candidate's target file(s); found 2 same-file adjacencies
+  `orphaned_never_touched` (39 orphaned total). Of the 39 orphaned, 9 cleared AO-dispatch-scope eligibility (plus the 1
+  separately-eligible `archivable_now` item, for 10 todos total). Phase 3's conflict-check ran against the whole
+  `plans/active` corpus for every eligible candidate's target file(s); found 2 same-file adjacencies
   (`ao_open_issues_consolidated_close_out_2026_07_17.md` touched by both todo 2 and todo 3;
   `worker_liveness/_respawn.py` and `orphan_reap.py` each shared with an unrelated, NA, different-facet sibling todo) —
   handled via sequencing/caution rules per batch3/batch4's own precedent rather than exclusion. Left `status: draft`
   deliberately — flipping to `active` is the operator's call. Full per-doc Phase 1 verdicts + reasoning for all 41
-  candidates (including the 29 declined): Workflow run `wf_d2e30c15-0f6`, journal at
+  candidates (including the 30 declined): Workflow run `wf_d2e30c15-0f6`, journal at
   `subagents/workflows/wf_d2e30c15-0f6/journal.jsonl` (agent-orchestrator dispatch host).
+- **2026-08-03 (same-session self-correction)** — First-draft arithmetic was off by one (said "29 declined" instead of
+  30 — the 10 AO-eligible total splits into 9 orphaned-eligible + 1 separately-eligible `archivable_now` bookkeeping
+  item, not 10 orphaned-eligible) and the Deferred section's per-doc ledger, on a direct recount against the Workflow
+  journal, named only 24 of the 30 declined docs (7 missing: `ao_residuals_after_dispatch_hardening_2026_07_17.md`,
+  `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md`,
+  `backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md`,
+  `blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`,
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`,
+  `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`,
+  `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md`). Fixed both: corrected the count throughout, added all
+  7 missing docs to their correct taxonomy category with reasoning pulled from their own Workflow verdict, and added an
+  explicit ledger-check line to the Deferred section header per this skill's "count it, don't eyeball it" rule. No todo
+  content changed — this was a bookkeeping-accuracy fix on the Deferred section only.
