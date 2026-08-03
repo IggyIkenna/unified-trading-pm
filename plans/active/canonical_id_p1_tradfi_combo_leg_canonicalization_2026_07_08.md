@@ -123,7 +123,7 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       butterflies), producing real `InstrumentLeg` objects. Wired into `adapter.py` via `_SPREAD_LEG_PARSERS` dataset
       dispatch (`XCBF.PITCH` alongside `GLBX.MDP3` in `_FUTURES_DATASETS`). Evidence: instruments-service (this
       commit) +
-      `tests/unit/test_databento_tardis_adapter.py::     TestTradfiG1FoundationRegression::test_g1c_xcbf_spreads_decompose_to_combo`
+      `tests/unit/test_databento_tardis_adapter.py::TestTradfiG1FoundationRegression::test_g1c_xcbf_spreads_decompose_to_combo`
       (2-leg, 3-leg, unparseable-drops, 5-leg-drops, outright-unaffected).
 - [x] [DATA] P1. **Apply `_resolve_product_root()` human-name translation to leg instrument_keys** — done via the new
       shared `_build_leg_key()` helper, both CME and CBOE paths (`FUTURE:SP500`, `FUTURE:VIX`).

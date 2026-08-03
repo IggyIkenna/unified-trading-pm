@@ -13,7 +13,11 @@ scope: [engineer]
 tags: [audit, quality-gates]
 related: [/codex/06-coding-standards/quality-gates.md, /codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
-authoritative_for: [redirect stub — audit-remediation guidance lives in the 06-coding-standards README]
+authoritative_for:
+  [
+    redirect stub — audit-remediation guidance lives in 10-audit/QUALITY_GATE_BYPASS_AUDIT.md and
+    06-coding-standards/quality-gates.md,
+  ]
 referenced_by:
 owner:
 last_reviewed:

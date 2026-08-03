@@ -96,7 +96,7 @@ bad files. Safe workflow: (1) detect: `git ls-files --ignored --exclude-standard
 - `from unified_trading_library.events import setup_events, log_event` — no fallbacks
 - Search unified libraries before implementing anything new
 
-Full standards: `unified-trading-codex/06-coding-standards/README.md`
+Full standards: `/codex/06-coding-standards/README.md`
 
 **No summary files** — never create `*_SUMMARY.md`, `*_STATUS.md`, `READY_TO_*`, `COMPLETION_*` files. Report results as
 text in the chat, not as committed documents. Rule (ARCHIVED 2026-08-02, no longer live):
@@ -163,8 +163,8 @@ For other Python: cd <WORKSPACE_ROOT> && source .venv-workspace/bin/activate as 
 
 ## 10. Repo Readiness Checklist & Semver Rules
 
-**Readiness SSOT:** `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` (template) +
-`unified-trading-codex/10-audit/repos/{repo-name}.yaml` (per-repo status)
+**Readiness SSOT:** `/codex/10-audit/REPO_READINESS_CHECKLIST.yaml` (template) +
+`/codex/10-audit/repos/{repo-name}.yaml` (per-repo status)
 
 Every repo progresses through three independent axes:
 

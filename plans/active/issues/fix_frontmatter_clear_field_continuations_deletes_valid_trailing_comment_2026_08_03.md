@@ -34,8 +34,8 @@ related:
   ]
 created: 2026-08-03
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 drift_direction: correct-codex
@@ -117,3 +117,10 @@ intentionally-changed files won't surface it either.
 ## Progress Log
 
 - **2026-08-03**: filed after catching (and reverting, not shipping) one live incident — see `source` above.
+- **2026-08-03 (cicd plan_health escalation, agt-ab3285)**: RECLASSIFY `assigned_vm: NA` → `planning`
+  (`execution_scope: local-only` → `orchestrator-agent`). Both todos are precisely-scoped, deterministic-outcome work
+  (fix a named function's continuation-line classification logic + add a named regression-test fixture; audit the corpus
+  for the same shape via a stated grep+git-blame recipe) — a bounded bug fix, not an open-ended judgment call defaulted
+  to NA. Conflict-check: no other active plan/issue references `_clear_field_continuations` or this bug shape — cleared.
+  Done as part of resolving the `check_na_corpus_ratchet` hard-gate failure (361 > baseline 360) by fixing a genuine
+  misclassification rather than raising the ratchet.

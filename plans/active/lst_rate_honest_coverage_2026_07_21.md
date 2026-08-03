@@ -999,3 +999,10 @@ tarball once; always check the launcher's own freshness warning output, and if s
   counts climbing (`-1` 79,541, `-2` 3,936, `-3` 196,930 as of this check). Nothing materially changed in the ~19
   minutes since the prior check — confirms it, does not supersede it. Not re-doing the fuller day-count analysis above
   (would be duplicated effort with no new signal this soon). Same verdict stands: not yet closeable.
+- **na-eligibility-audit 2026-08-03**: KEEP-NA valid — doc is over the 1000L cap (pre-existing, operator ruling
+  2026-08-02), so this is a marker-only append (no checkbox changes) per that ruling's scoped exception. 3 of 6 open
+  items are STALE (already shipped: A2 staking=strategy-service@e93902d8; recursive-staking borrow=
+  strategy-service@23bd8b76; Phase 3 sample-download superseded by Phase 5's real prod force+skip proof) and Phase 5 #2
+  DEX-fill has a live finding (VM `-3` FAILED exit_code=137 on 2026-07-27, never relaunched — 6-day silent stall).
+  Ready-to-apply checkbox text + full evidence filed as real todos:
+  [[lst_rate_honest_coverage_over_cap_findings_2026_08_03]]. Doc stays `assigned_vm: NA`.

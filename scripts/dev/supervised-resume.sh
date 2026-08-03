@@ -48,7 +48,7 @@
 # Watcher Coverage HARD RULE, this script never exits silently.
 #
 # SSOT: codex/12-agent-workflow/async-wait-and-poll-discipline.md item 6,
-# plans/active/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md.
+# plans/archive/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md.
 set -euo pipefail
 
 MAX_RETRIES=10

@@ -359,7 +359,7 @@ range never overlaps a still-in-flight per-market-only day).
       the `*-store` buckets, `-prd` initial), same call sites (`commentary/pipeline_uat.py:167/181/195/211` +
       `deployment_api_config.py:547`), same prereq (bucket-SSOT owner registers the env-tiered names in
       `cloud-providers.yaml`), same repo, and the same
-      `(MIGRATED FROM: downstream_services_manifest_canonicalisation_2026_06_01.md,     2026-07-13)` provenance — the
+      `(MIGRATED FROM: downstream_services_manifest_canonicalisation_2026_06_01.md, 2026-07-13)` provenance — the
       consolidation folded this one finding in twice under two spellings of its own name ("FLAG-3" and "FLAG 3").
       Closing the duplicate only; the surviving copy above still carries the full work item, so nothing becomes
       untracked by this close.

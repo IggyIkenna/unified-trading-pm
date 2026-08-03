@@ -305,3 +305,11 @@ prospectus-generator/committed-copy resync.
       committed files on multiple unrelated axes (venue-category classification, execution-algorithm lists, formatting,
       `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet — still carries DRIFT
       residue and remains unowned (see "Fourth instance found, NOT applied" above).
+
+## Progress Log addendum
+
+- **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed, and independently cross-confirmed by
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s own Phase-1 classification (its Deferred/non-batchable list):
+  "regenerating/reconciling the 57 `unified-api-contracts/openapi/prospectus/*.md` generator outputs spans many axes
+  unrelated to DRIFT removal — needs a human design decision on how to reconcile generator vs committed copies before
+  any worker todo is determinable." No stale/reclassify-eligible content found. Doc stays `assigned_vm: NA`.

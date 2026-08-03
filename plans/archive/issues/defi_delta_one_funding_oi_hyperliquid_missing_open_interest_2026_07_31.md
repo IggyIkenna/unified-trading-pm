@@ -18,7 +18,7 @@ summary: >-
   NaN` rejection) on every date, deterministically, until either (a) MTDS's HYPERLIQUID adapter starts capturing OI (if
   Hyperliquid's API even exposes it at this grain), or (b) the calculator's column requirement is relaxed/reworked to
   not need OI.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -43,6 +43,9 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  "all 4 todos DONE 2026-08-03: OI-availability confirmed + fix direction B ruled (operator); B-implementation shipped
+  features-service@0699c5db; bucket-resolution root cause fixed features-service@6b2282c5; live verification confirmed
+  real record_captured rows (features-delta-one-defi-20260803-055219, exit_code=0)"
 context_scope:
   [
     /plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
@@ -51,6 +54,10 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. No content was rewritten.
 
 # ⚠️ 2026-08-02 UPDATE — VERDICT OVERTURNED: OI _IS_ available at source (already in the corpus under `derivative_ticker`)
 
@@ -175,12 +182,13 @@ fixes above.
       separately-dispatched `[DATA] P3` todo directly below (data_engineering craft, its own `Done when` is exactly that
       run), matching the craft-scope split this issue's own prior sessions already established (backend implements +
       unit-tests; data re-verifies against real infra).
-- [ ] [DATA] P3. **ATTEMPTED 2026-08-03 (slot-2) — still BLOCKED, new root cause found, see Progress Log + new
-      `[BACKEND] P1` todo below.** Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
+- [x] ✅ [DATA] P3. **RE-ATTEMPTED 2026-08-03 (slot-10, data_pipeline_failure escalation agt-dd3c9e) — DONE, real
+      `record_captured` rows confirmed.** Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo over the verified-clean manifest window
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
-      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). **Not yet met** — the real launch
-      this session still wrote only `record_failed` (see below); re-attempt once `[BACKEND] P1` lands.
+      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). **MET** — see Progress Log entry
+      below (`features-delta-one-defi-20260803-055219`, exit_code=0, real `funding_oi` partitions written for the
+      majority of the window; `[BACKEND] P1`'s CEFI-bucket fix is confirmed live in production, not just unit tests).
 - [x] ✅ [BACKEND] P1. **NEW, this session.** `_enrich_funding_oi_from_derivative_ticker`
       (`features_service/delta_one/app/core/_passthrough_loader.py:345`) is silently failing to find ANY matching
       `derivative_ticker` rows for HYPERLIQUID over `2023-05-12..2023-10-31`, even though real `derivative_ticker` data
@@ -348,3 +356,35 @@ fixes above.
   rather than redoing the investigation. Did NOT run a live GCS verification-window run — that's the `[DATA] P3` todo
   above (data_engineering craft, its own done-when covers exactly that; same craft-scope split this issue's prior
   sessions established for `[BACKEND] P2`).
+- **2026-08-03 (slot-10, `data_pipeline_failure` escalation agt-dd3c9e) — `[DATA] P3` DONE, live verification
+  confirmed.** Arrived via an unrelated DP-VM-001 (`DP_VM_EXIT_NONZERO`) alert on
+  `features-delta-one-defi-20260803-031632` (this exact shard — slot-2's own `[DATA] P3` attempt above, still running
+  the pre-`[BACKEND] P1` code). Root-caused it back to this doc before considering a relaunch: log showed
+  `Rejecting shard HYPERLIQUID:perpetual:/funding_oi: 104 columns exceed NaN threshold — open_interest=100.0%, mark_price=100.0%, index_price=100.0%`
+  across every processed date, matching this issue's own diagnosis exactly. Found ONE more contributing cause before
+  relaunching: the VM code tarball (`gs://deployment-scripts-central-element-323112/code/features-service-code.tar.gz`)
+  was pinned to `commit_sha 617388c5`, which PREDATES `[BACKEND] P1`'s fix (`features-service@6b2282c5`) —
+  `git merge-base --is-ancestor 617388c5 6b2282c5` confirmed 617388c5 is an ancestor, i.e. strictly older. A same-args
+  relaunch against that stale tarball would have reproduced the identical failure (the exact class this doc's own
+  `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` sibling issue already documents:
+  `LC_TARBALL_FRESHNESS` defaults to `warn`, not `enforce`, so a stale tarball launches silently). Rebuilt
+  - republished via `bash scripts/vm/create-code-tarballs.sh --include features-service` from a clean
+    `origin/live-defi-rollout` checkout (features-service HEAD `c092df50`, a `6b2282c5` descendant); confirmed the new
+    manifest (`commit_sha: c092df50...`) before relaunching. Relaunched the identical shard —
+    `FEATURE_GROUP=funding_oi TIMEFRAME=15m bash scripts/vm/launch-features-vm.sh --feature-family delta_one --asset-group DEFI --start-date 2023-05-12 --end-date 2023-10-31 --launch-mode full`
+    — as `features-delta-one-defi-20260803-055219` (SPOT), with the launcher's own `lc_verify_tarball_freshness`
+    confirming "all 5 tarball(s) current" before boot. Polled to terminal state (background, ~8min run): `exit_code=0`,
+    `status=completed`, run.log shows `Completed 1/1 feature groups (succeeded=['funding_oi'], failed=[])` /
+    `Processing completed successfully`; grep counts across the full log — `Wrote 2/2 daily partitions` ×84,
+    `Wrote 1/2 daily partitions` ×282 (real captured `funding_oi` output for the large majority of the window), vs
+    `Insufficient data for reliable features` ×140 (still-correct, honest skips for the earliest slice of the window
+    that hasn't yet accumulated the calculator's 500-candle rolling-window minimum — a genuine data-ramp-up condition,
+    not a bug, shard-isolated rather than fatal this time). ManifestWriter's final per-VM shard write:
+    `features-defi-prd-.../\_index/per_vm/features-delta-one-defi-20260803-055219.parquet` (599 total entries, 22 new,
+    `process_final=True`). This is real, live-verified proof that `[BACKEND] P1`'s CEFI-bucket-resolution fix works in
+    production (not just its unit tests) — flipping `[DATA] P3` above. Did NOT touch `[BACKEND] P1`/P2's own text (their
+    craft's own DONE entries stand as written). Registry's `rows_out=0` counter did not reflect the real captured
+    partitions — a pre-existing, separate cosmetic gap in this deployment's row-counting instrumentation, not filed as a
+    new issue here (out of this escalation's scope; noted for whoever next touches `deployment_heartbeat.py`'s row
+    counters). Pinged the authoring slot (`dp-fleet-monitor`) with this outcome and closed the DP-VM-001 escalation via
+    `/done` — no new issue doc needed, this one already covered it end-to-end.

@@ -81,7 +81,7 @@ BOTH `asset_group=defi` (LST rates, lending indices, DEX, oracle) AND `asset_gro
 the coverage audit MUST cover both legs or it is incomplete.
 
 **Active MVP critical path — Solana basis trade (2026-06-01)**: the concrete first-live target is
-[`plans/active/solana_basis_trading_mvp_2026_06_01.md`](../../active/solana_basis_trading_mvp_2026_06_01.md)
+[`plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md`](../../archive/solana_basis_trading_mvp_2026_06_01.plan.md)
 (`parent_epic: mtds_mdps_master`) — **long SOL spot on Orca (Whirlpool SOL/USDC, primary) / Raydium + short SOL-PERP on
 Drift V2 = funding carry**. It re-scopes the Solana data sources after the Bug-D Drift-backfill saga
 (`issues/bug_d_prime_drift_backfill_2026_05_31.md`). Audit implications this doc MUST honour:

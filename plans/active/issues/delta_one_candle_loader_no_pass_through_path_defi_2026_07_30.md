@@ -320,7 +320,7 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   pass-through loader now loads real rows (no more "No upstream MDPS data"), but `funding_oi` fails a DIFFERENT gate:
   HYPERLIQUID's raw `perp_funding` rows never carry `open_interest`/ `mark_price`/`index_price` in either capture era
   (confirmed via direct raw-parquet inspection, not simulated) — a genuine data-availability gap, not a loader bug.
-  Filed `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` (does not
+  Filed `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` (does not
   re-attempt `funding_oi` further — deterministic, fix-direction is operator/repo-owner scoped). Separately dry-ran
   `returns` (`oracle_prices`) over the same window — 27/51 instruments loaded real candles, then hit
   `_resolve_passthrough_timestamp()` raising a polars `SchemaError` (tz-naive vs tz-aware `Datetime` compared in the

@@ -968,3 +968,32 @@ not just noting.
   one fresh `workflow_dispatch` per the established posture (`30787484781`). `GET /api/repo-blockers` → `open: []`
   (unrelated `features-service` entry only). No code/test change made or needed. Slot left clean on `live-defi-rollout`
   (only this doc touched).
+
+- **2026-08-03 ~05:25-05:50Z (cicd escalation `agt-8e5d24`, slot 2, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — the exact wall `agt-f70a66`/`agt-c82335`/`agt-15e651` (all above) diagnosed; per `agt-15e651`'s own
+  note this should be the point a re-dispatch stops re-deriving the diagnosis and instead applies this doc's own
+  established fix (the `PYTEST_TIMEOUT`-raise precedent in
+  `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`), so that's what this session did. Confirmed the
+  root cause unchanged: `main` still ~447 commits behind LDR, fleet-promote gate still
+  `GATE BLOCK features-service: ci_status=FAILING`; LDR's own queued run `30780475199` had its `tests` leg genuinely
+  claimed (not dead) but `checks` leg still unclaimed after 2.5h; failed run `30777261237` showed `pytest-timeout` on
+  `test_momentum.py` (trivial 50-row df) + `Type check FAILED/timeout (exit=124)` — the same two catalogued signatures,
+  no assertion failures. Host: `uptime` 37-42/16 vCPUs the whole session. Rather than a 5th no-op confirmation, applied
+  the validated `unified-trading-api@71cdda0` mitigation pattern to this repo: `features-service@c092df50` adds
+  `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` AND `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-300}` (this repo hits BOTH failure
+  shapes, not just pytest) to `scripts/quality-gates.sh`. Verified locally: full `bash scripts/quality-gates.sh` at LDR
+  HEAD `617388c5` (+ the uncommitted change) — **`✅ ALL QUALITY GATES PASSED (338s)`**, sentinel written, zero timeouts
+  (17th corroboration). Shipped via `quickmerge --agent --files 'scripts/quality-gates.sh'`; first attempt died mid-run
+  in the (non-blocking, CI-irrelevant — `QG_SLICE`-scoped CI runs never reach this loop) peripheral-dir advisory loop
+  after a peer's push invalidated the sentinel and forced a Pass-2 re-gate, same host-pressure signature as the core
+  failure this doc tracks; retried and the sentinel-verified fast-path landed clean second time
+  (`✅ Landed on live-defi-rollout`), confirmed via `merge-base --is-ancestor` on origin. Also fast-pathed repo-blocker
+  `RB-417918ff` (a genuinely separate, already-fixed-by-another-slot bug — `617388c5`'s `_verify_test_manifest` 4→3-arg
+  signature update, confirmed passing in this session's local run) via `POST /api/repo-blockers/RB-417918ff/resolve` (2
+  waiters notified). `AUTHORING_SLOT=ci-reconcile` not a live numeric slot — same non-int rejection as prior entries;
+  this doc entry is the outcome record. Did not manually retrigger LDR's own in-flight `quality-gates-v2` run — both
+  legs were genuinely progressing, a duplicate dispatch would only add load. **Next occurrence for this repo should
+  observe whether the timeout raise actually clears it** (mirrors
+  `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` todo 1) before repeating either the no-op
+  confirmation OR another timeout raise. Slot left clean on `live-defi-rollout` (only `features-service` touched by this
+  session's code commit + this doc).

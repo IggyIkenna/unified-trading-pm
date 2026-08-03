@@ -66,11 +66,11 @@ locked_since: 2026-05-07
 
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation + live-pipeline activation 2026-05-08**
 >
-> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md) merges the 8 separate
-> features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that plan
-> lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate)
-> into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership: this plan owns
-> FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
+> [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md) merges the 8
+> separate features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that
+> plan lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN
+> write-gate) into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership:
+> this plan owns FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) builds on
 > the consolidated repo for live-mode features compute. This plan's batch features compute work continues in parallel.
@@ -335,7 +335,7 @@ so whichever direction the operator picks, the next agent (or this one) can ship
 proposal: the per-service wire-in approach itself is no longer the plan.
 
 **Why deferred** — Ikenna's plan-consolidation work (PM@`78918e1` 2026-05-08) shipped a new plan
-[`features_repo_consolidation_2026_05_08.md`](../active/features_repo_consolidation_2026_05_08.md) (P0, deadline
+[`features_repo_consolidation_2026_05_08.md`](../archive/features_repo_consolidation_2026_05_08.plan.md) (P0, deadline
 2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a single
 `features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4 cross-family
 helpers into UTL** — including the exact one Tab 12 was wiring:

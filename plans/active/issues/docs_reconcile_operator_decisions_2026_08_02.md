@@ -102,3 +102,12 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 - **na-eligibility-audit 2026-08-02** (infra tranche, dispatch agt-fe5e17): KEEP-NA, valid — both items are explicit
   `BLOCKED-OPERATOR-DECISION` authority calls (A/B/C options, no evidence-determined single answer) per this doc's own
   title and framing. Textbook KEEP-NA, no re-derivation needed.
+- **docs-reconcile 2026-08-03** (dispatch agt-fd4e6d) — NOT resolving BLOCKED-OPERATOR-DECISION 1 myself, but flagging
+  strong circumstantial evidence it may already be moot: commits `unified-trading-pm@b45eab084` /`@d4f7fab9d`
+  (2026-08-02 23:26-23:27, "apply operator rulings on 2026-08-02 scheduled-audit-batch operator-decision queue") deleted
+  the top-level `cursor-rules/` tree entirely and moved all 25 files verbatim into
+  `plans/archive/cursor-rules_2026_08_02/` — the exact action Option A here recommended, under a matching archive-date
+  slug. Neither commit message names this issue doc explicitly, so this is circumstantial, not proof (hence not
+  auto-closing the checkbox) — but if the operator confirms that archival WAS the intended resolution, this item and
+  `pm-repo-context.mdc`'s "unresolved — flagged for operator review" note (line 29) both need a one-line update to say
+  RESOLVED instead of leaving both artifacts stale.

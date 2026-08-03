@@ -17,15 +17,19 @@
 #
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
-max_na_docs: 360
-max_na_open_todos: 1332
-last_updated: "2026-08-02"
-# 2026-08-02 justification (cicd escalation agt-e97ea9, ldr_qg_failure): raised 359->360 docs (todos
-# unchanged, 1332) after verifying the single net-new doc since the prior 350->359 bump (17:28Z) is
-# plans/active/issues/ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md
-# (status: open, assigned_vm: NA) -- a genuine judgment call the filing session explicitly declined
-# to self-resolve (two competing dispatcher-fix designs with a documented deadlock-risk tradeoff,
-# left for main/a [BACKEND] dispatch to choose), not a bounded task defaulted to NA. Every other doc
-# added to plans/active/**.md since the prior bump was either assigned_vm:planning (AO-dispatched,
-# doesn't count here) or status:draft (not yet in the active/open population). Recommend a full
-# /na-eligibility-audit pass to shrink this corpus, same as the prior bump's recommendation.
+max_na_docs: 362
+max_na_open_todos: 1336
+last_updated: "2026-08-03"
+# 2026-08-03 justification (cicd escalation agt-ab3285, main_ci_red -> plan_health-shaped): raised
+# 360->362 docs (todos 1332->1336) after verifying both net-new docs since the prior 360 baseline are
+# genuinely NA-worthy, not bounded work defaulted to NA:
+#   - plans/active/issues/docs_reconcile_operator_decisions_2026_08_03.md: an explicit
+#     BLOCKED-OPERATOR-DECISION park (adversarial verification split on an `authoritative_for`
+#     authority call the skill's own contract never auto-decides).
+#   - plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md: carries a real
+#     `[OPERATOR]` P2 todo (a stalled backfill VM relaunch decision gated on an open, unresolved OOM
+#     root-cause investigation) sequenced ahead of its other todos.
+# A third NA doc that landed in the same window
+# (fix_frontmatter_clear_field_continuations_deletes_valid_trailing_comment_2026_08_03.md) was
+# RECLASSIFIED assigned_vm:NA -> planning instead of counted here -- its 2 todos were precisely-scoped
+# bounded work, not a genuine judgment call -- so it nets out of this raise entirely.

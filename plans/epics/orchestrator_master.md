@@ -20,7 +20,7 @@ related:
     ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md,
     ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md,
     ../archive/agent_orchestrator_slack_notifications_2026_05_19.md,
-    ../active/agent_orchestrator_workers_on_vms_2026_05_19.md,
+    ../archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md,
     ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md,
     ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md,
     ../active/issues/human_led_audit_pool_2026_05_21.md,

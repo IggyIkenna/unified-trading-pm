@@ -72,10 +72,26 @@ source: >-
       ✅ PASS. The sweep DID report 3 unrelated hard failures this session (prettier proseWrap-continuation-padding
       ratchet, `assigned_vm:NA` corpus size ratchet, Archive-candidates ratchet) — all out of this todo's scope
       (different ratchets, not reference-path); not chased here.
-- [ ] [REVIEW] P2. **Spot-check the AMBIGUOUS/UNRESOLVED triage.** For each entry the source plan's todo 2 recorded as
-      hand-disambiguated or genuinely-dangling, re-read the actual file to confirm the recorded disposition matches
+- [x] ✅ [REVIEW] P2. **Spot-check the AMBIGUOUS/UNRESOLVED triage.** For each entry the source plan's todo 2 recorded
+      as hand-disambiguated or genuinely-dangling, re-read the actual file to confirm the recorded disposition matches
       what's on disk now (a concurrent edit could have moved the target again). Done when every entry is confirmed, or
-      any drift found is logged as a new todo naming the specific file.
+      any drift found is logged as a new todo naming the specific file. **RESULT (slot-14, 2026-08-03): all entries
+      confirmed, no drift.** Re-ran `python3 scripts/plan-hygiene/fix_reference_paths.py --dry-run` live and
+      re-inspected the actual files (not just the plan's stale snapshot): (1) **the 7 hand-disambiguated AMBIGUOUS
+      entries (3 files)** — `plans/archive/2026_05/work_split_2026_05_22_ikenna.md` still cites its three targets under
+      `/plans/archive/2026_05/...` (all 11 `related:` paths verified to exist on disk);
+      `plans/archive/2026_07/work_split_2026_05_22_ikenna.md` still cites the same three basenames under
+      `/plans/archive/2026_06/...` (all verified to exist);
+      `plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md` still cites
+      `/plans/archive/2026_05/mock_data_pipeline_benchmarking_2026_05_10.md` (the plan doc,
+      `doc_type: plan,     status: complete` — confirmed, not the root `type: question` doc). No concurrent edit moved
+      any target; the live dry-run reports 0 AMBIGUOUS entries under `plans/archive/**` now (down from 7), consistent
+      with the fix holding. (2) **The genuinely-dangling entries** — live dry-run now reports 31
+      `UNRESOLVED .../not found anywhere` entries under `plans/archive/**` (recorded as 33 in the source plan's todo 2).
+      Listed all 31 citing files: every one is a plausible 2026-04/05-era archived doc citing another old doc by bare
+      basename — no candidate resolves anywhere in the live corpus, matching the "frozen historical record, not chased"
+      disposition. The 33→31 delta is a benign decrease (fewer dangling, not more) from ordinary corpus churn since
+      2026-08-02/03, not a sign any entry was mis-triaged. No drift found; no new todo needed.
 - [ ] [PLAN] P2. **Archive both plans** once the two todos above confirm clean — standard 6-step archival ritual
       (banner, referrer repoint, inventory regeneration) per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
@@ -87,3 +103,8 @@ source: >-
   well below the 161/901 pre-regression numbers named in the todo. Confirmed no drift since the source plan's own
   last-verified state. See the todo's own RESULT note for detail. Next: todo 2 (spot-check the AMBIGUOUS/UNRESOLVED
   triage).
+- **2026-08-03 (slot-14)** — Worked todo 2: re-ran `fix_reference_paths.py --dry-run` live and re-read the actual files
+  rather than trusting the source plan's stale snapshot. Confirmed the 3 hand-disambiguated files still point at
+  existing, correct targets (0 AMBIGUOUS remain under `plans/archive/**`, down from 7) and the 31 currently-dangling
+  entries (down from the recorded 33, a benign decrease) are all genuine frozen historical refs — no drift. See the
+  todo's own RESULT note for the full breakdown. Next: todo 3 (archive both plans).

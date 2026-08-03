@@ -847,3 +847,6 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   correctly NOT AO-dispatchable ... Remains parked pending an operator design/scoping session"; "Scope/sequencing
   decision needed before dispatch"). No stale/duplicate/reclassify-eligible items found. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed independently. Only diff since 2026-08-01 was the
+  context-scout metadata backfill (no content change). Both open checkboxes remain explicitly operator-design-gated per
+  their own text. Doc stays `assigned_vm: NA`.

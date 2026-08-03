@@ -14,6 +14,7 @@ tags: [defi, execution, strategy, tenderly, mvp, live-trading]
 related:
   [
     /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
     /codex/04-architecture/chain-environment-resolution.md,
     /codex/04-architecture/tenderly-execution-provider.md,
     /codex/04-architecture/custody-providers.md,

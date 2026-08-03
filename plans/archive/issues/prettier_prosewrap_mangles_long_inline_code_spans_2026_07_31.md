@@ -13,7 +13,7 @@ summary: >-
   unified-trading-pm@fd1b02c2c (slot 14, still live/uncorrected) — indicate a real prettier config quirk on long
   inline-code spans, not one-off operator typos. Workers currently rediscover and hand-fix it individually instead of it
   being root-caused once.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,11 +38,21 @@ source:
     padding at 96-100) and confirmed the config (`.prettierrc`: proseWrap=always, printWidth=120).",
   ]
 resolved_by:
+  "both todos DONE 2026-08-03 (slots 11/8): root-caused as a prettier proseWrap idempotency bug, gate shipped
+  (check_prosewrap_padding.sh), fd1b02c2c hand-repaired; corpus-wide remediation tracked separately in
+  /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. Corpus-wide remediation backlog this doc's
+> gate tracks lives on in
+> [`prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`](/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md).
+> No content was rewritten.
 
 # prettier proseWrap mangles long inline-code spans in plan docs
 

@@ -122,7 +122,7 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
       `get_captured_instruments()`, verified by a new unit test; `bash     scripts/quality-gates.sh` green in both
       unified-trading-library and features-service (post wheel-bump). — unified-trading-library@9fb3a73d
 - [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION (SUPERSEDED — the funding_oi resume is now authoritatively tracked in
-      `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[BACKEND] P2`
+      `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[BACKEND] P2`
       (implement direction B) + gated `[DATA] P3` (resume). 2026-08-02 CORRECTION: the earlier "structurally infeasible"
       framing was WRONG — OI _is_ available at source and already in the corpus under `derivative_ticker` (Hyperliquid
       `asset_ctxs` archive; ETH-USD 2023-07-11 = 1442/1442 non-zero open_interest). Fix-direction RULED = B. This
@@ -198,6 +198,6 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   OI-less `fundingHistory` endpoint), never `derivative_ticker`. Per the operator's sequencing this settles the
   fix-direction to **B**. Full finding + evidence + the new scoped `[BACKEND] P2` (implement B) and gated `[DATA] P3`
   (resume) todos now live in
-  `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`. This doc's todo 2 is
-  SUPERSEDED by that chain (see its updated text); it stays non-dispatchable until the `[BACKEND] B` fix lands. Did not
-  implement B (repo-owner-ratifiable per operator) and did not relaunch (no fix landed yet).
+  `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`. This doc's todo 2
+  is SUPERSEDED by that chain (see its updated text); it stays non-dispatchable until the `[BACKEND] B` fix lands. Did
+  not implement B (repo-owner-ratifiable per operator) and did not relaunch (no fix landed yet).

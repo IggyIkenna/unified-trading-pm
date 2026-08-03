@@ -167,7 +167,7 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # carries real debt (found while root-causing 2026-08-03), so this is a shrinking ratchet like
 # check_archive_candidates.sh below — full-corpus only, not wired into --precommit (a staged-subset
 # count would trivially pass against the corpus-wide baseline). SSOT + repro:
-# plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
+# plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
 run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh"
 # Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
 # referrer's path being updated) — the same check the --precommit fast path runs on any staged

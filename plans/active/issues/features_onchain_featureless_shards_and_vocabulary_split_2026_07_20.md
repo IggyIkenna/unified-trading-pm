@@ -301,3 +301,17 @@ build-MTDS-collectors → recompute), not a new one.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's premise ('BLOCKED on the frozen onchain
   manifest/consolidator') was REFUTED by the cited sibling's own 2026-07-28 root-cause update (orphaned migration
   artifact, not a broken consolidator). Citation corrected; the work is owned by that sibling's todo
+- **na-eligibility-audit 2026-08-03**: KEEP-NA valid — **correcting the 2026-07-30 entry above: the ownership claim was
+  backwards.** The sibling doc (`archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`, now
+  archived, all its own todos shipped) explicitly disclaims ownership of the remaining scope in its own final Progress
+  Log entry: "Remaining recompute scope (build missing MTDS chain-field collectors for the 5 featureless groups) is
+  genuinely new work, already tracked as its own open todo in
+  `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md` — not duplicated here." So THIS doc owns the
+  work, not the (archived) sibling — there is no other active doc to cite for a checkbox-citation fix. Verdict on the
+  merits: KEEP-NA valid, not RECLASSIFY — independently cross-confirmed by
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s own Phase-1 classification of this exact remaining scope (its
+  Deferred/non-batchable list, citing this doc by name): "steps 2-4 (new MTDS chain-field collectors for
+  ltv/liquidation_threshold/reward_rate/health-factor inputs + recompute) are 'genuinely new scope (upstream
+  collection)... size them as their own work' per the doc author" — i.e. building 5 protocol-specific on-chain data
+  collectors from scratch needs a human sizing/scoping pass (which on-chain source per protocol/field) before any
+  worker-determinable todo exists, not a bare mechanical build. Doc stays `assigned_vm: NA`.

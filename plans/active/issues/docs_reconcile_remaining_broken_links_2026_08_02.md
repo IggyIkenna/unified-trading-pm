@@ -86,8 +86,29 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 - [ ] [DOCS] P2. `cursor-rules/testing/tradfi-path-builder-byte-identity.mdc` cites codex `04-architecture`'s
       `path-canonicalization.md` — file does not exist anywhere in the repo, not a rename.
 
+## New from 2026-08-03 sweep — genuinely dead links, no successor (verified via direct invocation of the live checkers, not re-implemented logic)
+
+- [ ] [DOCS] P2. `plans/audit/results/archive/AUDIT_2026_05_15_harsh_side_completion.md` cites 6 dead targets, all the
+      same shape: `../../harsh_orchestrator/pings/slot_{2,5,6,7,8,9}.md`. Git archaeology confirms all 6 were
+      **deliberately, permanently deleted** by commit `890ef4b86` (2026-06-24, "operator-deleted... no longer needed") —
+      not a rename, no successor exists or should be invented. Fix: delete the 6 dead links from the citing doc (it's
+      already an `archive/` doc itself, so this is pure link cleanup with no content implication).
+- [ ] [DOCS] P3. `plans/epics/agent_operating_framework_master.md` (`related:` frontmatter) cites
+      `../active/orchestrator_v07_multi_vm_topology_2026_05_21.md` — no file under this or any similar slug exists
+      anywhere in the repo; multi-VM dispatch itself was deprecated 2026-06-27 in favor of the single-VM architecture,
+      so there is no "current" successor to point to, only a retired concept. Fix: drop the dead `related:` entry (the
+      epic's other `related:` entries remain valid).
+
 ## Genuinely ambiguous — broken, but no confident single target (P2, report-only per the skill's own severity guidance — not an authority question)
 
+- [ ] [DOCS] P2. `codex/validators/QUICK_REFERENCE.md` (status: current) redirects to
+      `/codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md` as one of its two "actual SSOTs" — that target resolves fine as a
+      FILE (not a broken link), but its own content admits `status: stale` and its own summary says "Service/UI lists
+      use retired repo names and are stale" (title still dated "2026-02-21", no `superseded_by:` pointer). So a current
+      doc's redirect target is itself stale with no named successor — this is a content-staleness gap one layer behind a
+      link check, not a broken link per se. Needs a human who can either refresh the matrix (retired repo names →
+      current fleet) or determine there's no live consumer left and archive it with QUICK_REFERENCE.md repointed
+      elsewhere.
 - [ ] [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cites the `plans/active/` slug
       `uac_citadel_architecture_2026_05_07.md` — `plans/archive/INDEX.md` (line 177) tracks this exact slug's
       disposition as "Superseded by completed execution plan," naming `uac_citadel_implementation_execution` as the
@@ -146,3 +167,14 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   one item (the `.cursor/plans/` artifact `phase_0_cod_service_specs_f0a0afbd.plan.md` dead link — "Fix: delete the dead
   link") reads as individually bounded/mechanical if this doc is ever split; not split here since the doc stays NA in
   full.
+- **docs-reconcile 2026-08-03** (dispatch agt-fd4e6d): re-ran both link checkers' `--update-baseline` after fixing the 7
+  auto-fixable entries this sweep newly found successors for (mostly a `.plan.md` archival-suffix pattern the
+  archive-basename-fallback tier can't catch — flagging that as a worthwhile future improvement to `docspec.py`'s
+  resolution tiers, not implemented here since it's a checker-mechanics change beyond this run's doc-fix scope).
+  Baselines shrank: `doc_body_link_baseline.yaml` 27→22, `doc_reference_baseline.yaml` 12→1 (9 entries no longer
+  reproduced at all — a new tier-5 sibling-repo resolution shipped hours earlier plus an independent frontmatter fix —
+  and were dropped as dead weight, not fixed by this sweep). Appended 2 newly-investigated genuine- dead-link findings
+  above (the 6 `AUDIT_2026_05_15` slot-file links + 1 `agent_operating_framework_master.md` link) and 1
+  genuinely-ambiguous content-staleness finding (`VALIDATOR_COVERAGE_MATRIX.md`) that this doc's 2026-08-02 pass hadn't
+  reached yet (only ~16 of the 27 `doc_body_link_baseline.yaml` entries had been individually investigated before
+  today).
