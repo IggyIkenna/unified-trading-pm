@@ -51,7 +51,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
+    /plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     features-service/features_service/common/live_runner.py,
     market-data-processing-service/market_data_processing_service/cli/parser.py,
