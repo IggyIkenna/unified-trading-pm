@@ -297,3 +297,23 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   does). Slot left clean (`features-service` on `live-defi-rollout`, 0 commits ahead). Pinged the authoring slot
   (`ci-reconcile`) with the outcome. Todo 2 remains open/unaddressed by this entry (scope stayed bounded to this one
   escalation, per prior-entry precedent).
+
+- **2026-08-03 ~11:04Z (`cicd` escalation `agt-0dbb62`, slot 9, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 8th escalation for the same wall, no material change since the prior (10:48Z) entry**: read `main`'s
+  failing run `30780455914` directly — same already-diagnosed pre-`c092df50` 150s-pytest-timeout shape (fix on LDR,
+  pending promotion). Checked LDR: the same run flagged as in-flight at the end of the prior entry (`30804251677`,
+  headSha `d387ba7f`, dispatched 10:07:07Z) is STILL the live run, now ~57min elapsed, no newer LDR run exists (current
+  LDR HEAD `9fb37033`, one commit ahead of `d387ba7f`, untested by any run yet). Verified on-disk that all three
+  sanctioned mitigations are present and unchanged on `live-defi-rollout`
+  (`grep PYTEST_TIMEOUT|PYRIGHT_TIMEOUT| FORMULA_DRIFT_TIMEOUT scripts/quality-gates.sh` →
+  `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}`, `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-300}`,
+  `run_timeout "${FORMULA_DRIFT_TIMEOUT:-240}"` all intact) — no regression, no new code gap. `GET /api/repo-blockers` →
+  `open: []`. `ldr-to-main-promote-fleet` still ticking green every ~15min (latest `30807769375` @11:00:10Z, success)
+  and will auto-promote the instant any LDR run reports green. Per this doc's own established precedent (6 of the last 7
+  entries), did NOT re-dispatch a fresh `quality-gates-v2` run (would cancel the already 57min-elapsed in-progress run
+  via the concurrency group, discarding contention-survival progress for zero benefit) and did NOT raise any timeout a
+  further increment (root-cause fix for the underlying host contention is
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, already forked and in flight — out of scope
+  for a one-shot wall-clearing task). **Disposition: no code or workflow change made or needed** — this is purely a
+  runner-queue-depth wait, identical to entries 3, 4 (partial), and 6. Slot left clean (`features-service` on
+  `live-defi-rollout`, 0 commits ahead, no local changes). Pinged the authoring slot (`ci-reconcile`) with the outcome.
