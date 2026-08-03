@@ -813,11 +813,30 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       `plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after discovering it was
       blocking the corpus-wide `check_finalize_plan_coverage.py` gate — unrelated to this todo, shipped as its own
       commit.
-- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
+- [x] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
       this bounded item extracted — its main P0/P1 chain stays there, operator-gated). Fix the invalid `sit_retry_cap`
       wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
       background worker rather than Issue + Slack only. **MIGRATED FROM**:
-      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`. ✅ **Already shipped
+      pre-extraction — DUPLICATE of this same plan's own item at line ~240 ("The `sit_retry_cap` escalation can never
+      succeed")**, which cites the SAME source ([DEVOPS] P0 in the same issue doc) and closes the `sit_retry_cap`
+      bounded-fix half end-to-end: `unified-trading-pm@2e5a42479` + `agent-orchestrator@dbdccb6`, live-proven via a real
+      `workflow_dispatch` → `POST /api/escalate` → `HTTP 200 escalation_id=agt-d37ed9` → dispatched to a live `cicd`
+      worker (slot 1) → confirmed fixed in code (`server/models/escalation.py` carries `sit_retry_cap` in
+      `EscalateRequest.wall_type`, `escalation.WALL_TYPES`, and `escalate-to-orchestrator.yml`'s case-statement +
+      `workflow_dispatch` choice list) → `/done`. Verified independently this session: `sit-debounce-trigger.yml:321`
+      still emits `wall_type:"sit_retry_cap"`; `escalation.py` `WALL_TYPES` (line 73) and `server/models/escalation.py`
+      (line 44) both carry it; `escalate-to-orchestrator.yml`'s case-statement (line 150) and `workflow_dispatch` choice
+      list (line 81) both accept it; `tests/test_escalation.py` asserts
+      `_prompt_template_for("sit_retry_cap") == "cicd"` and cross-checks the `EscalateRequest` Literal against
+      `WALL_TYPES` so the two sets can't drift apart again. **The second clause (design call: should a red SIT escalate
+      to a background worker rather than Issue + Slack only) stays UNRESOLVED BY DESIGN** — the source issue doc's
+      na-eligibility-audit verdict (2026-08-02) explicitly flags this as "a genuine design call and should stay NA
+      regardless of which option is picked"; a worker deciding it autonomously would be exactly the
+      judgment-wearing-a-todo's-clothes anti-pattern CLAUDE.md's dispatch-scope-eligibility rule forbids. Note the
+      _bounded_ half is not purely academic either: the retry-cap escalation (3 consecutive SIT failures) now DOES reach
+      a background worker (proven above) — only the broader "every single red SIT run" policy question remains open,
+      tracked at its source doc, not here.
 - [x] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (same doc, same
       extraction). Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
       cross-repo combination was executed" — it is a surface check. **MIGRATED FROM**:
