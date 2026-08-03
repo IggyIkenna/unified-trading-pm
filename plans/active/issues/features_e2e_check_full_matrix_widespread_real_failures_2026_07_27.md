@@ -432,3 +432,24 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`
   — `unified-trading-pm@dcfc59595`, verified on origin. Not fixed in this session (out of scope for this
   verification-only todo). **CEFI:delta_one still in flight**, healthy, no verdict yet.
+- 2026-08-03 ~11:45Z (slot-16, data_engineering, INTERIM #4 — TRADFI:cross_instrument re-verified): re-ran
+  TRADFI:cross_instrument (force+skip) now that TRADFI:delta_one has a genuine terminal verdict. Both legs FAILED
+  (`vm_not_success:vm_exit_nonzero=1`) — confirmed via direct `run.log` read on the force-leg VM
+  (`features-e2e-tradfi-20260803-113749-c81739`) it is the SAME real cascade, not a new bug:
+  `FileNotFoundError: No delta-one features found under gs://features-tradfi-test-central-element-323112/delta_one/by_date/day=2026-01-21/ for timeframe=15s. Run features-delta-one-service for TRADFI/2026-01-21 first.`
+  This traces directly to TRADFI:delta_one's real failure (root-caused, already filed in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`)
+  — no new issue doc needed for this leg; it is expected to clear automatically once that fix lands. No code changes
+  this session (verification-only).
+- 2026-08-03 ~11:50Z (slot-16, data_engineering, INTERIM #5 — TRADFI:multi_timeframe re-verified): re-ran
+  TRADFI:multi_timeframe force (VM `features-e2e-tradfi-20260803-114630-c54481`) — FAILED, same real cascade:
+  `ERROR No upstream data: delta-one features for asset_group=TRADFI date=2026-01-21 produced 0 instruments. Run features-delta-one-service first`.
+  Confirms root cause B (the date-handling fix, `features-service@87e39bc7`) is genuinely working — the family now
+  correctly reads the requested window's date (`2026-01-21`, matching TRADFI:delta_one's own auto-resolved window)
+  instead of wall-clock `today()`; the failure is purely the same real upstream-dependency gap already tracked in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`,
+  not a regression of B. Skip leg was skipped by the driver's own `duplicate_in_flight` guard (concurrent with force on
+  the same VM); not separately re-run since there is no valid prior successful output for it to skip against — the force
+  leg alone is sufficient evidence for this cell's verdict. No code changes this session (verification-only).
+  **Remaining open**: CEFI:delta_one still in flight (no verdict yet); CEFI:cross_instrument and CEFI:multi_timeframe
+  still need re-running once CEFI:delta_one completes.
