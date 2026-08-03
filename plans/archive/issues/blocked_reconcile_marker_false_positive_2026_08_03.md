@@ -29,6 +29,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_role: backend_engineer
+context_scope:
+  [
+    agent-orchestrator/server/blocked_reconcile.py,
+    /plans/archive/issues/ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
+    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
+  ]
 ---
 
 > **🟢 ARCHIVED 2026-08-03** — `status: resolved`, zero open todos; archived per
@@ -102,3 +108,6 @@ near the BLK id; workers narrating unrelated pending state stop tripping it).
   shape (BLK id + unrelated "resolved" 5 lines later). Full suite: 16/16 passed locally; `agent-orchestrator@209cd00`
   shipped via quickmerge, verified on `origin/live-defi-rollout`. Full repo `quality-gates.sh` green (2271 passed, 2
   skipped; dashboard tsc/vitest green).
+- **context-scout 2026-08-03**: populated context_scope (3 entries) — the reconciler source file (fix target), the issue
+  doc that originally built this mechanism (design-intent context for the recommended tightening), and the triggering
+  doc where the false positive fired.
