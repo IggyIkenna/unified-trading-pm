@@ -419,12 +419,21 @@ concurrent workers do not collide on this file.
       triggers table + default-branch schedule gotcha + measure-don't-assume verification). (c) corrected the
       strict-quickmerge line from "WARN-default" to "BLOCKS by default" (operator policy 2026-06-26). prettier +
       `check_reference_paths.py` both clean (at baseline); shipped via `quality-gates.sh` → `quickmerge --agent`.
-- [ ] [INFRA] P3. **The two husky UI repos carry no strict-quickmerge guard.** The pre-push self-heal skips them
-      (`case "${_hooks_dir}" in */.husky/*) continue`), so `deployment-ui` and `unified-trading-system-ui` are the only
-      clones with no provenance guard at all. Wire the strict guard into each repo's husky `pre-push`. This touches
-      `.husky/` hooks only — **no UI source, so the playwright gate does not apply**; do not touch any `src/`/`app/`
-      file. **Done when**: a synthetic non-quickmerge code push is blocked in both repos, a quickmerged range passes,
-      and the self-heal recognises the husky installs. Source:
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-9, infra)** — **The two husky UI repos carry no strict-quickmerge guard.**
+      Added a COMMITTED `<repo>/.husky/pre-push` in each — a thin delegate (mirrors `.husky/pre-commit`'s prek
+      delegation) that `exec`s the fleet's canonical `scripts/hooks/pre-push` after resolving the workspace root (same
+      sibling-repo walk-up the canonical guard itself uses), so it ships via normal commits rather than a per-tick
+      content-heal — `deployment-ui@a3268d0`, `unified-trading-system-ui@563f6238`. Also updated
+      `slot-cron-ff-pull.sh`'s self-heal: it still never writes into a husky repo's hooks dir (that would clobber
+      husky's own `.husky/_/` dispatcher shim), but now WARNs loudly when a husky repo's `.husky/pre-push` delegate is
+      missing instead of a silent, no-signal skip — `unified-trading-pm@69b858288`. **Done-when, verified**: a new
+      regression test (`test-husky-pre-push-strict-quickmerge-delegate.sh`, 15/15 cases) runs the REAL committed
+      delegates against synthesized git fixtures — proves a synthetic non-quickmerge `.ts` source push is BLOCKED in
+      both repos, a quickmerged (`Quickmerge: agent` trailer) push PASSES in both, a missing canonical guard degrades
+      gracefully (warns, exit 0), and the extracted self-heal recognition block warns on a missing delegate / stays
+      silent once present. Also manually verified live via husky's own internal dispatcher shim (`.husky/_/pre-push`) in
+      both repos — confirmed it now resolves to the new delegate instead of no-op'ing. Full `quality-gates.sh` green on
+      all three repos (deployment-ui, unified-trading-system-ui, unified-trading-pm). Source:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** —
       unified-trading-pm@45b25799b + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
