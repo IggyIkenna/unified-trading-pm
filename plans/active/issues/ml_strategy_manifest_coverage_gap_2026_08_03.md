@@ -152,19 +152,71 @@ is an ACTIVE ongoing gap, not a pre-instrumentation historical artifact.
    if manifest recording fails, per the function's own "heartbeat" design intent; only the _visibility_ of the failure
    changed.
 
+## Todo 2 investigation findings (2026-08-03)
+
+**The row shape this todo's own wording assumed (`capture_status="captured"`) is WRONG — footer-verified all 7 real
+objects and every one is a genuine 0-row write, not a row_count>0 capture.**
+
+1. Downloaded all 7 real objects (`gcloud storage cp` + `pyarrow.parquet.ParquetFile.metadata.num_rows`, each ~135
+   bytes) — every single one reads `rows=0`. This matches `batch_results.py::write_instructions_to_gcs`'s own documented
+   design intent ("Always write instructions — even empty. This is the heartbeat from strategy to execution") — these
+   are hold-day signals (the strategy ran and chose not to trade), not junk and not real row_count>0 captures.
+2. `StrategyManifestRecorder.record_captured` (the correctly-wired-but-zero-caller dead-code path) already encodes the
+   correct terminal state for this: it routes `row_count<=0` straight to `record_empty`, never `record_captured`.
+   Stamping `capture_status="captured"` here would itself be a silent-placeholder / dishonest-absence violation
+   (data_engineering.md craft north-star #1) — so the honest backfill target is `record_empty`
+   (`capture_status="empty_confirmed"`), not what this todo originally asked for.
+3. **Blocker**: `record_empty(reason=SOURCE_RETURNED_ZERO)` — the closest-named existing `EmptyConfirmedReason` — is
+   semantically wrong here. Its own docstring + the writer's Phase-1-KEYSTONE gate
+   (`FetchEvidence.proves_honest_absence()`, REQUIRED for this reason or the writer HARD-RAISES
+   `UnprovenHonestAbsenceError`) are explicitly HTTP-fetch-shaped ("Threaded from the adapter HTTP layer" —
+   `http_status`/`source`-vendor-token/`endpoint`-URL fields). `strategy_instructions` has no upstream fetch at all —
+   "the strategy engine IS the source" (`strategy_manifest.py`'s own comment) — so constructing a synthetic
+   `FetchEvidence` to satisfy the gate would itself be fabricated evidence, not a fix. No other closed-set
+   `EmptyConfirmedReason` member fits "an internal computation legitimately produced zero rows" either — every
+   `EXPECTED_*` member is a calendar/coverage-window primitive (holiday, pre-launch, TVL-floor, etc.), none of which
+   describe a strategy engine's own hold-day decision.
+4. Adding a new `EmptyConfirmedReason` taxonomy member is the semantically correct fix, but per its own governance
+   ("Adding a new code = adding it here AND to `codex/02-data/honest-absence-downstream-handling.md` AND to the
+   per-service consumer-class audit table") it's a real closed-set design decision requiring a `unified-api-contracts`
+   change — outside this todo's declared repos (`ml-service`, `strategy-service`, `unified-trading-pm`) and exactly the
+   kind of judgment call `task_template.md`'s dispatch-scope-eligibility rule reserves for a human decision, not a
+   mechanical worker.
+5. **Companion fix shipped this todo** (in scope, correct regardless of the reason-code decision):
+   `strategy_orphan_sweep.py`'s `build_covered_index()` only recognised `capture_status=="captured"` as coverage — an
+   honest `empty_confirmed` backfill would therefore NEVER have converged `orphan_class_E` to 0 on re-sweep, directly
+   defeating this todo's purpose. Widened to treat `{"captured", "empty_confirmed"}` as covered (a cell the manifest
+   system has terminal knowledge of, either shape) + added a locking unit test.
+6. **Backfill tool shipped this todo, functional but not yet applied**:
+   `backfill_strategy_instructions_orphan_class_e.py` — footer-reverifies each of the 7 known cells is still genuinely
+   0-row, re-checks the LIVE manifest index (never double-records), calls
+   `ManifestWriter.record_empty(reason=<operator-supplied>)`, sample-verifies its own per-VM shard post-write. Requires
+   an explicit `--reason` (refuses `SOURCE_RETURNED_ZERO` and any non-closed-set value) — proven end-to-end in
+   `--dry-run` against real prod GCS (all 7 cells still genuinely 0-row, none yet covered). 9 new unit tests (all
+   passing). The actual `--apply` run is deferred pending the operator's reason-code decision (posted as a `/blocked`
+   question).
+
 ## Open work
 
 - [x] 1. ✅ [SCRIPT] P2. **Investigate why `strategy_instructions` has zero manifest rows in prod** — grep
       `StrategyManifestRecorder`/`record_captured` call sites in `strategy-service`, confirm whether they're wired into
       the live paper/backtest write path at all, or exist but never fire (env mismatch, exception swallowed, etc.).
       Repo: strategy-service. — strategy-service@788dfa08 (see "Todo 1 investigation findings" above).
-- [ ] 2. [SCRIPT] P2. **Backfill `record_captured` manifest rows for the 7 real `strategy_instructions` orphans** listed
-      above (additive-only, `NEVER delete` per the sweep's own printed warning) — todo 1 confirmed this is an ONGOING
-      silent-failure bug (last observed 2026-07-18), not a one-time pre-instrumentation gap, and confirmed the row shape
-      (`client_id`/`strategy_id`/`date`/`data_type="strategy_instructions"`/`capture_status="captured"`, all with blank
-      `client_id`/`venue`/`feature_group`). No existing `backfill_*_class_e.py` tool exists for strategy-service yet
-      (unlike features-service's `backfill_feature_orphan_class_e.py`) — build one mirroring that pattern, or a one-off
-      script for this small (7-object) case. Repo: strategy-service.
+- [ ] 2. [OPERATOR] P2. **Decide the `EmptyConfirmedReason` for the 7 real `strategy_instructions` orphans, then run the
+      backfill.** See "Todo 2 investigation findings" above — the objects are genuine 0-row hold-day writes, not
+      `capture_status="captured"` as originally assumed, and no existing closed-set reason fits an internally-computed
+      (no-upstream-fetch) empty write. Options: (A) add a new `EmptyConfirmedReason` member (e.g. something like
+      `EXPECTED_STRATEGY_NO_SIGNAL` or `SOURCE_INTERNAL_ZERO`) in `unified-api-contracts` + its codex/audit-table
+      entries — semantically correct, matches the taxonomy's one-reason-per-distinct-semantic pattern, but is a
+      cross-repo design change; (B) reuse an existing reason as a pragmatic approximation (none surveyed actually fit —
+      see finding 3 above) — NOT recommended, would misclassify the absence; (C) leave these 7 objects unmanifested for
+      now (accepted low-severity gap — todo 1's fix already makes any FUTURE occurrence of this exact failure mode loud
+      via `logger.exception`, so the risk is bounded to this one already-known historical batch) and close this todo as
+      won't-fix-for-now. Recommendation: (A) if this hold-day pattern recurs / is expected to keep happening (it is the
+      "heartbeat" design, so it will), else (C) if this is a one-off. Once decided: run
+      `.venv/bin/python scripts/backfill_strategy_instructions_orphan_class_e.py --apply --reason     <decided-reason>`
+      (built + dry-run-proven this todo — strategy-service@\<sha\>), wait for the manifest consolidator, re-run
+      `strategy_orphan_sweep.py`, confirm `orphan_class_E=0`. Repo: strategy-service.
 - [ ] 3. [DOC] P3. **Confirm `ml_predictions` is genuinely intentionally unwired** (not a silently-broken feature) —
       check with the operator or a design doc whether ml-service inference was ever meant to persist predictions in prod
       yet, or if `MLInferenceBatchModeHandler`'s discarded `prediction_writer` is itself a gap worth its own todo. If
@@ -192,3 +244,24 @@ is an ACTIVE ongoing gap, not a pre-instrumentation historical artifact.
   `StrategyManifestRecorder` wiring) has zero callers anywhere in the current tree — confirmed dead code, not the
   production path. Root-causing the exact swallowed exception (Cloud Logging archaeology) is a good next step but not
   required to answer this todo's question and is left for whoever picks up todo 2 (backfill).
+- **2026-08-03** (AO dispatch, slot 2) — Started todo 2 (backfill). Footer-verified via `gcloud storage cp` +
+  `pyarrow.parquet.ParquetFile.metadata.num_rows` that all 7 real orphan objects are genuine 0-row writes — the todo's
+  own `capture_status="captured"` assumption was wrong (see "Todo 2 investigation findings" above). Built + unit-tested
+  (9 new tests) + dry-run-proved against real prod GCS `backfill_strategy_instructions_orphan_class_e.py`, and widened
+  `strategy_orphan_sweep.py`'s `build_covered_index()` to recognise `capture_status="empty_confirmed"` as coverage (else
+  an honest backfill could never converge `orphan_class_E` to 0). Discovered `SOURCE_RETURNED_ZERO`'s `FetchEvidence`
+  proof gate is HTTP-fetch-shaped and does not apply to strategy-service's internally-computed instructions, and no
+  other closed-set `EmptyConfirmedReason` fits — retagged the todo `[OPERATOR]` and posted BLK-4a063e0f with 3 options
+  (recommend A: add a new taxonomy member).
+- **2026-08-03** (AO dispatch, slot 2) — Operator ruling on BLK-4a063e0f: option A. Added
+  `EmptyConfirmedReason.STRATEGY_ENGINE_RETURNED_ZERO` (sibling of `SOURCE_RETURNED_ZERO`, exempt from the FetchEvidence
+  gate) — `unified-api-contracts@06dee218`. Ran the operator-mandated exhaustive-consumer audit (an Explore sub-agent
+  surveyed every repo for hand-maintained mirrors of the closed set) and found + fixed 2 real drift risks that would
+  have silently misclassified the new reason as legacy `empty_unclassified`: `deployment-api@e922a72b`
+  (`EMPTY_REASON_KEYS` tuple) and `deployment-ui@01cb9b6c` (`EMPTY_REASON_KEYS` + `EMPTY_REASON_META` + its pinned test
+  snapshot — also backfilled 2 pre-existing gaps, `EXPECTED_ACQUISITION_PENDING`
+  - `EXPECTED_SUBGRAPH_DEINDEXED`, found during the same audit but predating this change). Updated
+    `codex/02-data/honest-absence-downstream-handling.md`'s reason taxonomy + consumer-policy tables and
+    `scripts/quality_gates/check_record_empty_reason_closed_set.py`'s `KNOWN_REASONS` (also backfilled the same 2
+    pre-existing gaps there). Shipped `strategy-service@faddf680`: the backfill tool + sweep coverage fix (see prior
+    entry), now runnable with `--reason STRATEGY_ENGINE_RETURNED_ZERO`. All 5 repos QG-green before shipping.
