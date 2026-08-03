@@ -181,7 +181,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -208,10 +208,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "warn_file_count": 0,
-        "coverage_pct": 87.6,
+        "qg_red_reason": "qg",
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 0,
+        "coverage_pct": null
       }
     },
     "client-reporting-api": {
@@ -247,7 +247,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -342,10 +342,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "qg_red_reason": "basedpyright",
-        "warn_file_count": 18,
+        "qg_red_reason": "qg",
+        "large_file_count": 0,
         "coverage_pct": null,
-        "large_file_count": 0
+        "warn_file_count": 18
       }
     },
     "deployment-service": {
@@ -426,7 +426,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -456,10 +456,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 22,
-        "coverage_pct": null,
+        "qg_red_reason": "basedpyright",
         "large_file_count": 0,
-        "qg_red_reason": "qg"
+        "warn_file_count": 22,
+        "coverage_pct": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -531,9 +531,9 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
         "qg_red_reason": "qg",
-        "large_file_count": 1,
+        "large_file_count": 2,
+        "coverage_pct": null,
         "warn_file_count": 15
       },
       "ldr_ci_status": "GREEN",
@@ -566,7 +566,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -594,10 +594,10 @@
         "subscription-redemption"
       ],
       "codebase_health": {
-        "coverage_pct": 83.9,
-        "warn_file_count": 0,
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 0,
+        "coverage_pct": null
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -826,10 +826,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
+        "qg_red_reason": "pytest",
+        "large_file_count": 6,
         "coverage_pct": null,
-        "qg_red_reason": "qg",
-        "large_file_count": 5,
-        "warn_file_count": 7
+        "warn_file_count": 6
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -858,7 +858,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -954,9 +954,9 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "qg_red_reason": "qg",
-        "coverage_pct": null,
+        "qg_red_reason": "pytest",
         "large_file_count": 0,
+        "coverage_pct": 82.59,
         "warn_file_count": 6
       },
       "ldr_ci_status": "RED",
@@ -988,7 +988,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1113,8 +1113,8 @@
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "qg_red_reason": null,
-        "coverage_pct": 9.54,
         "large_file_count": 0,
+        "coverage_pct": null,
         "warn_file_count": 0
       }
     },
@@ -1311,9 +1311,9 @@
       "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "qg",
-        "coverage_pct": 73.14,
         "large_file_count": 0,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "coverage_pct": 73.65
       }
     },
     "unified-trading-api": {
@@ -1506,7 +1506,7 @@
       "version_source": "git-tag",
       "status": "active",
       "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab→LDR→main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged — 2026-05-24 incident.",
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "none",
@@ -1525,10 +1525,10 @@
       ],
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "warn_file_count": 7,
-        "coverage_pct": null,
+        "qg_red_reason": "qg",
         "large_file_count": 14,
-        "qg_red_reason": "pytest"
+        "coverage_pct": null,
+        "warn_file_count": 7
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
