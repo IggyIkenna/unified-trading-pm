@@ -747,3 +747,36 @@ not just noting.
   this same slot — `786e1ca`, todo-5 of
   `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — was left untouched as
   out-of-scope for this one-shot escalation, not silently dropped).
+
+- **2026-08-03 ~03:47-03:59Z (cicd escalation `agt-05a7fe`, slot 5, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — same host/slot as the `agt-c82335` `features-service` entry directly above (`ip-172-31-5-118` /
+  `172.31.5.118`, exact match to runner `glue-ip-172-31-5-118-1`). Confirmed `main`'s prior run `30774745528`
+  (00:33:18Z, HEAD `e7933317`) failed with `qg_red_reason=pytest`, `1 failed, 1270 passed` at 24% progress: a single `F`
+  mid-stream, then a `pytest-timeout` `SIGALRM` fired while an xdist worker was mid-write on its execnet report pipe
+  (`pytest_timeout.py:317 handler` → `execnet/gateway_base.py:544 write` blocked >150s), corrupting the IPC channel and
+  cascading through `worker_internal_error` → `RuntimeError: Unexpectedly no active workers available` — the exact
+  signature this doc's sibling `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` / `..._continued_2026_08_02.md`
+  docs track (pipe-write-under-SIGALRM race, not a real hang or test defect). **Verified code cleanliness directly**:
+  full local `quality-gates.sh` (backgrounded per mandatory pattern) at LDR HEAD `5a6a3cba` (one commit ahead of the
+  failing SHA) — **100% green, 5120 passed, 6 skipped, 53.09s** — proving no code/test regression exists; the specific
+  `F` from the crashed run is unrecoverable (no `FAILURES`/short-summary section printed before the crash) but is very
+  unlikely a genuine regression given the full-suite local green. A newer commit (`5489328a`,
+  `refactor(sports): delete dead OpenMeteoAdapter.get_weather`, slot-12) landed on LDR mid-investigation; verified
+  independently via targeted grep — zero remaining callers of the deleted method anywhere in the tree — rather than
+  re-running the full (now 4th-in-queue) suite on an already-thrashing host. Host corroboration at investigation time:
+  `uptime` load average **38.87/38.46/38.19** (16 vCPUs, >2x oversubscribed), swap **24Gi/47Gi** in use, **39**
+  concurrent `quality-gates.sh` processes — same or worse than every prior entry. Live CI cross-check: a
+  `workflow_dispatch` run (`30780872143`, created 03:05:05Z, HEAD `73824258` — FIFO-queued 3 commits behind current tip)
+  was genuinely progressing at investigation time (`content sentinel` success, `QG slice (tests)` `in_progress`,
+  `QG slice (checks)` `queued`) — direct process inspection confirmed real work (two live `pytest` xdist worker
+  subprocesses under the runner's venv, PIDs 246291/246316, both in `D`-state disk-I/O wait, started 03:21Z), not a
+  stuck/dead runner despite ~50min of elapsed wall-clock on the FIFO queue. **Disposition: no code/test/workflow change
+  made or needed** — this is a single completed failure (not yet a sustained non-self-clearing red across multiple hours
+  the way `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` documents for `unified-trading-api`), so
+  the repo-local `PYTEST_TIMEOUT` raise mitigation that doc applies was not yet warranted here per its own stated
+  threshold; a fresh FIFO-queued run is already progressing toward its own natural resolution on the current LDR HEAD,
+  and retriggering would only cancel it via the `cancel-in-progress` concurrency group. `GET /api/repo-blockers` →
+  `open: []` — nothing to fast-path. Pinged `AUTHORING_SLOT=planning` with the outcome. Slot left clean on
+  `live-defi-rollout` in both `instruments-service` and this PM worktree (only this doc touched in PM; the same
+  pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this slot, referenced in the
+  `agt-c82335` entry above, was again left untouched as out-of-scope for this one-shot escalation).
