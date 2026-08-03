@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-api, unified-trading-pm, features-service]
+repos: [unified-trading-api, unified-trading-pm, features-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
@@ -31,7 +31,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T08:55Z
+last_updated: 2026-08-03T09:24Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -158,6 +158,36 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   timeout moves the threshold, does not close the class."
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+
+- **2026-08-03 ~09:10-09:24Z (`cicd` escalation `agt-7784b3`, slot 5, `market-data-processing-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=569`)** — same bug class, a new repo: `quality-gates-v2` failed on the LDR→main
+  promotion PR (`promote/market-data-processing-service/23aad425a868`, headSha `23aad42`), run `30790876831` (created
+  06:38:47Z). Both slices failed: `QG slice (checks)` exit=143 after a 79-minute hang inside the repo-local
+  `[6.X] PER-SHARD MEMORY REGRESSION GATE` step (runs `tests/perf/test_polars_instrument_day_memory.py` unconditionally
+  after `base-service.sh` returns, regardless of LEG) — traced the exit code to `qg-host-governor.sh`'s own RAM-pressure
+  watchdog (`QG_HOST_RAM_ABORT_PCT`, SIGTERM to the process tree after sustained ≥80% host RAM), NOT a pytest-timeout
+  expiry (the perf test's own `--timeout=120` never even fired — the process was starved of scheduler time, not merely
+  slow). `QG slice (tests)` exit=1 after a 41-minute hang ending in `PluggyTeardownRaisedWarning` /
+  `OSError: cannot send (already closed?)` (pytest-xdist worker death under the same pressure) — consistent symptom of
+  the same class, not a distinct defect. Host corroboration at investigation time: `uptime` load average
+  `33.52, 32.00, 32.82`, `22Gi/47Gi` swap in active use, 28 concurrent `quality-gates.sh` processes — matches every
+  prior entry. Confirmed no code/test defect: no commit in this repo's recent history touches
+  `tests/perf/test_polars_instrument_day_memory.py` or the polars candle engine it exercises; ran the perf test in
+  isolation (`.venv/bin/python -m pytest tests/perf/test_polars_instrument_day_memory.py --timeout=120 -q` after
+  `uv sync`) — 5 passed in 1.99s, zero regression. Unlike the pytest-timeout-expiry shape this doc otherwise tracks,
+  this specific failure mode (governor RAM-abort) is NOT fixed by raising a pytest-level timeout budget — the governor's
+  SIGTERM fires independently of any in-process timeout, so no repo-local code change was applied (would be a no-op fix
+  for the actual trigger). By the time of this diagnosis the promotion PR had ALREADY MERGED
+  (`mergedAt: 2026-08-03T06:38:48Z`, one second after creation — branch protection evidently accepted an earlier green
+  status on the same SHA lineage or an admin/automerge path; the still-running/then-failing `quality-gates-v2` check on
+  the PR context completed 2h37m AFTER the merge and is now moot) — `main`'s own post-merge `quality-gates-v2` run
+  (`30790880111`) was still `in_progress` at 2h45m+, and `main-backmerge-to-ldr` + `Semver Agent` had both already
+  completed successfully, so nothing was actually blocked. `GET /api/repo-blockers` → `open: []`. Per this doc's own
+  precedent (`agt-637862`'s "did NOT re-dispatch a redundant run — bottleneck is host-wide runner-slot scarcity, not a
+  stale/dead run or code gap"), did NOT trigger a fresh `quality-gates-v2` run — the promotion is already complete and a
+  new dispatch would only add to the same contention this doc tracks for zero benefit. Slot left clean
+  (`market-data-processing-service` on `live-defi-rollout`, 0 commits ahead; discarded a `uv.lock` diff produced by
+  local `uv sync` — not an intended change). No code shipped this session.
 
 - **2026-08-03 ~08:35-08:55Z (`cicd` escalation `agt-a7a7b6`, slot 6, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — 4th escalation for the same wall, this time a genuinely NEW (not yet-fixed) gap found**: read
