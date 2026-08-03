@@ -39,6 +39,7 @@ repos:
     ml-service,
     alerting-service,
     execution-service,
+    market-tick-data-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
@@ -50,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T16:20Z
+last_updated: 2026-08-03T16:25Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -285,3 +286,32 @@ repeated here.
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Now a
   5th repo's worth of same-day corroboration for the fleet-wide signature (`deployment-service` ×3, `features-service`
   ×2 in this doc alone (~17 total across the doc-chain), `alerting-service`, `execution-service`).
+
+- **2026-08-03 ~15:31-16:05Z (`cicd` escalation `agt-72552a`, slot 11, `market-tick-data-service`,
+  `wall_type=main_ci_red`, `pr_number=0`) — 6th repo added to the corroboration list; checked this repo's own base rate
+  before concluding "same signature, no action" and confirmed it does NOT meet the sustained-red mitigation bar**:
+  `main` HEAD at dispatch time (`efcd8980`) had failed `quality-gates-v2` on 2026-08-02 via
+  `❌ Type check FAILED/timeout (exit=124)` (checks leg, `[4/6] TYPE CHECK` step) — a `timeout`-wrapped basedpyright
+  invocation blowing its wall-clock ceiling under host contention, not a real type error (workflow-yaml/actionlint/ruff
+  steps immediately before it all passed clean in seconds). By investigation time LDR had already advanced and
+  auto-promoted forward (PR #816, `mergedAt=2026-08-03T06:38:55Z`, the same
+  self-merge-before-confirmatory-check-completes pattern this doc-chain documents repeatedly) to new `main` HEAD
+  `ef78e52b`, whose own `quality-gates-v2` run (`30790885949`) was already `in_progress` with its `checks` leg PASSED
+  (no repeat of the typecheck timeout) — watched it to completion via a bounded background poll (180s interval, ~35min)
+  rather than re-dispatching. Outcome: the run was `cancelled`, NOT failed — a yet-newer LDR→main promotion landed mid-
+  watch (main HEAD advanced again to `17502351`), and the branch-scoped concurrency group correctly superseded the stale
+  run with a fresh one (`30830062679`, confirmed `queued` against the true current head) — pure forward-progress churn,
+  not a stall. Before accepting "same bug class, no action" by default, pulled this repo's own last 40 LDR
+  `quality-gates-v2` runs: 18 success / 8 failure / 13 cancelled, most recent success `2026-08-02T12:24:14Z` — a healthy
+  self-clearing ratio, NOT the "100% failure, no green for 13.5-36h+" bar that justified the repo-local
+  `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT` mitigation on `unified-trading-api`/`features-service`/`deployment-service`/
+  `execution-service` elsewhere in this doc-chain (mirrors the `instruments-service` precedent above, which similarly
+  found only 2/25 genuine failures and correctly withheld the mitigation). Confirmed `scripts/quality-gates.sh` here
+  carries no `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT` override — deliberately NOT adding one, per that precedent.
+  `GET /api/repo-blockers` → `open: []`. **Disposition: no code or workflow change made or needed** — every candidate
+  fix already exists on `live-defi-rollout`, the newly-queued run (`30830062679`) is the correct in-flight state to
+  leave this for the next occurrence, and this repo's base rate argues against pre-emptively adding a timeout override
+  it doesn't yet need. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) — per `cicd.md`, skipped the
+  authoring-slot ping. Slot left clean (`market-tick-data-service` and `unified-trading-pm` both on `live-defi-rollout`,
+  0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Added
+  `market-tick-data-service` to this doc's `repos:` frontmatter (1st occurrence for this repo in the doc-chain).
