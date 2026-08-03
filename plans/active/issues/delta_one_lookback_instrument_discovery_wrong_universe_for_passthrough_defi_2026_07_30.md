@@ -215,3 +215,19 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   required `candle_data_types` param. `bash scripts/quality-gates.sh` ALL PASSED (17996 tests, 0 failures; sentinel
   written at HEAD 8e62dc30). Todo 2 (P2, DATA-tagged) is next — unblocked, not part of this task's scope.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-03 (slot-5, data_pipeline_failure escalation agt-0c3ac6, DP-VM-001/DP_VM_EXIT_NONZERO)**: the
+  `exit_code_fleet_monitor` fired a fresh `relaunch_vm` escalation for `features-delta-one-defi-20260802-235804`
+  (exit_code=1 — not 137, so out of `RelaunchBackfillVm`'s OOM-only auto-recover scope, hence the escalation to a
+  human-judgment worker per `RB-INFRA-RELAUNCH`). Independently re-diagnosed from scratch (GCS `run.log` +
+  `EXIT_STATUS` + the DEFI `market-data-tick` availability manifest, not by reading this doc first) and landed on the
+  **exact same conclusion slot-6 already recorded above 2026-08-02**: `oracle_prices` manifest-captured rows for DEFI
+  start at `2022-11-01` with zero rows before it (`read_availability_index` min date == `2022-11-01`, confirmed live),
+  so the `2022-11-01→2022-11-24` window's lookback validation (`buffer_days=2`, needs `2022-10-30`/`10-31`) fails
+  deterministically — not a transient/relaunchable fault, and re-running the SAME launcher args would fail identically
+  every time (verified: `fail_on_insufficient=not skip_dependency_check`, and the archived launch command passed no
+  `--skip-dependency-check`). Per `RB-INFRA-RELAUNCH`'s own bound ("if it re-fails the SAME way twice, the shard is
+  wedged ... STOP relaunching") — skipped the wasted first relaunch since the deterministic-failure evidence was already
+  conclusive without needing to reproduce it a second time. **Did NOT relaunch this VM.** No code/data action needed —
+  this is the same resolved-moot finding, not a new defect. Pinged the authoring monitor slot (`dp-fleet-monitor`) with
+  this outcome so a future occurrence of this exact alert for this VM prefix is recognized as expected noise, not a
+  fresh incident.
