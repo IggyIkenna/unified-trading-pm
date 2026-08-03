@@ -127,3 +127,25 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   the fix is already correct and shipped, this is purely a runner-queue-depth wait. `GET /api/repo-blockers` →
   `open: []`. Slot left clean on `live-defi-rollout` (only this doc touched this session; no code change —
   `features-service`'s fix was already shipped by the prior session).
+
+- **2026-08-03 ~08:30Z (`cicd` `agt-637862`, slot 4, `features-service`, `wall_type=main_ci_red`, `pr_number=0`)** —
+  Same wall re-escalated a 3rd time; same run `30790679266` (the prior session's dispatch) is STILL the live one — now
+  `in_progress`/`queued` for 1h55m+ (started 06:35:05Z). Confirmed via direct process inspection on this shared host
+  (this box IS the `glue-ip-172-31-5-118-1` runner, `172.31.5.118`) that the `tests` job's pytest (PID 208125,
+  `-n 0 --timeout=300`, `--cov=features_service`) is genuinely alive and accruing CPU time (not deadlocked) but starved
+  — `uptime` load `37.25, 37.60, 38.12` on 16 vCPUs, `ps aux` shows 12+ concurrent `claude` agent sessions plus 6+
+  distinct per-repo self-hosted `glue` runner processes all on this one box. No `timeout-minutes` set anywhere in
+  `quality-gates-v2.yml` (job or step level), so GH Actions' own ceiling is the 360min default — this run could
+  legitimately churn for hours yet before GH itself would kill it. Re-confirmed no code/workflow defect: `main`'s 3
+  failed `quality-gates-v2` runs today (00:10Z/01:35Z/02:55Z) are the pre-fix 150s-timeout shape exactly as diagnosed;
+  LDR HEAD (`b81a6a75`, one commit after the fix) has no red run against it, only this one still-pending run.
+  `ldr-to-main-promote-fleet` (ticking every ~15min, latest `30796675435` @08:15Z, success) correctly still shows
+  `GATE BLOCK features-service: ci_status=FAILING` — it will auto-promote (create+merge the LDR→main PR) the moment this
+  run reports green; no manual promotion action needed or taken. Did NOT re-dispatch a 4th redundant run (would only
+  re-trigger the `cancel-in-progress` concurrency group and reset elapsed progress on an already-alive job with zero
+  benefit — the bottleneck is host-wide runner-slot scarcity, not a stale/dead run). Took no action beyond this log
+  entry; `GET /api/repo-blockers` → `open: []`. Slot left clean on `live-defi-rollout`, no code touched. Escalating to
+  the operator via the authoring-slot ping that this is now a 3rd consecutive same-day escalation for the same wall with
+  no forward progress in 2h — worth checking whether host-wide agent-fleet concurrency (12+ simultaneous `claude`
+  sessions observed) should itself be throttled, per the parent doc's still-open finding that "repeatedly raising a
+  timeout moves the threshold, does not close the class."
