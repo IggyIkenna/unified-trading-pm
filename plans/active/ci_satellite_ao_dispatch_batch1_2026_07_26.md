@@ -711,7 +711,7 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       handler runs). Found a SECOND non-numeric source beyond the literal `"ci-reconcile"` sentinel:
       `server/routes/repo_blockers.py:100`'s `authoring_slot=str(req.slot_id if req.slot_id is not None else "")`
       produces an empty string when a repo-blocker is declared with no `slot_id`. Fixed generally (not just the one
-      literal) — `unified-trading-pm@<see commit>`: `cicd.md`'s ping step now guards on
+      literal) — `unified-trading-pm@41f193405`: `cicd.md`'s ping step now guards on
       `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`, skipping when non-numeric (both known sentinels, and any future one) since
       there is no real originator slot to notify in that case — the dispatch-time Slack alert already covers the FYI, so
       nothing is silently lost by skipping.
