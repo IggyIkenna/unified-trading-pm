@@ -212,7 +212,25 @@ Three candidate directions — genuinely a design decision, not something a sing
       todos (the wiring gap, the NaN crash, the broken bare `ml-service` console script, and a 758-vs-2383-fixtures
       discrepancy worth re-checking) filed at
       `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This todo
-      stays open, now blocked on that new doc.
+      stays open, now blocked on that new doc. **UPDATE 2026-08-03 (slot-3, `data_engineering`)**: that child doc's
+      Findings 1+2 (the wiring gap + the NaN crash) are now FIXED and shipped as `ml-service@37d59f1`. Continuing past
+      them surfaced 3 MORE gaps (child doc Findings 4-6): CLV needs `--task-type regression`, not the CLI default
+      `classification` (LightGBM needs 0-indexed labels; CLV's target is `{-1,0,1}` — no code fix, just the correct
+      flag, matching the existing passing `test_sports_clv_pipeline` integration test); `--operation pipeline` (this
+      todo's OWN literal command) never calls `store_model` at all, so it structurally can never persist/promote an
+      artifact regardless of how many bugs get fixed in it — `--operation train` is the actually-correct operation (it
+      already has the native `odds_targets` merge AND calls `store_model`), gated behind its own
+      `--skip-dependency-check` need (SPORTS-blind dependency checker) and a pre-existing missing Pub/Sub topic that
+      makes any successful run exit non-zero. `--operation     train` uses its own separate
+      `ModelTrainer`/`HyperparameterTuner` (not `UniformTrainingPipeline`'s generic `LightGBMTrainer`, which is what
+      actually needed `--task-type regression`) — it handles the raw `{-1,0,1}` CLV labels fine as classification (real
+      classification-report metrics per class confirmed), so `--task-type` doesn't need overriding for this operation;
+      only `--skip-dependency-check` was needed. Using `--operation train     --skip-dependency-check` (default
+      task-type), **1 of 3 variants produced + independently verified**: real 372,665-byte artifact at
+      `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803191857/training-period-2026-08/model.joblib`
+      (accuracy=0.80). Running the remaining 2 variants next. Full findings + evidence in the child doc (updated same
+      session). This todo stays open (2 of 3 variants remaining) — see Deferred-work table below if not completed same
+      session.
 
 ## Progress Log (append-only)
 
@@ -292,6 +310,19 @@ Three candidate directions — genuinely a design decision, not something a sing
   `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This is a
   big-finding-class result (contradicts this doc's own "RATIFIED + VERIFIED" claim for a specific code path) — operator
   notified.
+- 2026-08-03 (slot-3, `data_engineering`, pre-compact checkpoint): picked up the same todo independently — had already
+  found + fixed the child doc's Findings 1+2 before discovering slot-11's rescued WIP diagnosed the identical root cause
+  (corroborating, not wasted, work). Shipped `ml-service@37d59f1` (both fixes, full QG green, 4 new regression tests,
+  verified on origin). Continuing past them surfaced 3 MORE independent gaps between "trains successfully" and "produces
+  a promotable artifact" — full detail + evidence in the child doc's Findings 4-6 (updated same session): CLV needs
+  `--task-type regression` for `--operation pipeline` specifically (no code fix); `--operation pipeline` (this todo's
+  own literal command) structurally never calls `store_model` so it can NEVER persist an artifact no matter how many
+  bugs are fixed in it; `--operation train --skip-dependency-check` is the actually-correct command (native odds_targets
+  merge, real `store_model` persistence) and **produced + independently GCS-verified 1 of 3 variants**:
+  `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803191857/training-period-2026-08/model.joblib`
+  (372,665 bytes, accuracy=0.80, non-degenerate target). **Writing this up now because the server flagged
+  `directive: compact_now`** — running the remaining 2 variants next, in a fresh context. If this session ends before
+  that, see the Deferred-work table below for exact resume instructions.
 
 ## Deferred work after 2026-07-26 (pre-compact checkpoint, slot-7)
 
@@ -302,11 +333,22 @@ Three candidate directions — genuinely a design decision, not something a sing
 | Watchdog `_sweep_unpushed_slots` gate-aware fix (`[BACKEND] P1`)   | Not done by me — tracked in main-agent's canonical doc `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`, open for anyone to pick up                            | Nobody — real work, unclaimed                                                                                        |
 | `CLVTargetBuilder` family-route PIT-gap verification (`[DATA] P3`) | New finding, not yet verified against real data                                                                                                                                          | Nobody — real work, unclaimed; see `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` |
 
-**Recommended next item (superseded 2026-08-03)**: the retrain was attempted and is now blocked one layer deeper — see
-the 2026-08-03 Progress Log entry above and
+**Recommended next item (superseded 2026-08-03, twice — see below)**: the retrain was attempted and is now blocked one
+layer deeper — see the 2026-08-03 Progress Log entry above and
 `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` for the actual
 next actionable work (`PipelineHandler`'s CLV target generation needs the same `odds_targets`-merge wiring
 `TrainingOrchestrator` already has).
+
+**Second supersession, same day (slot-3, pre-compact checkpoint)**: that blocker is now FIXED (`ml-service@37d59f1`).
+**Recommended next item**: run
+`python -m ml_service.training.cli.main --operation train --mode batch --asset-group SPORTS --family pregame_clv_family --target-types clv --skip-dependency-check --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`
+(with `GCP_PROJECT_ID=central-element-323112` exported) **2 more times** to produce the remaining 2 of 3 variants — each
+run gets a fresh `V<timestamp>` model_id automatically, no flag changes needed between runs. Each run will exit non-zero
+at the very end (child doc Finding 6's pre-existing Pub/Sub topic gap) — that is EXPECTED and does not mean the run
+failed; verify success via the log line `Model stored successfully: models/models/...model.joblib` (or an independent
+GCS `list_blobs` check, as done for variant 1) BEFORE trusting the exit code. Once 3 artifact paths are confirmed, flip
+this todo's checkbox to done citing all 3 GCS paths + `ml-service@37d59f1`, commit via `docs(plans):`, ship, call
+`/done`.
 
 **Lesson carried forward**: a session holding a commit behind an operator-only merge gate MUST self-heartbeat well under
 the ~25-min worker-staleness threshold (not the 30-min interval this session initially used) — the
