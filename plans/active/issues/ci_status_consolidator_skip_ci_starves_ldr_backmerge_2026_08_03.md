@@ -50,6 +50,7 @@ drift_direction: stable
 source: agt-368655
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # ci-status-consolidator's `[skip ci]` starves the LDR backmerge — fleet-promote gate can stall indefinitely
