@@ -258,9 +258,50 @@ lets each one be built, validated, and run to real completion on its own timelin
       against real GCS data — todos 1-3 of `features_service_manifest_coverage_gap_2026_08_03.md`'s sibling doc (which
       this run's tiny finding was folded into rather than filed separately, given its trivial 4-object scope) now covers
       every wired family.
-- [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
-      not day-sharded); scope the actual shard key first before writing the sweep (may need its own design pass, not a
-      mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.
+- [x] 3. ✅ [SCRIPT] P2. **Build an ml/strategy orphan sweep — the one confirmed family per repo.** Scoped the actual
+      shard key first (per this todo's own instruction): ml-service has exactly ONE manifest-writing corpus
+      (`ManifestWriter`/`record_captured` grepped 2026-08-03 — only
+      `ml_service/inference/app/core/     prediction_publisher.py`;
+      `manifest_gap_handler.py`/`manifest_inference_guard.py` READ the manifest, they do not write it) —
+      `ml_predictions`, shard key `(day, mode)`. strategy-service has MANY manifest-writing sites (orders, positions,
+      pnl, instructions, backtest results all write `ManifestWriter` rows), of which `strategy_instructions` is the one
+      with a fully verified single shape confirmed across BOTH its write sites (`gcs_storage_service.py`'s
+      `write_instructions` + `cli/handlers/batch_results.py`), shard key `(client_id, strategy_id, day)` — confirming
+      the parent doc's own framing that ml/strategy needed its own design pass, not a mechanical day-sharded port.
+      **Built 2026-08-03** (`ml-service@2f0c7e6`, `scripts/ml_orphan_sweep.py`, 19 unit tests;
+      `strategy-service@4e04e2af`, `scripts/strategy_orphan_sweep.py`, 22 unit tests) — both mirror
+      `candle_orphan_sweep.py`/`feature_orphan_sweep.py`'s A-E-style taxonomy + single-walk + checkpointed-resume
+      pattern. **Two BIG FINDINGs surfaced** (both documented with file:line citations in the respective sweep's module
+      docstring, both sweeps built against the REAL code-confirmed shape, not the stale constant): PATH_REGISTRY's
+      `ml_predictions` entry (`predictions/predictions/by_date/day={date}/mode={mode}/`,
+      `unified-trading-library/unified_trading_library/config_interface/paths/registry.py:143`) diverges from the live
+      writer, which calls `get_data_sink(bucket=...)` with no `prefix=` and so writes at the BUCKET ROOT
+      (`day={date}/mode={mode}/{uuid}.json`, JSON only, never the declared `batch_{timestamp}.parquet` extra_file); and
+      PATH_REGISTRY's `strategy_instructions` entry (`strategy_instructions/strategy_id={strategy_id}/     day={date}/`,
+      `registry.py:176`) omits the `client_id=` segment the live writer (`gcs_storage_service.py::write_instructions`)
+      actually includes, confirmed by 2 independent manifest row_key call sites. **NOT wired this dispatch** (each needs
+      its own design pass, mirroring how `feature_orphan_sweep.py` explicitly rejected `commodity`/`cross_instrument`
+      rather than guess): ml-service's `ml_models`/`ml_model_metadata`/`ml_training_artifacts` (zero manifest coverage —
+      orphan detection is undefined for them); strategy-service's `strategy_orders`/`strategy_positions`/`strategy_pnl`
+      (deployment- injected `routing_key=` sinks whose actual bucket/prefix this session did not resolve, and whose
+      manifest rows omit `data_type` entirely) and `backtest_results` (the genuinely run-id-keyed, non-day-sharded shape
+      the parent issue doc's own text flagged — needs its own investigation into whether it is manifest-tracked at all).
+      VM-run validation against real GCS data (never in-session per STEP 0.56 of
+      `unified-trading-pm/agents/data_engineering.md`) + the unwired families + the two PATH_REGISTRY-divergence
+      fix-or-confirm decisions are split to todo 3b below, mirroring todo 1's own build/validate split and todo 2's own
+      family-by-family incremental-wiring split.
+- [ ] 3b. [SCRIPT] P2. **Validate the ml/strategy orphan sweeps against real GCS data** (Tier-2 SPOT VM, never
+      in-session per STEP 0.56) for `ml_predictions` (ml-service) and `strategy_instructions` (strategy-service),
+      mirroring todo 1's + todo 2b's own real-prod-data validation pattern (each caught a genuine bug — todo 1's sports
+      bucket-resolution bug, todo 2c's commodity case-mismatch — a real run here may surface further gaps code-reading
+      alone could not, especially given the two PATH_REGISTRY divergences todo 3 found). Also: (a) decide + fix the
+      PATH_REGISTRY drift for `ml_predictions`/`strategy_instructions` (repoint the registry to the real shape, or fix
+      the writer to match the registry — an operator/design-judgment call todo 3 deliberately did not make); (b)
+      design + wire `strategy_orders`/`strategy_positions`/`strategy_pnl` (resolve each routing_key's real bucket/prefix
+      from deployment config first); (c) investigate + design `backtest_results`'s orphan coverage (is it
+      manifest-tracked by run_id anywhere?); (d) `ml_models`/`ml_model_metadata`/ `ml_training_artifacts` need a
+      manifest-WRITE design pass before orphan detection is even meaningful for them — scope that as its own decision,
+      not a mechanical sweep port. Repo: ml-service, strategy-service.
 - [ ] 4. [DOC] P2. Once todos 1-3 land real per-stage findings, write the combined cross-repo lineage report
       `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo.
 
@@ -343,3 +384,24 @@ lets each one be built, validated, and run to real completion on its own timelin
   todo 1, now DONE) for entries matching the doc's current open work in features/ml/strategy:
   `features_service_manifest_coverage_gap_2026_08_03.md`, `features-service/scripts/feature_orphan_sweep.py`,
   `ml-service/.../manifest_gap_handler.py`).
+- **2026-08-03** (AO dispatch, slot 9) — Picked up todo 3. Scoped the actual shard key first (per this todo's own
+  instruction): grepped `ManifestWriter`/`record_captured` across both repos — ml-service has exactly ONE
+  manifest-writing corpus (`prediction_publisher.py`, shard key `(day, mode)`); strategy-service has MANY (orders,
+  positions, pnl, instructions, backtest results), of which `strategy_instructions` alone had a fully verified single
+  shape confirmed across both its write sites. Built `ml-service/scripts/ml_orphan_sweep.py` (19 unit tests,
+  `ml-service@2f0c7e6`) and `strategy-service/scripts/strategy_orphan_sweep.py` (22 unit tests,
+  `strategy-service@4e04e2af`), both mirroring the A-E taxonomy + single-walk + checkpointed-resume pattern of
+  `candle_orphan_sweep.py`/`feature_orphan_sweep.py`. While designing each shard key against the live writer code (not
+  the PATH_REGISTRY constant), found + documented TWO real PATH_REGISTRY divergences: `ml_predictions`'s declared
+  `predictions/predictions/by_date/...` shape vs. the live writer's actual bucket-root JSON path (no prefix at all —
+  `get_data_sink()` called with no `prefix=`), and `strategy_instructions`'s declared path (no `client_id=` segment) vs.
+  the live writer's actual `client_id=`-keyed path (confirmed via 2 independent manifest row_key call sites). Both
+  sweeps are built against the REAL, code-confirmed shape, not the stale registry. Explicitly did NOT wire
+  `ml_models`/`ml_model_metadata`/`ml_training_artifacts` (zero manifest coverage — orphan detection undefined) or
+  `strategy_orders`/`strategy_positions`/`strategy_pnl`/`backtest_results` (deployment-injected routing_key sinks
+  - the genuinely run-id-keyed backtest shape, each needing its own design pass) — mirrors `feature_orphan_sweep.py`'s
+    own incremental-wiring discipline rather than guessing under time pressure. Zero real GCS calls made this session
+    (per STEP 0.56 — manifest loads are exactly the shape that caused 2 recent shared-host AO outages). Flipped todo 3
+    (build-only scope, genuinely done) and added todo 3b for the real-data VM-run validation + the unwired families +
+    the two PATH_REGISTRY fix-or-confirm decisions, mirroring todo 1's build/validate split and todo 2's incremental-
+    wiring split.
