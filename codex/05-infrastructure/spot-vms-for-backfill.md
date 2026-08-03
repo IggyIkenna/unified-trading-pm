@@ -245,6 +245,19 @@ exists per-launcher-family; the tee-wrapper's grep is agnostic to which layer wr
 proven via a local bash simulation with a child that self-`kill -9`s mid-run, then a second invocation reading
 `PROGRESS.json` back (same methodology as `deployment-service@3d99865`, cefi batch 2).
 
+**`HAD_FAILURE` was itself blind to PARTIAL payload loss within an otherwise-`CHUNK_RC=0` chunk (found + fixed
+2026-08-03,** `plans/archive/2026_08/mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`**).** A chunk
+where some but not all of that chunk's date-payloads failed (e.g. a transient manifest-consolidator-staleness guard
+mid-run) can still exit `0` if at least one payload succeeded — the whole-subprocess `CHUNK_RC` check alone never saw
+this, so the checkpoint kept advancing straight through ~28 consecutive lossy chunks in one real incident
+(`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260731-134654`, ~a third of 2020 silently under-captured despite
+`EXIT_STATUS=0`). Fix (`deployment-service@5478a92`): both `mtds_chunk_loop.sh` and `cefi_coverage_chunk_loop.sh`
+generators now also emit each chunk's expected day-count, tee the CLI subprocess's output, and parse its own
+`Batch complete: N results collected` line — `N < expected_days` is now treated the same as `CHUNK_RC≠0` for
+`HAD_FAILURE`/checkpoint-advancement purposes (`reason=PARTIAL_PAYLOAD_LOSS`, reusing the existing `CHUNK_FAILED:`
+greppable prefix). Regression-tested (`TestChunkLoopPartialPayloadLossGating`,
+`deployment-service/tests/unit/test_vm_launcher_scripts.py`).
+
 **Per-launcher-family conformance (as of the 2026-07-28 P2 fix):**
 
 | Family (VM name prefix)                                                                                         | Mechanism                                                                                                                                                 | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |

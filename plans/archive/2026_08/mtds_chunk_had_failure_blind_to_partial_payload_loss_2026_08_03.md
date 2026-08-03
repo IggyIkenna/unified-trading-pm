@@ -17,7 +17,7 @@ summary: >-
   advancing right through the lossy chunks and ended at `last_completed_date: 2020-12-22` — reading as "the year is
   essentially done" when roughly a third of it (≈2020-06-17 through 2020-12-29) most likely never got real data. The
   same gating pattern is mirrored verbatim in `cefi_coverage_chunk_loop.sh`.
-status: open
+status: resolved # (was: open) 2026-08-03 -- both todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [tradfi, cefi, meta]
 stage: [data]
@@ -68,6 +68,12 @@ context_scope:
     /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-03 — both todos done, no lock.** Todo 1 (the `HAD_FAILURE`/checkpoint gating fix in both
+> generated chunk-loop scripts) shipped `deployment-service@5478a92`; todo 2 (spot-check the CME ES/MES 2020 gap dates)
+> confirmed all 5 sampled dates genuinely `captured` via a direct manifest query — the wave-launcher's routine
+> skip-if-fresh cadence self-healed the gap as this doc's own "Why it matters" section anticipated. No targeted relaunch
+> needed. See Progress Log for both closures.
 
 ## What I found
 

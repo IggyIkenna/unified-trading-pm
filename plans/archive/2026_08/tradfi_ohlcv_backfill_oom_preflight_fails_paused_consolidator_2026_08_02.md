@@ -178,7 +178,7 @@ call — not a default.
       `ENABLED` — that entry explicitly cites closing this doc's outage. This doc's own `[OPERATOR]` tag was never
       retagged to match (HARD RULE violation per CLAUDE.md "the moment an OPERATOR tag resolves, retag... never leave it
       stale"). Independently reconfirmed live 2026-08-03T19:33Z while investigating an adjacent finding
-      (`/plans/active/issues/mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`):
+      (`/plans/archive/2026_08/mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`):
       `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-tradfi-cron --location=asia-northeast1`
       → `state: ENABLED, schedule: */1 * * * *`; `gsutil stat` on
       `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` → updated 3 minutes prior
