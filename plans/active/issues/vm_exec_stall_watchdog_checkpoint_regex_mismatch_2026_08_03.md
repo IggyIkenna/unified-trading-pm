@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                          todos 6 and 7 below.
+                                                              only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                              `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                              todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -341,8 +341,8 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       `main()` also requires a `--surface {mdps,instruments}` argument the launcher never passes at all, and uses
       `--apply`/dry-by-default (not this launcher's generic `--dry-run` append), so a naive module-name fix alone would
       still crash on the missing required arg. (repo: deployment-service)
-- [ ] [INFRA] P2. **A genuine `WORKER_STALLED` in-guest self-delete is NOT covered by the same auto-recovery path that
-      already handles SPOT preemption for this launcher — confirmed during todo 3's monitoring dispatch.**
+- [x] ✅ [INFRA] P2. **A genuine `WORKER_STALLED` in-guest self-delete is NOT covered by the same auto-recovery path
+      that already handles SPOT preemption for this launcher — confirmed during todo 3's monitoring dispatch.**
       `exit_code_fleet_monitor.py`'s `classify_terminated_vm()` routes `TerminationVerdict.PREEMPTED` (a durable
       `compute.instances.preempted` marker) to `EscalationTier.AUTO_RECOVER` → `RelaunchPreemptedVm` — empirically
       proven today (two back-to-back auto-relaunches within ~70-90s of `backfill-defi-dex-swaps-*` preemptions, see
@@ -359,7 +359,16 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       `RelaunchPreemptedVm`'s `_MAX_PREEMPTION_RELAUNCHES_PER_DAY`) before falling back to paging — instead of always
       paging first. This is a real design decision (which launchers qualify, what the relaunch budget should be), not a
       mechanical fix, so it stays a follow-up here rather than being implemented ad hoc under this doc's narrow
-      per-instance monitoring scope. (repo: deployment-service)
+      per-instance monitoring scope. (repo: deployment-service) — `deployment-service@c111383` (+ line-cap fix
+      `@c0a3221`), `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
+      `exit_code_fleet_monitor.py` gains `WORKER_STALLED_EXIT_CODE=124` (the deterministic RC `vm-exec-with-gcs-tee.sh`
+      writes on its own stall self-kill) + `DEFAULT_WORKER_STALL_SAFE_LAUNCHERS` (the exact 3 launchers named above,
+      already independently proven idempotent/checkpoint-resumable in this doc). A `WORKER_STALLED` verdict on a vetted
+      launcher now routes to `AUTO_RECOVER` and delegates (via `escalation._recover_backfill_vm` →
+      `_recover_stalled_vm`) to the SAME `RelaunchStalledVm` actuator + budget (≤2/(vm-prefix,day)) `DP_VM_STALL`
+      already uses — reused, not duplicated. An unvetted launcher keeps the pre-existing safe default (page_operator). 5
+      new regression tests (classify/gating, unvetted-stays-paged, default-off-stays-paged, full
+      classify→finding→route_finding delegation proof); 290 existing tests unaffected; basedpyright clean.
 - [ ] [INFRA] P3. **`tradfi-catalogue-canon`'s per-shard progress lines never reach the tee'd log the stall watchdog
       reads — an architectural gap no `STALL_PROGRESS_REGEX` value can fix** (found during todo 5's sweep).
       `_catalogue_canon_cmd()` (launch-canonical-migration-vm.sh:932-948) forks each of `CANON_SHARDS` (default 16)
