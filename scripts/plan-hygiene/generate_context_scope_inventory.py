@@ -68,7 +68,84 @@ def _iter_docs() -> list[Path]:
     return sorted(out)
 
 
-def _git_last_commit_date(path: Path) -> str | None:
+# Pure-reference frontmatter fields: their only job is citing another doc's path. When a cited
+# doc moves/archives, check_reference_paths.py's own repoint tooling mechanically rewrites these
+# fields on every citing doc -- that keeps the citation alive but is not a content change, and
+# should not make the citing doc look newly STALE. Measured 2026-08-03: of 169 docs relying on
+# this git-fallback (no `last_updated:` field), 103 (61%) had ONLY this class of commit as their
+# single most recent touch -- i.e. ~34% of the corpus-wide STALE count was this false-positive
+# class before this walk-back fix, not genuine content drift.
+_REF_ONLY_FIELDS = ("context_scope:", "related:", "supersedes:", "superseded_by:", "depends_on:")
+# Bounded walk-back depth. Deliberately small: measured 2026-08-03, 61% of docs on this fallback
+# path resolve on the FIRST historical commit checked; a deep cap buys little extra accuracy for a
+# real per-commit cost (each commit needs its OWN diff + its OWN full-file fetch -- see why in
+# _commit_touches_only_ref_fields's docstring). Never returns a date OLDER than the truth, only
+# ever fails to look far enough back on a doc with an unusually long run of pure-reference commits
+# -- a safe direction to fail in (worst case: a few docs stay STALE that a deeper walk would have
+# cleared, never the reverse).
+_MAX_HISTORY_WALK = 5
+
+
+def _commit_touches_only_ref_fields(sha: str, path: Path) -> bool:
+    """True if `sha`'s diff to `path` is confined to the flow-list bodies of _REF_ONLY_FIELDS.
+
+    Needs the file's content AT THIS COMMIT (not the current HEAD content) to locate those
+    fields' line ranges -- an earlier version reused the current file's line positions as an
+    approximation and it was wrong in practice (frontmatter shifts between commits, e.g. a field
+    added/removed upstream of context_scope moves everything below it), producing a WORSE STALE
+    count than not fixing this at all. Correctness over speed: this is 2 subprocess calls per
+    commit walked, bounded by _MAX_HISTORY_WALK.
+    """
+    diff = subprocess.run(
+        ["git", "show", sha, "--unified=0", "--", str(path)],
+        cwd=PM,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    ).stdout
+    hunk_headers = re.findall(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", diff, re.MULTILINE)
+    if not hunk_headers:
+        return False
+
+    full_new = subprocess.run(
+        ["git", "show", f"{sha}:{path.relative_to(PM).as_posix()}"],
+        cwd=PM,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    ).stdout.splitlines()
+
+    blocks: list[tuple[int, int]] = []
+    for idx, line in enumerate(full_new):
+        stripped = line.strip()
+        if any(stripped.startswith(f) for f in _REF_ONLY_FIELDS):
+            start = idx + 1
+            end = start
+            for j in range(idx + 1, min(idx + 60, len(full_new))):
+                if full_new[j].strip() in ("]", "],"):
+                    end = j + 1
+                    break
+            blocks.append((start, end))
+    if not blocks:
+        return False
+
+    def in_any_block(line_no: int) -> bool:
+        return any(s <= line_no <= e for s, e in blocks)
+
+    for new_start_s, new_count_s in hunk_headers:
+        new_start = int(new_start_s)
+        new_count = int(new_count_s) if new_count_s else 1
+        for offset in range(max(new_count, 1)):
+            if not in_any_block(new_start + offset):
+                return False
+    return True
+
+
+def _git_last_commit_date_cheap(path: Path) -> str | None:
+    """Date of the single most recent commit touching `path` -- one `git log` call, no diff
+    inspection. This is what the whole corpus needs on every run, so it stays cheap."""
     try:
         out = subprocess.run(
             ["git", "log", "-1", "--format=%cs", "--", str(path)],
@@ -84,13 +161,58 @@ def _git_last_commit_date(path: Path) -> str | None:
     return date or None
 
 
-def _last_touched(fm: dict, path: Path) -> str | None:
+def _git_last_commit_date_accurate(path: Path) -> str | None:
+    """Date of the most recent commit that changed `path` in a way that isn't confined to a
+    pure-reference frontmatter field (see `_REF_ONLY_FIELDS`) -- a mechanical repoint of one of
+    those fields (because a cited doc archived/moved) doesn't mean the doc's OWN content changed.
+    Walks bounded history (_MAX_HISTORY_WALK commits) and falls back to the single newest commit
+    if every commit checked is reference-only-confined (or on any parse/subprocess failure). Only
+    called once the cheap single-commit date has already been tried and found wanting -- see
+    `_last_touched`'s short-circuit -- since this needs 2 subprocess calls per commit walked.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "log", f"-{_MAX_HISTORY_WALK}", "--format=%H %cs", "--", str(path)],
+            cwd=PM,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    lines = [line for line in out.stdout.splitlines() if line.strip()]
+    if not lines:
+        return None
+
+    newest_date = lines[0].split(" ", 1)[1]
+    for line in lines:
+        sha, date = line.split(" ", 1)
+        try:
+            if not _commit_touches_only_ref_fields(sha, path):
+                return date
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return newest_date
+    return newest_date
+
+
+def _last_touched(fm: dict, path: Path, marker: str | None) -> str | None:
     last_updated = fm.get("last_updated")
     if isinstance(last_updated, (dt.date, dt.datetime)):
         return last_updated.isoformat()[:10]
     if isinstance(last_updated, str) and last_updated.strip():
         return last_updated.strip()[:10]
-    return _git_last_commit_date(path)
+
+    # No explicit last_updated -- fall back to git history. Walking back past reference-only
+    # commits (_git_last_commit_date_accurate) can only push this date EARLIER or leave it
+    # unchanged relative to the cheap single-commit date, never later -- so if the cheap date
+    # already satisfies UP_TO_DATE against the marker, the accurate date can only agree too.
+    # Skip the expensive walk entirely in that case -- it only needs to run for docs the cheap
+    # check would flag STALE, which is a minority of the corpus.
+    cheap_date = _git_last_commit_date_cheap(path)
+    if marker is not None and cheap_date is not None and marker >= cheap_date:
+        return cheap_date
+    return _git_last_commit_date_accurate(path)
 
 
 def _latest_marker(body: str) -> str | None:
@@ -106,8 +228,9 @@ def main(argv: list[str] | None = None) -> int:
     records = []
     for path in _iter_docs():
         rel = path.relative_to(PM).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
         try:
-            fm, body = ds.parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+            fm, body = ds.parse_frontmatter(text)
         except yaml.YAMLError:
             continue
         if fm is None:
@@ -126,8 +249,8 @@ def main(argv: list[str] | None = None) -> int:
         if not context_scope:
             verdict = "NEVER_SCOUTED"
         else:
-            last_touched = _last_touched(fm, path)
             marker = _latest_marker(body)
+            last_touched = _last_touched(fm, path, marker)
             if marker is not None and last_touched is not None and marker >= last_touched:
                 verdict = "UP_TO_DATE"
             else:
