@@ -1,0 +1,75 @@
+# Test-impact / selective-execution — verified dynamic-dispatch allowlist.
+#
+# Purpose
+# -------
+# test_impact_selective_execution_design_2026_08_03.md's selector treats
+# static reachability (import_graph_walker.py) as unsafe wherever dynamic
+# dispatch (importlib.import_module / __getattr__ / __import__) could route
+# around it. A rough regex proxy over-matches (any directory literally named
+# "adapter(s)" gets flagged, whether or not it actually dispatches
+# dynamically) — see test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md
+# Phase 1 todo 3 for the full verification pass. This manifest is the
+# resulting hand-curated, file:line-cited allowlist: every entry below has
+# been read directly and confirmed to contain a genuine
+# importlib.import_module / __getattr__ / __import__ call.
+#
+# A changed file under any `path` prefix below forces RUN_FULL_SUITE=true for
+# its repo (selector.py), never a narrowed set — because a file inside a
+# dynamically-dispatched directory can be imported by machinery the static
+# import graph cannot see, so static reachability alone cannot prove a
+# narrowed set is safe.
+#
+# Adding a new dynamic-dispatch directory: cite the exact file:line of the
+# importlib.import_module / __getattr__ / __import__ call before adding an
+# entry — an unverified entry defeats the whole point of this allowlist
+# being "verified" rather than a regex guess.
+
+repos:
+  execution-service:
+    dynamic_dispatch_paths:
+      - path: execution_service/trade_execution/
+        verified_at: "execution_service/trade_execution/__init__.py:252,257"
+        note: >-
+          __getattr__ (line 252) does importlib.import_module(module_path) (line 257) against a _TRADFI_ADAPTER_MAP dict
+          — dispatches CMEAdapter/FXAdapter/ IbkrTradFiAdapter/etc with no static import statement naming the target
+          module.
+
+  features-service:
+    dynamic_dispatch_paths:
+      - path: features_service/api/main.py
+        verified_at: "features_service/api/main.py:64"
+        note: >-
+          importlib.import_module(f"features_service.{family}.api.main") in a loop over _FAMILY_NAMES — per-family API
+          module dispatch.
+
+  instruments-service:
+    dynamic_dispatch_paths:
+      - path: instruments_service/reference_data/adapters/cefi/tardis/
+        verified_at: "instruments_service/reference_data/adapters/cefi/tardis/_pkg_ref.py:33"
+        note: "__getattr__ lazy-shim for the optional tardis SDK."
+      - path: instruments_service/reference_data/adapters/tradfi/databento/
+        verified_at: "instruments_service/reference_data/adapters/tradfi/databento/_pkg_ref.py:34"
+        note: "__getattr__ lazy-shim for the optional databento SDK."
+      - path: instruments_service/reference_data/adapters/prediction/polymarket/
+        verified_at: "instruments_service/reference_data/adapters/prediction/polymarket/_pkg_ref.py:34"
+        note: "__getattr__ lazy-shim for the optional polymarket SDK."
+
+# Confirmed FALSE POSITIVES (regex-matched, no genuine dynamic dispatch found —
+# recorded so a future re-verification pass doesn't re-litigate these from
+# scratch; a changed file under these paths is narrow-eligible on dynamic-
+# dispatch grounds, same as any other plain static-import file):
+#   execution-service:  sports_execution/adapters/**, adapters/algorithm_factory.py
+#   features-service:   calendar/adapters/**, volatility/.../vol_greeks_surface_adapter.py,
+#                        commodity/adapters/**
+#   instruments-service: reference_data/adapters/sports/**, reference_data/adapters/tradfi/massive.py,
+#                        reference_data/factory.py (confirmed: ~50+ adapters, all static imports)
+#   market-data-processing-service: app/adapters/** (zero dynamic dispatch found anywhere)
+#   deployment-api: deployment_api/main.py (api/main.py$ regex hit was a directory-name-suffix
+#                   coincidence — "deployment_api" ends in "api" — not a real api/ dir)
+
+# Cross-cutting manifests: a change to either of these ALWAYS forces
+# RUN_FULL_SUITE=true, fleet-wide — narrowing them is not attempted (design
+# doc escape-hatch table, "config/data-driven tests" row).
+cross_cutting_manifests:
+  - workspace-manifest.json
+  - strategy-manifest.json

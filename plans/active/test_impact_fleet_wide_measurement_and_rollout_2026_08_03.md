@@ -182,20 +182,48 @@ to be per repo — not measured here, out of this todo's scope.
 > frontmatter, which serializes the whole plan (Phase 1's own todos have the same real dependency shape, so this is
 > correct for both phases, not just Phase 2).
 
-- [ ] [INFRA] P1. **Build the workspace-wide import-graph walker**, extending `check_removed_symbols.py`'s existing
-      `ast.walk()`-over-`Import`/`ImportFrom` pattern into a `file → {imported files}` edge table, inverted to
-      `file → {transitive importers}`, cached via the same content-sentinel key pattern `content-gate` already uses.
-      Done-when: the walker runs against a real repo and produces a verifiably-correct edge table for a hand-checked
-      sample of files (cross-referenced against `grep -rn "^import\|^from"` for the same files).
-- [ ] [INFRA] P1. **Wire the Phase-1 verified allowlists (dynamic-dispatch, conftest tree, config/data artifacts) into
-      the walker as escape-hatch checks**, producing the binary `RUN_FULL_SUITE=true`/narrowed-set output the design's
-      fallback rule specifies. Done-when: given a synthetic diff touching each escape-hatch category, the walker emits
-      `RUN_FULL_SUITE=true`; given a synthetic self-contained diff, it emits a correctly-narrowed set.
-- [ ] [REVIEW] P1. **Build the golden-set selector regression tests** (design doc layer 1) — a fixture repo/frozen
-      snapshot with known import relationships, a known dynamic-dispatch file, a known multi-level `conftest.py` tree,
-      and a known config-driven test, asserting the selector's exact expected output for every safe case and every
-      escape-hatch category. Done-when: this suite is wired into the SAME repo's own `quality-gates.sh` so a regression
-      in the selector itself is caught the same way any other code regression is.
+- [x] ✅ [INFRA] P1. **Build the workspace-wide import-graph walker** — `scripts/quality_gates/import_graph_walker.py`
+      (unified-trading-pm), extending `check_removed_symbols.py`'s `iter_python_files()` + `ast.walk()`-over-
+      `Import`/`ImportFrom` pattern into a `file → {imported files}` edge table (absolute + relative imports,
+      package-vs-module resolution, and — a real bug caught by the golden-set tests below — every ANCESTOR package's
+      `__init__.py` along a dotted path, since real Python import semantics execute each one before the leaf import
+      completes; the first draft only recorded the leaf, which under-narrows), inverted via `invert_edges()` to
+      `file → {direct importers}`, with `transitive_importers()` (BFS) and `affected_test_files()` on top. Caching:
+      `compute_content_sentinel()` mirrors `.qg_content_sentinel`'s (path, size, mtime) hash pattern. Verified against a
+      real repo (`market-data-processing-service`, 253 files, 489 edges) — `book_snapshot_adapter.py`'s direct import of
+      `base_adapter.py` and `test_book_snapshot_column_normalization.py`'s transitive dependency on it both
+      cross-checked against `grep -n "^import\|^from"` and matched. 10 unit tests in
+      `scripts/quality_gates/test_import_graph_walker.py` (synthetic fixture repo: absolute/relative imports, package
+      `__init__.py` targets, unparseable-file fallback, BFS correctness, content-sentinel stability). A SECOND real bug
+      surfaced by the golden-set tests below (todo 3): `_is_test_file()`'s original heuristic ("`tests` in the path OR
+      `test_`-prefixed name") flagged `conftest.py` itself as a test file merely for living under a `tests/` directory —
+      pytest never collects `conftest.py` as a test module, so this wrongly injected `conftest.py` into a narrowed set.
+      Fixed to filename-prefix-only (`test_*.py`), the actual pytest discovery convention. Full `quality-gates.sh` green
+      (1678 passed/11 skipped, 0 failed). SHA stamped in the Progress Log below once shipped.
+- [x] ✅ [INFRA] P1. **Wire the Phase-1 verified allowlists (dynamic-dispatch, conftest tree, config/data artifacts)
+      into the walker as escape-hatch checks** — `scripts/quality_gates/test_impact_selector.py` +
+      `scripts/quality_gates/test_impact_allowlist.yaml` (unified-trading-pm). The allowlist is a hand-curated,
+      file:line-cited YAML manifest (matching `removed_symbols_manifest.yaml`'s convention) holding the 3 verified
+      dynamic-dispatch entries from Phase 1 todo 3 (`execution-service/trade_execution/`,
+      `features-service/api/main.py`, instruments-service's 3 `_pkg_ref.py`-guarded subdirectories) plus the 2
+      cross-cutting manifests. `classify_diff()` implements the design's fallback rule literally: shared-dependency repo
+      (UTL/UAC) → always full suite; high-level `conftest.py` (repo-root or top-level `tests/`) → full suite; leaf-level
+      `conftest.py` → narrows to its own subtree (not full suite — the design's actual rule, more precise than "any
+      conftest touch = everything"); cross-cutting manifest → full suite; verified dynamic-dispatch path → full suite;
+      **a changed file containing an UNALLOWLISTED dynamic-dispatch call site → full suite too** (fail- closed on a new
+      pattern the allowlist hasn't been told about yet, not just the known ones); unparseable file → full suite;
+      anything else → narrowed via the walker. Selector's own process errors fail-open to full suite
+      (`except Exception`, deliberate per the design's explicit fail-open requirement).
+- [x] ✅ [REVIEW] P1. **Build the golden-set selector regression tests** (design doc layer 1) —
+      `scripts/quality_gates/test_test_impact_selector.py`, a fixture repo with a known import graph, a verified
+      dynamic-dispatch mechanism (mirrors the real `trade_execution/__init__.py` `__getattr__` shape), a multi-level
+      `conftest.py` tree (repo-root-equivalent `tests/conftest.py` + leaf `tests/family_a/conftest.py`), and a
+      cross-cutting manifest — 9 tests asserting the selector's exact expected output for the safe case AND every
+      escape-hatch category (high-level conftest, leaf conftest, cross-cutting manifest, verified dynamic-dispatch,
+      UNVERIFIED/unallowlisted dynamic-dispatch fail-closed, unparseable file, shared-dependency repo, no-changed-
+      files). This suite is wired into unified-trading-pm's own `quality-gates.sh` (same repo, same gate as every other
+      code regression) — caught the 2 real bugs documented in todo 1's writeup. Full `quality-gates.sh` green (1687
+      passed/11 skipped, 0 failed).
 - [ ] [REVIEW] P1. **Single-repo shadow-mode trial**, on the highest-eligibility repo from the Phase-1 measurement
       (candidates per the 4-repo sample: `market-data-processing-service` or `features-service`, ~94-96% eligible) — run
       the selector in parallel with the real full suite for 2 weeks, always actually executing the full suite, logging
