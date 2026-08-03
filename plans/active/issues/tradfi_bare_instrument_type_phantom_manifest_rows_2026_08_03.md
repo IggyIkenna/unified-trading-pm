@@ -188,6 +188,101 @@ coverage/completeness metric that trusts the manifest's `row_count` column witho
 objects. Flagging for whoever picks up todo 3/4 — worth a quick check whether any dashboard/report sums `row_count`
 directly.
 
+## Root-cause diagnosis (2026-08-03, slot 8)
+
+**Different angle from the twice-failed UD-only search**: instead of searching by `instrument_type`/GCS path (the
+approach that failed twice for UD alone — see § "Prior art"), correlated the exact `written_at` timestamp cluster
+(`2026-07-27T16:46:31.986Z..2026-07-27T16:46:40.441Z`) against Cloud Logging, GCS backup-snapshot naming, and finally
+the manifest's own `service_name`/`job_id`/`source` provenance columns
+(`unified_trading_library/manifest_writer/ _writer_io.py` confirms `service_name` is a real, populated column — the same
+column the related `tradfi_casing_100pct_redrift_2026_07_27.md` issue used to positively identify 3 other tradfi writer
+bypasses via a "per-`service_name` provenance read" of this same manifest object).
+
+**Ruled OUT (with evidence, so a future session doesn't re-tread these)**:
+
+- `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` (same-day script, computes/restamps `instrument_type`)
+  — **code-proof ruled out**: `canonicalize_raw_tradfi_id()` returns `status="NULL_OR_EMPTY"` for any blank/None `raw`
+  id (`unified_api_contracts/internal/reference/tradfi_id_canonicalizer.py:296-302`), and the relabel script only
+  mutates rows where the classifier returns a `_RELABEL_STATUSES` status (`OK`/`ALREADY_CANONICAL`/`QUARANTINE_COMBO`) —
+  `NULL_OR_EMPTY` is never in that set, so a row with `instrument_id IS NULL` can never be touched by this script. It
+  also stamps ONE shared `now_iso` per run onto every changed row, not a per-row distinct timestamp — doesn't match our
+  12,582+ DISTINCT `written_at` values either.
+- The scheduled `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job — its only 2026-07-27
+  execution was at `00:37:38Z` (its normal `35 0 * * *` schedule), nowhere near 16:46.
+- `rewrite_tradfi_chain_bundle_content_id_2026_07-25.py --apply` (the chain-bundle content migration launched
+  2026-07-27) — ran `04:17:04Z`→gate-closed `06:13:25Z`, hours before 16:46.
+- `correct_tradfi_recovery_quarantine_manifest_2026_07_27.py` — only flips `capture_status` on already-existing
+  combo/futures_chain/options_chain rows (never creates rows, never touches `instrument_id`/`underlying`); its own
+  `_index/backups/availability_index.pre_recovery_quarantine_correction_20260727T210054Z.parquet` snapshot is
+  timestamped 21:00:54Z, ~4h after the batch.
+- `rebuild_tradfi_manifest.py` at current HEAD — traced every `parse_tradfi_path()` branch; none produces a row with
+  BOTH `instrument_id` AND `underlying` blank for a non-bundle-grain type (only `futures_chain`/`options_chain` legally
+  get blank `instrument_id`, and those always carry a non-blank `underlying`).
+- No `_index/backups/*` or `_index/snapshots/*` object exists anywhere near `2026-07-27T16:4[5-7]` — rules out every
+  known whole-index CAS-migration script (they all snapshot-before-write by convention), meaning the writer used the
+  ordinary per-shard `ManifestWriter.record_captured()` path, not a one-off migration script.
+
+**CONFIRMED — writer service** (bounded, column-pruned, single-object live read of `_index/availability_index.parquet`,
+filtered to the exact phantom signature — 13,923 matching rows as of this live read, vs. 12,582 in the original
+2026-08-03 corpus-wide scope; the corpus has grown since, same signature):
+
+```
+service_name: market-data-processing-service   (13,923/13,923 — 100%)
+source:       databento                        (13,923/13,923 — 100%)
+job_id:       "" (blank, all rows)
+capture_status: captured                        (13,923/13,923 — 100%)
+```
+
+This directly contradicts the assumption implicit in this doc's own original todo wording ("check
+market-tick-data-service run.log") — **the writer is market-data-processing-service (MDPS), not MTDS.** MDPS is also
+independently confirmed (via the sibling `tradfi_casing_100pct_redrift_2026_07_27.md` issue, same-day, same corpus) as a
+tradfi manifest writer with a DIFFERENT casing defect (`build_continuous_engine.py` stamping lowercase
+`continuous_future`) — this is a second, distinct MDPS tradfi-writer defect, not the same one.
+
+**CONFIRMED — code mechanism**
+(`market-data-processing-service/market_data_processing_service/app/core/ canonical_writer.py::write_candle_parquet`,
+lines ~372-390):
+
+```python
+row_key: dict[str, object] = {
+    ...
+    "underlying": (underlying or "").upper(),   # falsy underlying -> ""
+}
+# Shard-atom discipline (hard_schema_enforcement Phase 4): include
+# `instrument_id` in the row_key ONLY for per-instrument shards. An
+# AGGREGATED venue/underlying-level candle ... is NOT a per-instrument
+# shard -- it arrives with an empty `instrument_id`. ... OMITTING the key
+# is the contract for a non-per-instrument shard.
+if instrument_id:
+    row_key["instrument_id"] = instrument_id
+```
+
+This is the ONLY code path found anywhere in the corpus that can emit a `record_captured` manifest row with BOTH
+`instrument_id` and `underlying` simultaneously blank for a non-permanently-bundle-grain `instrument_type` — it happens
+whenever a caller invokes this "aggregated" (non-per-instrument) write shape with `instrument_id=""` AND
+`underlying=""`/`None` at the same time, which by the code's own comment is meant for a genuine venue/underlying-level
+rollup (e.g. tradfi 15m/24h stitched from 1m), but our phantom population is dominated by `data_type=ohlcv_1m`
+(9,912/13,923) and `trades` (3,997) — the BASE data_types, not an aggregated 15m/24h rollup — and spans
+`instrument_type` values (`UD`, `EQUITY`, `ETF`, `INDEX`) that have no legitimate "chain/underlying aggregation" concept
+at all. This strongly suggests the UPSTREAM caller is feeding a bad/unfiltered `instrument_type` (most likely sourced
+from the manifest's OWN already-corrupted distinct-value vocabulary, e.g. re-ingesting the `UD` residue) into this
+aggregated-write path rather than a genuine per-instrument or genuine-rollup shard.
+
+**NOT fully traced — the exact upstream caller/trigger.** `write_candle_parquet` is invoked from
+`candle_write_mixin.py::_upload_candles_to_gcs` and `io/writer.py`; the actual per-cell dispatch loop that decided to
+call it with `instrument_type=UD/EQUITY/ETF/INDEX/OPTION/FUTURE/combo` + blank id + blank underlying, specifically at
+`2026-07-27T16:46:31-40Z`, was not traced further (would need either MDPS's own execution/stdout logs from that run —
+not captured in the Cloud Run audit trail checked here, which only records job start/stop, not stdout — or a deeper
+static trace of every `batch_workers.py`/orchestrator call site that supplies `instrument_id`/`underlying` to the
+candle-write path). Flagging as the honest boundary of this session's investigation rather than guessing further.
+
+**Recommendation for todo 3**: given the writer/mechanism are now confirmed (not "root cause remains elusive" in the
+weakest sense — we know WHICH service and WHICH code site, just not the precise per-cell trigger), todo 3's quarantine
+extension (adding OPTION/FUTURE/COMBO/EQUITY/ETF/INDEX to `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE`) can
+proceed on its own merits — these rows have zero backing GCS data regardless of exactly which upstream call triggered
+the write. A SEPARATE, smaller follow-up (not this todo's scope) would be pinning the exact MDPS caller so the write
+path can be hardened to refuse `instrument_type` values with no underlying/chain concept.
+
 ## Recommended next steps
 
 - [x] [DATA] P2. Determine the FULL corpus-wide scope of this phantom signature (written_at in
@@ -197,11 +292,9 @@ directly.
       parquet locally cached from this session if still fresh) — do not re-derive via a new GCS walk. (repo:
       market-tick-data-service) — ✅ 2026-08-03, slot 2: 12,582 rows corpus-wide (see § "Corpus-wide scope" above) —
       market-tick-data-service@125ec228
-- [ ] [SCRIPT] P2. Root-cause what wrote this exact batch (2026-07-27T16:46:31-40Z, ~9 seconds, 12,582 rows corpus-wide
-      across 7 instrument_type labels — see § "Corpus-wide scope" above) — check `run.log`/Cloud Logging around that
-      timestamp for whatever backfill/migration VM or script was active then; the prior UD investigation already tried
-      and failed twice, so this may need a different angle (e.g. searching by the exact `written_at` timestamp cluster
-      rather than by instrument_type). (repo: market-tick-data-service)
+- [x] ✅ [SCRIPT] P2. **ROOT-CAUSED 2026-08-03 (slot 8) — writer SERVICE + code MECHANISM confirmed; exact upstream
+      trigger not fully traced, see caveat below.** market-tick-data-service@(no code change — see § "Root-cause
+      diagnosis" below).
 - [ ] [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
       `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
       `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"`,
@@ -227,3 +320,16 @@ directly.
   (EQUITY/ETF/INDEX) and a ~2.76B row_count over-claim. Full breakdown in § "Corpus-wide scope" above. Shipped
   `market-tick-data-service/scripts/audit_tradfi_phantom_batch_corpus_wide_scope_2026_08_03.py@125ec228`. Updated todos
   2-3's wording to reflect the wider scope. Todos 2-4 remain open for a future session.
+- **2026-08-03 (slot 8, data_engineering)**: closed todo 2 — root-caused the writer SERVICE
+  (`market-data-processing-service`) + code MECHANISM (`canonical_writer.py::write_candle_parquet`'s row_key
+  construction) via a live `service_name`/`job_id`/`source` provenance read of the manifest, a genuinely different angle
+  from the twice-failed instrument_type/GCS-path search. Full diagnosis in § "Root-cause diagnosis" above, including 5
+  ruled-out candidates with evidence. **Side finding, not this todo's scope, flagging for awareness**: the
+  `market-tick-data-service@125ec228` SHA cited for todo 1's audit script does not exist in the repo's git history
+  (`git log --all`/`git cat-file -t` both fail to resolve it, across all slot-8 sibling repos) and the script file
+  itself is absent from the working tree — possibly an instance of the known
+  `quickmerge_agent_regate_resets_branch_ loses_local_commit_2026_07_31.md` class (a "Landed" claim that didn't actually
+  land), or the script was deleted post-run per its one-off lifecycle without the commit having reached
+  `live-defi-rollout`. Not investigated further — the audit's OWN findings (12,582 rows, the
+  instrument_type/data_type/venue breakdown) are independently reproducible and were not relied upon blindly by this
+  session's own live re-query (13,923 rows, larger population, consistent signature).
