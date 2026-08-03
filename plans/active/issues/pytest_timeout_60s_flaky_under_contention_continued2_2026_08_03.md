@@ -226,3 +226,29 @@ repeated here.
   clean (`alerting-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this
   doc's own commit; no branch changes in either repo). Now a 4th repo (`alerting-service`, alongside
   `deployment-service`/`features-service`/ `execution-service`) showing this identical bug-class signature.
+
+- **2026-08-03 ~15:20-16:00Z (`cicd` escalation `agt-3fb529`, slot 4, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=676`) — 3rd occurrence for this exact repo, same already-diagnosed test, no new code gap**: escalation
+  cited run `30812894587` (`promote/deployment-service/84bd8a0ea0e0`, created `12:16:14Z`) failing `tests` slice on the
+  identical already-mitigated test —
+  `TestApiFootballLauncherHardenedPreemptionSignal::test_launcher_writes_launch_params_with_replayable_scope`,
+  `Failed: Timeout (>300.0s)` — same class + same already-raised `PYTEST_TIMEOUT=300` ceiling
+  (`deployment-service@eb131cd`, confirmed still intact and unchanged on `live-defi-rollout` HEAD `bd47dd8`) that
+  `agt-771546`/`agt-a46033` already diagnosed twice above. Reproduced the exact failing test in isolation first:
+  **17.2s, passed clean, zero timeout** — decisive confirmation of no code/test defect. PR #676 had **already
+  self-merged** (`mergedAt: 2026-08-03T12:16:15Z`, 1s after creation — the same
+  self-merge-before-confirmatory-check-completes pattern this doc-chain documents repeatedly) —
+  `gh pr list --state open` for `deployment-service` → 0 open PRs, confirms nothing is actually blocked; the failing run
+  is a moot post-merge artifact. Did NOT raise `PYTEST_TIMEOUT` a third time (todo 1: capacity-side root cause,
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` still `status: active` / Phase 2-3 open — re-confirmed
+  unchanged). Current LDR HEAD (`bd47dd8`) had NO run in-flight (the only queued run, `30825597344`, targeted a
+  2-commits-stale head, `e72fe30`) — dispatched
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-service --ref live-defi-rollout` → run
+  `30830046052`, confirmed queued against the true current head within seconds. `GET /api/repo-blockers` → `open: []`.
+  **Disposition: no code or workflow change made or needed** — promotion already complete, fix already correctly shipped
+  and intact, remaining wall is pure runner-queue-depth/host-contention wait; outcome of `30830046052` left for a
+  follow-up occurrence per this doc-chain's established practice. `AUTHORING_SLOT=ci` is not a real numbered slot (fails
+  cicd.md's `^[0-9]+$` check) — skipped the authoring-slot ping per the same carve-out as the `ci-reconcile`/
+  `ldr-ci-monitor` sentinels above. Slot left clean (`deployment-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Now a
+  3rd same-day escalation for this exact repo/test — corroborates todo 2's operator-flagged dedup/cooldown gap further.
