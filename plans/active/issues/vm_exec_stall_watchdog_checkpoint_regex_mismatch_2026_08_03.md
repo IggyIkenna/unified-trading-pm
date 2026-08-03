@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [infra, vm-lifecycle, stall-watchdog, false-positive, big-finding, data-pipeline, root-cause-correction, defi]
 related:
   [
-    /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
   ]
 created: "2026-08-03"
@@ -49,7 +49,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                              only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                              `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                              todos 6 and 7 below.
+                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                      todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —

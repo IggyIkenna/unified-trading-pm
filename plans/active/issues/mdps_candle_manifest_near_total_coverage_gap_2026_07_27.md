@@ -48,7 +48,7 @@ context_scope:
   [
     market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
     deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
-    /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
   ]
@@ -277,7 +277,7 @@ the candle layer instead of raw-tick.
   the reap-zombies.sh bug) — real, transient SPOT capacity pressure in this zone right now, not a recurring bug.
   Checkpoint remained at 360 days each time (the next 20-day boundary, ~day-index 380 ≈ mid-January 2024, hadn't been
   reached yet) — confirms the checkpoint-cadence gap already filed as a fix todo in
-  `/plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` todo 4, but the redo cost stays
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` todo 4, but the redo cost stays
   small in practice since re-verifying already-copied days is a fast idempotent no-op (confirmed: days 2023-12-28
   through 2024-01-06 all re-verified as `needs_copy=0` except the two genuinely-incomplete days). Relaunched again:
   `backfill-defi-dex-swaps-20260803-141041`. If preemptions keep recurring in this zone, the next escalation is either a
@@ -299,7 +299,7 @@ the candle layer instead of raw-tick.
   (`reap-zombies.sh` checks the wrong GCS log path, `logs/` instead of the canonical `vm-logs/`, so it always sees "no
   run.log" for any healthy VM and reaps purely on a 10-minute creation-time threshold — a fleet-wide false-positive
   risk, NOT specific to this campaign). Root-caused, mitigated, and filed as its own big-finding issue doc:
-  `/plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` (P0, `infra` role, 4 fix todos).
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` (P0, `infra` role, 4 fix todos).
   **Mitigation**: immediately relaunched the campaign — `backfill-defi-dex-swaps-20260803-103749` (same command,
   `--force` to bypass the singleton lock), verified running the correct fixed tool code
   (`market-data-processing-service@ce64a98`, confirmed an ancestor of the freshly-published tarball pin despite a
