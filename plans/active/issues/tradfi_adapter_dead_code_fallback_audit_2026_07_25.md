@@ -345,11 +345,14 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       `factory.py:149`'s stale `# TradFi (9 venues)` comment to the actual registered count of 7. Repo:
       market-tick-data-service@7db75b1a.
 
-- [ ] [OPERATOR] P2. **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
-      `DatabentoCmeConverter` and `databento_opra_converter.py`'s `DatabentoOpraConverter` produce an orphaned
-      `CanonicalOptionQuote` type used only in tests. Decide: wire into the live `databento_enrichment.py` path, delete,
-      or document as intentionally unused. Correct the stale credit at `docs/tradfi-venue-coverage-matrix.md:26`
-      regardless of direction. Repo: market-tick-data-service.
+- [x] ✅ [BACKEND] P2. **DECIDED 2026-08-03 (operator ruling) — document as intentionally unused, don't wire into
+      `databento_enrichment.py` or delete** (Finding M-3): `databento_cme_converter.py`'s `DatabentoCmeConverter` and
+      `databento_opra_converter.py`'s `DatabentoOpraConverter` remain complete, fail-loud, test-only scaffolding
+      producing an orphaned `CanonicalOptionQuote` type. Added STATUS notes to both module docstrings matching the
+      `databento_equity.py`/Finding-M-2 precedent. Corrected the stale credit at `docs/tradfi-venue-coverage-matrix.md`
+      (CME `options_chain` + CBOE `options_chain` rows both wrongly implied these converters are part of the live
+      enrichment path — both now note `databento_enrichment.py::_classify_row` does its own classification and the
+      converters are not-yet-activated scaffolding). Repo: market-tick-data-service@8a9b3da3.
 
 - [x] [BACKEND] P3. ✅ **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
       `reference_data/adapters/tradfi/databento/adapter.py::_parse_tick_and_lot` (lines 715-729),
