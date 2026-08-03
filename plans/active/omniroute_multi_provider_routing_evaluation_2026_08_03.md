@@ -159,4 +159,24 @@ Two CLI defects found and worked around: `nodes add --base-url` is shadowed by t
 
 Harness promoted out of the session scratchpad to `agent-orchestrator/scripts/orchestrator/omniroute-eval/` with the
 seven hard-won traps written into its README, since every one of them silently produced a wrong result before being
-understood.
+understood — `agent-orchestrator@fcdd5d1` (dirty-deps carve-out: AO `quality-gates.sh` fails on pre-existing pip-audit
+CVEs in locked transitive deps, `msgpack 1.1.2` / `pydantic-settings 2.14.1`, unrelated to these files; prek clean on
+all three).
+
+## Deferred work after 2026-08-03
+
+| Item                                      | State              | Blocked on                                                       |
+| ----------------------------------------- | ------------------ | ---------------------------------------------------------------- |
+| Phase-1 benchmark matrix (all 7 todos)    | Not done           | nobody — pick it up; `provider-matrix.sh` is the P0 prerequisite |
+| Phase-2 routing-strategy comparison       | Not done           | Phase-1 harness existing first                                   |
+| Go/no-go decision                         | Operator-owned     | the matrix results                                               |
+| Cerebras provider                         | Cannot be done yet | free tier retires 2026-08-17; currently `402 payment_required`   |
+| Correction banner on the 2026-07-31 audit | Operator-owned     | operator judgment — findings 2-3 postdate that doc's research    |
+
+**Recommended next item**: the P0 `provider-matrix.sh` build. Every Phase-1 quality todo depends on it, and it is the
+only place the `served_by` requirement (finding 4) can be enforced once rather than re-remembered per run — without it
+the whole matrix silently benchmarks whichever models OmniRoute chose to substitute.
+
+**Live-state caveat for whoever resumes**: the running instance holds real API keys for 5 providers and is loopback-only
+by configuration, not by firewall. If this host is ever repurposed or the evaluation lapses, run the Phase-3
+decommission todo — revoking the keys at source is the part that cannot be undone later.
