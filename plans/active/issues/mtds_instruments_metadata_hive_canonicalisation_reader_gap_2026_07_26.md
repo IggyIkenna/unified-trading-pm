@@ -199,13 +199,35 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       3 protocols since `venue_prefix_for_protocol` returns `None` before any path is even built). (repo:
       market-tick-data-service) — market-tick-data-service@b94259a0, landed in the same commit as todo 1 per this todo's
       own requirement. Added the 3 map entries + a regression test asserting all 3 resolve.
-- [ ] 4. [DATA] P2. After todos 1-3 ship, verify against the real bucket:
-      `load_pool_metadata_for_date("kamino_lending",     "SOLANA", <a 2026-07-2{3,4,5,6} date>, ...)` returns non-`None`
-      real rows (not just no-exception), and confirm via the availability manifest (`read_availability_index` on the
-      `market-data-tick-defi` bucket, filtered `data_type=risk_params`, `venue in [morpho, fluid, kamino_lending]`,
-      `date>=2026-07-23`) that captured row counts are non-zero going forward (a regression test alone proves the code
-      path; this todo proves the actual production data stopped being silently zero). (repo: market-tick-data-service)
-- [ ] 5. [DATA] P3. Once todos 1-4 are green, re-open the sibling P3 todo in
+- [x] 4. ✅ [DATA] P2. **Reader-layer fix CONFIRMED correct against the live bucket; production capture pipeline
+      CONFIRMED still broken — new P1 finding filed as todo 8.** — market-tick-data-service (verification only, no code
+      change). Evidence (all against the real `instruments-store-defi-prd-central-element-323112` /
+      `market-data-tick-defi-prd-central-element-323112` buckets, GCP_PROJECT_ID=central-element-323112): - **Part A —
+      reader fix works.** `load_pool_metadata_for_date("kamino_lending", "SOLANA", <2026-07-24/25/26>,       ...)`
+      returns 113 real, non-`None` rows for every date tested (was `None` pre-fix for every date since 2026-07-23). Also
+      spot-checked `morpho`/ETHEREUM+BASE and `fluid`/ETHEREUM the same way for 2026-07-24/2026-08-01/2026-08-02:
+      560/330/12+ real rows every time, and confirmed `risk_params_from_catalogue(catalogue, ...)` (the actual
+      downstream consumer) turns that catalogue into 560 and 12 non-empty risk-param rows respectively (`pool_address`
+      populated on 100% of rows) — the todos 1-3 code fix is genuinely correct end-to-end when invoked directly against
+      production data. - **Part B — production is NOT benefiting from the fix.** `read_availability_index` on the DeFi
+      `market-data-tick-defi` bucket, filtered `data_type=risk_params`, `venue in [MORPHO, FLUID]` (manifest venue
+      casing is upper, not the lowercase protocol slug), `date>=2026-07-20`, shows **every single date from 2026-07-20
+      through TODAY (2026-08-03) still stamped `capture_status in {empty_confirmed,       expected_unattempted}`,
+      `row_count=0`** — including `attempted_at` timestamps as recent as `2026-08-03T01:34:37Z`
+      (`pipeline_mode=batch_onchain_rpc`), i.e. the capture job IS actively running daily, it just keeps producing zero
+      rows even now, 8 days after the fix landed. `KAMINO`/`KAMINO_LENDING` venue: **zero manifest rows found at all**
+      since 2026-07-01 (not even a zero-row/catalog-unavailable stamp) — a separate gap, not this doc's regression
+      (kamino_lending risk_params appears to never dispatch at all; out of this todo's scope, flagged for a future
+      audit, not filed here to avoid scope creep beyond this doc's DeFi catalogue-reader focus). - **Root cause
+      (strongly suspected, not yet confirmed by a direct VM check):** MTDS's live/daily capture runs on a persistent VM
+      that installs code from a GCS tarball snapshot at boot (`vm-tarball-deployment.md` —
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` § "Code deployment from GCS tarballs"), not live from
+      git. A VM running continuously since before `market-tick-data-service@b94259a0` (2026-07-26) would still be
+      executing the pre-fix exact-path reader every cycle, which explains the contradiction (manual invocation of HEAD
+      code = real data; the deployed process = still zero) without requiring a second code bug. See todo 8.
+- [ ] 5. [DATA] P3. Once todos 1-4 **AND todo 8** are green (todo 4 found the fix is not yet live in production —
+      widening `_DEFAULT_PROTOCOLS` to `solend`/`marginfi` today would just add two more venues riding the same
+      still-broken-in-prod path), re-open the sibling P3 todo in
       `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md` (risk_params_handler.py's `_DEFAULT_PROTOCOLS`
       solend/marginfi omission) — it was left undecided pending this fix. (repo: market-tick-data-service,
       unified-trading-pm)
@@ -225,6 +247,23 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       verified end-to-end in one dispatch, not just proposed. Distinct from todo 3 (the `_PROTOCOL_TO_VENUE_PREFIX` gap,
       already shipped) and todo 4 (forward-looking verification only). (repo: market-tick-data-service,
       unified-trading-pm)
+- [ ] 8. [DATA] P1. **The todos 1-3 reader fix is correct in code but NOT yet live in the production risk_params capture
+      path** — found while executing todo 4's verification (see todo 4's evidence block). The daily `batch_onchain_rpc`
+      risk_params capture job for MORPHO/FLUID has run every day through 2026-08-03 and still stamps
+      `capture_status=empty_confirmed, row_count=0` every time, even though the exact same production code, invoked
+      directly against the live bucket, returns real non-empty rows. Suspected cause: the persistent data-pipeline VM
+      installs code from a GCS tarball snapshot taken at boot
+      (`deployment-service/scripts/vm/setup-data-pipeline-vm.sh`), so a VM that has been running continuously since
+      before `market-tick-data-service@b94259a0` (2026-07-26) is still executing the pre-fix reader. (a) Confirm the
+      deployed tarball/VM's installed `market-tick-data-service` git SHA (or last-boot timestamp vs. 2026-07-26) — if it
+      predates the fix, that confirms the theory without a second code bug. (b) Rebuild the
+      `market-tick-data-service-code` tarball from current `live-defi-rollout`/`main` and redeploy/restart the capture
+      VM (or Cloud Run job, whichever actually runs `batch_onchain_rpc` risk_params) so it picks up the fix. (c) Re-run
+      this doc's todo-4-style verification (read the manifest for MORPHO/FLUID risk_params on the next 1-2 dates after
+      redeploy) and confirm `row_count>0`/`capture_status=captured` actually appears. Also investigate why
+      `KAMINO`/`KAMINO_LENDING` risk_params has ZERO manifest rows at all since 2026-07-01 (not even a zero-row stamp) —
+      `kamino_lending` is in `_DEFAULT_PROTOCOLS` but appears to never dispatch; may be the same stale-deployment cause
+      or a distinct dispatch gap. (repo: market-tick-data-service, deployment-service)
 
 ## Progress Log
 
@@ -254,3 +293,21 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   promotion-PR history) — this was purely a dual-flip gap, not missing work. Flipped the checkbox, no code changes
   needed.
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.
+- 2026-08-03 (slot 7, `data_engineering`, `-004`): Executed todo 4's real-bucket verification. Read-only — no code
+  changed. **Part A passed**: `load_pool_metadata_for_date` (current `live-defi-rollout` HEAD, includes todos 1-3)
+  called directly against the live `instruments-store-defi-prd-central-element-323112` bucket returns real non-empty
+  rows for `kamino_lending`/SOLANA (113 rows, dates 2026-07-24/25/26) and for `morpho`/ETHEREUM+BASE and
+  `fluid`/ETHEREUM (560/330/12+ rows, dates 2026-07-24 through 2026-08-02) — confirmed `risk_params_from_catalogue`
+  turns that into non-empty risk rows too. **Part B found the production pipeline is NOT benefiting from the fix**:
+  `read_availability_index` on `market-data-tick-defi-prd-central-element-323112`, filtered
+  `data_type=risk_params`/`venue in [MORPHO, FLUID]`/`date>=2026-07-20`, shows every date through TODAY (2026-08-03)
+  still `capture_status=empty_confirmed`/`row_count=0`, with `attempted_at` as recent as `2026-08-03T01:34:37Z` — the
+  capture job is actively running, just still producing zero rows 8 days after the code fix landed. Filed this as new
+  todo 8 (P1, suspected stale VM-tarball deployment per `vm-tarball-deployment.md` — the persistent capture VM installs
+  code from a GCS snapshot at boot, not live git) and amended todo 5's gate to also require todo 8, since widening
+  `_DEFAULT_PROTOCOLS` today would ride the same still-broken-in-prod path. Also found `KAMINO`/`KAMINO_LENDING`
+  risk_params has ZERO manifest rows since 2026-07-01 at all (not even a zero-row stamp) — folded into todo 8's scope
+  rather than a separate issue doc, since it's the same DeFi-catalogue-reader investigation area and root-causing it
+  standalone would be scope creep beyond this todo. Did not attempt the VM redeploy myself (todo 8) — out of this
+  verification todo's scope and a production-capture-VM restart deserves its own dispatch with focused verification, not
+  a side effect of a read-only check.
