@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T18:40Z
+last_updated: 2026-08-03T20:10Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -651,3 +651,49 @@ repeated here.
   carve-out. Slot left clean (`deployment-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead
   of origin beyond this doc's own commit; no branch changes in either repo). `deployment-service` already present in
   this doc's `repos:` frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~19:35-20:10Z (`cicd` escalation `agt-f91096`, slot 3, `ml-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=335`) — this repo's 3rd occurrence in the doc-chain (1st: `agt-2336b3` `main_ci_red`, parent doc; 2nd:
+  `agt-83db42` above, `typecheck` exit-124), and the FIRST occurrence of a genuinely new failure shape**: the cited run
+  (`30835989289`, `checks` job) reproduced the already-established `typecheck` exit-124 wall-clock-timeout signature
+  (`qg-governor` admitted the job after 880s `WAIT_CPU`, `[4/6] TYPE CHECK` ran `17:35:34Z`→`17:37:34Z`, exactly the
+  120s ceiling, 0 errors/0 warnings extracted) — no new diagnosis needed there. Confirmed PR#335 had **already
+  self-merged** (`mergedAt: 2026-08-03T17:16:15Z`, 5s after `createdAt`, the same
+  self-merge-before-confirmatory-check-completes pattern this doc-chain documents repeatedly); `gh pr list --state open`
+  for `ml-service` → 0 open PRs, nothing actually blocked. Checked current state rather than stopping at the cited run:
+  `ldr-to-main-promote-fleet`'s freshest tick (`30848223829`, `20:00:06Z`) still reads
+  `GATE BLOCK ml-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — genuinely still red, not stale. The
+  most-current LDR run against true current HEAD (`37d59f1`, run `30846230098`, dispatched by an earlier pass) had
+  **already failed its `checks` job** by investigation time — but via a **different,
+  previously-unlogged-for-this-doc-chain failure shape**:
+  `error: Failed to install: basedpyright-1.38.2-py3-none-any.whl (basedpyright==1.38.2) — Caused by: The wheel is invalid: Missing .dist-info directory`,
+  a hard `uv sync`/`uv pip install` failure (exit 2) during environment setup, well before `base-service.sh`'s own
+  `[4/6] TYPE CHECK` step ever ran — i.e. NOT the typecheck-timeout class, a distinct infra failure mode. Being
+  co-located with the shared self-hosted `glue-ip-172-31-5-118-1` runner (this session's shell runs on the same host),
+  inspected the actual on-disk `uv` cache directly rather than reasoning from the log alone:
+  `~/.cache/uv/wheels-v6/pypi/basedpyright/1.38.2-py3-none-any/` currently contains BOTH `basedpyright/` and
+  `basedpyright-1.38.2.dist-info/` intact — the cache entry is NOT corrupted now, consistent with a transient corruption
+  (a concurrent-write race under the extreme fleet-wide disk-I/O contention this doc-chain already establishes —
+  `uptime` read `load average: 24.50, 29.64, 32.26` at investigation time) that self-healed on a later `uv`
+  fetch/repair, not a persistent defect requiring a code/script fix. `df -h`: root filesystem 173G available (75% used,
+  not full) — rules out the disk-full failure class (`shared_host_home_filesystem_full_ 2026_07_26.md`) as the direct
+  cause. Per this doc-chain's established scope (todo 1: root-cause is capacity-side, tracked by
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, still `status: active`/Phase 2-3 open — did NOT attempt a
+  broader infra fix such as isolating `UV_CACHE_DIR` per-runner), dispatched a fresh LDR re-verify run against the true
+  current head (`gh workflow run quality-gates-v2.yml --repo IggyIkenna/ml-service --ref live-defi-rollout` → run
+  `30848928130`, confirmed queued against `37d59f1`) rather than relying on the already-failed `30846230098`. Watched it
+  for several minutes (background-polled, heartbeated) — still `queued` behind the single busy runner at investigation
+  end, consistent with this doc-chain's established queue-depth pattern (not stuck/hung). `GET /api/repo-blockers` →
+  `open: []`; no redundant runner-hogging job found to cancel. **Disposition: no code or workflow change made or
+  needed** — `ml-service/scripts/quality-gates.sh` still carries no `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT` override and this
+  single non-sustained wheel-corruption occurrence does not meet the sustained-red bar that justified repo-local timeout
+  raises elsewhere (same precedent `agt-83db42` already applied for this repo); the promotion PR is not actually blocked
+  (already merged); outcome of `30848928130` left for the next occurrence per established practice. **New data point for
+  todo 1**: this is the first occurrence in the doc-chain of a `uv`-wheel-install corruption (as opposed to a
+  `pytest`/`basedpyright` wall-clock timeout) — same root cause class (shared-host resource contention), different
+  failure mechanism (cache-write race vs. CPU-starved wall-clock), worth the ledger-coordination fix's authors being
+  aware the contention surfaces in more than one failure shape. `AUTHORING_SLOT=ci` fails `cicd.md`'s `^[0-9]+$` check
+  (not a real numbered slot) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI).
+  Slot left clean (`ml-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
+  this doc's own commit; no branch changes in either repo). `ml-service` already present in this doc's `repos:`
+  frontmatter — no frontmatter change needed.
