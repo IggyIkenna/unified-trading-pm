@@ -90,7 +90,20 @@ involved). Each hunter, per doc:
    not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to "no doc found," is
    surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's own todo/body prose
    to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes `context_scope` + the dated
-   marker, per its scope boundary above).
+   marker, per its scope boundary above). 4a. **Cross-reference by evidence fingerprint, not just topic** — for a doc
+   whose "Evidence"/findings section quotes a distinctive literal (an exact error code, an HTTP header value, a
+   secret/resource name, a VM name, a byte-identical log line), grep the rest of `plans/active/` (and `.../issues/`) for
+   that EXACT string before finalizing `context_scope`. Two docs independently recording the same distinctive
+   fingerprint is strong evidence they're investigating the SAME underlying incident, even when their titles/topics look
+   unrelated (real incident: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`'s original scout
+   pass — 4 entries, all topically about the live connector — never surfaced
+   `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, which had independently recorded the identical
+   `x-requests-remaining: -772`/`x-requests-used: 5000772` evidence a day earlier and already contained the full
+   root-cause forensic trail; a worker who later got only the shallow scope had to redo ~215k tokens of fleet-wide
+   grepping and gcloud attempts to re-find what was already written down, 2026-08-03). A CONFIRMED fingerprint match
+   goes straight into `context_scope` on BOTH docs (this is one of the few cases where scouting one doc legitimately
+   touches another's frontmatter — see Phase 2); a topical-only match without a literal string overlap does not qualify,
+   don't over-fire on it.
 5. **Actively hunts for the doc's real source-code target — this is not optional padding, it's the half of the job a
    codex citation alone doesn't cover.** Re-read the doc's body specifically looking for filenames, script names, class
    names, or module paths already named in prose (root-cause sections, "Plan"/"What shipped" todos, and error messages
@@ -112,7 +125,10 @@ involved). Each hunter, per doc:
 
 - Write `context_scope: [...]` into the doc's frontmatter (YAML flow-list, matching the existing style already used in
   the corpus, e.g. `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`). This is the ONLY frontmatter field this
-  skill ever writes.
+  skill ever writes. **Exception**: a Phase-1 step-4a confirmed fingerprint match writes `context_scope` on BOTH docs in
+  the pair (the doc currently being scouted, AND the other doc whose evidence it matched) — even if the second doc is
+  already UP_TO_DATE and wouldn't otherwise be touched this run. Still only ever writes `context_scope` + the dated
+  marker on that second doc, nothing else.
 - Append a dated Progress Log marker: `**context-scout YYYY-MM-DD**: populated/refreshed context_scope (<n> entries)` —
   this is Phase 0's incremental-skip anchor for every future run. Never skip writing this, even when the computed list
   is short.
@@ -129,11 +145,13 @@ involved). Each hunter, per doc:
 Finish with text: total docs scouted this run (never-scouted vs stale), total skipped (up-to-date), entries written (avg
 per doc), any doc where Phase 1 found ZERO confirmable entries (report these — a doc with genuinely no reading-list is
 fine, but worth surfacing so a human can sanity-check it isn't a scouting failure), every unconfirmed "unstated SSOT"
-suggestion surfaced in Phase 1 step 3, and every stale-candidate-pointer finding surfaced in Phase 1 step 4 (which
+suggestion surfaced in Phase 1 step 3, every stale-candidate-pointer finding surfaced in Phase 1 step 4 (which
 candidate(s) named in the doc's own prose/todos turned out wrong, and what the confirmed owner actually is, so
-`/plan-reconcile` can correct the prose itself). Like `docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`,
-this is chat-text only — there is no separate structured-findings endpoint. NEVER write agent memory; NEVER create a
-`*_SUMMARY.md` file.
+`/plan-reconcile` can correct the prose itself), and every step-4a fingerprint-match pair found (both doc paths + the
+matched literal) — these are the strongest signal of genuinely duplicated investigation effort in the corpus and are
+worth a human glance even though this skill already links them. Like
+`docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`, this is chat-text only — there is no separate
+structured-findings endpoint. NEVER write agent memory; NEVER create a `*_SUMMARY.md` file.
 
 **Post-hoc source-hunting lint (advisory, not a blocker)**: run
 `python3 scripts/plan-hygiene/generate_context_scope_source_lint.py` and fold its output into the report. This is a

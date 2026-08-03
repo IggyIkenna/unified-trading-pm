@@ -154,16 +154,16 @@ live claim / mtime <120s → PROTECT). An interactive session IS slot N (long un
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
   what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
   `time_created` not `updated`), NEVER activity** — an entity-agnostic check can pass for hours while the target entity
-  writes ZERO rows, masked by OTHER entities writing (real incident, detail in the SSOT); monitors read terminal
-  `exit_code` + manifest counts + log-mtime + a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match);
-  `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog
-  (≤30-min) in the SAME turn. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  writes ZERO rows, masked by OTHER entities writing; monitors read terminal `exit_code` + manifest counts + log-mtime
+  - a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent
+    are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+    `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before starting ANY task, grep `plans/active/`+`.../issues/`
   first: plans go stale/superseded BETWEEN daily `/plan-reconcile` sweeps, so no-flag ≠ current; 0 hits ≠ clear
-  (grep-then-READ) — a hit means confirm `status`/`supersedes` before building. SSOT:
-  `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`.
+  (grep-then-READ) — confirm `status`/`supersedes` first. Also scope reads narrowly, keep replies terse. SSOT:
+  `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`, `…/context-economy.md`.
 
 ## Doc retrieval — retrieve less but right (L0→L4, grep-native)
 

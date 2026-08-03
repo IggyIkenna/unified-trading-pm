@@ -119,6 +119,37 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 
 ---
 
+## 2a. Populate `context_scope` yourself at authoring time — don't leave it for the next `/context-scout` sweep
+
+`context_scope` (an elective frontmatter field, `plans/PLAN_FORMAT.md`) is a curated reading-list — codex SSOTs, related
+plan/issue docs, key source paths — that saves the next worker a cold grep. `/context-scout` runs hourly and will
+eventually backfill it if you skip this, but "eventually" has a real cost: a doc that sits `context_scope: []` between
+filing and the next sweep is exactly the gap that lets a duplicate investigation happen (real incident —
+`odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` was filed with no cross-reference to
+`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, a sibling doc that had independently recorded the identical
+exhaustion evidence a day earlier and already contained the full root-cause trail; the next worker to pick up the first
+doc had to redo ~215k tokens of fleet-wide grepping before finding it, 2026-08-03).
+
+**This costs you nothing extra to do**: CLAUDE.md's pre-task plan/issue conflict-check HARD RULE already requires
+grepping `plans/active/` + `.../issues/` before starting any task — capture that grep's output into `context_scope`
+instead of discarding it. Two additions worth the extra 30 seconds beyond a plain topic/keyword grep:
+
+- **Grep by evidence fingerprint, not just topic** — if your doc's evidence includes a distinctive literal (an exact
+  error code, an HTTP header value, a secret/resource name, a VM name), grep the corpus for that EXACT string, not just
+  your topic keywords. Two docs independently recording the same fingerprint are very likely the same incident even if
+  their titles look unrelated.
+- **Link both directions** — if you find a genuine match, add it to your own `context_scope`, and (small edit,
+  `context_scope`/`related` + a dated marker only) add your new doc to the found doc's `context_scope`/`related` too, so
+  a worker who lands on either one sees both.
+
+If you can't find anything worth citing yet (a genuinely novel investigation), leave `context_scope` unset — don't pad
+it — `/context-scout` will pick it up on its next sweep once more of the corpus exists to cross-reference against. See
+`cursor-configs/skills/context-scout/SKILL.md` for the full methodology (source-path hunting, hedged-candidate
+resolution, fingerprint cross-referencing) if you want to do a more thorough pass than this quick authoring-time
+version.
+
+---
+
 ## 3. Todo format
 
 - Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
@@ -493,3 +524,13 @@ start.**
 ## Progress Log
 
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.
+- **2026-08-03 (interactive session)**: Added §2a ("Populate `context_scope` yourself at authoring time") — an author
+  who runs the pre-task conflict-check grep for a new doc should capture that grep into `context_scope` immediately,
+  including a fingerprint-based cross-reference pass (grep for the doc's own distinctive evidence literals, not just
+  topic keywords), rather than leaving the field empty until the next hourly `/context-scout` sweep. Prompted by a real
+  gap: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` was filed without linking to
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, which had already recorded the identical exhaustion evidence
+  a day earlier — the next worker spent ~215k tokens rediscovering it. Companion change:
+  `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4a (fingerprint cross-referencing, applies to the
+  scheduled sweep too) and a `PLAN_FORMAT.md` `context_scope` comment pointing here. (repo: unified-trading-pm,
+  docs-only, no code changed)
