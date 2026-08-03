@@ -42,7 +42,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T14:50Z
+last_updated: 2026-08-03T15:35Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -897,3 +897,41 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (`deployment-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean throughout — only this doc
   edited). This doc is now approaching its 1000-line hard cap (870+ lines) — flagging for whoever hits it next to split,
   per this doc's own precedent for its parent.
+
+- **2026-08-03 ~15:05-15:35Z (`cicd` escalation `agt-e718ef`, slot 3, `execution-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 3rd consecutive re-dispatch of the SAME wall `agt-956fe9`/`agt-bd0d27` already fixed; re-verified
+  from scratch, root cause now confirmed WORSE, still no code action warranted**: confirmed `agt-956fe9`'s fix is live
+  at LDR HEAD `7803a634` (`PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` alongside the pre-existing `PYRIGHT_TIMEOUT=300`);
+  `main` remains 279 commits behind LDR (`compare/main...live-defi-rollout` -> `ahead_by:279, behind_by:0`), no open
+  `base:main` promotion PR -- the fix genuinely cannot reach `main` until a fresh LDR-to-main promotion fires, which
+  itself needs LDR's own `quality-gates-v2` green first (per `ldr-to-main-promote-fleet.yml`'s gate). The two
+  confirmatory runs `agt-956fe9` triggered have now both concluded/progressed: `main` run `30822051928` completed
+  `conclusion=failure` -- expected, this run predates the fix per `agt-956fe9`'s own note (main hasn't been promoted
+  yet), failure signature identical to the doc's established class (`tests` slice: `Failed: Timeout (>150.0s)` on
+  `test_gcs_storage_adapter.py::TestGetBucketForCategory::test_delegates_to_config` -- a trivial mocked-config test,
+  cannot legitimately take 150s -- cascading to xdist `worker_workerfinished` `AssertionError`). `LDR` run `30822100465`
+  is a NEW finding not previously logged: its `checks` slice also now FAILED (`Type check FAILED/timeout, exit=124`)
+  even with `PYRIGHT_TIMEOUT=300` already in effect -- read `base-service.sh`'s `[4] TYPE CHECK` step directly: on a
+  `MEM_WRAP` (cgroup) launch failure it retries basedpyright UNWRAPPED once, so worst-case wall time is ~2x
+  `PYRIGHT_TIMEOUT` before this failure fires; observed elapsed was ~11m45s (705s) between the section header and the
+  failure line -- consistent with genuinely running (not silently failing) through two full 300s-class attempts under
+  real CPU starvation, not a config gap. Host corroboration: `uptime` load average **36.21, 35.14, 39.94** on this same
+  16-vCPU shared host -- markedly WORSE than `agt-bd0d27`'s ~27.5 thirty minutes earlier, confirming this is fleet-wide
+  contention actively worsening, not self-clearing. `tests` slice of the same LDR run was still `in_progress` at
+  investigation end -- did NOT cancel/redispatch it (would lose ~75min of elapsed queue/run position for zero benefit,
+  per this doc's established practice). Checked for a `agt-771546`/`agt-a46033`-style genuinely-redundant runner-hogging
+  job to cancel (this doc's one non-pure-wait mitigation precedent): none found -- no stale post-merge PR-scoped run for
+  execution-service is occupying the runner (PR #538 merged 06:38Z, long since settled); the only other queued entry for
+  this repo is an unrelated 69-day-old orphaned `workspace-qg` run from 2026-05-26 (`26364931341`, different workflow,
+  clearly inert, out of scope). Per the `deployment-service` precedent, did NOT raise `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT`
+  a third time -- a repo already at the sanctioned 300s ceiling timing out under measurably worsening host contention is
+  exactly the case this doc's todo 1 anticipated as "past self-clearing," and the real fix is capacity-side
+  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`), not another local timeout bump.
+  `GET /api/repo-blockers` -> `open: []`. **Disposition: no code or workflow change made or needed** -- fix already
+  landed and correctly not yet promoted; both confirmatory runs are genuinely progressing/concluded on their own merits;
+  recommend whoever handles the NEXT occurrence for this repo check whether
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03` Phase 2-3 has landed before repeating this same
+  wait-and-corroborate cycle a 4th time. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) -- per
+  `cicd.md`, skipped the authoring-slot ping. Slot left clean (`execution-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc edit; no branch changes made in either repo). This doc
+  is now at its 1000-line hard cap -- the NEXT occurrence for ANY repo MUST split rather than append.
