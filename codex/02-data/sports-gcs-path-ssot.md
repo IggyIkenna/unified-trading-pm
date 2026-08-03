@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Sports GCS Path SSOT
 summary:
   Canonical GCS path resolver for sports parquet (UAC candidate_parquet_paths / SPORTS_DATA_TYPE_TO_FOLDER); three
-  layouts (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT) plus non-obvious entity= folder names — never
-  hardcode paths (phantom-row trap).
+  layouts (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT/FLAT_PER_SEASON) plus non-obvious entity= folder
+  names — never hardcode paths (phantom-row trap).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +23,7 @@ created: 2026-05-08
 authoritative_for:
   [
     sports GCS parquet path resolver and entity-folder naming,
-    sports path-layout taxonomy (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT),
+    sports path-layout taxonomy (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT/FLAT_PER_SEASON),
   ]
 referenced_by:
   [
@@ -72,7 +72,7 @@ from unified_api_contracts.sports import (
     candidate_parquet_uris,         # same, prefixed with gs://<bucket>/
     SPORTS_DATA_TYPE_TO_FOLDER,     # data_type → entity-folder canonical name
     SPORTS_DATA_TYPE_LAYOUT,        # data_type → SportsPathLayout enum
-    SportsPathLayout,               # PER_DAY_PER_LEAGUE | PER_DAY_PER_SEASON | PER_DAY_BARE | FLAT
+    SportsPathLayout,               # PER_DAY_PER_LEAGUE | PER_DAY_PER_SEASON | PER_DAY_BARE | FLAT | FLAT_PER_SEASON
     sports_bucket_name,             # asset_group=sports → GCS bucket name resolver
 )
 
@@ -85,7 +85,7 @@ return None  # honest absence; record_empty(reason=EXPECTED_*)
 
 ## Path layout taxonomy
 
-**Four** layout variants (`SportsPathLayout`), declared per data_type in `SPORTS_DATA_TYPE_LAYOUT`. The `pipeline_mode=`
+**Five** layout variants (`SportsPathLayout`), declared per data_type in `SPORTS_DATA_TYPE_LAYOUT`. The `pipeline_mode=`
 segment (canonical, see the correction banner) sits between `day=` and `entity=`; `candidate_parquet_paths()` emits the
 `pipeline_mode`-bearing candidates first and the `pipeline_mode`-less legacy shapes as fallbacks.
 
@@ -122,6 +122,21 @@ sports_reference/<folder>/<folder>.parquet
 
 Used by: `VENUES` (stadium reference table — single global file), other singletons.
 
+### Layout 5 — `FLAT_PER_SEASON` (singletons, season-keyed, no by_date partition)
+
+```
+sports_reference/<folder>/season=<season>/<folder>.parquet
+```
+
+Used by: `TEAMS_SEASON_SNAPSHOT` (2026-08-03) — a season-keyed team×venue snapshot folded from a legacy
+`day=all/entity=teams` archive (30,069 rows, seasons 2019-2025). Distinct from the routine daily `TEAMS` data_type
+(`PER_DAY_PER_LEAGUE`) — the two share the `teams` folder name but never collide on disk, since the presence/absence of
+`season=` vs `day=`/`league=` segments makes the path shapes disjoint. Added instead of forcing a fake `day=`/`league=`
+label onto genuinely season-keyed data — see
+`/plans/archive/2026_08/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md` for the full ruling +
+migration evidence. Manifest registration is deliberately skipped for `FLAT_PER_SEASON` data (same as `FLAT`/`VENUES`
+below) — `ManifestWriter.record_captured`'s `row_key` contract requires a `date`, which neither layout's data has.
+
 Bucket: `sports_bucket_name(project_id, env=...)` → `instruments-store-sports-{env}-{project_id}`
 (`SPORTS_BUCKET_TEMPLATE`). `candidate_parquet_uris()` prefixes the same candidates with `gs://<bucket>/`.
 
@@ -142,6 +157,7 @@ Some sources have non-obvious `entity=` folder names that don't match the data_t
 | `INJURIES`              | `entity=injuries`               | `PER_DAY_PER_LEAGUE` | api_football         |
 | `STANDINGS`             | `entity=standings`              | `PER_DAY_PER_LEAGUE` | api_football         |
 | `TEAMS`                 | `entity=teams`                  | `PER_DAY_PER_LEAGUE` | api_football         |
+| `TEAMS_SEASON_SNAPSHOT` | `entity=teams` (season= subdir) | `FLAT_PER_SEASON`    | api_football         |
 | `LEAGUES`               | `entity=leagues`                | `PER_DAY_BARE`       | api_football         |
 | `VENUES`                | `entity=venues`                 | `FLAT`               | api_football         |
 | `MATCHES`               | `entity=footystats_matches`     | `PER_DAY_PER_LEAGUE` | footystats           |

@@ -183,7 +183,7 @@ satisfies every requirement:
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
   - > **🟡 2026-07-25 status**: this bullet's premise is stale — see
-    > `/plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
+    > `/plans/archive/2026_08/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
     > not mechanically executable as described (TEAMS has no FLAT layout; the legacy vs. live venue key spaces have zero
     > overlap) and is now `BLOCKED-OPERATOR-DECISION` in the AO-dispatched copy of this todo
     > (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`). The per-source genesis dates quoted above are also
