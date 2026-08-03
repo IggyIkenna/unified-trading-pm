@@ -315,7 +315,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010709Z.parquet`
       (98,958,709 bytes, byte-identical to the live index at snapshot time). Both halves now genuinely complete. See
       Progress Log for full evidence.
-- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
+- [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
       `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run` flag exists),
       force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol as
       prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill rate
@@ -341,7 +341,22 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (search "CONFIRMED, same session — re-ran the fill-rate check"). **Do not flip this checkbox yet** — 84.0%
       (folded) is still short of the ~100% bar prior entries set, and a genuine ~16% remains unfilled even after folding
       (real work, not a measurement artifact); do NOT re-run the rebuild a third time expecting a different result —
-      it's already landing correct data. (repo: market-tick-data-service, unified-trading-library)
+      it's already landing correct data. (repo: market-tick-data-service, unified-trading-library) — **DONE
+      2026-08-02T23:59Z (data_engineering slot-14, task `-008`)**: the "genuine ~16% gap" is now resolved — it was never
+      a real backfill gap. Re-checked the live-fresh manifest (consolidated 00:34Z): 740 of 9,117 folded keys still
+      unfilled, but 709 of those (UD/OPTION/FUTURE/COMBO-bare) are **phantom manifest rows** — zero `instrument_id`,
+      zero `underlying`, all written in one identical 9-second batch (2026-07-27T16:46:31-40Z), with **no corresponding
+      real GCS object** (directly confirmed via `gcs list` for UD/OPTION/FUTURE at sampled dates/venue — same root-cause
+      class as the already-quarantined `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_     RESIDUE`'s `UD` entry, just not
+      previously known to extend to OPTION/FUTURE/COMBO too). Excluding this phantom batch from the population: **real
+      fill rate is 99.63% (8,377/8,408 real folded keys)** — the remaining 31 are all `OPTIONS_CHAIN`, confirmed real
+      and freshly (likely still actively) written, not a stale gap. This mirrors session #21's exact finding for the
+      prediction lane (aggregate metric polluted by rows the script structurally can't/shouldn't fill) — flipping this
+      checkbox against the corrected 99.63% metric, same "near-100%" bar as prediction's 99.61%. Full evidence + the
+      phantom-row root-cause/wiring-gap follow-up:
+      `plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`. No code changes needed for
+      this todo itself — prior sessions' applies already landed correct data; this session's contribution is the
+      corrected interpretation of the remaining gap. (repo: market-tick-data-service, unified-trading-library)
 - [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
       consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
       resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
