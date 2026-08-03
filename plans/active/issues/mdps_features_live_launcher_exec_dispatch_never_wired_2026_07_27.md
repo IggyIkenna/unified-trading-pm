@@ -189,14 +189,32 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       edit), gated this doc on it (`depends_on` + `gate_on_depends: true`, see frontmatter + banner above), and
       re-opened the actual code-writing work below as its own gated todo so it isn't lost — unified-trading-pm, this
       commit.
-- [ ] [SCRIPT] P2. `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` has landed (shipped +
+- [x] ✅ [SCRIPT] P2. `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` has landed (shipped +
       archived 2026-08-03 — this doc's gate is satisfied, dispatchable now): add the `VM_TASK == "mdps-features-live"`
       (or generic "+"-split) branch to `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing
       tarball-resolution split + the multi-worker sharding pattern at ~line 2031 for backgrounding N python processes
       under one `_launch_with_tee` wrapper) that invokes MDPS and features-service with the CLI flags their actual
       parsers require, per the ruled topology (per-shard MDPS + per-family features-service, per-family↔asset_group
       mapping in `features-service@ebd43939`), using the extended UAC `mdps_mvp_universe()` to discover its
-      `(venue, data_type)` shard set at boot.
+      `(venue, data_type)` shard set at boot. **Shipped 2026-08-03 (slot-6)** — `deployment-service@e7d17f2`: a new
+      `VM_TASK == "mdps-features-live"` branch discovers MDPS's `(venue,     data_type)` shards at boot via
+      `mdps_mvp_universe(asset_group)` (projected from the 3-tuple, deduped across `instrument_type`, since MDPS's
+      `--shard-spec` grain is `ASSET_GROUP:VENUE:DATA_TYPE`) and the applicable `--feature-family` set via
+      `FEATURE_FAMILY_ASSET_GROUPS`, then generates a self-contained fan-out supervisor script (mirrors the existing
+      cefi-backfill fan-out pattern) that backgrounds one
+      `market-data-processing process --mode live --operation streaming-aggregation --shard-spec ...` per MDPS shard and
+      one `features_service --feature-family <name> --operation compute --mode live ...` per applicable family (CLI-flag
+      construction mirrors `launch-features-vm.sh`: calendar omits `--asset-group`; delta_one/volatility/ onchain add
+      `--feature-group ALL`; delta_one/volatility add `--timeframe 1m` for tradfi), waits every worker, and ORs their
+      real exit codes — all under one `_launch_with_tee` wrapper. `performance_features` is deliberately excluded: its
+      `run(argv)` CLI shim (`features_service/performance_features/__init__.py`) always calls `run_batch()` regardless
+      of `--mode` (an architecture-only scaffold with no live wiring yet, per its own docstring) — spawning it would
+      exit immediately and read as a crashed worker to the fan-out supervisor. Verified: `bash -n` clean, `shellcheck`
+      clean (no new warnings), dry-parsed the generated MDPS shard-spec and several features-service family CLI
+      invocations directly against each service's real argparse (no crash), `deployment-service` quality-gates.sh green.
+      Real live-VM confirmation (an actual `mdps-features-live` launch) is still pending — out of scope for this todo,
+      which was specifically about the exec-dispatch wiring; the two `[SCRIPT]` P3 todos below (VM_OPERATION metadata
+      fix, vm-exec-with-gcs-tee.sh failure-signaling gap) remain open and unblocked by this change.
 - [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
       it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
       `build-continuous`); once the dispatch branch above ships, set the metadata this launcher passes to match whatever
@@ -227,3 +245,6 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   citations at the archive location (`depends_on`/`gate_on_depends: true` left untouched — bare slug, still correctly
   resolves against `plans/archive/` per `check_depends_on_graph.py`). The exec-dispatch wiring todo below is now
   genuinely dispatchable.
+- **2026-08-03 (slot-6)**: Shipped the exec-dispatch wiring todo — `deployment-service@e7d17f2` (see the flipped
+  checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
+  scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.
