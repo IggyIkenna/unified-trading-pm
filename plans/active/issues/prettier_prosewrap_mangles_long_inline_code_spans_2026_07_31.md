@@ -90,9 +90,10 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
       prettier-version bug), then apply (A) a `.prettierrc` fix or (B) a plan-hygiene/prek lint check that catches
       multi-space runs inside backtick spans + over-padded continuation lines. Confirm the fix against the
       fd1b02c2c-style pattern. (repo: unified-trading-pm) — see Progress Log for evidence.
-- [ ] [BACKEND] P3. Re-run prettier / hand-fix the still-live mangled span in
-      `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`
-      (unified-trading-pm@fd1b02c2c), verifying content-only via `git diff -w`. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-03 (slot 8, backend_engineer)** — Re-run prettier / hand-fix the still-live
+      mangled span in `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`
+      (unified-trading-pm@fd1b02c2c), verifying content-only via `git diff -w`. (repo: unified-trading-pm) — see
+      Progress Log for evidence.
 
 ## Progress Log
 
@@ -132,3 +133,15 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
   `scripts/plan-hygiene/prosewrap_padding_baseline.yaml` (seeded `violation_count: 4472`) + `run_hygiene_sweep.sh`
   wiring; full sweep run clean (`✅ PASS [hard] No prettier proseWrap continuation-padding (ratchet)`), two pre-existing
   unrelated hard failures (`Reference path convention`, `Archive candidates`) confirmed NOT caused by this change.
+- **2026-08-03 (slot 8, backend_engineer) — todo 2 DONE**: hand-fixed the still-live
+  `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` (unified-trading-pm@fd1b02c2c). Ran
+  `scripts/plan-hygiene/check_prosewrap_padding.sh` against the file first to enumerate the exact 30 corrupted lines (10
+  backtick-internal multi-space runs + 20 continuation lines padded to 382 leading spaces in the
+  `deployment-service@ a172915` DONE block, lines 458-476) rather than re-running prettier (its own idempotency bug —
+  confirmed by todo 1 — would have ADDED padding, not fixed it). Hand-repaired: collapsed every 3+-space run inside a
+  backtick span to a single space (a Python pass scoping the regex to `` `[^`\n]*` `` spans only, so prose outside
+  backticks was untouched), and reset the 382-space block to the doc's normal 6-space continuation indent. Verified: (1)
+  `check_prosewrap_padding.sh` on the file now reports `0 violating line(s)` (down from 30); (2) `git diff -w` against
+  the pre-fix tree is byte-empty (confirms content-only — no meaning change) while `git diff --stat` shows the expected
+  30 lines changed; (3) full `quality-gates.sh --no-fix` green, sentinel SHA matches HEAD. Evidence:
+  `unified-trading-pm@<sha>` (this commit).
