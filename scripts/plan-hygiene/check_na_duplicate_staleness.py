@@ -107,7 +107,12 @@ def parse_blocks(text: str) -> list[TodoBlock]:
         block_text = "\n".join(cont)
         cite_m = SOURCE_CITE_RE.search(block_text)
         blocks.append(
-            TodoBlock(line=line_num, done=done, text=block_text[:200], source_cite=cite_m.group(1) if cite_m else None)
+            TodoBlock(
+                line=line_num,
+                done=done,
+                text=block_text,
+                source_cite=cite_m.group(1) if cite_m else None,
+            )
         )
     return blocks
 
@@ -210,6 +215,71 @@ def compute_genuinely_outside_ao(docs: list[DocInfo]) -> dict:
     }
 
 
+# Any bare `.md` filename mention, not just after `Source:` — catches "see X.md",
+# "coordinate with X.md", "tracked in X.md", etc. Meta/normative docs are excluded below
+# since they're referenced constantly and never indicate staleness.
+ANY_MD_REF_RE = re.compile(r"([A-Za-z0-9_]{6,}_2026_\d{2}_\d{2}(?:_[A-Za-z0-9_]+)?)\.md")
+_META_DOC_NAMES = {
+    "task_template",
+    "plan_format",
+    "index",
+    "active_index",
+    "readme",
+    "claude",
+    "skill",
+}
+
+
+def build_resolved_doc_index(pm_root: Path) -> dict[str, str]:
+    """basename (no .md, lowercase) -> 'archived' or the doc's own status field, for
+    every .md under plans/ (active + archive)."""
+    index: dict[str, str] = {}
+    for p in (pm_root / "plans").rglob("*.md"):
+        stem = p.stem.lower()
+        if stem in _META_DOC_NAMES:
+            continue
+        is_archived = "archive" in p.relative_to(pm_root / "plans").parts
+        if is_archived:
+            index[stem] = "archived"
+            continue
+        if stem not in index:
+            text = p.read_text(encoding="utf-8", errors="replace")
+            fm = parse_frontmatter(text)
+            index[stem] = (fm.get("status") or "").lower()
+    return index
+
+
+def find_plain_stale_candidates(
+    docs: list[DocInfo], resolved_index: dict[str, str], dup_tracked_docs: set[str]
+) -> list[dict]:
+    """Among NA-open todos with NO duplicate-tracking citation, flag ones whose own text
+    references another doc that is now archived/resolved/complete/superseded — a strong
+    signal the referenced dependency/context has moved on since this todo was written,
+    worth a manual re-check. Not a checkbox-precise match (same doc-level caveat as the
+    duplicate-staleness check) — a candidate filter, not an auto-closer."""
+    candidates: list[dict] = []
+    for d in docs:
+        if d.assigned_vm != "na" or d.status not in ("active", "open"):
+            continue
+        if d.path.name in dup_tracked_docs:
+            continue  # already surfaced by the duplicate-staleness check above
+        own_stem = d.path.stem.lower()
+        hits: list[dict] = []
+        for b in d.blocks:
+            if b.done:
+                continue
+            for m in ANY_MD_REF_RE.finditer(b.text):
+                ref_stem = m.group(1).lower()
+                if ref_stem == own_stem:
+                    continue
+                ref_status = resolved_index.get(ref_stem)
+                if ref_status in ("archived", "resolved", "complete", "superseded"):
+                    hits.append({"line": b.line, "references": f"{ref_stem}.md", "ref_status": ref_status})
+        if hits:
+            candidates.append({"doc": str(d.path), "hits": hits})
+    return candidates
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     default_root = Path(__file__).resolve().parents[2]
@@ -224,9 +294,13 @@ def main() -> int:
     docs = collect_all(args.pm_root)
     candidates = find_stale_candidates(docs)
     overlap = compute_genuinely_outside_ao(docs)
+    resolved_index = build_resolved_doc_index(args.pm_root)
+    dup_tracked_docs = {Path(pd["doc"]).name for pd in overlap["per_doc_with_citations"]}
+    plain_stale = find_plain_stale_candidates(docs, resolved_index, dup_tracked_docs)
 
     if args.json:
-        print(json.dumps({"stale_candidates": candidates, "overlap": overlap}, indent=2))
+        payload = {"stale_candidates": candidates, "overlap": overlap, "plain_stale_candidates": plain_stale}
+        print(json.dumps(payload, indent=2))
         return 0
 
     print(f"Scanned {len(docs)} docs (plans + issues).\n")
@@ -255,6 +329,19 @@ def main() -> int:
     for pd in overlap["per_doc_with_citations"]:
         doc, oo, ct, cd = pd["doc"], pd["own_open"], pd["citations"], pd["counted_duplicate"]
         print(f"    {doc}: own_open={oo}, citations={ct}, counted_duplicate={cd}")
+
+    print(
+        "\n=== PLAIN-STALE CANDIDATES among genuinely-NA-exclusive todos "
+        "(reference another doc now archived/resolved) ==="
+    )
+    print(f"{len(plain_stale)} found\n")
+    for c in plain_stale:
+        print(f"  {c['doc']}")
+        for h in c["hits"]:
+            print(f"    line {h['line']}: references {h['references']} (now {h['ref_status']})")
+        print()
+    if not plain_stale:
+        print("  (none found)")
 
     return 0
 
