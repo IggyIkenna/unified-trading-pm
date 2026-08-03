@@ -123,6 +123,17 @@ across every future incremental inventory run.
       a genuinely safe extraction candidate (or conclude none exists and this doc needs a different remediation shape,
       e.g. promotion to `plans/epics/` at the 2000L epic cap instead of the 1000L active-plan cap, given its role as the
       migration's own coordinator).
+  - **Interim partial fix 2026-08-03 (same-day residual context-scout pass, 646-doc corpus)**: `context_scope` was
+    successfully populated (2 minimal entries: `/codex/02-data/pipeline-mode-partition.md`,
+    `/plans/active/instruments_completion_tracker_2026_07_06.md`) without a Progress Log marker — the doc sits at
+    exactly 999L pre-edit, and neither a compact single-line `context_scope` (verified via direct `npx prettier@3.9.5`
+    dry-runs against `.prettierrc`, which stays single-line only under printWidth=120) nor a `related:` 1-line collapse
+    freed enough room for BOTH `context_scope` AND any marker text — every combination tested landed at 1000-1001L, and
+    prosewrap merges any appended marker into the doc's last existing paragraph, always forcing +1 wrapped line
+    regardless of marker brevity. Shipped context_scope-only at exactly 1000L (`check_line_caps.sh` passes: hard cap is
+    `-gt 1000`, not `-ge`). This doc will show `STALE` (not `NEVER_SCOUTED`) in tomorrow's
+    `generate_context_scope_inventory.py` run until this P3 trim actually lands and a marker can be added — that is
+    expected, not a scouting gap.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-08-03 (same session).** Trimmed
       `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md` (1000L pre-commit) — extracted the full
       "2026-07-21/22 continuation" Progress Log section (140 lines, zero open todos, round 2 of this doc's own recurring
