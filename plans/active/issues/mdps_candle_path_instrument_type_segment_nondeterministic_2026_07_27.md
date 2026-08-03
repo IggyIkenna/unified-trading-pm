@@ -18,13 +18,7 @@ assigned_role: data_engineering
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
-    market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py,
-  ]
+context_scope: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md, /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md, market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py]
 source: [data_pipeline_check_mdps_features_2026_07_20.md todo 8]
 related:
   [
@@ -91,3 +85,4 @@ here.
   race), determinable by code read; conflict-check clear (`data_pipeline_check_mdps_features` only REFERENCES this doc
   as owner). Shared conflict-check protocol:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

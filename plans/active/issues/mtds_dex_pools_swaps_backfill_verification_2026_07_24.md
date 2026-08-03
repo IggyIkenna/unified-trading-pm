@@ -44,14 +44,7 @@ drift_direction: none
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_query_strings.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
-  ]
+context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md, market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_query_strings.py, market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py]
 locked_since:
 supersedes:
 superseded_by:
@@ -333,3 +326,4 @@ rule (see Progress Log entry below for the observed outcome).
   2023-01-01→2024-10-06). Along the way, live-reproduced VELODROME_V2/OPTIMISM's "bad indexers" failure (100% across 26
   processed days) and confirmed it's the same class already tracked in the 2026-07-27 (slot-2) scope-extension todo
   above — folded findings into that todo rather than filing a duplicate. See both todos above for full evidence.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

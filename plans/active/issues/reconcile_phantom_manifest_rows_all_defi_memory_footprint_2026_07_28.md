@@ -29,14 +29,7 @@ priority: P2
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
-context_scope:
-  [
-    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
-    deployment-service/terraform/gcp/cf_manifest_audit_scheduler.tf,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [instruments-service/scripts/reconcile_phantom_manifest_rows_all.py, unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py, deployment-service/terraform/gcp/cf_manifest_audit_scheduler.tf, /codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/defi_consolidated_closeout_2026_07_18.md]
 drift_direction: advance-code
 depends_on: []
 assigned_role: infra
@@ -137,3 +130,4 @@ because it is currently blocking anything urgent.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - both todos retagged from [OPERATOR] with direction 1
   adopted; bounded machine-type/Cloud-Run sizing + a column-pruned read path
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -214,3 +214,7 @@ not lost if the bound expires unanswered.
   `attempted_failed` rows, both root-cause fixes still ancestors of LDR), adding no new work. Verdict unchanged: the
   `[OPERATOR] P2` todo is an explicit A/B/C policy choice over shared alerting code, and the `[DIAG] P3` follow-up is
   gated on that choice. Neither is worker-determinable.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

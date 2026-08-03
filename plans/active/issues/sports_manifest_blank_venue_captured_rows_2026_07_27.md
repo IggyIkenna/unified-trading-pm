@@ -36,13 +36,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
-    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
-  ]
+context_scope: []
 assigned_vm: planning
 assigned_role: data_engineering
 resolved_by:
@@ -116,3 +110,4 @@ the MDPS-side hypothesis is more plausible for that data_type specifically.
   one sampled shard atom) is bounded and touches no delete/VM-launch. Conflict-check CLEAR: the doc itself states this
   is a distinct axis from `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track C venue re-stamp, and no active
   planning doc claims the blank-`venue` root cause.
+- **context-scout 2026-08-03**: confirmed zero-entry context_scope (N/A (already carries a verified 4-entry context_scope; all 4 paths resolve on disk)).

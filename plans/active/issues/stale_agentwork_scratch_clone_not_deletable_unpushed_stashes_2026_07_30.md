@@ -45,14 +45,7 @@ source: ["2026-07-30 operator instruction to delete the stale scratch clone (inf
 resolved_by:
 locked_by:
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
-    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
-    scripts/quality_gates/check_repo_docs_ssot.py,
-    /plans/epics/infrastructure_master.md,
-  ]
+context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, /cursor-configs/SUB_AGENT_MANDATORY_RULES.md, agent-orchestrator/scripts/hooks/block_destructive_commands.py, scripts/quality_gates/check_repo_docs_ssot.py, /plans/epics/infrastructure_master.md]
 ---
 
 # Stale agentwork scratch clone — deletion blocked on unproven stash WIP
@@ -133,3 +126,4 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   `issues/ag_closeout_audit_infra_parked_2026_07_31.md` finding 2 observes this directory already absent from a sandbox
   `.tabs/3`, but that observation is explicitly non-authoritative for the real target host and does not license flipping
   this checkbox.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

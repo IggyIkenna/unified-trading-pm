@@ -29,12 +29,7 @@ assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
-    scripts/dev/prune-uv-cache.sh,
-    scripts/dev/install-prune-uv-cache-cron.sh,
-  ]
+context_scope: [/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md, scripts/dev/prune-uv-cache.sh, scripts/dev/install-prune-uv-cache-cron.sh]
 source: [unified_trading_api_pip_audit_stale_ignore_list-001 -- observed while shipping the dependency fix]
 related:
   [
@@ -139,3 +134,4 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
   flipping the doc exposes (a) to blind dispatch. Splitting one todo into two is editorial authoring, outside this
   skill's apply set (and would grow the NA todo count against the ratchet) — recorded instead as a targeted-extraction
   candidate for a future infra batch.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

@@ -41,13 +41,7 @@ source:
 assigned_vm: NA
 execution_scope: local-only
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
-    /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md,
-    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
-    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
-  ]
+context_scope: [/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md, /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md, /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md, unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py]
 resolved_by:
 drift_direction: advance-code
 depends_on: []
@@ -163,3 +157,7 @@ DEPLOYMENT_ENV race — left exactly as still open below". Cross- verified again
 still-open, unrelated leak"; Deferred **E7** remains open/parked, unchanged. Independently corroborated by the sibling
 `/ag-closeout-audit ci` skill's same-day draft `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (row D4-12):
 "genuinely-unbounded investigation... same as batch1 D3(3) / batch2 E7." No reclassification.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

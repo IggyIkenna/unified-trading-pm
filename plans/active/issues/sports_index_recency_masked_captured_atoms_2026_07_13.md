@@ -42,15 +42,7 @@ source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
 resolved_by: ""
 locked_by: ""
-context_scope:
-  [
-    /plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    instruments-service/scripts/enumerate_expected_universe.py,
-    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-  ]
+context_scope: [/plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md, /codex/02-data/availability-manifest-and-data-status.md, /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md, instruments-service/scripts/enumerate_expected_universe.py, instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -227,3 +219,7 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
       (masking writer is `uts-prod-instruments-service-sports-fixtures`, a different job) is tracked separately as the
       `[CODE] P1` "extend the guard" todo above, dispatched via
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

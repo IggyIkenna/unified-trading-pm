@@ -47,13 +47,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
-    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
-    ml-service/ml_service/training/app/core/cloud_feature_provider.py,
-    ml-service/ml_service/training/cli/handlers/pipeline_handler.py,
-  ]
+context_scope: [/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md, /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md, ml-service/ml_service/training/app/core/cloud_feature_provider.py, ml-service/ml_service/training/cli/handlers/pipeline_handler.py]
 supersedes:
 superseded_by:
 ---
@@ -195,3 +189,4 @@ same CLI path would hit the identical wall.
   as 'a genuine design decision, not a mechanical fix' (wire `--family` to actually scope SPORTS training vs drop the
   vestigial required-arg), and todo 2 (the CLV retrain) is blocked one layer deeper on
   `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, which this pass reclassified instead
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

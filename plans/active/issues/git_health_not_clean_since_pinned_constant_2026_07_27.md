@@ -110,3 +110,4 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   unchanged. All 3 `[BACKEND] P3` todos are diagnostics feeding the doc's own unresolved field-design choice (keep the
   hysteresis-gated `not_clean_since` and ADD a separate "last observed dirty transition" field, vs. bugfix the existing
   field's reset semantics) — a genuine judgment call.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

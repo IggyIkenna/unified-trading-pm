@@ -47,13 +47,7 @@ estimate_calibrated_ai_days: 0.15
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py,
-  ]
+context_scope: [/plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/05-infrastructure/vm-launcher-runbook.md, unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py]
 supersedes:
 superseded_by:
 resolved_by:
@@ -263,6 +257,7 @@ minute once actually applied.
     the exact scenario the 3900s headroom fix exists for: NOT a repeat of the false-stall-kill, a correctly bounded wait
     now with margin past its own horizon. Leaving it running unattended per the established pattern above — no further
     action needed unless it re-fails past 3900s (would then indicate a NEW, different issue).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Open follow-up: exit-code monitor mislabels a stall-kill as OOM
 

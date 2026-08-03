@@ -35,13 +35,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-02
 locked_since:
-context_scope:
-  [
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
-    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-  ]
+context_scope: [/plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md, /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 ---
 
 # CeFi Track-2 coverage backfill VM preempted, never recovered
@@ -683,3 +677,4 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   which per `dispatch_cooldown_auto_park_skip_threshold=3` (`server/state_store/cooldown.py`) should cross the auto-park
   threshold and finally park this task fleet-wide behind the backfill's actual completion, ending the 16-dispatch
   redispatch loop.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

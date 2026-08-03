@@ -63,14 +63,7 @@ drift_direction: advance-code
 source: [tradfi_satellite_ao_dispatch_batch2-001, slot-6 live verification runs 2026-07-27]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/data_completion_tradfi_2026_07_15.md,
-    market-data-processing-service/market_data_processing_service/app/core/batch_workers.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
-  ]
+context_scope: [/codex/02-data/honest-absence-downstream-handling.md, /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md, /plans/active/data_completion_tradfi_2026_07_15.md, market-data-processing-service/market_data_processing_service/app/core/batch_workers.py, market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py]
 depends_on: []
 # 2026-07-30 (slot-7, main ruling on BLK-c2d17da7/BLK-7abe9c2b): the "re-run
 # mdps-backfill-tradfi-*" verify todo is a REAL dependency on the sibling
@@ -330,3 +323,7 @@ exists. Neither finding was on any tracked plan before this verification pass.
 
 None new — this is an implementation-bug finding against the existing honest-absence/FetchEvidence contract
 (`/codex/02-data/honest-absence-downstream-handling.md`), not a contract change.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

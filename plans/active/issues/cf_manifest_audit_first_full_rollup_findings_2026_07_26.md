@@ -45,13 +45,7 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
-    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
-  ]
+context_scope: [/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md, /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md, /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md, unified-trading-library/unified_trading_library/cf_manifest_audit.py]
 ---
 
 # First complete CF-audit rollup — a fixed checker bug + genuine cross-AG data-quality reds
@@ -312,3 +306,4 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   prior production regressions on this same surface, gating the sibling CF-8 sports todo above for the identical reason.
   Filed a new P3 follow-up todo to bundle this cleanup into that same future maintenance-window pass rather than a
   separate production touch now. No code shipped this touch — read-only diagnostic + this doc edit only.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

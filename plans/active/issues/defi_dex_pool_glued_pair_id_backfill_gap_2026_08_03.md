@@ -41,13 +41,7 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
-context_scope:
-  [
-    instruments-service/docs/DEFI_INSTRUMENTS.md,
-    instruments-service/scripts/build_instrument_catalogue.py,
-    instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py,
-  ]
+context_scope: [instruments-service/docs/DEFI_INSTRUMENTS.md, instruments-service/scripts/build_instrument_catalogue.py, instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py]
 ---
 
 # DeFi DEX-pool glued_pair_id backfill gap (post-2026-08-03 code fix)
@@ -148,3 +142,4 @@ session's shared host.
   heartbeat, actively-growing `run.log`, `processed_snapshots` climbing). Monitoring `...-084648` to completion via a
   bounded background watchdog (45min cap, polls `EXIT_STATUS`); will verify post-run per this doc's todo 1 acceptance
   criteria (0 colon-before-fee, 0 `.0`-suffixed fee segments, report the real remaining-blank count) once it lands.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -51,12 +51,7 @@ source: >-
   some tasks are I.O heavy and wait heavy") rather than accepting the hand-wavy load-average-only explanation.
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
-    /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
-    agent-orchestrator/server/host_resources.py,
-  ]
+context_scope: [/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md, /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md, agent-orchestrator/server/host_resources.py, agent-orchestrator/server/plan_health.py]
 locked_since:
 ---
 
@@ -237,6 +232,7 @@ investigated further here, out of scope for this doc.
   low-priority (P3) 'consider whether X is worth a one-line correction' note explicitly framed by the doc's own author
   as NOT worth a standalone dispatch ('not worth a dedicated edit on its own given the line cap, but cheap to fold in
   opportunistically'). The target...
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Todos
 

@@ -42,13 +42,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    scripts/dev/slot-git-status-report.sh,
-  ]
+context_scope: [/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md, /codex/05-infrastructure/per-tab-worktrees.md, /codex/04-architecture/agent-orchestrator-alerting.md, scripts/dev/slot-git-status-report.sh]
 depends_on: []
 ---
 
@@ -130,3 +124,4 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
   access from an offline audit worktree): the durable loopback fix shipped `unified-trading-pm@804fa2b9a` on 2026-07-26
   removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
   `reporter_stale=false` live before closing it.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

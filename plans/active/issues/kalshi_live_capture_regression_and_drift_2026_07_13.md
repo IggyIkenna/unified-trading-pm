@@ -41,12 +41,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
-    /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
-    /plans/epics/predictions_master.md,
-  ]
+context_scope: [/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md, /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md, /plans/epics/predictions_master.md]
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -257,3 +252,4 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5's second leg, which is itself correctly gated on the
   credential reshape in `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md` (the root cause of why
   this verification could never have passed). Leave it owned there.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

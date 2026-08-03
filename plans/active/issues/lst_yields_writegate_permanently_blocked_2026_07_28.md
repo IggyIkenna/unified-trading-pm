@@ -38,14 +38,7 @@ depends_on: []
 last_updated: 2026-07-28
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/features_service/onchain/engine/lst_features.py,
-    features-service/features_service/onchain/app/core/feature_writer.py,
-    unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py,
-    /plans/active/issues/defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-  ]
+context_scope: [features-service/features_service/onchain/engine/lst_features.py, features-service/features_service/onchain/app/core/feature_writer.py, unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py, /plans/active/issues/defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md, /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md]
 supersedes:
 superseded_by:
 resolved_by:
@@ -139,3 +132,7 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
   day-partitions for 2024-01-01/02/03 now present alongside the original 15 (2026-04-03..19).
 - features-service full test suite: 17964 passed, 209 skipped (pre-existing, unrelated skips).
 - `features-service@<commit-sha-of-this-fix>` (see companion plan-flip commit).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

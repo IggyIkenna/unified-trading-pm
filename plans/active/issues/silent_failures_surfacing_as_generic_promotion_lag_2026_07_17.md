@@ -38,14 +38,7 @@ assigned_role: devops_engineer
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/04-architecture/ci-alerting.md,
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
-    scripts/self-hosted-runners/glue-runner-run.sh,
-    scripts/quality_gates/check_no_swallowed_credential_fetch.py,
-  ]
+context_scope: [/codex/04-architecture/ci-alerting.md, /codex/08-workflows/ci-cd-flow.md, /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md, scripts/self-hosted-runners/glue-runner-run.sh, scripts/quality_gates/check_no_swallowed_credential_fetch.py]
 supersedes:
 superseded_by:
 depends_on:
@@ -183,3 +176,7 @@ attempt BROKE PROD, crash-looping all 5 glue runners (~34 restarts) until rollba
 retry without first adding a `--selfcheck` mode and rolling ONE unit at a time. The sibling `- [x]` item in this same
 doc re-states it as "operator-gated per the P0 above". The three smaller items (runner-liveness paging, per-line lag
 causes, systemd `StartLimitBurst`) are bounded and are reasonable future carve-out candidates.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

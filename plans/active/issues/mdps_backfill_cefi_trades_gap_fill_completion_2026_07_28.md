@@ -47,14 +47,7 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md,
-    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
-    unified-trading-library/tests/unit/test_manifest_v4_migration.py,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [/plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md, unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py, unified-trading-library/tests/unit/test_manifest_v4_migration.py, /codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 resolved_by:
 ---
 
@@ -126,3 +119,4 @@ safe; only the manifest's registration of it is what the reconciliation todo abo
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a full-corpus GCS
   walk requiring a VM launch, with no `[OPERATOR]` tag and no stated safe-idempotent justification; near-miss for
   reclassification, needs the gating line added first.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

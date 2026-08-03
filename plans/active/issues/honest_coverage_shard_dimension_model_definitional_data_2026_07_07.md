@@ -35,14 +35,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /codex/02-data/honest-coverage-model.md,
-    /codex/04-architecture/instrument-universe-registry-consolidation.md,
-    instruments-service/instruments_service/engine/orchestrator/writers.py,
-    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
-  ]
+context_scope: [/plans/active/instruments_completion_tracker_2026_07_06.md, /codex/02-data/honest-coverage-model.md, /codex/04-architecture/instrument-universe-registry-consolidation.md, instruments-service/instruments_service/engine/orchestrator/writers.py, deployment-api/deployment_api/services/data_status/breakdowns_core.py]
 execution_scope: local-only
 model_tier: opus-required
 thinking_tier: high
@@ -599,3 +592,4 @@ longer has its own download button.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - re-verified after its 2026-07-30
   edit: still carries a `[CODE]` item "deliberately deferred pending explicit go-ahead" and a `[VERIFY]` item the doc
   marks genuinely contested + actively under concurrent investigation.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

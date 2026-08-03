@@ -44,13 +44,7 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
-    /plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md,
-    instruments-service/instruments_service/reference_data/utils/evm_creation_resolver.py,
-    unified-api-contracts/unified_api_contracts/registry/chain_env.py,
-  ]
+context_scope: [/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md, /plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md, instruments-service/instruments_service/reference_data/utils/evm_creation_resolver.py, unified-api-contracts/unified_api_contracts/registry/chain_env.py]
 ---
 
 # Broader local-fallback-vs-UAC sweep (beyond the LENDING_PROTOCOL_DEPLOY_DATES precedent)
@@ -120,3 +114,4 @@ urgent (no known active drift found yet, unlike the launch-dates case), but wort
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

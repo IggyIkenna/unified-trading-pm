@@ -41,14 +41,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-    /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
-    /plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md,
-    /plans/archive/issues/read_availability_index_unfiltered_callsite_audit_2026_07_26.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-  ]
+context_scope: [unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md, /plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md, /plans/archive/issues/read_availability_index_unfiltered_callsite_audit_2026_07_26.md, /codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 # `read_availability_index` slim path returns empty against a fresh, valid manifest — no error surfaced
@@ -116,3 +109,7 @@ that verification is this todo's job.
       path returns nothing IS a genuine failure, not honest absence) or fix the underlying read defect directly; add a
       regression test pinning "columns= fast path returns the same row count as the unprojected full path against a
       real/fixture manifest" so this can't silently regress again. (repo: unified-trading-library)
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

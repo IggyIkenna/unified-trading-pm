@@ -61,14 +61,7 @@ source: >-
   chain per item (no separate journal file was produced — this is a single-agent read-and-classify pass, not a
   multi-agent workflow).
 assigned_role: data_engineering
-context_scope:
-  [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
-  ]
+context_scope: [/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md, /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md, /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md]
 sequential: false
 drift_direction: advance-code
 ---
@@ -427,3 +420,7 @@ No new durable contract is created by this plan — every todo executes an alrea
 from the closeout doc's own native todo text (narrowed where a judgment call was embedded).
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" is the standard
 this extraction applied throughout.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

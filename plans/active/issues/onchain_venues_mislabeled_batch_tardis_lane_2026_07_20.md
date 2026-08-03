@@ -36,14 +36,7 @@ execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
 locked_by:
-context_scope:
-  [
-    /codex/02-data/pipeline-mode-partition.md,
-    /codex/04-architecture/solana-defi-coverage.md,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
-  ]
+context_scope: [/codex/02-data/pipeline-mode-partition.md, /codex/04-architecture/solana-defi-coverage.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py, market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py]
 locked_since:
 assigned_vm: NA
 resolved_by:
@@ -189,3 +182,4 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - 3 of 4 todos are prod GCS
   pipeline_mode re-partitions requiring de-dup MERGE semantics against a live split-brain; delete/move-safety gated.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

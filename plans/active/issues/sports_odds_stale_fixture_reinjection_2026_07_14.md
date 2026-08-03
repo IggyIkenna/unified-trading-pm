@@ -50,14 +50,7 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py,
-    features-service/scripts/sports/verify_ml_readiness.py,
-    features-service/features_service/sports/data/writer.py,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/epics/sports_master.md,
-  ]
+context_scope: [market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py, features-service/scripts/sports/verify_ml_readiness.py, features-service/features_service/sports/data/writer.py, /codex/02-data/honest-absence-downstream-handling.md]
 ---
 
 # MTDS sports odds-api ingestion re-serves stale cached fixture odds under new day partitions
@@ -306,3 +299,4 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
   written; the `[DATA] P3` gate-reassessment bundles a bounded re-run with an open judgment call (whether the strict
   per-day gate is still the right pass criterion for near-empty international-break days). Neither is a bare-flip
   RECLASSIFY candidate as currently written.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

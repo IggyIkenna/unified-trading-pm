@@ -44,14 +44,7 @@ source:
     unified-api-contracts/pyproject.toml,
     unified-trading-library/pyproject.toml,
   ]
-context_scope:
-  [
-    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
-    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
-    /codex/08-workflows/ci-cd-flow.md,
-    unified-trading-system-ui/.github/workflows/ci.yml,
-    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
-  ]
+context_scope: [/plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md, /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md, unified-trading-system-ui/.github/workflows/ci.yml, /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md]
 ---
 
 ## What I found
@@ -471,3 +464,4 @@ Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

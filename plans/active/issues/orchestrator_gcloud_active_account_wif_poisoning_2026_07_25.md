@@ -54,14 +54,7 @@ source: >-
   via different call sites (gsutil upload, gcloud storage/compute create).
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md,
-    /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
-    /codex/07-security/self-hosted-runner-security-posture.md,
-    /codex/07-security/gha-wif-migration.md,
-    agent-orchestrator/scripts/bootstrap_vm.sh,
-  ]
+context_scope: [/plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md, /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md, /codex/07-security/self-hosted-runner-security-posture.md, agent-orchestrator/scripts/bootstrap_vm.sh]
 locked_since:
 ---
 
@@ -227,3 +220,7 @@ That entry explicitly self-classifies as "no new candidate direction — logged 
 the Todos section is untouched. The head todo still carries `[OPERATOR-DECISION]` with four unadopted directions (a)-(d)
 for a shared-infrastructure auth design affecting every CI job on the host; todo 2 is still stated blocked on that
 decision; todo 3 is still a partial mitigation of the same surface. Correctly NA.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

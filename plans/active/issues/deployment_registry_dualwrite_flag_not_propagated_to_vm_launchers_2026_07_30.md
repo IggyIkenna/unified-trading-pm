@@ -35,14 +35,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/05-infrastructure/deployment-observability.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
-    deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh,
-    deployment-service/scripts/vm/deployment_heartbeat.py,
-  ]
+context_scope: [/codex/05-infrastructure/deployment-observability.md, /codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md, deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh, deployment-service/scripts/vm/deployment_heartbeat.py]
 ---
 
 # What I found
@@ -225,3 +218,4 @@ own QG-verified change + a real soak before P3's checklist is re-run).
 - **context-scout 2026-08-01**: verified the 2 pre-existing context_scope entries still resolve and are relevant (kept
   in place), added the gated downstream cutover plan + the exact AWS-launcher source file the remaining OPERATOR todo
   targets — refreshed (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -41,11 +41,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md,
-    features-service/features_service/delta_one/app/core/_passthrough_loader.py,
-  ]
+context_scope: [plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md, features-service/features_service/delta_one/app/core/_passthrough_loader.py]
 locked_by:
 resolved_by:
 ---
@@ -134,3 +130,7 @@ problem with the fix that was never written down — which would be a genuine da
   slot-10's `055219` DP-VM escalation, now this pre-fix-failure trace) all consistent with `6b2282c5` being correct and
   the dangling stash being safe to judge abandoned — still leaving that call to the `[OPERATOR]` todo above, not
   deciding it here.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

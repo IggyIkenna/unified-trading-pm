@@ -48,13 +48,7 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /codex/02-data/venue-availability.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [/plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, /codex/02-data/venue-availability.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/yahoo_finance_adapter.py]
 ---
 
 # TradFi YahooFinanceAdapter stamps venue="YAHOO" (vendor) instead of a real per-instrument venue
@@ -165,3 +159,4 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   investigation and is sequenced first among 3 entangled Yahoo/venue todos. Found batch5's `status` field has since
   flipped `draft` → `active` (last touched 2026-08-01) — updated the NOTE block above to correct the stale "NOT
   ingested, NOT dispatched today" wording; disposition unchanged (KEEP-NA-STALE, `assigned_vm` stays NA).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -37,13 +37,7 @@ source: >-
   prod data on live SPOT VMs (mdps-backfill-cefi-20260726-*), not inferred.
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py,
-  ]
+context_scope: [/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/honest-absence-downstream-handling.md, market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py, market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py]
 resolved_by:
 depends_on: []
 ---
@@ -238,3 +232,4 @@ on-chain-CLOB wire format.
   `HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet` and `HYPERLIQUID:PERPETUAL:ETH-USD@LIN.parquet` under every timeframe
   (`15s`/`1m`/`5m`/`15m`/`1h`/`4h`/`1d`). Todo 1 flipped `[x]`. Todos 2/3 (bugs 2/3,
   `derivative_ticker`/`book_snapshot_5`) remain untouched — separate, smaller fixes, not started this session.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

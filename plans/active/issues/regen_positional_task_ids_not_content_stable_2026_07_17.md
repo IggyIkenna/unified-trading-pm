@@ -46,13 +46,7 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:
-context_scope:
-  [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    agent-orchestrator/server/regen_backlog_from_plan.py,
-    agent-orchestrator/server/bootstrap.py,
-  ]
+context_scope: [/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md, /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md, agent-orchestrator/server/regen_backlog_from_plan.py, agent-orchestrator/server/bootstrap.py]
 locked_since:
 supersedes:
 superseded_by:
@@ -280,3 +274,4 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   explicitly name a redirect-to-another-doc banner and an inline `assigned_vm: NA #`-comment citing a prior
   RECLASSIFY-then-revert as hard KEEP-NA triggers (same commit as this marker), so a future run's Phase 1 does not need
   to rediscover this citation by luck.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -22,14 +22,7 @@ priority: P2
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_state.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
-    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-  ]
+context_scope: [unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py, unified-trading-library/unified_trading_library/manifest_writer/_state.py, market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py, /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 source:
   [
     "found while working todo 4 of /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (the
@@ -124,3 +117,4 @@ its own review):
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc states its todos 'name the investigation + design work,
   not a pre-committed implementation, since this is a shared-infra performance change needing its own review', and the
   P3 alternative needs an explicit durability-vs-throughput tradeoff call.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

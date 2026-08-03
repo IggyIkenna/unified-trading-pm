@@ -42,13 +42,7 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
-    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/trades_adapter.py,
-  ]
+context_scope: [/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md, market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/trades_adapter.py]
 ---
 
 # MDPS TRADFI candles crash on a corrupted raw-tick timestamp (year 58317)
@@ -106,3 +100,7 @@ dropped/flagged as a single bad-row anomaly.
       filtered) — if systemic, the fix belongs in the CAPTURE path, not just as an MDPS-side guard.
 - [ ] [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
       confirm the candle path now degrades gracefully instead of failing outright.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

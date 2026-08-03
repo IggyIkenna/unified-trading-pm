@@ -55,13 +55,7 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/sports-data-types-catalog.md,
-  ]
+context_scope: [/plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md, /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/sports-data-types-catalog.md]
 ---
 
 # Sports EXCHANGE_ODDS vs FIXED_ODDS fork
@@ -375,3 +369,4 @@ context_scope:
   function falls back to reading the upstream file's open todos and emits a blocking `gate-upstream-open:<stem>` named
   prerequisite, and that upstream has exactly 1 open `[DATA] P0`. No todo state changed; the previously-executed todos
   stay `[x]`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

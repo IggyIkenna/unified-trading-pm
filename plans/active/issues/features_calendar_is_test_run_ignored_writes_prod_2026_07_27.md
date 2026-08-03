@@ -44,14 +44,7 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/features_service/calendar/config.py,
-    features-service/features_service/delta_one/config.py,
-    features-service/features_service/calendar/engine/calendar_orchestrator.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-  ]
+context_scope: [features-service/features_service/calendar/config.py, features-service/features_service/delta_one/config.py, features-service/features_service/calendar/engine/calendar_orchestrator.py, codex/02-data/gcs-and-manifest-delete-safety-protocol.md, plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 ---
 
 # features-service `calendar` family ignores `IS_TEST_RUN` — writes to PROD unconditionally
@@ -224,3 +217,7 @@ ALL, not even for the success path.
       own follow-up P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit
       continued under that doc (that doc's own P2 is now also done, 2026-07-30, `features-service@710c1a72` — the doc is
       archived).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

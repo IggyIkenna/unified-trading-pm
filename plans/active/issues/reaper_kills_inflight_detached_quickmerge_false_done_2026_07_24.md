@@ -37,13 +37,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    agent-orchestrator/server/orphan_reap.py,
-    scripts/quality_gates/check_evidence_backed_completion.py,
-  ]
+context_scope: [/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, agent-orchestrator/server/orphan_reap.py, scripts/quality_gates/check_evidence_backed_completion.py]
 depends_on: []
 ---
 
@@ -144,3 +138,4 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   "the blocking critical path fully landed and archived" rather than a direct commit citation — worth a 5-minute direct
   check (does `features-service` have BOTH commits from slots 9 and 8 on origin, or did only one supersede the other)
   before formally closing this item, but not treated as still-live work.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

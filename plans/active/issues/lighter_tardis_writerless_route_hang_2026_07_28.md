@@ -25,13 +25,7 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by:
-context_scope:
-  [
-    market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py,
-    unified-trading-library/unified_trading_library/lifecycle/in_flight_registry.py,
-    unified-trading-library/unified_trading_library/streaming/event_facade.py,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-  ]
+context_scope: [market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py, unified-trading-library/unified_trading_library/lifecycle/in_flight_registry.py, unified-trading-library/unified_trading_library/streaming/event_facade.py, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -106,3 +100,4 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - scoped root-cause diagnostic with an explicit stated
   done-when (identify the blocking await) — AO-eligible per dispatch-scope eligibility
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -41,13 +41,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    agent-orchestrator/tests/test_plan_health.py,
-    agent-orchestrator/server/plan_health.py,
-    agent-orchestrator/server/notifications/slack.py,
-  ]
+context_scope: [/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md, agent-orchestrator/tests/test_plan_health.py, agent-orchestrator/server/plan_health.py, agent-orchestrator/server/notifications/slack.py]
 depends_on: []
 ---
 
@@ -225,3 +219,4 @@ whole suite (1609 passed).
   `secretmanager.versions.access` grant to `unified-trading-sa` plus REMOVING the fallback. Deliberately NOT
   reclassified: dispatching the todo as written would ship banned-pattern code, and rewriting its substance is a scope
   change beyond a mechanical citation fix.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -39,13 +39,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-    deployment-service/deployment_service/vm_prefix_registry.py,
-  ]
+context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/data_pipeline_check_mdps_features_2026_07_20.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/vm_prefix_registry.py]
 supersedes:
 superseded_by:
 resolved_by:
@@ -123,3 +117,4 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   operator keep/delete decision (options) A/B/C' block; todos 1, 2 and 8 each say 'pending operator' / 'operator-design
   adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
   launcher-deletion blast radius is exactly what the A/B/C ask covers
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -62,13 +62,7 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/sports-gcs-path-ssot.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/02-data/sports-2020-06-data-floor.md, /codex/02-data/sports-gcs-path-ssot.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py]
 ---
 
 # Sports legacy fixtures-path migration
@@ -345,3 +339,4 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   `fixtures_schedule` read, and removed the 3 now-dead fallback-specific unit tests. Full `quality-gates.sh` green
   (156s), shipped `instruments-service@333c35d2` via the standard Pass-1/Pass-2 flow. Full evidence on todo 5's own
   checkbox above.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

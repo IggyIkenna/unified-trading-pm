@@ -25,13 +25,7 @@ status: open
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    scripts/dev/slot-cron-ff-pull.sh,
-    scripts/dev/slot-git-status-report.sh,
-    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
-    /codex/05-infrastructure/per-tab-worktrees.md,
-  ]
+context_scope: [scripts/dev/slot-cron-ff-pull.sh, scripts/dev/slot-git-status-report.sh, /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md, /codex/05-infrastructure/per-tab-worktrees.md]
 nature: issue
 asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; per-slot AO crons, not multi-AG
 stage: [meta]
@@ -220,3 +214,4 @@ uncommitted work above must be preserved before any decommission/reclaim action 
   `uts-orchestrator-epic-role` were both denied for the worker IAM identity (`ikenna-worker`) — a genuinely different
   principal, so the IAM self-service carve-out in `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`
   does not apply. The new P1 adds a WIP-preservation requirement over 5 dirty repos on that host; still operator-only.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

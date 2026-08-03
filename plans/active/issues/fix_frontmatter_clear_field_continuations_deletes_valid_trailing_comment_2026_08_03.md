@@ -52,11 +52,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    scripts/plan-hygiene/fix_frontmatter.py,
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
-  ]
+context_scope: [scripts/plan-hygiene/fix_frontmatter.py, /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md]
 ---
 
 # fix_frontmatter.py deletes a valid value when it's followed by a multi-line trailing comment
@@ -176,3 +172,4 @@ intentionally-changed files won't surface it either.
     bare field with no continuation → still correctly empty) plus an end-to-end `fix_active_plan()` test reproducing the
     exact live-corpus shape and asserting the full fixer pass is a byte-for- byte no-op.
   - Repo: unified-trading-pm@c8e07871e, full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

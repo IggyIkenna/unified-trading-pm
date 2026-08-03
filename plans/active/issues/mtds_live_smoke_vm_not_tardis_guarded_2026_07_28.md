@@ -23,14 +23,7 @@ execution_scope: local-only
 priority: P1
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
-    deployment-service/scripts/vm/launch-mtds-live.sh,
-    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
-  ]
+context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md, deployment-service/scripts/vm/launch-mtds-live.sh, deployment-service/scripts/vm/tardis-concurrency-guard.sh]
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
 drift_direction: advance-code
 depends_on: []
@@ -169,3 +162,4 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`. **P3 (the
   skill Phase-2 doc note) is untouched — out of scope for this todo, tracked separately as this batch's todo 2** (its
   premise may also need revisiting given this finding, but that is not this todo's call to make).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

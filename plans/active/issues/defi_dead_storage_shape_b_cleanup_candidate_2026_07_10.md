@@ -36,13 +36,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
-    instruments-service/instruments_service/engine/orchestrator/writers.py,
-    market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, instruments-service/instruments_service/engine/orchestrator/writers.py, market-tick-data-service/market_tick_data_service/instrument_availability_paths.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
 ---
 
 ## What I found
@@ -355,3 +349,4 @@ FLAT shape, tracked under the other doc).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

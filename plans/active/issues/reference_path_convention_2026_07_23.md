@@ -34,13 +34,7 @@ drift_direction: advance-code
 source: [operator request 2026-07-23]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/PLAN_FORMAT.md,
-    /plans/active/task_template.md,
-    scripts/plan-hygiene/check_reference_paths.py,
-  ]
+context_scope: [/codex/11-project-management/cross-reference-path-convention.md, /plans/PLAN_FORMAT.md, /plans/active/task_template.md, scripts/plan-hygiene/check_reference_paths.py]
 depends_on: []
 ---
 
@@ -189,3 +183,4 @@ convention's scope).
   already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
   `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
   still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

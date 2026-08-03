@@ -49,14 +49,7 @@ source:
     instruments_tradfi_g1_g5_gate_execution_2026_07_24.md (the P0 'Run the manifest-count check for ES CME ohlcv_1s/1m'
     todo)",
   ]
-context_scope:
-  [
-    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py,
-  ]
+context_scope: [/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py]
 ---
 
 # tradfi CME ES futures ohlcv — manifest-verify shows total capture failure, not a proven backfill
@@ -329,3 +322,4 @@ root-cause fix.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

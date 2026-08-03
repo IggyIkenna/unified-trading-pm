@@ -42,13 +42,7 @@ source:
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/reference_path_convention_2026_07_23.md,
-    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
-  ]
+context_scope: [/codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/issues/reference_path_convention_2026_07_23.md, /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md, /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md]
 supersedes:
 superseded_by:
 ---
@@ -274,3 +268,4 @@ are `*_finalize_*` companions whose authoring peer plausibly still has the epic 
   unaided. That is this skill's own dated prior ruling and is not re-litigated here. The standing cheap-overrule offer
   stands unchanged: if the audit half alone (report present/missing per host, flag the rest `[OPERATOR]`) counts as the
   done-when, this is a one-line flip.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

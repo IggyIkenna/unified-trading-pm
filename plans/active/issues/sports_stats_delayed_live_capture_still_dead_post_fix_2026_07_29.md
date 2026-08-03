@@ -53,14 +53,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    deployment-service/deployment_service/sports_latency_observation.py,
-    deployment-service/deployment_service/sports_trigger_scheduler.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
-  ]
+context_scope: [/codex/04-architecture/instruments-service-as-ssot-for-mtds.md, /codex/02-data/data-pipeline-correctness-hard-rule.md, deployment-service/deployment_service/sports_latency_observation.py, deployment-service/deployment_service/sports_trigger_scheduler.py, unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py]
 ---
 
 # Sports `stats_delayed`/XG live capture still dead after the lookback fix — two further root causes
@@ -577,3 +570,7 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       threshold=3 and park this task server-side without further operator action; if it does NOT auto-park despite 3
       skips landing inside one un-reset window, that gap is itself worth a fresh diagnosis by whoever picks this up
       next. Releasing via `/skip-current-task {"reason_code": "GATED"}`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

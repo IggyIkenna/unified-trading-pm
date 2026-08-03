@@ -44,7 +44,7 @@ source:
 execution_scope: orchestrator-agent
 assigned_role: cicd
 drift_direction: advance-code
-context_scope: [/codex/08-workflows/ci-cd-flow.md]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, scripts/manifest/check-dependency-alignment.py, scripts/manifest/dependency-exceptions.yaml, unified-api-contracts/unified_api_contracts/registry/service_contract_map.py]
 depends_on: []
 assigned_vm: planning
 resolved_by:
@@ -148,6 +148,7 @@ premature).
   `execution-service@050ed797`-author sanity check that nothing else silently relied on that manifest entry (the
   recommendation's own stated risk) — flip to `resolved` once that's confirmed, or if a downstream break surfaces,
   reopen with the specifics.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Todos (follow-up)
 

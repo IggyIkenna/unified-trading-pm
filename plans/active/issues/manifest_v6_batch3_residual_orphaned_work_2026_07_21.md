@@ -50,14 +50,7 @@ drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-006]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/02-data/shard-granularity-cefi.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
-    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
-    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
-  ]
+context_scope: [/codex/02-data/shard-granularity-cefi.md, /codex/02-data/availability-manifest-and-data-status.md, /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py, unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py]
 depends_on: [plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md]
 gate_on_depends: true
 ---
@@ -183,3 +176,4 @@ overhead.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — both remaining todos carry `depends_on` +
   `gate_on_depends: true` on `cefi_chain_tail_v6_canonicalisation_2026_07_21`, whose todos 5-8 are still open — never
   re-litigate a live gate.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

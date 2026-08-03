@@ -53,13 +53,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-  ]
+context_scope: [/plans/active/instruments_completion_tracker_2026_07_06.md, /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md, /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md, /codex/02-data/data-pipeline-correctness-hard-rule.md]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium
@@ -661,3 +655,4 @@ the todos already promised.
   pre-resolver coverage gap, which the doc itself says 'needs research into an alternate historical read path ... NOT a
   <=30-min fix', (b) an untraced root-cause on 273 mistagged DERIBIT/COMBO rows, and (c) 'update both drilldown mockups'
   with no done-when. Research + an under-specified deliverable, not bounded work
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

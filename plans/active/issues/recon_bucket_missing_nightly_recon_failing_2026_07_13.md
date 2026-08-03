@@ -37,13 +37,7 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
-context_scope:
-  [
-    /codex/08-workflows/t1-batch-dag.md,
-    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
-    batch-live-reconciliation-service/batch_live_reconciliation_service/config.py,
-    /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
-  ]
+context_scope: [/codex/08-workflows/t1-batch-dag.md, /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md, batch-live-reconciliation-service/batch_live_reconciliation_service/config.py, /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md]
 locked_since:
 assigned_vm: NA
 resolved_by:
@@ -170,3 +164,4 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc's own conclusion is that the residual is multi-repo
   feature work 'correctly out of scope for the bucket-consolidation plan this issue is filed under' and 'should become
   its own scoped plan/epic item' — an ask-before-creating operator call.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

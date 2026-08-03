@@ -49,12 +49,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-  ]
+context_scope: [/codex/02-data/sports-2020-06-data-floor.md, /codex/02-data/availability-manifest-and-data-status.md, /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md, /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md, market-tick-data-service/scripts/sports/census_odds_api_gap_verify_2026_08_02.py]
 ---
 
 # odds_api scattered multi-year manifest gaps (635 missing days, 616 undocumented)
@@ -622,6 +617,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   re-check: whoever resumes should no longer see this P2 todo repeatedly auto-dispatched while P1 remains blocked — the
   next dispatch should happen only after P1's marker clears or an operator/main manually re-triages. Not flipping the
   checkbox itself (the underlying gap is still real and unresolved). Skipping this task (`reason_code=BLOCKED`).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 
 ## Codex SSOTs
 

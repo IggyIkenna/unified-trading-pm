@@ -35,20 +35,7 @@ resolved_by:
 locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
-context_scope:
-  [
-    /codex/04-architecture/tier-and-import-architecture.md,
-    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
-    strategy-service/strategy_service/engine/strategies/v2/factory.py,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/basis_perp.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
-    /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
-  ]
+context_scope: [/codex/04-architecture/tier-and-import-architecture.md, /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md, strategy-service/strategy_service/engine/strategies/v2/target_universe/, unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py, strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py, strategy-service/strategy_service/engine/strategies/v2/factory.py]
 ---
 
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
@@ -850,3 +837,7 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
 - **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed independently. Only diff since 2026-08-01 was the
   context-scout metadata backfill (no content change). Both open checkboxes remain explicitly operator-design-gated per
   their own text. Doc stays `assigned_vm: NA`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

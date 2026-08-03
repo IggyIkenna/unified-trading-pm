@@ -58,13 +58,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md,
-    agent-orchestrator/server/routes/slots_worker.py,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-  ]
+context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/failover.py, agent-orchestrator/server/worker_liveness_watchdog.py, /plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md]
 depends_on: []
 ---
 
@@ -256,3 +250,4 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   alongside it — correctly left NA as a doc, with the current_task-clearing item flagged as a candidate for its own
   future scoped AO-dispatch batch (a decision for `/ag-closeout-audit` or a future satellite-batch draft, not this run's
   verdict rubric, which only flips `assigned_vm` in place — never splits a doc).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

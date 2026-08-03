@@ -55,14 +55,7 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
-context_scope:
-  [
-    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
-    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
-    /plans/epics/sports_master.md,
-  ]
+context_scope: [/plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md, /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, /plans/epics/sports_master.md]
 ---
 
 # sports odds venue-enumeration undercount, discovered at pre-drain
@@ -284,3 +277,4 @@ on this bucket.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-07-30 (only a
   context-scout frontmatter backfill since); sole open todo self-identifies as an operator/data-engineering
   classification call (which of 19 bookmakers is EXCHANGE_ODDS vs FIXED_ODDS).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

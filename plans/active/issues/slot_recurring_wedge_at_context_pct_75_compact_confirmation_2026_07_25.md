@@ -65,13 +65,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    agent-orchestrator/server/context_lifecycle.py,
-    agent-orchestrator/server/worker_liveness/__init__.py,
-  ]
+context_scope: [/plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, agent-orchestrator/server/context_lifecycle.py, agent-orchestrator/server/worker_liveness/__init__.py]
 depends_on: []
 ---
 
@@ -160,3 +154,4 @@ recurrence-prone and episode 1 needed manual intervention.
   (`server/worker_liveness/_respawn.py::maybe_auto_respawn_stuck_slot`); still unresolved pending a live trace/test as
   that entry states. Items 1 and 3 are independently actionable but neither prior pass reclassified them — concur with
   that caution, this stays a judgment-gated live-dispatch-critical-path change, not a clean AO todo.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

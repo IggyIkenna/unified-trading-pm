@@ -45,12 +45,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
-  ]
+context_scope: [/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md, /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md, agent-orchestrator/server/autospawn.py]
 depends_on: []
 ---
 
@@ -139,3 +134,4 @@ incident window.
   normal fully-scoped AO work (content-hash task-id rewrite, full blast radius).
   `ao_satellite_ao_dispatch_batch1_2026_07_26.md` records the same routing: 'Do NOT draft a competing batch todo here —
   dispatch that issue doc's todo directly.' Annotated in place; `assigned_vm` untouched.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

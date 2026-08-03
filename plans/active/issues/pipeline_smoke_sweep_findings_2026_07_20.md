@@ -38,12 +38,7 @@ depends_on: []
 source: ["cross-asset-group smoke sweep run 2026-07-20 while completing the CeFi throughput close-out"]
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
-  ]
+context_scope: [/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md, /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md, /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md]
 ---
 
 # Pipeline smoke sweep — findings
@@ -115,3 +110,4 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
   DUPLICATE/STALE — the same BucketNamingError class already root-caused and fixed elsewhere. Citation fix, not a
   reclassification: re-verify the remaining 2 sub-items (DeFi migration gate, sports staleness cause) before treating
   this as live.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

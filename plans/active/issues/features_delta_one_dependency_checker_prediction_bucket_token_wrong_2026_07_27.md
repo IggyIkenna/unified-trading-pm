@@ -37,14 +37,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
-context_scope:
-  [
-    features-service/features_service/delta_one/app/core/dependency_checker.py,
-    execution-service/execution_service/utils/dependency_checker.py,
-    features-service/features_service/volatility/core/dependency_checker.py,
-    /codex/02-data/per-asset-group-bucket-layouts.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-  ]
+context_scope: [features-service/features_service/delta_one/app/core/dependency_checker.py, execution-service/execution_service/utils/dependency_checker.py, features-service/features_service/volatility/core/dependency_checker.py, codex/02-data/per-asset-group-bucket-layouts.md, plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
 ---
 
 # delta_one dependency checker resolves the wrong PREDICTION bucket name
@@ -260,3 +253,4 @@ four now route through the one helper.
   — verify the venv is actually intact (`import`-test a package touched by the interrupted install, or just
   `uv sync --reinstall` proactively) before spending more retry cycles chasing what looks like flaky test failures but
   is actually leftover install corruption.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

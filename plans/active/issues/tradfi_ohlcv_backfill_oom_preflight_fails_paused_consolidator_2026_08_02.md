@@ -75,12 +75,7 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: [mtds_available_at_cross_asset_backfill_2026_07_13]
 last_updated: 2026-08-02
-context_scope:
-  [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-  ]
+context_scope: [/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/05-infrastructure/data-pipeline-alerts.md]
 ---
 
 # Tradfi OHLCV backfill VMs self-deleting at boot (exit_code=78) — consolidator cron paused since 2026-07-29
@@ -192,3 +187,4 @@ call — not a default.
   sequencing-breaking cron resume), not a checkable fact. Independently sufficient: `depends_on` names that plan's
   still- open prerequisite todos, and an already-filed + already-answered `/blocked` (`BLK-058d5928`) exists. Nothing to
   reclassify.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

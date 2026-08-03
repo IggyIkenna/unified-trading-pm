@@ -43,12 +43,7 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md,
-    features-service/features_service/delta_one/app/core/data_loader.py,
-  ]
+context_scope: [/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md, /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md, features-service/features_service/delta_one/app/core/data_loader.py]
 locked_by:
 resolved_by:
 ---
@@ -156,3 +151,7 @@ group doesn't consume that data_type.
   and confirmed f932908b is an ancestor of `origin/live-defi-rollout`. Flipped the checkbox; no new code needed. The
   remaining `[DATA] P3` re-verification todo (fresh relaunch throughput check) is out of this task's scope.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

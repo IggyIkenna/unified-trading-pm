@@ -39,14 +39,7 @@ depends_on: []
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    agent-orchestrator/scripts/bootstrap_vm.sh,
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
-    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
-    scripts/quality-gates-base/base-service.sh,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-  ]
+context_scope: [/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md, unified-trading-pm/scripts/self-hosted-runners/setup-glue-runners.sh, agent-orchestrator/server/host_resources.py, /codex/05-infrastructure/vm-launcher-runbook.md]
 locked_since:
 ---
 
@@ -417,3 +410,4 @@ per the doc's own guidance, no new issue doc filed.
   operator-gated / judgment-gated, not bounded worker-executable tasks. Item 1 is explicitly tagged [OPERATOR] and the
   doc itself proves via live verification that no AO-worker cloud identity (ikenna-worker) has the privileged access
   (root/SSM RunCommand/self-gr...
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

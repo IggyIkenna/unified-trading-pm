@@ -29,12 +29,7 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
-context_scope:
-  [
-    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
-  ]
+context_scope: [agent-orchestrator/scripts/hooks/block_destructive_commands.py, /codex/05-infrastructure/per-tab-worktrees.md, /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md]
 locked_since:
 resolved_by:
 ---
@@ -340,3 +335,4 @@ specific to any one task.
   directories "before proposing any action"), any resulting cleanup is unconditionally blocked for autonomous workers by
   `block_destructive_commands.py`, and this doc itself records a `du -sh` census being killed by host pressure before
   completing — so even the measurement half is not reliably completable from a slot session.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

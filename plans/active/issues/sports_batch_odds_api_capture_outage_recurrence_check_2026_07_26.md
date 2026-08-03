@@ -60,13 +60,7 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-  ]
+context_scope: [/plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md, market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py, /codex/02-data/data-pipeline-correctness-hard-rule.md]
 supersedes:
 superseded_by:
 resolved_by:
@@ -424,3 +418,4 @@ other files it touched without a similar per-item live-fact check, not just a te
   live-verified) before changing the text. Updated the top banner and this checkbox to reflect both gates (launch
   decision + credential) now agreeing. Did not launch the backfill VM as part of this edit — that remains the actual
   next action, tracked by the now-unblocked checkbox above.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

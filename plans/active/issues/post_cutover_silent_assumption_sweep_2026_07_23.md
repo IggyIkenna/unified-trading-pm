@@ -48,14 +48,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 locked_by:
-context_scope:
-  [
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md,
-    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    scripts/deploy/trading-kill-switch.sh,
-    scripts/cicd/reconcile_release_tags.py,
-  ]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, scripts/deploy/trading-kill-switch.sh, scripts/cicd/reconcile_release_tags.py, /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md]
 resolved_by:
 depends_on: []
 source:
@@ -631,3 +624,7 @@ and flipped 3 to `[x]` DONE with commit citations that a prior audit pass missed
 guard — all three shipped via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, `unified-trading-pm@97970974e` /
 `@cb5e944f0`). F3 success-reporting remains the one genuinely-uncovered bounded gap, still not yet extracted into any
 active batch — flagged again as the standing carve-out candidate. Doc stays NA overall.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -35,13 +35,7 @@ priority: P2
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
-    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_manifest.py,
-  ]
+context_scope: [/codex/02-data/availability-manifest-and-data-status.md, market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py, market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py, market-data-processing-service/market_data_processing_service/app/core/canonical_writer_manifest.py]
 ---
 
 # MDPS SPORTS honest-absence candle writes always fail the manifest's FetchEvidence gate
@@ -392,3 +386,4 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   never asset-group-correcting `venue` for SPORTS when `input_venue` is truthy. Filed here rather than a new doc since
   it lands in the exact function this doc's findings 3/4 already implicate. Did not fix inline (outside this task's
   scope; findings-closure HARD RULE).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

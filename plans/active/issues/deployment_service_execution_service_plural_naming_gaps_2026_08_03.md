@@ -52,12 +52,7 @@ depends_on: []
 supersedes:
 superseded_by:
 resolved_by:
-context_scope:
-  [
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    deployment-service/deployment_service/shard_builder.py,
-    deployment-service/configs/sharding.execution-service.yaml,
-  ]
+context_scope: [/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md, deployment-service/deployment_service/shard_builder.py, deployment-service/configs/sharding.execution-service.yaml, deployment-service/scripts/run-all-quality-gates.sh]
 ---
 
 # deployment-service's shard-storage-env resolver and two fleet sweep scripts key on the stale plural "execution-services" — 2026-08-03
@@ -137,3 +132,4 @@ form and were NOT fixed as part of that todo:
 - 2026-08-03 (slot-4, backend_engineer): Filed. Not fixed inline — both findings are in `deployment-service`, a
   different repo than `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s todo-009, which is scoped to
   `Repo: execution-service` only.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

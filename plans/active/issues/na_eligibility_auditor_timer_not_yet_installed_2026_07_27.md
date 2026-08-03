@@ -34,13 +34,7 @@ assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/issues/ao_scheduled_job_observability_and_slack_alerting_2026_07_28.md,
-    agent-orchestrator/server/plan_health.py,
-  ]
+context_scope: [/cursor-configs/skills/na-eligibility-audit/SKILL.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /plans/archive/issues/ao_scheduled_job_observability_and_slack_alerting_2026_07_28.md, agent-orchestrator/server/plan_health.py]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -134,3 +128,4 @@ which is why it's tracked here instead of folded into the code commits above.
   this exact surface and nothing material has changed since). Flagging as a process note for whoever next touches this
   skill's own Phase 3: a "RECLASSIFY, conflict-cleared" Progress Log entry is not sufficient proof of an applied flip —
   always diff the entry's stated verdict against the doc's ACTUAL current frontmatter before trusting it.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

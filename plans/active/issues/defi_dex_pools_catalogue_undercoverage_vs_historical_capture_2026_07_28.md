@@ -33,16 +33,7 @@ resolved_by:
 locked_by:
 depends_on: []
 assigned_role: data_engineering
-context_scope:
-  [
-    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
-    /codex/02-data/honest-coverage-model.md,
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
-    /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
-  ]
+context_scope: [/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, /codex/02-data/honest-coverage-model.md, /codex/04-architecture/instruments-service-as-ssot-for-mtds.md, market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py, /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py]
 ---
 
 # DeFi dex_pools instruments-service catalogue drastically under-covers historically-captured pools
@@ -378,3 +369,4 @@ captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap direct
   permanent. Retagged the scope-policy todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete
   full-completion mandate written into the doc. Docs-only, no code/catalogue change made.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (7 entries).

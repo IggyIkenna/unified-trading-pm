@@ -44,13 +44,7 @@ parent_epic: defi_master
 priority: P0
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/drift_helius_perp_funding_shards_are_zero_valued_signature_noise_2026_07_16.md,
-    /plans/archive/issues/drift_helius_path_obsolete_2026_07_15.md,
-    /plans/archive/solana_perp_dex_adapters_2026_05_13.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-  ]
+context_scope: [/plans/archive/issues/drift_helius_perp_funding_shards_are_zero_valued_signature_noise_2026_07_16.md, /plans/archive/issues/drift_helius_path_obsolete_2026_07_15.md, /plans/archive/solana_perp_dex_adapters_2026_05_13.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 source: [operator-ruling, solana_perp_dex_cull_drift_pacifica_2026_07_16]
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -617,3 +611,7 @@ Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) a
   durable guarantee beyond what a one-off confirmation run would give. No evidence found of an actual prod `--apply`
   regen run producing a literal 0-diff artifact; that step is instruments-service-repo scope and a prod mutation, both
   outside this task's bounds, so `[DATA] P2` is left open (non-blocking) with this status noted rather than checked off.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

@@ -41,13 +41,7 @@ source: >-
   registry"), itself sourced from sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md line 163.
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py,
-  ]
+context_scope: [/codex/02-data/sports-2020-06-data-floor.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md, unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -247,3 +241,7 @@ the todo's own quoted dates.
       data loss); (4) update this doc's Finding 1 + Disposition sections to record the layout as shipped once done. Cost
       is negligible (one manifest/GCS write pass, well under the pre-approved $100 threshold) — not a blocker. (repo:
       unified-api-contracts, instruments-service)
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

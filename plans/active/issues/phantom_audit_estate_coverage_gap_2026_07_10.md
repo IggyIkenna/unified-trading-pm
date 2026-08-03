@@ -33,13 +33,7 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
-    e2e-testing/scripts/audit/manifest_hygiene_daily.py,
-    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
-    deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf,
-  ]
+context_scope: [instruments-service/scripts/reconcile_phantom_manifest_rows_all.py, e2e-testing/scripts/audit/manifest_hygiene_daily.py, /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md, deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf]
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5
@@ -190,3 +184,4 @@ noted here only so the two aren't conflated.
   'Suggested fix (data-pipeline owner to scope)' and the fix carries an unresolved cost/parallelism question (a fan-out
   over ~20 buckets of full-corpus GCS walks against the deliberate weekly cadence) — a scoping call, not a determinable
   outcome. 4-tranche doc, cefi-flagship evidence
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

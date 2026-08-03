@@ -41,15 +41,7 @@ priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/task_template.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
-  ]
+context_scope: [/codex/02-data/honest-absence-downstream-handling.md, /plans/active/task_template.md, /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md, market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py, /plans/active/defi_consolidated_closeout_2026_07_18.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py]
 ---
 
 # DeFi clean-path fetch-evidence fidelity — scoping correction
@@ -175,3 +167,4 @@ below is explicitly gated on a human design call) — a future triage pass shoul
   include that undecided design call and a `[CODE] P2` the doc itself says to "re-scope to the actual highest-value
   single file once picked up", so a whole-doc flip would dispatch under-scoped work. Left for a future extraction rather
   than reclassified.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

@@ -55,12 +55,7 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
-context_scope:
-  [
-    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-  ]
+context_scope: [/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_consolidated_closeout_2026_07_18.md]
 ---
 
 # TradFi adapter audit — dead code, silent fallbacks, duplicate-implementation check
@@ -414,3 +409,4 @@ that plan's own stated reconciliation pattern.
   block above; added the one-line `tradfi/`-groups-by-vendor clarifying comment above `factory.py`'s `"tardis": (...)`
   registration. `market-tick-data-service@4dc7bf9f` (`quality-gates.sh` full green, shipped via
   `quickmerge.sh --agent`). Both checkboxes flipped above.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

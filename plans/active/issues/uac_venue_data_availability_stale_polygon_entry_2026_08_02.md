@@ -42,12 +42,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [
-    unified-api-contracts/unified_api_contracts/registry/data_availability.py,
-    unified-trading-pm/scripts/openapi/generate_ui_reference_data.py,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-  ]
+context_scope: [unified-api-contracts/unified_api_contracts/registry/data_availability.py, unified-trading-pm/scripts/openapi/generate_ui_reference_data.py, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 supersedes:
 superseded_by:
 depends_on:
@@ -168,3 +163,4 @@ in the regenerated `ui-reference-data.json`.
   already correctly set. No finalize twin required — `doc_type: issue` is structurally exempt from the
   finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not
   `plans/active/issues/*.md`).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

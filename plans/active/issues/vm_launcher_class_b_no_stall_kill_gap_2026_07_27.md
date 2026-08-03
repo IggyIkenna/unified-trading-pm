@@ -54,12 +54,7 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
-context_scope:
-  [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-  ]
+context_scope: [/plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md, /codex/05-infrastructure/spot-vms-for-backfill.md, /codex/05-infrastructure/vm-launcher-runbook.md, deployment-service/scripts/vm/lib/launcher_common.sh]
 ---
 
 # 8 Class-B launcher VMs have zero in-VM stall-kill; 6 of them also fail the fleet naming heuristic
@@ -195,3 +190,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
   a false positive against a legitimately-continuous live/paper VM name. Independently corroborated:
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own non-batchable table classifies this doc
   **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

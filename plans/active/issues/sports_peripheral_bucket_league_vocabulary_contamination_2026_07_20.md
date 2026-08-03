@@ -33,12 +33,7 @@ priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope:
-  [
-    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
-  ]
+context_scope: [/plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/epics/sports_master.md]
 ---
 
 # Sports peripheral buckets — a second, different non-canonical league vocabulary
@@ -99,3 +94,4 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-07-30 (only a
   context-scout frontmatter backfill since); sole open todo bundles an unbounded root-cause trace with a 9,733-object
   GCS migration carrying no `[OPERATOR]` tag or delete-safety citation.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

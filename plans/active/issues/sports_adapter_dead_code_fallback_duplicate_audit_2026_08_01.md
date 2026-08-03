@@ -52,11 +52,7 @@ locked_since:
 depends_on: []
 supersedes:
 superseded_by:
-context_scope:
-  [
-    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-  ]
+context_scope: [/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md, /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md]
 ---
 
 # Sports adapter dead-code/fallback/duplicate audit — 14 findings
@@ -354,3 +350,4 @@ except blocks, disciplined pattern), `understat.py`, `transfermarkt.py`, `footys
 status), `betfair.py`/`betfair_order_mapping.py` split (execution-service, documented reason),
 `trade_execution/adapters/{polymarket_adapter,sports_adapter}.py` (documented USEI wrapper layer),
 `paper/paper_betting.py`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

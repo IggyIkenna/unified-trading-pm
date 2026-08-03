@@ -73,15 +73,7 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/epics/tradfi_master.md,
-  ]
+context_scope: [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/05-infrastructure/spot-vms-for-backfill.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/epics/tradfi_master.md]
 ---
 
 # TradFi satellite AO batch 5 — fresh audit extraction
@@ -902,6 +894,7 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
       evidence per this todo's own "e.g. via a local repro against the exact date/instrument" acceptance language; the
       next full-range re-run (or a future targeted single-date backfill) will pick up the corrected candles going
       forward.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 
 ## Codex SSOTs
 

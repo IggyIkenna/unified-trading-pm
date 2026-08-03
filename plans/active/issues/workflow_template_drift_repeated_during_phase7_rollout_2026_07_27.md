@@ -39,7 +39,7 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/epics/infrastructure_master.md]
+context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/epics/infrastructure_master.md, scripts/workflow-templates]
 ---
 
 # workflow-template-parity drifted + blocked all PM commits 3x in ~1hr during Phase-7 rollout
@@ -136,3 +136,4 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
   `[DATA] P3` is a conditional runbook step that is not startable at all until a future drift recurrence triggers it
   ("**If** another workflow-template-parity failure recurs … check `git log` FIRST"). Neither outcome is determinable by
   a worker today. Correctly NA.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

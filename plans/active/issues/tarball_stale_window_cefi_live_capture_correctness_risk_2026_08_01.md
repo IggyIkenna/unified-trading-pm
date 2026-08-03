@@ -41,7 +41,7 @@ drift_direction: advance-code
 source: [code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01-worker]
 resolved_by:
 locked_by:
-context_scope: [/codex/05-infrastructure/vm-tarball-deployment.md]
+context_scope: [/codex/05-infrastructure/vm-tarball-deployment.md, /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md, /codex/02-data/data-pipeline-correctness-hard-rule.md]
 depends_on: []
 ---
 
@@ -348,3 +348,7 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
 ## Codex SSOTs
 
 `/codex/05-infrastructure/vm-tarball-deployment.md`, `/codex/02-data/data-pipeline-correctness-hard-rule.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

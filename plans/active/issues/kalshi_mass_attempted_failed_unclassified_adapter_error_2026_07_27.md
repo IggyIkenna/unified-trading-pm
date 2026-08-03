@@ -30,12 +30,7 @@ source: ["read-only manifest measurement, prediction_satellite_ao_dispatch_batch
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
-    /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
-  ]
+context_scope: [/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md, /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md, /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md]
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
@@ -105,3 +100,7 @@ attempt volume further.
 
 - 2026-07-27: Filed from `prediction_satellite_ao_dispatch_batch1-004`'s read-only re-measurement pass (slot 15). No
   code changed; no root cause investigated yet.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
