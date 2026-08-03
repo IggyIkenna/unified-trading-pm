@@ -218,3 +218,56 @@ from `calculators/__init__.py`'s module-level registry):
   auto-relaunch. **Did NOT relaunch** — doing so would only reproduce the identical, already-tracked failure; no new
   issue filed (this doc + the parent already cover it in full). No code change; annotation-only per the "fits another
   plan → annotate it, don't fix" findings-triage rule. Pinged authoring slot (`dp-fleet-monitor`) with this outcome.
+- 2026-08-03 (slot-3, data_engineering, ROOT CAUSE FOUND + FIXED — last open P2 todo): Root-caused the 0/586
+  usable-instrument gap. **NOT a recurrence of root cause A** (the coverage-check-vs-`check_dependencies()`
+  disagreement, already fixed) — a genuinely distinct bug in the PER-INSTRUMENT CANDLE READ path. Confirmed via direct
+  evidence, not code review alone:
+  1. Downloaded the failing VM's `run.log`
+     (`gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-tradfi-20260803-053515-b3b034/run.log`, 110
+     MB) and confirmed `PROTOCOL_DATA_SOURCE_BUCKET` is NOT set for delta_one's own launch (only
+     `PROTOCOL_DATA_SINK_BUCKET_TRADFI` is — matches `pipeline_e2e_check.py`'s own documented design: only DERIVED
+     families like multi_timeframe/cross_instrument get delta_one's `-test-` bucket as `--source-bucket`; delta_one's
+     OWN MDPS candle reads correctly fall through to the real PROD bucket,
+     `market-data-tick-tradfi-prd-central-element-323112` — confirmed live in the log).
+  2. Verified via `gsutil` that REAL candle data genuinely exists for `day=2026-01-20` in that PROD bucket — e.g.
+     `.../pipeline_mode=batch_databento/timeframe=1h/data_type=ohlcv_1m/instrument_type=EQUITY/venue=NASDAQ/NASDAQ:EQUITY:AAPL-USD.parquet`
+     (real object, `gsutil stat` confirms it exists) — yet the SAME run's log shows
+     `WARNING No upstream MDPS data for NASDAQ:EQUITY:AAPL-USD on 2026-01-20 (data_type=ohlcv_1m) — skipping date` for
+     this EXACT instrument/day/data_type, proving the miss is NOT a real data-absence — the candle genuinely exists but
+     the reader never finds it.
+  3. Traced to `unified_trading_library/pipeline_mode_resolver.py::resolve_pipeline_mode()` (called via
+     `features_service/delta_one/cli/handlers/_tf_cluster_helper.py::_resolve_read_pipeline_mode` →
+     `resolve_pipeline_mode("features-service", "batch", venue, asset_group=asset_group, data_type=data_type)`).
+     `batch_handler.py`/`orchestrator.py` carry `asset_group` in UPPERCASE throughout (CLI `--asset-group TRADFI`
+     convention — confirmed in the launch argv itself: `--asset-group TRADFI`), but `resolve_pipeline_mode()` passed
+     `asset_group` AS-IS (no lowercasing) into `read_with_source_priority(asset_group, data_type)`, whose
+     `SOURCE_PRIORITY` dict keys are lowercase (`("tradfi", "ohlcv_1m")`). Live-reproduced via a direct `uv run python`
+     call in `unified-trading-library`:
+     `resolve_pipeline_mode("features-service","batch","NASDAQ",asset_group="TRADFI",data_type="ohlcv_1m")` returned
+     `batch_cross_instrument` (a FEATURE-WRITE pipeline_mode used for an unrelated purpose,
+     `_SERVICE_FALLBACKS["features-service"]` — nothing to do with market data) instead of the correct `batch_databento`
+     — the `KeyError` from the case-mismatched SOURCE_PRIORITY lookup was silently swallowed and fell through to this
+     wrong per-SERVICE fallback (`resolve_pipeline_mode` has no asset_group-level fallback net at all, unlike the
+     write-time sibling `derive_pipeline_mode_for_row`, which already lowercases — `ag_lower = asset_group.lower()` —
+     before its own `read_with_source_priority` call, so it was never affected). Every TRADFI delta_one candle read then
+     constructed candidate blob paths under `pipeline_mode=batch_cross_instrument/` (never exists) plus the
+     pipeline_mode-less legacy variant (also never exists, since real data requires the `pipeline_mode=batch_databento/`
+     segment) — matching ZERO real objects for EVERY instrument/venue/timeframe, exactly reproducing the observed
+     universal 0/586 (confirmed both the 15s-base and 1h-base TF clusters hit this identically in the log). This is
+     unrelated to the also-real-but-separate `TRADFI_SUPPORTED_TIMEFRAMES`/15s-base-TF gap noted in `constants.py` (that
+     gap affects the near-base cluster specifically; this pipeline_mode bug affected BOTH clusters universally and is
+     the dominant cause).
+  4. **Fixed** at the SSOT (`unified-trading-library@597def48`): `resolve_pipeline_mode()`'s SOURCE_PRIORITY branch now
+     lowercases `asset_group` (`ag_lower = asset_group.lower()`) and retries with `data_type.upper()` on a second
+     `KeyError` (sports data_type keys are uppercase), mirroring `derive_pipeline_mode_for_row`'s existing pattern
+     exactly. Live-reproduced the fix too: `TRADFI`/`tradfi` both now resolve `batch_databento`; `CEFI`→`batch_tardis`,
+     `SPORTS`→`batch_api_football` unaffected/sensible. Full `unified-trading-library` `quality-gates.sh` green before
+     ship.
+  5. **Not yet fully closed**: the todo's own "done when" requires a LIVE from-scratch TRADFI:delta_one force run
+     completing with ≥1 feature group succeeding post-fix — that live re-verification run is in flight (see next entry
+     for VM name); this entry documents the root-cause + fix, which is the substantive finding, but the checkbox stays
+     open until the live run's terminal verdict confirms it end-to-end. Given the blast radius (this bug hits ANY
+     `resolve_pipeline_mode()` caller passing an uppercase asset_group with no matching `_VENUE_OVERRIDES` entry —
+     TRADFI equities/futures/CBOE/CME venues have none), this is a genuine "big finding" (data-pipeline-correctness) per
+     CLAUDE.md, not a narrow one-shard bug — flagging here for visibility; no separate issue doc needed since this doc
+     already tracks it end-to-end as the todo it resolves.
