@@ -311,6 +311,27 @@ not just noting.
   (unrelated `features-service` entry only). No code/test change made or needed. Slot left clean on `live-defi-rollout`
   (only this doc touched).
 
+- **2026-08-03 ~21:32Z (review agt msg #3596, main agt-1756f6 verified on-host)** — fresh CPU-oversubscription incident,
+  the strongest QG-count reading yet on this box. Review reported ~18 concurrent `quality-gates.sh` + loadavg 31.5; main
+  re-measured live seconds later and found it **WORSE — 26 concurrent `quality-gates.sh` on 16 cores** (cap=4, violated
+  6x+ on the QG count alone), loadavg **33.49 / 29.69 / 28.39** (>2x oversubscribed). Concrete harm this time is a real
+  ship failure, not just elevated load: **slot 2 (task `mtds_type_ignore_ratchet_regression`, repo
+  market-tick-data-service) reported 3 consecutive ship attempts dying ~7min in at 68% test progress, self-diagnosed as
+  host contention (not a code defect) and backed off.** Review flags a likely compounding factor: 8+ `ldr_qg_failure`
+  cicd-escalation agents spawned across repos in the prior ~45min, each running its own QG investigation on top of
+  normal worker QG load — so some red-gate signals may themselves be contention-induced flakiness rather than real
+  regressions (echoes the 16th-corroboration local-green pattern logged above). Worker-level backoff (slot 2) is the
+  ONLY mitigation live and is reactive/uncoordinated, so runs will pile back up. **This is fresh, concrete justifying
+  harm for the still-pending fix**: the machine-enforced host QG concurrency gate is already built in
+  `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (flock-protected reservation-ledger admission
+  governor, largely shipped) — the ONE remaining piece is the **live-admission cutover**, explicitly flagged there as
+  the safety-critical, operator-aware step (not an autonomous flip). Today's slot-2 ship failures are exactly the harm
+  that cutover prevents; surfacing to the operator as justification to prioritize it. Main took no process-kill action
+  (bulk-killing another slot's in-flight QG/pytest is BANNED per CLAUDE.md multi-agent-safety; these are legitimate
+  runs, not a single runaway). Separately noted by review (FYI, already self-healed, no action): a mass
+  `tmux_session_lost` sweep at 21:23:17Z across slots 1/4/5/8/12 + a ~90s orchestrator restart ~21:30Z — all recovered
+  via existing AutoSpawn/inherit-dirty-WIP, no data loss.
+
 - **2026-08-03 ~05:25-05:50Z (cicd escalation `agt-8e5d24`, slot 2, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`)** — the exact wall `agt-f70a66`/`agt-c82335`/`agt-15e651` (all above) diagnosed; per `agt-15e651`'s own
   note this should be the point a re-dispatch stops re-deriving the diagnosis and instead applies this doc's own
