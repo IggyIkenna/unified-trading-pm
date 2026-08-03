@@ -857,3 +857,37 @@ not just noting.
   the QG governor's niceness/reservation gate actually bind CI-runner legs) rather than continuing to dispatch `cicd`
   workers to re-derive the same diagnosis. Slot left clean on `live-defi-rollout` in `deployment-api` (read-only this
   session, no local changes) and this PM worktree (only this doc touched).
+- **2026-08-03 ~04:11-05:02Z (cicd escalation `agt-895b89`, slot 7, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`)** — 5th independent confirmation of the same family (`agt-c82335`,
+  `agt-05a7fe`, `agt-15e651` above, now `market-data-processing-service`). Same false boot-context premise repeated
+  verbatim ("the code fix already exists on `live-defi-rollout`"): confirmed false —
+  `git log origin/main..origin/live-defi-rollout` shows 0 commits main-ahead-of-LDR (main is simply 30 commits stale,
+  nothing diverged/broken). Root-caused the actual lock mechanism this time: `ci_status_store.py`'s `resolve_status()`
+  carve-out ("a STORED `main`-originated `FAILING` may be cleared ONLY by another `main` signal") means a
+  genuinely-green LDR run CANNOT clear a `main`-branch `FAILING` doc by itself — only a fresh green `main` QG run can,
+  which is exactly the thing the capacity crisis prevents. `ldr_to_main_fleet_promote.sh` gate log confirmed:
+  `GATE BLOCK market-data-processing-service: ci_status=FAILING (cached='FAILING', live='FAILING')`. Both the failing
+  `main` runs (`30777098334`, `30780140510`) and the LDR run (`30774747037`) show the identical signature already
+  catalogued above: `OSError: cannot send (already closed?)` during `pytest_sessionfinish` teardown after a `SIGINT`
+  (`30780140510`'s tests leg got the SIGINT at 96% test progress, then sat another ~38min before the step finally
+  reported `exit=1`) — not a real assertion failure. LDR's OWN `quality-gates-v2` had already gone green once
+  (`30777264856`, 01:36Z, 56min) proving the LDR tree itself is fine; per the ratchet above that green could not
+  propagate to unblock `main`. Per the established "resolve via retrigger" ruling, dispatched exactly ONE fresh
+  `workflow_dispatch` on `main` (`30783997794`) — confirmed no run was already in-flight on `main` before firing (the
+  `cancel-in-progress: true` concurrency group is per-`github.ref`, so this could not and did not cancel LDR's
+  concurrently-queued run `30780874357`). Did NOT retrigger a second time despite both runs sitting `queued` for
+  1h40min+ — direct process inspection on this same host (`ip-172-31-5-118`, this session runs ON the host, not just via
+  SSM) confirms this is the same well-known contention, not a dead runner: `uptime` load average **42.03/38.50/37.36**
+  (again >2.5x the 16-vCPU nominal capacity), swap **24Gi/47Gi**, and `market-data-processing-service`'s own `glue-1`
+  runner (`Runner.Listener`/`Runner.Worker`, PIDs 1294281/1294434/1295562) genuinely claimed the LDR run's
+  `QG slice (checks)` job at 04:08Z and is actively executing its step script (PID 1349705, started 04:10Z) — real
+  claimed work, not a stuck/dead queue entry; a duplicate dispatch would only add load per the `agt-15e651` precedent.
+  Fleet-promote gate remains `GATE BLOCK` for this repo as of last check (05:02Z). **Disposition: no code/test/workflow
+  change made or needed** — 6th combined confirmation that the fleet is still capacity-constrained; this entry adds the
+  concrete `resolve_status()` ratchet-mechanism explanation for WHY a proven-green LDR cannot self-clear a `main`-red
+  once the crisis has produced one, which the earlier 4 entries observed but did not trace to code.
+  `GET /api/repo-blockers` → not queried (session predates the AO API check pattern in `agt-c82335`; the repo-blocker
+  fast-path in `cicd.md` is for AFTER a fix lands, not applicable here since no fix landed).
+  `AUTHORING_SLOT=ci-reconcile` is not a live numeric slot (same non-int rejection as `agt-05a7fe`/`agt-15e651`) — this
+  entry is the outcome record. Left `market-data-processing-service` and this PM worktree on `live-defi-rollout`,
+  nothing else touched.
