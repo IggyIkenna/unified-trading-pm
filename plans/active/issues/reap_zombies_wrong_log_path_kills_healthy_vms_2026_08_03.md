@@ -14,7 +14,7 @@ summary: >-
   reap-zombies.sh always read "no run.log at all" for every correctly-functioning VM and fall through to a
   creation-time-only staleness check with a 600s (10-minute) default threshold — meaning ANY healthy VM older than 10
   minutes is a false-positive zombie candidate under this script, fleet-wide, not just this task's VM.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -42,7 +42,7 @@ source: >-
   Surfaced 2026-08-03 (slot 15, data_engineering) while monitoring
   plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md's last open todo (defi dex_pool_swaps
   source-correction campaign verification).
-resolved_by:
+resolved_by: "slot-13 (data_engineering), reap_zombies_wrong_log_path_kills_healthy_vms-004, 2026-08-03"
 locked_by:
 locked_since:
 context_scope:
@@ -55,6 +55,18 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-08-03 -- all 4 todos done: Todo 1 fixed `reap-zombies.sh`'s log path (`deployment-service@60d9f7e`)
+> with a regression test proving the pre-fix path reaped a healthy VM. Todo 2's 30-day fleet-wide audit found NO
+> evidence `reap-zombies.sh` ever actually ran against prod, and corrected this doc's own root-cause claim -- the
+> flagged VM was self-killed by `vm-exec-with-gcs-tee.sh`'s stall watchdog (`STALL_PROGRESS_REGEX` misconfiguration),
+> not reaped by this script; full evidence in
+> `/plans/archive/2026_08/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`. Todo 3 ruled out any actual
+> invocation of `reap-zombies.sh` at the incident timestamp (zero Terraform/GHA/systemd/cron wiring found anywhere).
+> Todo 4 made `backfill_defi_dex_pool_swaps_source_correction.py`'s day-level checkpoint durable (writes after EVERY
+> day, not every 20th) -- `market-data-processing-service@8ce3378`. Archived per issue-doc-lifecycle. The
+> `reap-zombies.sh` log-path fix itself remains real and independently worthwhile defense-in-depth, even though it was
+> not this specific incident's cause.**
 
 # reap-zombies.sh checks the wrong GCS log path — reaps healthy VMs fleet-wide
 
@@ -199,14 +211,16 @@ NEW root cause in the same incident family, not a duplicate.
       left inconclusive. No recurring schedule exists to harden, so todo 1's path fix (already shipped) is
       defense-in-depth for a script that is invoked ad hoc/manually only, not a currently-scheduled process. (repo:
       deployment-service, unified-trading-pm) — doc-only, no code change required.
-- [ ] [DATA] P2. **Make `backfill_defi_dex_pool_swaps_source_correction.py`'s day-level checkpoint durable against an
-      early kill** — write `_write_checkpoint` after EVERY completed day (or wrap the loop body in a try/finally that
-      always persists `done_days` on any exit path, not just the `i % 20 == 0` cadence + a full-completion tail-call),
-      so a kill within the first 19 days doesn't force a full redo from day 1. Given per-day GCS writes are cheap
-      relative to the per-day copy/record work itself, the extra per-day checkpoint write is not a meaningful cost.
-      Add/update the existing unit test suite
-      (`tests/unit/scripts/test_backfill_defi_dex_pool_swaps_source_correction.py`) to cover a simulated
-      early-kill-then-resume scenario. (repo: market-data-processing-service)
+- [x] ✅ [DATA] P2. **Make `backfill_defi_dex_pool_swaps_source_correction.py`'s day-level checkpoint durable against an
+      early kill** — `run_remediate` now calls `_write_checkpoint` after EVERY completed day (removed the
+      `if i % 20 == 0:` gate), so a kill within the first 19 days no longer forces a full redo from day 1 — at most the
+      one in-flight day is lost. Added two regression tests to
+      `tests/unit/scripts/test_backfill_defi_dex_pool_swaps_source_correction.py`: one asserting a checkpoint write
+      after every day (not gated on a 20-day cadence), and one simulating an early-kill-then-resume (a stubbed
+      `process_day` raises mid-day-3) proving days 1-2 survive the kill and a second run only reprocesses day 3.
+      Verified both new tests FAIL against the pre-fix cadence (reproducing the incident: a <20-day run persists nothing
+      before a kill) and PASS against the fix. `quality-gates.sh` full run green; shipped via `quickmerge --agent`,
+      `market-data-processing-service@8ce3378` verified ancestor of `origin/live-defi-rollout`.
 
 ## Progress Log
 
