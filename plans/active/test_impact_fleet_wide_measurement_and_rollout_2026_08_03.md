@@ -224,30 +224,20 @@ to be per repo — not measured here, out of this todo's scope.
       files). This suite is wired into unified-trading-pm's own `quality-gates.sh` (same repo, same gate as every other
       code regression) — caught the 2 real bugs documented in todo 1's writeup. Full `quality-gates.sh` green (1687
       passed/11 skipped, 0 failed).
-- [ ] [REVIEW] P1. **Single-repo shadow-mode trial — INFRASTRUCTURE SHIPPED 2026-08-03, TRIAL CLOCK RUNNING, NOT YET
-      DONE.** `market-data-processing-service@1c8588c` — a new `[7.1] TEST-IMPACT SELECTOR — SHADOW MODE` section in
-      that repo's own `scripts/quality-gates.sh` (a per-repo customization point, same pattern as its existing
-      `[6.X]`/`[6.Y]` custom sections — NOT the shared `base-service.sh`, so this is genuinely single-repo-scoped, not
-      fleet-wide). Runs on every real CI invocation, AFTER the unchanged full suite already executed: computes the diff
-      (`git diff HEAD~1 HEAD`, a known limitation for multi-commit pushes — see code comment), calls
-      `test_impact_selector.py`, and prints a `TEST_IMPACT_SHADOW:` -prefixed verdict. Purely additive — never skips or
-      gates anything; verified via a real local run (2332 passed/2 skipped, exit 0, verdict logged correctly against the
-      actual current diff) before shipping. Dry-run-validated against 3 real historical commits first (a test-only
-      change narrowed to 1 file; a `base_adapter.py` change correctly narrowed to its ~100+ real transitive dependents;
-      an untested backfill script narrowed to zero). Divergence detection is deliberately NOT computed inline (would
-      require either a second pytest invocation — defeating the whole point during the trial — or coupling to
-      `base-service.sh`'s internal mktemp log path, which is fragile/unstable) — instead, a periodic/end-of-window
-      analysis pass over this repo's CI run logs (`TEST_IMPACT_SHADOW:` lines vs pytest's own `FAILED` lines, both
-      already in the same captured job log) checks for divergence; that analysis tool is NOT built yet — no point
-      building it before 2 weeks of real data exist. **Done-when (unchanged, NOT yet met): zero observed divergences
-      over a full 2-week window from 2026-08-03.** Re-visit ~2026-08-17.
-- [ ] [SCRIPT] P1. **Build the shadow-trial divergence-analysis tool** — reads `market-data-processing-service`'s CI run
-      logs (`gh run list`/`gh run view --log`) over the trial window, extracts both this run's `TEST_IMPACT_SHADOW:`
-      verdict (the narrowed set) and pytest's own `FAILED <nodeid>` lines from the SAME run, and reports any failure
-      that fell outside the narrowed set (a real divergence) — buildable and testable anytime (doesn't need to wait for
-      the 2-week window itself, only running it meaningfully does). Done-when: run against the CI history accumulated so
-      far and produces a clean per-run divergence table (even if the window isn't complete yet) — this is what the
-      single-repo trial todo's done-when actually reads to determine "zero observed divergences."
+- [x] ✅ [REVIEW] P1. **Single-repo shadow-mode trial — SUPERSEDED 2026-08-03 by direct promotion to a real gate (see
+      the new todo below) before the 2-week window completed.** `market-data-processing-service@1c8588c` shipped the
+      original shadow-mode infrastructure (purely additive logging, verified via a real local run — 2332 passed/2
+      skipped, exit 0 — and dry-run-validated against 3 real historical commits). The trial's own done-when (zero
+      divergences over a full 2-week window) was never met by elapsed time — the operator instead directly authorized
+      promotion (see Progress Log) before the window ran, so this todo closes as superseded, not as satisfied. The
+      divergence-analysis tool (next todo) is still unbuilt and still has no urgency driver now that MDPS runs a real
+      gate instead of a shadow trial.
+- [ ] [SCRIPT] P2. **Build the shadow-trial divergence-analysis tool — DEPRIORITIZED, no longer load-bearing.**
+      Originally meant to read the shadow-mode trial's logs; MDPS no longer runs in shadow mode (see above), so this
+      tool's original purpose (measuring divergence during a trial before promoting) no longer applies to MDPS. Retained
+      as a P2 for a genuinely useful purpose: retroactively checking whether ANY narrowed real gate run (post-promotion)
+      ever missed a real failure — i.e. this becomes a POST-PROMOTION safety check, not a pre-promotion trial tool.
+      Done-when: run against MDPS's real `TEST_IMPACT_GATE:` CI logs and produce a clean per-run divergence table.
 - [x] ✅ [SCRIPT] P1. **Accelerate validation via a historical-commit backtest — DONE, but did NOT clear the evidence
       bar (see Progress Log for the full report).** `scripts/quality_gates/test_impact_backtest.py` +
       `test_test_impact_backtest.py` (unified-trading-pm) built and run for real against `execution-service`,
@@ -269,8 +259,11 @@ to be per repo — not measured here, out of this todo's scope.
       This does NOT mean promote, and does NOT mean the selector is unsafe — it means the live single-repo trial (below,
       clock to 2026-08-17) remains the only viable evidence path until the capacity crisis resolves enough to produce
       clean historical samples.
-- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency — STILL BLOCKED, backtest did NOT clear it.**
-      Gated on EITHER the live single-repo trial (`market-data-processing-service`, done-when 2026-08-17) OR the
+- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency — STILL BLOCKED, backtest did NOT clear it.
+      UNAFFECTED by the MDPS-only promotion below** (that was a scoped, single-repo operator override, not fleet-wide
+      evidence clearing the bar this todo actually gates). Gated on EITHER the live single-repo trial
+      (`market-data-processing-service`, done-when 2026-08-17 — moot now that MDPS runs a real gate instead of a shadow
+      trial; re-derive fleet-wide evidence from the post-promotion divergence-analysis tool instead, see above) OR the
       historical backtest clearing with zero divergences over a sample the reviewer judges large enough to trust — the
       backtest above ran for real but returned a 0-usable-sample result (see its writeup), which does NOT satisfy "large
       enough to trust"; it is evidence of nothing, not evidence of safety. This plan's `sequential: true` only encodes
@@ -279,12 +272,16 @@ to be per repo — not measured here, out of this todo's scope.
       (once the capacity crisis resolves) and clears with a genuinely trustworthy sample, it does NOT skip the
       fleet-wide question — it only removes the requirement to wait until 2026-08-17. Done-when: zero observed
       divergences fleet-wide, from whichever evidence source actually satisfies the reviewer.
-- [ ] [REVIEW] P2. **Promotion decision** — once the fleet-wide evidence bar above is met, decide whether to let the
-      selector actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand up the
-      post-promotion nightly full-suite canary the design specifies. This is itself an operator call, not a worker todo
-      — state the actual evidence (live trial and/or backtest, sample sizes, zero-or-not) and ask. **Explicitly NOT
-      satisfied by**: the backtest todo existing/running, the live trial merely being in progress, or elapsed calendar
-      time alone — only actual zero-divergence evidence, stated plainly, promotes.
+- [x] ✅ [REVIEW] P2. **Promotion decision — RESOLVED for MDPS ONLY, 2026-08-03, direct operator override; fleet-wide
+      promotion remains exactly as blocked as the todo above states.** Operator directly instructed promotion ("pls
+      implement /autonomous") after being shown the corrected evidence picture in-conversation (backtest inconclusive —
+      0 usable samples in 3/4 repos, confounded by the fleet-wide CI capacity crisis; live trial had zero elapsed signal
+      at promotion time) — explicitly chose **"Promote now, no extra safety net"** over the offered alternative of
+      adding a post-promotion nightly full-suite canary. This is a genuine, informed risk-accept by the operator, not
+      evidence claiming to satisfy the bar — the fleet-wide evidence-sufficiency todo above is UNCHANGED and still gates
+      any repo beyond MDPS. See Progress Log for the full implementation record (including a real architectural blocker
+      discovered and fixed: the per-repo coverage floor cannot be satisfied by a narrowed test run, so
+      `COV_FAIL_UNDER_OVERRIDE` was added as a new opt-in `base-service.sh` hook).
 
 ## Progress Log
 
@@ -384,6 +381,47 @@ to be per repo — not measured here, out of this todo's scope.
     4th is not "clean, zero divergences" — it's "no evidence either way." **The backtest does NOT accelerate anything
     right now; the live single-repo trial (clock to 2026-08-17) remains the only real evidence path**, unless the
     capacity crisis resolves and a re-run produces a genuinely large, clean sample.
+
+- **2026-08-03 (same session) — MDPS PROMOTED to a real gate, direct operator override.** Operator asked (in-chat)
+  whether the test-impact selector's "reduction in testing length" had actually been implemented, and separately invoked
+  `/autonomous` to implement it. Before touching anything, corrected the operator's premise in-conversation: the
+  backtest above did NOT clear the evidence bar (0 usable samples in 3/4 repos, confounded by the fleet-wide CI capacity
+  crisis — see above) and the live trial had zero elapsed signal — "we backtested that" was not the same as "the
+  backtest validated it." Presented three options (promote + nightly canary / promote with no extra safety net / hold
+  for real evidence); **operator explicitly chose "Promote now, no extra safety net."**
+  - **Architectural blocker discovered and fixed**: MDPS's `pyproject.toml` sets
+    `[tool.coverage.report] fail_under = 85`. A narrowed pytest invocation (only the selector's chosen subset of test
+    files) computes coverage against the WHOLE `$SOURCE_DIR` regardless of how few tests ran — verified empirically that
+    a single-file narrowed run reports ~15% coverage, which would fail the 85% floor on every narrowed run, a spurious
+    failure the original shadow-mode design never had to confront (shadow mode always ran the real full suite
+    underneath). Fixed by adding a new, OPT-IN `COV_FAIL_UNDER_OVERRIDE` hook to `base-service.sh` (unified-trading-pm)
+    — empty/unset for every repo by default (verified: no other repo sets it, zero behavior change fleet-wide), only
+    MDPS's own wrapper sets it to `0` when its gate narrows, relaxing the floor for that one invocation. Full-suite runs
+    (every escape-hatch case, the overwhelming majority) are completely unaffected.
+  - **Implementation**: moved the test-impact-selector invocation in MDPS's `scripts/quality-gates.sh` from AFTER
+    `source base-service.sh` (the old shadow-mode position, where it could only log, never gate) to BEFORE it, so its
+    verdict can set `PYTEST_UNIT_DIR` (narrowed file list, using the SAME pre-source override hook per-family layouts
+    already use) and the new `COV_FAIL_UNDER_OVERRIDE`. Every existing fail-closed escape hatch is untouched (high-level
+    conftest, cross-cutting manifest, verified/unverified dynamic-dispatch, unparseable file, shared-dependency repo,
+    no-diff, selector-process-error all still resolve to `RUN_FULL_SUITE=true`, unchanged). Removed the now-superseded
+    post-source shadow-mode block (would have been redundant duplicate logging, not a second gate).
+  - **Verification performed** (not just reasoning): (1) synthetic 5-scenario bash logic test of the new parsing
+    (full-suite/narrowed/empty-narrowed-falls-through/selector-error/stray-stdout-line, all correct); (2) confirmed
+    unquoted `PYTEST_UNIT_DIR` word-splits into separate pytest args under REAL bash (caught that my first test ran
+    under the tool shell's zsh, which does NOT word-split by default — re-verified via explicit `bash -c`); (3) a REAL
+    end-to-end run against MDPS with `PYTEST_UNIT_DIR` narrowed to one file and NO override — confirmed it genuinely
+    fails (`Total coverage: 15.05%` vs `fail_under=85`), proving the blocker is real, not theoretical; (4) the SAME
+    narrowed run WITH `COV_FAIL_UNDER_OVERRIDE=0` — confirmed `✅ QG_SLICE=tests PASSED`, only the narrowed file's 21
+    tests ran; (5) an isolated integration run of the real pre-source block against the REAL `test_impact_selector.py`
+    with an actual test file as the changed input — confirmed correct wiring end to end; (6) a new permanent bash
+    self-test, `unified-trading-pm/scripts/quality-gates-base/tests/test-qg-cov-fail-under-override.sh` (mirrors the
+    existing `test-qg-governor-slice-gating.sh` replica-matcher convention, since `base-service.sh` isn't sourceable in
+    isolation), 5/5 cases pass; (7) `shellcheck` clean on all 3 touched files; (8) full `quality-gates.sh --no-fix`
+    green on both `unified-trading-pm` (base-service.sh edit) and `market-data-processing-service` (default/no-diff
+    path, confirming the common case is completely unaffected).
+  - **Scope, explicitly**: MDPS ONLY. The fleet-wide evidence-sufficiency todo above is UNCHANGED — this was a scoped
+    operator risk-accept for one repo, not fleet-wide evidence clearing the bar. No other repo's `quality-gates.sh` was
+    touched; `base-service.sh`'s new hook is inert everywhere it isn't explicitly opted into.
 
 ## na-eligibility-audit verdict
 

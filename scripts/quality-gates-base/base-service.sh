@@ -801,6 +801,18 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         # already treats toml fail_under as "the real gate" — this flip just removes the shadow.
         # SSOT: quality_gates_speed_and_config_ssot_2026_06_09.md Phase 1 (TIER-A).
         COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml"
+        # Per-repo opt-in escape hatch (test-impact selective-execution, 2026-08-03): a
+        # NARROWED pytest invocation (only a subset of test files, per a repo's own
+        # test-impact gate) cannot meaningfully satisfy the full-suite coverage floor —
+        # fail_under measures against the WHOLE $SOURCE_DIR regardless of how few tests
+        # ran, so a narrowed run would spuriously fail on coverage alone even though the
+        # RIGHT tests ran. Set COV_FAIL_UNDER_OVERRIDE before sourcing this script to
+        # relax the floor for that one invocation. Empty/unset (every repo by default,
+        # incl. every full-suite run) => unchanged behavior, toml fail_under fully enforced.
+        # SSOT: test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md.
+        if [ -n "${COV_FAIL_UNDER_OVERRIDE:-}" ]; then
+            COV="$COV --cov-fail-under=${COV_FAIL_UNDER_OVERRIDE}"
+        fi
     fi
     # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
     # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
