@@ -58,7 +58,7 @@ resolved_by:
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md,
+    /plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2/,
     unified-trading-system-ui/lib/registry/ui-reference-data.json,
     unified-api-contracts/scripts/generate_ui_reference_data.py,

@@ -48,9 +48,10 @@ type: architecture
 > removal (adapters/drift_adapter.py, adapters/\_umi_pacifica.py, cli/handlers/solana_defi_drift\*.py,
 > cli/handlers/drift_v2*\*.py, live/connectors/drift_solana_ws.py, live/connectors/pacifica_solana_perp_ws.py) tracked
 > under a sibling task. GCS/manifest data purge is a separate sibling task
-> (`/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this banner describing
-> DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it to justify
-> re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in full.
+> (`/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`, closed 2026-08-03). **Everything below
+> this banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not
+> use it to justify re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this
+> banner in full.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
 > `/plans/archive/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per

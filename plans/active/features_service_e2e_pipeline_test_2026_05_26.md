@@ -76,7 +76,7 @@ drift_direction: advance-code
 >    processed_candles files/day across BITGET-FUTURES/SPOT/BITFINEX/KRAKEN), but the `delta_one`-specific
 >    `funding_oi`/`realized_vol` fields were not independently re-verified — re-check before assuming closed.
 > 3. Drift/Orca DeFi coverage confirm — **superseded, moot**: DRIFT was purged workspace-wide (operator ruling
->    2026-07-16, `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`); SOL_BASIS now points at
+>    2026-07-16, `/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`); SOL_BASIS now points at
 >    `perp_venue=hyperliquid`/`spot_venue=raydium`, not Orca. Do not re-dispatch.
 > 4. Strategy read-back (CarryStakedBasisRankAllocator/CarryBasisPerpRankAllocator) — **superseded**: owned by
 >    `carry_staked_basis_funding_scan_experiment_2026_06_16.md` +
@@ -698,9 +698,10 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
       `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
       `funding_oi`/`realized_vol` fields specifically weren't independently re-verified — confirm still needed.
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Basis-perp DeFi leg — confirm Drift/Orca coverage.** DRIFT was
-      purged workspace-wide (operator ruling 2026-07-16, `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`);
-      SOL_BASIS now points at `perp_venue=hyperliquid`/`spot_venue=raydium`, not Orca. The asked-for venue combination
-      no longer exists in this role.
+      purged workspace-wide (operator ruling 2026-07-16,
+      `/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`); SOL_BASIS now points at
+      `perp_venue=hyperliquid`/`spot_venue=raydium`, not Orca. The asked-for venue combination no longer exists in this
+      role.
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Phase C — strategy read-back.** Owned by
       `carry_staked_basis_funding_scan_experiment_2026_06_16.md` +
       `carry_strategy_ensemble_productionization_2026_07_24.md`, with a live, actively-maintained harness

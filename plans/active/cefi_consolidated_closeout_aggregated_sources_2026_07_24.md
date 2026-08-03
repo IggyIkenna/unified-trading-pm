@@ -675,9 +675,8 @@ context_scope:
       `RUN_INTEGRATION=false`.
     - **[QG] P2.** Fleet sweep — a PM quality-gate check comparing each repo's `tests/*/unit/` dirs against its
       `PYTEST_UNIT_DIR`.
-  - [`plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`](/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md)
-    - **[DATA] P2.** Re-run `build_instrument_catalogue.py --asset-group defi` (+cefi) as a confirmation pass — no
-      evidence yet of an actual prod `--apply` run.
+  - [`plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`](/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md)
+    — ✅ CLOSED 2026-08-03, all todos done, archived.
   - [`plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`](/plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md)
     - **[CODE] P0.** Gate the Tardis request universe on the vendor catalog (symbol x data_type x date-range); cache +
       refresh daily.
