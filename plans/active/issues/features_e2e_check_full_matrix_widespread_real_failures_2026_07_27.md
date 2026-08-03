@@ -470,3 +470,17 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   the same instrument set across multiple feature-group passes) to raw log-line growth, which is monotonically
   increasing and a more reliable liveness proxy for this workload shape. Still waiting for a terminal verdict before
   re-running CEFI:cross_instrument/multi_timeframe.
+- 2026-08-03 ~14:43Z (slot-12, data_engineering, INTERIM #8 — CEFI:delta_one VERDICT: genuine PASS): VM
+  `features-e2e-cefi-20260803-030432-d7c1a5` reached a terminal verdict after ~11.5h: `[vm-exec] command exited rc=0`,
+  `DEPLOYMENT_COMPLETED ... (exit_code=0)`, `EXIT_STATUS=0`, VM self-shutting-down per `VM_SHUTDOWN_ON_COMPLETION=true`.
+  Verified genuine (not just exit-code luck) via direct GCS listing:
+  `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-04/` and `.../day=2026-07-05/` both
+  contain real per-`feature_group` output (candlestick_patterns, market_structure, momentum, moving_averages,
+  oscillators, ...). Confirms root cause A's fix (manifest-aware `DependencyChecker` + coverage-check granularity fix)
+  holds for CEFI too, not just the TRADFI occurrence it was originally verified against. Immediately launched the last
+  two re-checks now that delta_one has real `-test-` output to read:
+  `pipeline_e2e_check.py --day 2026-07-05 --asset-group CEFI --family cross_instrument --legs force,skip --require-captured --auto-day`
+  and the same for `--family multi_timeframe` (both backgrounded local driver processes — VM launch + wait, not yet run
+  to completion). No code changes this session (verification-only). **Remaining open**: CEFI:cross_instrument and
+  CEFI:multi_timeframe verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
+  be written and the checkbox flipped.
