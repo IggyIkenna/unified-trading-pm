@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                      todos 6 and 7 below.
+                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -400,8 +400,8 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       one-time census, not a full migration run) before deciding whether 5000 is safe per-AG, or lower the modulus in
       the target script itself so it fires reliably regardless of AG size, before ever setting this launcher's metadata.
       (repo: deployment-service, instruments-service)
-- [ ] [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design decision,
-      not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
+- [x] ✅ [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design
+      decision, not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
       (launch-canonical-migration-vm.sh:1164) invokes
       `python -m market_tick_data_service.scripts.migrate_sports_canonical` — verified via `find` +
       `python3 -c "importlib.util.find_spec(...)"` that no such module exists; only
@@ -411,10 +411,16 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       launcher never passes it at all, so the invocation would still crash on a missing required argument; the script
       also uses `--apply`/dry-by-default (mirroring `--dry-run` is NOT its convention), while `_launch()`'s generic
       dispatch appends `--dry-run` for this category's `MODE=dry` branch — a flag the script's argparse doesn't define
-      at all. Needs an operator/design decision (does `sports` become two categories,
-      `sports-mdps`/`sports-instruments`, mirroring the script's own `--surface` split? or does the launcher pick one
-      surface by default and expose the other via `MIGRATION_EXTRA_ARGS`?) before implementing — not attempted in this
-      dispatch. (repo: deployment-service)
+      at all. **Resolved 2026-08-03 via `/blocked` (BLK-a66bfc9d), operator ruling: option A** — split into
+      `sports-mdps`/`sports-instruments`, each hardcoding its own `--surface`, using the correct
+      `migrate_sports_     canonical_v9` module, and moved into the apply-on-full category list (dry-by-default +
+      `--apply`, no `--dry-run` — matching the real script's contract, not the generic convention). Also fixed the `all`
+      category dispatch (previously called the now-nonexistent bare `sports`) and the usage string. Runtime-verified all
+      4 dry/full × mdps/instruments constructed commands parse cleanly against the real script's argparse (no
+      unrecognized-argument errors) before shipping. 3 new parametrized regression tests added.
+      `deployment-service@d172008`, `quality-gates.sh` green (276s, `IGNORE_TIMEOUT=true` — sanctioned transient
+      contention escape, host load avg 34-39 from concurrent slots), quickmerge landed on `live-defi-rollout`, SHA
+      verified ancestor of origin. (repo: deployment-service)
 
 ## Progress Log
 
@@ -542,3 +548,36 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   standalone to rule out a foreign/transient issue first) before assuming the code itself is wrong — both prior failures
   were mechanical (a line-cap), not logic bugs.** No GCS/VM mutations this dispatch — pure code change + its own test
   suite.
+- **2026-08-03T~18:40-19:08Z** (AO dispatch, slot 6, `infra`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-009`, todo 11) — Filed `/blocked` (BLK-a66bfc9d) with the two design
+  options already framed in this todo's text, plus one additional confirmed detail (the generic launcher's `--dry-run`
+  append is ALSO wrong for `sports` regardless of which option is picked, since `migrate_sports_canonical_v9` has no
+  `--dry-run` flag at all — dry-by-default + `--apply`). Operator/main ruled option A (split into
+  `sports-mdps`/`sports-instruments`) — convention-matching (mirrors `tradfi-cme-monolith` vs `tradfi-cme-options`
+  already splitting one target script's invocation shapes into separate categories) and the safer choice (a REQUIRED
+  `--surface` selector should never be a silently-defaulted `MIGRATION_EXTRA_ARGS` override). Implemented all three
+  fixes explicitly named in the ruling: correct module (`migrate_sports_canonical_v9`), per-category hardcoded
+  `--surface`, and moved both new categories into the apply-on-full list (dry mode emits no flag, full mode appends
+  `--apply`) instead of the generic `--dry-run`-append branch. Also fixed two call sites the sweep surfaced that would
+  otherwise still be broken post-split: the `all` category's dispatch loop (`_launch sports` → `_launch sports-mdps` +
+  `_launch sports-instruments`) and the top-of-file `Usage:` string. Before shipping, runtime-verified per the
+  operator's instruction: (a) captured the actual assembled `gcloud compute instances create` command for all 4 dry/full
+  × mdps/instruments combinations via a mocked-`gcloud` subprocess harness (confirmed correct module, `--surface`, and
+  apply/dry-run behavior byte-for-byte); (b) parsed all 4 constructed arg lists against a literal replica of the real
+  script's `argparse` definition (read directly from `migrate_sports_canonical_v9.py`'s `main()`) — all 4 resolve with
+  no unrecognized-argument error. Added 3 new parametrized regression tests
+  (`test_sports_split_categories_use_v9_module_and_correct_surface`,
+  `test_sports_split_categories_dry_by_default_no_dry_run_flag`,
+  `test_sports_split_categories_full_mode_uses_apply_flag`) to `tests/unit/test_vm_launcher_scripts.py`. First
+  `quality-gates.sh` run (accidentally run before committing) failed ONLY on the wall-clock meta-gate (336s > 300s)
+  under measured host contention (load avg 34-39 from concurrent slots' QG/pytest runs) — every real content gate
+  passed. Corrected the ordering (commit first, per `worker.md`), re-ran with the sanctioned `IGNORE_TIMEOUT=true`
+  contention escape (`codex/06-coding-standards/quality-gates.md`), green in 276s, sentinel matched the committed HEAD
+  exactly. `deployment-service@d172008`, quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
+  Considered (not implemented, out of the operator's named 3-bug scope): a more precise
+  `canonical-migration-sports-instruments-` VM-prefix-registry bucket entry (mirroring the existing
+  `canonical-migration-sports-features-` precedent, since `--surface instruments` targets the instruments-store bucket,
+  not the tick bucket the generic `canonical-migration-sports-` prefix maps to) — the existing generic prefix already
+  covers both new categories via longest-prefix match so nothing is unregistered/broken, this would only refine
+  dashboard/monitoring bucket classification; flagging here rather than expanding scope unrequested. No GCS/VM mutations
+  this dispatch — pure code + test change, verified via mocked/replica-argparse harnesses only.
