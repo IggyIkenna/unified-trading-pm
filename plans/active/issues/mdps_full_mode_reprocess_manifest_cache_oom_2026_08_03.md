@@ -194,11 +194,15 @@ not another blind resource-scaling guess — see the P1 todo below.
       bare call is completely unaffected (back-compat), and `lookup()` actually derives + passes the filter end-to-end.
       unified-trading-library's full `quality-gates.sh` passed both before and after (149s / 205s). Repos:
       unified-trading-library@4dc12dbe.
-- [ ] [INFRA] P2. Once the P1 root-cause + fix above lands, re-run shard4's `full`-mode retry
-      (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) and verify the manifest for the 26
-      residual dates (18 `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated, live-reverified
-      2026-08-03 via `gcloud storage ls -r` showing the 4 dates still only have `instrument_type=sport` meta-snapshot
-      objects, zero real odds — and 4 `LOSS_GUARD_BLOCKED`). **Three prior attempts have all OOM'd regardless of machine
-      size or worker count (16/e2-standard-8, 8/e2-highmem-8, 2/e2-standard-8)** — do NOT attempt a bare relaunch again
-      without the P1 fix landing first; another blind attempt would just burn more SPOT-VM cost for the same crash.
-      Repo: market-data-processing-service, deployment-service.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-03 (slot-9) — fix confirmed, ran clean to completion, zero OOM.** Found
+      `mdps-sports-bucket-20260803-134154` (e2-standard-8, SPOT, `--workers 16` — same original params, the P1 fix
+      applies regardless of worker count) already launched (13:41:54Z) with `unified-trading-library@4dc12dbe` in place;
+      monitored it end-to-end rather than duplicate the launch. Completed cleanly in 1591s (2.8s/date) — **no OOM at any
+      point**, sailing well past the ~18-24/571-day mark where all 3 pre-fix attempts crashed. Final tally: 571 total,
+      48 success, 0 empty, 19 attempted_failed, 500 skipped (already captured/empty_confirmed, correct `full`-mode
+      resume behavior), 4 `LOSS_GUARD_BLOCKED`. `rc=1` is EXPECTED (same as pre-fix runs) — the script exits non-zero
+      whenever residual failures remain, unrelated to the OOM bug this fix targets. Confirms the root cause (unfiltered
+      full-schema manifest decode in `ManifestWriter.lookup()`) was correctly isolated and fixed. Full
+      manifest-verification + residual-date accounting is tracked in the sibling parent doc
+      (`mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`'s P2 todo, its own action item) rather than
+      duplicated here. Repo: market-data-processing-service, deployment-service — no new code, verification only.

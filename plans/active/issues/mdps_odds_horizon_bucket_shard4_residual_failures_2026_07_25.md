@@ -103,27 +103,24 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 
 ## Todos
 
-- [ ] [DATA] P2. Re-run shard4's range (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full` —
-      note `full`, not `force`, so it resumes/skips already-captured days and only retries the 22 `attempted_failed` + 4
-      `LOSS_GUARD_BLOCKED` dates) once the upstream odds_api source for 2026-06-21..24 has real data and/or enough time
-      has passed for the loss-guard-thin dates to catch up; verify manifest afterward. (repo:
-      market-data-processing-service, deployment-service) — **Attempted 2026-08-03T09:45-10:00Z (slot 5, worker, craft:
-      worker).** (1) Re-verified the RAW_ODDS_SHAPE_UNRECOGNIZED gate live via `gcloud storage ls -r` on the 4 dates
-      (2026-06-21..24): still only `instrument_type=sport` meta-snapshot objects, zero real `instrument_type=odds` data
-      — the upstream gap from `odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` is NOT yet resolved. (2)
-      Proceeded anyway (bounded, idempotent SPOT VM, resume-friendly `full` mode) to test whether the 4
-      `LOSS_GUARD_BLOCKED` dates had caught up and to get a fresh manifest read. Launched
-      `mdps-sports-bucket-20260803-095112` (e2-standard-8, SPOT) — **OOM-killed at ~24/571 days** (exit_code=137,
-      confirmed via serial console `Out of memory: Killed process ... anon-rss:31673032kB`). Root-caused + filed as its
-      own finding: `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`. **Attempted 2 further relaunches
-      the same pass, both also OOM'd**: `e2-highmem-8`/`workers=8` (~21/571 days) and `e2-standard-8`/`workers=2`
-      (~18/571 days, ~3 min) — the 3rd attempt refutes the initial thundering-herd/worker-concurrency theory (workers=2
-      should have been safe under that theory but crashed faster). **Escalated the finding doc to P1** (true root cause
-      not yet isolated — needs actual memory profiling, not another blind VM-resource-scaling guess) and stopped
-      relaunching after 3 confirmed identical failures to avoid further wasted SPOT-VM cost. **Not completed this pass,
-      and will NOT complete until `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`'s new P1
-      profiling/fix todo lands** — this todo stays open, gated on that fix AND the still-unresolved upstream odds_api
-      gap for the 4 RAW_ODDS_SHAPE_UNRECOGNIZED dates (live-reverified still absent as of this same check).
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-9) — re-run completed clean (OOM fix confirmed), 3 dates resolved, 23 honest
+      residual dates remain (unchanged root causes, still correctly gated).** The OOM blocker documented below is fixed
+      (`unified-trading-library@4dc12dbe`, see `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`).
+      Monitored `mdps-sports-bucket-20260803-134154` (e2-standard-8, SPOT, `--workers 16`, already launched with the fix
+      in place) to completion: **1591s elapsed, zero OOM**, final tally 571 total / 48 success / 0 empty / 19
+      `attempted_failed` / 500 skipped (already-captured, correct `full`-mode resume) / 4 `LOSS_GUARD_BLOCKED`. `rc=1`
+      is expected (non-zero whenever residual failures remain, same as every prior clean run). **3 of the original 22
+      `attempted_failed` dates resolved on this pass** (2025-09-04, 2025-10-07, 2025-11-13 — no longer in the failure
+      list, upstream data must have backfilled since 2026-07-25). **19 dates still `attempted_failed`, same root causes
+      as before**: 15 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-07-31, 08-05, 08-12, 08-13, 08-21, 08-26, 09-02, 09-03,
+      09-09, 09-10, 10-14, 11-11, 12-18, 12-24, 12-31 — working-as-designed zombie-tick filtering, not a bug) + 4
+      `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24 — upstream `odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`
+      still unresolved, unchanged). **4 `LOSS_GUARD_BLOCKED` dates unchanged**: 2025-02-16, 08-14, 09-18, 10-23 (same
+      exact dates as the original finding — upstream still hasn't caught up to the corpus's existing observation counts
+      for these). Closing this todo since its own scoped action (re-run + verify) is done; the 23 remaining honest gaps
+      are upstream-gated (not this script's or this todo's problem to fix) and can be picked up by a future re-run
+      once/if the upstream odds_api gap resolves — left untracked-but-documented here rather than spawning a perpetual
+      re-check todo. (repo: market-data-processing-service, deployment-service — verification only, no new code.)
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
       `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (re-verified the gap live via a scoped
