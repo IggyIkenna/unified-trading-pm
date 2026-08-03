@@ -20,10 +20,10 @@ summary: >-
   timeout mitigations remain intact, the single shared self-hosted `glue-ip-172-31-5-118-1` runner is the structural
   bottleneck (confirmed `busy=true` fleet-wide across every repo spot-checked), and the root-cause fix remains correctly
   out of scope for a one-shot wall-clearing task
-  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, `status: active`, Phase 2-3 open). Both
-  sessions independently flag the SAME operator-level gap: `main_ci_red`/`ldr_qg_failure` escalations for an unchanged
-  underlying state are re-firing with no cooldown/dedup guard (now a 3rd+ repo showing this waste pattern, on top of the
-  9+ already logged for `features-service` alone in the parent doc).
+  (`/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, `status: active`, Phase 2-3
+  open). Both sessions independently flag the SAME operator-level gap: `main_ci_red`/`ldr_qg_failure` escalations for an
+  unchanged underlying state are re-firing with no cooldown/dedup guard (now a 3rd+ repo showing this waste pattern, on
+  top of the 9+ already logged for `features-service` alone in the parent doc).
 status: open
 nature: issue
 asset_group: [ci]
@@ -49,7 +49,7 @@ related:
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
-    /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
+    /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
 last_updated: 2026-08-03T21:50Z
@@ -75,7 +75,7 @@ context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
-    /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
+    /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
     deployment-service/scripts/quality-gates.sh,
     features-service/scripts/quality-gates.sh,
@@ -94,10 +94,10 @@ repeated here.
 ## Todos
 
 - [ ] 1. [INFRA] P3. Root-cause fix is capacity-side, not another per-repo timeout raise — track landing of
-      `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phase 2-3 (the single `glue` runner per
-      repo is the structural bottleneck: both `deployment-service` and `features-service` confirmed to have exactly ONE
-      online runner, `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed, re-test whether
-      the `main_ci_red`/`ldr_qg_failure` re-fires in this doc-chain stop recurring.
+      `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phase 2-3 (the single `glue`
+      runner per repo is the structural bottleneck: both `deployment-service` and `features-service` confirmed to have
+      exactly ONE online runner, `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed,
+      re-test whether the `main_ci_red`/`ldr_qg_failure` re-fires in this doc-chain stop recurring.
 - [ ] 2. [OPERATOR] P2. **Corroborating data point for the parent doc's todo 3** (un-cooldowned escalation re-fire), now
       observed across at least THREE repos: `deployment-service` (`agt-a46033`, 2 dispatches for the same state),
       `execution-service` (`agt-956fe9`/`agt-bd0d27`/`agt-e718ef`, 3 re-fires, logged in the parent doc), and
@@ -108,9 +108,9 @@ repeated here.
       escalation's, per `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle
       (fire on change/RESOLVED, never every tick while nothing changed). Operator decision, not something a one-shot
       wall-clearing session should self-implement.
-- [ ] 3. [INFRA] P3. Once `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3 land,
-      re-check whether this entire doc-chain (3 docs, ~30+ occurrences across 7+ repos) self-resolves — if the ledger
-      coordination fix genuinely closes the class, archive all three docs together rather than leaving them open
+- [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
+      land, re-check whether this entire doc-chain (3 docs, ~30+ occurrences across 7+ repos) self-resolves — if the
+      ledger coordination fix genuinely closes the class, archive all three docs together rather than leaving them open
       indefinitely as "still waiting."
 
 ## Progress Log
@@ -640,8 +640,8 @@ repeated here.
   failure, `tests` in-progress since `19:10:00Z`; `instruments-service` 1h21m; `agent-orchestrator` 1h;
   `execution-service` 20m; `unified-api-contracts` 2 concurrent in-progress) — confirms the ONE shared runner is
   serializing the entire fleet's queue, exactly the structural bottleneck this doc-chain's todo 1 already tracks
-  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Did NOT cancel/redispatch the queued
-  `30843993487` (would forfeit its accumulated queue position for zero benefit), per established practice.
+  (`/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Did NOT cancel/redispatch the
+  queued `30843993487` (would forfeit its accumulated queue position for zero benefit), per established practice.
   `GET /api/repo-blockers` → `open: []`. **Disposition: no code or workflow change made or needed** — the promotion has
   already landed, the confirmatory `main` run is genuinely queued (not stuck/hung) behind the fleet-wide single-runner
   bottleneck, and the underlying code is unchanged/correct on both branches; the "RED" ci_status is stale, dating to the
@@ -873,3 +873,14 @@ repeated here.
   frontmatter — no frontmatter change needed. Now the ~17th+ same-day escalation for `features-service` alone across
   this doc-chain — further corroborates todo 2's operator-flagged missing cooldown/dedup guard on `ldr_qg_failure`
   re-dispatch for an already-resolved/moot state.
+
+- **2026-08-03 ~21:50Z (interactive session, `/autonomous` on the ledger-coordination fork)** — the root-cause fix this
+  doc-chain's todo 1 has been tracking has now LANDED and is archived:
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`
+  (`unified-trading-pm@fada7dc20`/`4247e957f`), live-validated (6+ real repos sharing one ledger, admission gating
+  binding) and soaked (~73min, 0 OOM, 0 ghost reservations). **Not yet verified**: whether this specific doc-chain's
+  `main_ci_red`/`ldr_qg_failure` re-fires actually stop recurring now that it's live — todo 1's own "once landed,
+  re-test" step still needs real elapsed time post-fix + a fresh escalation-history pull to answer, not assumed from the
+  ledger fix's own soak alone (different observable: this doc tracks ESCALATION recurrence, the fork's soak tracked
+  ADMISSION correctness — related but not the same metric). Leaving todos 1 and 3 open for whoever next checks this
+  doc-chain to make that call with real post-fix escalation data.

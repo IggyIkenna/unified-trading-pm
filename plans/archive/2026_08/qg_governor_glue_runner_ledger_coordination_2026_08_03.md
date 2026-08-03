@@ -8,7 +8,7 @@ summary: >-
   onto one physical host with no shared admission control. Confirmed live 2026-08-02 (10 repos, load average 42-43, one
   16-core/61GB host). This plan forks that flagged-but-unscoped gap (parent plan's 2026-08-02 entry, open P1 todo, block
   ticket BLK-7eedce54) into its own scoped fix — design, implement, validate, roll out.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -55,6 +55,20 @@ context_scope:
 ---
 
 # QG governor — cross-repo ledger coordination on GHA glue-runner hosts
+
+> **🟢 ARCHIVED 2026-08-03.** All todos across Phases 0-3 resolved and shipped
+> (`unified-trading-pm@fada7dc20`/`4247e957f`/`eb4cc8db1`/`5d0cc52a0`): `_qg_shared_root()` extended to collapse the GHA
+> glue-runner topology onto one host-shared ledger; live-validated on the real production host (6+ real concurrent repos
+> correctly coordinating, not just synthetic); a ~73min sustained soak (0 OOM, 0 false aborts, 0 ghost reservations, 11
+> distinct repos rotating through the ledger). Parent plan's 2026-08-02 fork todo closed back there. Codex-alignment
+> check: `/codex/06-coding-standards/quality-gates.md` already updated with the matching 🟢 banner — nothing further to
+> update. Two genuine follow-ons surfaced by this work did NOT evaporate with this archive — both migrated to real
+> tracked todos in the parent plan (`/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`): (1) AO
+> slot-worker QG runs and the glue-runner pools' ledger are still two SEPARATE populations on the same host, not yet
+> unified; (2) block ticket `BLK-7eedce54`'s underlying issue is resolved but its ticket-system status was never flipped
+> (no verified AO `/blocked` API access from this session). Moved to
+> `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`; corpus referrers updated in the
+> same commit.
 
 > **LOCAL / operator-driven plan** (`assigned_vm: NA`) — not AO-ingested. Forked out of
 > `qg_host_adaptive_resource_governor_2026_07_14.md`'s 2026-08-02 finding per that doc's own note: "a one-shot

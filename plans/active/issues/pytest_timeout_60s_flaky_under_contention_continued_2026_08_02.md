@@ -307,7 +307,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT` a third time; a further raise only moves the threshold and does not close the
   class, and the actual fix for this exact root cause (cross-repo QG-governor ledger coordination on this one shared
   glue-runner host) is already forked, scoped, and mid-flight in
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phases 0-1 shipped
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phases 0-1 shipped
   `unified-trading-pm@fada7dc20`; Phase 2 live-validation + Phase 3 rollout still open) — duplicating that effort here
   would be scope creep for a one-shot wall-clearing task. A newer LDR run was already in flight at investigation time
   (`30804251677`, headSha `d387ba7f`, queued→in_progress during this session) — did not trigger a redundant dispatch
@@ -336,9 +336,9 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   entries), did NOT re-dispatch a fresh `quality-gates-v2` run (would cancel the already 57min-elapsed in-progress run
   via the concurrency group, discarding contention-survival progress for zero benefit) and did NOT raise any timeout a
   further increment (root-cause fix for the underlying host contention is
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, already forked and in flight — out of scope
-  for a one-shot wall-clearing task). **Disposition: no code or workflow change made or needed** — this is purely a
-  runner-queue-depth wait, identical to entries 3, 4 (partial), and 6. Slot left clean (`features-service` on
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, already forked and in flight — out
+  of scope for a one-shot wall-clearing task). **Disposition: no code or workflow change made or needed** — this is
+  purely a runner-queue-depth wait, identical to entries 3, 4 (partial), and 6. Slot left clean (`features-service` on
   `live-defi-rollout`, 0 commits ahead, no local changes). Pinged the authoring slot (`ci-reconcile`) with the outcome.
 
 - **2026-08-03 ~09:30-11:10Z (`cicd` escalation `agt-771546`, slot 4, `deployment-service`, `wall_type=ldr_qg_failure`,
@@ -386,7 +386,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (unchanged from the 11:04Z check). `ldr-to-main-promote-fleet` latest tick (`30807769375`, 11:00:10Z) still
   `success` + still `GATE BLOCK features-service: ci_status=FAILING` (cached from the 09:11Z red run, awaiting the
   in-flight run's verdict) — will auto-promote the instant it reports green. `GET /api/repo-blockers` → `open: []`.
-  Root-cause plan `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` confirmed still
+  Root-cause plan `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` confirmed still
   `assigned_vm: NA` / local / Phase 2-3 open — unchanged, still correctly out of scope for a one-shot task.
   **Disposition: no code or workflow change made or needed** — identical to entries 3, 4 (partial), 6, and 8. Did NOT
   re-dispatch a fresh run (would cancel 68min of contention-survival progress via the concurrency group for zero
@@ -414,8 +414,8 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   repro at the immediate parent commit (`d7276438`) already stands and this new commit touches nothing test-relevant.
   **Disposition: no code or workflow change made or needed** — confirms the prior entry's verdict still holds 1h10m
   later; root cause remains fleet-wide runner contention, tracked and out of scope for a one-shot wall-clearing task
-  (root-cause fix in flight at `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Slot left
-  clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean). Pinged the
+  (root-cause fix in flight at `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Slot
+  left clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean). Pinged the
   authoring slot (`ci`) with the outcome.
 
 - **2026-08-03 ~11:15-11:38Z (`cicd` escalation `agt-2336b3`, slot 10, `ml-service`, `wall_type=main_ci_red`,
@@ -507,11 +507,11 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `PYRIGHT_TIMEOUT=300`, `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at this head — no
   regression. `GET /api/repo-blockers` → `open: []`. Did NOT raise any timeout further (would only move the threshold
   per this doc's own established conclusion; root-cause fix remains
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, confirmed still open/Phase 2-3, correctly
-  out of scope for a one-shot task). Also note the sibling `ml-service` entry immediately above (`agt-2336b3`) found a
-  DISTINCT "only main can speak for main" `ci_status` CAS gap that applies once LDR promotes — not yet relevant here
-  since features-service's fleet-gate block is still upstream of that (LDR itself hasn't reported green yet, per the
-  gate's own "LDR CI is red" message, not a stale main-side cache).
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, confirmed still open/Phase 2-3,
+  correctly out of scope for a one-shot task). Also note the sibling `ml-service` entry immediately above (`agt-2336b3`)
+  found a DISTINCT "only main can speak for main" `ci_status` CAS gap that applies once LDR promotes — not yet relevant
+  here since features-service's fleet-gate block is still upstream of that (LDR itself hasn't reported green yet, per
+  the gate's own "LDR CI is red" message, not a stale main-side cache).
 
   **Disposition: no code change — the only action this session took beyond re-diagnosis was dispatching the first fresh
   run against an untested head since the wall started recurring**; outcome of `30810458524` not yet observed, left for a
@@ -568,13 +568,13 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   superseded commit regardless. Verified all three timeout mitigations (`PYTEST_TIMEOUT=300`, `PYRIGHT_TIMEOUT=300`,
   `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at LDR HEAD — no regression.
   `GET /api/repo-blockers` → `open: []`. Did not raise any timeout further (root-cause fix remains
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, correctly out of scope for a one-shot
-  task). **Disposition: no code change — dispatched the first fresh run against the true current, previously-untested
-  LDR head**; outcome of `30813594354` not yet observed, left for a follow-up occurrence. Slot left clean
-  (`features-service` on `live-defi-rollout`, 0 commits ahead of origin). `AUTHORING_SLOT=ci-reconcile` (sentinel, not a
-  real numbered slot) — per cicd.md, skipped the authoring-slot ping (dispatch-time Slack alert already covers the FYI).
-  This is the 11th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains open
-  and unaddressed by this entry.
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, correctly out of scope for a
+  one-shot task). **Disposition: no code change — dispatched the first fresh run against the true current,
+  previously-untested LDR head**; outcome of `30813594354` not yet observed, left for a follow-up occurrence. Slot left
+  clean (`features-service` on `live-defi-rollout`, 0 commits ahead of origin). `AUTHORING_SLOT=ci-reconcile` (sentinel,
+  not a real numbered slot) — per cicd.md, skipped the authoring-slot ping (dispatch-time Slack alert already covers the
+  FYI). This is the 11th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains
+  open and unaddressed by this entry.
 
 - **2026-08-03 ~12:40-12:55Z (`cicd` escalation `agt-5f4c41`, slot 9, `market-data-processing-service`,
   `wall_type=main_ci_red`, `pr_number=0`) — re-fire of the same wall `agt-7784b3` already diagnosed at ~09:09-09:24Z
@@ -591,9 +591,9 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (B) main-only stale-workflow/`[skip ci]` — also false, this is neither a workflow-definition problem nor a missing
   check, it's the identical fleet-wide QG-governor host-contention root cause this doc-pair has tracked across 10+ repos
   all day (root-cause fix in flight, out of scope, at
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). LDR itself currently has a fresh run
-  in-flight (`30815224742`, workflow_dispatch, started 12:50:08Z, ~10min elapsed at check time, dispatched by an earlier
-  session) — did not re-dispatch a redundant run (would cancel its elapsed contention-survival progress via the
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). LDR itself currently has a fresh
+  run in-flight (`30815224742`, workflow_dispatch, started 12:50:08Z, ~10min elapsed at check time, dispatched by an
+  earlier session) — did not re-dispatch a redundant run (would cancel its elapsed contention-survival progress via the
   concurrency group for zero benefit, per this doc's established precedent). `GET /api/repo-blockers` → `open: []`.
   **Disposition: no code or workflow change made or needed** — every candidate fix already exists on
   `live-defi-rollout`, the promotion already completed, and the remaining main-side red is purely the stale confirmatory
@@ -639,7 +639,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `PYRIGHT_TIMEOUT` ceiling, `agt-3bc731`'s 10:07-10:48Z entry) — the failure signature here is pure xdist-worker
   scheduler-starvation-during-teardown, not a slow-but-progressing individual test, so no further per-test/per-repo
   timeout raise would plausibly fix it; the actual fix is cross-repo QG-governor coordination, already forked and
-  in-flight at `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (confirmed still
+  in-flight at `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (confirmed still
   `status: active`, Phase 2-3 open) — did not duplicate that effort here (out of scope for a one-shot wall-clearing
   task). Host corroboration at investigation time: `uptime` load average `22.32, 24.46, 27.71` (16 vCPUs), `13Gi/47Gi`
   swap in active use, 19 concurrent `quality-gates.sh` processes — same fleet-wide-contention signature as every other
@@ -712,7 +712,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — will auto-promote the instant
   any LDR run reports green, no manual promotion action needed. **Disposition: no code or workflow change made or
   needed** — root cause remains fleet-wide `glue`-runner contention, root-cause fix still correctly out of scope
-  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, Phase 2-3 open).
+  (`/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, Phase 2-3 open).
   `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean
   (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc
   edit). This is the 12th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains
@@ -726,11 +726,12 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (`30817783411`) is still `in_progress`, no newer LDR commit exists to test. `GET /api/repo-blockers` → `open: []`. Per
   this doc's established precedent, did NOT redispatch (would cancel elapsed contention-survival progress for zero
   benefit) and did NOT raise `PYTEST_TIMEOUT` further (already at the sanctioned 300s ceiling; a further raise only
-  moves the threshold, root-cause fix remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`,
-  out of scope for a one-shot task). **Disposition: no code or workflow change made or needed** — purely a wait on
-  `30817783411`. `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
-  clean (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
-  origin beyond this doc edit).
+  moves the threshold, root-cause fix remains
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, out of scope for a one-shot task).
+  **Disposition: no code or workflow change made or needed** — purely a wait on `30817783411`.
+  `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean
+  (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
+  beyond this doc edit).
 
 - **2026-08-03 ~14:00-14:10Z (`cicd` escalation `agt-b8bcdb`, slot 3, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — re-dispatch of the SAME escalation id `agt-b8bcdb` already handled once at 11:05-11:15Z by slot 10
@@ -752,11 +753,11 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   auto-promote the instant any LDR run reports green, no manual action needed; 13 repos fleet-wide currently blocked at
   this same Tier-A gate, confirming the crisis remains fleet-wide, not features-service-specific. **Disposition: no code
   or workflow change made or needed** — identical verdict to every prior `features-service` entry in this doc.
-  Root-cause fix remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3, out of
-  scope for a one-shot task). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping.
-  Slot left clean (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
-  beyond this doc edit). Todo 3's operator-flagged dedup/cooldown gap remains open and unaddressed — this entry is
-  further evidence for it (now ~14 same-day fires for this one repo+wall pairing, several within a 10-15min window of
+  Root-cause fix remains `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3,
+  out of scope for a one-shot task). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot
+  ping. Slot left clean (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
+  origin beyond this doc edit). Todo 3's operator-flagged dedup/cooldown gap remains open and unaddressed — this entry
+  is further evidence for it (now ~14 same-day fires for this one repo+wall pairing, several within a 10-15min window of
   each other).
 
 - **2026-08-03 ~13:52-14:12Z (`cicd` escalation `agt-7cd4ea`, slot 7, `alerting-service`, `wall_type=main_ci_red`,
@@ -774,10 +775,10 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `GET /api/repo-blockers` (`open: []`, none registered for this repo). **Disposition: no code or workflow change made
   or needed — pure-wait resolved the wall**, reinforcing this doc's "don't redispatch an in-flight run" guidance with a
   positive (not just still-waiting) data point. Root cause remains fleet-wide `glue`-runner contention,
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3, still the correct out-of-scope
-  root-cause fix). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
-  clean (`alerting-service`/`agent-orchestrator`/`unified-trading-pm` all on `live-defi-rollout`, 0 commits ahead of
-  origin beyond this doc edit).
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3, still the correct
+  out-of-scope root-cause fix). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping.
+  Slot left clean (`alerting-service`/`agent-orchestrator`/`unified-trading-pm` all on `live-defi-rollout`, 0 commits
+  ahead of origin beyond this doc edit).
 
 - **2026-08-03 ~14:05-14:20Z (`cicd` escalation `agt-956fe9`, slot 2, `execution-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — NEW repo added to this doc, fixed with the sustained-red repo-local mitigation**: `main`'s
@@ -833,10 +834,10 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   outcome was already complete before this escalation fired, and both confirmatory runs are genuinely progressing
   (queue-starved, not stuck); did not redispatch either (would cancel elapsed queue position via the concurrency group
   for zero benefit) and did not hold the slot waiting on multi-hour-class runs, per this doc's established practice.
-  Root cause remains `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope for a
-  one-shot task). `AUTHORING_SLOT=ci` (sentinel, not a live numbered slot) — per `cicd.md`, skipped the authoring-slot
-  ping. Slot left clean (`execution-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
-  origin beyond this doc edit).
+  Root cause remains `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope
+  for a one-shot task). `AUTHORING_SLOT=ci` (sentinel, not a live numbered slot) — per `cicd.md`, skipped the
+  authoring-slot ping. Slot left clean (`execution-service` and `unified-trading-pm` both on `live-defi-rollout`, 0
+  commits ahead of origin beyond this doc edit).
 
 - **2026-08-03 ~14:26-14:33Z (`cicd` escalation `agt-d12ed0`, slot 4, `instruments-service`, `wall_type=ldr_qg_failure`,
   `pr_number=0`) — a NEW occurrence for this repo (bare LDR push gate, no PR — distinct from the now-fully-resolved
@@ -887,8 +888,8 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   mitigated with `PYTEST_TIMEOUT=300` (`deployment-service@eb131cd`), now timing out again AT that already-raised
   ceiling. Verified the mitigation is still intact on `live-defi-rollout` (unchanged). Per todo 1's own anticipated
   branch, did NOT raise `PYTEST_TIMEOUT` a third time — root-cause fix remains
-  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope for a one-shot task). No run
-  was in-flight against current `main` HEAD (`ce1239d`) after `30813934094` completed — dispatched a fresh
+  `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope for a one-shot task).
+  No run was in-flight against current `main` HEAD (`ce1239d`) after `30813934094` completed — dispatched a fresh
   `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-service --ref main` → run `30824452052`, confirmed
   queued cleanly. **Disposition: no code change — cancelled one genuinely-redundant runner-hogging job (a new mitigation
   distinct from anything else in this doc: freeing a runner already occupied by moot post-merge work, rather than purely
@@ -926,7 +927,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   clearly inert, out of scope). Per the `deployment-service` precedent, did NOT raise `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT`
   a third time -- a repo already at the sanctioned 300s ceiling timing out under measurably worsening host contention is
   exactly the case this doc's todo 1 anticipated as "past self-clearing," and the real fix is capacity-side
-  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`), not another local timeout bump.
+  (`/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`), not another local timeout bump.
   `GET /api/repo-blockers` -> `open: []`. **Disposition: no code or workflow change made or needed** -- fix already
   landed and correctly not yet promoted; both confirmatory runs are genuinely progressing/concluded on their own merits;
   recommend whoever handles the NEXT occurrence for this repo check whether

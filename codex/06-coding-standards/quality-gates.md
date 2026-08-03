@@ -3253,7 +3253,8 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > parent" design does not work). Propagates organically — every CI job self-clones
 > `unified-trading-pm@live-defi-rollout` fresh, so no separate fleet "flip" step exists. Live-validated 2026-08-03:
 > direct host introspection confirmed ≥6 real concurrent repos already sharing one ledger correctly, with admission
-> gating (CPU slots) actually binding. SSOT: `plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
+> gating (CPU slots) actually binding. SSOT:
+> `plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
 
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a

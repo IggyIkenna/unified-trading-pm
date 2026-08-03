@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 251 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -825,7 +825,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (11)
+### ao (14)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -851,6 +851,13 @@ by hand._
   Gated closeout for ao_satellite_ao_dispatch_batch4_2026_08_01.md — machine-held via depends_on + gate_on_depends until
   the batch's sole todo is done. Reconciles the completed todo's evidence back into its TRUE source issue doc (the
   batch…
+- [`ao_satellite_ao_dispatch_batch5_2026_08_03`](./ao_satellite_ao_dispatch_batch5_2026_08_03.md) **[draft]** — FIFTH
+  AO-dispatch batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-03,
+  autonomous mode, scheduled dispatch, real `Workflow` fan-out over all 41 currently mechanically-flagged never-cited…
+- [`ao_satellite_ao_dispatch_batch5_finalize_2026_08_03`](./ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md) —
+  Gated closeout for ao_satellite_ao_dispatch_batch5_2026_08_03.md — machine-held via depends_on + gate_on_depends until
+  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
+  (the…
 - [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
   — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
   control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
@@ -862,12 +869,16 @@ by hand._
 - [`omniroute_llm_gateway_pilot_design_2026_07_30`](./omniroute_llm_gateway_pilot_design_2026_07_30.md) — Operator
   flagged omniroute.online (a self-hosted, OpenAI/Anthropic-compatible local gateway that auto-routes across 268
   providers' free/cheap tiers) as a possible cost-routing layer, given the fleet already has a DeepSeek-swap precedent…
+- [`omniroute_multi_provider_routing_evaluation_2026_08_03`](./omniroute_multi_provider_routing_evaluation_2026_08_03.md)
+  — Evaluates OmniRoute as a self-hosted multi-provider LLM gateway for reducing Claude Max spend by routing
+  non-Claude-worthy work to cheaper providers. Harness is installed and working on the operator's host with 5 providers
+  wired (mistral,…
 - [`orchestrator_vm_e2e_hardening_2026_07_24`](./orchestrator_vm_e2e_hardening_2026_07_24.md) — Agent-orchestrator
   bootstrap/watchdog/memory-guardrail hardening and VM-from-scratch e2e validation — split out of
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (14)
+### ci (13)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -903,10 +914,6 @@ by hand._
 - [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) — Master coordinator
   for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a
   single-pane view of repo pipeline state and slot health.
-- [`qg_governor_glue_runner_ledger_coordination_2026_08_03`](./qg_governor_glue_runner_ledger_coordination_2026_08_03.md)
-  — The reservation-ledger admission governor (qg_host_adaptive_resource_governor_2026_07_14.md) is shipped and
-  validated on the interactive slot-worktree topology, but does NOT coordinate across different repos' CI jobs on a
-  GitHub Actions…
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…

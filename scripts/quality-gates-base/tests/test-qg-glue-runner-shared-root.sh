@@ -3,7 +3,7 @@
 # Lifecycle: permanent
 # Delete-when: NA
 # Unit tests for the glue-runner-topology branch of _qg_shared_root() in
-# qg-host-governor.sh (plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md).
+# qg-host-governor.sh (plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md).
 #
 # WHY: on the GHA self-hosted glue-runner host, quality-gates.sh's own
 # `WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"` resolves to a
