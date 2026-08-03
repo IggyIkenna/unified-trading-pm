@@ -433,13 +433,13 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       predate the 2026-07-26 batch-1 draft by 6+ weeks. Repo: system-integration-tests. Source:
       `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** UAC
-      `internal/domain/execution_service/defi_position.py` hardcodes a liquidation threshold of `1.1`, while the live
-      execution-service local copy uses `LIQUIDATION_PARAMS_REGISTRY[MarginModel.AAVE_V3].health_factor_critical`
-      (`1.15`). Make UAC read the registry rather than the literal so the two cannot drift again, and confirm no
-      consumer depends on the `1.1` value (grep then READ each hit). **Done when**: the hardcoded constant is gone, UAC
-      resolves the value from `LIQUIDATION_PARAMS_REGISTRY`, a test pins the resolved value, and UAC's QG is green.
-      Repo: unified-api-contracts. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
+- [x] ✅ [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** —
+      unified-api-contracts@194f3f7f. `is_at_risk` now resolves
+      `LIQUIDATION_PARAMS_REGISTRY[AAVE_V3].     health_factor_critical` (`1.15`) instead of hardcoded `1.1`, mirroring
+      execution-service's local copy. Grepped + read every consumer —
+      `execution-service/execution_service/models/position.py` is a bare re-export, no consumer depended on `1.1`. Added
+      `tests/internal/unit/domain/execution_service/test_defi_position.py` pinning `1.15`. QG green. Repo:
+      unified-api-contracts. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
 - [ ] [CODE] P3. **Rename UAC's `infura_*` Starknet endpoint-template key away from the banned provider name, and add
       the clarifying note.** Infura is a REMOVED provider (CLAUDE.md § DeFi execution — removed providers must not be
