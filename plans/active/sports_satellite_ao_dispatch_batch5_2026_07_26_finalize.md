@@ -47,7 +47,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

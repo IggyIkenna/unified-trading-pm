@@ -60,7 +60,7 @@ context_scope:
   [
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
-    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+    /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]

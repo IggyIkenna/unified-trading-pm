@@ -5,7 +5,7 @@ summary:
   A full quality-gates.sh run on live-defi-rollout HEAD (b7677e04) found 2 test failures, confirmed pre-existing
   (byte-identical failures reproduced on HEAD~1, before this session's own unrelated commit) — not caused by this
   session's work. Blocks any quickmerge --agent ship from this repo until fixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -22,6 +22,8 @@ estimate_class: refactor
 drift_direction: worsening-slowly
 source: [/plans/active/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md]
 resolved_by:
+  "both todos fixed 2026-08-03 (slot 5, cicd, escalation agt-2dce75) — market-tick-data-service@1e52c66e,
+  quality-gates.sh green (9847 passed, 0 failed)"
 locked_by:
 depends_on: []
 assigned_role: cicd

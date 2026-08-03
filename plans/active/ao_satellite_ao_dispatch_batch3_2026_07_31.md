@@ -179,7 +179,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       verifier reproduces the prior sweep's 10 recorded verdicts from their shas alone; the discriminator returns LIVE
       for both the slot-5 (32-day-expired claim, demonstrably live) and slot-15 (dead→live inside a 9-minute window)
       shapes on record; and each of the 25 wip-preserve refs has a recorded verdict in both source docs below. Source:
-      `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` (its two `[SCRIPT] P2` items +
+      `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` (its two `[SCRIPT] P2` items +
       its `[DATA] P3` item) AND `/plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its own
       `[DATA] P3` item, which mirrors the same 24-of-25-ref triage and explicitly depends on this todo's verifier — a
       genuine duplicate found by this batch's conflict-check, folded into one combined todo rather than drafted twice).

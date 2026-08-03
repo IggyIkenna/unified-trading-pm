@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [agent-orchestrator, backlog, dispatch-thrash, collision, prerequisites, long-running-driver]
 related:
   [
-    /plans/active/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
+    /plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
     /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
   ]
 created: 2026-08-02
@@ -36,7 +36,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope: [/plans/active/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md, agents/RULES.md]
+context_scope: [/plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md, agents/RULES.md]
 ---
 
 # AO backlog regen has no collision/liveness gate for a todo whose completion depends on a multi-hour external driver -- 2026-08-02

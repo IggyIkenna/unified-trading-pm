@@ -49,7 +49,7 @@ context_scope:
     agent-orchestrator/scripts/ao-self-pull.sh,
     /agents/main.md,
     unified-trading-pm/agents/main.md,
-    /plans/active/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
   ]
 ---
 

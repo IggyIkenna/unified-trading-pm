@@ -52,8 +52,8 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
-    /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md,
     /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,

@@ -58,7 +58,7 @@ context_scope:
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 

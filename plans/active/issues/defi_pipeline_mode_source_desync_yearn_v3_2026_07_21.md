@@ -55,7 +55,7 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/non-canonical-path-inventory.md,
     /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 

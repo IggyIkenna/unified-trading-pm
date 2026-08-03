@@ -55,7 +55,7 @@ context_scope:
     scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
-    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,

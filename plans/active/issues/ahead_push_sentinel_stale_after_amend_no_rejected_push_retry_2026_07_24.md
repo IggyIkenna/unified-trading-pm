@@ -49,7 +49,7 @@ context_scope:
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/tests/test_watchdog_unpushed_sweep.py,
     /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---

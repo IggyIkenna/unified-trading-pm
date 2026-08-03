@@ -202,8 +202,8 @@ banner is wrong"). What it does NOT determine is WHICH plan absorbs them, and th
 fold-by-default carve-out does not apply (these are `[BACKEND]`/`[DATA]`/`[SCRIPT]`/`[CI]`, not `[REVIEW]`/`[DOC]`).
 
 Note the corpus currently contains the opposite precedent, applied without a ruling:
-`/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` carries an inline "stays OPEN for the
-3 prevention todos the sweep filed" — which is exactly the anti-pattern the codex names. Whichever way this is ruled
+`/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` carries an inline "stays OPEN for
+the 3 prevention todos the sweep filed" — which is exactly the anti-pattern the codex names. Whichever way this is ruled
 should also settle that doc.
 
 **A [WORKER REC]**: migrate all 7 into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (the live CI

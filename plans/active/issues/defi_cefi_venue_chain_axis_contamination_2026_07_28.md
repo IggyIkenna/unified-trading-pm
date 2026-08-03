@@ -68,7 +68,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md,
-    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     instruments-service/scripts/migration_orphan_sweep.py,
     instruments-service/scripts/backfill_orphan_class_e.py,
     features-service/features_service/cefi/calculators/perp_funding_corpus.py,

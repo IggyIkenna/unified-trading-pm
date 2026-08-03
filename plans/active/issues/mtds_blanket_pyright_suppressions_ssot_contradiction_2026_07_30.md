@@ -41,7 +41,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
     /codex/06-coding-standards/README.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -60,7 +60,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
     /codex/06-coding-standards/README.md,
     /codex/06-coding-standards/quality-gates.md,
     market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md,

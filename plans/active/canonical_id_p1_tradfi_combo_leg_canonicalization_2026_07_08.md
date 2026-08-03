@@ -52,7 +52,7 @@ context_scope:
   [
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,

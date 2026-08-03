@@ -49,7 +49,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
-    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
     market-tick-data-service/tests/unit/test_prediction_universe_prod_catalogue_gating.py,
     market-tick-data-service/scripts/quality-gates.sh,

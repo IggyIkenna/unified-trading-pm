@@ -71,24 +71,24 @@ CEFI-only and records the go-ahead explicitly.
       tracked separately in `-056` — they are genuinely blocked and out of scope here.)
 
       **Real measured result — the FIRST-EVER genuine completion of this benchmark** (both 2026-07-27 and 2026-07-30
-                                                                                  prior attempts hit SPOT-preemption or the 72000s timeout without ever finishing): launch `19:24:37Z`, compute
-                                                                                  start `19:27:19Z`, `Processing completed successfully` `23:24:10Z`, `command exited rc=0`,
-                                                                                  `DEPLOYMENT_COMPLETED ... exit_code=0`. **Measured throughput**: 14,211s compute-start-to-complete for 848
-                                                                                  retained instruments (universe_filter: 848/1173, excluded 325) over a 2-day window (2026-07-24..2026-07-25) —
-                                                                                  **16.76 s/instrument, 8.38 s/instrument-day**. This is comfortably faster than the SKILL.md's flagged
-                                                                                  "materially exceeds ~25.9s/instrument-day" framing from the two prior non-completing attempts — the S1
-                                                                                  sequential-per-instrument-timeframe-loop bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`) is real
-                                                                                  but not as severe as the never-observed-to-completion runs suggested. **12/18 feature groups succeeded**
-                                                                                  (technical_indicators, moving_averages, oscillators, volatility_realized, momentum, volume_analysis, vwap,
-                                                                                  candlestick_patterns, market_structure, returns, round_numbers, streaks); **6 failed** with individually
-                                                                                  diagnosed, non-crash reasons visible in `run.log` (microstructure: `record_empty` correctly refused a
-                                                                                  SOURCE_RETURNED_ZERO write without FetchEvidence — the honest-absence guard working as designed, not a bug;
-                                                                                  others similar shard-isolated failures, each logged with its own reason) — shard-isolation correctly contained
-                                                                                  every failure rather than aborting the whole run (`Partial success — 12/18 groups succeeded; continuing`).
-                                                                                  **GCS output verified real**: 42,693 objects written under `gs://features-cefi-test-central-element-323112/`.
-                                                                                  **Zero orphaned/duplicate VMs at session end** — the stale-tarball VM1 (`...-185235-...`) self-deleted cleanly
-                                                                                  after its own crash; VM2 (this one) self-deleted cleanly after completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
-                                                                                  Full root-cause + tarball-staleness narrative in the Progress Log below.
+                                                                                                                      prior attempts hit SPOT-preemption or the 72000s timeout without ever finishing): launch `19:24:37Z`, compute
+                                                                                                                      start `19:27:19Z`, `Processing completed successfully` `23:24:10Z`, `command exited rc=0`,
+                                                                                                                      `DEPLOYMENT_COMPLETED ... exit_code=0`. **Measured throughput**: 14,211s compute-start-to-complete for 848
+                                                                                                                      retained instruments (universe_filter: 848/1173, excluded 325) over a 2-day window (2026-07-24..2026-07-25) —
+                                                                                                                      **16.76 s/instrument, 8.38 s/instrument-day**. This is comfortably faster than the SKILL.md's flagged
+                                                                                                                      "materially exceeds ~25.9s/instrument-day" framing from the two prior non-completing attempts — the S1
+                                                                                                                      sequential-per-instrument-timeframe-loop bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`) is real
+                                                                                                                      but not as severe as the never-observed-to-completion runs suggested. **12/18 feature groups succeeded**
+                                                                                                                      (technical_indicators, moving_averages, oscillators, volatility_realized, momentum, volume_analysis, vwap,
+                                                                                                                      candlestick_patterns, market_structure, returns, round_numbers, streaks); **6 failed** with individually
+                                                                                                                      diagnosed, non-crash reasons visible in `run.log` (microstructure: `record_empty` correctly refused a
+                                                                                                                      SOURCE_RETURNED_ZERO write without FetchEvidence — the honest-absence guard working as designed, not a bug;
+                                                                                                                      others similar shard-isolated failures, each logged with its own reason) — shard-isolation correctly contained
+                                                                                                                      every failure rather than aborting the whole run (`Partial success — 12/18 groups succeeded; continuing`).
+                                                                                                                      **GCS output verified real**: 42,693 objects written under `gs://features-cefi-test-central-element-323112/`.
+                                                                                                                      **Zero orphaned/duplicate VMs at session end** — the stale-tarball VM1 (`...-185235-...`) self-deleted cleanly
+                                                                                                                      after its own crash; VM2 (this one) self-deleted cleanly after completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
+                                                                                                                      Full root-cause + tarball-staleness narrative in the Progress Log below.
 
 ## Progress Log
 

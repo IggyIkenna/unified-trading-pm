@@ -68,7 +68,7 @@ depends_on: []
 > `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`); every listed orphaned commit was verified either already
 > re-landed on origin (re-landing would have regressed it) or genuinely gone with no recoverable content. The
 > unrouted-recovery-authority gap this doc surfaced was spun off into
-> `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`.
+> `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`.
 
 ## What happened (evidence)
 
@@ -218,7 +218,7 @@ The runtime/operator had already dispatched a task to fix this very bug — **`s
 > within 35 minutes of the orphaning), and 4 of them would have REGRESSED origin if cherry-picked blind. The content was
 > never at risk; what the 3-day unrouted escalation cost was 3 days of carrying a false P1 data-loss exposure. The
 > durable fix is therefore a cheap read-only "is this orphan still orphaned?" verifier, not recovery authority — filed
-> as `[SCRIPT] P2` in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, which also
+> as `[SCRIPT] P2` in `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, which also
 > carries the full per-item evidence, the liveness-gate results, and two further findings (a 25-strong fleet-wide
 > `refs/wip-preserve/**` population, and a liveness discriminator that trusts `.agent-claim` age too much). **Original
 > banner, preserved:** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc, so they are NOT
@@ -309,4 +309,4 @@ ancestor-or-equal of origin — the fix is to PUSH-then-reconcile, never reset-o
   (b) route a worker explicitly, (c) authorize main to run the recovery), which is exactly the authority call this audit
   must not make unilaterally. Execution also needs cross-slot worktree access to `.tabs/{9,12,13}/**` on
   `ip-172-31-5-118`, which the multi-agent safety HARD RULE bars. The P1 data-loss exposure is real and ageing — see
-  `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.
+  `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.

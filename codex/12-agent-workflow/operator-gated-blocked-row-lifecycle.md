@@ -26,7 +26,7 @@ authoritative_for: [operator-gated-blocked-row-lifecycle, blk-op-ruling-mechanis
 referenced_by:
   [
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-    /plans/active/issues/ao_operator_gated_canned_options_bc_still_no_op_2026_08_03.md,
+    /plans/archive/issues/ao_operator_gated_canned_options_bc_still_no_op_2026_08_03.md,
   ]
 owner:
 last_reviewed: 2026-08-03

@@ -15,7 +15,7 @@ summary: >-
   actually implemented — shipped it now (`deployment-service@9e6004a`). Did NOT relaunch shard 17 again: the parent
   doc's own Progress Log already flagged this VM as the 2nd relaunch of the day (`RB-INFRA-RELAUNCH`'s
   ≤2/(vm-prefix,day) bound), so a 3rd death today pages/holds rather than relaunches.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, meta]
 stage: [data, meta]
@@ -44,6 +44,8 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "both todos closed 2026-08-02 (MACHINE_TYPE bump deployment-service@9e6004a shipped + verified; RB-INFRA-RELAUNCH
+  carve-out ruled per plan_reconcile_parked_operator_decisions_2026_08_02.md na-eligibility-audit item 25)"
 locked_by:
 context_scope:
   [
