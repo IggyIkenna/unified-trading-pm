@@ -100,9 +100,41 @@ dropped/flagged as a single bad-row anomaly.
       deriving `main_date`/`interval_idx`. Regression test `test_corrupted_out_of_bounds_timestamp_dropped_not_crashed`
       added (verified it reproduces the exact `OverflowError` crash pre-fix, passes post-fix). Full `quality-gates.sh`
       green (sentinel=c10425d716e5... — full SHA `c10425d3aaaebc11ce912d77075b677b78971ea0`).
-- [ ] [DATA] P2. **market-tick-data-service** — trace the corrupted `58317-01-15` timestamp back to its raw source
-      object (`NASDAQ:EQUITY:IBIT`/`ETHA`, day=2026-05-07) to determine if this is a one-off vendor glitch or a systemic
-      unit/encoding bug (e.g. an epoch-microseconds value misread as epoch-nanoseconds, or a sentinel/NULL value not
-      filtered) — if systemic, the fix belongs in the CAPTURE path, not just as an MDPS-side guard.
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-12, `data_engineering`).** Traced the corrupted `58317-01-15` timestamp to
+      its raw source. **Verified directly against the real prod object** (not guessed):
+      `gs://market-data-tick-tradfi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-07/pipeline_mode=batch_databento/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=trades/NASDAQ:EQUITY:{IBIT,ETHA}-USD.parquet`
+      — downloaded + inspected both files. The `timestamp` column (`uint64`) is 100% clean in both: every row falls in
+      `1,778,140,803,454,358,407 .. 1,778,198,339,652,082,432` ns-since-epoch (correctly ≈2026-05-06/07). **This is NOT
+      a vendor glitch or a raw-source sentinel/NULL** — the raw Databento capture is uncorrupted. **Root cause is a
+      downstream unit-misread in MDPS, and it is confirmed SYSTEMIC (not a one-off)**: MTDS's `_apply_column_aliases`
+      (`market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py:61,95-100`) renames
+      Databento's true-nanosecond `ts_event` → the generic `timestamp` column name at write time, to unify
+      TradFi/Databento with CeFi/Tardis's native `timestamp` column (which is genuinely **microseconds**). MDPS's
+      `_get_local_timestamp_column` (`market-data-processing-service/.../app/adapters/base_adapter.py:213`) picks the
+      timestamp column by name priority (`ts_init > local_timestamp > ts_event > timestamp`) — because the `ts_event`
+      name was erased, IBIT/ETHA rows land on the generic `timestamp` fallback (priority 4), which
+      `_convert_to_processing_dt`/`_series_to_datetime` (pre-fix) unit-inferred as µs for anything not named
+      `ts_init`/`ts_event`. A genuine ns value (~1.778e18) read as µs and multiplied by 1000 → ~1.778e21 ns → year
+      ≈58,300s. **Math check**: R≈1.778e18 as ns → correct (2026-05-07); as µs (the bug) → R×1000 ≈1.778e21 ns → year
+      ≈58,300 (matches the reported `58317`); as ms/s the magnitude would be even further off and doesn't match — only
+      the ns-read-as-µs interpretation reproduces the observed value. **Confirmed systemic via a second independent
+      occurrence, same day**: the identical mechanism was already root-caused + fixed for CME combo `ESM6-ESU6` on this
+      same `2026-05-07` date (`/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` lines 865-899,
+      `market-data-processing-service@f179c96` — added a `>= 1e18 → unit="ns"` magnitude-heuristic branch to
+      `_convert_to_processing_dt`, verified live in `base_adapter.py` lines 285-314). Since IBIT/ETHA's raw values are
+      also ~1.778e18 (crosses the same `>=1e18` threshold), **the already-shipped `f179c96` fix generically covers this
+      exact crash too** — it's magnitude-based, not an instrument allowlist, so it protects any future TradFi row
+      hitting the same collision. **Residual architectural risk (not yet fixed, filed as a new tracked todo below)**:
+      the durable root cause is the shared column name `timestamp` meaning different units for CeFi/Tardis (µs) vs
+      TradFi/Databento (ns) — the current fix is a robust magnitude heuristic, not a resolution of that cross-repo
+      naming collision. Evidence: gcloud-verified raw GCS parquet (both instruments, zero anomalous rows);
+      `market-data-processing-service@f179c96` (`git log` confirmed); `base_adapter.py:285-314` (current unit-detection
+      logic confirmed present).
+- [ ] [DATA] P3. **market-tick-data-service or market-data-processing-service** — resolve the underlying naming
+      collision so unit-detection no longer depends on a magnitude heuristic: either MTDS stops aliasing Databento's
+      `ts_event` → generic `timestamp` for TradFi (preserve the unit-signaling column name through to MDPS), or MDPS's
+      column-priority/unit map becomes schema/vendor-aware (keyed off `pipeline_mode`/`source`, not column name +
+      magnitude). Scope this as its own plan — cross-repo (MTDS write-schema change has consumers beyond MDPS; check
+      features-service and any other reader of the `timestamp` column before changing the alias).
 - [ ] [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
       confirm the candle path now degrades gracefully instead of failing outright.
