@@ -130,7 +130,7 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       (254/254 instruments, 18 feature groups, 4-worker pool) and reached `EXIT_STATUS=0` at **61793s (17h9m53s)** — but
       only a PARTIAL completion: 10/18 groups succeeded, the other 8 failed on an unrelated, already-tracked bug
       (`orchestrator_returned_false`, see
-      `plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`) — not a timeout. Per-group
+      `plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md`) — not a timeout. Per-group
       timeline confirmed groups run on a 4-worker pool (not fully sequential), and one group alone (`moving_averages`,
       the 200-candle-lookback @ 24h-output-timeframe cell) took **10h20m** on its own slot; a failed group (`returns`)
       still ran 5h23m before erroring, so the failures were not uniformly fast. A genuine 18/18 completion has still

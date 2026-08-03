@@ -18,7 +18,7 @@ summary: >-
   consolidated `availability_index` are stale/missing (`market-data-tick-tradfi-prd-...`, age 47,309s vs the 7,200s
   threshold; `features-sports-test-...`, no consolidated index has EVER been written), fail-closing dependency checks
   and skip-logic reads for those shards.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -44,7 +44,7 @@ related:
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -60,8 +60,16 @@ source:
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: 2026-08-03 (all 6 findings closed in code; see Progress Log for SHAs)
 ---
+
+> **✅ ARCHIVED 2026-08-03** — all 6 findings closed via shipped code (ACKED-INTO-CODE, per
+> `/codex/11-project-management/issue-doc-lifecycle.md`): (1) multi_timeframe CLI — `features-service@39cc8653`; (2)
+> calendar verifier — `e2e-testing@8425ec5`; (3) delta_one verifier — `e2e-testing@cc8fbd3`/`63df3f0`; (4)
+> cross_instrument/onchain/sports/volatility verifiers — `e2e-testing@fbaa722` + `features-service@617388c5`; (5)
+> delta_one CEFI `perp_collapse` — `unified-trading-library@d120aa54`; sports-`-test-` manifest-consolidator gap —
+> `e2e-testing@555ab37`; (6) 13 stale test literals — `features-service@b9cf1e1c`. See the Progress Log below for full
+> per-finding evidence.
 
 # Smoke-matrix verification findings: mtf CLI broken, stale harness-verifier assumptions, stale consolidators
 

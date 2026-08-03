@@ -173,7 +173,7 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       (108s, sentinel-verified); shipped via quickmerge, landed + verified on `live-defi-rollout`. **New findings from
       this verification exercise** (multi_timeframe CLI entirely broken; calendar/delta_one smoke-harness verifier
       prefix mismatches; 2 stale manifest consolidators) filed as
-      `/plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md` per the FINDINGS CLOSURE rule —
+      `/plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md` per the FINDINGS CLOSURE rule —
       none block this todo's own P0 scope, which is proven correct independent of them.
 - [x] ✅ [DATA] P1. **DONE 2026-08-01 (slot-13).** Audited all 8 families' PROD features buckets for the caller-bug
       window: 2026-07-31 (e2e-testing relocation, confirmed via `git log --diff-filter=A` on all 8
@@ -258,7 +258,7 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
 - 2026-08-01 (slot-12, data_engineering): P0 DONE — `e2e-testing@04d261d`. See the checkbox above for full evidence.
   Verifying the fix live surfaced a stale-bucket-naming gap (5 families' `_test_bucket()` used bucket names Fold A
   retired) that was fixed inline (same file, blocking), plus 4 unrelated pre-existing bugs filed separately as
-  `/plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`. A separate incident
+  `/plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md`. A separate incident
   (`features_service.cross_instrument`'s real compute run growing to ~38.8GB RSS over hours, ignoring its `timeout`
   wrapper, causing a second same-day AO outage) happened mid-verification — the runaway PID was killed immediately on
   the operator's notification; that incident is tracked in its own doc by the agent who filed it, not duplicated here.
