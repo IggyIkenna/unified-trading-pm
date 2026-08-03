@@ -110,7 +110,22 @@ across every future incremental inventory run.
       `/plans/archive/2026_08/fleet_wide_qg_capacity_crisis_continues_day2_progress_log_history_2026_08_03.md`, kept
       only the 2 most recent live entries, re-applied `context_scope` (5 entries) — `unified-trading-pm@fcfd66f5e`.
       Verified via word-level (whitespace-normalized) diff: zero content removed across live+archive vs the original.
-- [ ] [SCRIPT] P3. **`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — STILL OPEN,
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-03 (slot-9) — superseded the "STILL OPEN, deliberately not attempted" verdict
+      below** (kept for the record; the concern about the live operational content was valid, but a genuinely-closed
+      historical span DID exist and hadn't been extracted yet). `master_data_canonicalisation_migration_catalogue_2026_06_07.md`
+      (999L pre-commit): extracted the fully-closed R1-R6 ratification-todos narrative (six ✅ DONE items — R1-backfill
+      through R6-codex) and the R5 smoke-ledger's descriptive evidence tables (BLOCKED shards / GREEN-per-AG /
+      cross-cutting findings / promotion-to-main snapshot — pure record, zero checkboxes) verbatim to a new companion
+      `plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_progress_log_history_2026_08_03.md`,
+      leaving pointer notes in place. Deliberately left in the live doc, untouched (the genuinely load-bearing content
+      the note below correctly flagged): the still-open R8-sports/pred parent checkbox, the "R5 remediation todos"
+      subsection (carries the still-open R5-fix-7 item), the Pre-migration drain resume runbook, and every active
+      coordination section (Gate-State Board, Dispatch waves, Sub-plan registry, Master coordination todos). Result:
+      999L→870L (well under the 1000L hard cap). Re-applied the pre-computed `context_scope` (every path re-verified to
+      resolve on disk) + bumped `last_updated` to 2026-08-03. Verified with `bash scripts/plan-hygiene/check_line_caps.sh`
+      (✅ within cap, scoped mode) and `check_frontmatter.sh` (✅ clean) on both the trimmed doc and the new archive
+      companion — `unified-trading-pm@fe38bfd97`. Original note (for the record):
+  - **`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — STILL OPEN,
       deliberately not attempted mechanically 2026-08-03.** This doc already went through TWO prior line-cap extraction
       rounds (2026-07-23 umbrella-split, 2026-07-24 second-tier extraction) — every major section is already down to a
       short verdict-pointer stub pointing at an archive doc. What remains is either (a) a LIVE operational runbook (the
@@ -277,3 +292,21 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   session — a completed edit reverted to HEAD with no trace in `git stash list`, no data lost since the recipe +
   archive-doc target were still reconstructable, but redo work was needed); the fix is procedural — never touch this
   repo's working tree while a quickmerge you started is still running.
+- **2026-08-03 (slot-9) — DONE, supersedes slot-1's "deliberately not attempted" verdict above with a real extraction.**
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` was already fully handled by slot-1 in a concurrent
+  commit (`unified-trading-pm@fcfd66f5e`) before this todo was picked up — trimmed to 333L, `context_scope` present and
+  matching the pre-computed entry above verbatim; no action needed there. For
+  `master_data_canonicalisation_migration_catalogue_2026_06_07.md`: slot-1's caution about the live operational/
+  coordination content (Pre-migration drain runbook, Gate-State Board, Dispatch waves, Sub-plan registry, Master
+  coordination todos) was correct and none of it was touched — but a dedicated read-through turned up a genuinely
+  closed historical span slot-1 hadn't extracted: the R1-R6 ratification-todos narrative (six ✅ DONE items) and the R5
+  smoke-ledger's descriptive evidence tables (BLOCKED shards / GREEN-per-AG / cross-cutting findings /
+  promotion-to-main snapshot — pure record, zero checkboxes). Extracted both verbatim to a new companion
+  `plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_progress_log_history_2026_08_03.md`, leaving
+  pointer notes in place. Deliberately left in the live doc, untouched: the still-open R8-sports/pred parent checkbox
+  (its sub-items are done but the parent itself was never flipped) and the "R5 remediation todos" subsection (carries
+  the one still-open R5-fix-7 item) — this pass extracts only genuinely-closed history, per the issue's own stated
+  discipline. Result: 999L→870L (well under the 1000L hard cap). Re-applied the pre-computed `context_scope` (every path
+  re-verified to resolve on disk) + bumped `last_updated` to 2026-08-03. Verified with
+  `bash scripts/plan-hygiene/check_line_caps.sh` (✅ within cap, scoped mode) and `check_frontmatter.sh` (✅ clean) on
+  both the trimmed doc and the new archive companion — `unified-trading-pm@fe38bfd97`. Checkbox flipped here.
