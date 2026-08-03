@@ -25,6 +25,7 @@ related:
   [
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
+    /plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
   ]
 created: "2026-08-03"
 last_updated: "2026-08-03"
@@ -150,12 +151,31 @@ NEW root cause in the same incident family, not a duplicate.
       terminal `rc=` line is reaped, (d) `--dry-run` never calls delete. Verified the test fails on the pre-fix script
       (reproduces the exact incident: healthy VM read as zombie) and passes on the fix. `quality-gates.sh` green,
       quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
-- [ ] [INFRA] P1. **Audit whether `reap-zombies.sh` has ever been invoked against prod in a way that could have silently
-      killed other healthy VMs** — check `gcloud logging read` for `v1.compute.instances.delete` events fleet-wide over
-      the last 30 days where `callerSuppliedUserAgent` matches the `gcloud` CLI (`from-script/True`, NOT the Python
-      compute client's signature) and cross-reference each deleted VM's run.log for a genuine terminal `rc=`/`VERDICT`
-      line vs. a healthy-but-young kill. If other false-positive reaps are found, file them as their own follow-up
-      (data-loss / wasted-compute) issue docs per the findings-triage HARD RULE. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Audit whether `reap-zombies.sh` has ever been invoked against prod in a way that could have
+      silently killed other healthy VMs** — check `gcloud logging read` for `v1.compute.instances.delete` events
+      fleet-wide over the last 30 days where `callerSuppliedUserAgent` matches the `gcloud` CLI (`from-script/True`, NOT
+      the Python compute client's signature) and cross-reference each deleted VM's run.log for a genuine terminal
+      `rc=`/`VERDICT` line vs. a healthy-but-young kill. If other false-positive reaps are found, file them as their own
+      follow-up (data-loss / wasted-compute) issue docs per the findings-triage HARD RULE. (repo: deployment-service) —
+      **Answer: NO evidence of reap-zombies.sh's list+delete-loop pattern actually running against prod in the audited
+      30-day window.** Pulled all `v1.compute.instances.delete` events (20,691 total, project-wide) via
+      `gcloud logging read`; the `uts-prd-sa@...` + gcloud-CLI/`from-script/True` signature matching the flagged
+      incident's actor accounts for 202 events / 101 unique instances. A 12-instance random sample's `run.log` (read at
+      the CORRECT `vm-logs/` path) each showed a clean, self-contained `DEPLOYMENT_COMPLETED`/`DEPLOYMENT_FAILED`
+      terminal state immediately followed by `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete` — the documented,
+      intentional self-delete convention (`launcher_common.sh`/`vm-exec-with-gcs-tee.sh`), not reap-zombies.sh.
+      Caller-IP reuse across unrelated, temporally-scattered instances is consistent with Cloud NAT IP-pool sharing
+      across independent self-deletes, not one centralized actor. **BIG FINDING — corrects this doc's own root-cause
+      claim**: re-checked the ORIGINAL flagged VM's `run.log` the same way, and it shows
+      `[vm-exec] DEPLOYMENT_FAILED cause=stall reason=WORKER_STALLED     mode=no-progress-marker stalled_for=3639 threshold=3600`
+      immediately before its self-delete — i.e. the VM was SELF-killed by `vm-exec-with-gcs-tee.sh`'s own stall watchdog
+      (a `STALL_PROGRESS_REGEX=checkpoint` misconfiguration in the launcher — the tool only logs "checkpoint" every 20th
+      day, never per-day), NOT reaped by reap-zombies.sh. Filed as
+      `/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md` (P0) with the full evidence
+      chain, the launcher fix (already applied, `STALL_PROGRESS_REGEX=day=`), and a time-critical callout that the
+      relaunched VM (`backfill-defi-dex-swaps-20260803-103749`) is running the OLD pre-fix metadata and is on track to
+      hit the identical self-kill imminently. Todo 1's reap-zombies.sh log-path fix remains a real, independently
+      worthwhile fix — it just wasn't the cause of THIS incident.
 - [ ] [INFRA] P2. **Determine (or rule out) what actually invoked `reap-zombies.sh` at `2026-08-03T10:30:56Z`** — grep
       is inconclusive (no Terraform/GHA/systemd wiring found in this repo checkout); check agent-orchestrator activity
       logs / other slots' session history around that timestamp for an ad-hoc invocation, or confirm it's dispatched
@@ -194,3 +214,14 @@ NEW root cause in the same incident family, not a duplicate.
   verified ancestor of `origin/live-defi-rollout`. Todos 2-4 (audit for other false-positive reaps, determine what
   invoked the script, harden the source-correction script's checkpoint cadence) remain open — out of this task's scope
   (single P0 todo dispatched).
+- **2026-08-03T~11:30Z** (AO dispatch, slot 6, `infra`) — Completed todo 2 (the fleet-wide false-positive-reap audit).
+  **Correction to this doc's own root cause**: the flagged VM was NOT killed by reap-zombies.sh — its `run.log`, read at
+  the correct `vm-logs/` path, shows a self-inflicted `WORKER_STALLED`/`no-progress-marker` kill by
+  `vm-exec-with-gcs-tee.sh`'s own stall watchdog, caused by a `STALL_PROGRESS_REGEX=checkpoint` misconfiguration in
+  `launch-backfill-defi-dex-swaps-source-correction-vm.sh` (the tool only logs "checkpoint" every 20th day, so the
+  watchdog's 3600s no-progress threshold trips before the first checkpoint on every real run). Full evidence chain + the
+  fix (already applied, `STALL_PROGRESS_REGEX=day=`, pending ship) + a time-critical note that the relaunched VM is
+  running the pre-fix metadata: `/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`
+  (P0). Todo 1's reap-zombies.sh fix stays valid/necessary (a real bug, just not this incident's cause). Todos 3-4
+  remain open. No GCS deletes/mutations performed — read-only investigation (30-day `gcloud logging read`, GCS log
+  reads, `gcloud compute instances describe`) plus the launcher-script edit filed in the new doc.
