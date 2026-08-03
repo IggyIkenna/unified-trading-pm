@@ -817,3 +817,43 @@ not just noting.
   touched; `features-service`/`agent-orchestrator` worktrees read-only in this session, no commit needed there; the same
   pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this slot was again left untouched
   as out-of-scope for this one-shot escalation).
+
+- **2026-08-03 ~04:44-04:52Z (cicd escalation `agt-ed1b93`, slot 8, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — a re-dispatch of the same `deployment-api main_ci_red` wall `agt-c82335` diagnosed earlier this
+  session; same false boot-context premise repeated verbatim ("the code fix already exists on `live-defi-rollout`" —
+  still false, LDR is still genuinely red). Root cause confirmed unchanged: `main` HEAD (`969bce0`) is 447 commits
+  behind LDR, so the shrinking-ratchet baseline `read_availability_index_bare_call_baseline.yaml` (keyed to
+  `deployment_api/services/data_status_drilldown/_core.py:175/392` on current LDR) no longer line-matches main's stale
+  copy of the same wrapper calls (`:171/388` there) — a spurious drift failure, not a real code defect; fixed
+  automatically once promotion catches main up, never by editing LDR. Fleet-promote gate confirms the sole blocker:
+  `GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  (dep-order block on `unified-api-contracts`/`deployment-service` is advisory-only, "promoting anyway", not the actual
+  gate). **New evidence this entry adds, distinguishing it from the prior 4 same-family entries' "genuinely progressing,
+  leave it alone" disposition**: LDR's own queued run (`30780858931`, created 03:04:48Z) was NOT progressing — direct
+  process inspection of its `tests` leg (PID 11083 + 4 xdist children, `--cov=deployment_api`) found it alive since
+  03:12Z but pinned at ~0% CPU across two 5s-apart snapshots, `S`-state (not `D`-state disk-I/O wait like every prior
+  entry's "verified real progress" case), 32s of accumulated CPU time after ~1h35m wall-clock — a genuine stall, not
+  slow-but-alive. `ps -o ni` confirmed `NI=10` (governor-niced, per `qg-host-governor.sh`'s de-prioritise-on-acquire
+  design) while the host ran ~30+ concurrent `quality-gates.sh` invocations plus ~15 un-niced interactive `claude`
+  sessions each holding a steady 15-20% CPU slice — the niced QG tree was losing the scheduler lottery outright, not
+  merely running slower. Separately notable: `qg-host-governor.sh --status` reported **0 live reservations / 0 running
+  heavy phases** at the same moment ~30 `quality-gates.sh` processes were live host-wide — the K=6 admission cap this
+  governor exists to enforce is not visibly gating the CI-runner-triggered invocations in practice (worth a follow-up
+  investigation into whether CI legs acquire the same reservation ledger as interactive-slot legs, separate from this
+  entry's scope to resolve). Host corroboration: `uptime` load average **34.33/35.08/36.89** (16 vCPUs, >2x
+  oversubscribed), swap **23-28Gi/47Gi** in use — consistent with every prior entry, crisis still not abating (>19h and
+  counting per `agt-15e651`'s count, now going on 20h). **Action taken (per this doc's own standing directive at
+  `agt-15e651` not to re-confirm a 5th/6th time): `gh run cancel 30780858931` +
+  `gh workflow run quality-gates-v2.yml --ref live-defi-rollout`** — the stalled run was genuine dead weight (holding
+  RSS/swap for zero forward progress, one fewer niced contender freed for the rest of the fleet); a fresh run
+  (`30785516231`) is now queued. Not claiming this fixes the crisis — a fresh run under the same host load will face the
+  same contention — but distinguishes "stuck, worth clearing" from "slow but alive, leave it" going forward, and frees
+  the dead process's swap/RSS immediately rather than leaving it to time out on its own. `GET /api/repo-blockers` →
+  checked, `open: []`. `AUTHORING_SLOT` from boot context is `ci-reconcile`, not a numeric slot id —
+  `POST /api/slots/{slot_id}/message` requires an int, same non-int-rejection class as `agt-c82335`/`agt-15e651`; this
+  doc entry is the outcome record. **Escalating per the established path**: this is now the 5th `cicd` dispatch onto
+  this exact wall family within ~4 hours, all independently landing on "fleet capacity crisis, no code fix applicable" —
+  flagging this doc's own P1 status for an operator capacity decision (reduce concurrent interactive slot count, or make
+  the QG governor's niceness/reservation gate actually bind CI-runner legs) rather than continuing to dispatch `cicd`
+  workers to re-derive the same diagnosis. Slot left clean on `live-defi-rollout` in `deployment-api` (read-only this
+  session, no local changes) and this PM worktree (only this doc touched).
