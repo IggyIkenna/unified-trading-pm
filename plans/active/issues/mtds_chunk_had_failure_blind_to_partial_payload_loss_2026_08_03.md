@@ -39,7 +39,7 @@ tags:
 related:
   [
     /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
-    /plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md,
+    /plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md,
     /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
