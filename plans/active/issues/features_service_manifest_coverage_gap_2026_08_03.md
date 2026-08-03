@@ -125,12 +125,21 @@ not something an AO worker should guess at.
 
 ## Open work
 
-- [ ] 1. [SCRIPT] P1. **Backfill `record_captured` manifest rows for onchain/defi's 783 real orphan objects** — read the
-      full list from the sweep's `--report-out` parquet
+- [x] 1. ✅ [SCRIPT] P1. **Backfill `record_captured` manifest rows for onchain/defi's 783 real orphan objects** — read
+      the full list from the sweep's `--report-out` parquet
       (`gs://deployment-scripts-central-element-323112/feature-orphan-sweep/20260803-104258/feat-orph-oc-defi-20260803-104258/orphan_sweep_onchain_defi.parquet`),
       write one `record_captured` row per (day, feature_group) cell (additive-only, mirrors
       `backfill_orphan_class_e.py`'s pattern — new script needed, or extend it if the shard-key shape is close enough).
-      Repo: features-service. VM-run if the object count needs it, in-session may suffice at this size.
+      Repo: features-service. VM-run if the object count needs it, in-session may suffice at this size. —
+      features-service@eaf99c9a. New `scripts/backfill_feature_orphan_class_e.py` (+ unit tests) — RE-VERIFY vs the live
+      index → per-object footer row-count read → `ManifestWriter.add()` (the same legacy-add shape the live onchain
+      writer itself uses, so a backfilled row is indistinguishable from a real one) → SAMPLE-VERIFY via the writer's own
+      per-VM shard readback. Ran in-session (783 objects, ~427MB total, well within bounds): all 783 cells re-verified
+      as still-orphan, footer-read 0 failures/0 zero-row-junk, all 783 `record_captured`'d and confirmed present with
+      `capture_status=captured` in the per-VM shard
+      `gs://features-defi-prd-central-element-323112/_index/per_vm/feature-orphan-backfill-onchain.parquet`. Awaits the
+      manifest consolidator to merge into the canonical index; a re-run of
+      `feature_orphan_sweep.py     --feature-family onchain` after that should read `orphan_class_E=0`.
 - [ ] 2. [SCRIPT] P1. **Backfill `record_captured` manifest rows for sports/sports's 67,077 real orphan objects** — same
       pattern as todo 1, reading
       `gs://deployment-scripts-central-element-323112/feature-orphan-sweep/20260803-104314/feat-orph-spt-sports-20260803-104314/orphan_sweep_sports_sports.parquet`.
