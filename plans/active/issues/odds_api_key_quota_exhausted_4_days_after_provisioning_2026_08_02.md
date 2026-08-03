@@ -30,6 +30,8 @@ related:
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
+    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
 created: 2026-08-02
 parent_epic: sports_master
@@ -38,20 +40,22 @@ estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineering
-drift_direction: unknown
+drift_direction: advance-code
 assigned_vm: planning
 execution_scope: orchestrator-agent
 source: [infra_capture_and_devops_leftovers-001 backlog task, slot 3, 2026-08-02]
 resolved_by:
 locked_by:
 depends_on: []
-last_updated: 2026-08-02
+last_updated: 2026-08-03
 context_scope:
   [
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
     /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py,
+    deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
   ]
 ---
 
@@ -86,17 +90,51 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
      4x prediction-live-kalshi/polymarket-*)
 ```
 
-## What to check next (not attempted in this pass)
+## What to check next
 
-1. Confirm the actual billing/reset terms of this odds-api-key subscription directly with The Odds API dashboard/
-   billing page (operator-only access) — is 5,000,000 a recurring monthly figure or a one-time signup credit?
-2. Audit every caller of this secret across the fleet (`grep -rn odds-api-key` / `odds_api_secret_name` across
-   market-tick-data-service, instruments-service, any backfill/one-off scripts) for polling cadence and whether any are
-   looping without the intended interval/backoff.
-3. Check the BATCH odds_api capture path's actual call volume for the 2026-07-29..08-02 window (manifest `attempted_at`
-   row counts × estimated credits/call) to see if it alone could plausibly explain ~5M credits in 4 days.
-4. Once root-caused: either request a quota increase / fix the runaway consumer, THEN resume the live VM per
-   `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo.
+1. **[OPERATOR] Confirm the actual billing/reset terms of this odds-api-key subscription directly with The Odds API
+   dashboard/billing page (operator-only access)** — is 5,000,000 a recurring monthly figure or a one-time signup
+   credit? Not answered by anything in this pass — still needs the operator to check the vendor dashboard directly.
+2. ✅ **DONE (root-caused via corpus cross-reference, 2026-08-03)** — Audit every caller of this secret across the
+   fleet. See Progress Log below: this is NOT a code-level runaway/no-backoff loop. The only two real callers are the
+   live WS connector (`odds_api_ws.py`, confirmed not running) and the batch `OddsApiAdapter` (has a working
+   `_CONSECUTIVE_FAILURE_WARN_THRESHOLD`/`credits_exhausted` circuit breaker that correctly self-stops on
+   `OUT_OF_USAGE_CREDITS` — it isn't looping blindly once exhausted).
+3. ✅ **DONE (root-caused via corpus cross-reference, 2026-08-03)** — the BATCH capture path alone plausibly explains
+   the burn: NOT one runaway process, but **5+ separate full/near-full-range backfill VM launches against the same key
+   within the 2026-07-29→08-02 window**, fully documented in
+   `/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s Progress Log (same underlying
+   `odds-api-key`, same 5,000,000-credit account, same exhaustion evidence
+   `x-requests-remaining: -772`/`x-requests-used: 5000772` first surfaced there on 2026-08-02, byte-identical to this
+   doc's own evidence — this is the SAME exhaustion event, not a coincidence). Sequence found:
+   `mtds-backfill-odds- gapfill-tail3-20260729` → `mtds-backfill-odds-sentinel-fix-20260731` (OOM-killed most chunks,
+   chunks 1-6 non-clean) → `mtds-backfill-odds-smallchunk-20260731` (SPOT-preempted immediately) →
+   `mtds-backfill-odds-smallchunk2-20260731` (OOM-killed 4x, then a silent freeze, deleted at chunk 75/450) → **5
+   previously-undocumented parallel shards** `mtds-backfill-odds-split1..split5` (`--chunk-size 2`, launched with
+   `RESUME_ALLOW_PARALLEL=true` to bypass the launcher's own singleton guard, ran 2026-07-29T17:45–19:15Z, all 5 exited
+   clean) — plus at least one ad-hoc local profiling script (`profile_odds_api_backfill_memory_2026_07_31.py`) making
+   live historical calls outside any VM. Each `download_batch()` call issues a discovery call
+   (`/v4/historical/sports/{league}/odds`, itself billed) PLUS up to 8 kickoff-relative offset calls at 60 credits each,
+   per league, per day, and the default launcher range is the full `2020-06-06..<today>` floor-to-present (2247+ days) —
+   every one of the OOM-crash-and-relaunch cycles above re-incurred the discovery-call cost (and, for chunks that got
+   partway through a date before dying, the historical fetch cost too) for whatever portion of that range the
+   freshness-skip logic hadn't yet durably recorded, across **5+ independent VM-scale attempts in 4 days**, several
+   explicitly running in parallel. This is sufficient to explain a multi-million-credit burn without any single
+   "misconfigured retry/no-backoff loop" — it's an uncoordinated-relaunch / no-cost-accounting gap: unlike the Tardis
+   venues (`tardis-concurrency-guard.sh`, hard cap 1 concurrent, both clouds — see workspace CLAUDE.md), this launcher
+   has no equivalent credit-budget or concurrent-VM guard, and `--allow-parallel`/`RESUME_ALLOW_PARALLEL=true` exists
+   specifically to bypass its only guard (the singleton lock) for legitimate sharded runs — which is exactly what
+   happened with `split1..split5`.
+4. **Not yet actioned** — the operator has, separately, already ruled on this exact quota exhaustion (same evidence,
+   found via the sibling doc): **2026-08-02, answering `BLK-6728ec9a`: Option B — purchase additional credits / upgrade
+   the plan now.** As of the last live check (`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, slot 13,
+   2026-08-02), the top-up had NOT yet landed (`x-requests-remaining` still `-772`). This session has no gcloud/
+   Secret-Manager credentials to re-verify live quota state — **next dispatch with live access should re-curl
+   `/v4/sports` to check whether the top-up landed before resuming the live VM** per
+   `sports_live_availability_and_source_latency_2026_07_24.md`'s P2 todo. Recommend, independent of the top-up: add a
+   concurrency/cost guard to `launch-mtds-sports-odds-backfill-vm.sh` (mirroring the Tardis pattern) so a future OOM-
+   crash-retry cycle can't silently re-multiply credit spend the same way — not yet filed as its own todo, worth doing
+   before the next backfill attempt on this launcher.
 
 ## Progress Log
 
@@ -104,3 +142,26 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
   the sibling plan's live-resume todo. Not investigated further in this pass (scope: surface the finding, not root-cause
   it) — no code changed, no VM launched.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **2026-08-03 (interactive session, data_engineering)**: Ran the pre-task plan/issue conflict check (grepped
+  `plans/active/` for `odds-api`/`odds_api` — no supersession, doc still `status: open`), then worked the doc's 4-step
+  "what to check next" list. Steps 1 and 4's "confirm top-up landed" sub-step remain genuinely blocked on
+  operator/live-credential access this sandboxed session does not have (`gcloud auth login` fails non-interactively here
+  — no GCP creds available). Steps 2 and 3 are answered: grepped every real caller of
+  `odds-api-key`/`odds_api_secret_name` across market-tick-data-service (`market_interface/config.py`,
+  `adapters/sports/odds_api_adapter.py`, `live/connectors/odds_api_ws.py`) and read the batch adapter in full — no
+  code-level runaway loop; the batch adapter already has a working credit-exhaustion circuit breaker
+  (`_run_league_fetch_loop`'s `credits_exhausted` flag, tripped on `OUT_OF_USAGE_CREDITS` or `<10` remaining). Then, per
+  the pre-task conflict-check discipline, grepped the wider plans corpus for other docs referencing this same
+  secret/evidence and found `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` already contains the full, dated
+  forensic trail (its own Progress Log, 2026-07-29 through 08-02) of every batch backfill VM launched against this exact
+  key in the exact window this doc's burn happened, ending in the SAME exhaustion evidence
+  (`x-requests-remaining: -772`, `x-requests-used: 5000772`) independently recorded there on 2026-08-02 — i.e. this is
+  one exhaustion event, documented in two places. Cross-referenced both docs (`related`/`context_scope` updated above)
+  rather than re-deriving the VM-launch history from scratch. **Root cause: not a single runaway/no-backoff consumer,
+  but 5+ uncoordinated full-or-near-full-range batch backfill VM relaunches (several after OOM crashes, 5 explicitly
+  parallel via a singleton-guard bypass) against a shared, unbudgeted key inside a 4-day window** — see item 3 above for
+  the full sequence and mechanism. No code changed this session (root-cause/cross-reference only, per this doc's own
+  scope); the concurrency/cost-guard recommendation in item 4 is flagged but not filed as its own todo yet — leaving
+  that decision to whoever next touches this doc with live access to confirm the top-up status first (filing a guard
+  todo before knowing if the top-up landed would be premature — the guard's urgency depends on whether more backfill
+  attempts are imminent).
