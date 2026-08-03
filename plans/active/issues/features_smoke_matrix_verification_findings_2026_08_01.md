@@ -253,11 +253,24 @@ not duplicated here.
       (retry succeeded identically) — a flaky external-data fetch in a sibling feature-group generator, unrelated to
       this fix, out of scope. `e2e-testing@8425ec5`, full `quality-gates.sh` green (70s), sentinel-verified, confirmed
       landed on `live-defi-rollout` via `git merge-base --is-ancestor`.
-- [ ] [SCRIPT] P2. **e2e-testing** — fix delta_one's `smoke_matrix.py` `_verify_gcs_parquet` prefix to match
+- [x] ✅ [SCRIPT] P2. **e2e-testing** — fix delta_one's `smoke_matrix.py` `_verify_gcs_parquet` prefix to match
       `OUTPUT_PATH_TEMPLATE` (`by_date/day={date}/feature_group={group}/timeframe={timeframe}/`, no `features/` prefix)
       — confirm the exact `timeframe` value the smoke cell's CLI invocation implies (check `_build_cli_invocation`'s
       default/omitted `--timeframe`) before hardcoding it into the verifier. **Done when**: a real delta_one smoke run
-      (any viable asset_group with real upstream data) returns PASS from the harness itself.
+      (any viable asset_group with real upstream data) returns PASS from the harness itself. — Fixed by slot-10
+      (2026-08-03) in two rounds: round 1 (`e2e-testing@cc8fbd3`) matched the cited
+      `DependencyChecker     .OUTPUT_PATH_TEMPLATE` shape, but a live GCS listing then revealed that constant is itself
+      DEAD (zero consumers anywhere in features-service) and doesn't describe the real write path — the real writer
+      (`FeatureWriter._write_instrument`, `features_service/delta_one/app/core/feature_writer.py`) writes
+      `delta_one/by_date/day={date}/feature_group={group}/feature_group_version={N}/timeframe={tf}/{instrument_id}.parquet`,
+      with `feature_group_version` resolved per-group from a registry (not a fixed constant). Round 2
+      (`e2e-testing@63df3f0`) corrected the prefix to stop right after `feature_group=` (GCS prefix-matching is a plain
+      string-prefix over the full blob name, so this still matches every version/timeframe/instrument written under that
+      group — no need to hardcode a specific timeframe). Verified live: `_verify_gcs_parquet` found real parquet blobs
+      under
+      `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-06-28/feature_group=technical_indicators/`
+      (previously found none, even after round 1). Confirmed landed on `live-defi-rollout` via
+      `git merge-base --is-ancestor 63df3f0 origin/live-defi-rollout`.
 - [ ] [SCRIPT] P2. **e2e-testing** — audit cross_instrument/onchain/sports/volatility's `smoke_matrix.py` verifiers
       (`_verify_gcs_parquet` prefix, `_verify_test_manifest` asset_group/feature_group filter) against each family's
       REAL write-path code (writer/orchestrator, not assumptions) — this session only confirmed the bucket NAME is now
@@ -410,3 +423,11 @@ not duplicated here.
   a new bug — no new finding filed. `e2e-testing@8425ec5`, full `quality-gates.sh` green (70s), sentinel-verified,
   confirmed landed on `live-defi-rollout` via `git merge-base --is-ancestor`. 6 findings total; 4 closed (this one +
   findings 1, 5, 6), 2 still open (3, and the sports-`-test-` consolidator gap).
+- 2026-08-03 (slot-15, data_engineering, backlog task `features_smoke_matrix_verification_findings-003`): flipped
+  finding 3 (delta_one `smoke_matrix.py` verifier)'s checkbox — the code fix was already shipped by slot-10 earlier the
+  same day (`e2e-testing@cc8fbd3` round 1, `e2e-testing@63df3f0` round 2) but the plan checkbox itself was never
+  flipped. Verified both commits are on `origin/live-defi-rollout` via `git merge-base --is-ancestor`; round 2's commit
+  message documents live verification against real GCS
+  (`gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-06-28/feature_group=technical_indicators/`
+  found real parquet blobs after the fix, none before). No new code shipped this session — checkbox-only flip. 6
+  findings total; 5 closed (this one + findings 1, 2, 5, 6), 1 still open (the sports-`-test-` consolidator gap).
