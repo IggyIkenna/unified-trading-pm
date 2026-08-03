@@ -190,14 +190,27 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
       superseded by the live cross-pool test in Phase 2 part 1, which used its real `WORKSPACE_ROOT` regardless of which
       commit its checkout happened to be on, since `_qg_shared_root()`'s behavior depends only on the path, not the
       checkout content.)
-- [ ] [INFRA] P2. Update `/codex/06-coding-standards/quality-gates.md` to note the glue-runner topology is now covered
+- [x] [INFRA] P2. Update `/codex/06-coding-standards/quality-gates.md` to note the glue-runner topology is now covered
       (mirrors the parent plan's own 🟢 LIVE + VALIDATED banner update pattern). Close the parent plan's 2026-08-02 todo
       (`_qg_shared_root()` glue-runner fix) by pointing it at this plan's completion, and close block ticket
-      `BLK-7eedce54`.
-- [ ] [INFRA] P2. Once live + soaked, check whether `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` and
+      `BLK-7eedce54`. — 2026-08-03: done, `unified-trading-pm@4247e957f`. Codex banner added (mirrors the parent's 🟢
+      pattern). Parent plan's 2026-08-02 todo flipped `[x]` with a closure note. `BLK-7eedce54`'s underlying issue is
+      resolved + documented; did NOT flip its status in the AO `/blocked` ticket system itself — no verified API access
+      from this interactive session (dashboard JWT / internal proxy auth not configured here). If the operator wants the
+      ticket-system record formally closed too, that needs either operator action or a session with AO API auth.
+- [x] [INFRA] P2. Once live + soaked, check whether `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` and
       its day-2 continuation can be marked resolved (or at minimum banner a material-improvement note with a
       before/after escalation-rate comparison) — this fix directly targets their root cause, so their own resolution
-      should follow, not be assumed automatically.
+      should follow, not be assumed automatically. — 2026-08-03: done, `unified-trading-pm@4247e957f`. **Banner-only,
+      NOT resolved** — the 2026-07-27 doc is at 995/1000 lines (no new entry added; that doc's own established pattern
+      routes continuations to the day-2 doc). Added a before/after material-improvement note to the day-2 doc: before =
+      10 repos with isolated ledgers, 0 shared admission (2026-08-02); after = 6+ real concurrent repos correctly
+      sharing one ledger, admission gating actually binding, 0 OOM (3 separate live spot-checks this session).
+      Explicitly scoped what this fix does NOT address, per a `~19:56Z` entry found in the day-2 doc describing a
+      STILL-ACTIVE, DIFFERENT root cause (runner-POOL starvation — a pool with zero available runner processes queues
+      forever; a capacity/count problem, not admission-coordination) — so neither doc should be marked resolved on this
+      fix alone. Also noted: AO slot-worker QG runs (a separate `.tabs`-scoped ledger population on the same host) are
+      still NOT unified with the glue-runner pools' ledger.
 
 ## Progress Log
 
