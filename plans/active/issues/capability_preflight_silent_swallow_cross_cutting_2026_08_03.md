@@ -32,7 +32,7 @@ tags:
 related:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md,
+    /plans/archive/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md,
   ]
 created: 2026-08-03
 last_updated: 2026-08-03
@@ -58,7 +58,7 @@ superseded_by:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md,
+    /plans/archive/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md,
   ]
 ---
 

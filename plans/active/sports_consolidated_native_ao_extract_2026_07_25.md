@@ -483,22 +483,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                                              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                                              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                                              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                                              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                                              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                                              count > 0) rather than a blanket `empty_confirmed`.
+                                                                                                                  from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                                                                                  404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                                                                                  of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                                                                                  correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                                                                                  compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                                                                                  count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                                              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                                              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                                              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                                              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                                              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                                              instance's result was independently verified correct, not corrupted by it): filed
-                                                                                                              `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                                              todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                                              day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                                                                                  **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                                                                                  the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                                                                                  never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                                                                                  report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                                                                                  defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                                                                                  instance's result was independently verified correct, not corrupted by it): filed
+                                                                                                                  `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                                                                                  todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                                                                                  day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -530,7 +530,8 @@ context_scope:
       explicit "none found") exists, each finding citing a symbol. Source:
       `sports_consolidated_closeout_2026_07_19.md:770-773`. **DONE 2026-08-01** — 14 findings (3 instruments-service / 6
       market-tick-data-service / 5 execution-service), each citing file+symbol, filed with 13 scoped fix todos at
-      `plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md`.
+      `/plans/archive/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` (archived 2026-08-03, all
+      todos done).
 - [ ] [DOC] P3. **Track X — add `data_completion_sports_history_2026_07_24.md` (0 open todos) as a bulleted entry to
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s Aggregated-source-docs index** — it is not
       currently listed there. (repo: unified-trading-pm, doc edit). **Done when**: the entry appears in that file's
