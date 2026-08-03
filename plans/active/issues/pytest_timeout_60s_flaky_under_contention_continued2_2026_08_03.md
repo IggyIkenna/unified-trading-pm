@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T17:50Z
+last_updated: 2026-08-03T17:55Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -550,3 +550,34 @@ repeated here.
   `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit). Adding no
   new todo — todo 2 (missing cooldown/dedup guard) already fully covers this; this is simply another same-day data point
   for it.
+
+- **2026-08-03 ~17:49-17:55Z (`cicd` escalation `agt-2482ca` re-dispatched to slot 11, `features-service`,
+  `wall_type=main_ci_red`, `pr_number=0`) — SAME escalation ID already fully diagnosed by the earlier slot-7 pass above
+  (~16:00-16:20Z), re-verified from scratch, disposition unchanged but state has moved forward**: the LDR→main promotion
+  PR (`#933`, `promote/features-service/7eca96acc75d`) has since **MERGED** (`mergedAt=2026-08-03T17:31:15Z`,
+  `ci_status=SIT_VALIDATED` at merge time, v2-gated auto-merge armed) — the push-triggered `quality-gates-v2` run this
+  produced on `main` (`30837128315`) was still `queued` (both `tests`/`checks` job slices, `content sentinel` slice
+  already `success`) at investigation end, ~23min after dispatch, with zero progress — confirmed via
+  `gh api .../actions/runners`: still exactly ONE online runner (`glue-ip-172-31-5-118-1`), `busy=true`, serialising
+  behind 3 other queued quality-gates-v2 workflow runs for this repo (`30837377996` LDR workflow_dispatch, `30837121191`
+  the now-closed promote-PR's own pull_request run, `30837126930` Semver Agent) — the same fleet-wide single-runner
+  bottleneck this doc-chain has established across 8+ repos, not a stall. `gh pr list --base main` → 0 open PRs
+  (promotion already landed, not stuck). Independently re-read the last real (non-cancelled) completed failure on both
+  branches before accepting "no code gap": `main`'s `30825589070` (15:02:36Z) and LDR's `30818407385` (13:32:16Z) both
+  failed via the established scheduler-starvation signature on different random hang sites
+  (`test_trendline.py::test_convergence_acceleration_column` vs `test_momentum.py::test_volume_momentum_columns_present`
+  for `tests`; both also hit the `[4/6] TYPE CHECK` exit-124 wall-clock timeout on `checks`, already ruled non-blocking
+  cross-repo-warn noise by the earlier slot-7 pass's entry above) — no new failure shape, no code regression. Confirmed
+  `PYTEST_TIMEOUT=300`/`PYRIGHT_TIMEOUT=300` intact and unchanged on current LDR HEAD. `GET /api/repo-blockers` →
+  `open: []`. Did NOT cancel/redispatch the in-flight `30837128315` (would forfeit its ~23min of accumulated queue
+  position for zero benefit), consistent with this doc-chain's established practice. **Disposition: no code or workflow
+  change made or needed** — every sanctioned mitigation already exists on `live-defi-rollout`; the promotion has already
+  landed and its confirmatory `main` run is progressing normally through the single-runner queue; remaining wall is pure
+  runner-queue-depth wait. This is now the **3rd same-day dispatch of this exact escalation ID** (`agt-2482ca`: slot 7
+  ~16:00-16:20Z, this slot-11 pass) — another direct data point for todo 2's operator-flagged missing cooldown/dedup
+  guard (the dispatcher re-fired the same ID to a fresh slot ~90min later without the state having meaningfully changed
+  beyond the promotion PR itself merging, which was already expected/in-flight, not a new gap needing agent action).
+  `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch
+  changes in either repo). Adding no new todo — todo 2 already fully covers this.
