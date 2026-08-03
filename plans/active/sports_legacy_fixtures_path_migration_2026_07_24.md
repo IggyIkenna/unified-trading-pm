@@ -65,9 +65,11 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/sports-gcs-path-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
   ]
 ---
 
@@ -345,3 +347,8 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   `fixtures_schedule` read, and removed the 3 now-dead fallback-specific unit tests. Full `quality-gates.sh` green
   (156s), shipped `instruments-service@333c35d2` via the standard Pass-1/Pass-2 flow. Full evidence on todo 5's own
   checkbox above.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the companion finalize twin
+  (`sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md`, authored 2026-08-02, not yet cited in the
+  reading list) and the writer/reader source file
+  (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py`) that every todo in this plan
+  (census, fallback removal, delete) actually touches.

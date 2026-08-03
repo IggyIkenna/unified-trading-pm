@@ -48,7 +48,9 @@ context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
-    plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    scripts/self-hosted-runners/setup-glue-runners.sh,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 ---
 
@@ -267,3 +269,5 @@ Phase 3 item 1: "coordinating timing so the cutover itself doesn't collide with 
 RECLASSIFY-eligible. No ARCHIVE. Hygiene nits noted for a future touch (not actioned, not verdict- changing): Phase 3's
 gate text says "≥3 different glue-runner hosts" but this doc's own Phase-0 finding today established there is only ONE;
 Phase 2→Phase 3 has a real dependency not expressed via `sequential`/`depends_on`.
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

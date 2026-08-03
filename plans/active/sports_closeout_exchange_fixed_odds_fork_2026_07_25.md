@@ -58,6 +58,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
     /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/sports-data-types-catalog.md,
@@ -347,15 +348,15 @@ context_scope:
       **Done when**: both named codex docs cite EXCHANGE_ODDS/FIXED_ODDS and the migration ordering used.
 
       **DISPATCHED PREMATURELY 2026-07-31T15:38Z (slot 14) — declined, still genuinely blocked.** This plan's own
-                              banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
-                              are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
-                              "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
-                              now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
-                              dispatch-order gap already tracked in
-                              `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
-                              4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
-                              corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
-                              code shipped.
+                                              banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
+                                              are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
+                                              "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
+                                              now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
+                                              dispatch-order gap already tracked in
+                                              `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
+                                              4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
+                                              corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
+                                              code shipped.
 
 ## Codex SSOTs
 
@@ -375,3 +376,6 @@ context_scope:
   function falls back to reading the upstream file's open todos and emits a blocking `gate-upstream-open:<stem>` named
   prerequisite, and that upstream has exactly 1 open `[DATA] P0`. No todo state changed; the previously-executed todos
   stay `[x]`.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the `depends_on` gating issue doc
+  (`sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`), which is now the single most load-bearing
+  reading-list entry (it's the hard ordering gate blocking the legacy-contract retirement todo).

@@ -43,8 +43,9 @@ source:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/epics/infrastructure_master.md,
-    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+    scripts/quality-gates-base/base-service.sh,
+    /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 ---
 
@@ -580,6 +581,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   restart — NOT force-restarted (9 worker-agents active, no OOM urgency). This is the primary lever for todo 307; the
   runtime abort-monitor (258) remains the QG-side complement.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Deferred / open decisions
 

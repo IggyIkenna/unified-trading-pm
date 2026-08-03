@@ -177,6 +177,9 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
   cross-referenced. That older doc traces th...
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all still accurate and
+  resolve; note doc now has 0 open todos (per the na-eligibility-audit entry below) and is an archive candidate, but
+  context_scope stays useful for whoever runs the archival pass.
 - **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: superseded mid-run by a concurrent worker's own
   na-eligibility-audit pass, which landed (via this run's own rebase) closing the 3rd and final open todo — see the
   `[x]` checkbox immediately above, closed 2026-08-03 citing

@@ -427,3 +427,7 @@ No new durable contract is created by this plan — every todo executes an alrea
 from the closeout doc's own native todo text (narrowed where a judgment call was embedded).
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" is the standard
 this extraction applied throughout.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.

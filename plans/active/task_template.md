@@ -489,3 +489,7 @@ commit + push + flip the plan checkbox in the SAME turn (`docs(plans):` prefix) 
 
 **This template is a LOCAL doc (not ingested). Copy §2 into a new `<slug>_<YYYY_MM_DD>.md` in `plans/active/` to
 start.**
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.

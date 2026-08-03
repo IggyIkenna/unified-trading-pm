@@ -145,3 +145,4 @@ No new durable contract is created by this plan. `/codex/11-project-management/`
   until batch5 is approved", both contradicting `status: active` — the 2026-07-30 flip (`233ebd614`, corpus-wide removal
   of the redundant finalize double-gate) changed frontmatter only and left the prose behind. No todo checkbox flipped;
   this plan's todos remain machine-gated on batch5's completion.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.

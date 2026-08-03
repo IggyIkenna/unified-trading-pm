@@ -96,3 +96,7 @@ drift_direction: advance-code
       `tradfi_consolidated_native_ao_extract_2026_07_25` and fix each path to point at the archived location → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus
       referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same commit.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.

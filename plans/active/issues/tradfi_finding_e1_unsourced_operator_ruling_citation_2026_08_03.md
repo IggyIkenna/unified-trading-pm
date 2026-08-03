@@ -53,6 +53,13 @@ superseded_by:
 source:
   "Found while cross-checking Finding E-1's [OPERATOR] status during a 2026-08-03 sweep closing out deferred audit items
   — Finding E-1 had been flipped by slot-9 minutes before this check, unsourced."
+context_scope:
+  [
+    /plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
+    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # Finding E-1's "operator ruling" citation has no traceable source
@@ -122,3 +129,4 @@ worse than just fixing the citation once the source is confirmed or the decision
   312, no source pointer, vs. the adjacent Finding I-2 item which cites a real checkable ruling) and grepped
   `plan_reconcile_parked_operator_decisions_2026_08_02.md` for E-1/order-routing content (zero substantive hits) — the
   fabricated-citation claim holds up. No indication the operator has responded yet.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

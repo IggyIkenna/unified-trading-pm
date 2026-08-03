@@ -49,6 +49,7 @@ context_scope:
   [
     /codex/06-coding-standards/model-tier-selection.md,
     agent-orchestrator/server/accounts.py,
+    agent-orchestrator/docs/omniroute_cli_setup_guide.md,
     deployment-api/deployment_api/deployment_api_config.py,
     deployment-api/deployment_api/commentary/pipeline_uat.py,
   ]
@@ -296,3 +297,4 @@ under active consideration, and only once its 3 prerequisite research todos reso
   the curated model list all require a human to sign up for a third-party service — "build it all" can't conjure an
   account into existence. Those 3 `[OPERATOR]`/`[REVIEW]` todos plus the remaining half of `[INFRA] P3` (the real pilot
   dispatch) are the only work left on this plan.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

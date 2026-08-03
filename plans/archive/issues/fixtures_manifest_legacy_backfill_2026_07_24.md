@@ -45,6 +45,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/restamp_fixtures_manifest_legacy_atom_2026_07_24.py,
+    deployment-api/deployment_api/routes/data_status/_axis_census.py,
   ]
 resolved_by: |
   All 4 todos closed 2026-08-03 (slot-3). The final open todo (re-verify the census, confirm the
@@ -357,3 +358,6 @@ underlying 55,233 collision-residual decision (delete vs. leave) is still unreso
   citations/pointers to this doc, not a competing claim on the census re-run itself (batch5's own text confirms it did a
   reconciliation-only pass and deliberately deferred). CLEAR — no other active `assigned_vm: planning` doc claims this
   exact re-verification. Not locked (`locked_by:` blank), no `depends_on` gate.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries; dropped the previously-cited
+  `deployment-api/scripts/census_manifest_data_type_2026_07_24.py` — deleted upstream 2026-08-03, its own Delete-when
+  clause satisfied, replaced with the underlying `_axis_census.py` route it wrapped).

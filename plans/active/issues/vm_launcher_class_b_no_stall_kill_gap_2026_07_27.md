@@ -57,7 +57,8 @@ resolved_by:
 context_scope:
   [
     /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
@@ -195,3 +196,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
   a false positive against a legitimately-continuous live/paper VM name. Independently corroborated:
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own non-batchable table classifies this doc
   **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

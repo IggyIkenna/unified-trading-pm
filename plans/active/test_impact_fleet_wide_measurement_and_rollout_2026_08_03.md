@@ -44,6 +44,15 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/archive/issues/test_impact_selective_execution_design_2026_08_03.md,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    scripts/quality_gates/test_impact_selector.py,
+    scripts/quality_gates/import_graph_walker.py,
+    market-data-processing-service/scripts/quality-gates.sh,
+  ]
 ---
 
 # Test-impact / selective execution — fleet-wide eligibility measurement, then staged rollout
@@ -440,3 +449,5 @@ positive — a different plan's `parent_epic`). **Flag for the orchestrating age
 audit action): whether the operator's own `/pre-compact` checkpoint — the doc's stated flip-trigger — has already
 happened this session is a timing question outside na-eligibility-audit's mechanism; if it has, this doc may already be
 due for its own pre-authorized next action independent of this audit.
+
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

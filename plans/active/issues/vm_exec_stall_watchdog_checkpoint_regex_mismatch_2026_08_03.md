@@ -50,8 +50,10 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
-    /deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
-    /market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
+    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
   ]
 depends_on: []
 ---
@@ -221,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                  todos 6 and 7 below.
+                                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                  todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -390,3 +392,4 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   mutations performed by this dispatch — read-only investigation (gcloud describe/operations/storage cat) plus one
   background Explore agent and this doc edit; the actual relaunches were performed by the fleet's own automation, not by
   this agent.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

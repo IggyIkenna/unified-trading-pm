@@ -903,6 +903,8 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
       next full-range re-run (or a future targeted single-date backfill) will pick up the corrected candles going
       forward.
 
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc, or

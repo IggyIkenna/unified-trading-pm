@@ -168,3 +168,4 @@ in the regenerated `ui-reference-data.json`.
   already correctly set. No finalize twin required — `doc_type: issue` is structurally exempt from the
   finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not
   `plans/active/issues/*.md`).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

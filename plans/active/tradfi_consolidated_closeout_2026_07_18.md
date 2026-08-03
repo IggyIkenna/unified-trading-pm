@@ -359,6 +359,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active`/`assigned_vm: planning` with its own
   copy still unchecked. Nothing here is RECLASSIFY-eligible — the sole native todo is correctly NA because the real
   dispatchable copy already lives on an active planning doc. `assigned_vm` stays unchanged.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
 
 ---
 
