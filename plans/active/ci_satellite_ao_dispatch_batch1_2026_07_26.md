@@ -877,8 +877,11 @@ option 1 (`autonomous_session_operator_decisions_2026_07_25.md` entry #33) and t
 (3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
 (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` — also parked, see the reproducer question); (4)
 broaden the branch check to recognise `live-defi-rollout` (`quickmerge_environment_autodetect_…` step 3, itself gated on
-its step 2); (5) the content-hash green-tree fast-path (`quickmerge_sentinel_race_retry_storm_…` fix 1 — explicitly "do
-NOT dispatch blind", operator sign-off).
+its step 2); (5) the content-hash green-tree fast-path
+(`quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` fix 1 — explicitly "do NOT dispatch
+blind", operator sign-off; full basename spelled out 2026-08-03, `/ag-closeout-audit ci` — the prior truncated form
+defeated `generate_ag_closeout_audit_candidates.py`'s basename-citation regex, showing this doc as mechanically "never
+cited" despite being tracked here since 2026-07-26).
 
 ### Operator-gated (needs a ruling, not a re-triage)
 
