@@ -149,11 +149,23 @@ not something an AO worker should guess at.
       RE-SWEPT via `feat-orph-spt-sports-20260803-133632`: `orphan_class_E=0` (target 0), `A_canonical_manifested=95153`
       (=28,076 original + 67,077 newly recorded, exact). See Progress Log for the 3 real bugs found + fixed en route
       (data-floor guard, VM dispatch branch, O(n^2) verify loop).
-- [ ] 3. [SCRIPT] P2. **Diagnose sports' 96,678-object `C_manifest_infra` classification** — confirm via a bounded
+- [x] 3. ✅ [SCRIPT] P2. **Diagnose sports' 96,678-object `C_manifest_infra` classification** — confirm via a bounded
       sample (list + inspect ~20 of the classified-infra object paths) whether these are genuinely `_index/`-prefix
       administrative objects (expected, inert) or a real-data shape `_infra_label()` is mis-classifying (which would
       mean the 28,076/67,077/96,678 split undercounts real coverage). Fix `feature_orphan_sweep.py`'s classification if
-      the latter. Repo: features-service.
+      the latter. Repo: features-service. — features-service@7f487699. **Neither hypothesis exactly**: a bounded
+      live-GCS sample (4 probes across the corpus's date range — 2020/2022/2023/2025 `start_offset`s, 2,000 class-C
+      objects inspected total, 0 exceptions) found 100% are `horizon_schema.json` — a best-effort metadata sidecar
+      `features_service/sports/data/writer.py::_write_horizon_schema_sidecar` writes alongside every real
+      `features.parquet` cell (schema-horizon info for ml-training, not feature row data). None are `_index/`-prefix
+      objects (the walk is prefix-scoped to `sports_features/by_date/`, so `_index/` can structurally never appear in it
+      — that hypothesis was checkable-false by construction, see the code comment added below). So: **genuinely inert,
+      correctly excluded from A/B/D/E already** — NOT a real-data shape being mis-classified, NOT undercounting
+      coverage. Shipped anyway: gave the sidecar its own explicit `_infra_label()` branch + reason
+      (`"horizon-schema-sidecar"`, filename-matched) instead of leaving it in the generic `not is_parquet` catch-all —
+      same functional classification (still `C_manifest_infra`, still excluded), but a FUTURE non-parquet object that
+      ISN'T this known sidecar now stays distinguishable in the `reason` column instead of reading identically to this
+      one. New unit test asserts the explicit reason string; full suite 44/44 passed.
 - [ ] 4. [OPERATOR] P1. **Root-cause the calendar phantom-captured anomaly** (6 manifest rows, 0 backing objects,
       confirmed via direct bucket listing) — is the calendar writer STILL producing phantom captured rows today (a live
       correctness bug needing an immediate fix), or is this a one-time historical artifact (e.g. from a renamed/retired
@@ -205,3 +217,22 @@ not something an AO worker should guess at.
   `e2-standard-4` SPOT VMs, zero preemptions, zero sweep-tool bugs found in the classification logic itself (the one
   real bug this validation run DID find — a missing `VM_TASK=feature-orphan-sweep` dispatch branch in
   `setup-data-pipeline-vm.sh` — was fixed in-place before any cell ran, see the parent doc's own progress log).
+
+- **2026-08-03** (AO dispatch, slot 2, todo 3) — Diagnosed sports' `C_manifest_infra=96,678` in-session (no VM needed —
+  a bounded, prefix-scoped listing sample, not a corpus walk). Ran `.venv/bin/python` against
+  `feature_orphan_sweep.py`'s own `_resolve_bucket`/`_FAMILY_CONFIGS`/`_infra_label` helpers with 4 `start_offset`
+  probes spread across the corpus's date range (2020/2022/2023/2025), capped at 500 class-C samples each (2,000 total,
+  ~4,000 objects scanned): 100% were `horizon_schema.json`, `0` `_index/`-prefix hits (structurally impossible — the
+  walk's own `prefix=cfg.walk_prefix` ("sports_features/by_date/") means `_infra_label`'s `_index/`-subprefix branch can
+  never match anything the walk itself returns; confirmed by reading `run_sweep`'s `list_blobs(..., prefix=...)` call).
+  Traced `horizon_schema.json` to `features_service/sports/data/writer.py::_write_horizon_schema_sidecar` — a
+  best-effort per-cell metadata sidecar (column horizon info for ml-training), written alongside every real
+  `features.parquet` write, deliberately excluded from write-gate/manifest logic. Verdict: genuinely inert, correctly
+  excluded from A/B/D/E already — NOT the mis-classification hypothesis, no coverage undercount. Shipped a small
+  precision fix anyway (features-service@7f487699): explicit `_infra_label()` branch + `"horizon-schema-sidecar"` reason
+  for this filename, instead of the generic `not is_parquet` catch-all, so a future non-parquet shape that ISN'T this
+  known sidecar stays distinguishable in the sweep's `reason` column. New unit test
+  (`test_classify_horizon_schema_sidecar_is_manifest_infra_with_explicit_reason`) asserts the explicit reason; full
+  features-service suite green (`.qg_last_passed_sha` matches `7f487699`). Todo 3 checkbox flipped above. Todo 4
+  ([OPERATOR] calendar phantom-row root-cause) is the only remaining open item — genuinely operator-gated, left
+  untouched.
