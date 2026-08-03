@@ -52,7 +52,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T21:50Z
+last_updated: 2026-08-03T22:15Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -884,3 +884,48 @@ repeated here.
   ledger fix's own soak alone (different observable: this doc tracks ESCALATION recurrence, the fork's soak tracked
   ADMISSION correctness — related but not the same metric). Leaving todos 1 and 3 open for whoever next checks this
   doc-chain to make that call with real post-fix escalation data.
+
+- **2026-08-03 ~22:04-22:15Z (`cicd` escalation `agt-0499f8`, slot 6, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — the SAME run `agt-5ea4c7` (above) left in-flight has since completed FAILED; re-verified from scratch
+  with a full local reproduction (not just log-reading), disposition unchanged, one direct new data point for todo 1**:
+  `agt-5ea4c7`'s in-flight run `30854599037` (headSha `5275fef1`, matches current LDR HEAD) completed `failure` at
+  `21:50Z` on `tests/delta_one/unit/test_feature_groups/test_anomaly.py::test_volume_zscore_columns` — hung ~7m42s
+  inside `_add_lagged_features`'s `features[feature].shift(lag)` before `pytest-timeout` fired, yet ANOTHER
+  previously-unlogged random hang site for this repo (18th+ distinct test in the doc-chain), reinforcing the
+  scheduler-starvation signature over any single-test theory. Rather than trust the log alone, ran a full LOCAL
+  `bash scripts/quality-gates.sh` reproduction (backgrounded, heartbeated every 180s per `cicd.md`'s mandatory pattern):
+  **tests slice — 18244 passed, 209 skipped, 0 failures, 0 timeouts, in 262.79s (4m22s)** — decisive,
+  `test_volume_zscore_columns` included and green, ruling out any code/test defect. The SAME local run then hit the
+  **identical timeout-class failure itself**, on `checks`/`[4/6] TYPE CHECK`: `run_timeout` SIGTERM'd basedpyright at
+  the `PYRIGHT_TIMEOUT=300` ceiling (`exit=143`) — direct first-hand confirmation, on this exact shared host, that the
+  contention is real and ongoing right now (not just inferred from CI logs): `uptime` read `load average: 24-27` at
+  dispatch time, still `17-23` minutes later with 10+ concurrent `quality-gates.sh` processes visible host-wide via
+  `ps aux` (matching every prior entry's host-state reading). Confirmed both sanctioned mitigations
+  (`PYTEST_TIMEOUT=300`/`PYRIGHT_TIMEOUT=300`) intact and unchanged in `features-service/scripts/quality-gates.sh` — did
+  NOT raise either further, per this doc-chain's established todo-1 practice. `gh pr list --base main --state open` → 0
+  open PRs (nothing blocked). `GET /api/repo-blockers` → `open: []`. `ldr-to-main-promote-fleet`'s freshest tick
+  (`30856940815`, `22:00Z`) reads `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='MAIN_GREEN')`
+  — live already reads green (content-equivalent tree), cached just hasn't caught up; no manual promotion action needed.
+  `gh api .../actions/runners`: both online runners (`glue-ip-172-31-3-59-1`, `glue-ip-172-31-5-118-1`) were
+  `busy=false` at investigation start (first time this doc-chain has observed an idle fleet for this repo — consistent
+  with `agt-48c16d`'s note that the `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` topology fix had just
+  landed) but both flipped back to `busy=true` within ~10min as fleet-wide activity resumed — the idle window was
+  transient, not a sustained fix-confirmed calm. No run was in flight against the true current HEAD (`5275fef1`) at
+  investigation start (the completed-failure `30854599037` was the latest) — dispatched a fresh one
+  (`gh workflow run quality-gates-v2.yml --repo IggyIkenna/features-service --ref live-defi-rollout` → run
+  `30857768146`, confirmed queued against `5275fef1` within seconds); at entry time it is `in_progress`
+  (`content sentinel` succeeded, `checks`/`tests` both still running) — left it running rather than cancel/redispatch,
+  per established practice. **Disposition: no code or workflow change made or needed** — full local reproduction is the
+  strongest evidence yet for this repo that the calculator/test code itself is correct; the wall is purely
+  runner-queue-depth/host-contention, now also directly reproduced on this investigating session's own shared host, not
+  just inferred from CI logs. Outcome of `30857768146` left for the next occurrence. **New data point for todo 1**: the
+  ledger-coordination fix's brief idle window (both runners momentarily `busy=false`) did not hold — re-confirms todo
+  1's "re-test once landed" step is not yet answerable from a single observation; needs a sustained idle/low-contention
+  period, not a momentary one, before concluding the fix closed this class. `AUTHORING_SLOT=ci-reconcile` (sentinel, not
+  a real numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack
+  alert already covers the FYI). Slot left clean (`features-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo).
+  `features-service` already present in this doc's `repos:` frontmatter — no frontmatter change needed. Now the ~18th+
+  same-day escalation for `features-service` alone across this doc-chain — further corroborates todo 2's
+  operator-flagged missing cooldown/dedup guard on `ldr_qg_failure` re-dispatch for an already-in-flight-verification
+  state.
