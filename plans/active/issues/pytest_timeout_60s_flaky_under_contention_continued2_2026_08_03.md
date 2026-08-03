@@ -40,6 +40,7 @@ repos:
     alerting-service,
     execution-service,
     market-tick-data-service,
+    batch-live-reconciliation-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
@@ -51,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T17:55Z
+last_updated: 2026-08-03T18:40Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -581,3 +582,43 @@ repeated here.
   authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
   `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch
   changes in either repo). Adding no new todo — todo 2 already fully covers this.
+
+- **2026-08-03 ~18:00-18:40Z (`cicd` escalation `agt-01e4dd`, slot 9, `batch-live-reconciliation-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=296`) — 7th repo added to the corroboration list, `checks` leg exit-124
+  signature, no code gap**: escalation cited the `checks` job of run `30837616904`
+  (`promote/batch-live- reconciliation-service/b974adb29349`, PR #296). Read the job log directly: `qg-governor` queued
+  the job `WAIT_CPU` for 2056s (`17:47:01Z`→`18:22:49Z`, in 30s increments) before admission, then `[4/6] TYPE CHECK`
+  ran exactly 120s (`18:22:49.3Z`→`18:24:49.7Z`) and hit `❌ Type check FAILED/timeout (exit=124)` with 0 errors/0
+  warnings extracted from `$PYRIGHT_OUT` (base-service.sh's own disambiguation for a genuine wall-clock timeout vs. a
+  real type-error verdict) — the identical exit-124 signature already established fleet-wide in this doc-chain
+  (`features-service`/`market-tick-data-service`/`execution-service`/`ml-service` above). Confirmed the `lint-codex`
+  selector that ran immediately after in the SAME job (same log, same "✅ ALL QUALITY GATES PASSED (104s)" banner the
+  `agt-2482ca` entry above already flagged as easy to misread) passed 104s later, clean — ruling out a systemic break in
+  this repo's codex-compliance surface; the job's overall failure is `typecheck`-only. Confirmed
+  `batch-live-reconciliation-service/scripts/quality-gates.sh` carries NO `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT` override —
+  stays at `base-service.sh`'s shared defaults (120s pyright / 150s pytest), matching `ml-service`'s
+  lowest-ceiling-in-the-doc-chain precedent. Checked this repo's own base rate before accepting "same class, no action"
+  (per the `market-tick-data-service`/`instruments-service` precedent of NOT pre-emptively raising a timeout a repo
+  doesn't yet need): last 8 LDR `quality-gates-v2` runs = 5 success / 2 cancelled (superseded-by-newer-commit churn, not
+  genuine failures) / 1 failure (this one) — a healthy self-clearing ratio, NOT the sustained-red bar that justified the
+  repo-local timeout raises elsewhere. Did NOT add a `PYRIGHT_TIMEOUT` override. `gh api .../actions/ runners`: exactly
+  ONE online runner, `glue-ip-172-31-5-118-1` (identical name/IP to every other repo in this doc-chain), `busy=true` —
+  same fleet-wide bottleneck; this VM's own `uptime` also reads `load average: 34.20, 37.71, 35.67`, consistent with the
+  contention level already logged for `execution-service` above — skipped a local `quality-gates.sh` reproduction (no
+  `.venv` yet provisioned in this slot's clone; spinning one up would itself add load to an already-contended shared
+  host for a confirmation the log evidence — 0 errors/0 warnings, a hard 120s wall-clock cutoff — already makes
+  unambiguous). PR #296 had **already self-merged** (`mergedAt: 2026-08-03T17:37:45Z`, 5s after `createdAt: 17:37:40Z` —
+  the same self-merge-before-confirmatory-check- completes pattern this doc-chain documents repeatedly);
+  `gh pr list --state open` for this repo → 0 open PRs, confirms nothing is actually blocked. Fresh confirmatory runs
+  were already queued against BOTH true current heads at investigation end — LDR (`423c95f0`, run `30841991289`) and
+  `main` (`b187b331`, run `30837624393`, itself already 59+ min queued behind the single busy runner) — did not
+  cancel/redispatch either (would forfeit real elapsed queue position for zero benefit), per this doc-chain's
+  established practice. `GET /api/repo-blockers` → `open: []`. **Disposition: no code or workflow change made or
+  needed** — every sanctioned mitigation is already at its correct (default, not-yet-warranted-to-raise) level, the
+  cited failure is the established host-contention exit-124 class, and the promotion PR is not actually blocked (already
+  merged); outcome of `30841991289`/`30837624393` left for the next occurrence per established practice.
+  `AUTHORING_SLOT=ci` fails `cicd.md`'s `^[0-9]+$` check (not a real numbered slot) — skipped the authoring-slot ping
+  per the established carve-out. Slot left clean (`batch-live-reconciliation-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Added
+  `batch-live-reconciliation-service` to this doc's `repos:` frontmatter (1st occurrence for this repo in the
+  doc-chain).
