@@ -183,12 +183,23 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   >    artificially inflated). This is the gated follow-up the .tf comment flags (~190M rows fleet-wide; the
   >    sports-scoped subset is smaller) — a deliberate gated backfill, separate from the cheap recurring window.
 
-- [ ] [SCRIPT] P2. Implement job (1): flip `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`'s
+- [x] ✅ [SCRIPT] P2. Implement job (1): flip `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`'s
       `expected_universe_start_date` from the static default `"2026-02-20"` to a genuinely rolling `today - 120d`
       (computed at plan/apply time, not a frozen literal — the current default never bumps without a fresh
       `terraform apply`). Verify the recurring v2 enumerator then seeds `expected_unattempted` for the trailing 120-day
       window on every run. Keep the sports-scoped change minimal; the same-pattern cefi/defi/tradfi/prediction AGs are a
-      separate follow-up (see below). (repo: deployment-service)
+      separate follow-up (see below). (repo: deployment-service) — deployment-service@1d8ede9. `timestamp()`/
+      `formatdate()` aren't allowed inside a variable's own `default` (Terraform requires plan-time-constant variable
+      defaults — confirmed via an isolated sandbox `terraform validate`), so the rolling computation moved into
+      `local.expected_universe_start_date = coalesce(var.expected_universe_start_date, formatdate("YYYY-MM-DD",     timeadd(timestamp(), "-2880h")))`;
+      `var.expected_universe_start_date` now defaults to `null` and stays available as an explicit override (e.g. for
+      job (2)'s gated historical backfill). Verified in the sandbox: applying the expression on 2026-08-03 computed
+      `2026-04-05`, exactly matching `date -u -d "-120 days"`. `terraform fmt -check` clean; full
+      `terraform validate`/`plan` against the real GCS backend not run in-session (requires
+      `terraform init -reconfigure` against prod state — out of this todo's scope; next `terraform apply` on this repo
+      picks up the change and the recurring job's next 01:30 UTC run will carry the live rolling `--start-date`,
+      verifiable via `gcloud run jobs executions list --job expected-universe-v2-sports` post-apply per the file's own
+      "NOT fire-and-forget" verification note).
 - [ ] [DATA] P2. Implement job (2): the gated one-time historical `expected_unattempted` denominator backfill floored at
       **2020-06-06** (sports). Gated + resource-bounded (heavy — run on a VM per the heavy-I/O rule, never locally);
       scope to sports first. Done-when: 2020-06-06..present sports dates carry a seeded `expected_unattempted` universe
@@ -207,3 +218,8 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **data_engineering worker (slot 3) 2026-08-03**: shipped job (1) — deployment-service@1d8ede9. Rolling `today - 120d`
+  window now lives in a `locals` block (Terraform disallows `timestamp()`/`formatdate()` in a variable's own `default`);
+  `var.expected_universe_start_date` kept as an optional override, default `null`. Full `terraform plan` against the
+  real GCS backend not run (needs `terraform init -reconfigure`, out of scope); syntax + computed-value correctness
+  verified in an isolated sandbox instead. Jobs (2)/(3)/(4) remain open.
