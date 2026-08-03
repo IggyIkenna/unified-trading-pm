@@ -168,14 +168,22 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
       check discovers oracle-price/perp-funding-shaped instrument ids (not DEX-pool ids), verified by a new unit test,
       and `bash scripts/quality-gates.sh` green. — features-service@8e62dc30, quality-gates.sh ALL PASSED
       (sentinel=HEAD).
-- [ ] [DATA] P2. **`returns` DONE (2026-08-02, slot-6); `funding_oi` still BLOCKED (2026-08-03, slot-2) — see Progress
-      Log, cannot flip D1's checkbox yet.** Once the above lands, resume
+- [x] ✅ [DATA] P2. **`returns` DONE (2026-08-02, slot-6); `funding_oi` still BLOCKED (2026-08-03, slot-2) — see
+      Progress Log, cannot flip D1's checkbox yet.** Once the above lands, resume
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one leg: launch
       `features-service --feature-family delta_one --asset-group DEFI --feature-group     funding_oi` (and `returns`)
       with `TIMEFRAME=15m`, over a clean window verified against the live MTDS manifest for the resolved pass-through
       data_type (`perp_funding` has a confirmed clean block `2023-05-12..2023-10-31`; `oracle_prices` needs the same
       clean-window check before picking dates). Repo: features-service. Done when: `features-delta-one-defi` has a
-      populated index, and D1's checkbox is flipped citing this evidence.
+      populated index, and D1's checkbox is flipped citing this evidence. — **CLOSED 2026-08-03 (slot-8)**, same
+      underlying verification as this DOC's near-duplicate twin
+      (`delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s todo 2). `funding_oi` was unblocked by
+      `features-service@6b2282c5` (the `[BACKEND] P1` fix in
+      `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`). Real verification-window run
+      `features-delta-one-defi-20260803-055145` (`2023-05-12..2023-10-31`, `15m`, SPOT, `EXIT_STATUS=0`): 454/455
+      manifest shards `captured` across 147 dates. `returns` reconfirmed complete (10,580 `captured` rows). D1's
+      checkbox flipped in `defi_satellite_ao_dispatch_batch3_2026_07_26.md` citing this evidence — full detail in the
+      sibling doc's Progress Log, not re-duplicated here.
 
 # Progress Log
 
@@ -268,3 +276,9 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   Block persists; not a new finding. Did NOT relaunch `funding_oi` (same deterministic failure the prior 2 attempts
   already reproduced) and did NOT touch `[BACKEND]`-scoped code (craft-scope, not mine to freelance). Skipping this task
   rather than idling — `[BACKEND] P1` landing is what unblocks re-attempt.
+- **2026-08-03 (slot-8, backend_engineer craft, backlog task `delta_one_candle_loader_no_pass_through_path_defi-003`) —
+  todo 2 CLOSED as a duplicate-close.** `[BACKEND] P1` (`features-service@6b2282c5`) landed; ran the real
+  verification-window resume this todo and its near-duplicate twin both called for
+  (`delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s own todo 2 — full evidence there, not duplicated
+  here): `features-delta-one-defi-20260803-055145`, 454/455 manifest shards `captured`. D1's checkbox flipped in
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. This closes every todo in this doc.

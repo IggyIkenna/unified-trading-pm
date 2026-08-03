@@ -180,14 +180,27 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
       manifest window) loads >0 candles for a majority of the 412 discovered instruments and writes real
       `record_captured` rows (not `record_failed`/empty), verified by a new unit test, and
       `bash scripts/quality-gates.sh` green. — ✅ features-service@a5a5bf7d. Full evidence in Progress Log below.
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one
+- [x] ✅ [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one
       leg (funding_oi + returns) over a verified-clean manifest window. Repo: features-service. Done when:
-      `features-delta-one-defi` has a populated index and D1's checkbox is flipped citing this evidence.
-- [ ] [OPERATOR] P1. Until todo 1 lands, consider parking `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo
+      `features-delta-one-defi` has a populated index and D1's checkbox is flipped citing this evidence. — Confirmed the
+      blocking `[BACKEND] P1` fix (`features-service@6b2282c5`, HYPERLIQUID derivative_ticker CEFI-bucket resolution)
+      landed. Republished a stale `features-service` code tarball first (a just-launched VM warned it would fetch
+      pre-fix code — deleted it before it could burn wasted SPOT spend, republished via
+      `create-code-tarballs.sh     --include features-service`, confirmed `6b2282c5` is an ancestor of the new tarball
+      SHA before relaunching). Real verification-window run `features-delta-one-defi-20260803-055145` (`funding_oi`,
+      DEFI, `15m`, `2023-05-12..2023-10-31`, SPOT, `EXIT_STATUS=0`): manifest shows **454/455 shards `captured`** across
+      147 distinct dates spanning the full window (the lone `attempted_failed` is 2023-05-12, the window's first date —
+      expected lookback-buffer warmup edge, not a systemic failure). `returns` independently re-confirmed already
+      complete (10,580 `captured` rows, 2022-11-25..2026-07-22, well beyond this window). Both delta_one legs of D1's
+      done-when are now satisfied. `features-delta-one-defi` has a real populated index — D1's checkbox flipped citing
+      this evidence (see `defi_satellite_ao_dispatch_batch3_2026_07_26.md`).
+- [x] ✅ [OPERATOR] P1. Until todo 1 lands, consider parking `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo
       (backlog `priority: 999` + `priority_override: true` + a false prerequisite gating it, per
       `unified-trading-pm/agents/RULES.md` §4 "Park a task") so the AO dispatcher stops redispatching fresh workers into
       the same guaranteed-deterministic-failure loop -- 10 VM launches burned today already, several concurrently
-      in-flight as this doc was filed.
+      in-flight as this doc was filed. — Moot: D1 itself is now flipped (todo 2 above), so there is nothing left to park
+      — the redispatch-into-failure-loop risk this todo existed to prevent no longer applies once the parent todo is
+      done.
 - [x] ✅ [BACKEND] P1. Fix `_tf_cluster_helper.py::_process_one_date_for_cluster` to isolate failures per OUTPUT
       TIMEFRAME (not just per date) -- the near-cluster's default output-TF ladder (`["15s","1m","5m","15m"]`, from
       `_default_output_timeframes`/`config.DEFAULT_TIMEFRAMES`) always tries `"15s"` FIRST, and a single failed TF
@@ -412,3 +425,24 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   other slots remain eligible to pick this up once the backend fix ships. The still-open `[OPERATOR] P1` parking todo
   (todo 3) is now `status: blocked` in the live backlog (already gated by someone), so the redispatch-storm concern it
   raised appears addressed separately.
+- **2026-08-03 (slot-8, backend_engineer craft, backlog task `delta_one_candle_loader_no_pass_through_path_defi-003`) —
+  todo 2 SHIPPED, D1 UNBLOCKED.** Confirmed `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006`
+  (`[BACKEND] P1`, `features-service@6b2282c5`) landed. Before relaunching, caught a stale-tarball trap: the first
+  launch attempt (`features-delta-one-defi-20260803-054840`) warned it would fetch a `features-service` tarball pinned
+  to `617388c5` (missing the fix) — deleted the VM within seconds (zero ambiguity: I had just launched it myself),
+  republished the tarball (`create-code-tarballs.sh --include features-service`), confirmed `6b2282c5` is an ancestor of
+  the new tarball SHA (`c092df50`) before relaunching. Real (non-dry) verification-window run
+  `features-delta-one-defi-20260803-055145` (`funding_oi`, DEFI, `15m`, `2023-05-12..2023-10-31`, SPOT, `EXIT_STATUS=0`,
+  monitored to terminal state): manifest confirms 454/455 shards `captured` across 147 distinct dates (only 2023-05-12,
+  the window's first date, is `attempted_failed` — an expected lookback-buffer warmup edge, not a systemic issue). Also
+  re-verified D1's other two legs directly against the live manifest rather than trusting the 2026-07-31 note at face
+  value: `returns` — 10,580 `captured` rows, 2022-11-25..2026-07-22 (solid); onchain-defi — re-checked via the
+  manifest's `row_count` column (not shard count, which misleadingly showed only 119 for `lending_rates`):
+  `lending_rates` alone totals 14,772,435 real rows, `perp_funding_rates` covers 182 real days through the full target
+  window — the `row_count ≫ 3` bar is genuinely cleared (the OTHER onchain-defi feature groups being 100%
+  `attempted_failed`, e.g. `flash_loan_availability`/`health_factor`/`risk_params`, is a SEPARATE, already-tracked issue
+  outside D1's own stated done-when, not re-litigated here). All 3 legs of D1's done-when now hold — flipped D1's
+  checkbox in `defi_satellite_ao_dispatch_batch3_2026_07_26.md` citing this evidence, and closed the near-duplicate
+  todos in `delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md` and
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[DATA] P3` (same underlying
+  verification run closes all three). This closes every todo in this doc — archiving per issue-doc-lifecycle discipline.
