@@ -155,3 +155,15 @@ without knowing what it is). No further action was taken on `deployment-api` —
   repo-scoped [1-6/6] QG green); shipping via quickmerge is blocked pending this cross-repo item. Did not attempt to fix
   `deployment-api` beyond the safe, non-destructive `git fetch`/`git pull --ff-only` diagnostic (refused cleanly, no
   data touched) — out of scope for the delegated task and would require handling another agent's uncommitted WIP.
+- **2026-08-03 (corroboration)** — Hit byte-identical while shipping an unrelated `instruments-service` fix (same parent
+  audit's Finding I-1: 3 unlogged silent-fallback catch blocks in
+  `reference_data/adapters/tradfi/databento/{adapter.py,sessions.py}`). Two full
+  `bash scripts/quality-gates.sh --no-fix` runs from `instruments-service` both passed the repo's own [0-6/6] gates
+  clean (tests: 5159 passed) then hard-failed at the same `[5.70/6] IS-MTDS CONTRACT INTEGRITY` /
+  `check_adapter_contract_regression` step on the identical
+  `deployment-api/deployment_api/services/data_status/mtds_meta.py` line. Confirmed via `quickmerge.sh --agent`: STAGE
+  0.4 auto-pulled 1 new origin commit mid-run, invalidating the Pass-1 sentinel, forcing a genuine Pass-2 regate that
+  hit the same failure and correctly refused to ship ("❌ Re-gate FAILED against the current tree — this is a REAL
+  failure, not a lost race") — no commit/push happened, working tree left clean of any partial state. This confirms the
+  block is host-wide and NOT specific to execution-service's diff or repo. instruments-service's own code change is
+  complete/correct and shipping is deferred until this INFRA item (todo 1) resolves. Did not touch `deployment-api`.
