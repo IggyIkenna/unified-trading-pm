@@ -625,7 +625,7 @@ which is the ACKED-INTO-PLAN case `/codex/11-project-management/issue-doc-lifecy
 active plan before archival. All 3 source docs were already moved to `plans/archive/issues/` without this step; migrated
 here now, retroactively, to close that gap. Each item cites its source doc + original todo tag/priority.
 
-- [ ] [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
+- [x] ✅ [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
       billing-wall class (2026-06-11, 2026-06-23, 2026-07-29) — the archived doc's own P3 remediation (spend telemetry /
       50-80-95% budget alert) was never unblocked, `BLOCKED-ON-DECISION` pending an operator-minted `Plan: read`
       billing-scoped token. Mint that token so the workspace can self-detect this before it walls CI, or accept
@@ -635,7 +635,13 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       operator-gated twice already: `/na-eligibility-audit ci` 2026-07-30 ("KEEP-NA, valid — gated on an operator-minted
       billing-scoped token") and `ci_satellite_ao_dispatch_batch5_2026_08_02.md`'s D5-4 ("Operator-gated (needs a
       ruling, not a re-triage)"). Filed a /blocked question with the operator to pick a fork; no code change exists for
-      a worker to ship here.
+      a worker to ship here. **RULED 2026-08-03T06:28:59Z (operator, via main — `blocked_id: BLK-c099ebe5`,
+      `disposition: final`)**: "Rule that recurring manual operator intervention is the accepted standing posture (no
+      token minted) — close this todo as wont-fix, since across all 3 prior recurrences the operator has already handled
+      it manually within hours each time with no lasting harm." No `Plan: read` billing-scoped token was minted
+      (verified — no reference to one exists anywhere in the codebase or CI config as of this check) and none will be;
+      that is the ruled outcome, not a gap. Closed wont-fix per the ruling — no further code or credential action
+      outstanding.
 - [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
       `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal FAILING status
       on a 0-step billing-kill (the archived doc's still-open P1 "outage-aware v2 status dispatch" item) — if not
