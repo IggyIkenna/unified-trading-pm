@@ -106,13 +106,21 @@ The tool is correctly conservative: when the hive target path already exists, it
 flat source and, on a mismatch, does **NOT** overwrite — it flags `content_mismatch` for manual review. Measured across
 today's full-mode APPLY runs (real PROD writes, all other outcomes are safe/idempotent copies or verified matches):
 
-| asset_group |                                                                                           copied | already_present_verified | content_mismatch | failed |
-| ----------- | -----------------------------------------------------------------------------------------------: | -----------------------: | ---------------: | -----: |
-| cefi        |                                                                                            1,571 |                    4,585 |        **1,494** |      0 |
-| defi        |                                                                                            3,316 |                   39,048 |       **31,315** |      0 |
-| tradfi      |                                                                                            7,492 |                   17,873 |           **37** |      0 |
-| prediction  |                                                                                            4,105 |                        0 |                0 |      0 |
-| sports      | TBD (this session's fresh full run in progress — see parent doc's 7c checkbox for final numbers) |                          |                  |
+| asset_group |     copied | already_present_verified | content_mismatch | failed |
+| ----------- | ---------: | -----------------------: | ---------------: | -----: |
+| cefi        |      1,571 |                    6,156 |        **1,494** |      0 |
+| defi        |      3,316 |                   42,364 |       **31,315** |      0 |
+| tradfi      |      7,492 |                   25,365 |           **37** |      0 |
+| prediction  |      4,105 |                        0 |                0 |      0 |
+| sports      |          0 |                    6,330 |                0 |      0 |
+| **TOTAL**   | **16,484** |               **80,215** |       **32,846** |      0 |
+
+All 5 asset groups reconfirmed idempotent via a second fresh full-mode run (2026-08-03 07:08-07:24 UTC): re-running
+APPLY on an already-migrated bucket now reports `copied: 0` and the SAME content_mismatch count, proving every
+non-mismatched recognized-shape candidate is durably present at its hive target. Total recognized-shape candidates
+across the 5 buckets: 117,166 (16,484 + 80,215 + 32,846) — the residual 32,846 content_mismatch objects are the only
+unresolved recognized-shape work, blocked on todo 4's operator decision above. The unrecognized-shape populations
+(sports ~172,595 / prediction ~25,745) are untouched by this migration entirely — see todos 1-3.
 
 **Root-cause sample (defi, `day=2020-05-20/venue=UNISWAP_V2-ETHEREUM`)**: the flat source (created 2026-07-09, 31,322
 bytes, crc32c=`4fZjbA==`) and the existing hive target (created 2026-07-29 04:25:45 — matching the exact timestamp of
