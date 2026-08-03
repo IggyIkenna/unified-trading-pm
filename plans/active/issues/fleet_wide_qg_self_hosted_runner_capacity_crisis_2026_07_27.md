@@ -785,3 +785,32 @@ as prior entries; a duplicate dispatch would only add load). `AUTHORING_SLOT=ci`
 completion ping was skipped per `cicd.md`'s own carve-out. Slot left clean: `deployment-api` worktree untouched,
 `live-defi-rollout` tracking `origin/live-defi-rollout` with zero diff. Second `deployment-api`-specific corroboration
 of this exact signature in this doc (see 2026-08-02 ~18:35 UTC entry above).
+
+**2026-08-03 ~23:05 UTC corroboration (deployment-api, escalation `agt-3a0021`, cicd agent slot-9,
+wall_type=main_ci_red)**: dispatched on the SAME `main`-push `quality-gates-v2` run (`30842810802`, headSha `94b94112`,
+"chore(promote): LDR → main (Option-B direct)") the immediately-preceding `agt-c7f2be` entry above left `queued` at
+check time — by the time I reached it, the run had progressed from `queued` to genuinely `completed`/`failure`: both
+`QG slice (checks)` and `QG slice (tests)` failed at the `uv sync --frozen` dependency-install step, before any test
+ran — `error: Failed to install: google_api_core-2.30.3-py3-none-any.whl (google-api-core==2.30.3) — Caused by: The
+wheel is invalid: Missing .dist-info directory`. Same shared-`uv`-cache-race signature class this doc tracks (a
+concurrent colocated `glue` job racing/corrupting the same cache path mid-install), just a different flavor of symptom
+than the "missing directory"/hardlink variants above — a corrupted-in-place wheel rather than an evicted cache entry;
+no promotion PR exists for this repo's `ldr_main` model (`gh pr list --base main` → `[]`), the push itself already
+carries `Promoted-From`-style content via the Option-B direct-push flow, so classification collapsed to "MAIN-ONLY
+breakage, re-fire the check" per this wall type's own dispatch brief. Re-triggered via
+`gh run rerun 30842810802 --failed` (not a duplicate — the run was genuinely `completed`/`failure`, not still
+in-flight, matching the `unified-api-contracts` `main_ci_red` precedent's "genuinely needed some re-fire" reasoning,
+not the "duplicate dispatch to an already-saturated pool" case). The rerun sat `queued` 40+ min behind the repo's sole
+runner (`glue-ip-172-31-5-118-1`, confirmed `online`/`busy:true` the whole time, occupied by an unrelated `LDR`-branch
+`workflow_dispatch` run `30858463166` that itself ran 40+ min before I stopped watching) — consistent with this doc's
+established multi-hour queue pattern, so per the same "don't block a one-shot session on a run that has historically
+taken hours" precedent, left it queued rather than continuing to wait. Live host state at diagnosis: `uptime` load
+average 20.31/18.22/19.06 (16 vCPU box), `/proc/pressure/io` `some avg10=43.49 full avg10=31.94`. No open repo-blockers
+for `deployment-api` (`GET /api/repo-blockers` → `{"open": []}`). No code/test/workflow change made or needed — nothing
+to fix on `live-defi-rollout`, it was never touched. `AUTHORING_SLOT=ci-reconcile` is not a numeric slot id, so the
+completion ping was skipped per `cicd.md`'s own carve-out. Both `deployment-api` and `unified-trading-pm` worktrees left
+clean (`git status --short` empty in both, `live-defi-rollout` tracking `origin/live-defi-rollout`). Third
+`deployment-api`-specific corroboration in this doc, and the first to actually re-fire the specific `main_ci_red` run
+(the immediately-preceding `agt-c7f2be` entry diagnosed the promotion-PR-side failure of the same underlying
+promotion but left the downstream `main`-push run `30842810802` untouched since it was still queued, not yet failed,
+at that check time).
