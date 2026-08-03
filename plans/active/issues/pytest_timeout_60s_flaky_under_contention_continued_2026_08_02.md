@@ -103,3 +103,27 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (`unified-trading-api@71cdda0`), shipped + verified on origin, triggered fresh `quality-gates-v2` run `30773174599`.
   Filed this continuation doc (parent doc at hard cap). Outcome of the fresh run to be added once observed by this or a
   follow-up session.
+
+- **2026-08-03 06:20-07:26Z (`cicd` `agt-4e5bc3`, slot 9, `features-service`, `wall_type=main_ci_red`, `pr_number=0`)**
+  — This is todo 2's template-extension actually landing, tracked here retroactively: an earlier same-day session
+  (`agt-8e5d24`, slot 2, logged in the parent doc
+  `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) had already applied this doc's
+  exact mitigation pattern to `features-service` — `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` AND
+  `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-300}` (this repo hits both the pytest-timeout AND basedpyright-120s-ceiling
+  shapes) — `features-service@c092df50`, verified locally green (338s, zero timeouts). This session picked up the same
+  wall re-escalating (`main` ~428 commits behind LDR, fleet-promote gate still
+  `GATE BLOCK features-service: ci_status=FAILING` because no run had yet tested `c092df50` itself — the LDR run in
+  flight at fix-landing time, `30780475199`, was still testing the OLD pre-fix HEAD and never got a runner slot in
+  3.5h+). Per this doc's own posture (observe before re-deriving), triggered the fresh post-mitigation observation run
+  (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`, run `30790679266`) — concurrency group
+  `quality-gates-v2-refs/heads/live-defi-rollout` (`cancel-in-progress: true`) correctly auto-cancelled the stale
+  pre-fix run. Host corroboration: `uptime` load average `39.03, 43.52, 44.74` on 16 vCPUs (worse than every prior entry
+  in this doc or the parent). Fleet-wide snapshot at 07:23Z: dozens of queued/in-progress `quality-gates-v2` runs across
+  ~20 repos (not features-service-specific), several `in_progress` for 3-4h+ — confirmed via spot-check
+  (`unified-api-contracts` run `30780884061`, in-progress since 03:05Z, still churning/cleaning up orphan processes at
+  07:10Z) that these are genuinely progressing, not dead/hung, just severely backlogged. As of session end (~07:26Z, 51
+  min after dispatch) run `30790679266` was still `queued`, never claimed a runner. **Outcome not yet observed** — left
+  for a follow-up occurrence per this doc's established pattern; no further code action needed for `features-service`,
+  the fix is already correct and shipped, this is purely a runner-queue-depth wait. `GET /api/repo-blockers` →
+  `open: []`. Slot left clean on `live-defi-rollout` (only this doc touched this session; no code change —
+  `features-service`'s fix was already shipped by the prior session).
