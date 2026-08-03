@@ -23,7 +23,7 @@ status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [features-service]
+repos: [features-service, agent-orchestrator]
 scope: [engineer]
 tags: [defi, features-service, delta-one, dangling-wip, stash, git-hygiene, data-correctness]
 related:
@@ -100,16 +100,45 @@ problem with the fix that was never written down — which would be a genuine da
 
 # Recommended decision
 
-- [ ] [OPERATOR] P2. Determine the stash's origin/intent: check `features-service-clean-check`'s recent history (was
-      this worktree used by another slot/session around 2026-08-03T00:43Z, the stashed file's mtime?), ask around, or
-      simply judge it abandoned given the strong corroborating evidence above. Done when: a decision is recorded — drop
-      the stash (`git stash drop` on the `features-service-clean-check` worktree, human-only per this workspace's
-      destructive-command guardrail) if judged accidental/abandoned, or escalate to a real `[BACKEND]` investigation if
-      a genuine concern surfaces.
-- [ ] [SCRIPT] P3. If judged accidental: audit whether `features-service-clean-check` (or any other `-clean-check`
-      linked worktree in this workspace) should be routinely swept for stray staged/uncommitted state, since it is not
-      part of the normal `/boot`-per-task worktree-cleanliness checks (those check the slot's PRIMARY repo clones, not
-      secondary linked worktrees like this one).
+- [x] ✅ [DIAG] P2. Determine the stash's origin/intent — **RULED 2026-08-03 (operator, applied by slot-6): judged
+      abandoned/accidental.** Basis: the stashed file's mtime predates `6b2282c5`'s own commit timestamp (so it cannot
+      be a fresh reaction to that fix), no rationale exists anywhere in the corpus, and `6b2282c5` is now three-ways
+      corroborated correct in production (`features-delta-one-defi-20260803-055145` exit 0, slot-10's concurrent
+      `055219`, and slot-4's DP-VM-001 pre-fix-timing trace in the Progress Log below). See the new Progress Log entry
+      for the full ruling record.
+- [ ] [OPERATOR] P2. **Drop the ruled-abandoned stash** — `git stash drop` on the entry currently tagged
+      `orchestrator-slot-8-features_smoke_matrix_verification_findings-006` in the `features-service-clean-check` linked
+      worktree (`.tabs/8/features-service-clean-check`, gitdir
+      `.tabs/8/features-service/.git/worktrees/features-service-clean-check`). Re-resolve the exact stash index via
+      `git stash list | grep features_smoke_matrix_verification_findings-006` immediately before dropping — the index
+      shifts as the worktree accumulates more stashes (11 other unrelated stashes already sit alongside it as of
+      2026-08-03, see the P3 finding below). Human-only per this workspace's destructive-command guardrail — do not
+      execute autonomously. Done when: the stash is gone and `git stash list` in that worktree no longer shows it.
+- [x] ✅ [SCRIPT] P3 (2026-08-03, slot-6). **Audit executed.** Found exactly one other `-clean-check` linked worktree in
+      the whole workspace: `.tabs/8/features-service-clean-check` (confirmed via its `.git` gitdir pointer — no other
+      repo under `.tabs/*` has a sibling `-clean-check` dir). Its working tree is currently clean
+      (`git status --porcelain` empty) but `git stash list` shows **12 accumulated stash entries**, oldest dated
+      2026-07-27 (`slot-8-orphan-2026-07-27T10:02:25Z`), including this doc's own dangling revert (`stash@{1}`) — real,
+      confirmed drift, not a hypothetical risk. Checked the existing gate:
+      `agent-orchestrator/server/worktree_clean_check/_report.py`'s `check_slot_clean()` DOES walk every immediate
+      subdirectory of a slot dir that has a `.git` entry (so a `-clean-check` linked worktree sitting alongside the
+      primary clone is structurally within its iteration, not skipped by directory name) — but it only runs
+      `git status --porcelain` (staged/unstaged/untracked working-tree state). **No existing check anywhere in
+      `worktree_clean_check/` (confirmed via `_stash.py`, which only handles the slot-tagged stash _push_ side, never
+      enumerates existing entries) inspects `git stash list` for any repo, primary or linked.** So the real gap is
+      narrower than "secondary worktrees are unchecked" — it's "stash state is invisible to every existing cleanliness
+      gate, everywhere." Recommendation: yes, add a routine sweep (see new P3 follow-up todo below) — filed as separate
+      tracked work rather than fixed inline here since it's a real agent-orchestrator server-code change, not a doc
+      edit.
+- [ ] [BACKEND] P3. **Extend orchestrator worktree-cleanliness checks to detect stale `git stash list` entries** (repo:
+      agent-orchestrator). Per the audit finding directly above, neither `check_slot_clean()` nor any
+      `worktree_clean_check/` module inspects stash state today, for primary OR linked (`-clean-check`-style) worktrees
+      — a stash can sit indefinitely (confirmed: 12 entries, oldest from 2026-07-27) with zero visibility until an agent
+      stumbles onto it by accident during unrelated work, as this doc's own `## What I found` section did. Done when: a
+      periodic sweep or a wired-in gate surfaces aged/dangling stash entries (age + originating slot/task, parsed from
+      the slot-tagged message convention in `_stash.py`) across every slot's repos — including linked
+      `-clean-check`-style worktrees, confirmed structurally in-scope by the P3 audit above — so this class of finding
+      stops depending on an agent noticing by chance.
 
 # Progress Log
 
@@ -134,3 +163,15 @@ problem with the fix that was never written down — which would be a genuine da
   slot-10's `055219` DP-VM escalation, now this pre-fix-failure trace) all consistent with `6b2282c5` being correct and
   the dangling stash being safe to judge abandoned — still leaving that call to the `[OPERATOR]` todo above, not
   deciding it here.
+- 2026-08-03 (slot-6, `features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix-001--ruling`):
+  **Operator ruling applied to the P2 stash-origin todo — judged abandoned/accidental.** Operator instruction: the
+  stash's file mtime predates `6b2282c5`'s own commit (so it cannot be a fresh reaction to that fix), no rationale
+  exists anywhere in the corpus, and two independent live production runs (`features-delta-one-defi-20260803-055145` and
+  slot-10's concurrent run) confirm `6b2282c5` is correct — combined with slot-4's independent pre-fix-failure trace
+  above, that's three-ways corroborated. Did **not** drop the stash myself (destructive `git stash drop` stays
+  human-only per this workspace's guardrail) — flagged as a new `[OPERATOR]` todo above instead. Also executed the P3
+  follow-up audit (see checked item above): confirmed `.tabs/8/features-service-clean-check` is the only other
+  `-clean-check` linked worktree in the workspace, found it carrying 12 accumulated stash entries (oldest 2026-07-27)
+  invisible to every existing `worktree_clean_check` gate (which checks git-status only, never `git stash list`, for any
+  repo) — filed the concrete fix as a new `[BACKEND]` P3 todo above rather than implementing it inline (a real
+  agent-orchestrator server-code change, outside this doc-only task's scope).
