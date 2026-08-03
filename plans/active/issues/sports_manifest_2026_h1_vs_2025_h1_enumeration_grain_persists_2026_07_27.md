@@ -254,3 +254,36 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   `var.expected_universe_start_date` kept as an optional override, default `null`. Full `terraform plan` against the
   real GCS backend not run (needs `terraform init -reconfigure`, out of scope); syntax + computed-value correctness
   verified in an isolated sandbox instead. Jobs (2)/(3)/(4) remain open.
+- **data_engineering worker (slot 14) 2026-08-03**: launched the real production run of job (2)'s
+  `launch-expected-universe-v2-historical-backfill-vm.sh sports` and found + fixed 3 real bugs in the launcher itself
+  (the script as shipped by job (2) could never have completed):
+  1. **deployment-service@f399619** — the launcher only waited for VM-terminal compute status, never checked the
+     enumerator's own exit code. Every sports chunk (448K+-instrument catalog) trips `enumerate_expected_universe.py`'s
+     `--max-writes-per-run` halt-safety (default 1M) almost immediately, so the unfixed script would have silently
+     "finished" 7 partially-seeded chunks. Now reads the VM's durable `EXIT_STATUS` marker and retries the SAME window
+     on a `5` (max_writes_exceeded) — safe/idempotent, the enumerator dynamically globs already-written per-VM shards
+     and excludes them from the next attempt's candidates, so it converges. Hard-aborts on any other/missing status
+     (before fix 3, below).
+  2. **deployment-service@b64e4a7** — `LAUNCH_OUTPUT="$(child_launcher ...)"` under `set -e` aborted the whole script AT
+     THE ASSIGNMENT when the child launcher failed, before the `echo` line that would have shown the real error — so a
+     genuine failure (e.g. a `PERMISSION_DENIED`) died with zero diagnostics. Hit live: a sibling slot's
+     `gcloud config set account` clobbered this shared host's active gcloud identity mid-run (`~/.config/gcloud` is
+     host-global, not slot-isolated) and the retry died silently. Now captures the exit code explicitly and always
+     echoes the captured output before deciding whether to abort.
+  3. **deployment-service@3d70522** — a missing `EXIT_STATUS` was an unconditional hard-abort, which is correct for a
+     genuine unknown failure but wrong for the routine case: every backfill VM defaults to SPOT (HARD RULE), and a
+     preempted VM also leaves `EXIT_STATUS` unwritten. Confirmed live: a chunk-2 retry VM was preempted ~2 min after
+     creation with zero logs (`compute.instances.preempted`, verified via `gcloud compute operations list`) — the
+     unfixed script would have aborted the entire 7-chunk backfill over a routine SPOT reclaim. Now checks the
+     operations log and retries on confirmed preemption; still hard-aborts if there's no preemption evidence. All 3
+     fixes have shell-test coverage (15/15 pass, `tests/test_launch_expected_universe_v2_historical_backfill.sh`),
+     shipped via the normal QG→quickmerge flow, and verified on `origin/live-defi-rollout`. Real production run
+     relaunched after each fix; as of this log entry chunk 1/7 (2020-06-06..2020-12-31) completed clean
+     (`EXIT_STATUS=0`), chunk 2/7 (2021-01-01..2021-12-31) is in progress with a notably large candidate backlog for a
+     single calendar year (13+ retry attempts observed, a mix of genuine `max_writes_exceeded` halts and an elevated
+     SPOT preemption rate in asia-northeast1-c for `e2-standard-4` — all safely converging within the
+     `MAX_CHUNK_ATTEMPTS=50` bound, no runaway signal). Did not raise `--max-writes-per-run` unilaterally — that's
+     operator-review-gated per the enumerator's own error message and RULES.md. Chunks 3-7 (2022..2026-04-04) not yet
+     reached. This todo (`[DATA] P2. Launch + verify the real production run of job (2)'s new script`) stays
+     open/in-progress; will flip once all 7 chunks TERMINATE clean and the post-run cell-seeding ratio re-check (same
+     method as this issue's own read-only measurement) is done.
