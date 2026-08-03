@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-api, unified-trading-pm]
+repos: [unified-trading-api, unified-trading-pm, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
@@ -31,7 +31,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-02T23:55Z
+last_updated: 2026-08-03T08:55Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -158,3 +158,33 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   timeout moves the threshold, does not close the class."
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+
+- **2026-08-03 ~08:35-08:55Z (`cicd` escalation `agt-a7a7b6`, slot 6, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 4th escalation for the same wall, this time a genuinely NEW (not yet-fixed) gap found**: read
+  `main`'s failing run `30780455914` (02:55Z) directly rather than re-deriving the prior entries' diagnosis. Confirmed
+  the `tests` slice's failure is the already-diagnosed pre-`c092df50` 150s-pytest-timeout shape (fix already on LDR,
+  pending promotion — nothing to do). But the SAME run's `checks` slice failed independently via STEP 5.91 (formula-hash
+  drift gate): its output printed a clean `MATCH: 5 DRIFTED: 0 NEW: 29` (proving no real drift — verified by running
+  `python -m features_service.delta_one.app.features.status_report --check-drift` locally against both `main` and LDR
+  checkouts, byte-identical registry.py/calculator sources on both, both exit 0) then still failed the step ~37s after
+  its last output line — this command's OWN `run_timeout 60` wrapper (a bare `python -m` invocation, NOT pytest/pyright)
+  was never covered by the `PYTEST_TIMEOUT`/`PYRIGHT_TIMEOUT` raise, since it's a third, independent hardcoded timeout
+  in the same file. Cross-checked a second failing run (`30777230449`) where this same step took 65s to pass —
+  corroborates a step that's genuinely marginal against a 60s budget under this host's contention, not a one-off fluke.
+  Applied the identical sanctioned fix philosophy: `features-service@fd84f90a` raises this specific `run_timeout 60` to
+  `${FORMULA_DRIFT_TIMEOUT:-240}` (scoped, single-line, no logic change). Verified via the underlying command directly
+  (not a full local `quality-gates.sh` re-run — started one, backgrounded, then killed it early: this box hosts the
+  actual `glue` CI runners and running a redundant full suite would only add to the exact contention this doc tracks for
+  zero new signal beyond what the isolated command already proved) and via quickmerge's own Pass-1 QG, which now shows
+  STEP 5.91 passing cleanly. Verified the commit landed:
+  `git merge-base --is-ancestor fd84f90a origin/live-defi-rollout` → true. Did NOT re-dispatch a fresh
+  `quality-gates-v2` run on LDR — one was already `in_progress` (`30790679266`, testing older SHA `c092df50`, queued
+  since 06:35Z, now finally running) and a fresh dispatch would cancel it via the concurrency group, discarding elapsed
+  progress, per this doc's own established precedent. The `ldr-to-main-promote-fleet` auto-promotion will pick up
+  whichever LDR SHA next reports green (any of `c092df50`/`b81a6a75`/`fd84f90a` should now pass both fixed timeouts) —
+  no manual promotion action taken or needed. `GET /api/repo-blockers` → `open: []`. Slot left clean (features-service
+  on `live-defi-rollout`, 0 commits ahead of `origin`; scratch worktree removed). Pinged the authoring slot
+  (`ci-reconcile`) with the outcome. This is the 4th same-day escalation for this exact wall — unlike entries 2-3, this
+  one found and closed an actual code gap rather than re-confirming "wait it out," so it's not pure duplication of the
+  standing operator concern about agent-fleet throttling, but that concern (noted in the entry above) remains open and
+  unaddressed by this entry.
