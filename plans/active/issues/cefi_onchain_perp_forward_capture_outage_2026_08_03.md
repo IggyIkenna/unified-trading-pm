@@ -141,11 +141,15 @@ finding, just not caught by any existing gate because no gate watches this speci
 
 ## Recommended decision / Todos
 
-- [ ] [DATA] P1. Wire real Cloud Scheduler → Compute Engine automation for the cefi onchain-perp forward capture (the
+- [x] ✅ [DATA] P1. Wire real Cloud Scheduler → Compute Engine automation for the cefi onchain-perp forward capture (the
       launcher this doc fixed, or a dedicated daily-poll variant) so this class of gap self-heals instead of depending
       on a human/agent remembering to manually re-trigger it. **Repo: deployment-service.** Mirror the existing
       `cefi-fwd-daily-cron-`/`tradfi-fwd-daily-cron-` `SCHEDULED_RECURRING` registry pattern (`vm_prefix_registry.py`)
-      so it's watchdog-visible.
+      so it's watchdog-visible. — deployment-service@bcd3678 (`launch-cefi-onchain-fwd-daily-cron-vm.sh` +
+      `vm_prefix_registry.py`/`launcher_registry.py` entries); cron host `cefi-onchain-fwd-daily-cron-20260803-230641`
+      launched + verified RUNNING via SSH: `/etc/cron.d/cefi-onchain-fwd-daily` installed (`0 8 * * *`), launcher binary
+      present at `/opt/deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`, `cron` service active. Next
+      fire 2026-08-04T08:00Z.
 - [ ] [DATA] P2. Add `UpstreamTimestampBiasError` (or a general "internal write-guard rejection" bucket) to UAC's
       `classify_venue_error()` `VENUE_ERROR_MAP` so it stops surfacing as `UNCLASSIFIED:` and can be alerted on
       distinctly from a real vendor-API error. **Repo: unified-api-contracts.**
@@ -166,3 +170,11 @@ finding, just not caught by any existing gate because no gate watches this speci
   doc). Found + fixed the launcher regression, launched on-demand remediation for ASTER/LIGHTER-ZKSYNC/
   EXTENDED-STARKNET; result pending as of doc creation, will update once the on-demand VMs terminate and the manifest is
   re-checked.
+- **2026-08-03 (slot 4, data_engineering)**: todo 1 (cron automation) was already code-shipped by another slot
+  (`deployment-service@bcd3678`, ~1h before this pickup) and the cron host VM was already launched
+  (`cefi-onchain-fwd-daily-cron-20260803-230641`). Verified end-to-end via SSH rather than trusting the commit alone:
+  crontab installed correctly (`0 8 * * *`), launcher binary downloaded to
+  `/opt/deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`, `cron` systemd unit active. No fire log yet
+  — expected, first scheduled fire is 2026-08-04T08:00Z (VM booted 23:07Z, past today's window). Flipped todo 1.
+  Remaining todos (2: UAC error classification, 3: HYPERLIQUID zombie-VM investigation `[OPERATOR]`, 4: HYPERLIQUID gap
+  backfill) are untouched — out of scope for this task.
