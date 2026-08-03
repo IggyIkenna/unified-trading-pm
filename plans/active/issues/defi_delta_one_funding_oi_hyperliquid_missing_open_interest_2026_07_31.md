@@ -155,15 +155,26 @@ fixes above.
       `asset_ctxs` archive, already captured under `derivative_ticker` — see the 2026-08-02 UPDATE banner + Progress
       Log). Per the operator's own interim sequencing (OI available → B), C (descope) is rejected and A (degrade) is
       unnecessary. The final B-implementation shape/effort is repo-owner-ratifiable but the direction is settled.
-- [ ] [BACKEND] P2. Implement direction B: source `open_interest`/`mark_price`/`index_price` for delta_one `funding_oi`
-      from the existing HYPERLIQUID `derivative_ticker` capture (asset_ctxs, per-minute, already in the corpus) rather
-      than the OI-less `perp_funding` rows — align the per-minute `derivative_ticker` OI to the hourly-settled
-      `perp_funding` grain in the pass-through reshape path
+- [x] ✅ [BACKEND] P2. Implement direction B: source `open_interest`/`mark_price`/`index_price` for delta_one
+      `funding_oi` from the existing HYPERLIQUID `derivative_ticker` capture (asset_ctxs, per-minute, already in the
+      corpus) rather than the OI-less `perp_funding` rows — align the per-minute `derivative_ticker` OI to the
+      hourly-settled `perp_funding` grain in the pass-through reshape path
       (`features_service/delta_one/app/core/_passthrough_loader.py` +
       `features_service/delta_one/app/calculators/funding_oi.py`). Repo: features-service. Done when: a DEFI
       `funding_oi` verification-window run over `2023-05-12..2023-10-31` loads non-null `open_interest` for a majority
       of HYPERLIQUID instruments and passes the >50% NaN column-quality gate, verified by a new unit test;
-      `bash     scripts/quality-gates.sh` green.
+      `bash     scripts/quality-gates.sh` green. **DONE (2026-08-03, slot-8, backend_engineer craft)** —
+      `_load_passthrough_range` now, for `data_type="perp_funding"`, recursively loads the same venue+symbol's
+      `derivative_ticker` frame and backward-asof-joins its `open_interest`/`mark_price`/`index_price` onto the hourly
+      funding rows (nearest known OI reading at-or-before each funding timestamp); `derivative_ticker` itself is
+      unaffected. 2 new unit tests (`TestEnrichFundingOIFromDerivativeTicker` in
+      `tests/delta_one/unit/test_data_loader.py`) cover the join (exact + nearest-prior match, asserting no unbounded
+      recursion via day-load call-count) and the graceful-fallback path; all 130 delta_one data_loader/funding_oi tests
+      pass; `bash scripts/quality-gates.sh` green. `features-service@0699c5db`. **Did NOT run a live GCS
+      verification-window run** against real HYPERLIQUID data — that half of this todo's done-when is the
+      separately-dispatched `[DATA] P3` todo directly below (data_engineering craft, its own `Done when` is exactly that
+      run), matching the craft-scope split this issue's own prior sessions already established (backend implements +
+      unit-tests; data re-verifies against real infra).
 - [ ] [DATA] P3. Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo over the verified-clean manifest window
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
@@ -194,3 +205,15 @@ fixes above.
   Did NOT implement the B fix (repo-owner- ratifiable per operator guidance; it's a distinct backend_engineer todo) and
   did NOT relaunch (no fix has landed — a relaunch would still fail the NaN gate). Method note: read one small parquet
   via the repo `.venv` (bounded, single file — no whole-corpus walk).
+- **2026-08-03 (slot-8, backend_engineer craft) — `[BACKEND] P2` B-implementation SHIPPED.** Extended
+  `_load_passthrough_range` (`_passthrough_loader.py`) so `data_type="perp_funding"` recursively loads the same
+  venue+symbol's `derivative_ticker` frame (reusing the exact same day-fetch/symbol-filter/timestamp-resolve path, no
+  new venue capture) and backward-asof-joins its `open_interest`/`mark_price`/`index_price` onto the hourly funding rows
+  — most recent known OI reading at-or-before each funding-settlement timestamp, since the two captures run on
+  independent cadences (per-minute vs hourly). Extracted a `_reshape_passthrough` helper to keep
+  `_load_passthrough_range` under the 50-line method cap. Added `TestEnrichFundingOIFromDerivativeTicker` (2 tests:
+  exact + nearest-prior asof match with a day-load call-count assertion ruling out unbounded recursion; graceful null-OI
+  fallback when derivative_ticker is empty) to `tests/delta_one/unit/test_data_loader.py`; all 130 delta_one
+  data_loader/funding_oi tests pass; `bash scripts/quality-gates.sh` green. `features-service@0699c5db` (verified
+  ancestor of `origin/live-defi-rollout`). Did NOT run a live GCS verification-window run — deferred to the `[DATA] P3`
+  todo below (data_engineering craft, separately dispatched, its own done-when covers exactly that).
