@@ -194,3 +194,23 @@ production data.
   (`instruments-service@47a631ff`, full QG green, see `-002` above) and closed `-004` (cross-reference). `-001` (the
   casing-direction decision) and `-003` (the `--apply` itself) stay OPEN, still gated on the human operator — no
   manifest write attempted this session.
+- 2026-08-03 (slot-11): dispatched `-002` independently (concurrently with slot-7, before their `47a631ff` landed on
+  origin), then found on rebase that slot-7 had already shipped the same seeder-side fix. Reconciling, found `47a631ff`
+  left a SECOND, still-live half of the same bug: `_rollup_present_bundle_grain` (the present-set/`_build_present_set`
+  side, used to convert a raw manifest read into the row-key set the seeder diffs against) re-keys a LEAF-shaped
+  captured `combo` row to the writer's bundle grain via `bundle_instrument_type_for_leaf`, whose static map value is
+  ALWAYS lowercase — untouched by `47a631ff`, which only fixed the seed side (`_canonical_writer_instrument_type`).
+  Confirmed live (before my fix): a real captured `combo` row, once rolled up through `_build_present_set`, was forced
+  back to lowercase `combo` while the seed now emits uppercase `COMBO` — the exact shard-atom mismatch `47a631ff` closed
+  on the seed side, reopened immediately on the present-set side (any real captured combo cell — leaf-shaped or already
+  bundle-shaped, `is_leaf` is keyed on `instrument_type` alone, not on whether `instrument_id` is blank — would never
+  suppress its own seed). Verified via before/after: reverting just the present-set-side hunk makes
+  `test_build_present_set_rolls_up_leaf_combo_capture_to_bundle_grain` and
+  `test_enumerate_v2_tradfi_leaf_shaped_combo_capture_suppresses_phantom_seed` fail with `('COMBO', '', 'ES')` still
+  present in the seeded output. Fixed by routing `_rollup_present_bundle_grain`'s `bundle_it_by_key` through the SAME
+  `canonicalize_manifest_instrument_type` call (no-op for `futures_chain`/`options_chain`, the permanent bundle-grain
+  exclusion) — `instruments-service@d79b9d74`, full QG green (5195 tests, `.qg_last_passed_sha=d79b9d74`), verified on
+  origin. Todo `-002`'s checkbox was already flipped by slot-7; this entry documents the follow-up fix landed on top of
+  it under the same todo (no separate checkbox — the todo's own outcome wasn't actually fully closed until this commit).
+  `-001` (casing-direction) and `-003` (`--apply`) remain OPEN, still gated on the human operator — no manifest write
+  attempted this session.
