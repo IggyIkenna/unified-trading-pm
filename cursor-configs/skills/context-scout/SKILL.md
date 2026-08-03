@@ -65,10 +65,21 @@ report that plainly rather than silently paying the full cost every day.
 
 ## Phase 1 — per-doc scouting (the real work)
 
-Batch the in-scope docs (NEVER_SCOUTED + STALE) into groups of ~10-15 and fan out read-only sub-agents via a `Workflow`
-`pipeline()` (max 10 concurrent per this workspace's sub-agent cap; paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
-at the top of every spawn; set `model=` explicitly — sonnet is enough for this, no architecture/trading judgment
-involved). Each hunter, per doc:
+**Backfill mode** (a large NEVER_SCOUTED+STALE population — dozens to hundreds of docs, e.g. the first corpus-wide run
+or a fix that re-flags a large slice): batch the in-scope docs into groups of ~10-15 and fan out read-only sub-agents
+via a `Workflow` `pipeline()` (max 10 concurrent per this workspace's sub-agent cap; paste
+`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of every spawn; set `model=` explicitly — sonnet is enough for
+this, no architecture/trading judgment involved).
+
+**Daily-incremental mode** (the expected steady state once the corpus is caught up — a small residual, roughly under ~15
+docs, from that hour's/day's edits): a `Workflow`'s fan-out ceremony is overkill for a handful of docs — dispatch 2-4
+direct `Agent` tool calls instead (same sub-agent-rules pasting + explicit `model=`), splitting the small doc list
+evenly across them. Reserve `Workflow` for genuine backfills.
+
+Each hunter, per doc (per `/codex/12-agent-workflow/context-economy.md`'s scoped-read discipline — grep the doc for
+`related:`/`depends_on:`/`Codex SSOTs:`/named filenames first; for a doc over ~300 lines, read only the sections that
+matter — Why/root-cause, todos, the most recent Progress Log entries — rather than top-to-bottom; fall back to a full
+read only once grep shows most of the doc is actually relevant):
 
 1. Reads the doc's frontmatter (`related`, `depends_on`, `supersedes`, `parent_epic`) and body (Why section, todos, any
    `Codex SSOTs:` list already present).
@@ -123,6 +134,21 @@ involved). Each hunter, per doc:
 
 ## Phase 2 — apply
 
+- **Line-cap pre-check (HARD RULE, before writing)**: if the doc is within ~15 lines of the workspace's 1000-line hard
+  cap (already flagged `SOFT` by Phase 0, or a quick `wc -l` shows >985), verify with
+  `bash scripts/plan-hygiene/check_line_caps.sh <path>` before shipping — a doc newly crossing 1000L in this commit is a
+  real, unexempted violation (SCOPED mode has zero baseline tolerance for that; see `check_line_caps.sh`'s own policy
+  comment). Two `.prettierrc` behaviors make this non-obvious: (1) a `context_scope:` flow-list stays on ONE line only
+  if the full `context_scope: [...]` line fits under `printWidth: 120` — count it before choosing entry count, or it
+  silently expands to one-entry-per-line (7-8+ lines for a 5-entry list); (2) `proseWrap: always` means a marker
+  appended right after existing prose (no blank line) gets merged into that paragraph and reflowed, which costs a full
+  extra wrapped line REGARDLESS of how short the marker text is — a blank-line separator doesn't avoid this either, it
+  just costs the same +1 a different way. If `context_scope` + marker together would push a doc over cap: try the most
+  compact single-line `context_scope` first (2-3 entries, dropping to the highest-value pair if needed); if still over,
+  ship `context_scope` alone and skip the marker (the doc shows `STALE` not `NEVER_SCOUTED` next run — a real
+  improvement, not a failure) rather than force the cap or skip the doc's `context_scope` entirely. Note the doc + why
+  in Phase 3's report; check for an existing line-cap remediation tracking issue (e.g.
+  `plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`) before filing a new one.
 - Write `context_scope: [...]` into the doc's frontmatter (YAML flow-list, matching the existing style already used in
   the corpus, e.g. `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`). This is the ONLY frontmatter field this
   skill ever writes. **Exception**: a Phase-1 step-4a confirmed fingerprint match writes `context_scope` on BOTH docs in
@@ -189,3 +215,7 @@ sibling timers. Still directly invocable interactively any time, against the who
 - `cursor-configs/skills/na-eligibility-audit/SKILL.md`, `cursor-configs/skills/docs-reconcile/SKILL.md` — sibling
   scheduled plan-health skills (disjoint concerns, same dispatch/report shape)
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract
+- `/codex/12-agent-workflow/context-economy.md` — scoped-read + terse-response discipline this skill's own scouting work
+  follows (Phase 1's per-doc read); that doc also names this skill as its complementary mechanism (pre-computing what a
+  FUTURE worker reads, vs. how the CURRENT worker reads)
+- `scripts/plan-hygiene/check_line_caps.sh` — the 1000L hard-cap gate Phase 2 must clear before writing

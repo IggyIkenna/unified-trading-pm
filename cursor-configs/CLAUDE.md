@@ -162,7 +162,7 @@ live claim / mtime <120s → PROTECT). An interactive session IS slot N (long un
   plans, memory).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before starting ANY task, grep `plans/active/`+`.../issues/`
   first: plans go stale/superseded BETWEEN daily `/plan-reconcile` sweeps, so no-flag ≠ current; 0 hits ≠ clear
-  (grep-then-READ) — confirm `status`/`supersedes` first. Also scope reads narrowly, keep replies terse. SSOT:
+  (grep-then-READ) — confirm `status`/`supersedes` first; scope reads narrowly, keep replies terse. SSOT:
   `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`, `…/context-economy.md`.
 
 ## Doc retrieval — retrieve less but right (L0→L4, grep-native)
