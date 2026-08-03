@@ -175,10 +175,33 @@ fixes above.
       separately-dispatched `[DATA] P3` todo directly below (data_engineering craft, its own `Done when` is exactly that
       run), matching the craft-scope split this issue's own prior sessions already established (backend implements +
       unit-tests; data re-verifies against real infra).
-- [ ] [DATA] P3. Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
+- [ ] [DATA] P3. **ATTEMPTED 2026-08-03 (slot-2) — still BLOCKED, new root cause found, see Progress Log + new
+      `[BACKEND] P1` todo below.** Once the [BACKEND] B fix above lands, resume the `funding_oi` leg of
       `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo over the verified-clean manifest window
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
-      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard).
+      `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). **Not yet met** — the real launch
+      this session still wrote only `record_failed` (see below); re-attempt once `[BACKEND] P1` lands.
+- [ ] [BACKEND] P1. **NEW, this session.** `_enrich_funding_oi_from_derivative_ticker`
+      (`features_service/delta_one/app/core/_passthrough_loader.py:345`) is silently failing to find ANY matching
+      `derivative_ticker` rows for HYPERLIQUID over `2023-05-12..2023-10-31`, even though real `derivative_ticker` data
+      for that exact window is confirmed present on GCS (see Progress Log — dozens of
+      `HYPERLIQUID:PERPETUAL:<SYM>-USD@LIN.parquet` objects live under
+      `day=2023-07-11/pipeline_mode=batch_hyperliquid/`, an in-window date). The method's own empty-result path
+      (`if oi_df.is_empty(): return funding_df`, line 374) is a SILENT no-op with no log line — so absence-of-evidence
+      in `run.log` doesn't distinguish "no data" from "join found no match" without instrumenting it. Leading hypothesis
+      (unconfirmed, needs a `[BACKEND]` worker's own trace, not guessed at here): a symbol/venue-key mismatch in the
+      recursive `_load_passthrough_range(synthetic_id, "derivative_ticker", ...)` call —
+      `synthetic_id = f"{venue}:derivative_ticker:{raw_symbol}"` is built from `perp_funding`'s OWN `raw_symbol` (bare,
+      e.g. `"ETH"`, per the 2023-era migrated-import filename shape this doc's original investigation cited), but
+      `derivative_ticker`'s live filenames use the fully-qualified `HYPERLIQUID:PERPETUAL:ETH-USD@LIN` shape — worth
+      checking whether `_gather_passthrough_days`'s day-fetch + `_PASSTHROUGH_SYMBOL_COLUMNS` symbol-column filter
+      (`symbol`/`coin`/`market`/`feed`) actually matches against this format, or whether the recursive call's own
+      `raw_symbol` extraction (`parts[2] if len(parts) >= 3 else ""` on a `:`-split synthetic_id) is silently
+      empty/wrong for this data_type's real symbol representation. Add a log line on the empty-result path first (turns
+      future silent failures into a one-line diagnosis) before hunting further. Repo: features-service. Done when: the
+      real symbol/matching gap is found + fixed, a new unit test reproduces the SPECIFIC HYPERLIQUID symbol-format shape
+      this session found broken (not just the already-covered exact/nearest-prior-asof-match case), and a live
+      verification-window re-run (the `[DATA] P3` todo above) writes real `record_captured` rows.
 
 # Progress Log
 
@@ -217,3 +240,35 @@ fixes above.
   data_loader/funding_oi tests pass; `bash scripts/quality-gates.sh` green. `features-service@0699c5db` (verified
   ancestor of `origin/live-defi-rollout`). Did NOT run a live GCS verification-window run — deferred to the `[DATA] P3`
   todo below (data_engineering craft, separately dispatched, its own done-when covers exactly that).
+- **2026-08-03 (slot-2, data_engineering craft, dispatched to
+  `delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi-002`) — `[DATA] P3` ATTEMPTED, still
+  BLOCKED, new root cause found.** Confirmed `features-service@0699c5db` (the B-implementation) is live in-worktree,
+  then launched the real verification-window run this todo calls for: `features-delta-one-defi-20260803-031632` (SPOT,
+  `--feature-family delta_one --asset-group DEFI --feature-group funding_oi --timeframe 15m --start-date 2023-05-12 --end-date 2023-10-31`,
+  `--launch-mode full`). Dependency-check and lookback-validation both PASSED cleanly (confirms the SIBLING
+  `delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md` fix is holding). But every
+  date the VM actually processed hit the SAME NaN-rejection this doc originally diagnosed —
+  `Rejecting shard HYPERLIQUID:perpetual:/funding_oi: 104 columns exceed NaN threshold — open_interest=100.0%, mark_price=100.0%, index_price=100.0%, open_interest_raw=100.0%, oi_change=100.0%`
+  — on every sampled date (2023-10-31, 2023-07-27, and the run's own final terminal date). VM exited `rc=1`,
+  `ERROR ALL feature groups failed: ['funding_oi']`. Independently re-verified against the manifest itself (not just the
+  log): read the run's own per-VM shard
+  (`gs://features-defi-prd-.../\_index/per_vm/features-delta-one-defi-20260803-031632.parquet`, one bounded single-file
+  read) — exactly 1 row, `capture_status=attempted_failed`, `error_reason=orchestrator_returned_false`. Zero
+  `record_captured` rows anywhere. So the B-implementation's own unit tests (which mock the join inputs) pass, but the
+  REAL production join is not finding any matching `derivative_ticker` rows for HYPERLIQUID over this exact window — a
+  genuinely NEW bug, not a re-confirmation of the original one. Ruled out data-absence as the cause: confirmed live
+  (bounded single-day `gsutil ls`, not a corpus walk) that `derivative_ticker` HYPERLIQUID data genuinely exists
+  in-window — dozens of objects under
+  `day=2023-07-11/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/`
+  (e.g. `HYPERLIQUID:PERPETUAL:ETH-USD@LIN.parquet`, `...BTC-USD@LIN.parquet`, etc.), so the join has real rows to find
+  and isn't matching them. `_enrich_funding_oi_from_derivative_ticker`'s empty-result path
+  (`_passthrough_loader.py:374`) is a silent no-op with no log line, so I could not pin the exact failing line without
+  either instrumenting it or reproducing the exact `perp_funding` raw_symbol shape for this venue/window — correctly
+  left to the new `[BACKEND] P1` todo (backend_engineer craft, not mine to freelance a debug session into, mirroring
+  this doc's own established craft-scope split). Did NOT relaunch — the failure is systematic across every processed
+  date, not a one-off, so a retry with the same code would reproduce identically. This ALSO means
+  `delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md`'s own Todo 2 (`returns` +
+  `funding_oi`, D1's checkbox) still cannot flip — `returns` remains complete (per that doc's own 2026-08-02 entry),
+  `funding_oi` is now blocked on `[BACKEND] P1` instead of `[BACKEND] P2` (which itself IS done, just insufficient
+  against real data). No manifest-integrity issue from this run itself — the one row it wrote is an honest
+  `attempted_failed`, not a masked/fake success.
