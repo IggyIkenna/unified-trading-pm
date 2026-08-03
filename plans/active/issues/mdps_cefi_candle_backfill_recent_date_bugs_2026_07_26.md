@@ -129,13 +129,29 @@ on-chain-CLOB wire format.
       code-fix pass silently found 0 files due to a missed `pipeline_mode=` hive segment — commit
       `market-data-processing-service@2ff7a16` fixes it; `335e9cc` above is the pushed/promoted SHA on
       `live-defi-rollout`).
-- [ ] [DATA] P2. **Fix HYPERLIQUID `derivative_ticker`→`deriv_ohlcv_1m` candle building.** Root-cause the
+- [x] [DATA] P2. **Fix HYPERLIQUID `derivative_ticker`→`deriv_ohlcv_1m` candle building.** Root-cause the
       `instrument_type='UNKNOWN'` resolution (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` rows, then
       either fix the resolution or register the missing
       `unified_api_contracts.internal.schemas.contracts.     CONTRACT_REGISTRY` entry for `deriv_ohlcv_1m`. Repos:
       market-data-processing-service (+ unified-api-contracts if a new contract is needed). **Done when**: a real
       `derivative_ticker` backfill for at least one HYPERLIQUID instrument produces a valid `deriv_ohlcv_1m` candle with
-      no SchemaContract/validation error.
+      no SchemaContract/validation error. — ✅ **DONE 2026-08-03** — `market-data-processing-service@f23e75f`. Root
+      cause: ALREADY RESOLVED (side effect of todo 1's `335e9cc` venue+pipeline_mode-scoped listing fix landing on
+      2026-07-26); no further source change needed. Live-VM proof (slot 6): a real `--instrument-ids`-narrowed backfill
+      (`HYPERLIQUID:PERPETUAL:ADA-USD@LIN`, `derivative_ticker`, day=2026-07-19) against
+      `market-data-tick-cefi-prd-central-element-323112` wrote a valid, correctly-partitioned `deriv_ohlcv_{tf}` candle
+      for EVERY timeframe (15s/1m/5m/15m/1h/4h/1d) —
+      `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/timeframe={tf}/data_type=derivative_ticker/instrument_type=PERPETUAL/venue=HYPERLIQUID/HYPERLIQUID:PERPETUAL:ADA-USD@LIN.parquet`,
+      confirmed via `gcloud storage ls -L` (per-timeframe creation timestamps) + direct parquet inspection (1m file:
+      1440 rows, correct `instrument_id`, 24 non-null `mark_price_mean`/`funding_rate_mean` observations matching the
+      raw file's 24 hourly snapshots) — zero SchemaContract/validation errors. Added a regression test
+      (`test_hyperliquid_derivative_ticker_resolves_perpetual_not_unknown`,
+      `tests/unit/test_canonical_writer_utility_functions.py`) pinning `_infer_instrument_type` + `lookup_mdps_contract`
+      for this exact (venue, instrument_type, data_type) combination so it can't silently regress. **Separate finding
+      filed** (not this todo's scope): the live-verification run showed 11-22GB RSS for this SAME single instrument's
+      candle build — filed as `/plans/active/issues/mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md`
+      (P3, root cause unconfirmed — the host was independently under severe contention, swap ~22GB in use + load avg
+      ~41, before this job started).
 - [ ] [DATA] P2. **Fix the `book_snapshot_5` column-name mapping for on-chain-perp venues.** Map HYPERLIQUID's (and
       check LIGHTER-ZKSYNC/EXTENDED-STARKNET's) `bid_px_NN`/`ask_px_NN` raw columns to the `bid_price_0`/`ask_price_0`
       the book-candle aggregator expects. Repo: market-data-processing-service. **Done when**: a real `book_snapshot_5`
