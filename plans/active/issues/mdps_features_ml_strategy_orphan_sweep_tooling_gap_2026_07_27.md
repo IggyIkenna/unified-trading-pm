@@ -181,13 +181,41 @@ lets each one be built, validated, and run to real completion on its own timelin
       was BUILD the tool** (mirrors todo 1's own split between "build the tool" and "run it to real completion on prod
       data") — genuinely done: built, unit-test-covered. The real-data VM-run validation + the 3 unwired families are
       todo 2b below, not a gate on this todo.
-- [ ] 2b. [SCRIPT] P2. **Validate the features-service orphan sweep against real GCS data** (Tier-2 SPOT VM, never
+- [x] 2b. ✅ [SCRIPT] P2. **Validate the features-service orphan sweep against real GCS data** (Tier-2 SPOT VM, never
       in-session — per STEP 0.56 of `unified-trading-pm/agents/data_engineering.md`, a features-corpus manifest load is
       exactly the shape that caused 2 recent shared-host AO outages) for each of the 5 wired families
       (`delta_one`/`volatility`/`onchain`/`sports`/`calendar`) × applicable asset_group, mirroring todo 1's
       real-prod-data validation (which caught a genuine bucket-resolution bug) — fix whatever the real run surfaces.
-      Also design + wire `commodity`/`cross_instrument`/`multi_timeframe` (each needs its own shard-key design pass
-      first, per `feature_orphan_sweep.py`'s module docstring). Repo: features-service.
+      Also design + wire `cross_instrument`/`multi_timeframe` (each needs its own shard-key design pass first, per
+      `feature_orphan_sweep.py`'s module docstring). Repo: features-service. **2026-08-03**
+      (`features-service@9fb37033`): wired `cross_instrument` (day-anchored positional `feature_group`, `date=` not
+      `day=` — `run_tag` varies batch/t1-recon so it can't be matched at a fixed index) + `multi_timeframe` (hive
+      `feature_group=` but also `date=` not `day=`; 21 new unit tests, 43 total green). Built
+      `launch-feature-orphan-sweep-vm.sh` (`deployment-service@ca8967f`) — first real launch caught + fixed a genuine
+      gap (`setup-data-pipeline-vm.sh` had no `VM_TASK=feature-orphan-sweep` dispatch branch, same root-cause class as
+      the 2026-07-21/22 datapoint-validation/orphan-sweep gaps — fixed `deployment-service@3b9255c` before any cell
+      ran). Ran all 10 real (family, asset_group) cells on Tier-2 SPOT VMs, all completed <3min, zero preemptions:
+      delta_one (cefi 306A/0E, tradfi 4A/0E, defi 304,257A/8E, prediction 0/0-genuinely-empty), volatility (all 3
+      applicable AGs genuinely empty — verified via matching bucket names to delta_one's own real data, not a
+      bucket-resolution bug), onchain/defi (950A/**783E**), sports/sports (28,076A/96,678C/**67,077E**), calendar/global
+      (0/0 objects but 6 phantom-captured manifest rows — a class this sweep's taxonomy can't detect, since orphan
+      detection is object-driven not manifest-driven). The two real orphan gaps (onchain 45%, sports 35%) plus the
+      calendar phantom-row anomaly are big findings, out of THIS todo's scope (validate the tool) — filed as their own
+      doc:
+      [`features_service_manifest_coverage_gap_2026_08_03.md`](features_service_manifest_coverage_gap_2026_08_03.md)
+      (backfill + investigation todos live there, not here). `commodity` remains genuinely unwired (flat JSON
+      `signal.json`, not parquet, positional day+feature_group with no hive keys at all, own dedicated bucket) — split
+      to todo 2c below rather than guessed at in this dispatch.
+- [ ] 2c. [SCRIPT] P2. **Design + wire the `commodity` feature_family** into `feature_orphan_sweep.py` — genuinely
+      different shape from every other wired family: writes a flat JSON `signal.json` (not parquet) at
+      `{commodity}/{date}/signal.json` with NEITHER segment hive-style (both `commodity` and `date` are raw positional
+      segments), no `feature_group`/`day` hive keys at all, and its own dedicated bucket (`features-commodity` kind,
+      global — no per-asset_group fold). Needs its OWN JSON-aware classification path (the existing `is_parquet` gate
+      would misclassify every real `signal.json` as `C_manifest_infra`, masking real orphans) — a genuinely separate
+      design pass, not a mechanical port of `calendar`'s or `cross_instrument`'s positional handling. See
+      `feature_orphan_sweep.py`'s module docstring for the full citation trail
+      (`commodity/cli/handlers/batch_handler.py` `_write_signal_to_gcs`/`_write_signal_and_manifest`). Repo:
+      features-service.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
       not day-sharded); scope the actual shard key first before writing the sweep (may need its own design pass, not a
       mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.
@@ -236,3 +264,16 @@ lets each one be built, validated, and run to real completion on its own timelin
   in the SAME dispatch), split todo 2 the same way the parent doc's own "Why this needs a split" section argues for:
   reworded todo 2 to scope BUILD only (now genuinely done, flipped) and added todo 2b for the real-data VM-run
   validation + the 3 still-unwired families (open, next dispatch against this doc).
+- **2026-08-03** (AO dispatch, slot 2) — Picked up todo 2b. Wired `cross_instrument` + `multi_timeframe` (both write
+  `date=` not `day=`; cross_instrument's `feature_group` is day-anchored positional since its preceding `run_tag`
+  segment varies) — `features-service@9fb37033`, 21 new unit tests, 43 total green. Built
+  `launch-feature-orphan-sweep-vm.sh` mirroring `launch-orphan-sweep-vm.sh` — `deployment-service@ca8967f` (+ `@3b9255c`
+  fixing a genuine `setup-data-pipeline-vm.sh` VM_TASK dispatch gap the first real canary launch caught). Ran all 10
+  (feature_family, asset_group) cells for the 5 wired families on real Tier-2 SPOT VMs — every launch completed clean in
+  under 3 minutes, zero preemptions. Surfaced two real, substantial manifest-coverage gaps (onchain/defi 45% orphan,
+  sports/sports 35% orphan = 67,860 real orphan objects) and one phantom-captured anomaly (calendar: 6 manifest rows, 0
+  backing objects) — filed as their own doc, out of this todo's "validate the tool" scope:
+  [`features_service_manifest_coverage_gap_2026_08_03.md`](features_service_manifest_coverage_gap_2026_08_03.md).
+  Flipped todo 2b — genuinely complete (tool validated against real data for all 5 wired families, 2 of the 3
+  originally-unwired families now wired). Split `commodity` (JSON not parquet, needs its own classification path) to new
+  todo 2c rather than guess at its shape under time pressure.
