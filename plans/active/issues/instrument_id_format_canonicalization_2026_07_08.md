@@ -361,10 +361,21 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       it does NOT retroactively rewrite the current live catalog (needs a real per-day-corpus regen, out of scope for
       inline execution per the memory-bounding guardrail) — that remaining scope is tracked in
       [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]].
-- [ ] [DECISION] P2. **Confirm exact target quote-currency per on-chain-perp venue** (finding 4) — ASTER/PACIFICA/
-      LIGHTER-ZKSYNC's real settlement currency needs a quick per-venue API check before the illustrative targets in
-      this doc become real implementation targets (e.g. confirm ASTER really settles BTC-USDT in USDT, not some other
-      stable).
+- [x] [DECISION] P2. **Confirm exact target quote-currency per on-chain-perp venue (finding 4) — RESOLVED, already
+      shipped, checkbox had gone unchecked (same pattern as finding 5's Bitfinex catch).** Re-verified 2026-08-03: (1)
+      **ASTER** — `aster.py` does not assume a quote currency at all; it parses each real perp's `quoteAsset` field live
+      off `fapi.asterdex.com/fapi/v1/exchangeInfo` per-instrument (`instrument-service@57f8a754`), backed by
+      `docs.asterdex.com`'s "fully settled in USDT" confirmation + a live pull showing 100% stablecoin quotes (504 USDT
+      / 3 USD1 / 2 bare "U", zero inverse) — stronger than a single assumed value, it's the real per-symbol truth. (2)
+      **LIGHTER-ZKSYNC** — `lighter.py` hardcodes `quote_asset="USDC"`/`settle_asset="USDC"`
+      (`instruments-service@57f8a754`), backed by `docs.lighter.xyz/trading/multi-asset-margin`'s explicit "Portfolio
+      Balance is the USDC value... linear perpetuals (USDC-margined), not inverse" — confirmed venue-wide, not
+      per-symbol variance. (3) **PACIFICA** — moot: the venue was **removed entirely** by a later operator ruling
+      (`instruments-service@4d65d468`, 2026-07-16, "remove Drift + Pacifica reference-data adapters entirely" — not
+      integrated, no adapter exists to carry a quote-currency assumption). All 3 named venues are resolved: 2 are
+      real-API-verified and shipped, the 3rd no longer exists as a venue. No new code required — the confirmed values
+      were already implemented ahead of this checkbox being flipped. Evidence: instruments-service@57f8a754/@4d65d468
+      (both verified ancestors of `origin/live-defi-rollout`).
 - [x] [DECISION] P2. **Migration mechanics — RESOLVED 2026-07-08 (operator)**: always backfill/rewrite historical GCS
       rows in place AND correct going forward — never leave a legacy-format historical range unfixed. Mechanism:
       **rewrite/relabel already-downloaded data in place (re-derive the corrected instrument_id from already-captured
@@ -589,6 +600,19 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   `pool_fee_tier` bps column via a new `_bps_fee_str()` helper, regression test added). Retroactive backfill of the
   current live catalog (needs a real per-day-corpus regen, out of scope for inline execution per the memory-bounding
   guardrail) tracked in [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]].
+
+- **2026-08-03 — finding-4 on-chain-perp quote-currency todo re-verified + flipped (was unchecked despite being already
+  resolved).** Dispatched as task `instrument_id_format_canonicalization-002`. Read `aster.py` and `lighter.py`
+  directly: both already carry the real, API/docs-verified settlement currency committed 2026-07-09
+  (`instruments-service@57f8a754`) — ASTER resolves `quoteAsset` live per-instrument off real `exchangeInfo` (not an
+  assumed constant), LIGHTER hardcodes the docs-confirmed venue-wide `USDC`. Checked `defi.py` for PACIFICA and found it
+  was dropped as a venue entirely by a later, unrelated operator ruling (`instruments-service@4d65d468`, 2026-07-16) —
+  no adapter exists for it any more, so its quote-currency question is moot rather than answered. No code change needed
+  (the confirmed values were already shipped); flipped the checkbox with the citing evidence. Noted but NOT touched (out
+  of scope for this todo): `venue_core.py`'s `_VENUE_ADAPTER_EPOCH` dict still carries a now-dead
+  `"PACIFICA": "2026-05-12"` key, and PACIFICA strings remain scattered across several UAC registry files and one-off
+  historical migration scripts — cleaning that up is a separate, much larger dead-reference sweep than this todo's
+  quote-currency-confirmation scope, not attempted here.
 
 ## Orchestration state, 2026-07-09 — split to archive (2026-07-27, line-cap remediation)
 
