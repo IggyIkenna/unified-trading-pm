@@ -407,3 +407,12 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   `EXIT_STATUS`, then re-running the 4 derived shards against the freshly-written delta_one `-test-` output, then
   closing out this todo with the final consolidated verdict. No code changes needed for this todo (verification-only);
   nothing shipped against `features-service` this session.
+- 2026-08-03 ~05:31Z (slot-16, data_engineering, INTERIM #2): TRADFI:delta_one's VM
+  (`features-e2e-tradfi-20260803-022954-b3b034`) was **SPOT-preempted after running ~3h** (`compute.instances.preempted`
+  op at 2026-08-03T05:30:48Z; no `EXIT_STATUS` written, consistent with a genuine preemption, not a hang) — relaunched
+  (`features-e2e-tradfi-...` new VM, in flight). The long runtime before preemption is consistent with this shard's
+  known-large buffer window (348d TRADFI vs 240d CEFI, `features_delta_one_sequential_per_day_gcs_scan_2026_07_27.md`)
+  and a genuinely large volume of honest `Continuous series absent ... MDPS build-continuous must run first` warnings
+  (upstream data gaps, not a driver bug) rather than a stall — confirmed via continuously-advancing `run.log` timestamps
+  right up to the preemption instant. CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) remains healthy
+  and running. Still not done; continuing to monitor both.
