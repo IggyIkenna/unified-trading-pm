@@ -202,6 +202,22 @@ sibling todo reads `[x]`.
       it was a one-time historical artifact (e.g. from the original 2026-06-22 migration's own incomplete pass), this
       todo resolves as `no-issue-found`.
 
+- [ ] [SCRIPT] P3. **Harden `do_rename()`'s `deleted_dup_source` branch with a content-equality check before it deletes
+      the old object** (flagged 2026-08-03 by review agt-de20d5 after the slot-3 `--apply` run). That branch currently
+      real-deletes the OLD (stale-duplicate) object based solely on the NEW canonical name's EXISTENCE — it does NOT
+      compare content (crc32c / size / row-count) between old and new before the delete, so a genuinely-different object
+      that happened to collide on the canonical name would be silently destroyed. The 2026-08-03 slot-3 run deleted
+      1,048 objects via this path against prod bucket `market-data-tick-cefi-prd-central-element-323112`; review
+      confirmed live that bucket carries a 604800s (7-day) GCS soft-delete policy, so those specific deletes are
+      RECOVERABLE through 2026-08-10 if ever found wrong — this is a hardening follow-up, NOT an active-loss incident.
+      Process-gap note for the audit trail: that `--apply` todo was not `[OPERATOR]`-tagged and did not cite a fresh
+      soft-delete-retention check (task_template.md finding T's bar); adding the content-equality guard removes the
+      reliance on that missing gate. Repo: market-tick-data-service. Real-but-P3 because the same code path WILL run
+      again soon (the sibling `lending_indices` launcher shares the identical `do_rename()`-adjacent metadata-delimiter
+      bug class). **Done when**: `do_rename()`'s dedup-delete path performs a crc32c/size (or row-count) equality
+      assertion between the old object and the pre-existing canonical object and only deletes the old one when they
+      match, refusing + logging the delete on mismatch; add a unit test covering the mismatch-refusal case.
+
 ## Progress Log
 
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (3 entries) — no changes.
