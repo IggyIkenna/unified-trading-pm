@@ -60,11 +60,10 @@ locked_since:
 context_scope:
   [
     /codex/02-data/orphan-object-detection.md,
-    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
-    market-data-processing-service/scripts/candle_orphan_sweep.py,
-    features-service/scripts/feature_orphan_sweep.py,
-    ml-service/ml_service/training/app/core/manifest_gap_handler.py,
+    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    strategy-service/scripts/strategy_orphan_sweep.py,
+    strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
+    ml-service/scripts/ml_orphan_sweep.py,
   ]
 depends_on: []
 ---
@@ -290,19 +289,50 @@ lets each one be built, validated, and run to real completion on its own timelin
       `unified-trading-pm/agents/data_engineering.md`) + the unwired families + the two PATH_REGISTRY-divergence
       fix-or-confirm decisions are split to todo 3b below, mirroring todo 1's own build/validate split and todo 2's own
       family-by-family incremental-wiring split.
-- [ ] 3b. [SCRIPT] P2. **Validate the ml/strategy orphan sweeps against real GCS data** (Tier-2 SPOT VM, never
-      in-session per STEP 0.56) for `ml_predictions` (ml-service) and `strategy_instructions` (strategy-service),
-      mirroring todo 1's + todo 2b's own real-prod-data validation pattern (each caught a genuine bug — todo 1's sports
-      bucket-resolution bug, todo 2c's commodity case-mismatch — a real run here may surface further gaps code-reading
-      alone could not, especially given the two PATH_REGISTRY divergences todo 3 found). Also: (a) decide + fix the
-      PATH_REGISTRY drift for `ml_predictions`/`strategy_instructions` (repoint the registry to the real shape, or fix
-      the writer to match the registry — an operator/design-judgment call todo 3 deliberately did not make); (b)
-      design + wire `strategy_orders`/`strategy_positions`/`strategy_pnl` (resolve each routing_key's real bucket/prefix
-      from deployment config first); (c) investigate + design `backtest_results`'s orphan coverage (is it
-      manifest-tracked by run_id anywhere?); (d) `ml_models`/`ml_model_metadata`/ `ml_training_artifacts` need a
-      manifest-WRITE design pass before orphan detection is even meaningful for them — scope that as its own decision,
-      not a mechanical sweep port. Repo: ml-service, strategy-service.
-- [ ] 4. [DOC] P2. Once todos 1-3 land real per-stage findings, write the combined cross-repo lineage report
+- [x] 3b. ✅ [SCRIPT] P2. **Validate the ml/strategy orphan sweeps against real GCS data** (Tier-2 SPOT VM) for
+      `ml_predictions` (ml-service) and `strategy_instructions` (strategy-service), mirroring todo 1's + todo 2b's own
+      real-prod-data validation pattern. **Done 2026-08-03**: (a) decided + fixed the PATH_REGISTRY drift for BOTH
+      datasets — repointed the registry to the real writer shape (`unified-trading-library@3ae19775`: `ml_predictions`
+      now bucket-root JSON only, no stale `predictions/predictions/by_date/` prefix or parquet extra_file;
+      `strategy_instructions` now carries the `client_id=` segment). Verified no live reader depended on the OLD (wrong)
+      shapes — every consumer was dead code or an unwired stub — so this changed no runtime behavior. Fixed the one
+      downstream call site that would've KeyError'd (`strategy-service@a353a570`'s
+      `PnlDomainAdapter.read_strategy_instructions_path`, now accepts `client_id`, default `"*"`). Built
+      `launch-ml-strategy-orphan-sweep-vm.sh` (`deployment-service@fb29a8d`, mirrors
+      `launch-feature-orphan-sweep-vm.sh`'s pattern) — while wiring `VM_SERVICE=ml_service`, found + fixed a
+      pre-existing gap: `ml-service` had NO `SERVICE_TARBALLS`/`TARBALL_DIRS` entry at all (only stale
+      `ml_training_service`/`ml_inference_service` keys pointing at tarballs from repos that no longer exist), so
+      `launch-ml-vm.sh`'s existing VMs had been silently getting zero ml-service code extracted. Ran BOTH real Tier-2
+      SPOT VMs against prod (`ml-orph-*`/`strat-orph-*`, `e2-standard-4`, completed in ~2 min each): the real run caught
+      a genuine bug code-reading alone missed — `ml-store-prd-...` is NOT dedicated to `ml_predictions` alone (it also
+      holds `models/`/`training-artifacts/` for 3 sibling ml-service corpora sharing the same `bucket_template`), so 233
+      real objects were misclassified `D_junk`. Fixed (`ml-service@3e83350`): added an `F_other_corpus` informational
+      class (never gates the E acceptance bar) that excludes recognized sibling-corpus prefixes before classification,
+      per `/codex/02-data/orphan-object-detection.md` §2c's "other-corpus, labelled out" pattern — mirrors
+      `migration_orphan_sweep.py`'s own `_DATA_PREFIXES` exclusion. Re-ran the ml VM to confirm clean:
+      `A=0 C=2 D=0 E=0 F=236`. `strategy_instructions` real run found the manifest is completely absent in prod (0
+      captured cells) with 7 real orphan objects (genuine 2025-06-15/16 backtest artifacts) — a real data-correctness
+      gap, filed as its own doc rather than absorbed into this todo's "validate the tool" scope (mirrors todo 1's/todo
+      2b's own precedent):
+      [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](ml_strategy_manifest_coverage_gap_2026_08_03.md). (b)
+      strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the ml_models/etc.
+      manifest-WRITE design pass are each their own genuine judgment call — split to todo 3c below rather than guessed
+      at in this dispatch, mirroring how todo 2 split unwired families to 2b/2c/2d.
+- [ ] 3c. [SCRIPT] P2. **Design + wire the remaining ml/strategy orphan-coverage gaps todo 3/3b explicitly deferred** —
+      each needs its own investigation pass, not a mechanical port: (a) design + wire
+      `strategy_orders`/`strategy_positions`/`strategy_pnl` orphan sweeps — resolve each
+      `get_data_sink(routing_key=     "strategy_orders"/"strategy_positions"/"strategy_pnl")` call's real
+      deployment-injected bucket/prefix first
+      (`strategy-service/strategy_service/engine/core/cloud_strategy_storage.py`'s `CloudStorageService.__init__`); note
+      the manifest rows these 3 write also omit `data_type` entirely per todo 3's own finding, so the covered-index
+      needs its own grain-tolerant match, not `strategy_orphan_sweep.py`'s exact-triple lookup ported as-is; (b)
+      investigate + design `backtest_results`'s orphan coverage — is it manifest-tracked by `run_id` anywhere, or
+      genuinely untracked (`batch_results.py`'s manifest write for backtests reuses `data_type="strategy_instructions"`
+      with a `(date, strategy_id, client_id)` row_key that has no `run_id` column at all)?; (c)
+      `ml_models`/`ml_model_metadata`/`ml_training_artifacts` need a manifest-WRITE design pass before orphan detection
+      is even meaningful for them (zero manifest coverage today, confirmed again by todo 3b's real VM run) — scope that
+      as its own operator-facing decision, not a mechanical sweep port. Repo: ml-service, strategy-service.
+- [ ] 4. [DOC] P2. Once todos 1-3c land real per-stage findings, write the combined cross-repo lineage report
       `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo.
 
 ## Progress Log
@@ -405,3 +435,23 @@ lets each one be built, validated, and run to real completion on its own timelin
     (build-only scope, genuinely done) and added todo 3b for the real-data VM-run validation + the unwired families +
     the two PATH_REGISTRY fix-or-confirm decisions, mirroring todo 1's build/validate split and todo 2's incremental-
     wiring split.
+- **2026-08-03** (AO dispatch, slot 3) — Picked up todo 3b. Decided + fixed the PATH_REGISTRY drift for both datasets
+  (repointed the registry to the real writer shape rather than the writer to the registry — verified no live reader
+  depended on the old shapes, so zero runtime-behavior change): `unified-trading-library@3ae19775`. Fixed the one
+  downstream call site the new required `client_id` placeholder would've KeyError'd: `strategy-service@a353a570`. Built
+  `launch-ml-strategy-orphan-sweep-vm.sh` (`deployment-service@fb29a8d`) mirroring `launch-feature-orphan-sweep-vm.sh` —
+  while wiring it, found + fixed a real pre-existing gap: `ml-service` had no `SERVICE_TARBALLS`/`TARBALL_DIRS` entry at
+  all in `setup-data-pipeline-vm.sh` (only stale `ml_training_service`/`ml_inference_service` keys for repos that no
+  longer exist), so `launch-ml-vm.sh`'s own existing `VM_SERVICE=ml_service` VMs had silently never gotten ml-service
+  code extracted. Ran both real Tier-2 SPOT VMs against prod. The real run caught a genuine bug: `ml-store-prd-...` is
+  NOT dedicated to `ml_predictions` alone (also holds `models/`/`training-artifacts/` for 3 sibling ml-service corpora
+  sharing the bucket) — 233 real objects were misclassified `D_junk`. Fixed (`ml-service@3e83350`): new `F_other_corpus`
+  informational class excludes recognized sibling-corpus prefixes before classification, per
+  `/codex/02-data/orphan-object-detection.md` §2c/§2d. Re-ran the ml VM to confirm clean (`A=0 C=2 D=0 E=0 F=236`).
+  `strategy_instructions`'s real run found the manifest completely absent in prod (0 captured cells) with 7 real orphan
+  objects — filed as its own doc, out of this todo's "validate the tool" scope, mirroring todo 1's/todo 2b's own
+  precedent: [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](ml_strategy_manifest_coverage_gap_2026_08_03.md).
+  Flipped todo 3b (genuinely complete: build + validate + PATH_REGISTRY decision + the sibling-corpus bug the real run
+  caught, all done). Split (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the
+  ml_models manifest-WRITE design pass to new todo 3c — each is its own genuine judgment call, mirroring todo 2's own
+  incremental-wiring split (2b/2c/2d).
