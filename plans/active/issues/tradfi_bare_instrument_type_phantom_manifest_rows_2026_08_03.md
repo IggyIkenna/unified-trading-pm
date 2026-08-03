@@ -144,26 +144,73 @@ Separately, these are `capture_status=captured` manifest rows with **no real bac
 the already-resolved "4,991 phantom captured FIXTURE_EVENTS manifest rows" (sports) — a genuine, if small (8,556 rows in
 this one slice), manifest-correctness problem independent of the `available_at` question.
 
+## Corpus-wide scope (2026-08-03, slot 2)
+
+Ran a bounded, column-pruned + predicate-pushdown read of the live-consolidated `_index/availability_index.parquet`
+(single object, not a new GCS walk) filtered to the exact phantom signature (`written_at` in
+`2026-07-27T16:46:31Z..2026-07-27T16:46:41Z` AND `instrument_id IS NULL` AND `underlying IS NULL`). Shipped as
+`market-tick-data-service/scripts/audit_tradfi_phantom_batch_corpus_wide_scope_2026_08_03.py@125ec228`.
+
+**Corpus-wide total: 12,582 rows** — larger than the 8,556 this doc originally found, because the same batch also
+touched `trades` and `ohlcv_15m` (not just `ohlcv_1s`/`ohlcv_1m`) and 728 rows post-2023-04-10 (the doc's original slice
+was pre-2023-04-10 only). Sanity-check against the doc's own number: re-applying the exact original slice filter
+(pre-2023-04-10, `data_type in {ohlcv_1s, ohlcv_1m}`) to this same read returns 8,550 rows — within 6 of the documented
+8,556 (immaterial, consistent with the same batch/signature).
+
+By `instrument_type` (case-folded, C2a convention):
+
+```
+FUTURE      4560
+COMBO       4190   (stored lowercase "combo" — same C2a casing-migration-pending note as elsewhere)
+UD          2354
+OPTION      1346
+EQUITY       122   <- NOT previously documented as part of this signature
+ETF            6   <- NOT previously documented as part of this signature
+INDEX          4   <- NOT previously documented as part of this signature
+```
+
+**New finding beyond the original scope**: `EQUITY`/`ETF`/`INDEX` (132 rows total) share the exact same phantom
+signature (same 9-second write batch, same null instrument_id+underlying) but were NOT in this doc's original
+UD/OPTION/FUTURE/COMBO list — the original investigation's pre-2023-04 ohlcv_1s/1m slice happened not to surface them.
+Todo 3 below (extending `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE`) should add these 3 alongside
+OPTION/FUTURE/COMBO, not just the original 3.
+
+By `data_type`: `ohlcv_1m` 9,054 · `trades` 3,514 · `ohlcv_15m` 14. By venue: `CME` 12,083 · `ICE` 341 · `NASDAQ` 68 ·
+`NYSE` 60 · `CBOE` 30. Date range 2020-01-01..2024-01-16 (613 distinct dates). `capture_status`=`captured` and
+`pipeline_mode`=`batch_databento` for all 12,582 rows (100%) — consistent with one writer/batch job, not organic
+per-venue capture. `written_at` has 12,582 distinct values inside the 9-second window (one row per timestamp, consistent
+with a tight per-row write loop, not a bulk single-timestamp write).
+
+**Additional correctness concern surfaced (not previously flagged)**: these 12,582 phantom rows collectively carry
+`row_count` = **2,762,371,174** (sum of the manifest rows' own `row_count` field) — i.e. the manifest's bookkeeping
+falsely claims ~2.76 billion rows of tick data captured with zero backing GCS objects. This inflates any row-count-based
+coverage/completeness metric that trusts the manifest's `row_count` column without cross-checking against real GCS
+objects. Flagging for whoever picks up todo 3/4 — worth a quick check whether any dashboard/report sums `row_count`
+directly.
+
 ## Recommended next steps
 
-- [ ] [DATA] P2. Determine the FULL corpus-wide scope of this phantom signature (written_at in
+- [x] [DATA] P2. Determine the FULL corpus-wide scope of this phantom signature (written_at in
       `2026-07-27T16:46:31Z..2026-07-27T16:46:41Z` AND `instrument_id IS NULL` AND `underlying IS NULL`) — this session
       only checked the pre-2023-04 `ohlcv_1s`/`ohlcv_1m` slice (8,556 rows); the same 9-second batch likely touched
       other data_types/date ranges too. Read the manifest with this filter directly (bounded read, already have the
       parquet locally cached from this session if still fresh) — do not re-derive via a new GCS walk. (repo:
-      market-tick-data-service)
-- [ ] [SCRIPT] P2. Root-cause what wrote this exact batch (2026-07-27T16:46:31-40Z, ~9 seconds, 8,556+ rows across 4
-      instrument_type labels) — check `run.log`/Cloud Logging around that timestamp for whatever backfill/migration VM
-      or script was active then; the prior UD investigation already tried and failed twice, so this may need a different
-      angle (e.g. searching by the exact `written_at` timestamp cluster rather than by instrument_type). (repo:
-      market-tick-data-service)
+      market-tick-data-service) — ✅ 2026-08-03, slot 2: 12,582 rows corpus-wide (see § "Corpus-wide scope" above) —
+      market-tick-data-service@125ec228
+- [ ] [SCRIPT] P2. Root-cause what wrote this exact batch (2026-07-27T16:46:31-40Z, ~9 seconds, 12,582 rows corpus-wide
+      across 7 instrument_type labels — see § "Corpus-wide scope" above) — check `run.log`/Cloud Logging around that
+      timestamp for whatever backfill/migration VM or script was active then; the prior UD investigation already tried
+      and failed twice, so this may need a different angle (e.g. searching by the exact `written_at` timestamp cluster
+      rather than by instrument_type). (repo: market-tick-data-service)
 - [ ] [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
       `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
-      `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"` alongside
-      the existing `"UD"` (same evidenced signature) — OR, if by then the operator has ruled these should be deleted
-      (delete-safety protocol, since they carry zero real data and a false `capture_status=captured` claim) rather than
-      quarantined, do that instead. Do not delete manifest rows without a fresh delete-safety 5-part-proof pass
-      regardless of how confident this doc's evidence looks. (repo: unified-api-contracts)
+      `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"`,
+      `"EQUITY"`, `"ETF"`, `"INDEX"` alongside the existing `"UD"` (all 6 confirmed same evidenced phantom signature —
+      the 3 added beyond the doc's original OPTION/FUTURE/COMBO list came out of the corpus-wide scope pass above) — OR,
+      if by then the operator has ruled these should be deleted (delete-safety protocol, since they carry zero real data
+      and a false `capture_status=captured` claim) rather than quarantined, do that instead. Do not delete manifest rows
+      without a fresh delete-safety 5-part-proof pass regardless of how confident this doc's evidence looks. (repo:
+      unified-api-contracts)
 - [ ] [CODE] P3. Fix the wiring gap — `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` should actually reach
       `_ACCEPTED_EXCEPTIONS[("instrument_types", "tradfi")]` in
       `deployment-api/deployment_api/routes/data_status/     _distinct_values.py`, or its own comment should stop
@@ -175,3 +222,8 @@ this one slice), manifest-correctness problem independent of the `available_at` 
 - **2026-08-03** — Filed while working `mtds_available_at_cross_asset_backfill_2026_07_13.md` task
   `mtds_available_at_cross_asset_backfill-008` (data_engineering, slot 14). Full evidence above.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **2026-08-03 (slot 2, data_engineering)**: closed todo 1 — corpus-wide scope determined via bounded single-object
+  read, 12,582 phantom rows total (vs. 8,556 in the original slice), found 3 new instrument_type labels
+  (EQUITY/ETF/INDEX) and a ~2.76B row_count over-claim. Full breakdown in § "Corpus-wide scope" above. Shipped
+  `market-tick-data-service/scripts/audit_tradfi_phantom_batch_corpus_wide_scope_2026_08_03.py@125ec228`. Updated todos
+  2-3's wording to reflect the wider scope. Todos 2-4 remain open for a future session.
