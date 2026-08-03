@@ -53,6 +53,7 @@ jobs:
     outputs:
       action: ${{ steps.promote.outputs.action }}
       pr: ${{ steps.promote.outputs.pr }}
+      arm_failed: ${{ steps.promote.outputs.arm_failed }}
     steps:
       # Token-pool split (sprawl consolidation 2026-06-27):
       # checkout uses GITHUB_TOKEN (same-repo read + LDR push, which is unprotected).
@@ -89,6 +90,16 @@ jobs:
         run: |
           set -euo pipefail
           ACTION="noop"; PR=""
+          # Hardening (2026-08-03, ci_satellite_ao_dispatch_batch1 [CI] P1 — mirrors
+          # unified-trading-pm@4bf65b67c's ldr-to-main-promote-fleet.yml fix): every
+          # `gh pr merge --auto` arm-call site below used to swallow its own exit status
+          # (`2>/dev/null || true` / `|| echo WARN`) and never tallied the failure anywhere a
+          # human or Slack would see it — review agt-39a53d confirmed this failing LIVE (gh run
+          # view 30774619258: "WARN: auto-merge unavailable", zero alert). ARM_FAILED now tracks
+          # the outcome of the LAST arm attempt made this run (a later successful re-arm in the
+          # same tick — close+reopen recovery, dirty-state reconcile — overwrites an earlier
+          # failure back to "false", since only the final state matters).
+          ARM_FAILED="false"
 
           # ── Provenance gate (D1 mirror, ldr_trunk_promotion_decoupling_2026_06_10): PM's LDR→main
           # promotes only quickmerge-provenanced content. PM is checked out here (fetch-depth 0), so
@@ -159,7 +170,7 @@ jobs:
           LDR_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
           if [ -z "$LDR_SHA" ] || [ "$LDR_SHA" = "null" ]; then
             echo "WARN: could not resolve live-defi-rollout tip — skipping this tick (retry in 15m)"
-            { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+            { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
           PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
@@ -191,13 +202,13 @@ jobs:
             MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
             if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
               echo "✅ main tree == LDR tree (content-identical; any ahead_by gap is squash-accounting noise) — nothing to drain"
-              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
             FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
             if [ -z "$FILES" ] || [ "$FILES" = "0" ]; then
               echo "✅ main is content-current with LDR (0 changed files) — nothing to drain"
-              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -224,7 +235,7 @@ jobs:
                   --json headSha,status --jq "[.[]|select(.headSha==\"$_INFLIGHT_SHA\" and .status!=\"completed\")]|length" 2>/dev/null || echo "0")
                 if [ "${_V2_INFLIGHT:-0}" != "0" ]; then
                   echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick, letting it finish"
-                  { echo "action=inflight_wait"; echo "pr="; } >> "$GITHUB_OUTPUT"
+                  { echo "action=inflight_wait"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
                   exit 0
                 fi
               fi
@@ -232,7 +243,7 @@ jobs:
 
             if [ "$DRY_RUN" = "true" ]; then
               echo "DRY-RUN: would open LDR→main PR ($FILES changed file(s))"
-              { echo "action=would-open"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              { echo "action=would-open"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
             # bug#5 hardening: delete the LEGACY no-slash `promote/$REPO` ref FIRST — it
@@ -250,7 +261,7 @@ jobs:
                  -f ref="refs/heads/$PROMOTE_HEAD" -f sha="$LDR_SHA" >/dev/null 2>&1; then
               if ! gh api "repos/$OWNER/$REPO/git/refs/heads/$PROMOTE_HEAD" >/dev/null 2>&1; then
                 echo "  ⛔ could not create immutable promote ref $PROMOTE_HEAD @ ${LDR_SHA:0:8} — retry next tick"
-                { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+                { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
                 exit 0
               fi
             fi
@@ -280,22 +291,26 @@ jobs:
               # Race: another run opened it between the list and the create.
               PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-              [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
+              [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"; exit 0; }
             else
               echo "  opened $PR_URL ($FILES changed file(s))"
               if [ "$PROV_BLOCKED" = 1 ]; then
                 echo "  ⛔ provenance-blocked — NOT arming auto-merge (PR left open)"
                 gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — PM's LDR→main carries code that bypassed quickmerge. Auto-merge not armed; re-ship via \`quickmerge\` or revert on \`live-defi-rollout\`." 2>/dev/null || true
-                { echo "action=provenance_blocked"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+                { echo "action=provenance_blocked"; echo "pr=$PR_URL"; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
                 exit 0
               fi
               # --delete-branch is safe ONLY because the head is the bot's per-SHA ref. It is
               # COUPLED to the frozen head: with head=live-defi-rollout this flag deletes the SSOT
               # branch on merge (deployment-ui, 2026-06-29). Never re-add one without the other.
               # PAT-armed: the App token cannot enablePullRequestAutoMerge (WS-L 2026-06-26).
-              GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null \
-                || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
-              { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null; then
+                echo "  ✅ auto-merge armed on $PR_URL"
+              else
+                echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO — merge manually: $PR_URL"
+                ARM_FAILED="true"
+              fi
+              { echo "action=opened"; echo "pr=$PR_URL"; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
           fi
@@ -307,10 +322,19 @@ jobs:
           if [ "$PROV_BLOCKED" = 1 ]; then
             echo "  ⛔ provenance-blocked — leaving PR open, not arming auto-merge"
             gh pr comment "$PR_NUM" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — non-quickmerge code on \`live-defi-rollout\`; auto-merge not armed until LDR is clean." 2>/dev/null || true
-            { echo "action=provenance_blocked"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"
+            { echo "action=provenance_blocked"; echo "pr=$PR"; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
+          # Hardening (2026-08-03, mirrors 4bf65b67c): this routine per-tick re-arm attempt used to
+          # silently swallow its own failure (`|| true`) into the same untallied nothing as a genuine
+          # arm. A later successful re-arm below (close+reopen recovery / dirty-state reconcile) in
+          # this same tick overwrites this back to "false" — only the final state matters.
+          if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null; then
+            ARM_FAILED="false"
+          else
+            echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO on existing PR #$PR_NUM — merge manually"
+            ARM_FAILED="true"
+          fi
 
           MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
           if [ "$MSTATE" = "blocked" ]; then
@@ -334,8 +358,16 @@ jobs:
             if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ] && [ "$DRY_RUN" != "true" ]; then
               echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
               gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \
-                && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
+                && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null || true
+              # Hardening (2026-08-03, mirrors 4bf65b67c): tested independently of the close/reopen
+              # chain above (which keeps its own `|| true` fail-safety) so a genuine arm failure here
+              # is tallied instead of silently folded into the unconditional "recovered" action.
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null; then
+                ARM_FAILED="false"
+              else
+                echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO on close+reopen re-arm #$PR_NUM — merge manually"
+                ARM_FAILED="true"
+              fi
               ACTION="recovered"
             else
               echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
@@ -431,10 +463,33 @@ jobs:
               # per-SHA ref and a fresh, clean PR, and this stale one is closed by the superseded-ref
               # cleanup. One tick (~15 min) slower than the old head==LDR behaviour, and correct
               # instead of merging a moving head. Kept for the race where `dirty` already cleared.
-              GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
+              # Hardening (2026-08-03, mirrors 4bf65b67c): tally instead of silently swallowing.
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null; then
+                ARM_FAILED="false"
+              else
+                echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO after dirty-state reconcile on #$PR_NUM — merge manually"
+                ARM_FAILED="true"
+              fi
             fi
           else
             echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
             ACTION="pending"
           fi
-          { echo "action=$ACTION"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"
+          { echo "action=$ACTION"; echo "pr=$PR"; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
+
+  # Hardening (2026-08-03, ci_satellite_ao_dispatch_batch1 [CI] P1 — mirrors
+  # unified-trading-pm@4bf65b67c's ldr-to-main-promote-fleet.yml notify-arm-failed job): an arm
+  # failure previously had NO alert surface at all (see the ARM_FAILED hardening comments in the
+  # promote step above) — exactly the "sits green, nobody notices" shape the source incident
+  # (ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md) described.
+  notify-arm-failed:
+    name: Slack — LDR→main auto-merge ARM FAILED alert
+    needs: [promote-ldr-to-main]
+    if: always() && needs.promote-ldr-to-main.outputs.arm_failed == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        PM LDR→main auto-drain bot: auto-merge ARM FAILED for ${{ needs.promote-ldr-to-main.outputs.pr }} — PR exists +
+        provenance-clean but needs a MANUAL `gh pr merge --auto` (or plain merge once green); check repo
+        `allow_auto_merge` + branch protection. SSOT: ldr-to-main-promote.yml.
+    secrets: inherit
