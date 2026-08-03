@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T20:40Z
+last_updated: 2026-08-03T21:05Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -744,3 +744,43 @@ repeated here.
   (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
   beyond this doc's own commit; no branch changes in either repo). `market-data-processing-service` already present in
   this doc's `repos:` frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~20:52-21:05Z (`cicd` escalation `agt-9c7994`, slot 9, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1068`) — instruments-service's 2nd occurrence in this doc-chain (1st: `agt-d12ed0` above), a fresh
+  same-shape xdist-crash on a different random test, no code gap, PR already moot**: escalation cited failing run
+  `30839360878` (`promote/instruments-service/710bcbf7b036`, triggered by pull_request, started `19:35:24Z`) — the
+  `tests` slice crashed via the identical xdist `INTERNALERROR`/`AssertionError` shape already logged for this repo on
+  `tests/unit/test_sports_comprehensive.py::TestCompetitionPhaseAdditional::test_whitespace_handling` (a
+  `Failed: Timeout (>150.0s) from pytest-timeout` firing mid-flush of the xdist report-channel write, corrupting the
+  worker rather than cleanly failing the test), `1 failed, 4420 passed, 6 skipped, 3 warnings in 728.53s`. Read the
+  named test + the function it exercises (`classify_competition_phase`,
+  `instruments_service/reference_data/adapters/sports/competition_phase.py`) before accepting the doc-chain's
+  conclusion: pure string ops (`.lower().strip()`, `in`/`startswith` checks) with zero I/O, no loops, no regex — cannot
+  itself hang for 150s under any input, ruling out an algorithmic-hang theory for this specific test. Confirmed PR #1068
+  was **already MERGED** (`mergedAt: 2026-08-03T18:01:13Z`, ~94min before the failing run even started) — the same
+  self-merge-before-confirmatory-check-completes pattern this doc-chain documents repeatedly;
+  `gh pr list --state open --repo IggyIkenna/instruments-service` → 0 open PRs, confirms nothing is actually blocked by
+  this failure. Reproduced fresh on current LDR HEAD (`d79b9d74`, 2 commits ahead of the failing run's `710bcbf7`) via a
+  backgrounded `bash scripts/quality-gates.sh` (heartbeat loop posted every 180s while it ran):
+  **`✅ ALL QUALITY GATES PASSED (114s)`**, tests phase `5195 passed, 6 skipped, 10 warnings in 54.90s` — zero timeouts,
+  decisive confirmation of no code/test defect (the named test passed clean as part of the full suite). Confirmed
+  `gh api .../actions/runners`: `instruments-service` still reports exactly ONE online runner, `glue-ip-172-31-5-118-1`,
+  `busy=true` — the same fleet-wide bottleneck. `instruments-service/scripts/quality-gates.sh` carries no
+  `PYTEST_TIMEOUT` override (stays at the shared 150s default) — per this doc-chain's established practice (todo 1:
+  root-cause is capacity-side), did NOT add one for a single non-sustained occurrence. `GET /api/repo-blockers` →
+  `open: []`. Checked in-flight runs on `live-defi-rollout`: a run was already `queued` (`30851282295`, dispatched by an
+  earlier tick, headSha `47a631ff` — 1 commit behind the true current HEAD `d79b9d74`); the one intervening commit
+  (`fix(tradfi): canonicalize present-set rollup's re-keyed combo instrument_type`) is orthogonal to the sports/
+  competition-phase test class that failed, so left the queued run alone rather than cancel+redispatch (would forfeit
+  its elapsed queue position for negligible freshness gain), consistent with established precedent. Noted (not actioned,
+  informational only): the prior entry in this doc (`agt-48c16d`, MDPS) reports the
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` topology fix landed on LDR at `20:36Z` — this repro ran at
+  `~20:57-20:59Z`, after that fix, though a single 114s local run is too fast/uncontended to itself evidence anything
+  about shared-runner topology (it never touches the shared `glue` runner at all); the fix's effect on THIS repo's own
+  CI-side contention remains for the next occurrence to observe. **Disposition: no code or workflow change made or
+  needed** — PR already merged and moot, local reproduction clean, every sanctioned mitigation already in place; outcome
+  of `30851282295` left for the next occurrence. `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left
+  clean (`instruments-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
+  this doc's own commit; no branch changes in either repo). `instruments-service` already present in this doc's `repos:`
+  frontmatter — no frontmatter change needed.
