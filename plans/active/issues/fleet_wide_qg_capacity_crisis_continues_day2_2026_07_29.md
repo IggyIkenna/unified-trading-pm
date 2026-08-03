@@ -331,3 +331,34 @@ not just noting.
   `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` todo 1) before repeating either the no-op
   confirmation OR another timeout raise. Slot left clean on `live-defi-rollout` (only `features-service` touched by this
   session's code commit + this doc).
+
+- **2026-08-03 ~12:35-12:52Z (cicd escalation `agt-a45acf`, slot 2, `market-data-processing-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`)** — 6th cicd dispatch onto this exact repo/wall today (after `agt-68298f`,
+  `agt-dbfcd7`, `agt-2c266f`, `agt-6db91d`, `agt-895b89`, all above, all "no code/test change made or needed"). Run
+  `30809754899` (11:29:42Z, 1h5m53s) confirmed the identical catalogued signature: `QG slice (tests)` progressed to 77%
+  then went silent 7min before `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` during
+  `pytest_sessionfinish`, `exit=1` — zero genuine `FAILED tests/...` lines. Host at investigation time: `uptime` load
+  average **20.14/22.22/23.56** (16 vCPUs, still >1.25-1.5x oversubscribed), swap **18Gi/47Gi** in use, 16 concurrent
+  `quality-gates.sh` processes, 11 `Runner.Worker` processes — same contention class, somewhat lower than the ~04:11Z
+  entry's 42.03 peak but not cleared. Per `agt-8e5d24`'s own "next occurrence should apply the fix rather than another
+  no-op" directive (this repo's 6th dispatch, well past that bar) and MDPS not yet carrying the mitigation (checked
+  `scripts/quality-gates.sh` — only a separate `MDPS_PERF_TEST_TIMEOUT_SECONDS` override existed for the unrelated perf
+  gate, nothing for the main pytest slice's `PYTEST_TIMEOUT`), applied the same proven pattern as
+  `unified-trading-api@71cdda0`/`features-service@c092df50`: `market-data-processing-service@8fa00db` adds
+  `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` to `scripts/quality-gates.sh` (confirmed this repo sources `base-service.sh`,
+  the `PYTEST_TIMEOUT`-keyed copy of the PARGS line, not `base-library.sh`'s `PYTEST_TIMEOUT_SECONDS` — right variable
+  name verified before editing, not assumed from the other repos' diffs). Verified locally: full
+  `bash scripts/quality-gates.sh` (backgrounded per the mandatory pattern) at LDR HEAD `1c8588c` + the change —
+  **`✅ ALL QUALITY GATES PASSED (80s)`**, tests leg `2332 passed, 2 skipped, 27.59s`, zero timeouts (18th corroboration
+  this doc-pair has accumulated of "local green, CI red = pure contention"). Shipped clean first attempt via
+  `quickmerge --agent --files 'scripts/quality-gates.sh'` (`✅ Landed on live-defi-rollout`), confirmed via
+  `merge-base --is-ancestor 8fa00db origin/live-defi-rollout`. `GET /api/repo-blockers` → `open: []`, nothing to
+  fast-path. No run was in-flight for the new HEAD, so triggered one fresh `workflow_dispatch` (`30815224742`) and did
+  NOT hold the slot waiting on it — per this same doc-pair's own prior direct guidance to this slot (a queued message
+  from an earlier session on this exact wall class: "holding a slot for hours while it crawls is precisely the
+  over-watch anti-pattern... repo-health-watcher polling for the eventual green"), a locally-verified green plus one
+  clean retrigger is the disposition, not a held wait. `AUTHORING_SLOT=ci-reconcile` not a live numeric slot — same
+  non-int rejection as every prior entry; this doc entry is the outcome record. **Next occurrence for THIS repo should
+  observe whether the raise actually clears CI** (mirrors `agt-8e5d24`'s own open question for features-service) before
+  repeating either a no-op confirmation or another timeout raise. Slot left clean on `live-defi-rollout` (only
+  `market-data-processing-service` touched by this session's code commit + this doc).
