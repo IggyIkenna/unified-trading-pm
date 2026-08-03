@@ -141,7 +141,17 @@ identically.
       b8a8fa7a); if authorized, run a fresh `--remove-stragglers` dry-run against the LIVE prediction index to size the
       current straggler count, then (separately, after review) `--remove-stragglers --apply --confirm-prod-write` per
       that script's own operator-review checklist (pause/snapshot/apply/resume the consolidator cron). (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **Step 2 (dry-run) DONE 2026-08-03 (interactive session)**:
+      `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python     scripts/canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers`
+      (bundle-mode=normalize, default) run live against the real 1,970,331-row canonical index. Results: **22,641
+      stragglers** would be removed (rows_in 1,970,331 -> rows_out 1,947,690); corrected-target rows 2,477 `data_type` +
+      902,636 `instrument_type` + 11 `source`. Safety check passed clean: CAPTURED cells 345,405 in -> 345,405 out (no
+      STOP-ON-SURPRISE regression). **Steps 3-6 (pause consolidator / apply / resume / verify) NOT yet run — awaiting
+      explicit operator go-ahead** per the script's own checklist gating on both `--apply` AND `--confirm-prod-write`,
+      plus the separate consolidator-pause action this involves. Note: the 22,641 figure is smaller than FINDING 2's
+      original corpus-wide ~652k straggler estimate (2026-07-18) — consistent with the doc's own note above about a
+      pre-fix/partial apply having already cleaned most of the corpus in an earlier session; this dry-run reflects what
+      remains right now, not the original full corpus.
 
 ## Progress Log
 
@@ -150,3 +160,8 @@ identically.
   (`market-tick-data-service@b8a8fa7a`); re-running the prediction apply with the corrected script (see that plan's
   Progress Log for the re-run's own checkpoint).
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **2026-08-03 (interactive session)**: backlog dispatch for this task hadn't been picked up after 2+ hours (546 queued,
+  ordinary depth, not stuck) — operator asked me to run the dry-run directly to unblock. Ran it live (see todo P2's
+  DONE-step-2 entry above for full numbers). Did NOT proceed to steps 3-6 (pause consolidator / apply / resume / verify)
+  — that's a separate, harder-to-reverse action (live scheduler pause + CAS-write to the prod canonical index) the
+  operator explicitly wants to review the numbers on first ("lemme know when they come back so we can run apply").
