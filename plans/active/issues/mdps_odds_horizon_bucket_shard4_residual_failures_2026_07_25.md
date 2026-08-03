@@ -115,12 +115,15 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       `LOSS_GUARD_BLOCKED` dates had caught up and to get a fresh manifest read. Launched
       `mdps-sports-bucket-20260803-095112` (e2-standard-8, SPOT) — **OOM-killed at ~24/571 days** (exit_code=137,
       confirmed via serial console `Out of memory: Killed process ... anon-rss:31673032kB`). Root-caused + filed as its
-      own finding: `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md` — `full` mode's manifest
-      pre-flight (`writer.lookup()`, never exercised by the original all-`force`-mode 4-shard sweep) reloads the
-      full-schema whole-sports-manifest every 60s TTL-cache-expiry under 16-way concurrency, accumulating RSS past 32GB
-      over a multi-hour run. **Not completed this pass** — the new doc's own P2 todo (relaunch with
-      `MACHINE_TYPE=e2-highmem-8` and/or fewer workers) is the next concrete step; this todo stays open pending that
-      relaunch AND the still-unresolved upstream odds_api gap for the 4 RAW_ODDS_SHAPE_UNRECOGNIZED dates.
+      own finding: `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`. **Attempted 2 further relaunches
+      the same pass, both also OOM'd**: `e2-highmem-8`/`workers=8` (~21/571 days) and `e2-standard-8`/`workers=2`
+      (~18/571 days, ~3 min) — the 3rd attempt refutes the initial thundering-herd/worker-concurrency theory (workers=2
+      should have been safe under that theory but crashed faster). **Escalated the finding doc to P1** (true root cause
+      not yet isolated — needs actual memory profiling, not another blind VM-resource-scaling guess) and stopped
+      relaunching after 3 confirmed identical failures to avoid further wasted SPOT-VM cost. **Not completed this pass,
+      and will NOT complete until `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`'s new P1
+      profiling/fix todo lands** — this todo stays open, gated on that fix AND the still-unresolved upstream odds_api
+      gap for the 4 RAW_ODDS_SHAPE_UNRECOGNIZED dates (live-reverified still absent as of this same check).
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
       `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (re-verified the gap live via a scoped

@@ -27,7 +27,7 @@ created: 2026-08-03
 assigned_vm: planning
 parent_epic: sports_master
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 source:
   "worker, slot 5, executing mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md's P2 shard4 full-mode retry
@@ -131,22 +131,59 @@ half the workers, which is consistent with a **thundering-herd** pattern rather 
   is reducing `--workers` low enough that `N × 6.5GB` fits comfortably (e.g. `--workers 2` → ~13GB worst case, safe even
   on a standard machine) — genuinely fixing this requires the single-flight/snapshot fix in item 2's P3 todo below.
 
+## Third occurrence (2026-08-03T10:19Z) — thundering-herd hypothesis REFUTED; escalating to P1
+
+Relaunched a THIRD time on the default `e2-standard-8` (32GB) with `--workers 2` — the minimum-concurrency mitigation
+the thundering-herd analysis above predicted would be safe (worst case `2 × 6.5GB ≈ 13GB`, well under 32GB).
+**OOM-killed again** (exit_code=137), this time at only **~18/571 days, ~3 minutes wall-clock** — WORSE relative timing
+than either prior attempt, not better.
+
+This refutes the thundering-herd/concurrent-reload theory as the (sole) cause: `--workers 2` gives essentially no room
+for a multi-thread pile-up, yet the process still exhausted 32GB in ~3 minutes. Re-reading the cache implementation
+(`_read_index.py:606-636`): `_INDEX_CACHE[bucket]` is a **single dict entry per bucket, overwritten** on every reload
+(`_INDEX_CACHE[bucket] = (now, _backfill(...))`) — not an accumulating collection — so a naive "cache dict grows
+forever" explanation doesn't fit the code either. The reload cadence observed in this run's `run.log`
+(`MANIFEST_LOAD_SIZE_BYTES` events at 10:17:02 and again at ~10:18:11, ~69s apart) is consistent with the documented 60s
+TTL, not a runaway reload storm.
+
+**Conclusion: the true root cause is NOT fully isolated yet.** Candidates that remain open, roughly in order of
+suspicion:
+
+1. A genuine reference leak keeping the "overwritten" old `_INDEX_CACHE` entry alive somewhere else in the call chain
+   (e.g. a still-referencing local variable in `lookup()`'s `df`/`matching` intermediates that outlives the call via a
+   closure, an exception traceback, or a `ThreadPoolExecutor` future retaining its call-frame).
+2. Something in `reprocess_sports_odds.py`'s OWN per-date processing (`reprocess_date()` / the sports-odds adapter
+   fetch/decode path) that is unrelated to the manifest cache entirely and just happens to correlate with the same
+   symptom — this pass did not rule this out, since all 3 attempts used the SAME reprocess script + SAME data range.
+3. GC-generational delay: CPython's refcounting frees most objects immediately, but reference cycles (e.g. pandas
+   internals with circular refs) only get collected on a generational GC pass, which may not fire often enough under
+   this workload's allocation pattern to keep pace with ~6.5GB-per-cycle churn.
+
+**Do not attempt a 4th VM-launch-and-guess cycle.** Three attempts (workers=16/e2-standard-8, workers=8/ e2-highmem-8,
+workers=2/e2-standard-8) have now all OOM'd, burning real SPOT-VM cost each time without new diagnostic signal beyond
+"still crashes." The next step needs actual memory profiling (`tracemalloc` / `objgraph`/heap snapshot at intervals),
+not another blind resource-scaling guess — see the P1 todo below.
+
 ## Todos
 
-- [ ] [INFRA] P2. Relaunch `mdps-sports-bucket` shard4's `full`-mode retry
-      (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) with a LOW worker count
-      (`WORKERS=2`, per the thundering-herd analysis above — this bounds worst-case concurrent-reload memory to ~13GB,
-      not just delays the crash) on the default `e2-standard-8` (32GB is ample at that worker count); accept the
-      correspondingly slower wall-clock time. Verify the manifest for the 26 residual dates afterward (18
-      `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated, live-reverified 2026-08-03 via
-      `gcloud storage ls -r` showing the 4 dates still only have `instrument_type=sport` meta-snapshot objects, zero
-      real odds — and 4 `LOSS_GUARD_BLOCKED`). **Two prior attempts both OOM'd** (e2-standard-8/workers=16 at ~24/571;
-      e2-highmem-8/workers=8 at ~21/571) — do NOT retry with a similarly-high worker count again without first applying
-      this todo's `--workers 2` mitigation or item-2's code fix. Repo: market-data-processing-service,
-      deployment-service.
-- [ ] [INFRA] P3. Design + fix `ManifestWriter`/`read_availability_index()`'s cache behavior so a long-running (>>60s),
-      many-worker batch job doesn't repeatedly reload the full-schema manifest under concurrency — see "Recommended
-      decision" item 2's three candidate approaches, informed by the thundering-herd root cause confirmed above (no
-      single-flight lock around a cache-miss reload — candidate (c) is now the most directly-targeted fix). Add a
-      regression/load test simulating a multi-cycle TTL-expiry run under N concurrent callers, asserting peak RSS stays
-      bounded regardless of N. Repo: unified-trading-library.
+- [ ] [INFRA] P1. **Escalated from P3 — this is now the confirmed SOLE blocker on the parent doc's shard4 retry, not a
+      nice-to-have.** Root-cause the actual memory growth in `reprocess_sports_odds.py --full` (or the
+      `ManifestWriter`/`read_availability_index()` path it calls) using real memory profiling — e.g. `tracemalloc`
+      snapshots taken every N processed dates, or `objgraph.show_growth()` between iterations — run on a SMALL date
+      range (e.g. 30-50 days, enough to observe the growth trend without a full 571-day/hours-long run) so the profiling
+      loop itself completes quickly. Confirm whether the leak is in the manifest-cache path (candidate 1 above) or the
+      per-date reprocess/adapter path (candidate 2) before designing a fix. A promoted local tracemalloc profiler
+      already exists for a related odds_api backfill OOM (`git log` `market-tick-data-service`, commit
+      `86da3fa1 chore(sports): promote local tracemalloc profiler for     the odds_api backfill OOM`) — check whether
+      it's reusable here before writing a new one. Once root-caused, apply the fix (candidate approaches from the
+      original "Recommended decision" section above still apply if the manifest cache is confirmed as the culprit) and
+      add a regression/load test asserting peak RSS stays bounded over a multi-cycle run. Repo: unified-trading-library,
+      market-data-processing-service.
+- [ ] [INFRA] P2. Once the P1 root-cause + fix above lands, re-run shard4's `full`-mode retry
+      (`bash scripts/vm/launch-mdps-sports-bucket-vm.sh 2025-01-01 2026-07-25 full`) and verify the manifest for the 26
+      residual dates (18 `ADAPTER_RETURNED_EMPTY_OUTPUT`, 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` — still gated, live-reverified
+      2026-08-03 via `gcloud storage ls -r` showing the 4 dates still only have `instrument_type=sport` meta-snapshot
+      objects, zero real odds — and 4 `LOSS_GUARD_BLOCKED`). **Three prior attempts have all OOM'd regardless of machine
+      size or worker count (16/e2-standard-8, 8/e2-highmem-8, 2/e2-standard-8)** — do NOT attempt a bare relaunch again
+      without the P1 fix landing first; another blind attempt would just burn more SPOT-VM cost for the same crash.
+      Repo: market-data-processing-service, deployment-service.
