@@ -416,3 +416,19 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   (upstream data gaps, not a driver bug) rather than a stall — confirmed via continuously-advancing `run.log` timestamps
   right up to the preemption instant. CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) remains healthy
   and running. Still not done; continuing to monitor both.
+- 2026-08-03 ~11:25Z (slot-16, data_engineering, INTERIM #3 — TRADFI:delta_one VERDICT): TRADFI:delta_one's relaunched
+  VM (`features-e2e-tradfi-20260803-053515-b3b034`) ran to a genuine terminal `EXIT_STATUS=1` after ~5h48m of real,
+  continuously-advancing compute — **failed, not a genuine PASS**. Root-caused via direct `run.log` read + a code read
+  of `instrument_type_filter.py`/`config.py`/`orchestrator.py`: (1) `filter_delta_one_instruments` resolves a
+  never-provisioned `-stg-` instruments-store bucket under `--env staging` (a 5th confirmed site of the exact bug class
+  already fixed at 4 sites in `pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`) — caught + degrades
+  to an ID-pattern fallback, so not fatal alone; (2) the auto-resolved window (`2026-01-20/2026-01-21`) produced 0/586
+  usable TRADFI instruments at actual candle-load time despite `--require-captured --auto-day` having approved the
+  window as covered — every real calculator then failed on empty input (ALL 18 feature groups failed); (3) separately,
+  `swing_outcome_targets` is missing from `orchestrator.py`'s own local calculator dispatch map despite being registered
+  in `calculators/__init__.py` — a genuine, smaller half-wired-feature bug (unlike `temporal`/`economic_events`, which
+  are intentionally, documentedly excluded). Filed as its own issue doc with concrete fix-todos citing the exact prior
+  sibling fixes to mirror:
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`
+  — `unified-trading-pm@dcfc59595`, verified on origin. Not fixed in this session (out of scope for this
+  verification-only todo). **CEFI:delta_one still in flight**, healthy, no verdict yet.
