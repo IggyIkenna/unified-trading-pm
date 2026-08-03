@@ -36,11 +36,12 @@ source: >-
 resolved_by:
 context_scope:
   [
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     cursor-configs/skills/data-pipeline-check-is/SKILL.md,
     instruments-service/instruments_service/engine/orchestrator/process_zero_records.py,
+    instruments-service/instruments_service/engine/orchestrator/process_fetch.py,
     instruments-service/instruments_service/reference_data/adapters/cefi/coinbase_cde.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
   ]
 ---
 
@@ -165,3 +166,5 @@ by this doc, just applying the documented method to a genuinely-real finding).
   planning plans REFERENCE this doc as the owner). Shared conflict-check protocol:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the parent track2 checkpoint plan +
+  process_fetch.py (where the actual pre-launch-venue classifier fix landed), swapped out venue_mapping.py.

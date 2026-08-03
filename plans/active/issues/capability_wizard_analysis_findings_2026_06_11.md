@@ -31,9 +31,9 @@ context_scope:
   [
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
-    /codex/04-architecture/execution-algorithm-selection.md,
+    execution-service/execution_service/trade_execution/adapters,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2,
-    unified-trading-pm/scripts/openapi,
+    /codex/04-architecture/execution-algorithm-selection.md,
   ]
 ---
 
@@ -840,3 +840,6 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the openapi scripts dir (Phase-0 generator
+  fixes are all shipped) for the execution-service adapters dir, since the sole remaining open item (F46,
+  BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there.

@@ -46,11 +46,11 @@ depends_on: []
 context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
-    /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_cefi_manifest.py,
+    /plans/active/data_completion_cefi_2026_07_15.md,
   ]
 ---
 
@@ -290,3 +290,5 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
   without activating — content is otherwise bounded/deterministic.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03 (re-scout)**: swapped the satellite-dispatch-batch doc for the CF-11
+  `rebuild_cefi_manifest.py` source module (the P1 todo's actual comparison-logic target) -- still 6 entries.

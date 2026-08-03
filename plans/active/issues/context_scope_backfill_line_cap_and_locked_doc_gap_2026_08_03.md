@@ -329,3 +329,4 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
     short-circuits to "no uncommitted changes, already committed" and can cause it to amend whatever commit happens to
     be at HEAD instead of committing your files. Caught before any content was lost (post-hoc `git show --stat`
     verification after every batch), but cost 2 wasted quickmerge cycles before switching to space-separation.
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).

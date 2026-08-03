@@ -130,3 +130,5 @@ repeated per-incident coaching.
   rename-similarity threshold vs. accept-and-document) before any implementation step is determinable. The doc's own
   Progress Log states the decision...
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (3 entries) — already minimal + source-anchored (`verify.py`
+  is confirmed to be the actual guard implementation), left unchanged.

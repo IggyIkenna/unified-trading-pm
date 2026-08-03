@@ -104,3 +104,4 @@ context_scope:
   frames as a deliberately-parked backlog, not a defaulted bucket — stays NA as a whole; the 4 P3 items are individually
   plausible future RECLASSIFY candidates for a dedicated split, not actioned this run.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).

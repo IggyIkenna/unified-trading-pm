@@ -66,12 +66,12 @@ source: CeFi completion program /autonomous close-out (slot-3, 2026-07-17) — a
 resolved_by:
 context_scope:
   [
-    /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/chart-candle-delivery-flow.md,
-    /codex/06-coding-standards/read-time-filter-pushdown.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/05-infrastructure/gcs-object-operations.md,
+    market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
   ]
 ---
 
@@ -728,3 +728,5 @@ pairs stay honest-unresolved (reported, never guessed).
   Both stay open until Script 1 finishes. **No reconciliation gap found** — this doc's Phase-1/2 state already
   accurately reflects shipped work.
 - **context-scout 2026-08-01**: populated context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the codex-only list for the binding
+  blueprint doc, the live content-migration-fleet tracker, and two source targets (catalog reader, HL/ASTER launcher).

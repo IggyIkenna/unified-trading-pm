@@ -69,10 +69,10 @@ last_updated: 2026-07-29
 context_scope:
   [
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
-    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    alerting-service/alerting_service/notifiers/dp_run_mostly_empty_static_backlog.py,
+    deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 ---
@@ -583,3 +583,5 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
     still open, unimplemented) — cross-linking this occurrence there as further corroborating evidence rather than
     attempting a unilateral fix of that still-gated design decision. No GCS/manifest write, no VM launch, no code
     shipped this session (PM plan-doc edit only).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the two shipped-fix source modules
+  (alerting-service static-backlog notifier, deployment-service staleness monitor) for two secondary related docs.
