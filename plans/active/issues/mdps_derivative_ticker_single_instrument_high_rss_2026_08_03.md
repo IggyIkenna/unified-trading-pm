@@ -71,7 +71,7 @@ through the 4h aggregation step, with the harness reporting exit code 1.
 
 **Important caveat — the host was already in severe distress before this job started**: `swap=22187MiB` in use and
 `load average ~41` (measured via `free -h`/`uptime`) at job start, consistent with heavy concurrent activity from OTHER
-slots on this shared host (per `codex/12-agent-workflow/async-wait-and-poll-discipline.md` and the fleet-wide QG
+slots on this shared host (per `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` and the fleet-wide QG
 capacity-crisis precedent). The FIRST attempt at this same command was killed by a `timeout 180` wrapper, but `ps`
 showed it alive and accumulating CPU for 10+ minutes before actually dying — i.e., even a 180s wall-clock timeout did
 not fire promptly under this host's contention. It's therefore NOT certain whether the 11-22GB RSS figures reflect
