@@ -13,7 +13,7 @@ summary: >-
   every key unconditionally and emits it into the UI-facing `ui-reference-data.json`, so a regeneration run currently
   surfaces POLYGON as a live TradFi data provider ("Real-time + historical equities/options data") that no longer has
   any adapter, venue registration, or capture code behind it.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -32,7 +32,7 @@ related:
 created: "2026-08-02"
 parent_epic: instruments_master
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@89b196cf
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
@@ -138,14 +138,20 @@ in the regenerated `ui-reference-data.json`.
 
 ## Todos
 
-- [ ] [DATA] P2. **Remove the stale `"POLYGON"` entry from `VENUE_DATA_AVAILABILITY`** in
+- [x] ✅ [DATA] P2. **Remove the stale `"POLYGON"` entry from `VENUE_DATA_AVAILABILITY`** in
       `unified-api-contracts/unified_api_contracts/registry/data_availability.py` (currently ~lines 323-329, under the
       "── TradFi reference data ──" section header, immediately after the `FRED` entry) — mirror the exact removal
       pattern used for the sibling `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fix (`unified-api-contracts@e34afc1d`) and
       the full 5-registry `YAHOO_FINANCE` removal (`unified-api-contracts@fec3f110`). Repo: unified-api-contracts. Done
       when: the entry is gone, `quality-gates.sh` is green, and re-running `generate_ui_reference_data.py`'s
       `extract_venue_data_availability()` (or a targeted unit test) confirms `"POLYGON"` no longer appears in the
-      output.
+      output. — unified-api-contracts@89b196cf. Verified: `VENUE_DATA_AVAILABILITY` dict entry removed (8 lines
+      deleted); confirmed live via
+      `.venv/bin/python -c "from unified_api_contracts.registry.data_availability import     VENUE_DATA_AVAILABILITY; assert 'POLYGON' not in VENUE_DATA_AVAILABILITY"`
+      — passed; `quality-gates.sh` green (298s, sentinel `.qg_last_passed_sha=89b196cf`); no test references
+      `VENUE_DATA_AVAILABILITY` content directly so none needed updating; all other repo "POLYGON" hits are the DeFi
+      chain enum/venue-suffix (unrelated, per CLAUDE.md § DeFi execution: "the `polygon` in DeFi code is the CHAIN, not
+      the vendor").
 
 ## Progress Log
 
@@ -169,3 +175,9 @@ in the regenerated `ui-reference-data.json`.
   finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not
   `plans/active/issues/*.md`).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
+- **data_engineering 2026-08-03** (slot-10): shipped the fix — `unified-api-contracts@89b196cf` removed the
+  `VENUE_DATA_AVAILABILITY["POLYGON"]` entry (8 lines); verified live via a direct import assertion and a green
+  `quality-gates.sh` (298s). Todo flipped, `status: resolved`. Archiving this doc immediately per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (sole todo done, unlocked) and
+  `issue-doc-lifecycle.md`'s ACKED-INTO-CODE trigger — see the follow-up archival commit for the `git mv` +
+  referrer-path fixes.
