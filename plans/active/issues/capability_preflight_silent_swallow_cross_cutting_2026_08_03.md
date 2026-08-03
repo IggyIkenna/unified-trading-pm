@@ -21,7 +21,7 @@ summary: >-
   `CapabilityResolutionError`/`UnsupportedOperationError` and logs via `_logger.debug` — also compliant. This is
   therefore NOT a workspace-wide anti-pattern; it is one additional confirmed defect, scoped and ready to fix the same
   way the sports_execution sites were fixed (execution-service@7bba972a).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [execution]
@@ -43,7 +43,7 @@ source:
   2026-08-03) — the todo asked to investigate 3 named non-sports call sites and, if the pattern was confirmed present at
   any of them, file this follow-up."
 assigned_vm: planning
-resolved_by:
+resolved_by: execution-service@b68bc236 (fix) + slot-3 2026-08-03 (both docstring correction and logging fix shipped)
 locked_by:
 execution_scope: orchestrator-agent
 estimate_class: refactor
@@ -128,7 +128,7 @@ Fix by adding observability, matching the exact pattern already used for the 7 s
 (`execution-service@7bba972a` — `logger.warning` naming `type(exc).__name__` + the exception message, no control-flow
 change) and correcting the docstring to match reality.
 
-- [ ] [BACKEND] P1. Fix
+- [x] ✅ [BACKEND] P1. Fix
       `execution-service/execution_service/defi_execution/protocols/base.py::preflight_validate_operation` (lines
       136-140): add a `logger.warning`/`log_event` call naming `type(exc).__name__` + the exception message in the
       `except Exception:` branch before `pass`, so a `CapabilityResolutionError`/`UnsupportedModeError`/
@@ -136,7 +136,8 @@ change) and correcting the docstring to match reality.
       — matching the fix already applied to the 7 sports_execution call sites (execution-service@7bba972a). Also correct
       the function's docstring (lines 120-122), which currently claims these errors are "logged and swallowed" when the
       actual code has no logging call — update it to describe the real (post-fix) behavior. No control-flow change
-      (still swallow-and-continue for non-`UnsupportedOperationError` cases). (repo: execution-service)
+      (still swallow-and-continue for non-`UnsupportedOperationError` cases). (repo: execution-service) —
+      execution-service@b68bc236
 
 ## Progress Log
 
@@ -146,3 +147,8 @@ comment marker workspace-wide (found only at the 3 already-named sites, no other
 non-test `validate_operation(` call site (30 files) to check each one's except-branch by hand. Result: one confirmed
 defect (`defi_execution/protocols/base.py`), two compliant sites correctly ruled out (`instruction_router.py`, MTDS
 `factory.py`), and no further occurrences anywhere else in the cloned workspace.
+
+**2026-08-03, slot 3**: Fixed. Added `logger.warning` naming `type(exc).__name__` + `source_name`/`operation` in the
+`except Exception:` branch of `preflight_validate_operation` (matching execution-service@7bba972a's pattern) and
+corrected the docstring. QG green, shipped execution-service@b68bc236, verified on origin. All todos in this issue doc
+are now done and unlocked — archiving next.
