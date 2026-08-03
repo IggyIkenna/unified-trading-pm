@@ -354,24 +354,38 @@ broken out of it.
       Databento billing-guard gap for the pre-fix window (ICE/KRX/FX `ohlcv_24h` mislabel window) is permanently
       deprioritized — do not chase Databento request-log access for this, do not re-raise. Downgraded from P0 to P3 and
       closed as declined-not-urgent, not left pending.
-- [ ] [DATA] P2. **RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the
-      6-step plan" — no further sign-off needed.** **RULED 2026-07-28 — scope + build + apply the ~4,310-row FX
-      `SPOT_PAIR` manifest `instrument_id` historical backfill** (design-choice half of the original todo; no specific
-      operator answer for this part — applying the standing workspace theme instead: full backfills get done, not
-      indefinitely deferred as "needs its own plan," when not superseded by newer work, and a canonicalisation fix is
-      done properly, not as a cheap partial). Note: the OTHER historical re-stamp this doc tracks (the 1,141-row
-      ICE/KRX/FX `ohlcv_24h` mis-stamp) was already separately re-tagged `[DATA]` 2026-07-28 in the "Deferred work"
-      table above — this todo is only the FX `instrument_id` half, do not duplicate that one. The write-path fix for
-      this half already shipped (`market-tick-data-service@020b703e` + comment-currency fix `b0fedf91`) — only the
-      historical rows remain (blank 2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13, all
-      pre-2026-07-25). Full completion mandate — do not ship a partial fix or leave this "needs its own plan"
-      indefinitely: (1) re-verify a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on
-      `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed once fresh
-      per finding T / delete-safety §3a); (2) snapshot the manifest index first; (3) build a manifest-only re-stamp
-      script (NOT a GCS content rewrite — the parquet files already carry the correct id, this is a manifest
-      `instrument_id` column repair, mirroring the `record_captured`-style re-stamp pattern already used for the sibling
-      ICE/KRX/FX fix and the MTDS lending restamp) that rewrites all 4 shapes above to the canonical
-      `FX:SPOT_PAIR:XXX-USD` form; (4) CAS-apply; (5) verify rows-in == rows-out, 0 duplicate row_keys, and a post-apply
-      `FX:SPOT_PAIR:` prefix on 100% of FX captured rows; (6) resume the consolidator cron. Cost is one-time
-      manifest-only compute, well under the pre-approved $100 threshold — not a blocker. (repo:
-      market-tick-data-service)
+- [x] [DATA] P2. ✅ **PARTIALLY DONE 2026-08-03 (slot-4) — mechanically-safe subset backfilled + CAS-verified; the
+      other two shapes turned out NOT to be a simple id-rewrite and are split into fresh todos below.** See Progress
+      Log entry "2026-08-03 (slot-4)" for the full live-investigation evidence. Summary: of the ~4,862 FX `SPOT_PAIR`
+      captured rows measured live (grown from the 2026-07-24 sample's 4,310), only the **bare-pair** (505) and
+      **`YAHOO_FINANCE:SPOT_PAIR:...`** (7) shapes were genuinely a manifest-column id defect — 480/505 bare-pair rows
+      turned out to be STALE DUPLICATES of an already-canonical row for the same shard (dropped, not rewritten) and 32
+      rows (25 bare + 7 YAHOO_FINANCE-prefixed) were rewritten in place to `FX:SPOT_PAIR:XXX-USD`. Applied + CAS-verified
+      0 remaining (repo: market-tick-data-service, no committed script — ephemeral one-off, deleted post-verified-run
+      per script-homes convention). **The blank (2,812) and `"ticks"` (983) shapes are NOT this defect** — see the two
+      new todos below.
+- [ ] [DATA] P1. **NEW 2026-08-03 (slot-4 discovery) — investigate the FX `SPOT_PAIR` blank-`instrument_id` population
+      (2,812 rows, 100% `pipeline_mode=batch_yahoo`) for phantom-capture (`capture_status=captured` with NO backing GCS
+      object).** A scoped live GCS listing (35 rows sampled across 2020-2026, full `venue=FX/` subtree per shard day —
+      not a corpus walk) found a real backing object for only 2/35 (~6%); the other 33/35 have ZERO objects anywhere
+      under the shard's prefix. This reads as a genuine honest-absence violation (the manifest asserts captured data
+      that was never actually written), a DIFFERENT and more serious defect class than "wrong instrument_id" — this
+      doc's own prior claim that "the real GCS object + its content ARE correctly formed" does NOT hold for this
+      population (it was true only for the specific 2026-07-23 sample the original finding cited). Needs: (1) a
+      corpus-wide (not just 35-row) census of backing-object presence for this exact population; (2) root-cause why the
+      writer stamped `captured` without a corresponding write (a genuinely different bug from the instrument_id one,
+      likely in the batch_yahoo write-confirmation path); (3) a decision on reclassifying these rows (e.g. to
+      `attempted_failed` / `empty_confirmed`) once root-caused — do NOT guess/backfill a fabricated instrument_id onto a
+      row with no real data. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **NEW 2026-08-03 (slot-4 discovery) — investigate the FX `SPOT_PAIR` literal-`"ticks"`-`instrument_id`
+      population (983 rows, 100% `pipeline_mode=batch_databento`) for a bundle-grain remodel.** A scoped live GCS
+      listing of all 20 sampled rows found a real backing object for every one, but each is a genuine BUNDLE file
+      literally named `ticks.parquet` (present at both an itype-less bundle path and the
+      `instrument_type=spot_pair` path for the same day) — i.e. the underlying capture is a multi-pair dump, not a
+      per-instrument shard the way every other FX row is modeled. Assigning any single `FX:SPOT_PAIR:XXX-USD` id to
+      one of these rows (as this doc's original 6-step plan proposed) would fabricate false per-instrument specificity
+      onto a row that may cover several currency pairs at once. Needs: (1) read the actual parquet CONTENT for a sample
+      of these bundle files to confirm how many distinct pairs each holds; (2) design the correct manifest
+      representation (likely mirroring the existing `futures_chain`/`options_chain` bundle-grain pattern — blank
+      `instrument_id` + a bundle marker — rather than a per-pair id); (3) only then decide whether/how to backfill.
+      (repo: market-tick-data-service)
