@@ -386,3 +386,37 @@ repeated here.
   (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`), which this doc's own body explicitly instructs readers to
   consult ("Read the parent (and its own parent, ...) for the full bug-class history; not repeated here") but which the
   prior context_scope omitted.
+
+- **2026-08-03 ~16:46-17:05Z (`cicd` escalation `agt-7bcb7c`, slot 12, `deployment-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — yet another same-day re-dispatch of this repo's identical wall (now the 4th deployment-service entry
+  in this doc-chain alone: `agt-a46033` ×2, `agt-3fb529`, this one), re-confirms the disposition from scratch, no new
+  code gap**: classified per the `main_ci_red` boot brief's A/B split first — checked `gh pr list --base main` (0 open
+  PRs, rules out (A) promotion-stuck) and confirmed `main` HEAD (`ce1239d`, PR #677's merge commit) has no stale
+  workflow-definition issue — the required check DID run and report, twice (`30813934094` push @12:31:37Z, `30824452052`
+  workflow_dispatch @14:48:17Z), both genuinely FAILED the `tests` slice on `pytest-timeout`, ruling out (B)'s
+  missing-check/stale-workflow shape too. Read both failing logs directly rather than trusting the cached parent-doc
+  diagnosis: `30813934094` timed out on `test_launcher_writes_launch_params_with_replayable_scope` (already logged by
+  `agt-a46033`'s first pass), but `30824452052` hit a **different, previously-unlogged-for-this-repo hang site**:
+  `test_turbo_data_validation.py::TestDataTypeValidation::test_expected_instrument_types_cefi_deribit`,
+  `Failed: Timeout (>300.0s)`, `1 failed, 2866 passed, 17 skipped, 8 warnings in 2312.15s (0:38:32)` — a third distinct
+  random test for this repo's occurrence-set, reinforcing (not just repeating) the scheduler-starvation signature over a
+  launcher-hang theory. Confirmed `PYTEST_TIMEOUT=300`/`PYRIGHT_TIMEOUT=300` still intact and unchanged on current LDR
+  HEAD (`f55b16c`, itself 2 commits ahead of the `bd47dd8` cited by `agt-3fb529`) — did NOT raise a third time, per this
+  doc-chain's established todo-1 practice. `gh api .../actions/runners`: exactly ONE online runner for this repo,
+  `glue-ip-172-31-5-118-1`, confirmed `busy` at investigation time — same fleet-wide bottleneck. Checked
+  `ldr-to-main-promote-fleet`'s freshest tick (`30833585017`, 16:45:56Z):
+  `GATE BLOCK deployment-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — auto-promotion is correctly
+  withheld pending a genuine green LDR re-verify, not stuck on anything a human/agent needs to unblock. The only
+  in-flight LDR run (`30833902590`, `queued`) targets headSha `3c5acfba` — 2 commits behind the true current HEAD
+  `f55b16c`, but both intervening commits are VM-launcher/terraform-only and orthogonal to the failing test class, so
+  left it queued rather than cancel+redispatch (would forfeit real elapsed queue position for negligible freshness
+  gain), consistent with this doc-chain's established precedent. `GET /api/repo-blockers` → `open: []`; no redundant
+  runner-hogging job found to cancel. **Disposition: no code or workflow change made or needed** — every sanctioned
+  mitigation already exists on `live-defi-rollout`, remaining wall is pure runner-queue-depth/host-contention wait;
+  outcome of `30833902590` left for the next occurrence per established practice. `AUTHORING_SLOT=ci-reconcile`
+  (sentinel, not a real numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping (dispatch-time
+  Slack alert already covers the FYI). Slot left clean (`deployment-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). This
+  is now the **5th same-day escalation dispatch for this exact repo/wall** across the doc-chain (`agt-771546` implied by
+  `agt-3fb529`'s reference, `agt-a46033` ×2, `agt-3fb529`, this one) — further corroborates todo 2's operator-flagged
+  missing cooldown/dedup guard on `main_ci_red`/`ldr_qg_failure` re-dispatch for an unchanged in-flight state.
