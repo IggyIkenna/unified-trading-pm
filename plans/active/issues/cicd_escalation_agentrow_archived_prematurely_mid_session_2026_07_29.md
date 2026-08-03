@@ -70,10 +70,12 @@ drift_direction: advance-code
 source: "slot 3, cicd escalation agt-a14109 (wall_type=plan_health, repo=unified-trading-pm#1780), 2026-07-29"
 context_scope:
   [
-    /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/state_store/agents.py,
+    agent-orchestrator/server/tmux_pruner.py,
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
-    agent-orchestrator/server/routes/slots_worker.py,
+    /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
   ]
 ---
 

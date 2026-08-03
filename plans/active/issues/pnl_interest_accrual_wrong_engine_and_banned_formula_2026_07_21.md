@@ -45,6 +45,14 @@ source:
   ]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    strategy-service/strategy_service/engine/backtest/paper_run_passive.py,
+    strategy-service/strategy_service/engine/backtest/paper_run_attribution.py,
+    strategy-service/strategy_service/engine/backtest/index_ratio_accrual.py,
+    /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
+  ]
 ---
 
 # DeFi interest PnL — wrong engine named, and the real one uses a banned formula

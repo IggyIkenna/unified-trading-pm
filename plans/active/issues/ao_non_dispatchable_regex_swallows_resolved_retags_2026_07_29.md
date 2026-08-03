@@ -52,8 +52,9 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
-    /cursor-configs/CLAUDE.md,
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /cursor-configs/CLAUDE.md,
   ]
 ---
 

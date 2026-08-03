@@ -31,6 +31,8 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [/codex/06-coding-standards/documentation-standards.md, /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium

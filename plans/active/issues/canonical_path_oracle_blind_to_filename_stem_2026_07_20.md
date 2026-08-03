@@ -65,6 +65,9 @@ context_scope:
     /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
+    cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
+    cursor-configs/CLAUDE.md,
+    unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
   ]
 ---
 

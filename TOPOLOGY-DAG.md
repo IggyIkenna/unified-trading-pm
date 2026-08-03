@@ -157,7 +157,7 @@ flowchart TB
 
     subgraph MGMT["📋 Management & Standards"]
         CODEX["unified-trading-codex\nArchitecture SSOT · Coding standards\nSchema governance · Tier rules\ntier-and-import-architecture.md"]
-        PM["unified-trading-pm\nworkspace-manifest.json SSOT\nTOPOLOGY-DAG.md (this file)\ncredentials-registry.yaml\nplans/active/ · cursor-rules/"]
+        PM["unified-trading-pm\nworkspace-manifest.json SSOT\nTOPOLOGY-DAG.md (this file)\ncredentials-registry.yaml\nplans/active/"]
     end
 
     %% ═════════════════════════════════════════════════════════════════
@@ -317,7 +317,7 @@ In production, each API is a separate Cloud Run service URL.
 
 | Layer | Purpose                                                     | Location                                           | In quickmerge?        |
 | ----- | ----------------------------------------------------------- | -------------------------------------------------- | --------------------- |
-| 0     | Contract alignment (AC↔UIC)                                | unified-api-contracts + unified-internal-contracts | Yes                   |
+| 0     | Contract alignment (AC↔UIC)                                 | unified-api-contracts + unified-internal-contracts | Yes                   |
 | 1     | Schema robustness per-service                               | Each repo tests/unit/                              | Yes                   |
 | 1.5   | Per-component integration (adapter/event/config with mocks) | Each repo tests/integration/                       | Yes (last local gate) |
 | 2     | Infrastructure verify (storage, queues, IAM)                | deployment-service/scripts/verify_infra.py         | No (post-deploy)      |

@@ -54,7 +54,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
-    /plans/active/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md,
+    /plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,

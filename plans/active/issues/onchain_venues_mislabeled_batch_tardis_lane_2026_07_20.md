@@ -36,6 +36,14 @@ execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
 locked_by:
+context_scope:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
+  ]
 locked_since:
 assigned_vm: NA
 resolved_by:

@@ -29,6 +29,14 @@ source: workflow wf_3785e859-c1f (map → design → adversarial verify; 7 agent
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
+    unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
+  ]
 resolved_by:
 ---
 

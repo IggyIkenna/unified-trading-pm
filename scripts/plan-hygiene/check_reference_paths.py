@@ -100,11 +100,19 @@ def write_baseline(format_count: int, existence_count: int, existing: Baseline) 
 
 
 def target_files() -> list[Path]:
+    """Docs this ratchet actually audits.
+
+    `plans/archive/` is EXCLUDED (ruled 2026-08-02,
+    plan_reconcile_parked_operator_decisions_2026_08_02.md § 4) -- it sat inside this ratchet's population but
+    outside every active-corpus audit's scope (plan-reconcile, ag-closeout-audit, na-eligibility-audit all only
+    touch plans/active/), so a real +47 regression there could never be cleared by any run that could actually fix
+    it. Archived docs' reference paths are frozen historical record, not something a live audit should chase.
+    """
     files: list[Path] = []
     for top in ("plans", "codex"):
         base = PM_DIR / top
         if base.exists():
-            files.extend(base.rglob("*.md"))
+            files.extend(p for p in base.rglob("*.md") if "plans/archive/" not in p.as_posix())
     return files
 
 

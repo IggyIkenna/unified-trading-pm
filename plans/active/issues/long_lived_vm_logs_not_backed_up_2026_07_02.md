@@ -29,6 +29,15 @@ assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /plans/archive/vm_launcher_durable_log_observability_2026_06_19.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
+    deployment-service/tests/unit/test_vm_launcher_scripts.py,
+    deployment-service/scripts/vm/launch-planning-vm.sh,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -47,10 +47,13 @@ locked_since:
 resolved_by:
 context_scope:
   [
+    scripts/propagation/rollout-cloudbuild.py,
+    configs/cloudbuild-service-template.yaml,
+    scripts/quality_gates/check_cloudbuild_template_drift.py,
+    /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
+    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    scripts/propagation/rollout-cloudbuild.py,
-    scripts/quality_gates/check_cloudbuild_template_drift.py,
   ]
 ---
 

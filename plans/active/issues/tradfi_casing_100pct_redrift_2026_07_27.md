@@ -40,8 +40,11 @@ depends_on: []
 sequential: true
 context_scope:
   [
+    market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
+    unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/epics/tradfi_master.md,
   ]
 ---

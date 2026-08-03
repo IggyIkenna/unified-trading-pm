@@ -41,6 +41,12 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
+    /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    /plans/epics/predictions_master.md,
+  ]
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code

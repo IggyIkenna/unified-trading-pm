@@ -34,10 +34,14 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-02"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm:
+  planning # corrected 2026-08-02 (operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md
+  # ag-closeout-audit item 13 / issues/ag_closeout_audit_infra_parked_2026_08_02.md finding 7): batch1/batch2 siblings
+  # both use planning; this doc predates the 2026-07-30 dispatch-safety convention change and was never updated to
+  # match, silently blocking its 1 open todo (fleet git-health pinned constant root-cause) from ever dispatching. (was: NA)
+execution_scope: orchestrator-agent # was: local-only, corrected alongside assigned_vm above
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.7
@@ -49,9 +53,13 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/06-coding-standards/script-homes.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
+    /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 supersedes:
@@ -66,9 +74,10 @@ source: >-
 
 # Infra satellite AO batch 3
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize twin) to `status: active` is
-> the operator's call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's
-> autonomous-mode rule. Nothing here has been shipped.
+> **✅ ACTIVE + DISPATCHABLE (2026-08-02).** `status: active` since authoring; `assigned_vm` flipped `NA` → `planning`
+> 2026-08-02 (operator ruling, `ag_closeout_audit_infra_parked_2026_08_02.md` finding 7) to match sibling batches 1/2's
+> convention — this banner was stale (still said `draft`/`NOT dispatched` after the doc had already gone active,
+> compounding the separate `assigned_vm` gap). The remaining `[BACKEND] P3` todo is now genuinely AO-dispatchable.
 
 ## Why this batch is thin — and why it is the last one
 

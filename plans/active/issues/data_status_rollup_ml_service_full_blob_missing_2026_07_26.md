@@ -40,9 +40,11 @@ source: agent diagnosis of defi_satellite_ao_dispatch_batch1-032 (uts-prod-data-
 depends_on: []
 context_scope:
   [
-    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
     deployment-api/deployment_api/services/data_status_service.py,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 ---
 
@@ -181,19 +183,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                                                                                                                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                                                                                                                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                                                                                                                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                                                                                                                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                                                                                                                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                                                                                                                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                                                                                                                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                                                                                                                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                                                                                                                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                                                                                                                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                                                                                                                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                                                                                                                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                                                                                                                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [ ] [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)`
       calls in `run_rollup`) has not written a new dated prefix under

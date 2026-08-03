@@ -60,7 +60,9 @@ context_scope:
   [
     /codex/05-infrastructure/dual-cloud-image-builds.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
     /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
   ]
 ---

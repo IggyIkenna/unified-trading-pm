@@ -28,8 +28,22 @@ doesn't defer to them; it's a disjoint concern.
 The point is to cut a worker's cold-start context burn, not maximize recall. A `context_scope` with 15 entries is no
 better than none — nobody reads 15 files before starting. Target **2-6 entries per doc**: the codex SSOT(s) the doc's
 own subject matter depends on, any plan/issue this doc supersedes or is gated on (when not already obvious from
-`depends_on`/`supersedes`), and — only when the doc's work is clearly anchored to specific code — 1-3 source paths
-(directories or well-known filenames, never line numbers, same citation discipline as `task_template.md` §3).
+`depends_on`/`supersedes`), and source paths (directories or well-known filenames, never line numbers, same citation
+discipline as `task_template.md` §3).
+
+**A codex doc explains the RULE; a source path is where a worker actually goes to BUILD the fix — a doc that names one
+without the other leaves a worker who has to re-derive the second half via a fresh cold grep, which is the exact cost
+this skill exists to cut.** Measured on the first corpus-wide backfill (2026-07-30): a spot-check of 342 already-scouted
+docs found only 51% carried a real source path at all, and roughly a third of the corpus were non-coordination docs that
+ended up codex/plan-only when their own body text already named the exact file. The failure mode isn't "couldn't find
+one" — it's settling for whatever's easiest to cite (a codex doc) over doing the extra step of surfacing a file the doc
+_already names in its own prose_. **Default assumption: if a doc's body names a specific filename, script, module, or
+class by name anywhere in its text, that path is a near-automatic include** (verify it exists, then add it) — treat NOT
+including it as the exception requiring justification, not the other way around. The only docs that legitimately end up
+with zero source paths are ones with no code target at all: a dispatch-batch coordinator
+(`*_satellite_ao_dispatch_batchN_*`) or a `*_finalize` gate whose entire job is pointing at OTHER docs, a pure
+design/proposal doc not yet executed, or a process/audit-of-docs doc. For everything else, a codex-only `context_scope`
+should be treated as an unfinished Phase-1 pass, not an acceptable minimal result.
 
 ## Phase 0 — inventory (cheap, no agents)
 
@@ -65,9 +79,17 @@ involved). Each hunter, per doc:
    grep-then-READ the candidate (per this workspace's grep-then-conclude ban) and confirm the doc actually exists and
    actually covers the claim before adding it. An unconfirmed guess becomes a Phase 5 suggestion, not a written
    `context_scope` entry.
-4. Adds 1-3 source paths only when the doc's work is clearly anchored to specific code — a directory or a well-known
-   module name a worker would `grep` for, never a line number (a plan outlives the code it points at; see
-   `task_template.md` §3's identical rule for todos).
+4. **Actively hunts for the doc's real source-code target — this is not optional padding, it's the half of the job a
+   codex citation alone doesn't cover.** Re-read the doc's body specifically looking for filenames, script names, class
+   names, or module paths already named in prose (root-cause sections, "Plan"/"What shipped" todos, and error messages
+   are the highest-yield spots) — every one of those is a near-automatic include once verified to exist. If the body
+   doesn't name one explicitly but the doc is clearly about fixing/building something in a specific repo (not a
+   coordination/dispatch-batch doc — see below), grep that repo for the obvious entry point before concluding there's
+   nothing to cite. Add 1-3 source paths (directories or well-known filenames, never line numbers — a plan outlives the
+   code it points at; see `task_template.md` §3's identical rule for todos). **Skip source paths only for a genuinely
+   code-free doc**: a dispatch-batch coordinator (`*_satellite_ao_dispatch_batchN_*`), a `*_finalize` gate, a pure
+   design/proposal not yet executed, or a process/meta-audit-of-docs doc — for these, codex+plan-only is the correct,
+   complete answer, not a shortcut.
 5. Verifies every proposed entry actually resolves — `/codex/...` and `/plans/...` paths must exist on disk, source
    paths must exist in the named repo — before returning. A dead pointer in a reading-list field is worse than an absent
    field; drop anything that doesn't resolve and note it was dropped.

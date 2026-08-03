@@ -22,7 +22,7 @@ created: 2026-06-24
 name: agent_operating_framework_master
 tier: L5
 priority: P0
-assigned_vm: planning # was: harsh_pc -- corrected 2026-07-14, finding 12: harsh_pc is a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot (this epic's own body-section correction already says so; this field was never updated to match); planning is the current single central-orchestrator VM id, matching the plan_hygiene_master.md epic precedent
+assigned_vm: NA # corrected 2026-08-02 (operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 2e, option A): this epic's own D2 drops epic->VM delegation for dispatch matching, and PLAN_FORMAT.md cites this epic as the SSOT for "NA is the expected value on every current epic" -- assigned_vm: planning here contradicted both. (was: planning, before that harsh_pc -- see git history for the 2026-07-14 finding-12 correction this superseded)
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
@@ -64,10 +64,10 @@ honest and graduates delegation. The whole design is **grep-native, NOT vector-R
 >   `escalation_pipeline_mvp` + the `escalation_and_disaster_recovery_master` epic). They stay valid; they are not on
 >   the make-AO-usable critical path. Pausing those 4 child plans is the remaining O1 mechanic (operator to confirm).
 
-**Assigned VM**: `planning` (was: `harsh_pc` — corrected 2026-07-14, finding 12: `harsh_pc` was a pre-2026-06-27
-multi-VM host id, retired by the single-VM pivot; see this doc's own W6 role-instance table-row correction, which
-already flagged `harsh_pc` as retired but never fed back into this line). `planning` is the current single
-central-orchestrator VM (reassign per-workstream as work dispatches — D4).
+**Assigned VM**: `NA` (corrected 2026-08-02, operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+§ 2e — this epic's own D2 below drops epic→VM delegation for dispatch matching, so an epic-level `assigned_vm` is not a
+live reassignment lever; PLAN_FORMAT.md cites this epic as its SSOT for "`NA` is the expected value on every current
+epic". Individual child plans carry their own `assigned_vm` per D1-D4 below.)
 
 ## Why this epic exists
 

@@ -46,7 +46,15 @@ depends_on: []
 last_updated: 2026-07-17
 locked_by:
 locked_since:
-context_scope: [/plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md, /plans/epics/cefi_master.md]
+context_scope:
+  [
+    /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
+    /plans/epics/cefi_master.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
+    market-tick-data-service/scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 # Tardis impossible combinations are recorded as `attempted_failed`

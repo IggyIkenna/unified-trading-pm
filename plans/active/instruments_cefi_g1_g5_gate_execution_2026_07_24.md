@@ -47,9 +47,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
   ]
 supersedes:
 superseded_by:

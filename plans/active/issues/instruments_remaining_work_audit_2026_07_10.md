@@ -60,6 +60,15 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+  ]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium

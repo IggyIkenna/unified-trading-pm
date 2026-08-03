@@ -42,6 +42,8 @@ context_scope:
     /plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md,
     /codex/06-coding-standards/ui-testing-layers.md,
     /plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md,
+    /plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
+    /plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md,
   ]
 ---
 

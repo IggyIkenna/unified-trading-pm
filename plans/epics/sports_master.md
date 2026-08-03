@@ -765,10 +765,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `/codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-                                                                                                                                                                                                                                                                                              disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-                                                                                                                                                                                                                                                                                              (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-                                                                                                                                                                                                                                                                                              (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-                                                                                                                                                                                                                                                                                              use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+                                                                                                                                                                                                                                                                                                  disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                                                                                                                                                                                                                                                                                                  (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                                                                                                                                                                                                                                                                                                  (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                                                                                                                                                                                                                                                                                                  use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -893,13 +893,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-                                                                                                                                                                                                                                                                                          going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-                                                                                                                                                                                                                                                                                          if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-                                                                                                                                                                                                                                                                                          (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+                                                                                                                                                                                                                                                                                              going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+                                                                                                                                                                                                                                                                                              if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+                                                                                                                                                                                                                                                                                              (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-                                                                                                                                                                                                                                                                                          (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-                                                                                                                                                                                                                                                                                          `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-                                                                                                                                                                                                                                                                                          CanonicalFixture fields)
+                                                                                                                                                                                                                                                                                              (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+                                                                                                                                                                                                                                                                                              `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+                                                                                                                                                                                                                                                                                              CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -1328,14 +1328,14 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-                                                                                                                                                                                                                                                                                          `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-                                                                                                                                                                                                                                                                                          dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-                                                                                                                                                                                                                                                                                          `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-                                                                                                                                                                                                                                                                                          clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-                                                                                                                                                                                                                                                                                          coverage shows 0% until then, correctly).
+                                                                                                                                                                                                                                                                                              `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+                                                                                                                                                                                                                                                                                              dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+                                                                                                                                                                                                                                                                                              `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+                                                                                                                                                                                                                                                                                              clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+                                                                                                                                                                                                                                                                                              coverage shows 0% until then, correctly).
 
-                                                                                                                                                                                                                                                                                          `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-                                                                                                                                                                                                                                                                                          trigger-date≪daily-calendar invariant. QG exit 0.
+                                                                                                                                                                                                                                                                                              `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+                                                                                                                                                                                                                                                                                              trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
@@ -1482,6 +1482,64 @@ readiness — scoped chain + gates (no activation)
   values for historical sports rows across all asset groups using the consolidated formula.
 - **Phase 7.D — Verification A3+A4 (DEFERRED-POST-CUTOVER)**: Re-run mega-audit A3+A4 checks after backfill completes to
   confirm zero residual mismatches.
+
+## Sports arb-execution & live-trading roadmap (migrated 2026-08-02 from `e2e-testing/docs/sports/ROADMAP.md`)
+
+> Migrated here per `/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` todo — this forward-looking sports
+> arb/execution planning belonged in the sports epic, not an e2e-testing repo doc. The repo copy is now a redirect stub
+> (its repo-local script File Index stays there). **Trial-window content (`~2026-04-03`) is EXPIRED — treat as
+> historical; re-validate any trial feed before relying on it.** Source `Last updated` was 2026-04-01.
+
+**Vision**: maximize bookmaker coverage across the fewest data/execution providers, cleanest data, most arbs, bet
+programmatically — no scraping.
+
+**Validated (as of 2026-04-01, historical evidence)**: 10-day arb backtest = 279 trades over 13 days on $10K, 88% win
+rate, 7.3% return, Sharpe 8.35, zero losing days (`arb_rolling_backtest.py`); live scanner found 8 arbs in 60s
+(`live_arb_scanner.py`); Betfair Exchange Stream integrated (direct TLS, ms timestamps); cross-provider matching 100% on
+overlapping events (UAC canonical + fuzzy). Back-lay arbs most robust (survive 5-min execution lag).
+
+**Layer 1 — data sources**:
+
+- _Historical (ML + backtest)_: Odds API (ML features, 12 validated books, 5.5y 2020-present, **active** — needs
+  T-14h/T-12h backfill); OddsPapi (one-time tick backtest, 207 fixtures, not in pipeline); Betfair Historical (one-time,
+  30M rows, not in pipeline); API-Football (reference: leagues/fixtures/teams/lineups, 10 seasons, GCS backfilled).
+- _Live (real-time for arb detection)_: Betfair Stream (TLS, ms latency, **live**, integrated); UNITY Feed (TCP push,
+  Pinnacle + 14 books, **pending** — EUR 500 to start). Trial aggregators SharpAPI / odds-api.io (WebSocket) — **trials
+  EXPIRED 2026-04-03, historical**; keep only if they show arbs on executable books.
+
+**Layer 2 — execution venues**: primary path = **UNITY broker** (single wallet → 15 books: PS3838/Pinnacle, SBObet,
+SingBet, 3ET, SharpBet, IBCbet/Nova88, VX, BetISN, Penta88, GA288, Broker5, Betfair, Matchbook, BetDex, Orbit; EUR 500
+connect + EUR 2,500/mo waived at EUR 250K turnover; REST `/getbetticket`→`/placebet`→`/getbetstatus`; BTC/USDT
+deposits). Execute Betfair via UNITY (single wallet); use direct Betfair stream for _data_ only. **Direct API venues**:
+Polymarket (prediction market, USDC on-chain, tested — 5,377 match markets / 691 matches / 60+ leagues via Gamma
+`/markets` date-range, `prediction_market_scanner.py`); Kalshi (needs `kalshi-api-key` in Secret Manager); Cloudbet
+(crypto sportsbook, official Trading API v2, signing up). **Stake.com DROPPED** (no official API). **Soft books**:
+data-first rotation — monitor via free/trial tiers, count arbs per book vs executable venues, sign up only to consistent
+winners (soft books limit/ban arbers — short-term edge, not sustainable base). Same-company dedup: Entain→Coral,
+Flutter→FanDuel, Kindred→Unibet, BetOnline/Bovada→BetOnline. 15 dedup'd soft books to monitor across US / UK-EU / Asia /
+Latam (top backtest coverage: KTO 45.5%, 1xBet 28.7%, Betano 26.3%, BetOnline 22.2%).
+
+**Layer 3 — reference data / canonical IDs**: Teams (UAC `team_mappings.py`, 763 entries / 29 leagues); Leagues (UAC +
+API-Football, 33 prediction leagues); Fixtures (`build_fixture_id()` HHMM, universal join key); Bookmaker keys (12 ML +
+23 arb); Betting instruments (canonical market+outcome+line — needs formalization). Both ML + arb pipelines share the
+same canonicals.
+
+**Phased roadmap** (dates historical; phase _structure_ is the durable content):
+
+1. **Validate live edge** — scanner 24/7 filtered to executable venues; measure Betfair-stream vs aggregator latency;
+   sign up Cloudbet; add Kalshi key; contact UNITY (EUR 500); start soft-book rotation.
+2. **First live trades** — UNITY demo feed → scanner; Betfair execution via UNITY; paper-trade arbs; first live Betfair
+   back/lay + first Cloudbet bet.
+3. **Expand venues + soft-book signups** — Kalshi + Cloudbet direct feeds; analyze rotation arb counts; sign up top 3-5.
+4. **ML & features** — backfill Odds API T-14h/T-12h; validate features-sports-service E2E (L3); train the 11-model
+   hierarchy; UNITY historical for training.
+5. **Scale** — all 15 UNITY books live; residency-based books as arbs justify; automated cross-venue rebalancing;
+   multi-sport (tennis/basketball).
+
+**No scraping needed**: direct APIs (Betfair/Polymarket/Kalshi/Cloudbet) + UNITY broker (Pinnacle + Asian sharps +
+exchanges) = programmatic betting on 19 venues; SharpAPI/odds-api.io cover 15 more soft books via free-tier rotation for
+arb-discovery only. Repo-local operational detail (arb scanner / backtest scripts, UNITY technical docs
+`LIVE_ODDS_PROVIDERS.md`, pipeline validation `progress.md`) stays in `e2e-testing/docs/sports/` + `scripts/sports/`.
 
 ## Cross-references
 

@@ -27,9 +27,10 @@ depends_on: []
 last_updated: 2026-07-26
 context_scope:
   [
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/liquid_representative.py,
     market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
 

@@ -33,7 +33,14 @@ superseded_by:
 depends_on:
 source: CeFi completion program /autonomous session (slot-3, 2026-07-15T14:36Z) + this session's 2026-07-16 recurrence
 resolved_by:
-context_scope: [/plans/archive/2026_07/cefi_completion_program_2026_07_15.md, /plans/epics/cefi_master.md]
+context_scope:
+  [
+    scripts/quickmerge.sh,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
+    /plans/epics/cefi_master.md,
+  ]
 ---
 
 # Slot-3 collision + YAHOO_FINANCE fleet-blocking red IS tree

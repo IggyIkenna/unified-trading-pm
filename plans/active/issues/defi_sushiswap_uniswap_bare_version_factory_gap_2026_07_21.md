@@ -38,6 +38,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+locked_by:
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -46,7 +47,6 @@ context_scope:
     instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
   ]
-locked_by:
 locked_since:
 supersedes:
 superseded_by:

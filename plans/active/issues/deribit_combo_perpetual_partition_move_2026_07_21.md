@@ -32,6 +32,14 @@ source:
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
+  ]
 resolved_by:
   "§9 [DESIGN] P1 cross-check + [WRITER] P1 guard-widen both DONE — unified-api-contracts@11adf279 (DERIBIT-COMBO
   deregistration) + market-tick-data-service@2ddc6d4a (bare-DERIBIT combo classifier fix, both ingestion paths),

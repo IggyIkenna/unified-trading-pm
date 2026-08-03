@@ -36,6 +36,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
+  ]
 assigned_vm: planning
 assigned_role: data_engineering
 resolved_by:

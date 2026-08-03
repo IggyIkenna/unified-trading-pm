@@ -43,9 +43,10 @@ context_scope:
   [
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
+    e2e-testing/scripts/defi/funding_ensemble_engine.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/,
     /plans/epics/strategy_master.md,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield,
-    e2e-testing/scripts/defi/funding_ensemble_engine.py,
   ]
 ---
 

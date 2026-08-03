@@ -13,9 +13,9 @@ related:
   [
     /plans/archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
     /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
-    instruments_backfill_phase3_2026_05_22.md,
-    mtds_backfill_phase3_2026_05_22.md,
-    mdps_backfill_phase3_2026_05_22.md,
+    /plans/archive/2026_05/instruments_backfill_phase3_2026_05_22.md,
+    /plans/archive/2026_05/mtds_backfill_phase3_2026_05_22.md,
+    /plans/archive/2026_05/mdps_backfill_phase3_2026_05_22.md,
     /plans/archive/2026_05/features_backfill_phase3_2026_05_22.md,
     /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
     /plans/archive/2026_05/batch_live_symmetry_2026_05_10.md,

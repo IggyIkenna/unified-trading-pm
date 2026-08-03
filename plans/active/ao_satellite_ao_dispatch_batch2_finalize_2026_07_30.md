@@ -45,10 +45,11 @@ source: >-
   the same turn as its batch by the /ag-closeout-audit ao skill run of 2026-07-30.
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
   ]
 ---
 

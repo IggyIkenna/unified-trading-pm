@@ -53,6 +53,13 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium

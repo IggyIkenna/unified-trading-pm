@@ -31,6 +31,9 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/coinbase.py,
     market-tick-data-service/market_tick_data_service/live/connectors/coinbase_book_ws.py,

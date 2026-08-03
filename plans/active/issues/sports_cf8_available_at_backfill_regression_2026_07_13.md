@@ -38,6 +38,14 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-14
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
+  ]
 resolved_by:
 ---
 

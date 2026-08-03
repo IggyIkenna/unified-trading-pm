@@ -39,6 +39,7 @@ context_scope:
     /codex/02-data/defi-canonical-naming-ssot.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
   ]
 ---

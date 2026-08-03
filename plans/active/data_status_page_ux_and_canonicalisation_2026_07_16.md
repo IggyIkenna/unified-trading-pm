@@ -61,6 +61,9 @@ context_scope:
     /codex/06-coding-standards/ui-testing-layers.md,
     unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    instruments-service/docs/PREDICTION_INSTRUMENTS.md,
+    /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
   ]
 ---
 
@@ -259,14 +262,13 @@ catalogue browser — completed checkbox evidence". The still-open todo (the `In
 side-discovery) stays below, unmoved.
 
 - [x] ✅ [DATA] P3. **DEDUPED 2026-08-02 — resolved-by-reference, not by completion.** This finding already has its own
-      proper home: `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (filed the same
-      day, same operator ruling) tracks the actual `extra='forbid'` + workspace-grep + prediction-title remediation
-      work end to end (currently 4 open todos there). Closing the duplicate pointer here to stop double-bookkeeping the
-      same finding in two docs — see that plan for live status, not this one. DECIDED (operator 2026-07-18:
-      extra='forbid' + workspace-grep callers + fix the discarded prediction
-      title). _(NEW — side-discovery 2026-07-17, adversarial review of the
-      `question`/`title` todo)_ **`InstrumentRecord` silently swallows unknown kwargs — real data has been discarded on
-      every prediction capture with zero signal.** Both prediction adapters pass a `symbol=` kwarg that
+      proper home: `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (filed the same day,
+      same operator ruling) tracks the actual `extra='forbid'` + workspace-grep + prediction-title remediation work end
+      to end (currently 4 open todos there). Closing the duplicate pointer here to stop double-bookkeeping the same
+      finding in two docs — see that plan for live status, not this one. DECIDED (operator 2026-07-18: extra='forbid' +
+      workspace-grep callers + fix the discarded prediction title). _(NEW — side-discovery 2026-07-17, adversarial
+      review of the `question`/`title` todo)_ **`InstrumentRecord` silently swallows unknown kwargs — real data has been
+      discarded on every prediction capture with zero signal.** Both prediction adapters pass a `symbol=` kwarg that
       `InstrumentRecord` does not declare; pydantic `extra='ignore'` drops it silently. Kalshi's value is
       `str(title)[:100]` — **the human-readable title the `question`/`title` todo above wants has been arriving and
       being thrown away on every capture**, for an unknown duration, with no warning, no log, no test failure. Two
@@ -587,9 +589,9 @@ safely-completable work. Terminal state:
 
 ## Todos (follow-up)
 
-- [ ] [DOC] P3. Confirm the 4 still-unbanked "⏳ Remaining" table rows above (non-Tardis confirmed venue bugs,
-      cache_oom 24h soak, Downloads CeFi re-capture, Downloads CSV-download smoke) each already have a real tracked
-      `- [ ]` todo in an owning doc (candidates found by grep: `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`,
+- [ ] [DOC] P3. Confirm the 4 still-unbanked "⏳ Remaining" table rows above (non-Tardis confirmed venue bugs, cache_oom
+      24h soak, Downloads CeFi re-capture, Downloads CSV-download smoke) each already have a real tracked `- [ ]` todo
+      in an owning doc (candidates found by grep: `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`,
       `artifact_pipeline_observability_2026_07_17.md`, `cost_observability_deferred_followups_2026_07_10.md`) — or file
       the missing ones. This table itself is prose, not a tracked todo, per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2.

@@ -35,6 +35,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 sequential: false
 depends_on: []
+locked_by:
 context_scope:
   [
     /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
@@ -42,8 +43,9 @@ context_scope:
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
     deployment-api/gunicorn.conf.py,
     deployment-api/deployment_api/lifespan.py,
+    deployment-api/cloudbuild.yaml,
+    deployment-api/deployment_api/services/data_status/manifest.py,
   ]
-locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:

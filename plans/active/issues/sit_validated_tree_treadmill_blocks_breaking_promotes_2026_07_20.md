@@ -42,6 +42,13 @@ source:
   ]
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    .github/workflows/ldr-to-main-promote-fleet.yml,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 resolved_by:
 ---
 

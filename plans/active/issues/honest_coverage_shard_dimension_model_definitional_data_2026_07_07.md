@@ -35,6 +35,14 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    instruments-service/instruments_service/engine/orchestrator/writers.py,
+    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
+  ]
 execution_scope: local-only
 model_tier: opus-required
 thinking_tier: high

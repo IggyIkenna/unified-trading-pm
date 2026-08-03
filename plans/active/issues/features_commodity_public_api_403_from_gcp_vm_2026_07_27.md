@@ -39,6 +39,14 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/features_service/commodity/adapters/base_source.py,
+    features-service/features_service/commodity/adapters/eia_ng.py,
+    features-service/features_service/commodity/adapters/cftc.py,
+    /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 ---
 
 # features-service `commodity` — public/no-auth data sources 403ing from a GCP VM

@@ -45,6 +45,14 @@ source:
   ]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    features-service/features_service/onchain/engine/orchestrator_calculators.py,
+    features-service/features_service/onchain/engine/orchestrator.py,
+    /plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 # features-onchain — feature-less shards, false captures, and a three-way vocabulary split

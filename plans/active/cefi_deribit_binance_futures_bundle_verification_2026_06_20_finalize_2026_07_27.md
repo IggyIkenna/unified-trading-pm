@@ -51,6 +51,8 @@ context_scope:
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
   ]
 ---
 

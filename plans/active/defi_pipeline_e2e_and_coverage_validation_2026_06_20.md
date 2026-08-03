@@ -45,6 +45,7 @@ context_scope:
     /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    strategy-service/scripts/phase_d_gate.py,
   ]
 ---
 

@@ -46,6 +46,7 @@ locked_since:
 context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/lst-exchange-rate-surfaces.md,

@@ -38,6 +38,8 @@ context_scope:
     /plans/epics/cefi_master.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
   ]
 ---
 

@@ -16,6 +16,23 @@
 # plan that just never got trimmed. `umbrella: true` frontmatter may still exist on old docs but is
 # no longer read by this script -- it is inert.
 #
+# A SECOND DOCUMENTED EXCEPTION (operator ruling 2026-08-02, plan_reconcile_parked_operator_decisions_2026_08_02.md
+# na-eligibility-audit item 17, option A / run-1 recommendation): a commit whose staged diff to an
+# already-over-cap LIVE doc (real open todos, not archival-eligible) is confined to APPENDING a small
+# dated audit-verdict marker -- no checkbox added/removed/changed -- is allowed through in SCOPED mode.
+# Root problem this closes: SCOPED mode has no baseline tolerance (a file THIS commit touches must not be
+# over cap, full stop), so once a live, still-open-todo doc crossed 1000L, EVERY future commit to it --
+# including a trivial 4-line na-eligibility-audit verdict marker with zero content change -- was
+# permanently blocked, forcing every future audit run to silently skip writing its incremental-skip
+# anchor onto the largest, most expensive-to-re-read docs in the corpus (confirmed empirically on 4 live
+# docs 2026-08-02: lst_rate_honest_coverage_2026_07-21.md, data_completion_to_100_all_ag_2026_06_21.md,
+# instruments_completion_tracker_2026_07_06.md, master_data_canonicalisation_migration_catalogue_2026_06_07.md).
+# Narrowly scoped: only fires when (a) the file is already over cap before this commit (a doc newly
+# crossing the cap in this commit is NOT covered -- that is a real regression, blocked as before), (b) the
+# staged diff has zero deleted lines, (c) the staged diff adds no more than 10 lines, and (d) none of the
+# added lines match a checkbox pattern (`- [ ]`/`- [x]`) -- so this can never be used to sneak in new
+# tracked work on an over-cap doc, only a small append like a dated verdict/Progress-Log marker.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -114,8 +131,28 @@ for f in "${TARGETS[@]}"; do
   fi
 
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
-    echo "  HARD    $name  ${lines}L  todos=${todos}"
-    HARD_FAILURES=$(( HARD_FAILURES + 1 ))
+    SMALL_MARKER_APPEND=""
+    if [ -n "$SCOPED" ]; then
+      # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
+      # non-checkbox append to a doc ALREADY over cap before this commit.
+      DIFF_NUMSTAT="$(git -C "$PM_DIR" diff --cached --numstat -- "$f" 2>/dev/null || true)"
+      ADDED="$(echo "$DIFF_NUMSTAT" | awk '{print $1}')"
+      DELETED="$(echo "$DIFF_NUMSTAT" | awk '{print $2}')"
+      if [ -n "$ADDED" ] && [ -n "$DELETED" ] && [ "$DELETED" = "0" ] && [ "$ADDED" -le 10 ] 2>/dev/null; then
+        PRE_COMMIT_LINES=$(( lines - ADDED ))
+        if [ "$PRE_COMMIT_LINES" -gt "$PLAN_HARD_CAP" ]; then
+          ADDED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null | grep -cE '^\+\s*-\s*\[.\]' || true)"
+          ADDED_CHECKBOX_LINES="${ADDED_CHECKBOX_LINES:-0}"
+          [ "$ADDED_CHECKBOX_LINES" = "0" ] && SMALL_MARKER_APPEND="1"
+        fi
+      fi
+    fi
+    if [ -n "$SMALL_MARKER_APPEND" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
+    else
+      echo "  HARD    $name  ${lines}L  todos=${todos}"
+      HARD_FAILURES=$(( HARD_FAILURES + 1 ))
+    fi
   elif [ "$lines" -gt "$PLAN_SOFT_CAP" ]; then
     echo "  SOFT    $name  ${lines}L  todos=${todos}"
   fi

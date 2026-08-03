@@ -40,12 +40,12 @@ source:
 drift_direction: advance-code
 context_scope:
   [
+    e2e-testing/scripts/defi/staked_basis_funding_scan.py,
     /codex/02-data/carry-venue-live-integration-reference.md,
-    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
+    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
-    e2e-testing/scripts/defi/staked_basis_funding_scan.py,
   ]
 ---
 

@@ -45,7 +45,9 @@ locked_since: 2026-05-21
 resolved_by:
 context_scope:
   [
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/bridge_events_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_catalog_freshness.py,
   ]

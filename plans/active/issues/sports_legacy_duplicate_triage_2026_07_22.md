@@ -73,6 +73,14 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    instruments-service/scripts/migration_orphan_sweep_sports.py,
+    instruments-service/scripts/migrate_sports_per_league.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

@@ -54,19 +54,19 @@ different concern (e.g., deployment infrastructure).
 
 ---
 
-## Archive Criteria by Plan Type
+## Archive Criteria (canonical — codified 2026-08-02)
 
-| Type         | Minimum gate to archive                     | Notes                                                           |
-| ------------ | ------------------------------------------- | --------------------------------------------------------------- |
-| `code`       | C5 for all repos in `repo_gates`            | Archivable during code-completion epic                          |
-| `infra`      | D3 for all repos in `repo_gates`            | Must prove staging integration even during code-completion epic |
-| `deployment` | D3 minimum                                  | Same as infra                                                   |
-| `business`   | B6 (user approved) + B3 KPIs met            | Unit tests alone are insufficient                               |
-| `mixed`      | Highest required gate across declared types | E.g., `code + infra` → D3                                       |
+> **RULED 2026-08-02** (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2d, option A): the
+> `repo_gates`/`completion_gates`-based table this section used to carry is **Legacy schema (pre-2026-05-21)** — no
+> current plan carries those fields, so no plan could ever satisfy it. Every real archival in this corpus already uses
+> the bar below; this section now states that practice instead of the unsatisfiable legacy one.
 
-**Archive eligibility rule:** A plan is eligible for archive when ALL repos in `repo_gates` have reached the gate level
-in `completion_gates`, AND the plan type's minimum gate is satisfied. A plan is NOT archivable just because the majority
-of todos are done — every repo must reach the required level.
+**Archive eligibility rule:** a plan is eligible for archive when every todo is `- [x]` (zero open `- [ ]` checkboxes)
+with cited evidence (repo@sha, verified reachable on the target branch, or an equivalent verification artifact), and it
+is not `locked_by:` an active branch (a locked plan needs an explicit `[unlock-plan]` first). A plan is NOT archivable
+just because the majority of todos are done, and it is NOT blocked from archiving by anything beyond these two
+conditions. See `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` for the full 6-step ritual
+(banner, referrer repoint, `git mv` into the dated `plans/archive/YYYY_MM/` subdir, etc.).
 
 ---
 
@@ -303,14 +303,23 @@ priority `None` → dispatcher de-prioritizes → task rots in the queue. Non-ca
 **Full hygiene stack doc** (4 silent-failure modes, severity ladder, cron schedules):
 `/codex/12-agent-workflow/plan-hygiene.md`
 
-**Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag):
+**Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag). **Updated
+2026-08-02** (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 2c, option A): this list had
+drifted from live practice — `task_template.md` §"`[TAG]` → craft role" already documented `[INFRA]`/`[DATA]`/
+`[BACKEND]`/`[UI]`/`[REVIEW]` as the live per-task role-routing tags, and a corpus-wide count found `[DOC]`/`[DOCS]`/
+`[PM]`/`[DIAG]`/`[DEVOPS]`/`[CI]` in active use across dozens to hundreds of docs each. Added below to match reality:
 
 ```
 AGENT | SCRIPT | HUMAN | HUMAN+AGENT | AUDIT | DESIGN | SPEC | VERIFY | CONFIG | IMPLEMENT
 DEFERRED | DELEGATED | UI
+INFRA | DATA | BACKEND | REVIEW | CODE | DOC | DOCS | PM | DIAG | DEVOPS | CI
 BLOCKED-CREDENTIALS | BLOCKED-OPERATOR-DECISION | BLOCKED-UPSTREAM-OUTAGE
 BLOCKED-PLAYWRIGHT | BLOCKED-OPERATOR | BLOCKED-INFRA
 ```
+
+Role routing for the AO-dispatch tags (per-task craft role, from `task_template.md`): `[INFRA]`→infra ·
+`[DATA]`→data_engineering · `[BACKEND]`→backend_engineer · `[UI]`→ui_developer · `[REVIEW]`→review. Generic `[CODE]` /
+`[SCRIPT]` / `[DOC]` / `[DOCS]` / `[PM]` / `[DIAG]` / `[DEVOPS]` / `[CI]` route to the plan's own `assigned_role`.
 
 **Full hygiene reference**: `/codex/12-agent-workflow/plan-hygiene.md` — covers all 4 silent-failure modes, check-vs-fix
 script pairing, cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every 4h), and the HARD vs
@@ -774,9 +783,12 @@ Reviewers reject daily work-split plans without the slot↔theme table.
 ## SSOT References
 
 - This file: `unified-trading-pm/plans/PLAN_FORMAT.md`
-- Cursor rule: `unified-trading-pm/cursor-rules/core/plan-readiness-gates.mdc`
-- Plan placement: `unified-trading-pm/cursor-rules/core/plan-placement.mdc`
-- Workflow: `unified-trading-pm/cursor-rules/workflow/plans-to-deployable-workflow.mdc`
+- ~~Cursor rule / Plan placement / Workflow~~ — the 3 filenames previously cited here
+  (`cursor-rules/core/plan-readiness-gates.mdc`, `cursor-rules/core/plan-placement.mdc`,
+  `cursor-rules/workflow/plans-to-deployable-workflow.mdc`) never existed under those names in the tree even before it
+  was archived 2026-08-02 (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md` § docs-reconcile
+  item 11) — pre-existing dangling references, not newly broken by the archival. The tree's surviving content is at
+  `plans/archive/cursor-rules_2026_08_02/`.
 - Sub-agent rules: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` §9
 - INDEX: `unified-trading-pm/plans/active/INDEX.md`
 - Per-tab worktrees: `unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md`

@@ -83,8 +83,10 @@ source: >-
 context_scope:
   [
     /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_tradfi_cf11.py,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
   ]
 ---
 

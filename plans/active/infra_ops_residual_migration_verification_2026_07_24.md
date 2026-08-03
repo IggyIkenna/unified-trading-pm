@@ -43,8 +43,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /codex/02-data/manifest-migration-coordination.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 supersedes:

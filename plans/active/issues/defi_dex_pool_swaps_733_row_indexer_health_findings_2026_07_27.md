@@ -56,11 +56,13 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 

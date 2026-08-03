@@ -48,6 +48,7 @@ context_scope:
   [
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_mdps.py,
     /plans/epics/infrastructure_master.md,
   ]
 ---

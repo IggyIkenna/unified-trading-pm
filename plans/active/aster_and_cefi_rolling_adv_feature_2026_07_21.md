@@ -62,6 +62,7 @@ context_scope:
   [
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
+    features-service/features_service/cross_instrument/app/calculators/adv.py,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 ---

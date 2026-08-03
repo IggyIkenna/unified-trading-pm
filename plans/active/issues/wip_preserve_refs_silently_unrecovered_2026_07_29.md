@@ -45,7 +45,7 @@ context_scope:
   [
     /plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md,
+    /plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md,
     /plans/epics/orchestrator_master.md,
   ]
 ---
@@ -111,11 +111,11 @@ closing the "then what" gap:
       `strategy-service` one. Triage the other 24 to a recorded SUPERSEDED / RECOVER / DELETE verdict; first-pass
       blob-compare says ~16 are already content-identical to origin and most of the rest would REGRESS origin if
       applied. Full first-pass breakdown + the one substantive residual (`slot-12 unified-trading-library c927ec58`, a
-      2-line docstring) are in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`. Do
+      2-line docstring) are in `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`. Do
       this with the verifier that doc's `[SCRIPT] P2` specifies, not by hand. Repo: agent-orchestrator. **Attempted
       2026-08-01 (batch3 todo 3) — the verifier this item depends on is now SHIPPED (agent-orchestrator@623009e3,
       `server/worktree_clean_check/_orphan_verify.py` + a periodic `server/orphan_ref_verify_watchdog.py` sweep — see
-      the full evidence in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own
+      the full evidence in `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own
       matching todo), but triaging these 25 specific refs was NOT possible from that session: 0/25 reachable. They are
       `refs/wip-preserve/cascade-*`-namespace refs created via a LOCAL-ONLY `git update-ref` by
       `quickmerge.sh::cascade_dep_branch()` (never pushed to origin), on slots 2/3/4/6/9/10/11/12/15 — but on host
@@ -129,8 +129,8 @@ closing the "then what" gap:
       verifier against all 9 named slots (29 refs now, not 25 — 4 new cascade branches accumulated over the 2
       intervening days). Result: 16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE — full per-ref table in
       `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log and cross-referenced in
-      `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This doc's
-      slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
+      `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This
+      doc's slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
       hand-triage — got the identical SUPERSEDED verdict from the automated verifier, cross-validating it.
 - [ ] [SCRIPT] P3. Add a fleet-wide `refs/wip-preserve/**` sweep (age-thresholded alert or a documented runbook check)
       so a preserved-but-unrecovered commit surfaces instead of sitting forgotten. Repo: agent-orchestrator.
@@ -145,7 +145,7 @@ closing the "then what" gap:
   quickmerge items), and the `[SCRIPT] P3` sweep offers a codex-documented-runbook option that is never autonomous. The
   `[DATA] P2` is bounded but needs cross-slot access to `refs/wip-preserve/cascade-strategy-service-a77eb6d170ca` in
   another slot's clone. **Flagged**: that ref has now sat unrecovered since 2026-07-28 — folded into
-  `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.
+  `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **2026-08-01 (batch3 todo 3 completion)**: `[DATA] P3` flipped `[x]` — the verifier (shipped 2026-08-01,
   `agent-orchestrator@623009e3`) was run against all 29 fleet-wide wip-preserve refs via SSM reach into

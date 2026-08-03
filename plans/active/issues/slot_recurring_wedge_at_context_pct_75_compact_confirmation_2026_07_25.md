@@ -65,6 +65,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/context_lifecycle.py,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+  ]
 depends_on: []
 ---
 

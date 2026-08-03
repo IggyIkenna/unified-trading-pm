@@ -50,6 +50,7 @@ context_scope:
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 

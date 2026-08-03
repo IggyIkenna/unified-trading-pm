@@ -49,6 +49,7 @@ source:
 execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
+locked_by:
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -57,8 +58,9 @@ context_scope:
     /codex/02-data/defi-data-types-catalog.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
     deployment-service/terraform/gcp/defi_collection_scheduler.tf,
+    market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
   ]
-locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:

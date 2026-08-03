@@ -57,6 +57,10 @@ resolved_by:
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_24.md,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]

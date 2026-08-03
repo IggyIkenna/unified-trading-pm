@@ -39,9 +39,10 @@ depends_on: []
 context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-    agent-orchestrator/server/orm.py,
+    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     agent-orchestrator/server/transcript_log.py,
+    agent-orchestrator/server/orm.py,
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
   ]
 ---
 
@@ -125,6 +126,17 @@ exists" section together before scoping the workstream.
   doc; if they're still real, worth splitting into a narrower follow-up scoped to just those three. Deferring the
   archive-or-split call to the operator rather than guessing.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-03**: operator asked (fresh, unprompted by this doc) why so many operator-blocking questions stay open and
+  what answering them actually does — independent confirmation this doc's pain points are still live, ~9 days after the
+  2026-07-31 entry above flagged them as possibly-still-open. Investigation this session also found, and fixed, a
+  concrete THIRD instance of "an answer option does nothing": canned options B/C on operator-gated cards were submitting
+  as plain final answers with no dispatch mechanism, unaffected by D1-D5 despite the archived doc's own text describing
+  exactly this failure mode — see `/plans/active/issues/ao_operator_gated_canned_options_bc_still_no_op_ 2026_08_03.md`
+  (resolved, agent-orchestrator@5bfde668). That fix does NOT touch this doc's own remaining scope (pain points 2-4:
+  scale/triage, cross-question dedup, dead-agent transcript-jump) — those are still real and still unscoped. Not
+  archiving this doc or auto-picking a direction on its `[DESIGN]` todo below (an open-ended scoping call, correctly
+  staying a human decision per this doc's own frontmatter) — flagging the renewed operator pain as a signal it may be
+  worth un-deferring, not deciding that myself.
 
 ## Todos
 

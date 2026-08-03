@@ -65,10 +65,12 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
   ]
 ---
 

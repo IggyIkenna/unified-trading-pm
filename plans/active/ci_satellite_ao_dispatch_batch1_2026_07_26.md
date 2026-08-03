@@ -67,6 +67,9 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/task_template.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -341,6 +344,22 @@ concurrent workers do not collide on this file.
       on both repos, shipped via `quickmerge --agent --files`. Sources:
       `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P2 sub-finding,
       2026-07-25) + `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2 messaging).
+- [x] ✅ [CI] P1. **Mirror the batch1-036 auto-merge-arm-failure fix to the sibling standalone
+      `ldr-to-main-promote.yml`.** batch1-036 (`unified-trading-pm@4bf65b67c`) fixed the silent-swallow of
+      auto-merge-arm failures in `.github/workflows/ldr-to-main-promote-fleet.yml`, but the PM-own standalone
+      `.github/workflows/ldr-to-main-promote.yml` has the IDENTICAL silent-swallow bug and is failing LIVE (review
+      agt-39a53d confirmed via `gh run view 30774619258`, 00:30-00:31Z: "WARN: auto-merge unavailable"; PR #2061 OPEN,
+      mergeStateStatus=UNSTABLE, autoMergeRequest=null; zero ARM_FAILED-equivalent tally/Slack). Apply the same
+      arm-failure tally + alerting as `4bf65b67c`. **Done when**: the standalone workflow surfaces an arm-failure
+      non-silently (+ alert), regression-tested, QG green, shipped via quickmerge. Source: review batch chat msg 3383,
+      2026-08-03; same failure class as the original ~10h-silent promote incident this plan traces to. Fixed all 4
+      `gh pr merge --auto` arm-call sites (new-PR arm, routine per-tick re-arm, close+reopen recovery re-arm,
+      post-dirty-reconcile re-arm) to branch on the arm call's own exit status, wiring a new `arm_failed` step/job
+      output through GITHUB_OUTPUT at every exit point + a dedicated `notify-arm-failed` Slack job (single boolean flag
+      tracking the last arm attempt's outcome this run, vs. the fleet's per-repo count — this workflow is
+      single-repo/per-tick). Added `scripts/quality-gates-base/tests/test-ldr-promote-standalone-arm-failed-tally.sh`
+      (structural + a functional extraction of a real if/else arm-site block evaluated against a stubbed `gh`, 8/8
+      pass). Full `quality-gates.sh` green. — unified-trading-pm@5047141d0
 - [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
       slowness.** The treadmill is currently only observable as a promotion-lag alert, which reads as latency. Add a
       regression test / monitor that fires on N consecutive `SIT GATE BLOCK <repo>` verdicts for the same repo.
@@ -585,11 +604,17 @@ which is the ACKED-INTO-PLAN case `/codex/11-project-management/issue-doc-lifecy
 active plan before archival. All 3 source docs were already moved to `plans/archive/issues/` without this step; migrated
 here now, retroactively, to close that gap. Each item cites its source doc + original todo tag/priority.
 
-- [ ] [BACKEND] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
+- [ ] [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
       billing-wall class (2026-06-11, 2026-06-23, 2026-07-29) — the archived doc's own P3 remediation (spend telemetry /
       50-80-95% budget alert) was never unblocked, `BLOCKED-ON-DECISION` pending an operator-minted `Plan: read`
       billing-scoped token. Mint that token so the workspace can self-detect this before it walls CI, or accept
-      recurring manual operator intervention as the standing posture.
+      recurring manual operator intervention as the standing posture. **Retagged 2026-08-03 (slot 15,
+      `ci_satellite_ao_dispatch_batch1-030`)**: this is a human-only credential-minting decision (a GitHub `Plan: read`
+      billing-scoped PAT can only be minted by the account owner) — not AO-executable code. Independently confirmed
+      operator-gated twice already: `/na-eligibility-audit ci` 2026-07-30 ("KEEP-NA, valid — gated on an operator-minted
+      billing-scoped token") and `ci_satellite_ao_dispatch_batch5_2026_08_02.md`'s D5-4 ("Operator-gated (needs a
+      ruling, not a re-triage)"). Filed a /blocked question with the operator to pick a fork; no code change exists for
+      a worker to ship here.
 - [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
       `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal FAILING status
       on a 0-step billing-kill (the archived doc's still-open P1 "outage-aware v2 status dispatch" item) — if not
@@ -601,25 +626,88 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       mandated "ping the authoring slot" step always 400s (confirmed `agt-69e9e4`/slot 14, 2026-07-29). Either have
       `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, advisory-only) or fix
       `_notify_authoring_slot` to treat it as a real target.
-- [ ] [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
+- [x] ✅ [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
       session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
       passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,
       `alerting-service@bd6aebb`, `market-data-processing-service@afcf984`, `ml-service@cc732d8`,
-      `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`.
+      `strategy-service@9c499721`, `agent-orchestrator@64365ad`, `agent-orchestrator@b9d6190`. **DONE 2026-08-02** —
+      queried `gh api repos/IggyIkenna/<repo>/actions/runs?head_sha=<full-sha>` per commit (resolved short→full SHAs
+      locally first): only 2/8 were directly confirmed green AT SHIP TIME — `market-data-processing-service@afcf984`
+      (run 30519065941, success) and `ml-service@cc732d8` (run 30519086798, success). The other 6 were NOT green at ship
+      time: `instruments-service@76eba912` (run 30476566006, real `failure`), `instruments-service@4c05f2d3` (8 runs,
+      mix of `startup_failure`×6/real `failure`×2, never `success`), `strategy-service@9c499721` (run 30519091690, real
+      `failure`), `alerting-service@bd6aebb` + `agent-orchestrator@64365ad` + `agent-orchestrator@b9d6190` (each exactly
+      1 run, `startup_failure` — the zero-jobs outage signature, CI never actually executed). Confirmed via
+      `git merge-base --is-ancestor` that all 8 SHAs are still ancestors of current `origin/live-defi-rollout` (none
+      reverted/rewritten). Then confirmed all 6 repos have SINCE had genuine (non-`startup_failure`) successful
+      `quality-gates-v2` runs on `live-defi-rollout` as recently as 2026-08-02 (instruments-service:
+      2026-08-02T08:48:42Z; agent-orchestrator: 2026-08-02T12:23:39Z; alerting-service: 2026-08-02T12:23:42Z &
+      08-01T21:18:31Z; strategy-service: 2026-08-02T07:47:10Z & 08-01T10:33:38Z) — since QG runs the full test suite
+      (not a per-commit diff) and none of the target SHAs were reverted, these later green runs constitute cumulative
+      confirmation that the current codebase state, including these commits' content, is CI-clean. No residual defect
+      traced to these specific commits; verification closed, no follow-up fix required. Evidence: gh API run IDs cited
+      above, all queryable via `gh api repos/IggyIkenna/<repo>/actions/runs/<id>`.
 - [ ] [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
       elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
       by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
       in the record for future triage.
-- [ ] [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a lightweight
-      standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
+- [x] ✅ [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a
+      lightweight standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
       `ldr-to-main-promote-fleet.yml`/`ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this
-      incident ran silently for ~10h before being noticed as a side-effect of an unrelated task.
-- [ ] [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can sit
-      with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
+      incident ran silently for ~10h before being noticed as a side-effect of an unrelated task. — **DONE (slot-9,
+      cicd)** — unified-trading-pm@ccb1d7b10. Delivered a standalone monitor (mirroring
+      `glue_pool_starvation_monitor.py`'s cheapest-honest-signal pattern rather than extending
+      `promotion_lag_monitor.py`, since a `startup_failure` run never reaches a job and so has no branch-pair compare
+      state to hook into): `scripts/cicd/promote_fleet_startup_failure_monitor.py` fetches each target workflow's
+      most-recent completed runs and pages once the LEADING (most-recent-first) run of them share `startup_failure` for
+      `threshold` (default 3) consecutive runs — a single failure is noise, insufficient history never false-positives.
+      New `.github/workflows/promote-fleet-startup-failure-monitor.yml` (schedule `*/15`, `workflow_dispatch` with a
+      `threshold` input) routes a positive finding through the reusable `notify-slack.yml` carrier with
+      `dedup_key: promote-fleet-startup-failure` + `cooldown_min: 60` (a standing condition, not a per-tick page), per
+      `/codex/04-architecture/ci-alerting.md`. `tests/unit/test_promote_fleet_startup_failure_monitor.py` (16 cases)
+      proves: the exact-threshold and longer-than-threshold streak both fire, a streak shorter than threshold does not,
+      insufficient run history never false-positives even if every run so far matches, a lone transient failure never
+      pages, and the report names each stuck workflow + its streak length. Full PM `quality-gates.sh` green (1631
+      passed, 0 failed; sentinel matched committed HEAD). NOT wired into `scripts/quality-gates.sh` (this is a standing
+      GHA monitor, not a QG checker — no same-file registration contention applies here).
+- [x] ✅ [CI] P1. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** A promote PR can
+      sit with ALL required checks green (`quality-gates-v2`, `image-build-gate`, `sit-gate/fleet-green`,
       `semver-agent/label-check`) for 10+ min without merging — observed on `market-tick-data-service` PR #791
       (`mergeStateStatus: UNSTABLE`, `mergeable: MERGEABLE`, `mergedAt: null`, `autoMergeRequest: null`), repeated
       across 8 straight regenerated PRs (#788→#791). Check whether the promote-PR-creation step needs to explicitly
-      enable auto-merge rather than relying on a default.
+      enable auto-merge rather than relying on a default. — **DONE 2026-08-02 (slot-10, cicd)** —
+      `unified-trading-pm@4bf65b67c`. **Finding: the code already explicitly arms auto-merge at all 3 sites (never
+      relied on a default), and the reported gap is NOT currently reproducing** — verified via a real live run (run
+      `30748479158` logs the arm succeeding for MTDS PR #815) and PR history (15 consecutive MTDS promote PRs #801→#815
+      merged within seconds of creation, 2026-07-31→2026-08-02, zero manual intervention). Root cause of the original
+      #788-793 gap traces most plausibly to the concurrent GitHub Actions billing-wall incident
+      (`github_actions_billing_wall_recurrence_2026_07_29.md`) rather than a code defect — cleared 2026-07-31, same day
+      the clean-merge streak begins. **Adjacent bug found + fixed in the same file**: all 3 `gh pr merge --auto`
+      arm-call sites in `scripts/cicd/ldr_to_main_fleet_promote.sh::process_repo()` unconditionally tallied
+      `_done PROMOTED` after the arm attempt regardless of whether the arm itself succeeded — a repo needing a manual
+      merge was silently counted identically to a genuinely-armed one (the close+reopen re-arm site was worse: it
+      swallowed the arm call's exit code via `2>/dev/null || true`, not even logging the failure). Each site now
+      branches on its own exit status into a new `ARM_FAILED` terminal state, wired through the aggregation tally,
+      `GITHUB_OUTPUT`, job outputs, and a dedicated Slack notify job
+      (`.github/workflows/ldr-to-main-promote-fleet.yml`). Also fixed `test-ldr-promote-provenance-rearm-gate.sh`,
+      discovered silently FATAL-ing (exit 2) since the 2026-08-01 script-extraction refactor (`468e9413e`) moved
+      `provenance_check_ok()` out of the workflow file's embedded `run:` block into the now-standalone
+      `ldr_to_main_fleet_promote.sh` without updating this test's extraction target — repointed it + added a new
+      regression test (`test-ldr-promote-arm-failed-tally.sh`) proving the ARM_FAILED tally with both structural
+      assertions and a functional harness against the real extracted aggregation code. Full PM `quality-gates.sh` green.
+      **Incidental fix, filed separately**: authored the missing companion finalize plan for
+      `plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after discovering it was
+      blocking the corpus-wide `check_finalize_plan_coverage.py` gate — unrelated to this todo, shipped as its own
+      commit.
+- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
+      this bounded item extracted — its main P0/P1 chain stays there, operator-gated). Fix the invalid `sit_retry_cap`
+      wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
+      background worker rather than Issue + Slack only. **MIGRATED FROM**:
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
+- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (same doc, same
+      extraction). Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
+      cross-repo combination was executed" — it is a surface check. **MIGRATED FROM**:
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
 
 ## Deferred
 
@@ -716,13 +804,33 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-03** (slot 15, backend_engineer, task `ci_satellite_ao_dispatch_batch1-030`) — Worked the `[BACKEND] P2`
+  billing-wall spend-telemetry item (migrated from `github_actions_billing_wall_recurrence_2026_07_29.md`). Found no
+  code path exists: the remediation is explicitly a fork between minting an operator-owned GitHub `Plan: read`
+  billing-scoped PAT (a human-only credential action — no worker-held token can create it) or ruling that recurring
+  manual operator intervention stays the standing posture. This exact item was already independently flagged
+  operator-gated twice before this dispatch (`/na-eligibility-audit ci` 2026-07-30 "KEEP-NA, valid"; this plan's sibling
+  `ci_satellite_ao_dispatch_batch5_2026_08_02.md` D5-4 "Operator-gated (needs a ruling, not a re-triage)") — batch1's
+  own todo was simply never retagged/parked to match, so it kept surfacing as a normal AO-dispatchable `[BACKEND]` item.
+  Retagged the todo `[BACKEND]` → `[OPERATOR]` in place (not checked off — nothing is actually resolved) and filed a
+  `/blocked` question so the operator/main can rule which fork to take and park the backlog task per the established
+  pattern (`RULES.md` § 4 "Park a task") so it stops being redispatched to workers in the meantime.
+- **2026-08-02 (operator ruling applied)** — Migrated 7 open prevention/follow-up todos from 3 `status: resolved` issue
+  docs that were archived without migration (`unified-trading-pm@17b53df1e`):
+  `github_actions_billing_wall_recurrence_2026_07_29.md` (3),
+  `github_actions_total_fleet_outage_startup_failure_2026_07_30.md` (2),
+  `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (2). See "## Migrated from resolved incidents"
+  above. Ruling: `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3, option A.
 - **2026-08-02** (slot 7, infra, task `ci_satellite_ao_dispatch_batch1-027`) — Flipped the event-ledger-consumer todo
   (D2 unblocked in the source doc). **Incidental finding, out of scope for this todo**: the sibling alerts ledger
   (`cicd/alerts/{date}/alerts.jsonl`, same read-modify-write race, already tracked as partially-open in
   `deployment_alerts_ingestion_completeness_2026_07_20.md`, archived with the gap still open) has an UNFIXED writer not
   enumerated in that doc's list — `agent-orchestrator/server/notifications/slack.py::_persist_to_gcs()`
   (download→append→upload, confirmed live at line 163-167). Not fixed here (audit-only scope); filed as
-  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each).
+  `issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md` (all 3 known unfixed writers, one bounded todo each) —
+  **resolved 2026-08-02**, all 3 todos done (2 already-fixed stale citations + 1 genuine fix,
+  agent-orchestrator@80cb301); now archived at
+  `/plans/archive/issues/alerts_ledger_remaining_unfixed_writers_2026_08_02.md`.
 - **2026-07-26** — Drafted by `/ag-closeout-audit ci` in autonomous mode, immediately after `/plan-reconcile ci` (whose
   14 auto-fixes shipped as `unified-trading-pm@29dda2bfd`, so frontmatter/checkbox state was trustworthy going in).
   Phase 0: covering-plan set EMPTY — closeout has 0 todos, no batch plan has ever existed, all 30 Sources are

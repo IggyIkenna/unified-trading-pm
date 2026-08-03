@@ -205,6 +205,25 @@ def main(argv: list[str] | None = None) -> int:
         if "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or not tranches):
             tranches.append("cross-cutting")
 
+        # Fixed 2026-08-02 (operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md
+        # na-eligibility-audit item 15, option C): a doc whose `asset_group` resolves to NOTHING more
+        # specific than the generic "infra" bucket (either directly via `asset_group: [infrastructure]`, or
+        # via the "meta" default-fold above) previously stayed invisible to its actual `parent_epic`-mapped
+        # tranche (e.g. `ao`) forever -- the asset_group-derived `tranches` list is the ONLY input
+        # `_iter_docs`'s caller uses to decide which tranche's `--tranche <x>` run even sees this doc, so a
+        # mistagged doc was structurally invisible to the one tranche that could correctly retag it: every
+        # future `ao` run never saw it, every future `infra` run saw it but wasn't the domain owner and (per
+        # the primary-owner rule) couldn't write a cross-tranche retag either -- a genuine deadlock,
+        # confirmed on 4 live docs 2026-08-02. Fix: ONLY when "infra" ended up as the SOLE candidate (never
+        # when a doc already has a real, specific tranche -- own AG, `ao`/`ci`/`ui`, or `cross-cutting`, all
+        # of which must win exactly as before), ALSO add the parent_epic-mapped tranche if it differs. This
+        # only ever ADDS a second candidate to the single-generic-bucket case; every other classification
+        # path above is completely unchanged.
+        if tranches == ["infra"]:
+            epic_tranche = EPIC_TO_TRANCHE.get(parent_epic)
+            if epic_tranche and epic_tranche in ALL_TRANCHES and epic_tranche != "infra":
+                tranches.append(epic_tranche)
+
         doc_tranches = tranches or ["UNCLASSIFIED"]
         records.append(
             {

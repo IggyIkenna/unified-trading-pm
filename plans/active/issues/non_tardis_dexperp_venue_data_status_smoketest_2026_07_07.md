@@ -50,6 +50,14 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
+    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md,
+  ]
 execution_scope: local-only
 model_tier: sonnet-doable
 thinking_tier: medium

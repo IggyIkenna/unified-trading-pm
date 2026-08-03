@@ -27,7 +27,7 @@ summary: >-
   SEPARATE bug from the 3 timestamp bugs -- it exists in the same function chain but is a distinct code path (the symbol
   filter, not timestamp resolution) and was invisible until the timestamp bugs were cleared (a SchemaError crashed the
   run before this filter's effect could even be observed in isolation).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -57,7 +57,9 @@ context_scope:
     features-service/features_service/delta_one/app/core/_passthrough_loader.py,
   ]
 locked_by:
-resolved_by:
+resolved_by: >-
+  slot-6 (data_engineering, 2026-08-02) -- both todos done, symbol-filter fix shipped 2026-07-31
+  (features-service@7e10172c), returns leg confirmed complete via direct prod GCS check (see Progress Log)
 ---
 
 # What I found
@@ -146,9 +148,16 @@ format before choosing the normalization strategy.
       `test_symbol_filter_matches_real_slash_vs_underscore_shape`). The full "verify against a real DEFI `returns` run
       over the verified-clean window" acceptance criterion is carried forward into the P2 todo below (the
       `data_engineering` craft resuming the `returns` leg is the actual real-run verification).
-- [ ] [DATA] P2. **ATTEMPTED 2026-07-31 (slot-5) — BLOCKED on a newly-found, distinct downstream bug, not unattempted.**
-      Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's `returns` leg over the
-      full captured window. Repo: features-service.
+- [x] ✅ [DATA] P2. **ATTEMPTED 2026-07-31 (slot-5) — BLOCKED on a newly-found, distinct downstream bug, not
+      unattempted.** Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's
+      `returns` leg over the full captured window. Repo: features-service. **DONE 2026-08-02 (slot-6)**: the blocking
+      buffer-too-short issue (`delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md`)
+      shipped + verified (`9e70fbac`/`12a64eb9`) in a separate session; `returns` production runs
+      (`094100`/`110727`/`132937`) completed after that. Verified directly against prod GCS (not re-derived from this
+      doc alone): `gs://features-defi-prd-central-element-323112/delta_one/by_date/` has 1337 real `returns`
+      day-partitions, contiguous `2022-11-25..2026-07-23` — the full captured window (the earlier span is a genuine,
+      non-fixable lookback-warmup limit at the corpus start, confirmed via a live deterministic preflight failure, not
+      missing coverage). Full detail: `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo.
 
 # Progress Log
 
@@ -173,3 +182,7 @@ format before choosing the normalization strategy.
   Filed `delta_one_passthrough_lookback_buffer_too_short_for_sparse_ticks_2026_07_31.md` with full evidence + 3
   candidate fix directions. P2 stays unflipped — it now depends on that new issue's P1 fix landing first.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-02 (slot-6, data_engineering craft)**: flipped todo 2 — confirmed `returns` leg complete via direct prod GCS
+  check (1337 contiguous day-partitions, `2022-11-25..2026-07-23`), no relaunch needed. Both todos now done; see
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo for full detail (funding_oi, a separate leg, remains
+  blocked on an unrelated unlanded backend fix — does not affect this doc's scope).

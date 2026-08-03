@@ -40,6 +40,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
+    /plans/archive/issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    market-tick-data-service/scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py,
+  ]
 depends_on: []
 ---
 

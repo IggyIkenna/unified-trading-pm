@@ -48,6 +48,7 @@ context_scope:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/task_template.md,
   ]
 ---
 

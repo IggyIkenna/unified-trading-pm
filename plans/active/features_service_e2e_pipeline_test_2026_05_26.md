@@ -30,13 +30,6 @@ estimate_calibrated_ai_days: 6
 last_updated: 2026-06-03
 locked_by: live-defi-rollout
 locked_since: 2026-05-25
-context_scope:
-  [
-    /plans/archive/2026_06/features_input_manifest_migration_2026_05_25.md,
-    /codex/02-data/data-lineage-MTDS-features-ml.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    features-service/features_service/delta_one/app/core/feature_writer.py,
-  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -50,6 +43,16 @@ estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving 
   validation runs across families.
 
   "
+context_scope:
+  [
+    /plans/archive/2026_06/features_input_manifest_migration_2026_05_25.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    features-service/features_service/delta_one/app/core/feature_writer.py,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 drift_direction: advance-code
 ---
 

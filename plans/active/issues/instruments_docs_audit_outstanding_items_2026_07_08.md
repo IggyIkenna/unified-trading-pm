@@ -69,6 +69,13 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
+context_scope:
+  [
+    instruments-service/docs/,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
+  ]
 locked_since:
 resolved_by:
 audited_scope: reference-data-docs

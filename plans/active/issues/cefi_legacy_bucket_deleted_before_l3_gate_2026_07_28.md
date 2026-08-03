@@ -45,10 +45,11 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
-    /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
+    /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
   ]
 ---

@@ -69,6 +69,10 @@ context_scope:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    instruments-service/instruments_service/engine/orchestrator/prediction.py,
   ]
 ---
 

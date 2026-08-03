@@ -65,6 +65,7 @@ context_scope:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
+    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
   ]
 supersedes:
 superseded_by:

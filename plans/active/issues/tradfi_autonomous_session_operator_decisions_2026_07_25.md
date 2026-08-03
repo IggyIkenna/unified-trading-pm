@@ -38,9 +38,12 @@ drift_direction: none
 depends_on: []
 context_scope:
   [
-    /plans/epics/tradfi_master.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md,
+    /plans/epics/tradfi_master.md,
   ]
 ---
 

@@ -49,6 +49,13 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    features-service/features_service/common/live_runner.py,
+    market-data-processing-service/market_data_processing_service/cli/parser.py,
+  ]
 supersedes:
 superseded_by:
 depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]

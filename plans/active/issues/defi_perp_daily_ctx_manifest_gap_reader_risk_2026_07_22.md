@@ -66,10 +66,12 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
-    /plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
-    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    /plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
   ]
 ---
 

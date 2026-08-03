@@ -19,7 +19,7 @@
 # exact path UAC #544 slipped through.
 #
 # Like test-quickmerge-blocked-contract.sh / test-quickmerge-untracked-new-file-guard.sh,
-# this EXTRACTS the REAL `provenance_check_ok()` function body from the workflow file (not
+# this EXTRACTS the REAL `provenance_check_ok()` function body from its source file (not
 # a replica) and:
 #   (a) structurally asserts it still carries every contract element, and that it is
 #       actually CALLED from all 3 re-arm/arm sites (not just defined and orphaned);
@@ -28,6 +28,14 @@
 #       fixture repo (never touches the network) and `gh` stubbed (never touches the real
 #       GitHub API) -- proving a genuinely non-quickmerge LDR commit is caught (returns 1,
 #       posts the blocking comment) and a clean range passes (returns 0, no comment).
+#
+# Source location (updated 2026-08-02, ci_satellite_ao_dispatch_batch1 [CI] P1): the
+# 2026-08-01 "extract giant embedded script from ldr-to-main-promote-fleet.yml" refactor
+# (unified-trading-pm@468e9413e) moved process_repo()/provenance_check_ok() OUT of the
+# workflow file's embedded `run:` block and into the standalone
+# scripts/cicd/ldr_to_main_fleet_promote.sh -- this test still pointed at the (now-empty
+# of this logic) .yml file and was silently FATAL-ing (exit 2, "could not extract") ever
+# since; discovered while touching this exact function for the ARM_FAILED tally fix below.
 #
 # Run: bash unified-trading-pm/scripts/quality-gates-base/tests/test-ldr-promote-provenance-rearm-gate.sh
 set -uo pipefail
@@ -38,16 +46,18 @@ pass() { echo "PASS: $*"; PASS=$((PASS + 1)); }
 fail() { echo "FAIL: $*"; FAIL=$((FAIL + 1)); }
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-WF="$REPO_ROOT/.github/workflows/ldr-to-main-promote-fleet.yml"
-[ -f "$WF" ] || { echo "FATAL: ldr-to-main-promote-fleet.yml not found at $WF"; exit 2; }
+PROMOTE_SCRIPT="$REPO_ROOT/scripts/cicd/ldr_to_main_fleet_promote.sh"
+[ -f "$PROMOTE_SCRIPT" ] || { echo "FATAL: ldr_to_main_fleet_promote.sh not found at $PROMOTE_SCRIPT"; exit 2; }
 
 # ── Extract the REAL provenance_check_ok() function body ─────────────────────────
+# Top-level function in the standalone script -- zero-indented (unlike its old home
+# embedded in the YAML `run:` block, hence `[[:space:]]*` not `[[:space:]]+` below).
 FUNC=$(awk '
-  /^[[:space:]]+provenance_check_ok\(\) \{$/ { c = 1 }
+  /^[[:space:]]*provenance_check_ok\(\) \{$/ { c = 1 }
   c { print }
-  c && $0 ~ /^[[:space:]]+\}$/ { exit }
-' "$WF")
-[ -n "$FUNC" ] || { echo "FATAL: could not extract provenance_check_ok() from $WF"; exit 2; }
+  c && $0 ~ /^[[:space:]]*\}$/ { exit }
+' "$PROMOTE_SCRIPT")
+[ -n "$FUNC" ] || { echo "FATAL: could not extract provenance_check_ok() from $PROMOTE_SCRIPT"; exit 2; }
 
 # Structural anchor #1: the function carries every load-bearing contract element.
 case "$FUNC" in
@@ -60,8 +70,8 @@ esac
 # Structural anchor #2 (THE re-arm-leak regression guard): provenance_check_ok must be
 # CALLED from all 3 sites -- creation (PR_URL) + the two re-arm paths (PR_NUM). A future
 # edit that adds a new re-arm path without gating it, or removes a gate call, must fail here.
-CALL_COUNT_URL=$(grep -c 'provenance_check_ok "\$PR_URL"' "$WF" || true)
-CALL_COUNT_NUM=$(grep -c 'provenance_check_ok "\$PR_NUM"' "$WF" || true)
+CALL_COUNT_URL=$(grep -c 'provenance_check_ok "\$PR_URL"' "$PROMOTE_SCRIPT" || true)
+CALL_COUNT_NUM=$(grep -c 'provenance_check_ok "\$PR_NUM"' "$PROMOTE_SCRIPT" || true)
 if [ "${CALL_COUNT_URL:-0}" -ge 1 ]; then
   pass "structural: PR-creation path calls provenance_check_ok (\$PR_URL) — ${CALL_COUNT_URL} call site(s)"
 else

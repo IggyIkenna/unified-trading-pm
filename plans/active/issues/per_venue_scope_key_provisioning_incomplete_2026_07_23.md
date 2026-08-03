@@ -39,6 +39,12 @@ source:
   ("Per-venue sub-key provisioning") and 2.C ("Per-scope key separation in adapters")
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    execution-service/execution_service/trade_execution/base_adapter.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---

@@ -73,6 +73,14 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    deployment-api/deployment_api/routes/_vm_health.py,
+    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+    /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
+  ]
 resolved_by:
 ---
 

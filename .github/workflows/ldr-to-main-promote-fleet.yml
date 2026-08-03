@@ -78,9 +78,11 @@ jobs:
       promoted: ${{ steps.promote.outputs.promoted }}
       blocked: ${{ steps.promote.outputs.blocked }}
       conflicted: ${{ steps.promote.outputs.conflicted }}
+      arm_failed: ${{ steps.promote.outputs.arm_failed }}
       promoted_count: ${{ steps.promote.outputs.promoted_count }}
       blocked_count: ${{ steps.promote.outputs.blocked_count }}
       conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
+      arm_failed_count: ${{ steps.promote.outputs.arm_failed_count }}
       ldr_main_repos: ${{ steps.promote.outputs.ldr_main_repos }}
     steps:
       # GitHub App token — separate 5000/hr pool from the shared user PAT.
@@ -138,4 +140,26 @@ jobs:
         needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted (repos: ${{
         needs.promote-ldr-to-main.outputs.ldr_main_repos }}). Conflict resolver dispatched for: ${{
         needs.promote-ldr-to-main.outputs.conflicted }}. WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
+    secrets: inherit
+
+  # Hardening (2026-08-02, ci_satellite_ao_dispatch_batch1 [CI] P1 — MTDS auto-merge-arm
+  # investigation): an arm failure previously fell through to the same PROMOTED tally as a
+  # genuinely-armed PR (see ldr_to_main_fleet_promote.sh), so a PR silently needing a manual
+  # merge click had NO alert surface at all — exactly the "sits green, nobody notices" shape
+  # the source incident (ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md)
+  # described. Separate job (distinct message shape from the conflict alert above — an
+  # arm-failed repo needs a manual `gh pr merge`, not the conflict resolver).
+  notify-arm-failed:
+    name: Slack — LDR→main auto-merge ARM FAILED alert
+    needs: [promote-ldr-to-main]
+    if: >
+      always() && needs.promote-ldr-to-main.outputs.arm_failed_count != '0' &&
+      needs.promote-ldr-to-main.outputs.arm_failed_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        LDR→main fleet bot: auto-merge ARM FAILED for ${{ needs.promote-ldr-to-main.outputs.arm_failed_count }} repo(s):
+        ${{ needs.promote-ldr-to-main.outputs.arm_failed }} — PR exists + provenance-clean but needs a MANUAL `gh pr
+        merge --auto` (or plain merge once green); check repo `allow_auto_merge` + branch protection. WS-L Phase-0
+        canary — SSOT: ldr-to-main-promote-fleet.yml.
     secrets: inherit

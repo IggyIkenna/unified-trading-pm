@@ -53,6 +53,8 @@ context_scope:
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 ---
 

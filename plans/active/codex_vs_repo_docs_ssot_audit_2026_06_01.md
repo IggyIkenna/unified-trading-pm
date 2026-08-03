@@ -50,8 +50,8 @@ context_scope:
     /codex/06-coding-standards/documentation-standards.md,
     /codex/00-SSOT-INDEX.md,
     /codex/06-coding-standards/model-tier-selection.md,
-    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
     /plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md,
+    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
   ]
 ---
 
@@ -390,10 +390,15 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       was wrong: `demo`/`demo` creds + Elysium = the client POD, not the removed data provider). Dominant finding
       matches Appendix-B: e2e-testing docs are legitimately service-local, near-zero codex duplication. QG-green
       sentinel==HEAD; quickmerge --agent.
-- [ ] [DOCS] P3. **e2e-testing sports/ROADMAP epic-migration follow-up (from the 2026-07-29 refresh)**:
+- [x] ✅ [DOCS] P3. **e2e-testing sports/ROADMAP epic-migration follow-up (from the 2026-07-29 refresh)**:
       `docs/sports/ROADMAP.md` is forward-looking sports planning content (expired trial windows now annotated
       historical) that belongs in a sports epic, not an e2e-testing repo doc. Migrate the roadmap content into the
-      sports epic, then slim/redirect the repo copy. (repo: e2e-testing, unified-trading-pm)
+      sports epic, then slim/redirect the repo copy. (repo: e2e-testing, unified-trading-pm) — **DONE 2026-08-02
+      (slot-8)**: migrated the durable roadmap (vision / data-source layers / execution venues / phased plan / decision
+      tree, expired trial content marked historical) into a condensed _"Sports arb-execution & live-trading roadmap"_
+      section in `plans/epics/sports_master.md` (1509→1567 lines, under the 2000 cap); slimmed the repo copy to a
+      redirect stub keeping only its repo-local sports script/doc file index. — e2e-testing@77e199d (ROADMAP stub) +
+      unified-trading-pm (epic section + this flip).
 - [x] ✅ [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **RE-CLOSED
       2026-07-29 (slot-11, fresh audit against current single-VM/Path-B code) — agent-orchestrator@`3abe56c`**
       (FIX-STALE apply, shipped via `quickmerge --agent` by slot-12; this session ground-truth-verified the applied

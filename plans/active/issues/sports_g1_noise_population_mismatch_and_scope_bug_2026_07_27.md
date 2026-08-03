@@ -40,6 +40,15 @@ source:
   sports_closeout_track_s2_foldin_2026_07_25.md todo "Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe"
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    instruments-service/scripts/delete_noncanonical_sports_leagues_2026_06_25.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

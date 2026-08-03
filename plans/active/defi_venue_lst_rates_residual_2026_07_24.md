@@ -55,6 +55,7 @@ context_scope:
   [
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    unified_api_contracts/registry/defi_venue_capabilities.py,
   ]
 ---
 

@@ -69,9 +69,9 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
-    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
   ]
 ---
 

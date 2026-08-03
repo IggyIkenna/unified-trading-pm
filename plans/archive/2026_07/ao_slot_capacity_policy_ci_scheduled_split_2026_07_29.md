@@ -7,8 +7,8 @@ summary: >-
   escalation is never blocked and daily scheduled-task batches can always run. Implemented the split in code, fixed an
   active production Cloud Build break found along the way, found and safely preserved unrelated pre-existing WIP
   discovered entangled in the same files, and scoped the remaining benchmark + live-VM-correction work as tracked todos.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group:
   [ci] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
   # the CI/CD-escalation vs scheduled-task slot reserve (CI pipeline mechanics driving the capacity split), squarely
@@ -39,11 +39,17 @@ depends_on:
 supersedes:
 superseded_by:
 source: "operator ask 2026-07-29, interactive session slot 1"
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-08-02 on archival, see banner above
+locked_since:
 context_scope:
   [/codex/08-workflows/ci-cd-flow.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 ---
+
+> **✅ ARCHIVED 2026-08-02** — all 8/8 todos done, 0 open checkboxes. Archived per operator ruling on
+> `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 22, option A: the 2026-07-31 "left
+> active per operator instruction" note had served its purpose (holding the doc for review, not indefinitely);
+> `locked_by` cleared, `[unlock-plan]` authorization is this ruling. No deferred work — every todo shipped with cited
+> evidence, see the 2026-07-31 Progress Log entry below.
 
 # AO slot-capacity policy — CI/CD-escalation vs scheduled-task reserve split
 

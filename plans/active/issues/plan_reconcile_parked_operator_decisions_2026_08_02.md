@@ -202,8 +202,8 @@ banner is wrong"). What it does NOT determine is WHICH plan absorbs them, and th
 fold-by-default carve-out does not apply (these are `[BACKEND]`/`[DATA]`/`[SCRIPT]`/`[CI]`, not `[REVIEW]`/`[DOC]`).
 
 Note the corpus currently contains the opposite precedent, applied without a ruling:
-`/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` carries an inline "stays OPEN for the
-3 prevention todos the sweep filed" — which is exactly the anti-pattern the codex names. Whichever way this is ruled
+`/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` carries an inline "stays OPEN for
+the 3 prevention todos the sweep filed" — which is exactly the anti-pattern the codex names. Whichever way this is ruled
 should also settle that doc.
 
 **A [WORKER REC]**: migrate all 7 into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (the live CI
@@ -262,30 +262,60 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       SMARKETS-purge clauses are struck from `sports_consolidated_closeout_2026_07_19.md`'s Track C todo; the STOP
       banner now records the historical disproof rather than gating a still-live instruction. (repo:
       `unified-trading-pm`)
-- [x] ✅ [OPERATOR] P0. **Rule § 1b** — RULED 2026-08-02, option A (retag `[OPERATOR]` + delete-safety §3a citation).
-      Both todos already carried this exact retag from the run's own auto-fix (`unified-trading-pm@b710bbd`, executing
-      the 2026-07-28 amendment) — the ruling confirms that disposition as final; option B (resolving the 1,492 rows) was
-      not selected, so the todos remain `[OPERATOR]`-gated pending that carve-out. (repo: `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P0. **Rule § 1b — CONFLICT RESOLVED 2026-08-03, option B stands.** A different session on this same
+      host (`slot-3`, commit `df384e4cc`) had applied option A first; operator confirmed B overrides it — resolve the
+      1,492 rows (copy to canonical) first, then the two todos revert to self-justified (not permanently
+      `[OPERATOR]`-gated). The existing `[OPERATOR]` + delete-safety §3a retag stays in place in the interim — correct
+      either way, since the carve-out isn't resolved yet. Actual migration filed as its own tracked todo,
+      `sports_reference_v2_1492_row_canonical_copy_2026_08_03.md` (real data-pipeline work, not inline here). (repo:
+      `unified-trading-pm`, `market-tick-data-service`)
+
 - [x] ✅ [OPERATOR] P1. **Rule § 1c** — RULED 2026-08-02, option A (un-check, restate as partial). E7's checkbox now
       reads "complete for the migrated corpus only", cross-references R1's data-loss finding directly. (repo:
       `unified-trading-pm`)
 - [x] ✅ [OPERATOR] P1. **Rule § 1d and § 1e** — RULED 2026-08-02, option A for both. Track 1 un-checked (Script 1's
       ~4.5M-file backfill confirmed still in progress via the fleet doc, `status: open`); legacy-bucket cross-cutting
       doc corrected to "deleted 2026-07-14" citing both corroborating docs. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal
-      in instruments-service). Implementation not yet done — implicates real code + a codex SSOT + CLAUDE.md, tracked as
-      its own follow-up. (repo: `instruments-service`, `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Rule § 2b** — who may hand-edit `backlog.yaml` to park. (repo: `agent-orchestrator`)
-- [ ] [OPERATOR] P2. **Rule § 2c and § 2d** — the two `PLAN_FORMAT.md` normative drifts (tag vocabulary, archive
-      criteria). (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P3. **Rule § 2e** — the AOF epic's own `assigned_vm`. (repo: `unified-trading-pm`)
+- [x] ✅ [CODE] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal in
+      instruments-service) — **EXECUTED 2026-08-03**. `instruments-service@e7933317` deletes
+      `reference_data/adapters/tradfi/massive.py` + `tests/unit/test_massive_adapter.py` and unwires every call site
+      (factory `_ADAPTERS`/`ADAPTER_DATA_SOURCES`, `_resolve_source_aware_adapter_key`,
+      `_DATE_AWARE_TRADFI_ADAPTER_KEYS`, the `--source` CLI flag + its whole `source=` plumbing through
+      `instruments_handler`→`process`→`process_fetch`/`process_completeness`→`urdi_reference_provider`→`factory`, the
+      `MASSIVE` pseudo-venue key-reloader branch, and the `sessions.py` `EXCHANGE_HOURS`/`get_session_metadata` aliases
+      whose only consumer was `massive.py`) — 19 files, −1,109/+36, `quality-gates.sh` green (exit 0, 5,113 tests pass,
+      coverage 88.76% ≥ 88.0% floor). Docs corrected in `unified-trading-pm@3fe932104` (codex
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` dated-2026-08-03 paragraph + CLAUDE.md domain index, both now
+      citing the completing sha alongside `uac@a2beed46`/`mtds@362a487e`). QG STEP 5.83's stale per-file baseline entry
+      for the deleted adapter cleared in `unified-trading-pm@77be36524` (single-entry removal, NOT
+      `--regenerate-baseline`, so no sibling repo's ratchet was silently re-based). Deliberately RETAINED, not a
+      residual gap: UAC's `external/massive/` normalisers + schemas, `PipelineMode.BATCH_MASSIVE` + `possible_manifest`
+      recognition, and the `source="massive"` mentions in instruments-service `scripts/` + `tests/scripts/` — all
+      historical data provenance, not adapter wiring. (repo: `instruments-service`, `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P2. **Rule § 2b** — RULED 2026-08-02, option B (carve out a park-only exception). Documented in
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`: an agent may hand-edit an existing row's
+      `priority`/`prereqs` to park it, provided the task content is untouched AND the same park intent is also authored
+      into the source plan (matching the already-shipped `defi_morpho_lending_indices_never_wired` precedent). A
+      hand-edit with no matching plan-side authoring is still banned. (repo: `agent-orchestrator`)
+- [x] ✅ [OPERATOR] P2. **Rule § 2c and § 2d** — RULED 2026-08-02, "sync all 3 to live practice." `PLAN_FORMAT.md`'s
+      canonical tag list now includes `INFRA`/`DATA`/`BACKEND`/`REVIEW`/`CODE`/`DOCS`/`PM`/`DIAG`; the archive-criteria
+      table (unsatisfiable `repo_gates`/`completion_gates` fields, legacy pre-2026-05-21 schema) is rewritten to the
+      zero-open-todos + hard-evidence bar actually in use. (repo: `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P3. **Rule § 2e** — RULED 2026-08-02, same "sync to live practice" batch. AOF epic's `assigned_vm`
+      flipped `planning` → `NA`, matching its own cited role as the SSOT for "NA is expected on every epic"; the body's
+      stale "reassign per-workstream" sentence corrected to match. (repo: `unified-trading-pm`)
 - [x] ✅ [OPERATOR] P1. **Rule § 3** — RULED 2026-08-02, option A (migrate all 7 into `ci_satellite_ao_dispatch_batch1`,
       per-item source citations). All 7 migrated + the 3 source docs (already archived, found with the todos still
       stranded there) updated to point at the new location. The `orphaned_commit_recovery` opposite-precedent doc's
       stale "stays OPEN" framing corrected to note its 3 prevention todos are already closed and its archival is routed
       through a different plan's todo, not a legitimate open-ended exception. This one gates the
       `check_terminal_status_archived` ratchet reaching its baseline. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Rule § 4** — the `plans/archive/` reference-path population question. (repo:
+- [x] ✅ [OPERATOR] P2. **Rule § 4** — RULED 2026-08-02, option B (exclude `plans/archive/` from the ratchet).
+      `check_reference_paths.py`'s `target_files()` now skips `plans/archive/`; re-baselined from
+      format=158/existence=407 down to format=81/existence=90 (both green, well under the reduced baseline). A separate
+      tracked mechanical-cleanup plan, `plans/active/plans_archive_reference_path_hygiene_2026_08_02.md`, was also filed
+      independently (option A) to actually fix the underlying `plans/archive/` reference-path defects rather than only
+      exclude them from the ratchet — not urgent now that the ratchet itself is green, but still useful hygiene. (repo:
       `unified-trading-pm`)
 - [ ] [DOC] P2. **Name this register in the skill file** — `cursor-configs/skills/plan-reconcile/SKILL.md:301`'s
       zero-checkbox section owns the sweep but never cites

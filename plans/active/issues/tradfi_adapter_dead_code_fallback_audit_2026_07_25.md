@@ -284,12 +284,22 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **DECISION — instruments-service `massive.py`** (Finding I-2): live, tested, fully wired
-      (`factory.py:167,219,370,450-456,470`; `cli/main.py:345-353`; `cli/instruments_handler.py:94-98,150-154,207-210`)
-      but codex `tradfi-databento-sourcing-ssot.md:44-53` + workspace CLAUDE.md both assert it was "removed... deleted"
-      2026-07-19; the cited removal commits (`unified-api-contracts@a2beed46`, `market-tick-data-service@362a487e`)
-      never touched instruments-service. Decide: (a) finish the removal in instruments-service, or (b) correct the codex
-      SSOT + CLAUDE.md text to scope the 2026-07-19 removal accurately. Repos: instruments-service, unified-trading-pm.
+- [x] ✅ [BACKEND] P1. **DECIDED 2026-08-02 (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
+      § 2a, option A) — finish the removal in instruments-service.** (Finding I-2): `massive.py` was live, tested, fully
+      wired (`factory.py:167,219,370,450-456,470`; `cli/main.py:345-353`;
+      `cli/instruments_handler.py:94-98,150-154,207-210`) but codex `tradfi-databento-sourcing-ssot.md:44-53` +
+      workspace CLAUDE.md both assert it was "removed... deleted" 2026-07-19; the cited removal commits
+      (`unified-api-contracts@a2beed46`, `market-tick-data-service@362a487e`) never touched instruments-service. Deleted
+      `massive.py` + `test_massive_adapter.py`, unwired the factory `_ADAPTERS`/`ADAPTER_DATA_SOURCES` entries,
+      `_resolve_source_aware_adapter_key`, `_DATE_AWARE_TRADFI_ADAPTER_KEYS` (databento-only now), the `--source` CLI
+      flag + its plumbing through
+      `instruments_handler → process → process_fetch/process_completeness →     urdi_reference_provider → factory`, the
+      MASSIVE pseudo-venue key-reloader branch, and the `sessions.py` `EXCHANGE_HOURS`/`get_session_metadata` public
+      aliases whose only consumer was `massive.py`. UAC's massive normalisers/schemas + `PipelineMode.BATCH_MASSIVE`
+      deliberately left untouched (historical GCS-object recognition, separate gated purge). Databento is now the sole
+      TradFi reference-data source in instruments-service, matching codex + CLAUDE.md as written. Repo:
+      instruments-service@e7933317 (landed by slot-3 ahead of this dispatch; verified present on
+      `origin/live-defi-rollout` + ancestor of this slot's HEAD).
 
 - [x] ✅ [BACKEND] P1. **Fix silent fabricated cancel-success** (Finding E-2):
       `execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py::cancel_order()` (lines 412-434) —
@@ -364,3 +374,9 @@ that plan's own stated reconciliation pattern.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **2026-08-02/03 (slot 12, backend_engineer)**: dispatched the § 2a todo 1 (finish the massive.py removal in
+  instruments-service). Found the work already landed on `origin/live-defi-rollout` — `instruments-service@e7933317`
+  (slot-3, quickmerge'd) deleted the adapter + unwired every call site named in Finding I-2. Verified the SHA is a real
+  ancestor of origin and re-checked codex `tradfi-databento-sourcing-ssot.md` + workspace CLAUDE.md's "removed... 2026
+  -07-19" language against the now-actually-removed code — both already read true as written, no further doc edits
+  needed. Flipped the checkbox citing the landed commit; no new code shipped by this slot.

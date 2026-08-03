@@ -42,6 +42,13 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/trades_adapter.py,
+  ]
 ---
 
 # MDPS TRADFI candles crash on a corrupted raw-tick timestamp (year 58317)

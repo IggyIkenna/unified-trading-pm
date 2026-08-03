@@ -38,6 +38,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
   ]

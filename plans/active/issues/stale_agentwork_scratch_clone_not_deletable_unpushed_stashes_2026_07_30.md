@@ -49,6 +49,8 @@ context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+    scripts/quality_gates/check_repo_docs_ssot.py,
     /plans/epics/infrastructure_master.md,
   ]
 ---

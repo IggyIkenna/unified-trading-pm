@@ -157,7 +157,7 @@ source: >-
 
 ## Not orphaned — checked, not assumed (recorded so a later pass does not re-raise them)
 
-- **`plans/active/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`**,
+- **`plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`**,
   **`issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`**,
   **`issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`**,
   **`issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`**,

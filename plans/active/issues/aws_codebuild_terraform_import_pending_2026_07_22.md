@@ -36,9 +36,10 @@ depends_on: []
 last_updated: 2026-07-30
 context_scope:
   [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     deployment-service/terraform/cloud-build/aws/main.tf,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 ---
 

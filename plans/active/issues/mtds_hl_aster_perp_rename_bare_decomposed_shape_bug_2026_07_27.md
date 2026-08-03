@@ -46,6 +46,12 @@ source:
   ]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py,
+  ]
 locked_since:
 ---
 

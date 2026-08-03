@@ -41,6 +41,8 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
     unified-trading-library/unified_trading_library/service_framework/_adapter.py,
+    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 

@@ -502,6 +502,17 @@ def validate_doc_references(path: Path, fm: dict, doc_type: str) -> list[Violati
                 continue
             if any((pm_root / "plans" / "archive").glob(f"**/{Path(entry).name}")):
                 continue
+            # 5. Sibling-repo path (e.g. `market-tick-data-service/docs/GCS_PATHS.md`) — this
+            # multi-repo workspace checks out sibling repos NEXT TO pm_root, not inside it.
+            # context_scope (added 2026-07-30) legitimately cites cross-repo source-path docs
+            # this way; the four PM-root-only resolutions above can never resolve those, so
+            # every genuinely-real cross-repo doc citation was flagging as dead. Only trust this
+            # when the first segment is an actual sibling directory, to avoid silently resolving
+            # a typo'd PM-internal path against the wrong root.
+            first_segment = entry.split("/", 1)[0]
+            workspace_root = pm_root.parent
+            if (workspace_root / first_segment).is_dir() and (workspace_root / entry).is_file():
+                continue
             out.append(Violation(spec.name, Sev.HARD, f"referenced doc '{entry}' does not exist"))
     return out
 

@@ -40,10 +40,12 @@ source: ["cross_cutting_satellite_ao_dispatch_batch1b-006, slot 14, 2026-07-28"]
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
   ]
 ---
 
@@ -55,7 +57,7 @@ context_scope:
 > quotes the 2026-07-08 retirement docstring's claim that HL/ASTER funding "is byte-identical to the `funding_rate`
 > field already carried on `derivative_ticker`". **That claim is FALSE and was already measured false and ruled on
 > before this doc was written.**
-> `/plans/active/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` compared 2,640 rows
+> `/plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` compared 2,640 rows
 > across the full 2023-05..2025-01 historical overlap and found only **60.7% matched** within a 2e-5 absolute tolerance
 > — p90 divergence 5.6e-5, **worst case 1.2e-3, roughly 10× typical funding-rate magnitude** (worst offenders cluster on
 > BANANA/CRV/BCH, i.e. genuinely different values, not float noise). **The operator RULED on 2026-07-28 to REVERSE the

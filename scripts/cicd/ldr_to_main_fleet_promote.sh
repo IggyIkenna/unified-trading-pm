@@ -193,8 +193,8 @@ if [ -z "$LDR_MAIN_REPOS" ]; then
   echo "ℹ️  No repos have promotion_model=ldr_main in workspace-manifest.json. Nothing to promote."
   echo "   Set repositories.<repo>.promotion_model = \"ldr_main\" to opt a repo into LDR→main."
   {
-    echo "promoted="; echo "blocked="; echo "conflicted="
-    echo "promoted_count=0"; echo "blocked_count=0"; echo "conflicted_count=0"
+    echo "promoted="; echo "blocked="; echo "conflicted="; echo "arm_failed="
+    echo "promoted_count=0"; echo "blocked_count=0"; echo "conflicted_count=0"; echo "arm_failed_count=0"
   } >> "$GITHUB_OUTPUT"
   exit 0
 fi
@@ -932,10 +932,18 @@ process_repo() {
          --body "$(printf 'LDR→main fleet bot — squash (LDR is the backmerge sink; not rebaseable).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
          --repo "$OWNER/$REPO"; then
       echo "  ✅ auto-merge (squash, delete-branch) armed — merges + deletes immutable ref when quality-gates-v2 is green"
+      _done PROMOTED
     else
+      # Hardening (2026-08-02, ci_satellite_ao_dispatch_batch1 [CI] P1 — MTDS auto-merge-arm
+      # investigation): an arm failure here used to fall through to `_done PROMOTED` anyway,
+      # so a PR needing a manual merge was silently tallied identically to a genuinely-armed
+      # one — the same silent-success-on-failure shape this batch's other todos already fixed
+      # elsewhere (workspace-quickmerge-validation, the F5 vacuous-reader class). Tally it as
+      # its own ARM_FAILED terminal state instead so it surfaces in the run summary + Slack.
       echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO — merge manually: $PR_URL"
+      _done ARM_FAILED
     fi
-    _done PROMOTED; return 0
+    return 0
   fi
 
   # PR creation returned empty → existing PR (from the frozen ref) or conflict. Inspect.
@@ -982,11 +990,20 @@ process_repo() {
           gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null || true
           if provenance_check_ok "$PR_NUM"; then
             # Promoted-From-LDR trailer — see the primary arm site above for the full rationale.
-            GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
+            # Hardening (2026-08-02, same ARM_FAILED finding as the primary arm site): this call
+            # used to swallow its exit code entirely (`2>/dev/null || true`) and always tally
+            # PROMOTED, so a failed close+reopen re-arm was invisible even in the raw log. Now
+            # loud + tallied like the other two arm sites.
+            if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                  --subject "chore(promote): LDR → main (Option-B direct)" \
                  --body "$(printf 'LDR→main fleet bot — squash (close+reopen re-arm).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
-                 --repo "$OWNER/$REPO" 2>/dev/null || true
-            _done PROMOTED; return 0
+                 --repo "$OWNER/$REPO"; then
+              _done PROMOTED
+            else
+              echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO on close+reopen re-arm #$PR_NUM — merge manually"
+              _done ARM_FAILED
+            fi
+            return 0
           else
             _done BLOCKED; return 0
           fi
@@ -1015,10 +1032,14 @@ process_repo() {
            --body "$(printf 'LDR→main fleet bot — squash (re-arm).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
            --repo "$OWNER/$REPO"; then
         echo "  ✅ re-armed squash auto-merge (delete-branch) on #$PR_NUM"
+        _done PROMOTED
       else
+        # Hardening (2026-08-02, same ARM_FAILED finding as the primary arm site) — this used to
+        # tally PROMOTED unconditionally below regardless of the re-arm's own outcome.
         echo "  ⛔ WARN: auto-merge re-arm FAILED for #$PR_NUM"
+        _done ARM_FAILED
       fi
-      _done PROMOTED; return 0
+      return 0
     fi
   else
     # Hardening (2026-07-31, ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md):
@@ -1043,8 +1064,8 @@ done <<< "$REPOS"
 wait 2>/dev/null || true
 
 # ── Barrier: replay logs in topo order + aggregate ───────────────────────────
-PROMOTED=""; BLOCKED=""; CONFLICTED=""
-PROMOTED_COUNT=0; BLOCKED_COUNT=0; CONFLICTED_COUNT=0
+PROMOTED=""; BLOCKED=""; CONFLICTED=""; ARM_FAILED=""
+PROMOTED_COUNT=0; BLOCKED_COUNT=0; CONFLICTED_COUNT=0; ARM_FAILED_COUNT=0
 while IFS= read -r REPO; do
   [ -z "$REPO" ] && continue
   [ -f "$LOG_DIR/$REPO.log" ] && cat "$LOG_DIR/$REPO.log"
@@ -1053,6 +1074,7 @@ while IFS= read -r REPO; do
     PROMOTED)   PROMOTED="$PROMOTED $REPO";     PROMOTED_COUNT=$((PROMOTED_COUNT + 1)) ;;
     BLOCKED)    BLOCKED="$BLOCKED $REPO";       BLOCKED_COUNT=$((BLOCKED_COUNT + 1)) ;;
     CONFLICTED) CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1)) ;;
+    ARM_FAILED) ARM_FAILED="$ARM_FAILED $REPO"; ARM_FAILED_COUNT=$((ARM_FAILED_COUNT + 1)) ;;
   esac
 done <<< "$REPOS"
 rm -rf "$RESULT_DIR" "$LOG_DIR"
@@ -1061,9 +1083,11 @@ rm -rf "$RESULT_DIR" "$LOG_DIR"
   echo "promoted=$PROMOTED"
   echo "blocked=$BLOCKED"
   echo "conflicted=$CONFLICTED"
+  echo "arm_failed=$ARM_FAILED"
   echo "promoted_count=$PROMOTED_COUNT"
   echo "blocked_count=$BLOCKED_COUNT"
   echo "conflicted_count=$CONFLICTED_COUNT"
+  echo "arm_failed_count=$ARM_FAILED_COUNT"
 } >> "$GITHUB_OUTPUT"
 
 echo ""
@@ -1072,3 +1096,4 @@ echo "LDR→main repos: $LDR_MAIN_REPOS"
 echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
 echo "Dep-order/Tier-A blocked ($BLOCKED_COUNT):$BLOCKED"
 echo "Conflicted ($CONFLICTED_COUNT):$CONFLICTED"
+echo "Auto-merge ARM FAILED ($ARM_FAILED_COUNT):$ARM_FAILED"

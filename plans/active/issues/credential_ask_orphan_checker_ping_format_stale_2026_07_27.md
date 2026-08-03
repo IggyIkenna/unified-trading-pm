@@ -43,8 +43,9 @@ depends_on: []
 context_scope:
   [
     scripts/quality_gates/check_credential_ask_orphans.py,
-    /codex/02-data/external-data-always-available-rule.md,
     agents/RULES.md,
+    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /codex/02-data/external-data-always-available-rule.md,
   ]
 ---
 

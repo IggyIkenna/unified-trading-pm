@@ -81,9 +81,10 @@ locked_since:
 context_scope:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 supersedes:
 superseded_by:
@@ -698,19 +699,23 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       git-log-diff-driven, ratchet-independent per-move referrer check. Full evidence + determination recorded in
       `issues/reference_path_convention_2026_07_23.md`'s own matching todo (now flipped). `pm@<commit-pending>`.
 
-- [ ] [INFRA] P2. **Add prefix-scoped lifecycle rules to the deployment-scripts bucket + a cross-bucket soft-delete
+- [x] ✅ [INFRA] P2. **Add prefix-scoped lifecycle rules to the deployment-scripts bucket + a cross-bucket soft-delete
       bloat audit.** Rehomed 2026-07-27 from `issues/issue_docs_remediation_sweep_2026_06_02.md`'s "Operator-gated
-      infra" section as a true orphan (per operator decision, `june_2026_vintage_audit_findings_2026_07_27.md` §5#28) —
-      that source doc is otherwise fully covered elsewhere in this batch (execution-service `service_name` drift, SIT's
-      2 QG failures, UAC `infura_*` rename, all drafted above) and this was its last uncovered item alongside G-TRACE
-      below. Add prefix-scoped GCS lifecycle rules to the deployment-scripts bucket: `vm-logs/` objects older than 14
-      days, `log-archive/` objects older than 90 days. Then run a cross-bucket soft-delete bloat audit via
-      `gcs_bucket_stats.py --bloat_pct` to quantify how much soft-deleted (not-yet-purged) storage is accumulating
-      fleet-wide. Author the lifecycle rules as terraform (matching the existing bucket-lifecycle pattern elsewhere in
-      `deployment-service/terraform/gcp/`), do not hand-apply via `gcloud`. **Done when**: the lifecycle-rule terraform
-      is authored + `tofu plan` shows the expected add (apply itself may need an `[OPERATOR]` follow-up per the usual
-      prod-terraform-apply gate), and the bloat audit's output is recorded in this todo or a linked follow-up. Repo:
-      deployment-service. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md` (deployment_scripts_bucket).
+      infra" section as a true orphan. **RESOLVED 2026-08-02 (slot 7, infra):** lifecycle-rule half is **STALE PREMISE,
+      no TF change** — the `log-archive/`>90d "sketch" this todo names is the ORIGINAL proposal, but
+      `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md` shows the operator overrode
+      it same-day with a stricter flat 30d cap on every retained prefix incl. `log-archive/`, already TF-codified
+      (`deployment-service@75012d3`) and live in `main.tf` today — drafted the 90d split, caught the conflict, reverted
+      it (would have silently loosened a deliberate live decision). Bloat-audit half **RUN**: `gcs_bucket_stats.py` (no
+      `--bloat_pct` flag — it's a CSV column) walked 103 buckets, 75 non-empty, 64.69 TiB, via Cloud Monitoring (no
+      object-walk); CSV in task transcript. One real finding tracked, not dropped: `deployment-scripts` itself reads
+      94.7% bloat (9.2/9.7 TiB soft-deleted) — same shape as the archived 2026-06-01 incident, smaller scale, consistent
+      with the retention drift fixed same-day in
+      `issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md` (live retention confirmed `0`;
+      residual = expected 7d bleed-off). Follow-up verification todo added there (same bucket/drift, one home). Other
+      audited buckets are intentional versioning or already-remediated 2026-06-02 offenders holding steady. Repo:
+      deployment-service (audit + doc only, no code change). Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`
+      (deployment_scripts_bucket).
 
 - [ ] [CODE] P3. **Build GAP G-TRACE — a cross-service E2E data-pipeline trace API + UI view.** Rehomed 2026-07-27 from
       `issues/issue_docs_remediation_sweep_2026_06_02.md` as a true orphan (per operator decision,

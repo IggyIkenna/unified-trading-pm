@@ -33,6 +33,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-12
 locked_by:
+context_scope:
+  [
+    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+  ]
 resolved_by:
 ---
 

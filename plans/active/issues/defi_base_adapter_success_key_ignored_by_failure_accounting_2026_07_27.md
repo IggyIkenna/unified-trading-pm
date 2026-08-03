@@ -49,9 +49,9 @@ last_reviewed:
 assigned_role: data_engineering
 context_scope:
   [
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/base_defi_adapter.py,
-    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
   ]
 ---
 

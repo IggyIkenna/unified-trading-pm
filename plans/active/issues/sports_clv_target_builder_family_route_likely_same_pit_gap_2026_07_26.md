@@ -47,6 +47,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    ml-service/ml_service/training/app/core/sports_target_generator.py,
+  ]
 ---
 
 # CLVTargetBuilder (family route) may share the legacy CLVTargetGenerator's PIT-gate emptiness

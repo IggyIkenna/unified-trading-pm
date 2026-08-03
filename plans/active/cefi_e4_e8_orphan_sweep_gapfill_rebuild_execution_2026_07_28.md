@@ -42,10 +42,10 @@ source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main
 context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
     /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
 

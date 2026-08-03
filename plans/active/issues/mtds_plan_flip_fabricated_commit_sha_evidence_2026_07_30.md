@@ -37,6 +37,13 @@ depends_on: []
 assigned_vm: NA
 resolved_by: ""
 locked_by: ""
+context_scope:
+  [
+    /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
+    /plans/archive/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
+    /plans/PLAN_FORMAT.md,
+    scripts/quality_gates/check_plan_commit_sha_evidence.py,
+  ]
 ---
 
 # Plan-flip cited a fabricated commit SHA as completion evidence

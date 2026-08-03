@@ -62,6 +62,9 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py,
+    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,

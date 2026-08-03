@@ -46,6 +46,13 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:
+context_scope:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/bootstrap.py,
+  ]
 locked_since:
 supersedes:
 superseded_by:

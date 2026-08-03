@@ -58,6 +58,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 depends_on: []
 ---
 

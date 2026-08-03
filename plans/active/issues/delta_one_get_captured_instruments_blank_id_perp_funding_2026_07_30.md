@@ -121,8 +121,14 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
       unified-trading-library. Done when: a DEFI `perp_funding` manifest row with blank `instrument_id` is returned by
       `get_captured_instruments()`, verified by a new unit test; `bash     scripts/quality-gates.sh` green in both
       unified-trading-library and features-service (post wheel-bump). — unified-trading-library@9fb3a73d
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one
-      `funding_oi` leg: relaunch
+- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION (SUPERSEDED — the funding_oi resume is now authoritatively tracked in
+      `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[BACKEND] P2`
+      (implement direction B) + gated `[DATA] P3` (resume). 2026-08-02 CORRECTION: the earlier "structurally infeasible"
+      framing was WRONG — OI _is_ available at source and already in the corpus under `derivative_ticker` (Hyperliquid
+      `asset_ctxs` archive; ETH-USD 2023-07-11 = 1442/1442 non-zero open_interest). Fix-direction RULED = B. This
+      relaunch stays non-dispatchable until the `[BACKEND] B` fix lands — a relaunch before then still fails the NaN
+      gate. DO NOT relaunch until then). Once the `[BACKEND] B` fix lands, resume
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one `funding_oi` leg: relaunch
       `--feature-family delta_one --asset-group DEFI --feature-group funding_oi     --start-date 2023-05-12 --end-date 2026-06-09 --timeframe 15m`
       (SPOT). Repo: features-service. Done when: `features-delta-one-defi` has real funding_oi rows for HYPERLIQUID, not
       empty_confirmed/failed.
@@ -162,3 +168,36 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   (`HYPERLIQUID:perpetual:`) — that's the companion candle-loader-pass-through issue's scope, not this UTL-function
   fix's.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-02 (slot-8, data_engineering craft) — todo 2 NOT relaunched; marked BLOCKED-OPERATOR-DECISION after
+  re-confirming the funding_oi/HYPERLIQUID leg is structurally infeasible.** Dispatched todo 2 ("resume the funding_oi
+  leg"). Before launching any VM (per this chain's own repeated "relaunching is guaranteed-wasted spend" lesson),
+  verified the state end-to-end: (1) UTL blank-id fix (todo 1, `9fb3a73d`) confirmed on LDR — instrument discovery is no
+  longer the blocker; (2) `funding_oi.py::get_required_columns()` STILL hard-requires
+  `["funding_rate", "open_interest"]` with NO commits since 2026-07-31, and the MTDS HYPERLIQUID perp_funding handler
+  has NO OI-capture fix landed either — so the
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` structural gap (HYPERLIQUID never captures
+  OI in either capture era, direct-parquet-confirmed by slot-2) is fully current, `status: open`, `[OPERATOR] P2`
+  fix-direction decision UNMADE; (3) live GCS check — `gs://features-defi-prd-central-element-323112/delta_one/by_date/`
+  contains ONLY `feature_group=returns` (303,812 parquet objects — the returns leg IS complete) and ZERO `funding_oi`
+  objects. Every funding_oi relaunch fails the >50% NaN column-quality gate deterministically on every date; no
+  window/SPOT-flag choice changes that. Did NOT launch a VM (guaranteed waste, exactly the 10+ VM storm 2026-07-30
+  already proved). Marked todo 2 above `BLOCKED-OPERATOR-DECISION` (a live token → non-dispatchable per
+  `regen_backlog_from_plan._is_non_dispatchable`, stops the redispatch-into-failure loop) and posted a `/blocked`
+  question surfacing the operator fix-direction decision. Also flagging for main/operator: the parent
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md` D1 todo (line ~103) carries a `BLOCKED-ON:` prefix that is NOT a
+  recognized non-dispatchable token (the regex only matches
+  `BLOCKED-OPERATOR/CREDENTIALS/BILLING/UPSTREAM-*/PLAYWRIGHT/JURISDICTION`), so that P1 todo is STILL dispatchable and
+  can re-trigger the same VM storm — but it bundles a still-doable onchain leg + the already-done returns leg, so it
+  needs a main/operator SPLIT (not a blanket block), which is out of this worker's scope.
+- **2026-08-02 (slot-8, follow-up after operator's interim guidance) — the "structurally infeasible" premise above is
+  OVERTURNED.** Operator/main answered the `/blocked`: reject descope, investigate OI-availability at source first, then
+  B (if available) / A (if not). Investigated → OI _IS_ available: HYPERLIQUID's `derivative_ticker` (the S3
+  `asset_ctxs` archive, parsed by `market_tick_data_service/adapters/hyperliquid_s3.py`) carries real per-minute
+  `open_interest`/ `mark_price`/`index_price`, already in the corpus (ETH-USD 2023-07-11 = 1442/1442 non-zero OI;
+  `derivative_ticker` prefix present for HYPERLIQUID across 2023/2024/2026). slot-2 only checked `perp_funding` (the
+  OI-less `fundingHistory` endpoint), never `derivative_ticker`. Per the operator's sequencing this settles the
+  fix-direction to **B**. Full finding + evidence + the new scoped `[BACKEND] P2` (implement B) and gated `[DATA] P3`
+  (resume) todos now live in
+  `/plans/active/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`. This doc's todo 2 is
+  SUPERSEDED by that chain (see its updated text); it stays non-dispatchable until the `[BACKEND] B` fix lands. Did not
+  implement B (repo-owner-ratifiable per operator) and did not relaunch (no fix landed yet).

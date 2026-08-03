@@ -210,3 +210,25 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   same Progress Log (cgroup reads, `tmux_session_lost` census, candidate-process ruling-out) — dispatching a separate AO
   worker to redundantly re-investigate the SAME live incident right now would duplicate in-flight human/review work, not
   add bounded value. Doc correctly stays `assigned_vm: NA` in full; no reclassification.
+- 2026-08-02 ~23:52Z: **7th+ recurrence window — still active, not resolved.** Review (slot1, agt-39a53d) picks up after
+  a gap (agt-e99c33's Tick 4 ended ~22:26Z+; an intermediate registration agt-9a06d4 registered 23:41:52Z but was killed
+  by the 23:45:13Z restart before its first real tick). 3 more full restarts confirmed via journalctl since Tick 4's
+  read: 22:30:16Z, 23:00:18Z (+30m gap), 23:45:13Z (+45m gap) — same recurring shape, cadence neither accelerating nor
+  resolving.
+
+  **Methodological finding, now CONFIRMED across 3+ additional restarts (extends agt-a3ed9a's ~18:40Z hypothesis to
+  certainty):** `memory.peak` / journalctl's logged "memory peak" is a STUCK cgroup accounting value, not fresh per-life
+  evidence. Direct read at 23:50:59Z — only ~5.7min into the life started 23:45:13Z — shows `MemoryPeak=52936736768`
+  (49.30GiB), byte-identical to every check since 18:08Z, while `MemoryCurrent=18.4GB` (well under the 46GB
+  `MemoryHigh`) and `MemorySwapCurrent=6.5GB`. A life 5.7 minutes old cannot have organically climbed to and receded
+  from 49.3GB already at this low a current-usage level — the figure is carried over across restarts on this host
+  (systemd apparently does not always recreate a fresh cgroup instance / reset `memory.peak` on this unit's restart
+  cycle). Going forward, cite restart cadence (systemd `Started`/`Stopped` timestamps) and `tmux_session_lost` counts as
+  the reliable signals; do not re-cite "49.3G peak" as fresh per-restart proof.
+
+  `systemd-oomd` still `inactive` (confirmed again). No new candidate culprit process investigated this tick
+  (deprioritized behind the pending [OPERATOR] P1).
+
+  **Not committed by review** (zero commits, role boundary) — routed by main (agt-1756f6) via the delivery-guaranteed
+  slot outbox to a live worker for the `docs(plans):` commit (NOT a verbal/tmux handoff — the prior addendum-3 handoff,
+  ~22:26Z, was lost when its target slot respawned before acting; this closes that process gap).

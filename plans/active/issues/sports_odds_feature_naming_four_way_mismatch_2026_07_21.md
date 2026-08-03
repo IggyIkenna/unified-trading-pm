@@ -36,8 +36,12 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
+    features-service/features_service/sports/calculators/odds_columns.py,
+    strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
+    /plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     /plans/epics/sports_master.md,
   ]
 ---

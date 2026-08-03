@@ -56,6 +56,7 @@ context_scope:
     .github/workflows/freeze-deferred-build-replay.yml,
     .github/workflows/cloud-build-router-aws.yml,
     deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
+    deployment-service/scripts/vm/create-code-tarballs.sh,
   ]
 ---
 

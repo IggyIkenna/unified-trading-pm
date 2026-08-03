@@ -44,6 +44,13 @@ parent_epic: defi_master
 priority: P0
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/drift_helius_perp_funding_shards_are_zero_valued_signature_noise_2026_07_16.md,
+    /plans/archive/issues/drift_helius_path_obsolete_2026_07_15.md,
+    /plans/archive/solana_perp_dex_adapters_2026_05_13.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 source: [operator-ruling, solana_perp_dex_cull_drift_pacifica_2026_07_16]
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -68,9 +68,11 @@ drift_direction: advance-code
 locked_since:
 context_scope:
   [
-    /codex/02-data/honest-coverage-model.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 ---
 

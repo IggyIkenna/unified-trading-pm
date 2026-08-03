@@ -24,6 +24,12 @@ priority: P2
 drift_direction: advance-code
 depends_on: []
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    deployment-ui/tests/smoke/nav-menu-dedup.spec.ts,
+  ]
 locked_since: 2026-05-21
 assigned_vm: planning
 resolved_by:

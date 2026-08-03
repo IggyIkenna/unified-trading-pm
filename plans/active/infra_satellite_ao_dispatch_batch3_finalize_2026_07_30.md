@@ -43,6 +43,8 @@ locked_since:
 context_scope:
   [
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
+    /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:

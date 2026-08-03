@@ -29,6 +29,13 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/scripts/pipeline_e2e_check.py,
+    features-service/features_service/delta_one/app/core/dependency_checker.py,
+    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 ---
 
 # require-captured missed a TRADFI candle gap that the VM's own dependency check caught (2026-07-27)

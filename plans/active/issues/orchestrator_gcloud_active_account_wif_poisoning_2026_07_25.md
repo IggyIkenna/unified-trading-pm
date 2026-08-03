@@ -54,6 +54,14 @@ source: >-
   via different call sites (gsutil upload, gcloud storage/compute create).
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md,
+    /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
+    /codex/07-security/self-hosted-runner-security-posture.md,
+    /codex/07-security/gha-wif-migration.md,
+    agent-orchestrator/scripts/bootstrap_vm.sh,
+  ]
 locked_since:
 ---
 

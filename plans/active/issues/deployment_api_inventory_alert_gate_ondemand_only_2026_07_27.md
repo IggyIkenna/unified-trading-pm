@@ -72,14 +72,15 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: none
 depends_on: []
+locked_by:
 context_scope:
   [
     /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /codex/05-infrastructure/deployment-observability.md,
     deployment-api/deployment_api/routes/deployments_inventory/_aggregation.py,
     deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+    deployment-api/deployment_api/routes/deployments_inventory.py,
   ]
-locked_by:
 locked_since:
 resolved_by:
 ---

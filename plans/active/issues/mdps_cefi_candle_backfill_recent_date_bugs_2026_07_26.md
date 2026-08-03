@@ -37,6 +37,13 @@ source: >-
   prod data on live SPOT VMs (mdps-backfill-cefi-20260726-*), not inferred.
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
+    market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py,
+  ]
 resolved_by:
 depends_on: []
 ---

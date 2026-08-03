@@ -41,6 +41,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    agent-orchestrator/tests/test_plan_health.py,
+    agent-orchestrator/server/plan_health.py,
+    agent-orchestrator/server/notifications/slack.py,
+  ]
 depends_on: []
 ---
 

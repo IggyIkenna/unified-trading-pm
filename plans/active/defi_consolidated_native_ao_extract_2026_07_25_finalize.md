@@ -44,6 +44,8 @@ context_scope:
   [
     /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
+    /plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md,
   ]
 ---
 

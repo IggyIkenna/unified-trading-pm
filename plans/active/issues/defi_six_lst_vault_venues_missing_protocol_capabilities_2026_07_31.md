@@ -101,7 +101,7 @@ guessed):
 
 ## Todos
 
-- [ ] [DATA] P2. Add `PROTOCOL_CAPABILITIES` entries for `ankr`/`stader`/`stakewise`/`swell`/`mantle` (protocol_class
+- [x] ✅ [DATA] P2. Add `PROTOCOL_CAPABILITIES` entries for `ankr`/`stader`/`stakewise`/`swell`/`mantle` (protocol_class
       matching UAC's existing LST taxonomy — check whether `_RESTAKING`/`_STAKING`/an `_LST`-specific instrument-type
       set is the right constant to reuse; PUFFER's own entry uses `_RESTAKING` + `staking_yields`/`oracle_prices`
       despite writing `lst_rates` in practice, so do NOT blindly copy it — verify against what `lst_rates_handler.py`
@@ -111,6 +111,10 @@ guessed):
       appearing in EXPECTED (not necessarily fully matched — that depends on real capture — but no longer silently
       excluded), and re-running the full Layer-1 check does not introduce NEW stray/missing tuples beyond the
       already-known pre-existing 57/83 baseline (compare before/after counts explicitly). (repo: unified-api-contracts)
+      — unified-api-contracts@314af7b8: entries landed for ankr/stader/stakewise/swell/mantle (instrument_type="lst",
+      data_type="lst_rates") and maker (instrument_type="yield_bearing", data_type="vault_share_price"); commit's own
+      A-B test shows EXPECTED 102→108 (+6), matched 83→89 (+6), missing unchanged (19), stray 671→665 (-6), no
+      regression.
 - [ ] [DATA] P3. Audit whether OTHER already-`phase="live"` DeFi venues have the same PUFFER-style declared-vs-actual
       data_type mismatch in `PROTOCOL_CAPABILITIES` (a quick per-protocol cross-check: does the declared `data_types`
       list match what the corresponding MTDS handler actually stamps via `write_defi_rows(data_type=...)`?) — this
@@ -124,3 +128,6 @@ guessed):
   required by `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` todo 5. Not fixed inline — see `source:` above for
   why.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **slot-15 2026-08-02**: flipped todo 1's checkbox — code was already shipped by another slot
+  (unified-api-contracts@314af7b8, confirmed on origin/live-defi-rollout) but the plan checkbox was never flipped. Todo
+  2 (P3 audit) remains open, out of scope for this task.

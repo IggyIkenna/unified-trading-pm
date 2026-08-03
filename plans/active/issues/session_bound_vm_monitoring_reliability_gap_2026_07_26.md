@@ -44,6 +44,13 @@ estimate_class: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+  ]
 depends_on: []
 ---
 

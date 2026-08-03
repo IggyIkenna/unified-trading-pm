@@ -61,6 +61,14 @@ source: >-
   data_pipeline_check_mdps_features_2026_07_20.md todo 11 (cross-repo orphan/lineage audit + migrate to zero orphans).
 resolved_by:
 locked_by:
+context_scope:
+  [
+    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    market-tick-data-service/scripts/rebuild_mtds_manifest.py,
+  ]
 locked_since:
 depends_on: []
 ---

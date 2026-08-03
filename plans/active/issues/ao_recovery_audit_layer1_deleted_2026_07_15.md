@@ -51,9 +51,12 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
-    /codex/04-architecture/agent-orchestrator-overview.md,
-    alerting-service/alerting_service/api/routes/safety_ops.py,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
     unified-trading-library/unified_trading_library/recovery/agent_action.py,
+    alerting-service/alerting_service/api/routes/safety_ops.py,
+    alerting-service/alerting_service/gateway/gateway_state.py,
+    unified-api-contracts/unified_api_contracts/incident.py,
+    /codex/04-architecture/agent-orchestrator-overview.md,
   ]
 ---
 

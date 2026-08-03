@@ -37,9 +37,11 @@ context_scope:
   [
     /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
+    /plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
   ]
 ---
 
@@ -113,13 +115,97 @@ Coverage's `expected_unattempted` derivation once the catalogue reflects the tru
 rollout (e.g. only the 4 protocols already measured) satisfies this ruling; every default DEX protocol needs the same
 treatment. No shortcuts, no MVP-only subset.
 
+## Quantification results — 8 EVM "other" protocols (2026-08-02)
+
+Cumulative per-protocol SAFE/FLAGGED breakdown from the full
+`quantify_dex_pools_catalogue_gap_other_12_protocols_2026_08_02.py` run (2020-01-01..2026-07-28, all 21 (protocol,
+chain) pairs `get_supported_chains_for_protocol()` returns for these 8 protocols, 50,421 total (day, protocol, chain)
+shards, 12,390 shards with >=1 address-keyed leaf):
+
+```
+  uniswap_v3       SAFE=   93645 FLAGGED=    5559 total=   99204 flagged_pct=5.6%
+  uniswap_v2       SAFE=   11085 FLAGGED=       0 total=   11085 flagged_pct=0.0%
+  uniswap_v4       SAFE=   22545 FLAGGED=    1056 total=   23601 flagged_pct=4.5%
+  balancer         SAFE=       0 FLAGGED=  786490 total=  786490 flagged_pct=100.0%
+  pancakeswap_v3   SAFE=       0 FLAGGED=     459 total=     459 flagged_pct=100.0%
+  sushiswap_v3     SAFE=       0 FLAGGED=     569 total=     569 flagged_pct=100.0%
+  aerodrome_v3     SAFE=       0 FLAGGED=       0 total=       0 flagged_pct=0.0% (no address-keyed leaves found)
+  camelot_v3       SAFE=       0 FLAGGED=       9 total=       9 flagged_pct=100.0%
+```
+
+Totals across the 8 protocols: SAFE=127,275, FLAGGED=794,142 (921,417 address-keyed leaves total, ~86.2% flagged). The
+gap is starkly bimodal, not a uniform ~74% like the original 4-protocol sample: `uniswap_v2/v3/v4` sit at 0-5.6% flagged
+(the catalogue's currently-active pool population happens to closely track what was ever historically captured for
+these), while `balancer`/`pancakeswap_v3`/`sushiswap_v3`/`camelot_v3` sit at 100% flagged (the catalogue has ZERO
+currently-tracked pools overlapping the historical address-keyed capture for these venues at all — `balancer` alone
+accounts for 786,490 of the 794,142 total flagged leaves, i.e. ~99% of the entire gap across all 8 protocols).
+`aerodrome_v3` has no address-keyed leaves in the corpus at all (either never captured or already fully
+symbol-resolved). This confirms the issue's "structural, not specific to this plan" framing at even larger scale than
+the original 4-protocol finding — reused script:
+`market-tick-data-service/scripts/one_offs/quantify_dex_pools_catalogue_gap_other_12_protocols_2026_08_02.py`
+(`market-tick-data-service@efc2430b`), full resume-log kept out of the repo (runtime artifact, not committed).
+
+**Solana DEX protocols (kamino/orca/raydium/phoenix) remain out of scope for this technique** — see the 2026-08-02
+Progress Log entry below for why (no address-keyed-vs-symbol-named duality exists for Solana rows) — tracked as its own
+todo below rather than attempted with a technique that would produce a misleading number.
+
+## Quantification results — 4 Solana DEX protocols (2026-08-03)
+
+Different method (per this doc's own second todo): distinct pool ids CAPTURED historically (leaf filenames, which ARE
+the raw on-chain pool id for Solana rows — no address/symbol duality) vs distinct pool ids currently CATALOGUED
+(instruments-service `prod/catalog.parquet`, filtered to `instrument_type` case-insensitive
+`solana_amm_pool`/`solana_vault`, keyed by the catalogue's `raw_symbol` column — the catalogue's own `instrument_id`
+embeds a truncated 8-char id fragment, e.g. `KAMINO-SOLANA:SOLANA_VAULT:BONK-WIF:2stEMJaU`, not the full address;
+`raw_symbol` carries the full address verbatim, e.g. `2stEMJaU9coWrHLYrGXifuhBZGiJUYig24ppkVEBtCdQ`). Case-SENSITIVE
+comparison throughout (base58 Solana addresses are case-sensitive by construction). Full corpus scan, 2020-01-01 to
+2026-07-28, chain=SOLANA (the only chain these 4 protocols write to — they are not registered in the UAC protocol/chain
+registry, matching the write path's own hardcoded chain), 9,604 (day, protocol) shards, LIST-only (no downloads) —
+`market-tick-data-service/scripts/one_offs/quantify_solana_dex_pools_catalogue_gap_2026_08_02.py`
+(`market-tick-data-service@6a7e7698`), resume-log kept out of the repo (runtime artifact, not committed, 361 MB).
+
+```
+  protocol     captured  catalogued   overlap  captured_only  catalogued_only  catalogue_covers_captured_pct
+  kamino            513         113       113            400                0                       22.0%
+  orca            14093         130       130          13963                0                        0.9%
+  raydium           156          59        24            132               35                       15.4%
+  phoenix             2           0         0              2                0                        0.0%
+```
+
+Confirms the "structural, not specific to this plan" framing at a STARKER scale than even the EVM protocols: the
+catalogue currently tracks 0.9%-22.0% of every pool ever captured for these 4 protocols (orca alone: 13,963 of 14,093
+captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap directions, both real:
+
+1. **catalogue undercounts captured reality** (`captured_only`, the dominant gap, all 4 protocols) — a pool was
+   genuinely captured on-chain but the catalogue never lists it.
+2. **catalogue lists pools never captured** (`catalogued_only`, raydium=35 only) — 35 raydium pools the catalogue
+   currently lists as live were never once captured in `dex_pool_state` across the full 2020-2026 corpus; kamino/orca
+   show 0 here (every currently-catalogued pool for those two HAS been captured at least once, i.e. catalogue ⊆ captured
+   for those two, just a tiny fraction of it). Kamino's `catalogued_only=0` is notable given the raw capture count (513)
+   is much smaller than orca's (14,093) — kamino vault capture is comparatively sparse historically
+   (`fetch_kamino_vault`), not absent (an earlier coarse 60-day-step probe during this task's own investigation
+   mistakenly read kamino as 0-captured entirely before the exhaustive day-by-day scan found 513 — the sparse-but-
+   nonzero real distribution, not a script bug).
+
 ## Todos
 
-- [ ] [DATA] P2. Quantify the same catalogue-vs-historical-capture gap for the OTHER 12 default protocols the standing
-      `mtds-dex-pools-backfill` VM covers (not just the 4 in this plan) — reuse the same per-shard-directory
+- [x] [DATA] P2. ✅ Quantify the same catalogue-vs-historical-capture gap for the OTHER 12 default protocols the
+      standing `mtds-dex-pools-backfill` VM covers (not just the 4 in this plan) — reuse the same per-shard-directory
       batch-verification technique (list symbol-named siblings, compare pool_address coverage) against each protocol's
       own catalogue population. Done-when: a per-protocol SAFE/FLAGGED breakdown table, matching this doc's numbers for
-      curve/sushiswap/velodrome_v2/trader_joe_v2. (repo: market-tick-data-service)
+      curve/sushiswap/velodrome_v2/trader_joe_v2. (repo: market-tick-data-service) — done for the 8 EVM protocols
+      (uniswap_v3/v2/v4, balancer, pancakeswap_v3, sushiswap_v3, aerodrome_v3, camelot_v3); see the results table above.
+      The remaining 4 protocols are Solana DEX (kamino/orca/raydium/phoenix), which this exact technique cannot measure
+      (no address-keyed/symbol-named duality) — split into the new todo directly below.
+- [x] [DATA] P2. ✅ Quantify the catalogue-vs-historical-capture gap for the 4 Solana DEX protocols (kamino, orca,
+      raydium, phoenix) that the standing `mtds-dex-pools-backfill` VM also covers, using a DIFFERENT method than the
+      address-keyed/symbol-named technique above (Solana rows always write `row.setdefault("symbol", pool_id_str)` per
+      `_dex_pools_subgraph.py::_collect_solana_dex`, so there is no filename duality to detect). Method: compare the set
+      of distinct `pool_id`s ever captured historically (across the full corpus, per (day, chain) shard directory)
+      against the instruments-service catalogue's current Solana pool universe for each of the 4 protocols. Done-when: a
+      per-protocol captured-vs-catalogued pool-count breakdown, in the same spirit as the EVM table above. (repo:
+      market-tick-data-service, instruments-service) — done, see "Quantification results — 4 Solana DEX protocols
+      (2026-08-03)" above: catalogue currently covers only 0.9%-22.0% of every pool ever captured across all 4
+      protocols.
 - [ ] [DATA] P2. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Expand the
       instruments-service DeFi pool catalogue via a full historical-discovery backfill covering every ever-captured pool
       for EVERY default DEX protocol (not just the 4 sampled) — full completion, no partial rollout, no MVP-only subset,
@@ -130,6 +216,42 @@ treatment. No shortcuts, no MVP-only subset.
 
 ## Progress Log
 
+- **2026-08-03 (slot 2, data_engineering/cicd, task
+  `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-003`)**: built + ran the Solana-specific quantification
+  script (`market-tick-data-service/scripts/one_offs/quantify_solana_dex_pools_catalogue_gap_2026_08_02.py`), covering
+  the last open todo. Investigated the write path first (`_dex_pools_subgraph.py::_collect_solana_dex`,
+  `canonical_write.write_defi_rows`, UAC `build_instrument_id`/`_build_defi`) to confirm the leaf filename for a Solana
+  `dex_pool_state` shard IS the raw on-chain pool id (colon-preserving leaf sanitiser, symbol=pool_id verbatim) — so a
+  cheap LIST-only (delimiter) directory scan across the full corpus recovers the captured-pool-id universe with zero
+  parquet downloads. Then inspected `prod/catalog.parquet` directly (not just the `_catalogue_filter.py` helper) and
+  found the catalogue's `instrument_id` column is NOT usable for this comparison — it truncates the address to an 8-char
+  fragment glued onto a symbol (`KAMINO-SOLANA:SOLANA_VAULT:BONK-WIF:2stEMJaU`); the full address lives in the separate
+  `raw_symbol` column instead, confirmed by direct inspection before writing any comparison code (would have silently
+  produced a ~0% overlap false-negative otherwise). Ran the full 2020-01-01..2026-07-28 scan (9,604 (day, protocol)
+  shards, 207s, `run_in_background` harness-tracked) — results + full table written into "Quantification results — 4
+  Solana DEX protocols (2026-08-03)" above. Flipped the todo. Resume-log (361 MB, per-shard pool-id lists) kept out of
+  the repo per `.gitignore` (`scripts/one_offs/*.resume.jsonl`), matching the sibling EVM script's own precedent.
+- **2026-08-02T~23:35Z (slot 16, data_engineering, task
+  `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-001` completed)**: picked up this task fresh (a
+  different slot/session than the ones below); slot 4's background PID (1774871) was dead as expected (does not survive
+  session end), but its resume-log checkpoint (34,650/50,421 shards, ~69%) was intact in slot 4's worktree — copied it
+  into this slot's scratchpad (kept OUT of the repo tree the whole time; the runtime `.resume.jsonl` file is not
+  gitignored and was never meant to be committed) and relaunched the already-shipped script
+  (`market-tick-data-service@efc2430b`) from slot 16's own worktree, memory-bounded via `run-bounded-analysis.sh` (first
+  attempt at the default 4G `ulimit -v` cap crashed immediately on thread creation —
+  `std::system_error: Resource temporarily unavailable` — because pyarrow + a 24-thread pool need more _virtual_ address
+  space headroom than 4G even though actual RSS stays under 1.2GB; 16G cap fixed it, RSS never exceeded ~1.2GB for the
+  rest of the run). Ran clean to completion (`run_in_background`, harness-tracked, ~63 min for the remaining 15,771
+  shards) — never touched by the 2026-08-02T23:00:18Z orchestrator-host memory-exhaustion restart (the ~5th recurrence
+  of the incident class tracked in `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`; irrelevant here
+  since this script runs independently of the orchestrator process). **Important correctness note**: the script's own
+  stdout summary table only reflects shards processed in that ONE process invocation (its in-memory `counts` dict is
+  never reloaded from prior resume-log entries) — so the final run's printed table under-counted the true cumulative
+  total by the ~34,650 shards processed in earlier sessions. Re-aggregated the CUMULATIVE per-protocol SAFE/FLAGGED
+  breakdown directly from the full 50,421-line resume-log (a bounded streaming pass,
+  `run-bounded-analysis.sh --mem-cap 2G`, never loaded whole-file into memory) — see the results table above. Flipped
+  todo 1 (done for the 8 EVM protocols) and split the previously-implicit Solana-4 scope gap into its own explicit todo
+  per the findings-closure/every-follow-up-is-a-todo rule, rather than leaving it as prose in this Progress Log.
 - **2026-08-02T~21:45Z (slot 4, data_engineering, task
   `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-001` continued)**: this slot's session died mid-task
   (harness teardown, per-turn background-process lifetime issue — same class this doc's sibling sports tracker already

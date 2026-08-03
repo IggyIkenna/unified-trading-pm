@@ -33,9 +33,10 @@ locked_since: 2026-05-21
 assigned_role: data_engineering
 context_scope:
   [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_defi_n5.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
   ]
 ---

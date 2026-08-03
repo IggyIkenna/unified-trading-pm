@@ -60,6 +60,14 @@ depends_on: []
 sequential: true
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_instruments_metadata.py,
+  ]
 ---
 
 # MTDS `_instruments_metadata.py` missed the instrument_availability hive-canonicalisation cutover

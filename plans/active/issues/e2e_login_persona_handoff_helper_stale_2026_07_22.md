@@ -27,6 +27,13 @@ drift_direction: advance-code
 source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    unified-trading-system-ui/app/(public)/login/page.tsx,
+    unified-trading-system-ui/lib/auth/personas.ts,
+    unified-trading-system-ui/tests/e2e/user-management.spec.ts,
+  ]
 depends_on: []
 ---
 

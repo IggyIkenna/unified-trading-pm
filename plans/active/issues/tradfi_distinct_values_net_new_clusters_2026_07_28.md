@@ -47,6 +47,10 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]

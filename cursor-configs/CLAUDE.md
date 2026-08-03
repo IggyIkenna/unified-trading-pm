@@ -324,7 +324,8 @@ architecture (L0–L4)".
 - **`pipeline_mode` / sourcing?** SOURCE-AWARE `{mode}_{source}[_{transport}]` (`source`=VENDOR only; GCS paths carry it
   left of `asset_group=`, readers PREFIX-MATCH) → `/codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
   datasets billing-fail-closed; `SOURCE_PRIORITY` databento-first; backfill silent-0-row gotchas; VIX=VX-futures via
-  XCBF.PITCH, Barchart RETIRED) → `/codex/02-data/tradfi-databento-sourcing-ssot.md`. **DeFi data gotchas** →
+  XCBF.PITCH, Barchart RETIRED; Massive/Polygon.io removal ruled 2026-07-19, **all-repos COMPLETE only 2026-08-03**) →
+  `/codex/02-data/tradfi-databento-sourcing-ssot.md`. **DeFi data gotchas** →
   `/codex/02-data/defi-canonical-naming-ssot.md`. **Sports paths** `candidate_parquet_paths()`. **Manifest
   consolidator** = Cloud Run / Batch-Fargate (NOT a VM; loud-fails on stale index) →
   `/codex/05-infrastructure/manifest-consolidator-ssot.md`. **Feature versioning** →
@@ -371,10 +372,9 @@ architecture (L0–L4)".
   **VM/monitoring-tool escalation design** (auto-recover-before-page, file-issue-worthy classes) →
   `…/data-pipeline-alerts.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
-  IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Massive
-  formerly-Polygon.io, removed as tradfi source 2026-07-19) — do NOT reference, SSOT
-  `/codex/02-data/tradfi-databento-sourcing-ssot.md` (the `polygon` in DeFi code is the CHAIN, not the vendor); Pyth
-  Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT: `/codex/04-architecture/defi-execution-overview.md`.
+  IS→MTDS→features-onchain→strategy→execution; removed providers, do NOT reference:
+  Elysium/Arkham/Bloxroute/Infura/Kaiko + Massive-formerly-Polygon.io (the `polygon` in DeFi code is the CHAIN, not the
+  vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT: `/codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:

@@ -22,6 +22,13 @@ priority: P3
 assigned_vm: planning
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-api/deployment_api/routes/_aws_deployments.py,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

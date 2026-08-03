@@ -29,6 +29,14 @@ priority: P2
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
+context_scope:
+  [
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
+    deployment-service/terraform/gcp/cf_manifest_audit_scheduler.tf,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 assigned_role: infra

@@ -41,6 +41,13 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md,
+    instruments-service/instruments_service/engine/orchestrator/footystats.py,
+  ]
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 2.5
