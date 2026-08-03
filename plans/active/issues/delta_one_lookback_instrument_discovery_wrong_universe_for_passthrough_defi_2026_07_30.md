@@ -180,6 +180,23 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
 - 2026-07-30 (slot-3): filed, root-caused via live 2-attempt repro + code trace + manifest spot-checks. D1's onchain leg
   (`perp_funding_rates`, a separate feature_family unaffected by this DEFI delta_one-specific bug) proceeding in
   parallel — see `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo for the combined status.
+- **2026-08-02 (slot-6, data_engineering craft, dispatched to todo 2)**: todo 1 (this doc) has long since landed
+  (`8e62dc30`), so todo 2 was legitimately dispatchable — but D1's own todo (in
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`) has accumulated a much longer chain of downstream findings since
+  this doc was filed (candle-loader pass-through gap, buffer-too-short, symbol-format mismatch, NaN-warmup gate,
+  dependency-checker false-negative, unfiltered-manifest OOM — all now fixed — plus a genuinely open `funding_oi`
+  OI-availability question). Checked current prod state instead of blindly relaunching per D1's own repeated lesson:
+  `returns` is essentially complete (real data `2022-11-25..2026-07-23` in `features-defi-prd-.../delta_one/by_date/`);
+  found + closed the one real remaining gap (`2022-11-01..2022-11-24`, 24 days) via a narrow gap-fill VM
+  (`features-delta-one-defi-20260802-235804`). `funding_oi`'s fix-direction was just RULED today (= B, source OI from
+  the existing `derivative_ticker` capture) in the sibling
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`, but the actual `[BACKEND] P2`
+  implementation is NOT yet shipped — correctly left untouched (backend_engineer scope, not mine to freelance). **Cannot
+  flip this todo's own done-when** ("D1's checkbox is flipped citing this evidence") — D1's own done-when needs BOTH
+  `funding_oi` and `returns` complete, and `funding_oi` remains genuinely blocked pending that unlanded backend join.
+  Full detail + VM status in `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo and
+  `delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md`'s todo 2 (this same VM closes that todo's scope
+  too — its originally-scoped ~192-day gap turned out to be only 24 real days).
 - 2026-07-30 (slot-14): todo 1 shipped — features-service@8e62dc30. `_discover_instruments` now routes to a new
   `_discover_instruments_from_manifest` when every requested `candle_data_types` entry is pass-through
   (`needs_candle_processing()` False); candle-processed and mixed sets keep the unchanged `processed_candles` walk.
