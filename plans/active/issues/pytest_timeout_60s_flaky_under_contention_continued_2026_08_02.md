@@ -40,7 +40,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T11:38Z
+last_updated: 2026-08-03T11:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -515,3 +515,36 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   run against an untested head since the wall started recurring**; outcome of `30810458524` not yet observed, left for a
   follow-up occurrence per this doc's pattern. Slot left clean (`features-service` on `live-defi-rollout`, 0 commits
   ahead of origin). Pinged the authoring slot (`ci-reconcile`) with the outcome.
+
+- **2026-08-03 ~11:40-11:50Z (`cicd` escalation `agt-32771a`, slot 9, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1065`) — same PR/commit already investigated by `agt-e5e387`'s 11:20-11:30Z entry above, confirmed still
+  fully resolved, no code action needed**: failing run `30795427753` (`promote/instruments-service/06be51ec6e74`, base
+  `main`) shows the identical `QG slice (tests)` crash signature this doc tracks — clean progress dots through `[86%]`
+  (10:21:38Z) then ~7min26s silence before an xdist `worker_internal_error`
+  (`Failed: Timeout (>150.0s) from pytest-timeout` firing inside the SIGALRM handler while flushing the execnet pipe)
+  killed the last live worker, `xdist/dsession.py` raising `RuntimeError: Unexpectedly no active workers available`
+  (`qg selector 'tests' FAILED, exit=1`) — no individual test nodeid survives in the non-verbose crash output, but the
+  shape (dead time at a random completion %, single hang-then-cascade rather than a specific always-failing test)
+  matches this doc's established signature exactly. Verified independently rather than trusting the cached prior entry:
+  `gh pr view 1065` → `state=MERGED`, `mergedAt=2026-08-03T07:55:41Z` (7s after `createdAt=07:55:34Z` — the same
+  self-merge-before-confirmatory-check pattern this doc documents repeatedly), `gh pr list --state open` → 0 open PRs
+  for this repo. `main-backmerge-to-ldr` (`30795432876`) and `Semver Agent` (`30795432877`) both `success` at
+  `07:55:43Z` — the business outcome (promote → backmerge → semver-tag) is fully complete, independent of the
+  confirmatory check. `git merge-base --is-ancestor 06be51ec6e74 HEAD` in this slot's `instruments-service` worktree
+  (LDR HEAD `dabbb1a3`, one commit past the promote head) → true; `git show --stat dabbb1a3` confirms that one extra
+  commit touches only `pyproject.toml`/`uv.lock` (dep-resolution fix), not test-relevant — the prior entry's clean local
+  repro at the immediate parent commit (`d7276438`: `5159 passed, 6 skipped, 0 failed in 60.50s`, zero timeouts) still
+  stands and was not re-run. Host corroboration at investigation time: `uptime` load average `27.69, 23.34, 23.81` on 16
+  vCPUs, `16Gi/47Gi` swap in use, 25 concurrent `quality-gates.sh` processes — identical fleet-wide-contention signature
+  to every other entry in this doc-pair. `main`'s own confirmatory `quality-gates-v2` (`30795433570`) still
+  `in_progress` at 3h50m+; LDR's own dispatch (`30808129517`, from a prior session) still `queued` at 40m+ — both
+  genuinely progressing/queued, not dead, per the same runner-slot-scarcity diagnosis this doc establishes throughout.
+  **Disposition: no code or workflow change made or needed** — every candidate fix already exists on
+  `live-defi-rollout`, the promotion already completed via self-merge, and the remaining red is purely the stale
+  confirmatory check sitting in a saturated runner queue. Did NOT re-dispatch either the `main` or LDR run (would cancel
+  `main`'s 3h50m of contention-survival progress via the concurrency group, and LDR's 40m, for zero benefit — per this
+  doc's established precedent). `GET /api/repo-blockers` → `open: []`. Slot left clean (`instruments-service` on
+  `live-defi-rollout`, 0 commits ahead of origin, working tree clean). Pinged the authoring slot (`ci`) with the
+  outcome. This is the second escalation for this exact PR/commit (after `agt-e5e387`'s 09:47-11:30Z entries) with no
+  state change between them — corroborates todo 3's operator-flagged concern about escalation re-fire lacking a
+  dedup/cooldown guard, now observed for `ldr_qg_failure` as well as `main_ci_red`.
