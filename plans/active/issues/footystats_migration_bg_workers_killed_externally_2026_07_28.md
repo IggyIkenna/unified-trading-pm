@@ -129,13 +129,13 @@ inconsistent state.
       but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)
 
       **Shipped 2026-07-31** — added item 6 to `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (the doc
-                                                                                                                                                                                                                                              already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
-                                                                                                                                                                                                                                              rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
-                                                                                                                                                                                                                                              history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
-                                                                                                                                                                                                                                              resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
-                                                                                                                                                                                                                                              but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
-                                                                                                                                                                                                                                              distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
-                                                                                                                                                                                                                                              guidance for when to safely retry.
+                                                                                                                                                                                                                                                  already owned a closely-related item 5 on `run_in_background` limits, so this landed as a direct continuation
+                                                                                                                                                                                                                                                  rather than `per-tab-worktrees.md`). Captures both confirmed kill mechanisms from this doc's full incident
+                                                                                                                                                                                                                                                  history (fixed ~1-3 min nohup/disown session-boundary reap, independent of load; a separate genuine
+                                                                                                                                                                                                                                                  resource-exhaustion kill that can still catch `run_in_background` at severe host contention, ~10x more durable
+                                                                                                                                                                                                                                                  but not immune), the self-restarting-supervisor-on-`run_in_background` mitigation, the `/tmp` tmpfs-corruption
+                                                                                                                                                                                                                                                  distinct-failure-mode warning (§ "Disk-full tmpfs corruption" above), and the swap-recovers-faster-than-load
+                                                                                                                                                                                                                                                  guidance for when to safely retry.
 
 ## Update 2026-07-28 (later, slot-14) — CORRECTION: harness `run_in_background` is NOT immune either; strong new
 
@@ -428,8 +428,18 @@ workaround successfully).
       since the pattern is explicitly the standard for ANY future multi-hour LOCAL background migration workspace-wide,
       matching the existing generic-dev-tool precedent (`run-bounded-analysis.sh`) rather than one script's originating
       repo.
-- [ ] [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
+- [x] ✅ [SCRIPT] P3. Harden `delete_migrated_defi_markers_2026_07_23.py` (and any sibling resume-log-driven script) to
       refuse/warn loudly if `--apply` is passed a resume-log where 100% of in-scope markers already show
       `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
       catches the silent-no-op class (shared dry-run/apply resume-log) before it ships a false "nothing to delete"
-      report.
+      report. — market-tick-data-service@383ea4c8. Added `_dry_run_reused_for_apply_error()` to both
+      `delete_migrated_defi_markers_2026_07_23.py` and the identically-shaped sibling
+      `purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.py` (same `would_delete`/`deleted`/`none`/
+      `delete_failed` action vocabulary + resume-log-reuse footgun): `--apply` now refuses when every in-scope
+      delete-eligible entry already in the resume log shows a dry-run action.
+      `fold_lst_rates_migrated_markers_2026_07_25.py` has an analogous `would_fold`/`folded` pattern but is a copy-only
+      fold (never deletes), a materially lower-risk class than these two delete scripts, and was left out of this narrow
+      P3 scope. Verified via a standalone logic unit-test (4 scenarios: pure-dry-run-reused → refuse,
+      real-apply-already-ran → no refuse, fresh log → no refuse, partial-apply-in-progress → no refuse) plus
+      `bash scripts/quality-gates.sh` green (9847 passed, 0 failed) and quickmerge landing verified on
+      `origin/live-defi-rollout`.
