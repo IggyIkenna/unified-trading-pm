@@ -698,12 +698,23 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       billing block). Candidate signal: the GH `timing` API's `run_duration_ms`/`billable` fields for the failing run,
       or a direct check for the 0-recorded-steps pattern via the jobs list. See the confirmed root-cause analysis in the
       todo immediately above this one for full evidence + code citations.
-- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
+- [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
       `ldr_qg_failure` escalation passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a real numbered slot, so a dispatched `cicd` worker's
       mandated "ping the authoring slot" step always 400s (confirmed `agt-69e9e4`/slot 14, 2026-07-29). Either have
       `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, advisory-only) or fix
-      `_notify_authoring_slot` to treat it as a real target.
+      `_notify_authoring_slot` to treat it as a real target. Evidence: took the special-case-`cicd.md` fork —
+      `_notify_authoring_slot` (`escalation.py:271`) is the SEPARATE server-side dispatch-time Slack notify (never
+      raises, handles any string fine, not the broken call); the actual 400 is the WORKER's own completion-time curl
+      (`cicd.md`'s "PING THE AUTHORING SLOT" step) hitting `POST /api/slots/{slot_id}/message`
+      (`server/routes/slots_ops.py:64-65`, `slot_id: int` path param — FastAPI rejects a non-numeric value before the
+      handler runs). Found a SECOND non-numeric source beyond the literal `"ci-reconcile"` sentinel:
+      `server/routes/repo_blockers.py:100`'s `authoring_slot=str(req.slot_id if req.slot_id is not None else "")`
+      produces an empty string when a repo-blocker is declared with no `slot_id`. Fixed generally (not just the one
+      literal) — `unified-trading-pm@<see commit>`: `cicd.md`'s ping step now guards on
+      `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`, skipping when non-numeric (both known sentinels, and any future one) since
+      there is no real originator slot to notify in that case — the dispatch-time Slack alert already covers the FYI, so
+      nothing is silently lost by skipping.
 - [x] ✅ [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
       session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
       passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,

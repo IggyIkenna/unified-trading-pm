@@ -214,12 +214,21 @@ This fires a Slack/dashboard alert + sets your slot `status=blocked`. Then poll
 Do NOT hold the slot longer than the 2-min bound — this is shared CI-firefighter capacity (a held slot starves other
 queued escalations).
 
-PING THE AUTHORING SLOT on COMPLETION (the outcome FYI to the originator — distinct from the dashboard alert above):
+PING THE AUTHORING SLOT on COMPLETION (the outcome FYI to the originator — distinct from the dashboard alert above).
+**Skip this step if `$AUTHORING_SLOT` is not a real numbered slot** — e.g. the literal sentinel `ci-reconcile`
+(`server/ci_reconcile.py`'s self-detected bare-LDR walls, no PR/authoring worker exists) or an empty string
+(`server/routes/repo_blockers.py` when the declaring `slot_id` was `null`): `/api/slots/{slot_id}/message` requires an
+integer path param and 4xxs on anything else (confirmed `agt-69e9e4`/slot 14, 2026-07-29,
+`github_actions_billing_wall_recurrence_2026_07_29.md`). There is no real originator to notify in that case — the
+dispatch-time Slack alert (`escalation.py`'s `_notify_authoring_slot`, fired when this wall was first dispatched)
+already covers the FYI:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
-  -H 'Content-Type: application/json' \
-  -d '{"content": "escalation '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — fixed+pushed @<sha>, or stopped: needs operator (asked via /blocked) because ...>"}'
+if [[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]; then
+  curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
+    -H 'Content-Type: application/json' \
+    -d '{"content": "escalation '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — fixed+pushed @<sha>, or stopped: needs operator (asked via /blocked) because ...>"}'
+fi
 ```
 
 LEAVE THE SLOT CLEAN BEFORE EXIT (HARD RULE — prevents the recurring branch-state quarantine, 2026-06-21). Resolving a
