@@ -26,7 +26,7 @@ summary: >-
   run before that plan's apply step: "Do NOT run this before that apply step — resuming early defeats the
   pause/apply/resume sequence this plan's HARD constraint section requires." Filed rather than overridden per `/blocked`
   `BLK-058d5928` (main auto-continued with the filed-issue option).
-status: open
+status: resolved # (was: open) 2026-08-03 -- sole todo done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -66,6 +66,8 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
+  "mtds_available_at_cross_asset_backfill_2026_07_13.md's cron-resume todo (data_engineering slot-3, 2026-08-02);
+  checkbox retagged + doc archived by slot-11, 2026-08-03"
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days:
@@ -85,6 +87,11 @@ context_scope:
 ---
 
 # Tradfi OHLCV backfill VMs self-deleting at boot (exit_code=78) — consolidator cron paused since 2026-07-29
+
+> **✅ ARCHIVED 2026-08-03 — sole todo done.** The governing plan
+> (`/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`, still active — other todos remain open) resumed
+> the tradfi consolidator cron 2026-08-02; this doc's `[OPERATOR]` tag was stale (never retagged to match) until closed
+> 2026-08-03. Cron confirmed `ENABLED` + index fresh live at close time — tradfi download VMs relaunch normally again.
 
 ## What I found
 
@@ -164,10 +171,18 @@ call — not a default.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide whether to expedite `mtds_available_at_cross_asset_backfill_2026_07_13`'s open
-      apply-then-resume todos, or authorize an early cron resume (breaking that plan's stated sequencing) to stop the
-      fleet-wide tradfi OHLCV backfill outage sooner. Until resolved, do not relaunch tradfi download VMs — they will
-      fail identically at rc=78.
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-02 (data_engineering slot-3, via the governing plan) — checkbox was stale,
+      retagged 2026-08-03 (slot-11).** `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own
+      "Resume the tradfi consolidator cron" todo was flipped 2026-08-02: ran the sanctioned
+      `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py`, maintenance window released, cron confirmed
+      `ENABLED` — that entry explicitly cites closing this doc's outage. This doc's own `[OPERATOR]` tag was never
+      retagged to match (HARD RULE violation per CLAUDE.md "the moment an OPERATOR tag resolves, retag... never leave it
+      stale"). Independently reconfirmed live 2026-08-03T19:33Z while investigating an adjacent finding
+      (`/plans/active/issues/mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`):
+      `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-tradfi-cron --location=asia-northeast1`
+      → `state: ENABLED, schedule: */1 * * * *`; `gsutil stat` on
+      `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` → updated 3 minutes prior
+      at check time. Tradfi download VMs may relaunch normally.
 
 ## Progress Log
 
