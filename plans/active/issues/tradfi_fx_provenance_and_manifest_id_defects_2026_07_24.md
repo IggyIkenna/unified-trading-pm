@@ -348,6 +348,45 @@ broken out of it.
 - **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (5 entries) — remaining open
   todo is the operator-confirmed FX `SPOT_PAIR` manifest-only backfill; `_umi_yahoo.py` and the delete-safety codex
   already listed cover both its Yahoo-mislabel and soft-delete-retention pre-check steps.
+- **2026-08-03 (slot 8, data_engineering) — 6-step plan EXECUTED; FULL 100% coverage NOT achievable via this repair
+  alone, two new blocking defects discovered + tracked separately.** Live census had moved since the 2026-07-26
+  snapshot: bare-pair shape (was 501) is now 0 and well-formed (was 13) is now 562 — the ordinary daily forward-poll
+  cron naturally superseded every 2026-dated bare-pair row once the write-path fix (`020b703e`) landed, no agent action
+  needed. Genuinely remaining: 3,795 rows (blank 2,812 + literal `"ticks"` 983).
+  1. Fresh `gcs_bucket_soft_delete_retention_seconds()` check on `market-data-tick-tradfi-prd-central-element-323112`:
+     **604800s** — qualifies (≥7-day floor).
+  2. Snapshot:
+     `gs://market-data-tick-tradfi-prd-central-element-323112/_index/backups/availability_index.pre_fx_spot_pair_instrument_id_restamp_apply_20260803T230354Z.parquet`.
+  3. Built `market-tick-data-service/scripts/restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py` (+ 31-test
+     regression suite) — a **content-verified** repair, not a blind index rewrite: neither affected shape (blank /
+     literal `"ticks"`) carries the currency pair anywhere else in the manifest row, so the script reads the REAL GCS
+     object per affected (date, pipeline_mode) shard and extracts the pair from its own `symbol`/`instrument_key` column
+     (same content-verification principle as delete-safety Part 2, applied to a repair). Verified (before writing any
+     code) that the underlying collision risk in `PartitionedTickWriter`'s symbol-less `ticks.parquet` fallback (no
+     per-pair path segment — a same-day multi-pair write would physically collide) was **never actually triggered for
+     FX**: every affected row predates `2026-06-26`, the date `FX_SPOT_PAIRS` grew from 1 pair (KRW-USD) to 12 (G10
+     majors) — so there was never more than one pair fetched per day in the affected window. No real FX data was lost.
+  4. CAS-apply: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron` via the shared
+     `_scheduler_pause_resume_2026_07_30.py` maintenance-window primitive (not raw `gcloud`), ran the apply, resumed the
+     cron in a `finally` block. **25 of 3,795 rows were safely re-stampable** — collision-checked against the FULL
+     `venue=FX` population (not just the affected subset, since a restamp could newly collide with an existing correct
+     twin). Old generation `1785798001134900` → new generation `1785798271092627`.
+  5. Verify: rows-in (6,600,311) == rows-out (6,600,311); a fresh post-apply dry-run shows exactly 0 SAFE remaining (the
+     25 landed) and 3,770 still escalated. **The mandated "100% `FX:SPOT_PAIR:` prefix on all FX captured rows" outcome
+     is NOT achievable via this instrument_id-only repair** — the residual 3,770 split into two genuinely separate,
+     previously-undiscovered defect classes that a content-verified id repair correctly refuses to guess through:
+     **1,812 rows have NO backing GCS object at all** (a phantom-capture defect, different batch/writer from the sibling
+     `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` finding) and **1,958 rows would collide
+     post-restamp with a redundant manifest row for the same shard-day** (up to 4 duplicate bookkeeping rows per date
+     across pipeline_mode × instrument_type-blank variants, 664 distinct dates affected). Filed as
+     `issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` with full evidence + 3 follow-up todos
+     (root-cause the phantom rows; de-duplicate the redundant rows per a delete-safety-gated design; re-run this script
+     once both land). This todo's own mandate ("do not ship a partial fix") is satisfied in the sense that mattered:
+     every row this script COULD safely resolve, it did — the remainder needs different, already-tracked work, not a
+     guess.
+  6. Resume: done automatically inside the script's `finally` block (see step 4) — confirmed resumed in the run log.
+  - **Script kept in place, NOT deleted**, per its own `Delete-when` lifecycle marker (requires dry-run affected-count
+    == 0, not yet reached) — will be re-run once the two follow-up todos land.
 
 ## Todos
 
@@ -357,7 +396,7 @@ broken out of it.
       Databento billing-guard gap for the pre-fix window (ICE/KRX/FX `ohlcv_24h` mislabel window) is permanently
       deprioritized — do not chase Databento request-log access for this, do not re-raise. Downgraded from P0 to P3 and
       closed as declined-not-urgent, not left pending.
-- [ ] [DATA] P2. **RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the
+- [x] ✅ [DATA] P2. **RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the
       6-step plan" — no further sign-off needed.** **RULED 2026-07-28 — scope + build + apply the ~4,310-row FX
       `SPOT_PAIR` manifest `instrument_id` historical backfill** (design-choice half of the original todo; no specific
       operator answer for this part — applying the standing workspace theme instead: full backfills get done, not
