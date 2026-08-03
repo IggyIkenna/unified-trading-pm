@@ -371,6 +371,32 @@ not just noting.
   repeating either a no-op confirmation or another timeout raise. Slot left clean on `live-defi-rollout` (only
   `market-data-processing-service` touched by this session's code commit + this doc).
 
+- **2026-08-03 ~18:19-18:45Z (cicd escalation `agt-f91096`, slot 7, `ml-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=335`)** — dispatched against a promotion PR (`ml-service#335`, LDR→main, real code diff:
+  `scripts/ml_orphan_sweep.py` + its test, not a chore/version-only promote). By dispatch time the PR had **already
+  merged** (`merged_at=2026-08-03T17:16:15Z`, 3s before the failing check `30835989289` even started) — nothing was
+  actually blocked. Diagnosed the failing run: `checks` job's `typecheck` slice waited **880s** in the QG-governor's
+  `WAIT_CPU` admission queue before being reserved, then hit the hard **120s basedpyright timeout** (`exit=124`,
+  `ERROR_COUNT=0`/`WARN_COUNT=0` — never got far enough to emit any real type-error output), consistent with this
+  doc-pair's catalogued "local green, CI red = pure contention" signature, not a code break. Host at investigation time:
+  `uptime` load average **42.38/39.82/35.15** (16 vCPUs, ~2.6x oversubscribed), swap 18Gi/47Gi in use, one LDR
+  `workflow_dispatch` run queued 45+min without even starting, another `main`-push run (`30838328689`, post this
+  promotion) also queued 45+min at time of writing — same root cause
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 1 shipped this same day, Phase 2/3
+  live-validation + fleet rollout still pending) and `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
+  (canary-only migrated so far; ml-service still on the old oversubscribed box) are both actively fixing. Ran a scoped
+  local repro (`QG_SLICE=typecheck`, backgrounded, heartbeated) at the same `live-defi-rollout` HEAD (already carries PR
+  335's diff): **`✅ QG_SLICE=typecheck PASSED`** — 223 pre-existing basedpyright errors reported but non-blocking
+  (ml-service has no `BASEDPYRIGHT_MAX_ERRORS` ceiling set, a pre-existing repo-config gap unrelated to this wall, not
+  touched here), 0 new blocking issues — confirms no code regression, 19th corroboration this doc-pair has accumulated
+  of the pure-contention signature. No code/test change made or needed (PR already merged; local repro clean).
+  `GET /api/repo-blockers` → `open: []`, nothing to fast-path. Did not force a duplicate re-trigger — a fresh
+  `main`-push `quality-gates-v2` run (`30838328689`) was already queued for this exact HEAD+successor commit; adding
+  another dispatch would only add load to the same saturated queue, mirrors this doc-pair's own established "did not
+  hold the slot waiting on it" disposition. `AUTHORING_SLOT=ci` not a live numeric slot — same non-int skip as every
+  prior entry (cicd.md's regex-gated ping step); this doc entry is the outcome record. Slot left clean on
+  `live-defi-rollout` (only this doc touched).
+
 **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA, valid (mixed reasons per item),
 re-read end-to-end (doc grew substantially today via the entries above since the last marker). 3 open todos: (1) AWS
 Cost Explorer $ quantification for the retry storm — this doc's own 2026-08-01 audit note already called this
