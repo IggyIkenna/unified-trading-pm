@@ -226,9 +226,18 @@ what's missing.
       cadence), but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to pursue, not a
       mechanical follow-up. VOL_ARB_RV_IV stays `not_available`; re-open only if a specific alternative parameterization
       is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
-- [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
-      for whichever of the 2 engines actually flipped to `available` (may be 0, 1, or 2 — do not force both). Repo:
-      unified-api-contracts.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-15, `backend_engineer`).** Regenerated + committed
+      `capability-verdict-matrix.json` — unified-api-contracts@`14dbb6d1`. **0 of the 2 engines flipped to `available`**
+      (both VOL_CARRY and VOL_ARB_RV_IV failed their backtests per the two todos above and remain unregistered —
+      confirmed via a live re-probe of `strategy_service.engine.strategies.v2.factory.ARCHETYPE_ENGINE_REGISTRY` in a
+      fresh `strategy-service/.venv`: neither key present, 32 engines registered total). Ran
+      `unified-trading-pm/scripts/openapi/generate_capability_verdict_matrix.py` against current HEAD (`bda8bfc7`); diff
+      vs. the prior committed matrix (2026-07-26, `431cb79a`) is JSON-formatting normalization + the
+      `generated_from_commit` bump + the missing verdict-summary block restored in `capability-orphan-report.txt` —
+      summary totals are byte-identical (31168 total cells: 22517 available / 8203 blocked / 448 not_registered) and the
+      VOL_CARRY/VOL_ARB_RV_IV archetype blocks are unchanged (still `not_registered(no_v2_engine)`), confirming no
+      semantic drift. Full `quality-gates.sh` green before commit (sentinel matched HEAD); shipped via quickmerge,
+      verified on origin (`git merge-base --is-ancestor 14dbb6d1 origin/live-defi-rollout`).
 
 ## Progress Log
 
