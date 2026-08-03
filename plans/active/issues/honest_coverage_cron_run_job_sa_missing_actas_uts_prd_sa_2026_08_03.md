@@ -48,6 +48,14 @@ source:
     2026-08-03",
   ]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/terraform/gcp/honest_coverage_scheduler.tf,
+  ]
 ---
 
 ## What happened
@@ -141,3 +149,7 @@ verified: the fetch-path repoint itself works correctly) and directly overlaps a
 (a) the data-pipeline-correctness gap (honest-coverage stale since ~2026-08-01/08-02) is tracked and visible, and (b)
 whoever next works either the P0 SA-rewiring plan or this doc sees the honest-coverage caller as a third affected
 identity alongside the two already documented.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

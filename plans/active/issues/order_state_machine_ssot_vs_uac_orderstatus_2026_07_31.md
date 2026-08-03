@@ -40,6 +40,14 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/04-architecture/order-state-machine.md,
+    /codex/02-data/canonical-schema-groups.md,
+    /codex/04-architecture/oms-protocol-and-state-machine.md,
+    unified-api-contracts/unified_api_contracts/canonical/domain/execution/base.py,
+    execution-service/tests/unit/orders/,
+  ]
 ---
 
 # order-state-machine.md documents an `OrderState` enum UAC does not have
@@ -102,3 +110,4 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
   judgment/operator-gated. Item 1 is an explicit [OPERATOR] tri-way design decision (A: extend UAC OrderStatus with
   FAIL_OUTBOUND/RECONCILED + rename members — a breaking fleet-wide contract change; B: retreat the codex doc to match
   the shipped 7-state enum; C: split into...
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

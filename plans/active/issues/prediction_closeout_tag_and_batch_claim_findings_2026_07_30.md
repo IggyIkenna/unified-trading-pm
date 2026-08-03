@@ -59,6 +59,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md,
+  ]
 ---
 
 # Prediction closeout-audit findings, 2026-07-30
@@ -274,3 +281,5 @@ candidate, not a batch todo.
   judgment calls) and confirmed a new instance of the candidate-script's `depends_on`-resolution gap (prediction's 4
   Phase A-E children, not just `native_ao_extract`-shaped forks) — full detail in
   `issues/ag_closeout_audit_prediction_parked_2026_07_31.md`.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

@@ -26,6 +26,14 @@ estimate_calibrated_ai_days: 1.2
 locked_by:
 locked_since:
 context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/quality-gates.sh,
+    scripts/quickmerge.sh,
+    scripts/quality_gates/profile_qg_resources.py,
+    scripts/quality_gates/check_pm_script_path_refs.py,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -441,3 +449,4 @@ solo work.
   follow-up (missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts`) that its own text deliberately declines to
   make a todo — left standing as an authorial call rather than overridden, since converting it would also grow the NA
   corpus.
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

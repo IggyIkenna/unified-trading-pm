@@ -49,6 +49,14 @@ source: >-
 depends_on: []
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md,
+    /plans/archive/issues/defi_v2_expected_universe_enumerator_oom_2026_08_01.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    unified-trading-pm/scripts/dev/run-bounded-analysis.sh,
+  ]
 ---
 
 # `read_availability_index(columns=[...])` OOMs on the live DeFi manifest at current scale
@@ -189,3 +197,5 @@ callers that only need counts/distinct-values rather than a full DataFrame.
   `quality-gates.sh` green (6900+ pre-existing tests pass, no regressions; 87.17% coverage). Todo 2
   (`run-bounded-analysis.sh`'s RLIMIT_AS fallback) is now independently corroborated by slot-2's finding above but not
   attempted in this session — scoped as its own follow-up.
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

@@ -61,6 +61,13 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    e2e-testing/scripts/calendar/smoke_matrix.py,
+    features-service/features_service/calendar/config.py,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # `smoke_matrix.py` harnesses silently target PROD buckets — `IS_TEST_RUN=true` alone does not route to `-test-`
@@ -268,3 +275,4 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
   verification. See the checkbox above for full per-family evidence. Filed a new P3 for the resulting manifest
   phantom-row correction (not fixed inline, mirrors the 07-27 doc's own still-open manifest-correction P3). P2 remains
   BLOCKED per its own note (parked on the cross_instrument memory-hardening prereq).
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

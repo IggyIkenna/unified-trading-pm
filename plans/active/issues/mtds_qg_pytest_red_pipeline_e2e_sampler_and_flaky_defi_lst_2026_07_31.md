@@ -26,6 +26,15 @@ source: >-
   a test-only commit unrelated to any of the 5 failing tests.
 locked_by:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
+    /plans/archive/issues/local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md,
+    agents/RULES.md,
+    market-tick-data-service/scripts/pipeline_e2e_check.py,
+    market-tick-data-service/tests/conftest.py,
+    unified-trading-library/unified_trading_library/cloud_interface/providers/local.py,
+  ]
 ---
 
 # mtds QG pytest red — pre-existing, unrelated to the tradfi manifest-shard commit
@@ -157,3 +166,4 @@ scope for a tradfi manifest-shard todo).
   `LocalStorageProvider`-adjacent leak (e.g. via `DefiManifestRecorder`/`ManifestWriter` internals) that this same
   fixture should now also cover going forward, since it isolates the shared root for every test in this repo's suite,
   not just the one that surfaced it.
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

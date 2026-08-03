@@ -60,6 +60,14 @@ source: >-
 resolved_by: slot-7 (data_engineering), 2026-08-03 — all 5 todos done
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
+    market-data-processing-service/market_data_processing_service/config.py,
+    market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py,
+    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+  ]
 ---
 
 # MDPS SPORTS:odds_horizon_bucket candle write targets PROD instead of `--output-bucket`
@@ -275,3 +283,5 @@ further this session (outside this task's scope — filed here instead of silent
   completion and corrected todo 4's now-stale "still blocked" note. No new code change from this session — the fix was
   already shipped; this session's contribution is verification + closing the plan-flip gap. Todo 4 (the from-scratch
   re-verification run) remains open for whoever picks it up next.
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

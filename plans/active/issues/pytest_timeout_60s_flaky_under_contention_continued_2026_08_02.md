@@ -48,6 +48,13 @@ supersedes:
 superseded_by:
 resolved_by:
 source: "cicd-role escalation agt-bde7b9 (WALL_TYPE=ldr_qg_failure, REPO=unified-trading-api, slot 4)"
+context_scope:
+  [
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /codex/06-coding-standards/quality-gates.md,
+    unified-trading-api/scripts/quality-gates.sh,
+  ]
 ---
 
 # pytest-timeout-under-contention: unified-trading-api's 5th occurrence, fixed with a repo-local mitigation
@@ -149,3 +156,5 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   no forward progress in 2h — worth checking whether host-wide agent-fleet concurrency (12+ simultaneous `claude`
   sessions observed) should itself be throttled, per the parent doc's still-open finding that "repeatedly raising a
   timeout moves the threshold, does not close the class."
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

@@ -45,6 +45,13 @@ execution_scope: local-only
 drift_direction: correct-docs
 depends_on: []
 last_updated: 2026-08-02
+context_scope:
+  [
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 ---
 
 # Prediction backfill only fills `prediction_canonical_question_group`, not `trades`/`book_snapshot_5`
@@ -166,3 +173,5 @@ Same session: redefined the parent plan's done-when criterion, flipped `-001`/`-
 for the parent-plan-side evidence. Remaining open work here is narrow: todo 3 (P3, whether `trades`/`book_snapshot_5`
 `available_at` is actually needed by any downstream consumer) — not urgent, not blocking the parent plan, kept open for
 whoever wants to close the loop.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

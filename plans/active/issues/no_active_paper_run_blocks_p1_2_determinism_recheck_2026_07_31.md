@@ -43,6 +43,13 @@ source: >-
   Found 2026-07-31 while working live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md's [DATA] P1.2 todo
   (slot 8). `gcloud compute instances list --filter="name~paper OR name~colocated"` (read-only), cross-checked against
   the same finding already logged in that plan's Progress Log by slot-14 earlier the same day.
+context_scope:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/cli/handlers/daily_determinism_handler.py,
+  ]
 ---
 
 # No active paper-trading run for BINANCE-FUTURES/ASTER/OKX-FUTURES
@@ -112,3 +119,4 @@ run already covers them under different instrument routing), not a mechanical da
   future authoring pass), but its answer only serves the gated DECISION — not splitting it this run. Cross-checked
   parent plan `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` (lines 170-188): independently and
   currently parks P1.2 citing this exact doc. No reclassification.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

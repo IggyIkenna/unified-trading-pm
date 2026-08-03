@@ -42,6 +42,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    unified-api-contracts/scripts/check_sdk_version_alignment.py,
+    unified-api-contracts/SCHEMA_VERSIONS.md,
+    unified-api-contracts/tests/unit/test_schema_version_alignment.py,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+  ]
 ---
 
 ## What I found
@@ -129,3 +136,7 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
       documented-but-absent package fails pre-fix and passes post-fix (or: passes today because todo 1 above already
       closed the specific gap — either order is fine, just don't let the test regress silently again). Repo:
       unified-api-contracts.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

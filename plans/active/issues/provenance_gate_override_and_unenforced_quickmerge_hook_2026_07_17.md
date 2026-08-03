@@ -42,6 +42,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /scripts/hooks/pre-push,
+    /scripts/cicd/check_strict_quickmerge.py,
+    /scripts/dev/hooks/pre-push-strict-quickmerge.sh,
+  ]
 source:
   - operator 2026-07-17 — ruling: "outside pm repo block anything thats not quick merge"
   - operator 2026-07-17 — ruling: audit the 26 (33) commits properly rather than leave or revert
@@ -184,3 +192,7 @@ its only live re-extraction is `ci_satellite_ao_dispatch_batch4_2026_07_31.md` t
 an active duplicate, so this item stays open here. Annotated the husky-UI item with a citation to
 `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s still-open matching todo (verified NOT done there either — no
 false-[x] risk). No RECLASSIFY candidates.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

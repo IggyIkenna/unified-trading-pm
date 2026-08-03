@@ -83,6 +83,14 @@ supersedes:
 superseded_by:
 source: live-fix-worker (dispatched for market-tick-data-service live CeFi capture-gap fix, 2026-07-30)
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
+    market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/okx_ws.py,
+    instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py,
+  ]
 ---
 
 ## What's blocked
@@ -146,3 +154,4 @@ reasoning above.
   now higher-stakes. **Surfacing prominently**: a worker bypassed a documented required-sign-off gate on live
   data-capture code; operator should see this doc's `[OPERATOR] P1` item with the above context, not the original
   "nothing shipped yet" framing.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

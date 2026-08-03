@@ -39,6 +39,13 @@ source:
   ]
 related: [/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md]
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    deployment-service/terraform/gcp,
+    deployment-service/terraform/modules/container-job/gcp,
+  ]
 ---
 
 # Prod terraform drift backlog needs a deliberate operator-gated reconcile-apply
@@ -187,14 +194,14 @@ todo below.
       deployment-service.
 
       **DONE 2026-07-30 — deployment-service@f57c96e.** Added the `ignore_changes = [client, client_version]` lifecycle
-                                                                                                                                                                                                                                                                                                                                                      block to BOTH the shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource
-                                                                                                                                                                                                                                                                                                                                                      (covers every `module.*_job` consumer — the 65-diff bulk) AND the standalone
-                                                                                                                                                                                                                                                                                                                                                      `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (which is NOT
-                                                                                                                                                                                                                                                                                                                                                      built via the shared module, so it needed its own copy — it already had an `ignore_changes = [launch_stage]`
-                                                                                                                                                                                                                                                                                                                                                      block, extended rather than duplicated). Code-only change (no `tofu apply` run — that remains this doc's still-open
-                                                                                                                                                                                                                                                                                                                                                      P1 item's job once it applies the fleet); `tofu fmt -check` confirmed no formatting issues in the added lines
-                                                                                                                                                                                                                                                                                                                                                      (pre-existing unrelated fmt drift elsewhere in both files, untouched, out of this todo's scope). Full
-                                                                                                                                                                                                                                                                                                                                                      `quality-gates.sh` green.
+                                                                                                                                                                                                                                                                                                                                                              block to BOTH the shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource
+                                                                                                                                                                                                                                                                                                                                                              (covers every `module.*_job` consumer — the 65-diff bulk) AND the standalone
+                                                                                                                                                                                                                                                                                                                                                              `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (which is NOT
+                                                                                                                                                                                                                                                                                                                                                              built via the shared module, so it needed its own copy — it already had an `ignore_changes = [launch_stage]`
+                                                                                                                                                                                                                                                                                                                                                              block, extended rather than duplicated). Code-only change (no `tofu apply` run — that remains this doc's still-open
+                                                                                                                                                                                                                                                                                                                                                              P1 item's job once it applies the fleet); `tofu fmt -check` confirmed no formatting issues in the added lines
+                                                                                                                                                                                                                                                                                                                                                              (pre-existing unrelated fmt drift elsewhere in both files, untouched, out of this todo's scope). Full
+                                                                                                                                                                                                                                                                                                                                                              `quality-gates.sh` green.
 
 ## Progress Log
 
@@ -202,3 +209,5 @@ todo below.
   a live, moving-target prod-terraform review (diff grew from 10/67 to 17/71 after a permission grant, needs fresh
   three-way classification) — stays NA as a whole; the smaller lifecycle-ignore-changes item is an individually
   plausible future RECLASSIFY candidate, not actioned this run.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

@@ -32,6 +32,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+  ]
 ---
 
 # Pyth oracle_prices manifest seeds expected_unattempted for feeds the collector cannot fetch
@@ -123,3 +130,4 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   (C6) done-when after a SPOT backfill VM (`mtds-pyth-archive-20260803-070759`) was preempted mid-run and I re-checked
   the manifest to determine real remaining gap. Filed this issue; C6 itself proceeds on its own achievable scope (the
   7-symbol fetchable universe) with a Progress Log note pointing here for the structurally-separate gap.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

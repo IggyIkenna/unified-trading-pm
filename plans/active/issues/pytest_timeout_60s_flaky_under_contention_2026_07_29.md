@@ -59,6 +59,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /plans/archive/2026_08/pytest_timeout_60s_flaky_under_contention_progress_log_history_2026_08_03.md,
+    /scripts/quality-gates-base/base-library.sh,
+  ]
 source: >-
   cicd-role escalation agt-fa86c9 (WALL_TYPE=ldr_qg_failure), triaging GH Actions run
   https://github.com/IggyIkenna/unified-api-contracts/actions/runs/30424080892 (2026-07-29T05:05:52Z, 48m56s,
@@ -602,3 +609,4 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   precedent, not babysat to completion. Slot left clean (market-data-processing-service + unified-trading-pm both
   already on `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinging the authoring slot
   (`ci-reconcile`) with the outcome.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

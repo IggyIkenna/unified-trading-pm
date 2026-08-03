@@ -55,6 +55,13 @@ superseded_by:
 source:
   "Worker slot 15, task sports_reference_v2_1492_row_canonical_copy-002 (backend/data_engineering), 2026-08-03 —
   surfaced before executing the copy."
+context_scope:
+  [
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
+    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py,
+  ]
 ---
 
 # sports_reference_v2 1,492-row copy contradicts the ratified pre-floor wipe policy
@@ -151,3 +158,4 @@ rather than executing the copy.
 
 - **2026-08-03** (slot 15, backend/data_engineering, task `sports_reference_v2_1492_row_canonical_copy-002`) — Filed
   before executing the copy. Did not implement any code change; no GCS object read or written for this task.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

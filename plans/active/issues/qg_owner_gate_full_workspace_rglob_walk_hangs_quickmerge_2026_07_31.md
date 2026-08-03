@@ -40,6 +40,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
+    unified-trading-pm/scripts/quality_gates/check_runbook_execution_owner.py,
+  ]
 ---
 
 # What was observed
@@ -188,3 +195,5 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
   **Standing note for the next run**: the conflict-check is done and clear, so if the operator picks B this is a
   one-line frontmatter change plus `execution_scope: local-only → orchestrator-agent` and an `assigned_role` fill — do
   not re-derive it.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

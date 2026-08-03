@@ -53,6 +53,15 @@ source: >-
   read of agent-orchestrator/data/config/backlog.yaml shows priority=20/priority_override=false/prereqs=[] despite
   main's 22:30:26Z blocked-answer (BLK-085fef5e) stating the park (priority:999/priority_override:true/false prereq
   p1-2-preconditions-met) had been applied and verified via the blockers endpoint.
+context_scope:
+  [
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    agents/RULES.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/routes/backlog.py,
+    agent-orchestrator/server/auto_park.py,
+  ]
 ---
 
 # P1.2's hand-applied backlog park did not persist
@@ -185,3 +194,4 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
   timeline above. Did not hand-edit `backlog.yaml` (worker-scope precedent: that edit path is main/operator-only);
   skipped the task with `reason_code: "PARKED"` instead so the `auto_park` skip-counter has a chance to durably park it
   via its own code path. No code changed this session — investigation-only.
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

@@ -62,6 +62,13 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/features_service/cross_instrument/cli/handlers/batch_handler.py,
+    e2e-testing/scripts/cross_instrument/smoke_matrix.py,
+    /plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
+    /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
+  ]
 ---
 
 # features_service.cross_instrument smoke-verify run — unbounded memory, `timeout` ignored, second AO outage today
@@ -215,3 +222,4 @@ locked_since:
   flipped todo above for the full finding + fix detail. `[DATA] P3` (resume the remaining unverified smoke_matrix.py
   legs) is now unblocked but explicitly OUT of this todo's scope — left for the dispatcher to hand out as its own task
   per the /boot-per-shippable-unit discipline.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

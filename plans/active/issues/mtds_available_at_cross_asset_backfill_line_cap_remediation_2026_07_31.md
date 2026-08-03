@@ -41,6 +41,14 @@ execution_scope: orchestrator-agent
 drift_direction: correct-docs
 depends_on: []
 last_updated: 2026-07-31
+context_scope:
+  [
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/active/task_template.md,
+    /plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_progress_log_history_2026_08_01.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # mtds_available_at_cross_asset_backfill_2026_07_13.md line-cap remediation
@@ -221,3 +229,5 @@ live-dispatch status is blocking BOTH split-related todos from proceeding safely
 another slot can retry once `-006` clears (done or declined+skipped) — recommend whoever picks this up next re-check
 `GET /api/backlog` for `-006`'s status FIRST, before re-reading the full plan, to avoid burning a full read cycle only
 to hit the same block.
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

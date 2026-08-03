@@ -46,6 +46,13 @@ resolved_by:
 locked_by:
 depends_on: []
 last_updated: 2026-08-02
+context_scope:
+  [
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
+    /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
+    market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py,
+  ]
 ---
 
 ## Why this matters
@@ -96,3 +103,4 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
 - **2026-08-02** — Filed by slot 3 (data_engineering) while working `infra_capture_and_devops_leftovers-001` / verifying
   the sibling plan's live-resume todo. Not investigated further in this pass (scope: surface the finding, not root-cause
   it) — no code changed, no VM launched.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

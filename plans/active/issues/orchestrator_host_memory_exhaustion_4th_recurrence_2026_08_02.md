@@ -29,6 +29,14 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    agents/RULES.md,
+    /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
+    scripts/dev/run-bounded-analysis.sh,
+    features-service/features_service/cross_instrument,
+  ]
 ---
 
 # Host ip-172-31-5-118 memory exhaustion -- 4th recurrence
@@ -274,3 +282,5 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 
   **Not committed by review** (zero commits, role boundary) -- handed to main to route to a live worker for the
   `docs(plans):` commit.
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

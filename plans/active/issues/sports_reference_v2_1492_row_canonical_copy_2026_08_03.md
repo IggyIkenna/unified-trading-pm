@@ -39,6 +39,13 @@ locked_since:
 supersedes:
 superseded_by:
 source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 1b, option B, 2026-08-03."
+context_scope:
+  [
+    /plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+  ]
 ---
 
 # Copy the 1,492 sole-surviving-copy sports_reference_v2/by_date/ rows to canonical storage
@@ -136,3 +143,4 @@ pending exactly this migration.
   and a `/blocked` question rather than executing the copy. No GCS object read or written; no code changed for this
   todo. Todo 1 (re-run the census) also not executed — pending the disposition ruling, since a fresh census only matters
   if the copy path is confirmed as correct.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

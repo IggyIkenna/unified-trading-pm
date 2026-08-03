@@ -55,6 +55,15 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md,
+    /plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+    /plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md,
+    scripts/dev/safe-doc-push.sh,
+    scripts/dev/check-slot-commit-identity.sh,
+  ]
 ---
 
 # Multi-agent slot collision — symptom fixed, root cause still open
@@ -175,3 +184,4 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   strengthening the case for the `[OPERATOR] P1` decision above. Recommend future sessions reach for
   `scripts/dev/safe-doc-push.sh` directly for doc-only batches rather than raw `git commit`/quickmerge, pending that
   operator decision.
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

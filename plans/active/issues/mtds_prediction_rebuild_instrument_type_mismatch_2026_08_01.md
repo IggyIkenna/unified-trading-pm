@@ -46,6 +46,15 @@ resolved_by:
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-01
+context_scope:
+  [
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    market-tick-data-service/scripts/canonicalize_prediction_manifest_2026_07_18.py,
+  ]
 ---
 
 # rebuild_prediction_manifest.py instrument_type mismatch — duplicate rows during available_at backfill
@@ -140,3 +149,4 @@ identically.
   `mtds_available_at_cross_asset_backfill_2026_07_13.md` task `-006`; shipped the code fix
   (`market-tick-data-service@b8a8fa7a`); re-running the prediction apply with the corrected script (see that plan's
   Progress Log for the re-run's own checkpoint).
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

@@ -29,6 +29,12 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [
+    /codex/02-data/prediction-schema-paths.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -94,3 +100,4 @@ near-mechanical choice — see "Why this needed a human anyway" below.
   mutual `related:` cross-reference between `execution-modes-and-chain-resolution.md` and
   `paper-vs-live-execution-seam.md`, and the missing hub-doc `related:` link on `prediction-batch-live.md` mentioned
   above.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

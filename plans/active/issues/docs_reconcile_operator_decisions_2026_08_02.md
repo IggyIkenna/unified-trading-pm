@@ -31,6 +31,12 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [
+    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
+    /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
+    scripts/workspace/setup-cursor-rules-symlink.sh,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -111,3 +117,4 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   auto-closing the checkbox) — but if the operator confirms that archival WAS the intended resolution, this item and
   `pm-repo-context.mdc`'s "unresolved — flagged for operator review" note (line 29) both need a one-line update to say
   RESOLVED instead of leaving both artifacts stale.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

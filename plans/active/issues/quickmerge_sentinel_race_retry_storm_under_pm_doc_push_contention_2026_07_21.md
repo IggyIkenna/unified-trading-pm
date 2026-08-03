@@ -31,6 +31,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md,
+    unified-trading-pm/scripts/quickmerge.sh,
+  ]
 ---
 
 # What was observed
@@ -127,3 +134,5 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
   quickmerge is high-blast-radius shared ship infra", and the Notes section restates that operator sign-off is required
   on the fast-path predicate because an over-eager "unchanged tree" skip could bypass a genuinely-needed gate. That is a
   standing in-doc gate, confirmed present verbatim, not re-derived.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

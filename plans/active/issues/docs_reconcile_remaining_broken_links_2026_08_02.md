@@ -29,6 +29,13 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [
+    /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
+    /plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md,
+    scripts/quality_gates/check_doc_body_links.py,
+    scripts/plan-hygiene/check_reference_paths.py,
+    scripts/quality_gates/check_codex_doc_freshness.py,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -178,3 +185,4 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   genuinely-ambiguous content-staleness finding (`VALIDATOR_COVERAGE_MATRIX.md`) that this doc's 2026-08-02 pass hadn't
   reached yet (only ~16 of the 27 `doc_body_link_baseline.yaml` entries had been individually investigated before
   today).
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

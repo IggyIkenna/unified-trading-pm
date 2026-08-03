@@ -47,6 +47,13 @@ source: >-
 assigned_role: cicd
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # CI satellite AO batch 5 — finalize
@@ -115,3 +122,4 @@ drift_direction: advance-code
   Todo 1 exists because batch-5's todo 1 spans 15 repos in two ordered steps, so whether the drift baseline actually
   ratcheted DOWN is only observable after the whole batch lands — the same partial-parallelism remedy batch1's finalize
   used for its three-checker registration commit.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

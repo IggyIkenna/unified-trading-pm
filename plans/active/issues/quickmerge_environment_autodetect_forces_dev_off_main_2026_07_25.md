@@ -60,6 +60,15 @@ resolved_by:
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md,
+    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    unified-trading-pm/scripts/quickmerge.sh,
+    unified-trading-library/unified_trading_library/config_interface/base_config.py,
+    unified-trading-library/unified_trading_library/core/config.py,
+  ]
 ---
 
 ## What was verified
@@ -185,3 +194,7 @@ as "the known stale branch-name artifact," cleared there per a cited precedent
 DIFFERENT doc; per the HARD RULE that archival/reclassification never proceeds on a non-empty `locked_by` without
 `[unlock-plan]` operator confirmation, this pass took no action on the lock field itself. Recommend the operator either
 confirm this is the same stale artifact (and clear it per the cited precedent) or clarify what it actually locks here.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

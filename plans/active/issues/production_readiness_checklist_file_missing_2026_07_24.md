@@ -42,6 +42,14 @@ code_refs: []
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/README.md,
+    /codex/10-audit/README.md,
+    /codex/10-audit/_checklist-template.yaml,
+    /codex/10-audit/_checklist-template-enhanced.yaml,
+    deployment-service/CONTRIBUTING.md,
+  ]
 ---
 
 # Production-readiness checklist file missing — item-count 3-way disagreement is a symptom, not the root problem
@@ -117,3 +125,4 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
   across six files and the one path every citing doc names does not exist, so there is no mechanical way to derive which
   is authoritative from the repo alone — the doc's own "Why I did not fix this myself" section says exactly that.
   Independently corroborated by the 2026-08-02 `/ag-closeout-audit infra` run's classification of the same doc.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

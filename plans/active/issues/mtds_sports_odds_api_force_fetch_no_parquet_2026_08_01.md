@@ -39,6 +39,14 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_20.md,
+    /cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
+    market-tick-data-service/scripts/pipeline_e2e_check.py,
+    deployment-service/scripts/vm/launch-mtds-backfill-vm.sh,
+  ]
 ---
 
 # MTDS SPORTS/ODDS_API force-fetch writes no parquet for odds_horizon_bucket + trades
@@ -96,3 +104,7 @@ before relying on force-refetch for this venue in any future SPORTS backfill.
   - [ ] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
         ownership split (MDPS writes this data_type, not MTDS) that the pipeline-check's SPORTS enumeration should
         exclude, rather than a real MTDS capture defect.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

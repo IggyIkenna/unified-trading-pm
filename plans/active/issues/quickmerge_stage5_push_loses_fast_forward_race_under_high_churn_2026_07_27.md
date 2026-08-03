@@ -34,6 +34,15 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    unified-trading-pm/scripts/quickmerge.sh,
+    unified-trading-pm/scripts/hooks/check-branch-drift.sh,
+    unified-trading-pm/agents/RULES.md,
+  ]
 ---
 
 # quickmerge Stage 5 push repeatedly loses the fast-forward race under high branch churn
@@ -197,3 +206,4 @@ resolved_by:
 - 2026-07-31 (slot-2, `infra`): Shipped todo 4 (`MERGE_HEAD` guard on `check-branch-drift.sh`). Todo 3 (the `push_race`
   repo-blocker feature) remains genuinely open — real design work, not a bounded mirror-the-pattern task per its own
   note above — so this doc stays `status: open`, not archival-eligible yet.
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

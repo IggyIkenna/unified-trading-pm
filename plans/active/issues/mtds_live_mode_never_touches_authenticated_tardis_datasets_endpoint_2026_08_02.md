@@ -34,6 +34,14 @@ locked_by:
 source: cefi_satellite_ao_dispatch_batch5_2026_08_02.md (todo 1, [INFRA] P1)
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
+    deployment-service/scripts/vm/launch-mtds-live.sh,
+    market-tick-data-service/market_tick_data_service/live/connectors/tardis_machine_ws.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+  ]
 ---
 
 ## What I found
@@ -168,3 +176,4 @@ as this update.
   this batch's todo 1 closed as not-a-bug, citing this doc. Added the follow-up observability todo above per the
   operator's explicit instruction to file it as its own separate, trackable item rather than folding it into the close.
   This doc stays `status: open` (one todo remains open, contingent on a future connector change) — no archival due yet.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

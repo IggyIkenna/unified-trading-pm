@@ -40,6 +40,13 @@ superseded_by:
 resolved_by:
 source: ["sports_satellite_ao_dispatch_batch2, autonomous continuation, 2026-08-02"]
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+  ]
 ---
 
 ## What happened
@@ -148,3 +155,5 @@ workaround is written down for whoever hits it next before the grant lands.
   default compute SA). Not parked as `BLOCKED-OPERATOR-DECISION` (this doc's own workaround already unblocks the
   campaign, no urgency), but flagged here so whoever next works either doc sees the connection before executing either
   fix.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

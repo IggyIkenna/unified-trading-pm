@@ -46,6 +46,14 @@ source:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    unified-trading-library/unified_trading_library/reconcile/manifest.py,
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
+    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
+  ]
 ---
 
 # Phantom reconciler wipes prediction bundle-atom captured cells (bundle-atom blind spot)
@@ -286,3 +294,7 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
 
 Both sub-items of the combined todo are confirmed closed by live measurement; no code/data change was required beyond
 the diagnostic script itself (kept for lifecycle-marker traceability, delete-when as declared in its header).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).
