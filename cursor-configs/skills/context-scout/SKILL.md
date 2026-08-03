@@ -128,7 +128,7 @@ covered anywhere in the written `context_scope`, and skips the doc shapes SKILL.
 coordinators, `*_finalize` gates). A hit is a candidate for human spot-check, not a fact — the token could be a false
 positive (a generic phrase, a renamed/deleted file, a doc discussing a service in the abstract). This exists because
 Phase 1's hunting is pure agent judgment with no other check that it actually ran as specified (confirmed miss:
-`/plans/active/issues/context_scout_source_hunting_gap_2026_08_03.md`).
+`/plans/archive/issues/context_scout_source_hunting_gap_2026_08_03.md`).
 
 ## Modes
 

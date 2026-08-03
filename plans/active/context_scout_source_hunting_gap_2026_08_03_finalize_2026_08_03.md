@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/context_scout_source_hunting_gap_2026_08_03.md,
+    /plans/archive/issues/context_scout_source_hunting_gap_2026_08_03.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 created: "2026-08-03"
@@ -45,7 +45,7 @@ assigned_role: docs_reconciler
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/context_scout_source_hunting_gap_2026_08_03.md,
+    /plans/archive/issues/context_scout_source_hunting_gap_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
