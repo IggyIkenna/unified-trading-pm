@@ -269,6 +269,24 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T22:13Z** (AO dispatch, slot 15, `data_engineering`) — **NEW failure mode found + fixed**: the on-demand
+  VM (`backfill-defi-dex-swaps-20260803-202140`) ran preemption-free for ~1h43m (through 613/1155 days, 2023-01-01
+  through 2024-06-08) before **crashing on an unhandled GCS 429** on the checkpoint object itself
+  (`_dex_swaps_source_correction_checkpoint.json` — "exceeded the rate limit for object mutation operations", exhausting
+  UTL's own 600s-deadline retry budget). Root cause: another agent had already fixed the checkpoint-cadence gap I filed
+  earlier today (now persists after EVERY day, not every 20th — see `unified-api-contracts`/deployment-service
+  context_scope refs), but writing to the SAME object every ~15-40s during this fast-skip period (many small
+  already-mostly-covered days) — compounded by ~10 VM relaunches earlier today all hammering the same object path —
+  pushed it into sustained GCS per-object rate limiting. **Fixed** (`market-data-processing-service@db055ba`): wrapped
+  the checkpoint write in try/except — on failure, log a WARNING and continue processing rather than crash the whole
+  run. Safe because the checkpoint is a resume-OPTIMIZATION, not a correctness requirement — the actual per-day data
+  copy + `record_captured` writes are already durable before the checkpoint call runs; losing one checkpoint persist
+  just means a future resume re-verifies that one day (fast, idempotent no-op), never data loss or corruption. Shipped
+  via full QG + quickmerge, verified on origin. **A second VM launched before the fix was published (still ran stale
+  code, crashed again — checkpoint advanced to 542 days first)**; republished the tarball
+  (`create-code-tarballs.sh --include market-data-processing-service`) and relaunched
+  `backfill-defi-dex-swaps-20260803-221324` (`ON_DEMAND=true`, confirmed running
+  `market-data-processing-service-code @ db055ba8ee27` — the fix). Still not flipping this todo's checkbox.
 - **2026-08-03T20:22Z** (AO dispatch, slot 15, `data_engineering`) — Sixth campaign VM
   (`backfill-defi-dex-swaps-20260803-201901`) was preempted after only **~67 seconds** (launched 20:19:08Z, preempted
   20:20:15Z — never even produced a run.log), the **5th genuine SPOT preemption** in this session, all confirmed
