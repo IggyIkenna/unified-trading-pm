@@ -654,6 +654,34 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   cicd.md, skipped the authoring-slot ping. Slot left clean (`market-data-processing-service` on `live-defi-rollout`, 0
   commits ahead of origin, working tree clean throughout).
 
+- **2026-08-03 ~13:05-13:12Z (`cicd` escalation `agt-32771a`, slot 10, `instruments-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=1065`) — SAME escalation id as the two entries above (`agt-e5e387`
+  09:47-11:30Z, `agt-32771a` 11:40-11:50Z slot 9) — this is a 3rd re-dispatch of an already-resolved wall, this time
+  landing on slot 10; confirmed a genuine forward state change since the last check, not just a re-derivation**:
+  re-verified from scratch rather than trusting the cached entries. `gh pr view 1065` → unchanged (`state=MERGED`,
+  `mergedAt=2026-08-03T07:55:41Z`); `gh pr list --state open` for `instruments-service` → 0 open PRs (unchanged).
+  `GET /api/repo-blockers` → `open: []` (unchanged). Both slot worktrees (`instruments-service`, `agent-orchestrator`,
+  `unified-trading-pm`) confirmed clean on `live-defi-rollout` before touching anything.
+
+  **The state change**: `main`'s own confirmatory `quality-gates-v2` run (`30795433570`, created 07:55:44Z — the same
+  run both prior entries left `in_progress`) has now COMPLETED: `conclusion=success`. Verified via
+  `python -m server.ci_status instruments-service --branch main` →
+  `{"conclusion": "success", "qg_v2_state": "success", "blocked": false, ...}`. This fully closes the loop the prior two
+  entries left open ("outcome not yet observed") — the promotion (self-merged 07:55:41Z), backmerge, and semver-tag were
+  already complete per the earlier entries, and now the confirmatory check on `main` itself is also green, so nothing
+  about this wall remains outstanding in any form. LDR's own unrelated `quality-gates-v2` (`30816252648`, created
+  13:04:24Z, testing newer LDR commits unconnected to this PR) is separately `in_progress` — not this wall's concern,
+  left untouched.
+
+  **Disposition: no code or workflow change made or needed** — confirms the prior two entries' verdict and adds the one
+  piece of forward progress (main confirmatory check now green) that closes this specific PR/commit's wall completely.
+  `AUTHORING_SLOT=ci` — not a real numbered slot (not `^[0-9]+$`), so per `cicd.md` skipped the authoring-slot ping (the
+  dispatch-time Slack alert already covers the FYI). Slot left clean
+  (`instruments-service`/`agent-orchestrator`/`unified-trading-pm` all on `live-defi-rollout`, 0 commits ahead, no local
+  changes). This is the 3rd consecutive dispatch of the identical escalation id with no actionable gap found on any of
+  the three — further corroborates todo 3's operator-flagged dedup/cooldown concern, now observed a 3rd time for this
+  exact wall+PR pairing specifically (not just the wall type in general).
+
 - **2026-08-03 ~13:52-14:00Z (`cicd` escalation `agt-1e081d`, slot 7, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — 12th escalation for this repo's wall, no material change since `agt-6db24c`'s 12:20-12:30Z entry**:
   `main` still red at the same already-diagnosed run `30780455914` (pre-`c092df50` 150s-timeout shape, fix on LDR,
