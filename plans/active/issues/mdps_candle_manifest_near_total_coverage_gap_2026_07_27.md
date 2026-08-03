@@ -269,6 +269,15 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T20:19Z** (AO dispatch, slot 15, `data_engineering`) — Fifth campaign VM
+  (`backfill-defi-dex-swaps-20260803-141041`) ran healthy for ~2h36m total (through 473/1155 days, 2023-01-01 through
+  2024-03-13, all `errors=0`) before a **4th genuine SPOT preemption** at `20:17:22Z` (confirmed via
+  `gcloud compute operations list` — `compute.instances.preempted` system event, NOT a `delete` — the reap-zombies.sh
+  fix from the earlier incident is holding; this is ordinary SPOT capacity churn in `asia-northeast1-c`). Checkpoint had
+  advanced further this cycle — 420 days saved (through 2024-02-25, vs. 360 last time), so the redo window is smaller
+  (~17 days: 2024-02-26 through 2024-03-13, all idempotent re-verification). **Relaunched**:
+  `backfill-defi-dex-swaps-20260803-201901` (same `--force` resume recipe), confirmed RUNNING. Still not flipping this
+  todo's checkbox — genuinely not done.
 - **2026-08-03T19:52Z** (AO dispatch, slot 15, `data_engineering`) — **Pre-compact checkpoint** (session context hit
   ~65%, handing off — this entry IS the resume point, not a summary). Fifth campaign VM
   (`backfill-defi-dex-swaps-20260803-141041`, launched 13:41Z) has run **~2h11m with ZERO preemptions/incidents**,
