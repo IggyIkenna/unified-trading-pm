@@ -103,13 +103,22 @@ new pool is confirmed green, (3) only then resize AO down.
 
 ## Todos
 
-- [ ] [INFRA] P0. **Re-confirm AWS-credit coverage still holds for the AO box** before treating the ~15% cost delta as
-      moot — check the actual AWS billing/credit balance (not just the doc's prior claim), since this plan's
-      cost-neutrality argument depends on it. Gate: cited credit balance + burn rate, dated.
-- [ ] [INFRA] P0. **Enumerate the CURRENT full runner fleet** — `gh api repos/IggyIkenna/<repo>/actions/runners` across
-      every repo in `scripts/workflow-templates/self-hosted-qg-repos.txt`, plus AO's own canary pool and PM's original
-      pool, all currently on `i-0c9b283b31d6b5ca7`. Gate: a table of repo → runner count → labels → registration status,
-      superseding both prior docs' stale counts.
+- [x] ✅ [INFRA] P0. **Re-confirm AWS-credit coverage — DOES NOT HOLD, materially different from the plan's premise.**
+      `aws ce get-cost-and-usage` (2026-08-03, live query): June 2026 total UnblendedCost ≈ $0 net (~$3,434 gross fully
+      offset by ~$3,434 credit — fully covered). **July 2026: total (post-credit) cost = $1,020.06**, despite
+      $1,846.49
+      of credit still being applied that month — i.e. July already had ~$1,020 of REAL out-of-pocket
+      spend. **August 2026 (Aug 1-4, 3 days in): total cost $268.46, credit applied only -$0.01** — essentially ALL of
+      August's spend so far is genuine, uncredited money, at a ~$89/day run-rate (whole-account, not just this VM).
+      Credits have clearly wound down/expired between June and August. This directly invalidates the plan's "today's box
+      is credit-covered... this is all list-price math, not real spend" framing — the ~15% cost delta from adding the
+      escalation VM is now REAL money, not moot. **PAUSED HERE per the operator's own instruction** (surface anything
+      materially different from the plan's assumptions before todo 3's VM launch) — see Progress Log.
+- [x] ✅ [INFRA] P0. **Enumerate the CURRENT full runner fleet** — live `gh api repos/IggyIkenna/<repo>/actions/runners`
+      query, 2026-08-03, across all 21 repos in `scripts/workflow-templates/self-hosted-qg-repos.txt`: **30 total
+      runners** — `agent-orchestrator`=3, `unified-trading-pm`=8, all other 19 repos=1 each (19). Supersedes both prior
+      docs' stale/approximate counts (the capacity-crisis doc's "129 live processes" figure counted OS processes
+      including JIT churn, not registered runners — the real registered-runner count is 30, smaller and more precise).
 - [ ] [INFRA] P0. Launch the escalation VM — `c8i.4xlarge` (16 vCPU/32GB), ap-northeast-1, sized/secured to match the
       current AO box's access model (SSM-only, no inbound SSH unless explicitly decided otherwise), gp3 storage sized
       per the enumerated runner count from the prior todo (not a blind 600GB guess). Gate: `aws ec2 describe-instances`
@@ -158,6 +167,22 @@ new pool is confirmed green, (3) only then resize AO down.
       `agent-orchestrator-single-vm-architecture.md`'s "unaffected — it never executes backlog tasks" framing, and
       `orchestrator-cloud-identity-self-service.md`'s per-VM ADC setup note). Gate: grep shows only historical/archived
       references, no active-doc assumes the VM still exists.
+
+## Progress Log
+
+- **2026-08-03 (autonomous execution start)**: Operator said "let's do the plan in full" — began execution per
+  `/autonomous`, in file order, per this plan's own Hard Sequencing Rule. Todos 1-2 (both read-only, no infra touched)
+  completed with a materially significant finding: **AWS credits do NOT reliably cover current spend.** Live
+  `aws ce get-cost-and-usage` query: June net cost ≈$0 (fully credited), July net cost = **$1,020.06** (real,
+  out-of-pocket, despite $1,846 credit still applied that month), August (3 days in) = **$268.46 real cost, only
+  $0.01 credited** — i.e. essentially 100% of August's spend so far is genuine money, ~$89/day whole-account run-rate.
+  This directly contradicts the plan's own "today's box is credit-covered, this is all list-price math" framing (§ Why,
+  bullet 3) — the ~15% cost delta from adding the escalation VM is REAL spend now, not moot. Runner-fleet enumeration
+  (todo 2) came back smaller/more precise than either prior doc's estimate: 30 real registered runners across 21 repos
+  (not "129 processes across 25 pools" — that figure counted OS processes/JIT churn, not registrations). **Paused here,
+  before todo 3 (VM launch — real billing begins), per the operator's own explicit instruction to surface anything
+  materially different from the plan's assumptions at exactly this checkpoint.** Not proceeding to provisioning until
+  the operator confirms whether to continue given credits are exhausted.
 
 ## Full-execution criterion (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE)
 
