@@ -269,6 +269,17 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T13:31Z** (AO dispatch, slot 15, `data_engineering`) — Second campaign VM
+  (`backfill-defi-dex-swaps-20260803-103749`) ran healthy for ~3 hours, cleanly processing 394 days (2023-01-01 through
+  2024-01-04 in-progress, all `errors=0`) before hitting a **genuine SPOT preemption** (`compute.instances.preempted` at
+  `13:30:41Z` — confirmed via `gcloud compute operations list`, distinct from the earlier reap-zombies.sh
+  false-positive: this one shows the real GCE preemption system-event type, not a `delete` operation). This is
+  expected/normal for a SPOT backfill VM. Checkpoint had 360 days saved (through 2023-12-27, written every 20 days per
+  the tool's own cadence), so the redo cost on resume is small (~8 days: 2023-12-28 through 2024-01-04). **Relaunched**:
+  `backfill-defi-dex-swaps-20260803-133142` (same `--force` resume recipe), confirmed RUNNING. Tarball-freshness check
+  flagged `unified-api-contracts`/`unified-trading-library` as stale on this launch (unrelated general deps, not the
+  tool code itself — `market-data-processing-service` tarball was fresh). Continuing to monitor; still not flipping this
+  todo's checkbox.
 - **2026-08-03T10:38Z** (AO dispatch, slot 15, `data_engineering`) — **INCIDENT**:
   `backfill-defi-dex-swaps-20260803-092530` was DELETED (not preempted) at `10:30:56Z` by an unrelated fleet script bug
   (`reap-zombies.sh` checks the wrong GCS log path, `logs/` instead of the canonical `vm-logs/`, so it always sees "no
