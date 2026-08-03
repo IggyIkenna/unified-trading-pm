@@ -150,9 +150,15 @@ finding, just not caught by any existing gate because no gate watches this speci
       launched + verified RUNNING via SSH: `/etc/cron.d/cefi-onchain-fwd-daily` installed (`0 8 * * *`), launcher binary
       present at `/opt/deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`, `cron` service active. Next
       fire 2026-08-04T08:00Z.
-- [ ] [DATA] P2. Add `UpstreamTimestampBiasError` (or a general "internal write-guard rejection" bucket) to UAC's
+- [x] ✅ [DATA] P2. Add `UpstreamTimestampBiasError` (or a general "internal write-guard rejection" bucket) to UAC's
       `classify_venue_error()` `VENUE_ERROR_MAP` so it stops surfacing as `UNCLASSIFIED:` and can be alerted on
-      distinctly from a real vendor-API error. **Repo: unified-api-contracts.**
+      distinctly from a real vendor-API error. **Repo: unified-api-contracts.** — unified-api-contracts@4dfe960a: added
+      a venue-agnostic `internal` pseudo-venue bucket (`errors/internal.py`, `VENUE_ERRORS_INTERNAL`) registering
+      `UpstreamTimestampBiasError` (RETRY), and made `classify_venue_error()` fall back to that bucket when a
+      venue-specific lookup misses — the guard is MTDS-internal (day-partition-alignment), not vendor-specific, so it
+      can fire for ANY venue (not just ASTER). Verified: `classify_venue_error("aster", "UpstreamTimestampBiasError")`
+      now returns non-None across all four onchain-perp venues; new tests added (`TestInternalErrorFallback`); full
+      `quality-gates.sh` green.
 - [ ] [DATA][OPERATOR] P1. Investigate `cefi-hyperliquid-2024-20260727-071055` and
       `cefi-hyperliquid-2025-20260727-071055` — running continuously since 2026-07-27 (7+ days), far past this
       launcher's normal runtime. Confirm via heartbeat-blob age + `run.log` tail + manifest-shard mtime whether they are
@@ -178,3 +184,11 @@ finding, just not caught by any existing gate because no gate watches this speci
   — expected, first scheduled fire is 2026-08-04T08:00Z (VM booted 23:07Z, past today's window). Flipped todo 1.
   Remaining todos (2: UAC error classification, 3: HYPERLIQUID zombie-VM investigation `[OPERATOR]`, 4: HYPERLIQUID gap
   backfill) are untouched — out of scope for this task.
+- **2026-08-03 (slot 6, data_engineering)**: closed todo 2. `classify_venue_error()` (UAC) only ever did a per-venue
+  `VENUE_ERROR_MAP` lookup, so a venue-agnostic error like `UpstreamTimestampBiasError` (an MTDS write-time
+  partition-alignment guard, not a vendor response) could never classify no matter which venue's map it was added to —
+  it would need duplicating into every venue's list. Instead added a new pseudo-venue `internal` bucket
+  (`unified_api_contracts/canonical/crosscutting/errors/internal.py`) and a fallback check in `classify_venue_error()`:
+  venue-specific match first, then `internal` bucket, matching the todo's own suggested "general bucket" framing.
+  Shipped `unified-api-contracts@4dfe960a`, full `quality-gates.sh` green, verified on origin. backfill) are untouched —
+  out of scope for this task.
