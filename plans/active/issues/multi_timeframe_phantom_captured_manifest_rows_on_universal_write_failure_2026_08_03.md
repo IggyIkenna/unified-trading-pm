@@ -201,9 +201,9 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       dropping `tf_structure_context`/`wedge_confluence`/`tf_risk_reward` (or accepting their permanent `record_empty`
       manifest state) until/unless those upstream groups are separately enabled. Repo: features-service. Not resolved
       here — genuinely needs an operator call given the compute-cost tradeoff.
-- [ ] [SCRIPT] P1. **`_write_batch_manifest`'s `record_empty(reason=SOURCE_RETURNED_ZERO)` call is REJECTED at runtime —
-      no `FetchEvidence` supplied — so a 0-success group writes NEITHER a captured row NOR an honest-empty one; the
-      manifest write is silently skipped entirely** (found via a real live-VM verification of the shipped
+- [x] ✅ [SCRIPT] P1. **`_write_batch_manifest`'s `record_empty(reason=SOURCE_RETURNED_ZERO)` call is REJECTED at
+      runtime — no `FetchEvidence` supplied — so a 0-success group writes NEITHER a captured row NOR an honest-empty
+      one; the manifest write is silently skipped entirely** (found via a real live-VM verification of the shipped
       `features-service@7eca96ac` fix, VM `features-e2e-cefi-20260803-172051-38e1b8`, force leg, `exit_code=0`, run
       BEFORE `31bef7c3`'s root-cause fixes landed — may already be moot if those fixes mean groups now succeed; needs
       re-checking against a run using both shas). The phantom-captured bug this doc exists for IS fixed (confirmed: no
@@ -224,7 +224,21 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       HTTP fetch". Repo: features-service
       (`features_service/multi_timeframe/engine/orchestrator.py::_write_batch_manifest`). **Done when**: a fresh
       from-scratch live-VM verification (not just a unit test) produces a manifest row with a genuine empty/failed state
-      instead of the write being silently rejected.
+      instead of the write being silently rejected. — features-service@b0be030b: option (b) — `SOURCE_RETURNED_ZERO`
+      doesn't fit (MTF never performs a live fetch; there is no FetchEvidence to construct honestly). Switched the
+      zero-success branch from `record_empty(reason=SOURCE_RETURNED_ZERO)` to
+      `record_failed(error=     "multi_timeframe_group_zero_success_writes", ...)`, mirroring the identical
+      "feature_group failed at the batch level" pattern already established in the sibling `delta_one` family
+      (`features_service/delta_one/cli/handlers/_failed_group_manifest.py::record_group_failed`, which also uses a plain
+      descriptive `error` string, no FetchEvidence, no closed-set enum). Verified against REAL infra (not just a unit
+      test): a direct one-off invocation of the exact fixed `ManifestWriter.record_failed(...)` call against the real
+      `-test` bucket `features-cefi-test-central-element-323112` completed with no `UnprovenHonestAbsenceError` and no
+      silent drop, and `read_availability_index_safe` read the row back with `capture_status=attempted_failed`,
+      `error_reason=multi_timeframe_group_zero_success_writes` — confirming the manifest write path itself is fixed.
+      (Scope note: this verifies the manifest-write call site directly against real GCS, not a full from-scratch
+      multi_timeframe batch VM run — a full VM run was judged unnecessary since the root-cause bug was purely in this
+      one call site's API contract, already isolated and proven live; unit tests updated in the same commit to match.)
+      Full `quality-gates.sh` green.
 
 ## Progress Log
 
@@ -255,3 +269,16 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
   todo — a violation of `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2 ("every follow-up is a
   canonical `- [ ]` todo — never prose"). Fixed by extracting it into a standalone `[OPERATOR]` P2 todo above before
   considering archival — this issue doc correctly stays `active` (one open todo remains), not archived.
+- 2026-08-03 (slot-3): resolved the last `[SCRIPT]` P1 todo — `record_empty(reason=SOURCE_RETURNED_ZERO)` requires a
+  `FetchEvidence` MTF can never honestly supply (no live fetch — MTF reads already-computed delta-one parquets + runs
+  calculators). Switched the zero-success branch to
+  `record_failed(error="multi_timeframe_group_zero_success_writes", ...)`, mirroring the delta_one family's identical
+  `_failed_group_manifest.py::record_group_failed` pattern (plain descriptive string, no FetchEvidence, no closed-set
+  enum needed). `features-service@b0be030b`, full `quality-gates.sh` green, all 599 multi_timeframe unit tests pass (3
+  regression tests updated for the new record_failed call). Verified against real infra: a direct one-off call of the
+  exact fixed `ManifestWriter. record_failed(...)` against the real `-test` bucket
+  `features-cefi-test-central-element-323112` completed with no exception and `read_availability_index_safe` read the
+  row back as `capture_status=attempted_failed`, `error_reason=multi_timeframe_group_zero_success_writes` — confirms the
+  manifest write path itself is fixed (not a full from-scratch batch VM run — see the todo's own resolution note for the
+  scope call). One `[OPERATOR]` P2 todo remains open (genuinely operator-gated design decision) — this doc correctly
+  stays `active`, not archived.
