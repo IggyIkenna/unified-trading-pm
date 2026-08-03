@@ -167,19 +167,34 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       each `group_name` from its own count (`record_empty` when 0, `add` with the true count otherwise). Regression test
       `TestWriteBatchManifestEmptyConfirmed::test_per_group_mix_never_masks_one_group_with_another` proves one group
       succeeding never masks another group's zero-write outcome. Full `quality-gates.sh` green.
-- [ ] [DIAG] P2. **Root-cause WHY every calculator failed this run** —
-      `Missing required columns: {'close','low','high'}` / `{'close','volume'}` /
-      `{'market_structure_bias_4h','market_structure_bias_1d'}` / `{'vol_regime'}` suggest the calculators expect either
-      (a) raw OHLCV passthrough columns no current `SourceSpec` in `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` marks as
-      `~passthrough`, or (b) upstream delta-one feature groups (`level_confluence`, `fibonacci`, `supply_demand_zones`,
-      `polynomial_trendlines`) that this session's real delta_one run never actually wrote for CEFI (confirmed via
-      direct GCS check: only 12 of 33 registered delta-one feature groups had real output at `day=2026-07-05`) —
-      separately confirmed the `polynomial_trendline` (singular) SourceSpec string in `config.py`'s
-      `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` doesn't match the registry's real group name `polynomial_trendlines`
-      (plural), so that spec silently never loads regardless of what delta_one wrote. Needs deciding: should delta_one's
-      default feature-group set be expanded to cover everything `multi_timeframe` depends on, or should
-      `multi_timeframe`'s calculator set / SourceSpec list be trimmed to only what delta_one actually produces? Not
-      resolved here — a design decision, not a mechanical fix. Repo: features-service.
+- [x] ✅ [DIAG] P2. **Root-cause WHY every calculator failed this run** — features-service@31bef7c3. Confirmed BOTH
+      hypotheses (a) and (b) were real, plus found a second naming bug of the same shape as (b): - **(a) confirmed +
+      fixed (mechanical, not a design call)**: `intraday_regime` (needs `close`,`volume`) and `micro_regime` (needs
+      `high`,`low`,`close`) failed because no `SourceSpec` in `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` marked these
+      `~passthrough`. Verified every delta-one output parquet DOES carry raw OHLCV alongside its computed columns
+      (`features_service.delta_one.engine.ohlcv_passthrough.attach_ohlcv_passthrough`,
+      `OHLCV_PASSTHROUGH_COLUMNS = (open, high, low, close, volume)`) — so the already-default-enabled
+      `market_structure@1h` spec just needed `~close,~volume,~high,~low` added. Fixed. - **(b) confirmed, PLUS a second
+      independent naming bug found**: `polynomial_trendline` (singular) vs. the real registered delta-one group
+      `polynomial_trendlines` (plural, verified in `features_service/delta_one/app/calculators/__init__.py`'s
+      `CALCULATOR_REGISTRY` and `polynomial_trendline.py`'s `feature_group: ClassVar[str] = "polynomial_trendlines"`) —
+      fixed (mechanical typo, not a design call). **Newly found**: `candlestick@4h` (used by `tf_confluence_signals`'
+      candle_pattern_context) also named a nonexistent group — the real registered name is `candlestick_patterns`, which
+      (unlike `polynomial_trendlines`) IS in delta-one's `DEFAULT_FEATURE_GROUPS`, so this second typo was silently
+      discarding real, already-computed upstream data every run. Fixed. - Added a regression test
+      (`TestSourceSpecGroupNames::test_every_source_spec_group_is_a_registered_delta_one_calculator`) asserting every
+      `SourceSpec.group` in `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` resolves to a real `CALCULATOR_REGISTRY` entry, so
+      a future typo of this shape fails loudly here instead of silently loading nothing. Also added
+      `test_market_structure_1h_passes_through_raw_ohlcv` covering the (a) fix. - **Genuine design decision — still
+      open, NOT resolved by this todo**: `tf_structure_context` needs
+      `market_structure_bias_4h`/`market_structure_bias_1d` from `market_structure_sequence`, and
+      `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group is in delta-one's
+      `DEFAULT_FEATURE_GROUPS` (confirmed: only 18 of the 33 `CALCULATOR_REGISTRY` groups are default-enabled;
+      `market_structure_sequence`, `supply_demand_zones`, `fibonacci`, `level_confluence`, `polynomial_trendlines`,
+      `risk_reward`, `wedge_quality`, and others are not). Needs an operator/design decision: expand delta-one's default
+      feature-group set to cover everything `multi_timeframe` depends on (real compute-cost/backfill implications), or
+      trim `multi_timeframe`'s calculator set / `SourceSpec` list to only what delta-one actually produces by default.
+      Not resolved here.
 
 ## Progress Log
 
@@ -197,3 +212,12 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
   Done-when bar (confirmed via `git show`, full `quality-gates.sh` green on that SHA per its own commit), discarded my
   redundant reimplementation (never pushed), and flipped both checkboxes here citing the already-shipped SHA instead of
   shipping a duplicate/conflicting commit.
+- 2026-08-03 (slot-8): root-caused the P2 DIAG todo. Read `orchestrator.py`'s `SourceSpec`/`_load_spec`/
+  `apply_column_naming`, delta-one's `CALCULATOR_REGISTRY` (33 groups) and `DEFAULT_FEATURE_GROUPS` (18
+  default-enabled), and `attach_ohlcv_passthrough` to verify both original hypotheses were real, plus found a second
+  naming bug (`candlestick`→`candlestick_patterns`) beyond the one already noted
+  (`polynomial_trendline`→`polynomial_trendlines`). Shipped the three mechanical fixes (two naming corrections + one
+  `~passthrough` addition) and a regression test that would have caught both naming bugs, in `features-service@31bef7c3`
+  — full `quality-gates.sh` green, verified on `origin/live-defi-rollout`. Left the genuine design decision (expand
+  delta-one's default group set vs. trim multi_timeframe's calculator set) for the operator, per the todo's own framing
+  — did not resolve it unilaterally.
