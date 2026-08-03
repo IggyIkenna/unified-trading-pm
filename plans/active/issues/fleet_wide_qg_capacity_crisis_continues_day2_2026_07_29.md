@@ -926,3 +926,34 @@ not just noting.
   `AUTHORING_SLOT=ldr-ci-monitor` per the standard completion step (expect the same non-numeric-literal rejection this
   doc's `ci`/`ci-reconcile` precedents hit). Slot left clean on `live-defi-rollout` (only this doc touched;
   `features-service` and `e2e-testing` working trees already clean, no commits made).
+
+- **2026-08-03 ~03:13-05:15Z (cicd escalation `agt-c77b30`, slot 6, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — dispatched against run `30772047216` (HEAD `b370df80`, 23:20:21Z,
+  `❌ Type check FAILED/timeout (exit=124)`). Ruled out a code cause immediately: `b370df80`'s diff is
+  `terraform/gcp/defi_collection_scheduler.tf` only (16 lines, Cloud Scheduler wiring) — zero Python touched, so a
+  `basedpyright` timeout cannot be this commit's fault. HEAD advanced during investigation
+  (`a182c68d`→`d98f1643`→`f9cb12e`→`b23e1c9`→`72ea669`→`77c0206`, all VM-launcher/infra script changes, none plausibly
+  typecheck-relevant). Watched the next `workflow_dispatch` (`30780860606`, HEAD `d98f1643`) complete `failure`:
+  `checks` leg hit the identical `exit=124` timeout again; `tests` leg failed on a THIRD failure shape not yet in this
+  doc's catalog — a `uv` dependency-install hardlink race
+  (`error: Failed to install: basedpyright-1.38.2-py3-none-any.whl ... Caused by: failed to hardlink file from .venv/.../basedpyright/... to /home/ubuntu/.cache/uv/archive-v0/... : No such file or directory (os error 2)`),
+  i.e. shared-host `uv` cache corruption under concurrent installs, not a test/code defect. **Reproduced locally FIRST**
+  (backgrounded, heartbeated per the mandatory pattern) at then-current HEAD `77c0206`: `bash scripts/quality-gates.sh`
+  → **`✅ ALL QUALITY GATES PASSED (233s)`** — tests 3017 passed/5 skipped, basedpyright completed with its existing
+  1293/1293-error ceiling (no timeout), sentinel written matching HEAD — decisive confirmation the code is clean.
+
+  Not yet aware of this doc's "don't add load, a duplicate dispatch doesn't help" posture, triggered one
+  `workflow_dispatch` (`30782058442`, HEAD `77c0206`) before finding it. Result: `checks` leg actually passed clean this
+  time (~6min, no timeout — the contention is intermittent, not constant), but `tests` leg hung completely silent for
+  ~90min (03:41→05:12Z, zero output) before cascading `pytest-timeout` (`>150.0s`) failures fired on tests that run in
+  9-48s locally (e.g. `test_launcher_gcloud_create_carries_preemption_shutdown_script`) — the exact tests-leg
+  resource-starvation-hang signature this doc's other entries already catalogue. `GET /api/repo-blockers` → `open: []`
+  both before and after this run — nothing to fast-path. **Disposition: no code/test/workflow change made or needed** —
+  15th repo-specific corroboration of the fleet-wide contention root cause, first `deployment-service`-specific entry,
+  adds the `uv`-hardlink-race dependency-install failure as a third catalogued failure shape alongside the established
+  `checks`-timeout and `tests`-hang. Did not trigger a further retrigger past the one already in flight when this was
+  written — per this doc's established posture, a duplicate dispatch onto an already-contended runner doesn't help.
+  Attempted to ping `AUTHORING_SLOT=ldr-ci-monitor` per the standard completion step — 422 rejected (non-numeric
+  `slot_id`), same class as the `ci`/`ci-reconcile` precedents above; this doc entry is the outcome record. Slot left
+  clean on `live-defi-rollout` (only this doc touched; `deployment-service` working tree already clean, no commit needed
+  there).
