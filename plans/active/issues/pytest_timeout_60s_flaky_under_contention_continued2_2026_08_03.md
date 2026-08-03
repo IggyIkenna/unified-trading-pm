@@ -50,7 +50,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T15:50Z
+last_updated: 2026-08-03T16:20Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -252,3 +252,36 @@ repeated here.
   `ldr-ci-monitor` sentinels above. Slot left clean (`deployment-service` and `unified-trading-pm` both on
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Now a
   3rd same-day escalation for this exact repo/test — corroborates todo 2's operator-flagged dedup/cooldown gap further.
+
+- **2026-08-03 ~16:05-16:20Z (`cicd` escalation `agt-0a8231`, slot 13, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — same signature confirmed independently, no new code gap, fresh dispatch for the true current head**:
+  escalation cited run `30818407385` (created `13:32:16Z`, headSha `abff85a3`) failing the `tests` slice on
+  `test_momentum.py::test_volume_momentum_columns_present` — read the full failed-job log directly rather than trusting
+  the cached diagnosis: captured stderr shows `_calculate_features`/`_enrich_features` completed normally at `14:04:29`
+  (`Added 147 time-since event features`, `Added 882 event-horizon binary features` — 147×6 horizons matches UTL's
+  current `EVENT_HORIZONS` default `[1,3,5,10,20,50]` exactly, not an inflated horizon count), then hung inside
+  `_add_lagged_features`'s single `pd.concat` call for ~7m57s before `pytest-timeout` dumped + killed at `14:12:26`.
+  Independently re-derived why this is NOT an algorithmic hang before accepting the doc-chain's conclusion: read
+  `_select_lag_candidates` (`features_service/delta_one/app/calculators/base.py:416-423`) — it dtype-filters to
+  `float64/float32/int64/int32/float/int`, which excludes the 882 just-added horizon-binary columns (stored `int8` via
+  `.astype(np.int8)` at `base.py:409`) from the lag pass entirely, so the final concat is bounded (~1176 existing cols +
+  ~441 freshly-lagged Series for a 50-row frame) — genuinely trivial at this scale, consistent with the parent commit's
+  own local-repro claim (`c092df50`: "338s, zero timeouts" at this exact code path). Confirmed all three sanctioned
+  mitigations intact + unchanged on current HEAD (`0f894013`): `PYTEST_TIMEOUT=300`, `PYRIGHT_TIMEOUT=300`
+  (`features-service/scripts/quality-gates.sh:40-41`). Confirmed `gh api .../actions/runners`: `features-service` has
+  exactly ONE online runner, `glue-ip-172-31-5-118-1`, `busy=true` — the same fleet-wide single-runner bottleneck this
+  doc-chain has now confirmed across 5 repos. `GET /api/repo-blockers` → `open: []`. The only run testing near-current
+  HEAD was `30829019397` (`queued`, headSha `87942ac0` — one commit behind true HEAD `0f894013`, and that one commit,
+  `test(multi_timeframe): port subprocess --help exit-code regression test`, is test-only/inert w.r.t. this failure) —
+  left it queued rather than cancel/redispatch (would lose ~20min of accumulated queue position for zero benefit, per
+  this doc-chain's established practice); did NOT dispatch an additional redundant run since one already targets a
+  content-equivalent tree. Did NOT raise `PYTEST_TIMEOUT` a third time (todo 1: capacity-side root cause,
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` still `status: active`, Phase 2-3 open — re-confirmed
+  unchanged). **Disposition: no code or workflow change made or needed** — every sanctioned mitigation already exists on
+  `live-defi-rollout`, the remaining wall is pure runner-queue-depth/host-contention wait; outcome of `30829019397` left
+  for a follow-up occurrence per established practice. `AUTHORING_SLOT=ldr-ci-monitor` is a workflow-dispatch sentinel,
+  not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time
+  Slack alert already covers the FYI). Slot left clean (`features-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Now a
+  5th repo's worth of same-day corroboration for the fleet-wide signature (`deployment-service` ×3, `features-service`
+  ×2 in this doc alone (~17 total across the doc-chain), `alerting-service`, `execution-service`).
