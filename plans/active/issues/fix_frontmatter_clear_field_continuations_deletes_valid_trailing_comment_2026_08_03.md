@@ -112,7 +112,7 @@ intentionally-changed files won't surface it either.
       "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior fixer run
       before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an indented
       non-quote-non-comment line, and cross-check each hit's git blame for a fixer commit that removed an adjacent
-      operator-ruling comment. Repo: unified-trading-pm. — unified-trading-pm@PENDING_SHA
+      operator-ruling comment. Repo: unified-trading-pm. — unified-trading-pm@c8e07871e
 
 ## Progress Log
 
@@ -175,4 +175,4 @@ intentionally-changed files won't surface it either.
     coverage (continuation-carries-value → not empty, for both the value+comment and quoted-scalar shapes; genuinely
     bare field with no continuation → still correctly empty) plus an end-to-end `fix_active_plan()` test reproducing the
     exact live-corpus shape and asserting the full fixer pass is a byte-for- byte no-op.
-  - Repo: unified-trading-pm@<PENDING_SHA>, full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
+  - Repo: unified-trading-pm@c8e07871e, full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
