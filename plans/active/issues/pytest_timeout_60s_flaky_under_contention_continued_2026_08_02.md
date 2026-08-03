@@ -31,7 +31,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T09:24Z
+last_updated: 2026-08-03T10:10Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -156,6 +156,46 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   no forward progress in 2h — worth checking whether host-wide agent-fleet concurrency (12+ simultaneous `claude`
   sessions observed) should itself be throttled, per the parent doc's still-open finding that "repeatedly raising a
   timeout moves the threshold, does not close the class."
+
+- **2026-08-03 09:47-10:10Z (`cicd` escalation `agt-e5e387`, slot 6, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1064`)** — same signature, a specific worker-crash variant not yet in this doc's own entries: run
+  `30790501567` (`promote/instruments-service/631fd6fc30d5`, base `main`) `QG slice (tests)` job started `07:43Z`,
+  produced clean progress dots through `[85%]` (08:40:55Z) then went silent for ~13min before an xdist
+  `worker_internal_error` (`Failed: Timeout (>150.0s) from pytest-timeout` firing INSIDE the SIGALRM handler while it
+  tried to flush the execnet channel pipe — the handler itself blocked on I/O, so the worker died mid-signal rather than
+  cleanly reporting one slow test) killed one worker at 08:53:44Z; a second, identical crash killed a second worker
+  43min later (09:36:45Z); with too few workers left, `xdist/dsession.py` raised
+  `RuntimeError: Unexpectedly no active workers available` and the whole slice aborted (09:44:35Z, ~2h1m wall time for a
+  suite that normally takes ~60s) — `qg_red_reason=pytest`, `large_file_count=8`. Confirmed no test-content overlap
+  possible to check (no individual test names survive in the non-verbose xdist crash output), but the shape — dead time
+  at a random completion percentage, not a specific always-failing test — matches this doc's established
+  scheduling-induced-timeout signature, not a per-test defect.
+
+  **Reproduced locally FIRST, backgrounded per the mandatory pattern**, at LDR HEAD `d7276438` (fast-forwarded from 2
+  commits behind, clean tree): `bash scripts/quality-gates.sh --no-fix` → **`✅ ALL QUALITY GATES PASSED (137s)`** —
+  tests slice `5159 passed, 6 skipped, 0 failed in 60.50s`, zero timeouts, zero xdist errors. Decisive confirmation the
+  code is 100% clean and the CI wall is pure host contention. Host corroboration at investigation time: `uptime` load
+  average `31.90, 33.77, 32.80` on 16 vCPUs (~2x oversubscribed), swap `21Gi/47Gi` in use, 27 concurrent
+  `quality-gates.sh` processes live on this shared host — the identical whole-host-thrashing signature every other entry
+  in this doc-pair tracks.
+
+  By the time this was diagnosed, PR #1064 had **already self-merged** (`mergedAt: 2026-08-03T06:31:51Z`, ~1h before the
+  failing run's own `qg_red_reason` was even recorded) — the same self-merge-before-confirmatory-check-completes pattern
+  this doc documents for other repos (deployment-service #672/#673, features-service #902/#919, instruments-service
+  #1026/#1027/#1035). `main`'s post-merge push-triggered `quality-gates-v2` (`30795433570`) and LDR's own confirmatory
+  dispatch (`30800087100`) were BOTH still `queued` (not stuck/dead, just queue-starved) at investigation time —
+  `main-backmerge-to-ldr` and `Semver Agent` had already completed successfully on the promoted commit, so the real
+  business outcome (code promoted to `main`, backmerged, semver-tagged) is already done, fully independent of whether
+  either confirmatory `quality-gates-v2` check ever goes green.
+
+  **Disposition: no code or workflow change made or needed.** Did not add a redundant retrigger on either branch — both
+  already have a dispatch queued at investigation time, and per this doc's established posture a duplicate dispatch onto
+  an already-contended runner pool doesn't help. `GET /api/repo-blockers` → `open: []`. A second, unrelated
+  `instruments-service` `ldr_qg_failure` escalation (`agt-05a7fe`, `pr_number=0`) was already independently resolved
+  (`still_red_past_deadline`, 05:18Z) before this session started — not touched here. Slot left clean on
+  `live-defi-rollout` (fast-forwarded 2 commits, no local changes beyond this doc). Thirteenth repo-specific
+  corroboration of the fleet-wide contention root cause in this doc-pair, and the first to document the specific
+  worker-dies-inside-its-own-SIGALRM-handler crash mechanics rather than a plain timeout-then-clean-report.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
 
