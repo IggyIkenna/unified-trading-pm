@@ -98,7 +98,7 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
       (`77be36524`): the count was already 91 at the moment the baseline commit landed, unrelated to `plans/archive/`
       (excluded from this check's population) and unrelated to any commit made during this session. Out of this plan's
       scope (archive-specific); recorded as its own follow-up below rather than chased here.
-- [ ] [DOCS] P3. **New finding — duplicate-named archived docs with diverged content.** Investigate + resolve the
+- [x] ✅ [DOCS] P3. **New finding — duplicate-named archived docs with diverged content.** Investigate + resolve the
       cross-folder duplicates surfaced by todo 2: `work_split_2026_05_22_ikenna.md`'s three cited docs
       (`instruments_backfill_phase3_2026_05_22.md`, `mtds_backfill_phase3_2026_05_22.md`,
       `mdps_backfill_phase3_2026_05_22.md`, each present under both `plans/archive/2026_05/` and
@@ -106,7 +106,32 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
       under both `plans/archive/` root and `plans/archive/2026_05/`). Decide per pair: keep-both-as-distinct-revisions
       (rename to disambiguate, e.g. `_v2` or a dated suffix) vs one-is-a-stray-duplicate-safe-to-remove; only then
       hand-fix the two `work_split_2026_05_22_ikenna.md` copies' `related:` entries to point at the resolved target.
-      (repo: `unified-trading-pm`)
+      (repo: `unified-trading-pm`) **RESULT: keep-both — every pair is genuine sequential history, not an accidental
+      duplicate.** Read all 4 pairs in full: (1) `instruments/mtds/mdps_backfill_phase3_2026_05_22.md` — the
+      `plans/archive/2026_05/` copy carries `archived: 2026-05-23` (the original archival) and a smaller, earlier-state
+      task list (several `DEFERRED-OPERATOR-DECISION` items still open); the `plans/archive/2026_06/` copy is materially
+      larger (211 vs 202 / 387 vs 250 / 368 vs 311 lines) and carries a dated "✅ ARCHIVED 2026-06-26 — instruments/MTDS
+      consolidation" banner plus many additional resolved `[SCRIPT]`/`[CODE]` todos (VM OOM root-causes, relaunches,
+      verifications) that only happened AFTER the 2026-05-23 archival — i.e. work genuinely continued on these plans
+      post-archival and the 2026-06-26 consolidation re-captured the final state under a new month folder instead of
+      updating in place. Both snapshots are real historical record of different points in time, not a copy-paste
+      accident — nothing safe to delete. (2) `mock_data_pipeline_benchmarking_2026_05_10.md` is a DIFFERENT kind of
+      pair: the `plans/archive/` root copy is a legacy pre-schema **question** doc (`type: question`,
+      `status: plan-spawned`, `spawned_plan: plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — pointing at
+      its own eventual plan by the same slug) while the `plans/archive/2026_05/` copy is the actual **spawned plan**
+      (`doc_type: plan`, `status: complete`) — genuinely two different documents that happen to share a base filename by
+      the question→plan naming convention. Keep both. Fix applied (no deletions/renames — folder placement already
+      disambiguates on disk; the only real defect was `related:`'s bare-filename resolution): hand-fixed `related:` in
+      both `work_split_2026_05_22_ikenna.md` copies to explicit paths, each pointed at the contemporaneous vintage of
+      its cited docs — the `2026_05` copy → the `2026_05/` targets (matching its own 2026-05-22 snapshot), the `2026_07`
+      copy → the `2026_06/` targets (matching its own 2026-07-13-updated, post-consolidation snapshot). Also fixed the
+      same bare-filename defect in `plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md`'s `related:` (→
+      `/plans/archive/2026_05/mock_data_pipeline_benchmarking_2026_05_10.md`, the plan doc, not the question doc) since
+      it's the other citer of the same ambiguous pair flagged by todo 2. Verified: all 7 new target paths exist on disk,
+      YAML frontmatter parses clean, and `check_reference_paths.py` shows none of the 3 edited files or their new
+      targets in its DANGLING/format-violation output (post-edit format 81/81 unchanged; the existence count moved
+      91→104 since the 2026-08-02/03 session but that drift is from unrelated concurrent corpus activity —
+      grep-confirmed none of it traces to these 3 files).
 - [ ] [DOCS] P3. **Pre-existing +1 existence-ratchet discrepancy, unrelated to `plans/archive/`.** As of
       `unified-trading-pm@dfdb0887` (the commit that re-baselined `check_reference_paths` existence to 90 after
       excluding `plans/archive/`), the live count was already 91 at that same commit — a 1-off measurement gap at
