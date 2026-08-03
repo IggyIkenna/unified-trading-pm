@@ -259,3 +259,12 @@ to be per repo — not measured here, out of this todo's scope.
   → 64.7%) and `deployment-api` (83.3% → 100%), modestly for the others. Full 22-repo table, verified allowlist, and
   fleet-wide estimate (≈884–1,768 min/week, MEASURED eligibility × ASSUMED 20-40% reduction, derivation shown) are now
   in this doc above — all 3 Phase-1 todos flipped `[x]`. Phase 2 (implementation) starts next, per `sequential: true`.
+- **2026-08-03 (same session) — Phase 2 todos 1-3 shipped**: `unified-trading-pm@1452d5da1` — import-graph walker
+  (`import_graph_walker.py`), the escape-hatch-wired selector (`test_impact_selector.py` +
+  `test_impact_allowlist.yaml`), and the golden-set regression suite (`test_test_impact_selector.py`, 9 tests) all
+  landed together. 19 new tests total across the 2 new test files; full `quality-gates.sh` green (1687 passed/11
+  skipped, 0 failed). 2 real bugs caught by the tests themselves before shipping: (1) the walker's first draft only
+  recorded the leaf of a dotted import path, missing every ANCESTOR package's `__init__.py` — real Python import
+  semantics execute each one, so this under-narrowed; (2) `_is_test_file()`'s original heuristic flagged `conftest.py`
+  as a test file merely for living under a `tests/` directory, when pytest never collects it as a test module — fixed to
+  the actual `test_*.py` filename convention. Both fixed before ship, not after.
