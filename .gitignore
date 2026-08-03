@@ -65,6 +65,10 @@ central-element-323112-*.json
 #       cron via --stale-check. NEVER committed — a fleet-shared index is a multi-writer contention
 #       hotspot, and any dirty generated file jams slot-cron-ff-pull (C2 decision). ---
 /DOC_INDEX.generated.md
+#     .DOC_INDEX.generated.md.*.tmp ← atomic-write temp sibling (gen_doc_index.py::_atomic_write_text
+#       writes here then os.replace()s over the real file). Cleaned up on success/error; only a
+#       hard-kill mid-write leaves one behind — ignore it so it can never dirty the tree / jam the cron.
+/.DOC_INDEX.generated.md.*.tmp
 /DOC_GRAPH.generated.html
 /scripts/docs/vendor-cache/
 #     DAG SVGs ← workspace-manifest.json (generate_workspace_dag.py / generate_data_flow_dag.py;
