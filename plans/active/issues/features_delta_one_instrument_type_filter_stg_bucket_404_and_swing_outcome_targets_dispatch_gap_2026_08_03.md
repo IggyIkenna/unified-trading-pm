@@ -173,12 +173,16 @@ from `calculators/__init__.py`'s module-level registry):
       `IS_TEST_RUN=true DEPLOYMENT_ENV=staging` resolves `instruments-store-tradfi-test-central-element-323112` (no
       404); `IS_TEST_RUN` unset/`DEPLOYMENT_ENV=prod` still resolves
       `instruments-store-tradfi-prd-central-element-323112` unchanged.
-- [ ] [SCRIPT] P2. Add `swing_outcome_targets` to `orchestrator.py::_create_calculator`'s local `calculator_map` dict
+- [x] ✅ [SCRIPT] P2. Add `swing_outcome_targets` to `orchestrator.py::_create_calculator`'s local `calculator_map` dict
       (it is already imported + implemented per `calculators/__init__.py`) — or, if there's a genuine reason it's
       excluded from batch dispatch that this doc's investigation missed, document that reason inline the same way
       `temporal`/`economic_events` are documented. **Done when**: a real delta_one run for any asset_group that requests
       `swing_outcome_targets` either produces real output or fails with a documented, deliberate reason — never a silent
-      `calculator_not_registered`. Repo: features-service.
+      `calculator_not_registered`. Repo: features-service. — features-service@b261f1e5. Added `swing_outcome_targets`
+      import + `"swing_outcome_targets": swing_outcome_targets.SwingOutcomeTargets` entry to `calculator_map`
+      (`delta_one/engine/orchestrator.py`). Confirmed via a direct `uv run python` smoke: imports `OrchestrationService`
+      and asserts `swing_outcome_targets` appears in `_create_calculator`'s source; full `quality-gates.sh` green
+      (formula-hash drift gate now reports `swing_outcome_targets` as a tracked group).
 - [ ] [DATA] P2. Investigate why the `2026-01-20/2026-01-21` window (auto-resolved by `--require-captured --auto-day` as
       fully covered) produced 0/586 usable TRADFI instruments at actual candle-load time — confirm whether this is the
       same coverage-check-vs-real-data disagreement as root cause A in the parent issue doc
@@ -195,3 +199,7 @@ from `calculators/__init__.py`'s module-level registry):
   `config.py`, and `orchestrator.py`. Not fixed this session (out of scope for the parent verification-only todo); filed
   per the findings-closure HARD RULE with concrete, actionable fix-todos citing the 4 prior sibling fixes to mirror for
   root cause 1.
+- 2026-08-03 (slot-9, worker): Fixed root cause 3's P2 todo — added `swing_outcome_targets` to
+  `orchestrator.py::_create_calculator`'s local `calculator_map` dict (features-service@b261f1e5). Verified via a live
+  import smoke (not just code review) confirming the group is now dispatchable, plus a clean full `quality-gates.sh`
+  run.
