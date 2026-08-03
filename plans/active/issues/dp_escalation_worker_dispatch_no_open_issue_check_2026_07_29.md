@@ -318,3 +318,14 @@ regression) is worse.**
   backlog has now consumed 30+ full orchestrator-agent dispatches — still awaiting the operator/design decision on
   Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log. Full writeup in the book_snapshot_5 doc's
   own Progress Log.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — `(cefi, book_snapshot_5)`'s 20th+
+  dispatch, and this time the SAME escalation_id (`agt-e11908`) as the entry directly above, not just the same
+  condition.** Fifth confirmed exact-duplicate-escalation_id case overall (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3`
+  2026-07-31, `agt-406c1f` 2026-07-31 — all `(cefi, book_snapshot_5)`) — the literal same escalation event dispatched to
+  two different slots (slot 4, then slot 9) with byte-identical alert numbers (300,744/1,121,420 attempted_failed). Not
+  addressed by the materiality fix (that changes classification/paging severity for a condition, it cannot deduplicate
+  two dispatches of the identical event) — squarely Option A/B/C's territory. Session cost: two file reads
+  - a git-ancestor batch check (5 commits, all still in place) + a Progress Log append in the book_snapshot_5 doc, no
+    GCS read (the slot-4 twin had just pulled a fresh live read moments earlier), no code change. Combined across both
+    tracked conditions, this backlog has now consumed 31+ full orchestrator-agent dispatches — still awaiting the
+    operator/design decision on Option A/B/C.

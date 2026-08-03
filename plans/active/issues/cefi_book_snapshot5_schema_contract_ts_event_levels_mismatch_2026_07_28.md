@@ -766,3 +766,17 @@ against the reproduction script.
   slot) with this outcome; this is now the 19th+ dispatch for this condition, further corroborating
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
   the orchestrator dispatch layer.
+
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — 20th+ dispatch, SAME escalation_id
+  (`agt-e11908`) as the entry directly above, dispatched to a second slot (slot 4 then slot 9) — the fifth confirmed
+  exact-duplicate-escalation_id case (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f` 2026-07-31,
+  all `(cefi, book_snapshot_5)`).** Did not repeat the live GCS read the slot-4 session already did moments earlier for
+  this identical escalation_id — instead re-verified the five root-cause fix commits are still ancestors of
+  `origin/live-defi-rollout` (fresh `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK. The slot-4 entry directly above already established the
+  215/24h trickle is 100% the OTHER already-tracked Tardis rate-limit/concurrent-IP-lock mechanism (zero new
+  schema-contract-violation rows since the 2026-07-31T04:18:05Z checkpoint) with a healthy 98.2% capture success rate —
+  nothing to add. **Conclusion: no code fix needed.** Session cost: doc read + git-ancestor batch check (5 commits) +
+  this Progress Log append, no GCS read, no code change, no VM launch. This case is squarely
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A/B/C territory (identical
+  escalation_id, two slots) — corroborating entry added there too.
