@@ -155,15 +155,80 @@ commodity-scope mismatch, not a vendor format change) and a different fix surfac
       (`rig_count` value produced, no "unexpected file format" warning). 2 new regression tests added pinning the new
       shape (`test_parse_workbook_drillfor_breakdown_shape`,
       `test_find_drillfor_breakdown_no_drillfor_section_returns_none`).
-- [ ] [SCRIPT] P2. **features-service** — decide + act on calendar's 4 dead-code adapters: EITHER (a) wire
-      `SentimentCalculator` into `calendar_orchestrator.py`'s batch path (add `sentiment` to `CALENDAR_FEATURE_GROUPS` +
-      the calculator dispatch) and wire `corporate_actions_handler.py`'s mode into `cli/main.py`'s `_OPERATIONS` map
-      (mirroring how `economic_results` was wired) so the smoke check actually covers them, OR (b) if genuinely
-      obsolete/superseded, delete `sentiment_calculator.py` + `corporate_actions_handler.py` + their 4 adapters entirely
-      (no-shims rule) and note the removal in this doc. This is a judgment call the audit itself is not making — file as
-      `[OPERATOR]`-gated if the answer isn't obvious from a quick history check (`git log` on
-      `sentiment_calculator.py`/`corporate_actions_handler.py` for why they were added and whether anything downstream
-      still expects their output).
+- [x] [SCRIPT] P2. ✅ **features-service** — decide + act on calendar's 4 dead-code adapters. **Split decision, resolved
+      2026-08-03** (history check done; `corporate_actions_handler.py` wired, `SentimentCalculator` filed
+      `[OPERATOR]`-gated — see reasoning below), `features-service@<pending>`.
+
+      **History check performed** (`git log --follow` on all 4 adapters + both calculators/handlers): all 4 came in
+          wholesale via the 2026-05-08 `feat(calendar): import features-calendar-service into features-service via git
+          subtree` commit (a previously-standalone repo folded in whole) — they are inherited, not purpose-built dead code.
+          Since then, only mechanical repo-wide fixes touched them (lint/`type: ignore`/bucket-migration/basedpyright), no
+          one has done feature work on them specifically. Calendar's own (also-dead, never-consulted)
+          `feature_builder_registry.py` declares `sentiment` + `corporate_actions` as intended feature groups with real
+          column names — showing original design intent to serve both, though that registry itself is unwired so it isn't
+          strong evidence on its own. No downstream consumer (grepped UAC, strategy-service, ml-service) references any of
+          these column names — nothing today depends on their output. Real precedent exists (`4eb5d628`, 2026-07-30) for
+          wiring a similarly-dormant calendar calculator into the batch path when a plan authorizes it (yield_curve +
+          economic_results, converting the `macro_micro_econ_data_capture_audit` issue doc's recommendation into code) — but
+          that same commit shows `economic_results` got a STANDALONE `--operation economic_results` entry point distinct
+          from the per-day `CALENDAR_FEATURE_GROUPS` batch-loop wiring, not just an `_OPERATIONS`-map registration.
+
+          **Corporate actions (`corporate_actions_handler.py`: `yfinance_earnings_adapter.py` + `polygon_corporate_actions_adapter.py`) — WIRED, option (a).**
+          `run_corporate_actions()` was already a complete, already-tested (`tests/calendar/unit/test_corporate_actions_handler.py`,
+          46 tests, all passing pre- and post-change), standalone `--operation corporate_actions --mode batch` function —
+          it just had no entry in `cli/main.py`'s `operations={}` map, so nothing could ever invoke it (confirmed dead code
+          per the audit). Registered `CorporateActionsModeHandler` (mirrors `EconomicResultsModeHandler`'s wrapper pattern)
+          + a `--tickers` CLI flag, added to `operations={...}`. This is a standalone, separately-invoked operation (like
+          `economic_results`) — its success/failure does NOT affect `--operation compute --mode batch`'s exit code or the
+          family-level smoke check's pass/fail signal, so this was safe to wire regardless of the Polygon credential's live
+          status (unconfirmed — `polygon-api-key` is not tracked in `unified-trading-pm/credentials-registry.yaml` at all;
+          yfinance needs no credential). Verified end-to-end: `python -m features_service.calendar --operation
+          corporate_actions --mode batch --dry-run --tickers AAPL --start-date 2026-08-01 --end-date 2026-08-01` reaches
+          real `app()`/`GCSCalendarStorage` code (fails only on missing `GCP_PROJECT_ID` env in this dev shell — proves the
+          argparse→ServiceBootstrap→handler→app() wiring is genuinely live). **Caveat, not fully closing the masking gap**:
+          this makes `corporate_actions_handler.py` CLI-reachable (fixes "unreachable dead code"), but `smoke_matrix.py`
+          only invokes `--operation compute --mode batch`, which never calls `--operation corporate_actions` — so the
+          family-level smoke check STILL never exercises this code path. Closing that fully would need `corporate_actions`/
+          `earnings_results` genuinely integrated into `CALENDAR_FEATURE_GROUPS`/`process_day()` (ticker-keyed data doesn't
+          fit that per-date calling convention without real integration work) — a separate, larger follow-up, not done here
+          given this todo's scope + the credential uncertainty above.
+
+          **Sentiment (`sentiment_calculator.py`: `cryptopanic_adapter.py` + `lunarcrush_adapter.py`) — `[OPERATOR]`-gated,
+          NOT wired.** Two concrete, evidence-backed reasons this is a genuine judgment call, not a mechanical one:
+          1. **Confirmed real cost, not provisioned.** `unified-trading-pm/credentials-registry.yaml` lists BOTH
+             `cryptopanic-api-key` and `lunarcrush-api-key` as `status: needs_provisioning` — combined cost estimate
+             $50-250/mo (CryptoPanic's free dev tier referenced in `macro_micro_econ_data_capture_audit_2026_06_05.md`
+             ended 2026-04-01, so it's paid-only now). The registry's own `required_for` field names
+             `features-cross-instrument-service` (news/social sentiment), NOT calendar — grepped `cross_instrument`'s
+             calculators and confirmed no cryptopanic/lunarcrush usage exists there either, so these credentials (even if
+             provisioned) were earmarked for a different, also-unbuilt consumer, not calendar's `SentimentCalculator`
+             specifically. The operator's cost posture on adjacent asks is documented: declined Glassnode Pro (~$999/yr)
+             and CoinGlass (~$299/mo) on 2026-07-29 in the same macro-audit doc — a new $50-250/mo commitment for calendar
+             sentiment is exactly the kind of spend that ruling pattern says needs an explicit operator answer, not a
+             data_engineering worker's unilateral call.
+          2. **Concrete correctness risk if wired without live credentials, not just a budget nicety.** Unlike
+             `corporate_actions`, wiring `sentiment` the way the task originally suggested (`add sentiment to
+             CALENDAR_FEATURE_GROUPS`) ties it into `batch_handler.py`'s per-day loop, which (a) only catches
+             `(ConnectionError, TimeoutError, OSError, ValueError)` per feature-group — the adapters' `RuntimeError(f"Secret
+             '{secret_name}' not found in Secret Manager")` on a missing key is NOT in that tuple, so it would propagate
+             uncaught out of `_process_batch_day`, breaking the whole per-day loop instead of just marking one group
+             failed — and (b) `_log_batch_summary` does `sys.exit(1)` if `total_failed > 0` across ANY feature group, so
+             even a caught failure would make the WHOLE calendar family report failure for EVERY batch day. That is exactly
+             the "fail-closed guard permanently, silently unsatisfiable" bug class this very issue doc documents for Baker
+             Hughes and CL/`weather_delta` (findings 1 + 3 above) — wiring `sentiment` without live credentials would
+             create a THIRD instance of that same bug class, not just leave dead code dead.
+
+          Follow-up action item tracked as its own todo below (findings-triage: every follow-up is a checkbox, not prose).
+
+- [ ] [OPERATOR] P2. **features-service** — decide calendar's `SentimentCalculator` fate (`cryptopanic_adapter.py` +
+      `lunarcrush_adapter.py`): EITHER approve the CryptoPanic + LunarCrush spend (~$50-250/mo combined, both
+      `status: needs_provisioning` in `unified-trading-pm/credentials-registry.yaml`) so a data_engineering worker can
+      wire `SentimentCalculator` into `CALENDAR_FEATURE_GROUPS` (must first fix `_process_batch_day`'s exception tuple
+      to catch the credential-missing `RuntimeError`, else this reproduces the Baker Hughes/CL fail-closed bug class —
+      see reasoning in todo 2 above), OR accept these are superseded by the credentials-registry's stated real intended
+      consumer (features-cross-instrument-service's still-unbuilt sentiment features, confirmed not built there either)
+      and delete `sentiment_calculator.py` + `cryptopanic_adapter.py` + `lunarcrush_adapter.py` + their tests (no-shims
+      rule). **Done when**: operator answers; a follow-up worker executes the chosen branch.
 - [ ] [DATA] P2. **features-service** — root-cause + fix CL's permanent `weather_delta` factor-coverage failure (see
       finding 3 above). Determine why `enabled_factor_groups` isn't narrowed for CL despite `config.py`'s own docstring
       claiming per-commodity overrides live in ConfigStore `CommodityProfile` (trace whether `batch_handler.py` /
@@ -186,3 +251,19 @@ commodity-scope mismatch, not a vendor format change) and a different fix surfac
   surface (ConfigStore data / `enabled_factor_groups` resolution, not an adapter parser); not fixed inline since
   root-causing which layer owns the per-commodity override is itself the open question. Todo 2 (calendar dead-code
   decision) untouched — outside this task's scope.
+- 2026-08-03 (slot-13, data_engineering): Closed todo 2 (calendar dead-code decision) as a SPLIT decision, per the
+  todo's own "file as [OPERATOR]-gated if not obvious" escape hatch. History check (`git log --follow` on all 4
+  adapters + both calculators) showed genuine heterogeneity across the 4, not a clean wire-all-or-delete-all call:
+  `corporate_actions_handler.py` (yfinance, free + polygon, cost-unconfirmed) was a complete, already-tested standalone
+  operation just missing `cli/main.py` registration — wired it (`CorporateActionsModeHandler`, mirrors
+  `EconomicResultsModeHandler`), verified end-to-end via a real CLI invocation reaching `app()`. `SentimentCalculator`
+  (cryptopanic + lunarcrush) was NOT wired: both credentials are confirmed `needs_provisioning` in
+  `credentials-registry.yaml` (real $50-250/mo, earmarked in that registry for a different, also-unbuilt consumer —
+  features-cross-instrument-service, not calendar), AND wiring it into `CALENDAR_FEATURE_GROUPS` without live
+  credentials would crash/permanently-fail-close the whole calendar batch (RuntimeError isn't in `_process_batch_day`'s
+  caught-exception tuple; `_log_batch_summary` exits 1 on any group failure) — a concrete third instance of this doc's
+  own Baker Hughes/CL bug class, not just a budget question. Filed the sentiment decision as its own `[OPERATOR]` todo
+  (new todo, findings-triage: checkbox not prose) rather than leaving it as unactioned prose. Explicitly noted the
+  corporate_actions wiring does NOT by itself close the smoke-check masking gap (smoke_matrix.py only invokes
+  `--operation compute --mode batch`, never `--operation corporate_actions`) — full closure needs
+  `CALENDAR_FEATURE_GROUPS`/`process_day()` integration, a separate larger follow-up not attempted here.
