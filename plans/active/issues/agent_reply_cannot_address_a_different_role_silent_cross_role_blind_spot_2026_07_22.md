@@ -196,6 +196,7 @@ too large.
   where a careless change breaks the reply-ack / redelivery-cap machinery), and one of the 3 open todos is an explicit
   `[REVIEW] P3` operator sign-off gate that must be recorded BEFORE the P1 routing change ships. In scope only via the
   2026-08-02 meta-retag sweep (`0409fa053`); content unchanged.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, per-item refinement.** In
   scope because the doc was edited since the 2026-08-02 marker (`context_scope` backfill). 2 of the 3 open items (line
   168 P1 backend routing fix, line 179 P3 review sign-off gate) remain genuinely operator-gated per the doc's own

@@ -193,3 +193,4 @@ rows) is real but small and not urgent.
   citing `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` line 144 as the executing doc, mirroring this doc's own
   already-`[x]`'d `[DOCS] P3` sibling todo's pattern ("already covered by ...batch3..., see that doc for execution").
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

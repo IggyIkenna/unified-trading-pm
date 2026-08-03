@@ -45,6 +45,8 @@ context_scope:
   [
     /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
   ]
 supersedes:
 superseded_by:
@@ -94,3 +96,4 @@ skill's no-double-gate mechanism).
 
 - **2026-08-02** — Authored alongside `infra_satellite_ao_dispatch_batch6_2026_08_02.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 11).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

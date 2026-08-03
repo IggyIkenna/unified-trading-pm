@@ -104,6 +104,7 @@ is just wrong to assume it won't fire.
   `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"). A
   dated operator ruling is not re-litigated by this skill. Both todos re-read and still accurate: the `E2E-DISPATCHED`
   seed drift is unfixed and the root cause is still an untested hypothesis.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Standing operator ruling
   (`unified-trading-pm@14478ca26`) directly covers this doc, independently re-verified real via `git show`, not
   re-litigated. Independently confirmed both items still open and accurate: no commit has touched the seed script or

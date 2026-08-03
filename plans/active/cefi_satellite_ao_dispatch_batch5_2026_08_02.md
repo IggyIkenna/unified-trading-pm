@@ -98,53 +98,53 @@ context_scope:
       every sibling live launcher.~~
 
       **Resolution (2026-08-02, slot 15):** before implementing, traced whether MTDS's live-mode capture path actually
-                      opens the authenticated `datasets.tardis.dev` connection this guard protects — it does not, for either
-                      `--live-source native` (per-venue native WS connectors) or `--live-source tardis-machine` (a free, unauthenticated
-                      `stream-normalized` sidecar endpoint, explicitly NOT the billed `replay-normalized` one), corroborated by
-                      `tardis-concurrency-guard.sh`'s own embedded "Self-declaring metadata model" comment ("live MTDS tardis-machine is
-                      an unauthenticated local sidecar ... neither contends"). Only 2 of the 8 `launch-*live*.sh` scripts even create
-                      cefi WS-capture VMs at all (`launch-mtds-live.sh`, `launch-mtds-live-cefi-consolidated.sh`); the other 6 are
-                      confirmed structurally non-Tardis regardless (non-cefi asset groups or no market-data ingestion). Wiring a hard
-                      refusal gate (cap=1) into a 24/7 live producer would close no real contention gap and would introduce a NEW
-                      failure mode: refusing a legitimate live-producer (re)launch whenever an unrelated cefi Tardis backfill happens
-                      to be running concurrently — live-data loss, exactly what CLAUDE.md's live/forward-VM on-demand rule protects
-                      against. Filed full evidence + posted `/blocked` (BLK-5aa3ce78); operator ruled **Option A — do not wire the
-                      guard**, close as not-a-bug. Evidence:
-                      `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`
-                      (unified-trading-pm@c34bfd176). **Follow-up filed as its own todo** (not folded into this close) in that same
-                      finding doc: IF a future live connector change ever routes through the paid endpoint, add a NON-REFUSING,
-                      log-only observability check to the affected launcher(s) — never a hard gate on a live producer. Source doc's
-                      P1 + P2 flipped citing this same evidence (`unified-trading-pm@c34bfd176` for the finding; this commit for the
-                      flips) — its P3 (todo 2 of this plan) is untouched, out of scope for todo 1.
+                              opens the authenticated `datasets.tardis.dev` connection this guard protects — it does not, for either
+                              `--live-source native` (per-venue native WS connectors) or `--live-source tardis-machine` (a free, unauthenticated
+                              `stream-normalized` sidecar endpoint, explicitly NOT the billed `replay-normalized` one), corroborated by
+                              `tardis-concurrency-guard.sh`'s own embedded "Self-declaring metadata model" comment ("live MTDS tardis-machine is
+                              an unauthenticated local sidecar ... neither contends"). Only 2 of the 8 `launch-*live*.sh` scripts even create
+                              cefi WS-capture VMs at all (`launch-mtds-live.sh`, `launch-mtds-live-cefi-consolidated.sh`); the other 6 are
+                              confirmed structurally non-Tardis regardless (non-cefi asset groups or no market-data ingestion). Wiring a hard
+                              refusal gate (cap=1) into a 24/7 live producer would close no real contention gap and would introduce a NEW
+                              failure mode: refusing a legitimate live-producer (re)launch whenever an unrelated cefi Tardis backfill happens
+                              to be running concurrently — live-data loss, exactly what CLAUDE.md's live/forward-VM on-demand rule protects
+                              against. Filed full evidence + posted `/blocked` (BLK-5aa3ce78); operator ruled **Option A — do not wire the
+                              guard**, close as not-a-bug. Evidence:
+                              `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`
+                              (unified-trading-pm@c34bfd176). **Follow-up filed as its own todo** (not folded into this close) in that same
+                              finding doc: IF a future live connector change ever routes through the paid endpoint, add a NON-REFUSING,
+                              log-only observability check to the affected launcher(s) — never a hard gate on a live producer. Source doc's
+                              P1 + P2 flipped citing this same evidence (`unified-trading-pm@c34bfd176` for the finding; this commit for the
+                              flips) — its P3 (todo 2 of this plan) is untouched, out of scope for todo 1.
 
-                      Ordered sub-steps for ONE worker (same launcher family, deliberately not fanned out; **not executed — see
-                      Resolution above**): (a) in
-                      `deployment-service/scripts/vm/launch-mtds-live.sh`, source `tardis-concurrency-guard.sh` and call
-                      `tardis_concurrency_guard` pre-flight plus `tardis_guard_reserve_slot` immediately before VM creation, gated on
-                      the shard's venue needing the guard. **REUSE, do not re-implement** — call the already-shipped
-                      `tardis_venue_list_needs_guard` helper (`deployment-service@2d6b01a`) rather than open-coding a venue list. (b)
-                      Then apply the same wiring to the sibling launchers that need it. **Verified live 2026-08-02**: the guard helper
-                      and `TARDIS_CAP_EXEMPT_VENUES` do exist in `deployment-service/scripts/vm/tardis-concurrency-guard.sh` (note:
-                      directly under `scripts/vm/`, not a `lib/` subdir as one might assume), and **all 8** `launch-*live*.sh` scripts
-                      under `scripts/vm/` currently have ZERO guard references — `launch-mtds-live.sh`,
-                      `launch-mtds-live-cefi-consolidated.sh`, `launch-mtds-live-prediction-consolidated.sh`,
-                      `launch-mdps-features-live.sh`, `launch-perp-clob-live.sh`, `launch-prediction-live.sh`,
-                      `launch-strategy-live-vm.sh`, `launch-batch-live-recon-cron-vm.sh`. That is a WIDER scope than the source doc's P2
-                      text (which named only 2 siblings); triage each of the 8 for whether it can actually create a Tardis-fetching VM
-                      and wire only those, recording the per-launcher verdict. **Do NOT "correct" the shipped exempt list from the
-                      source doc's prose** — the live list is `(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)`, which differs from
-                      that doc's older text; if the divergence is real it is its own finding, confirm against `VENUE_TO_ADAPTER_KEY`
-                      first. **Scope note: this todo is a launcher-script code change only — it requires no new VM launch and performs
-                      no deletes.** It makes FUTURE live-leg launches respect the N=1 cap; the worker must not create a VM to test it
-                      (unit/shellcheck coverage plus a dry-run of the guard's refusal path is the intended verification). This todo
-                      covers the source doc's P1 and P2 together. Source:
-                      `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1 + P2 of 3). **Done when** —
-                      **superseded by the Resolution above**: instead of shipping the wiring, every launcher's Tardis exposure was
-                      determined and recorded (2 of 8 create cefi WS-capture VMs but neither contends for the authenticated slot; the
-                      other 6 are structurally non-Tardis), the finding is evidenced in a dedicated issue doc, the operator ruled on
-                      the resulting decision (BLK-5aa3ce78, Option A), and the source doc's P1 + P2 checkboxes are flipped citing that
-                      evidence. No code ships for this todo — the correct action was NOT shipping the originally-instructed change.
-                      Repo: deployment-service (no change), unified-trading-pm (this flip + the finding doc).
+                              Ordered sub-steps for ONE worker (same launcher family, deliberately not fanned out; **not executed — see
+                              Resolution above**): (a) in
+                              `deployment-service/scripts/vm/launch-mtds-live.sh`, source `tardis-concurrency-guard.sh` and call
+                              `tardis_concurrency_guard` pre-flight plus `tardis_guard_reserve_slot` immediately before VM creation, gated on
+                              the shard's venue needing the guard. **REUSE, do not re-implement** — call the already-shipped
+                              `tardis_venue_list_needs_guard` helper (`deployment-service@2d6b01a`) rather than open-coding a venue list. (b)
+                              Then apply the same wiring to the sibling launchers that need it. **Verified live 2026-08-02**: the guard helper
+                              and `TARDIS_CAP_EXEMPT_VENUES` do exist in `deployment-service/scripts/vm/tardis-concurrency-guard.sh` (note:
+                              directly under `scripts/vm/`, not a `lib/` subdir as one might assume), and **all 8** `launch-*live*.sh` scripts
+                              under `scripts/vm/` currently have ZERO guard references — `launch-mtds-live.sh`,
+                              `launch-mtds-live-cefi-consolidated.sh`, `launch-mtds-live-prediction-consolidated.sh`,
+                              `launch-mdps-features-live.sh`, `launch-perp-clob-live.sh`, `launch-prediction-live.sh`,
+                              `launch-strategy-live-vm.sh`, `launch-batch-live-recon-cron-vm.sh`. That is a WIDER scope than the source doc's P2
+                              text (which named only 2 siblings); triage each of the 8 for whether it can actually create a Tardis-fetching VM
+                              and wire only those, recording the per-launcher verdict. **Do NOT "correct" the shipped exempt list from the
+                              source doc's prose** — the live list is `(HYPERLIQUID ASTER EXTENDED-STARKNET COINBASE-CDE)`, which differs from
+                              that doc's older text; if the divergence is real it is its own finding, confirm against `VENUE_TO_ADAPTER_KEY`
+                              first. **Scope note: this todo is a launcher-script code change only — it requires no new VM launch and performs
+                              no deletes.** It makes FUTURE live-leg launches respect the N=1 cap; the worker must not create a VM to test it
+                              (unit/shellcheck coverage plus a dry-run of the guard's refusal path is the intended verification). This todo
+                              covers the source doc's P1 and P2 together. Source:
+                              `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1 + P2 of 3). **Done when** —
+                              **superseded by the Resolution above**: instead of shipping the wiring, every launcher's Tardis exposure was
+                              determined and recorded (2 of 8 create cefi WS-capture VMs but neither contends for the authenticated slot; the
+                              other 6 are structurally non-Tardis), the finding is evidenced in a dedicated issue doc, the operator ruled on
+                              the resulting decision (BLK-5aa3ce78, Option A), and the source doc's P1 + P2 checkboxes are flipped citing that
+                              evidence. No code ships for this todo — the correct action was NOT shipping the originally-instructed change.
+                              Repo: deployment-service (no change), unified-trading-pm (this flip + the finding doc).
 
 - [ ] [DOC] P3. **Add the live-leg Tardis guard-gap note to the `data-pipeline-check-mtds` skill's Phase-2 section.**
       Document that a live-leg smoke check against a Tardis-sourced venue can contend with an active Tardis
@@ -273,3 +273,7 @@ batch1 through batch4 finalize pattern.
   migration has not cleared.
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step ritual this batch's finalize plan
   executes.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

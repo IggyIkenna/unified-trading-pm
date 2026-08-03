@@ -44,7 +44,6 @@ context_scope:
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
     deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
   ]
 ---
@@ -204,3 +203,4 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   6/11's park recommendation already stand). No unblocked action available. Released via
   `/skip-current-task {"reason_code": "BLOCKED"}`. Not re-filing a duplicate `/blocked` — nothing changed since the
   standing one; endorsing the park recommendation a 3rd time.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

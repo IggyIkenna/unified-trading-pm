@@ -65,8 +65,6 @@ context_scope:
     /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
-    cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
-    cursor-configs/CLAUDE.md,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
   ]
 ---
@@ -383,3 +381,4 @@ own tests pass (178 passed across the four canonical-path test modules).
   `BLOCKED-UPSTREAM-DESIGN`-tagged todo corpus-wide, not just this one. Checkbox stays `[ ]` — same as slot-12's
   determination, the quarantine disposition itself is still not wired and still gated on
   `fail_hard_canonical_enforcement_design_2026_07_20.md`'s open `[DESIGN] P1` todo.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

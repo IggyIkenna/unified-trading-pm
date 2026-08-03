@@ -151,3 +151,4 @@ not the dispatch-tooling gap). Suggested next steps:
   (`test_regen_park_survives_sibling_insertion` passes on current code; matching is content-hash-only, not positional),
   leaving the original incident's trigger unexplained and the alerting question genuinely undecided rather than merely
   unimplemented.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

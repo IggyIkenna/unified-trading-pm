@@ -106,3 +106,4 @@ first:
   `unified-trading-pm@14478ca26` flipped it to `assigned_vm: NA` + `execution_scope: local-only`. Corrected the todo's
   citation so a future reader is not told the work is queued for AO when it is now operator-driven. `assigned_vm: NA`
   unchanged here — zero backlog impact, pure hygiene, exactly the KEEP-NA-STALE contract.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

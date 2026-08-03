@@ -123,3 +123,7 @@ context_scope:
   finalize-sibling convention todo 3 restores.
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar todo 2 checks for before the
   deferred marker-format migration can move to a future batch.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

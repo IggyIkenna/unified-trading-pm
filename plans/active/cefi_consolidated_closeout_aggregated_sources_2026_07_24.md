@@ -801,3 +801,4 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
   commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
   run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (2 entries).

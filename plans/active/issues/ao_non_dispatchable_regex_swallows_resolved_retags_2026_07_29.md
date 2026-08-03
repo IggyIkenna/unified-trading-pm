@@ -216,6 +216,7 @@ past tense rather than deleting it outright.
 - **Counting note (2026-08-02)**: real open-todo count is **1** (the `[DATA] P1` rephrase-the-27 item), not the 3 the NA
   inventory reports — the other 2 `- [ ]` matches are illustrative examples inside fenced code blocks in the Evidence
   section. See `/plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Confirmed only 1 of the 3 grep hits is
   a real todo of this doc; the other 2 are fenced-code quoted excerpts from other files (per the doc's own Counting note
   above). The one real item was `RECLASSIFY`'d once (2026-07-30) then explicitly reverted by a dated operator directive

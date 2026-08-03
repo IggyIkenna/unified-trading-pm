@@ -208,3 +208,4 @@ source: >-
   replacement). Archival ritual NOT run; both docs stay `active`. Full detail on this todo's own checkbox above and the
   parent's matching Progress Log entry.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

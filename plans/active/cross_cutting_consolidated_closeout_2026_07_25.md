@@ -91,11 +91,8 @@ context_scope:
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/02-data/honest-coverage-model.md,
   ]
 depends_on: []
 source: >-
@@ -866,3 +863,4 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator gate (2026-07-25): do not flip to
   planning until operator personally runs /ag-closeout-audit + /plan-reconcile for this AG; sole open item is a
   meta-note about untracked digest items, not dispatchable work itself.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

@@ -36,7 +36,13 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
-context_scope: [/plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md, agents/RULES.md]
+context_scope:
+  [
+    /plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
+    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
+    agents/RULES.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+  ]
 ---
 
 # AO backlog regen has no collision/liveness gate for a todo whose completion depends on a multi-hour external driver -- 2026-08-02
@@ -125,6 +131,7 @@ even if nobody revisits it.
   to the deadlock risk documented above. No code shipped this entry -- pure findings-closure doc per `RULES.md` § 4.5,
   converting 7+ prior slots' prose flags into a tracked, actionable pair of todos.
 
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — first marker (no prior; doc filed 2026-08-02). Both
   items touch agent-orchestrator's core dispatcher/`/boot` machinery with real unresolved design details (the matching
   heuristic, state-storage choice, free-form Progress-Log-parsing approach) rather than fully-specified, mechanically

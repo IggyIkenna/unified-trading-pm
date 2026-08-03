@@ -133,3 +133,4 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
   byte-identical to the 07-30 reading (`git diff f3b018596..HEAD` = the `context_scope` block only). Verdict unchanged:
   the sole todo asks the operator to resolve a genuine same-day SSOT contradiction (codex vs plan banner) governing
   whether an agent may execute a ~1.2M-object delete. Requires an explicit ruling, not worker-determinable.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

@@ -59,8 +59,6 @@ context_scope:
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 supersedes:
 superseded_by:
@@ -269,3 +267,4 @@ Measured 2026-07-30 against the live corpus, not carried forward on trust:
   banner-guarded doc caused three real mis-dispatches before being reverted. Finding 7's recommendation (flip to
   `planning` to match batch1/batch2) is the right one and stands; it needs the operator. No duplicate park filed — the
   decision lives in the 2026-08-02 parked-findings doc.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

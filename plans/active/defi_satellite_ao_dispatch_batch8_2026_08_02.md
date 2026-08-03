@@ -125,3 +125,4 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
   aware of if you are a future auditor**: the source's Phase-3 checkbox still reads plainly open with no citation, so it
   can look un-dispatched. It is NOT — it is this batch's todo. Do not re-extract it; check this doc first. The deferred
   annotation text is preserved verbatim in that issue doc for whoever unblocks the cap.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

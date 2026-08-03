@@ -223,3 +223,4 @@ cefi-specific** — same defect now reproduced on a second tranche.
   of when the target is live-dispatch-critical-path machinery. **Also flagged**: `asset_group: [meta]` with
   `parent_epic: agent_operating_framework_master` — a third instance of the `ao`-mistag deadlock measured this run; see
   the tranche-level BLOCKED-OPERATOR-DECISION in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
