@@ -131,22 +131,25 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                                                                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                                                                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                                                                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                                                                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                                                                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                                                                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                                                                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                                                                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                                                                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                                                                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                                                                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                                                                              > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                                                                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                                                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                                                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                                                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                                                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                                                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                                                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                                                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                                                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                                                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                                                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                                                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                                                                  > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                                                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
-      canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
+      canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144. **na-eligibility-audit
+      2026-08-03**: already tracked (still open) as part of `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      combined todo (sub-item (b), `assigned_vm: planning`, `status: active`) — not closing here, just citing to avoid
+      this reading as unclaimed.
 - [x] [DATA] P0. **cefi — 802k `attempted_failed` TRIAGED** (CEFI lane 2026-06-21, measured from consolidated v9
       `_index`): by source — **tardis 753,341 + 22,519 phantom = 775,860 (96.7%) Tardis-gated** (batch_tardis;
       historical billing EXCLUDED → BLOCKED-CREDENTIALS) · **hyperliquid 30,835 + aster 17,675 = 48,510 free-venue
@@ -574,14 +577,22 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
       (not just `trades`), per `venue_data_types.yaml`.
 - [ ] [DATA] P1. **Step 4 — credential-gated venues** `BLOCKED-CREDENTIALS`: file the asks (Helius/Alchemy, Glassnode/
       Kaiko, Tardis, Databento, Sportradar/Odds-API); build scaffold + tests now, backfill on creds.
+      **na-eligibility-audit 2026-08-03**: already tracked (still open) as part of
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s combined todo (sub-item (a), `assigned_vm: planning`,
+      `status: active`) — not closing here, just citing.
 - [ ] [DATA] P1. **Step 5 — keep it 100%**: live capture per AG (batch=live) + continuous verification green
       (consolidator healthy, data-status dashboard = standing proof, alert on regression).
 - [ ] [CODE] P0. **DeFi catalogue MVP filter** — MTDS reads the IS catalogue as the MVP filter (TVL-qualifying
-      pools/day); `risk_params` (193,042 EU) has NO MTDS handler. _(folded from
-      `defi_instrument_catalogue_and_capture_pipeline`.)_
+      pools/day); ~~`risk_params` (193,042 EU) has NO MTDS handler~~ **STALE (na-eligibility-audit 2026-08-03)** — this
+      half is done: `instruments_completion_tracker_2026_07_06.md:474` confirms the `risk_params` MTDS handler shipped
+      2026-06-24. The MVP-filter mechanism itself (MTDS reading the IS catalogue as a TVL-qualifying filter) remains
+      unverified and stays open. _(folded from `defi_instrument_catalogue_and_capture_pipeline`.)_
 - [ ] [MTDS] P1. **DeFi honest-absence + residual tail** — record genuine zeros honestly post-capture; add subgraphs for
-      catalogue venues the dex handlers miss; catalogue monotonicity check; MIGRATE-then-delete legacy `dex_pools/` +
-      `lending_indices/` sibling trees. _(folded from the DeFi catalogue/adapter plans.)_
+      catalogue venues the dex handlers miss; catalogue monotonicity check; ~~MIGRATE-then-delete legacy `dex_pools/` +
+      `lending_indices/` sibling trees~~ **STALE (na-eligibility-audit 2026-08-03)** — already done: CLAUDE.md confirms
+      "dex_pools/ + lending_indices/ — FOLDED + DELETED 2026-07-21 ... legacy prefixes now 0 objects." The other 3 named
+      sub-items (genuine-zeros recording, missing subgraphs, monotonicity check) remain open. _(folded from the DeFi
+      catalogue/adapter plans.)_
 - [ ] [CODE] P1. **DeFi swallow-fixes (CF-11 class)** — `DefiManifestRecorder` pass-through (`_defi_manifest.py`
       `record_empty`/`record_failed`); `liquidations_handler.py` GraphQL body-error swallow; `polymarket_adapter`
       `_load_instruments_from_gcs` two `except Exception: pass` fallbacks. _(folded from
@@ -675,12 +686,13 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
 
 ### From `bar_edge_left_vs_right_remediation_2026_06_08.md` (archived 2026-07-13 -- Bar-edge (open/left vs close/right) systemic remediation)
 
-- [ ] [CODE] P1. Massive: `tradfi/massive_tradfi_rest_connector.py:490` (`t` open) — **coordinate with
-      `tradfi_massive_dual_source_2026_05_28.md` Phase 4b** (Massive #5 already requires interval-aware right-edge
-      conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
-      normalizes both identically. ALSO fold in: batch rows pre-stamp `available_at=now(UTC)` (`:472/:484/:503`) which
-      the writer persists (orchestrator stamps only when the column is absent) — must become `t_close`-anchored.
-      **(MIGRATED FROM: `bar_edge_left_vs_right_remediation_2026_06_08.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ~~[CODE] P1. Massive: `tradfi/massive_tradfi_rest_connector.py:490` (`t` open) — coordinate with
+      `tradfi_massive_dual_source_2026_05_28.md` Phase 4b...~~ **MOOT (na-eligibility-audit 2026-08-03)** — Massive was
+      fully removed as a TradFi source 2026-07-19→21 (Massive/Polygon.io removal ruling, CLAUDE.md). The target file
+      `tradfi/massive_tradfi_rest_connector.py` no longer exists anywhere in the repo (confirmed, zero hits) and the
+      cited coordination partner `tradfi_massive_dual_source_2026_05_28.md` is itself archived
+      (`plans/archive/tradfi_massive_dual_source_2026_05_28.md`). Nothing left to fix or coordinate. **(MIGRATED FROM:
+      `bar_edge_left_vs_right_remediation_2026_06_08.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 ### 2026-07-13 (defi + cefi lanes, slot-3) — legacy bucket terraform-drift fix, defi dtype fix, cefi CF-1..CF-14 audit
 
@@ -702,17 +714,18 @@ above):**
       This is a physical-relabel/backfill migration pass, not a blind same-session fix — parking it here as an explicit
       todo per the discoveries-as-todos rule rather than only mentioning it in a summary. Needs operator confirmation on
       scope/priority before dispatch. parent_epic: mtds_mdps_master.
-- [ ] [INFRA] P1. **Cross-cutting — scheduled `uts-prod-cf-manifest-audit` Cloud Run Job has NEVER produced a successful
-      run in this window** (asia-northeast1, meant to run this exact CF-1..CF-14 audit daily 06:00 UTC for ALL 5
-      asset_groups automatically). Confirmed failing every day 2026-07-04→2026-07-13 ("Application exec likely failed" /
-      exit 1 most days; today specifically OOM'd at its 4Gi container limit on `--all-ags`).
+- [x] ✅ [INFRA] P1. **Cross-cutting — scheduled `uts-prod-cf-manifest-audit` Cloud Run Job has NEVER produced a
+      successful run in this window** (asia-northeast1, meant to run this exact CF-1..CF-14 audit daily 06:00 UTC for
+      ALL 5 asset_groups automatically). Confirmed failing every day 2026-07-04→2026-07-13 ("Application exec likely
+      failed" / exit 1 most days; today specifically OOM'd at its 4Gi container limit on `--all-ags`).
       `gs://cf-manifest-audit-central-element-323112/cf_audit/` has 0 objects — the automated pipeline that is supposed
       to produce this daily for every asset_group (cefi/defi/tradfi/sports/prediction, all equally affected) has never
       succeeded, which is WHY this session's cefi audit (and every other AG's CF-audit numbers cited this session) had
-      to be run manually. Filed as its own tracked issue (not fixed here — this is bigger than cefi and needs a
-      dedicated infra pass): `plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. Likely
-      fix: bump the job's memory limit above 4Gi, or split `--all-ags` into 5 per-asset_group Cloud Run executions.
-      parent_epic: mtds_mdps_master.
+      to be run manually. Filed as its own tracked issue:
+      `plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. **DONE (na-eligibility-audit
+      2026-08-03)** — that filed issue is now `status: resolved`, closed 2026-07-26 with a verified green run
+      (`gs://cf-manifest-audit-central-element-323112/cf_audit/2026-07-26.json`). This todo described the finding +
+      filing action, both complete; the actual fix landed in the filed issue. parent_epic: mtds_mdps_master.
 
 ### 2026-07-14 (defi + infra lanes, slot-3) — features-onchain-defi / config-store / ml-models-store / dex-pools-test legacy bucket migrate-verify-delete sessions
 
@@ -775,3 +788,11 @@ disposition (re-audited 2026-07-21):
   `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`, `*-service-daily-trigger`,
   `uts-prod-ml-inference-t1-schedule`) has **no successor found — not yet identified, this plan remains the owner** for
   that residual.
+
+- **na-eligibility-audit 2026-08-03**: KEEP-NA, stale items. Closed 2 fully-moot/done checkboxes with evidence (Massive
+  bar-edge coordination — source removed + coordination partner archived; cf-manifest-audit Cloud Run finding — the
+  filed issue is now resolved). Narrowed 2 partially-stale checkboxes (DeFi catalogue MVP filter's risk_params half;
+  DeFi honest-absence's dex_pools/lending_indices half — both confirmed done elsewhere, the rest of each item stays
+  open). Cited 2 items (VM-launch gate-check, Step 4 credential asks) as already tracked (still open) in
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` — not closed, just no longer reads as unclaimed. Doc stays
+  `assigned_vm: NA` overall — remaining items are genuine judgment/infra-gated data work.

@@ -695,3 +695,7 @@ reconciling + signing off, not redoing.)_
   AAVE_V3-ARBITRUM/POLYGON + SPARK have real current captured data the turbo API silently reports as 0/0; a read-path
   bug, not a capture gap)
 - **SSOT:** `/codex/02-data/honest-coverage-model.md`
+
+**na-eligibility-audit 2026-08-03**: KEEP-NA, stale items. Closed 1 checkbox (generic manifest-reprocessing utility)
+whose "STILL OPEN" note pre-dated its actual shipping+archival by 2 days. All other open items reviewed, no other
+staleness found — doc stays `assigned_vm: NA`.

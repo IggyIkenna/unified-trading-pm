@@ -102,7 +102,11 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
 - [ ] 2. [INFRA] P3. If todo 1 confirms the fix, consider whether other repos in the parent doc's `repos:` list with
       recurring (not just single) unified-trading-api-style sustained-red occurrences would benefit from the same
       repo-local `PYTEST_TIMEOUT` raise, rather than relying solely on retries. Not done proactively here — scope
-      bounded to the one escalation this doc was filed under.
+      bounded to the one escalation this doc was filed under. **na-eligibility-audit 2026-08-03 note**:
+      `features-service` already got exactly this treatment (`PYTEST_TIMEOUT=300` + `PYRIGHT_TIMEOUT=300`,
+      `features-service@c092df50`, verified green — see Progress Log entries below), so this todo is partially
+      addressed, but "other repos" beyond `features-service` is broader than one confirmed repo — staying open, not
+      closing.
 
 ## Progress Log
 
