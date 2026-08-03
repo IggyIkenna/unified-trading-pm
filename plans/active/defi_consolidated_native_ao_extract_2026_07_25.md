@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
+    /plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
   ]
 created: "2026-07-25"
@@ -52,7 +52,7 @@ context_scope:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
+    /plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
@@ -99,7 +99,7 @@ context_scope:
       a `coverage.json` with the SAME per-(venue, instrument_id, data_type) row counts as a control run on the current
       32GB machine (or a documented tolerance if pyarrow ordering differs), no OOM; ~6 selection tests updated and
       passing; `quality-gates.sh` green. Source:
-      `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
+      `archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
       `defi_consolidated_closeout_2026_07_18.md` Track 8 as part of "fix the honest-coverage-nightly right-size"). —
       **2026-08-01 (slot-10, data_engineering craft) — instruments-service@12825e81.** `main()` now reads/computes/
       releases ONE asset_group's primary manifest at a time (new `_init_coverage_accumulator`/`_accumulate_coverage`
@@ -161,7 +161,7 @@ context_scope:
       (a) exactly one honest-coverage VM launcher artifact remains referenced by the live cron path, the publisher
       maintains that exact GCS path, `quality-gates.sh` green; (b) the instruments-service tarball's `.manifest.json`
       `commit_sha` matches `origin/live-defi-rollout` HEAD at time of republish. Source:
-      `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
+      `archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
       `defi_consolidated_closeout_2026_07_18.md` Track 8). **Evidence (2026-08-03, slot-7)**: (a) deleted
       `scripts/vm/launch-honest-coverage-vm.sh` + `scripts/vm/honest-coverage-daily-workflow.yaml`; repointed
       `terraform/gcp/honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased bucket-root

@@ -106,24 +106,24 @@ Also: the tarball publisher (`create-code-tarballs.sh`) publishes launchers to
       updates, not a one-line column drop.
 
       **DONE — resolved across 2 prior sessions, discovered already-shipped 2026-08-03 (slot-2, data_engineering
-          craft) while dispatched this exact todo.** The chosen fix was the metadata-deferred read (Option 2 of the
-          "OR"), not row-group streaming — both were named as acceptable in this todo's own text:
-          - `instruments-service@6c9f604f` (2026-07-16/17): `_read_parquet_safe`/`_read_parquet_eu_only` now pass
-            `read_dictionary=<columns>` so the parquet's on-disk PLAIN_DICTIONARY encoding survives as pandas `category`
-            dtype instead of being expanded to python-object strings — measured on a real sports-prd bucket (1,958,498
-            rows): peak RSS 447.1MB → 319.8MB (-28.5%), byte-identical `_compute_coverage` output old vs new. `iid` is
-            still read (never dropped) — the traced-unsafe naive drop does NOT apply.
-          - `instruments-service@12825e81` (2026-08-01): `main()` now reads/computes/releases ONE asset_group's manifest
-            at a time (`_init_coverage_accumulator`/`_accumulate_coverage`) instead of holding all 5 simultaneously —
-            bounds peak RSS to the single LARGEST asset_group's read instead of the sum of all 5.
-          - `deployment-service@d880de3` (2026-08-01): empirically verified BOTH fixes together are sufficient — a
-            control run on e2-highmem-4 (32GB) peaked at 7.53GB RSS; a test run on e2-standard-4 (16GB), same commit,
-            same `--asset-group all`, peaked at 8.20GB RSS with **no OOM**. Per-(venue, instrument_type, data_type) leaf
-            shard counts byte-identical to the control for cefi/tradfi/sports/prediction; defi differed on 4/193 leaf
-            shards, all monotonic growth from live capture activity in the ~8min gap between runs (zero regressions,
-            zero shard-set drift). `launch-measure-honest-coverage-vm.sh` downsized back to `e2-standard-4` on this
-            evidence — confirmed still the launcher's default (`MACHINE_TYPE="e2-standard-4"`, verified at HEAD).
-          All 3 commits verified ancestors of `origin/live-defi-rollout` (both repos) at flip time.
+              craft) while dispatched this exact todo.** The chosen fix was the metadata-deferred read (Option 2 of the
+              "OR"), not row-group streaming — both were named as acceptable in this todo's own text:
+              - `instruments-service@6c9f604f` (2026-07-16/17): `_read_parquet_safe`/`_read_parquet_eu_only` now pass
+                `read_dictionary=<columns>` so the parquet's on-disk PLAIN_DICTIONARY encoding survives as pandas `category`
+                dtype instead of being expanded to python-object strings — measured on a real sports-prd bucket (1,958,498
+                rows): peak RSS 447.1MB → 319.8MB (-28.5%), byte-identical `_compute_coverage` output old vs new. `iid` is
+                still read (never dropped) — the traced-unsafe naive drop does NOT apply.
+              - `instruments-service@12825e81` (2026-08-01): `main()` now reads/computes/releases ONE asset_group's manifest
+                at a time (`_init_coverage_accumulator`/`_accumulate_coverage`) instead of holding all 5 simultaneously —
+                bounds peak RSS to the single LARGEST asset_group's read instead of the sum of all 5.
+              - `deployment-service@d880de3` (2026-08-01): empirically verified BOTH fixes together are sufficient — a
+                control run on e2-highmem-4 (32GB) peaked at 7.53GB RSS; a test run on e2-standard-4 (16GB), same commit,
+                same `--asset-group all`, peaked at 8.20GB RSS with **no OOM**. Per-(venue, instrument_type, data_type) leaf
+                shard counts byte-identical to the control for cefi/tradfi/sports/prediction; defi differed on 4/193 leaf
+                shards, all monotonic growth from live capture activity in the ~8min gap between runs (zero regressions,
+                zero shard-set drift). `launch-measure-honest-coverage-vm.sh` downsized back to `e2-standard-4` on this
+                evidence — confirmed still the launcher's default (`MACHINE_TYPE="e2-standard-4"`, verified at HEAD).
+              All 3 commits verified ancestors of `origin/live-defi-rollout` (both repos) at flip time.
 
 - [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-10, infra craft)** — Republished the instruments-service tarball so the
       nightly writer has partial-stamping (a29e483). The previously-blocking foreign uncommitted
@@ -143,14 +143,14 @@ Also: the tarball publisher (`create-code-tarballs.sh`) publishes launchers to
       `launch-honest-coverage-vm.sh` + `honest-coverage-daily-workflow.yaml` so ONE launcher is the SSOT.
 
       **DONE — `deployment-service@b23e1c9` (2026-08-03), discovered already-shipped same-session (slot-2,
-          data_engineering craft).** Explicitly cites this issue doc as its source. Repointed
-          `terraform/gcp/honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased bucket-root
-          `vm/` path to `code/deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` — the path
-          `create-code-tarballs.sh`'s bare-launcher loop actually auto-publishes on every run, closing the drift class
-          that let the launcher go stale in the first place. Dropped the dead `honest-coverage-` VM-prefix registry
-          entry and corrected `setup-honest-coverage-scheduler.sh`'s stale description. Verified at HEAD: only ONE
-          honest-coverage launcher remains (`launch-measure-honest-coverage-vm.sh` + its scheduler-setup companion) —
-          `launch-honest-coverage-vm.sh` and `honest-coverage-daily-workflow.yaml` no longer exist in the tree.
+              data_engineering craft).** Explicitly cites this issue doc as its source. Repointed
+              `terraform/gcp/honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased bucket-root
+              `vm/` path to `code/deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` — the path
+              `create-code-tarballs.sh`'s bare-launcher loop actually auto-publishes on every run, closing the drift class
+              that let the launcher go stale in the first place. Dropped the dead `honest-coverage-` VM-prefix registry
+              entry and corrected `setup-honest-coverage-scheduler.sh`'s stale description. Verified at HEAD: only ONE
+              honest-coverage launcher remains (`launch-measure-honest-coverage-vm.sh` + its scheduler-setup companion) —
+              `launch-honest-coverage-vm.sh` and `honest-coverage-daily-workflow.yaml` no longer exist in the tree.
 
 ## Progress Log
 
