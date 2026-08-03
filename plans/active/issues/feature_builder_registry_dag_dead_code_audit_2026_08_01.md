@@ -86,13 +86,36 @@ deleted, not left as misleading documentation.
       declared dep in `features_service/multi_timeframe/schemas/feature_builder_registry.py` is classified
       real-bug-fixed/confirmed-harmless/deleted-dead-code, with evidence per entry. ✅ — audited, see Progress Log
       2026-08-03 entry (only 1 of 9 registry entries declares a non-empty `depends_on`; classified CONFIRMED-HARMLESS).
-- [ ] [AUDIT] P3. **Audit onchain's feature_builder_registry `depends_on` entries** — same method as above. Repo:
+- [x] ✅ [AUDIT] P3. **Audit onchain's feature_builder_registry `depends_on` entries** — same method as above. Repo:
       features-service. Done when: every declared dep in `features_service/onchain/schemas/feature_builder_registry.py`
-      is classified real-bug-fixed/ confirmed-harmless/deleted-dead-code, with evidence per entry.
+      is classified real-bug-fixed/ confirmed-harmless/deleted-dead-code, with evidence per entry. ✅ — audited, see
+      Progress Log 2026-08-03 (onchain) entry (2 of 16 registry entries declare non-empty `depends_on`:
+      `aave_rate_impact` CONFIRMED-HARMLESS, `onchain_regime` a genuine unwired-feature-group GAP — new follow-up todo
+      added below).
 - [ ] [AUDIT] P3. **Audit volatility's feature_builder_registry `depends_on` entries** — same method as above. Repo:
       features-service. Done when: every declared dep in
       `features_service/volatility/schemas/feature_builder_registry.py` is classified real-bug-fixed/
       confirmed-harmless/deleted-dead-code, with evidence per entry.
+- [ ] [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
+      feature group in features-service's onchain engine. `compute_onchain_regime_features()`
+      (`features_service/onchain/app/calculators/onchain_regime_calculator.py`) is never registered via
+      `@FeatureCalculatorRegistry.register`, never appears in `OnChainOrchestrationService._dispatch_feature_group`'s
+      feature-group elif chain (`features_service/onchain/engine/orchestrator.py`), and is exercised only by
+      `tests/onchain/unit/test_feature_touchup.py` — yet `features_service/onchain/schemas/feature_definitions.yaml`'s
+      `regime:` block declares 10 real, fully-specified features (`tvl_regime_bucket`, `utilization_regime_bucket`,
+      `health_factor_bucket`, `yield_z_score`, etc.), several `priority: P0`, explicitly consumed by
+      `models: [LENDING, RISK, ALL]` per the calculator module's own docstring ("consumed by strategy-service to adapt
+      position sizing and risk thresholds"). This is the SAME class of gap as this doc's original `composite_sr`
+      finding (a real, designed feature silently never computed) — not the decorative-`depends_on`-only pattern found
+      for `aave_rate_impact`/delta_one/multi_timeframe's `tf_risk_reward`. Done when: `onchain_regime` is either (a)
+      registered + dispatched like every other onchain feature group, with its 3 declared upstream deps
+      (`aave_utilization`, `defillama_tvl`, `aave_lending_rates`) threaded into the `df` `compute_onchain_regime_features`
+      expects, and covered by an integration-level test proving it runs end-to-end via
+      `OnChainOrchestrationService.process_feature_group("onchain_regime", ...)`; or (b) if the operator rules the
+      feature group is no longer wanted, deleted (calculator file, registry entry, yaml block, tests) rather than left
+      as misleading unwired documentation. (repo: features-service) — scoped out of THIS audit todo (classification
+      only, not a fix) given the larger surface (orchestrator wiring + upstream DataFrame threading + tests), mirroring
+      how `composite_sr`'s fix was its own separate unit of work.
 
 ## Progress Log
 
