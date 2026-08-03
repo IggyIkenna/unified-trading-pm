@@ -121,6 +121,14 @@ result.
       (`sync_backlog_to_db: REFUSING to reset …`) — positional task-id assignment appears to shift under a partial
       snapshot, which both logs scary errors and risks mis-identifying tasks. Confirm task IDs are content-anchored, not
       purely positional, so a partial plan snapshot cannot collide a new brief onto a done row's id.
+      **na-eligibility-audit 2026-08-03 (blocker-currency check): the "owned by an active `assigned_vm: planning` doc"
+      framing above is now STALE.** `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s `assigned_vm` was
+      RECLASSIFIED to `planning` by the 2026-07-30 na-audit cited above, but has since been **REVERTED to `NA` on
+      2026-07-31** (per `BLK-29884333`, its third mis-dispatch) with an explicit banner: "NOT AO-dispatchable:
+      banner-guarded, local-only-homed fleet-core rewrite." The conclusion here is unchanged (do NOT dispatch this P3
+      item — the duplicated content is a banner-guarded local-only rewrite, not merely "claimed elsewhere"), but the
+      reasoning should cite BLK-29884333 / the current `NA` status, not the superseded "active planning doc" framing.
+      `assigned_vm` untouched.
 
 ## Triage / charter note
 
@@ -139,3 +147,8 @@ incident window.
   normal fully-scoped AO work (content-hash task-id rewrite, full blast radius).
   `ao_satellite_ao_dispatch_batch1_2026_07_26.md` records the same routing: 'Do NOT draft a competing batch todo here —
   dispatch that issue doc's todo directly.' Annotated in place; `assigned_vm` untouched.
+- **na-eligibility-audit 2026-08-03** (reclassify pass): KEEP-NA, valid (blocker-currency only) — the referenced doc's
+  `assigned_vm` was reverted `planning`->`NA` on 2026-07-31 (`BLK-29884333`, a recurring mis-dispatch trap:
+  banner-guarded, local-only-homed fleet-core rewrite). Annotated in place so the next reader cites the current status
+  instead of the now-superseded "active planning doc" framing. Conclusion unchanged (do not dispatch). `assigned_vm`
+  untouched.

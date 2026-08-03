@@ -671,3 +671,32 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   done-when is "every `assigned_vm: NA` doc in that tranche", and the inventory this run consumed enumerates only docs
   with >=1 open todo, so a flip would overclaim against zero-open-todo members — exactly the overclaim this doc's own
   honest "would overclaim" note warns about. That note is a standing self-ruling and is not re-litigated here.
+- **na-eligibility-audit 2026-08-03 (RECLASSIFY + blocker-currency pass, 10 parallel agents over the 122-doc set from
+  this same date's staleness-audit rerun)**: full doc-level re-read (not line-level) of every doc, applying the
+  RECLASSIFY rubric + the shared conflict-check protocol before any flip. **4 docs RECLASSIFIED `NA` → `planning`** (all
+  `plans/active/issues/*.md`, so no `_finalize` companion owed):
+  `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` (gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md`
+  cleared 2026-08-03 — archived, 0 real objects needed migrating; also backfilled a missing
+  `assigned_role: data_engineering` and cleared the now-stale `depends_on`/ `gate_on_depends`),
+  `defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`,
+  `fixtures_manifest_legacy_backfill_2026_07_24.md` (delete-vs-leave decision already settled+archived; remaining work
+  is a bounded census re-run), `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`. **11 docs
+  got a blocker-currency note** (stale blocker cleared, item itself still open, `assigned_vm` unchanged) —
+  `bucket_fold_features_2026_07_17.md`, `candle_feature_canonical_path_divergence_2026_07_20.md`,
+  `github_actions_operator_gated_followups_2026_07_17.md`, `data_pipeline_reconciliation_skill_2026_07_20.md`,
+  `infra_ops_residual_migration_verification_2026_07_24.md`, `ao_orphan_audit_followup_triage_2026_07_30.md`,
+  `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`,
+  `prediction_phase_ab_residuals_2026_07_24.md`, `data_completion_sports_2026_07_24.md`,
+  `backlog_regen_reverted_p1_2_park_2026_08_01.md` (corrected a stale conflict citation, not a blocker per se). One
+  bonus stale-checkbox close found in passing: `defi_strategy_pnl_axis_index_2026_07_24.md` (already shipped via
+  `strategy-service@a90e85eb`, checkbox just never flipped). Every other doc in the 122-set stayed `KEEP-NA-VALID`,
+  `MIXED` (genuine judgment items mixed with bounded ones — never whole-doc-flipped, per this doc's own rubric), a
+  `CONFLICT` (work already claimed verbatim by an active `planning` doc — 4 caught, correctly not flipped), or
+  `LOCKED-skipped` (`locked_by` set — frontmatter untouched). **Confirmed same-day evidence of a CONCURRENT
+  `na-eligibility-audit` process independently working this exact population** (several docs already carried same-dated
+  2026-08-03 verdict markers when read) — no conflicting edits resulted since every agent re-verified content directly
+  rather than trusting a pre-existing marker, but it means this manual pass and the standing
+  `na-eligibility-auditor.timer` cron overlapped in real time tonight.
+- **Also found, not archived this pass**: `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md` now has
+  0 open todos (closed by a concurrent worker's own audit pass mid-session) — a live 6-step-archival candidate,
+  correctly left for its own independent pass rather than a rider on this one.

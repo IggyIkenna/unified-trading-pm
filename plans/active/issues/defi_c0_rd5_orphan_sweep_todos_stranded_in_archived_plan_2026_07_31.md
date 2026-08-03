@@ -33,8 +33,8 @@ related:
 created: "2026-07-31"
 last_updated: "2026-07-31"
 parent_epic: defi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 estimate_baseline_ai_days: 0.4
@@ -100,3 +100,10 @@ checked, not assumed.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, the sole remaining todo is a bounded,
+  worker-determinable live GCS check (grep 8 named legacy bucket-stems for a specific object-shape pattern, then
+  close-as-moot-with-evidence or draft a scoped follow-up) — no design/judgment call left. Conflict-check: grepped
+  `plans/active/*.md` + `plans/active/issues/*.md` for "C0-RD5" — the only other hit
+  (`defi_satellite_ao_dispatch_batch2_2026_07_26.md`) is a corroborating citation on an already-closed, unrelated todo
+  (deleting a specific script + auditing 8 campaign scripts for dead bucket templates), not a live claim on this doc's
+  live-check work. CLEAR, no conflict.

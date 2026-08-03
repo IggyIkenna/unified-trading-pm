@@ -441,7 +441,15 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
-      1), not an independent decision. **Pending P5 executor (dedup phase).**
+      1), not an independent decision. ~~Pending P5 executor (dedup phase).~~ **BLOCKER CLEARED (na-eligibility-audit
+      2026-08-03)**: the P5 executor this was gated on shipped and ran to completion —
+      `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` is archived with all 17 of its
+      own todos `[x]` (confirmed via `candle_canonical_path_migration_execution_stale_todos_2026_07_27.md`, RESOLVED
+      2026-07-28: P5's split-brain dedup logic shipped `mdps@6ce1a25`, then P6 drain + P7 per-AG `--apply` + P8
+      verify/reconcile ran for all 4 asset groups, corpus-wide, "0 orphans, 0 malformed objects, every residual fully
+      accounted for"). The gate is clear — but a corpus-wide COUNT of days/objects that lacked `pipeline_mode=`
+      specifically (this todo's own stated deliverable) has not been independently produced/cited anywhere this pass
+      could find, so the todo itself stays open pending that measurement, not the P5 executor.
 - [x] 10. ✅ [SCRIPT] P1. Oracle extended for the candle namespace (`processed_candles/` — the features namespace
       remains out of scope, not attempted): `PROCESSED_CANDLES_PREFIX` + `_candle_path_violations()` +
       `require_candle_migration_complete=` on `canonical_path_violations`/`is_canonical`, validating the CORRECTED
@@ -577,3 +585,10 @@ remain genuinely open content-level work, distinct from the path-migration infra
   a 5-tranche `infrastructure_master` doc whose remaining content is cefi/tradfi/defi candle-migration work, not sports
   (sports has no `processed_candles/` tree at all, per the doc's own measurement)
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, blocker-updated only — remaining open work (todo 3's
+  TradFi quarantine operator-ruling call, todo 9's split-count, todos 13/15/16) still carries genuine judgment/design
+  items (todo 3) plus items already tracked+owned elsewhere (15/16), so the doc as a whole is not RECLASSIFY-eligible.
+  Found todo 9's own cited blocker ("Pending P5 executor (dedup phase)") is stale — the P5 executor plan
+  (`candle_canonical_path_migration_execution_2026_07_24.md`) completed and archived 2026-07-28 — annotated in place
+  with evidence; todo 9 itself stays open pending its own stated deliverable (a corpus-wide split count), not the P5
+  gate. No `assigned_vm` change.

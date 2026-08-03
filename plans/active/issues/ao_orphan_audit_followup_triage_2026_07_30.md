@@ -55,7 +55,14 @@ source:
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24`,
       `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24`,
       `ao_recovery_audit_layer1_deleted_2026_07_15` — nothing else is needed to unblock them. **Done when**:
-      `status: active` + AO has picked it up (`/check-agent-orchestrator`).
+      `status: active` + AO has picked it up (`/check-agent-orchestrator`). **na-eligibility-audit 2026-08-03
+      (blocker-currency check): the first half is done — `ao_satellite_ao_dispatch_batch2_2026_07_30.md` now reads
+      `status: active`** (flipped from `draft`), and shows real, substantive progress (4 of 8 todos already `[x]`,
+      including a root-caused-and-fixed `agent-orchestrator@77769ab` item and a confirmed-moot item) — i.e. it has been
+      worked, not merely approved-on-paper. Did not independently re-verify the second half (AO backlog pickup via
+      `/check-agent-orchestrator`) this pass. Checkbox stays open since 4 of batch2's own todos remain `[ ]`, but the
+      "approve/dispatch" ask itself is satisfied; a future toucher should check batch2's own remaining todos rather than
+      re-approving anything here.
 - [ ] [OPERATOR] P1. **Rule on the 12 operator-gated docs from the orphan sweep**, one at a time — each is a genuine
       design/judgment fork with no evidence-based tiebreaker, per Phase 1 of the audit:
       `escalation_backlog_repo_collision_blind_spot_2026_07_25`,
@@ -110,3 +117,8 @@ source:
   other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
   docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-03** (reclassify pass): KEEP-NA, valid (blocker-currency only) — annotated todo 1 in
+  place: `ao_satellite_ao_dispatch_batch2_2026_07_30.md` is now `status: active` with 4/8 todos done, so the
+  approve/dispatch ask is satisfied even though the checkbox stays open pending batch2's own remainder. The other 3 open
+  todos (rule on 12 operator-gated docs, bucket 7 unclear docs — todo 3 already closed) are unchanged judgment-heavy
+  work per the 2026-08-01 verdict. Not a RECLASSIFY case. `assigned_vm` untouched.

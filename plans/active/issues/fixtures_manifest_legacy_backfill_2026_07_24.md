@@ -27,8 +27,8 @@ related:
 created: 2026-07-24
 last_updated: 2026-07-24
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.0
@@ -263,3 +263,18 @@ underlying 55,233 collision-residual decision (delete vs. leave) is still unreso
   DECISION on the stable 55,233-row collision residual (tracked in
   `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) plus a census re-run gated on it — a manifest-delete
   disposition, not a determinable fact
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning. The delete-vs-leave decision this doc's
+  sole open todo was gated on is now settled and archived
+  (`plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`, `status: resolved`, decided
+  option (b) 2026-07-30 — leave the 55,233 rows as permanent noise, no delete). What remains open here is a purely
+  mechanical re-verification: re-run the sanctioned read-only census
+  (`deployment-api/scripts/census_manifest_data_type_2026_07_24.py --service instruments-service --asset-group sports --filter-prefix FIXTURES`)
+  after the next `enum-universe-sports-*` run + >=2 consolidator cycles, and confirm the `FIXTURES` count has decayed
+  toward the stable 55,233 residual (proving the 10th-call-site leak fix, `instruments-service@ca8bd7b3ab`, held) — a
+  checkable fact, no judgment/design/operator call left. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped `plans/active/*.md` +
+  `plans/active/issues/*.md` for `census_manifest_data_type_2026_07_24` / `fixtures_manifest_legacy_backfill` — hits in
+  `sports_consolidated_closeout_2026_07_19.md` and `sports_satellite_ao_dispatch_batch5_2026_07_26.md` are historical
+  citations/pointers to this doc, not a competing claim on the census re-run itself (batch5's own text confirms it did a
+  reconciliation-only pass and deliberately deferred). CLEAR — no other active `assigned_vm: planning` doc claims this
+  exact re-verification. Not locked (`locked_by:` blank), no `depends_on` gate.

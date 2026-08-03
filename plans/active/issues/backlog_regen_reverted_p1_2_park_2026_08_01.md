@@ -124,4 +124,23 @@ re-applied by hand again.
 judgment/operator-gated or touch live dispatch-critical-path machinery whose fix scope is not yet fully determined; none
 are stale, duplicated elsewhere, or moot, so NA remains the correct home for the whole doc.
 
+**na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid — **correction to the 2026-08-01 entry above: item
+1 and item 2 are in fact substantially duplicated by a sibling doc, not "duplicated nowhere."**
+`plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` (`assigned_vm: planning`, already dispatched)
+investigates the SAME `BLK-085fef5e` park-does-not-persist incident on this SAME backlog task one dispatch cycle
+earlier, and reached a conclusive root-cause via `journalctl` + a static read of `_reconcile_task_fields()`: **this is
+NOT a `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class code regression** — the park was never actually
+WRITTEN to `backlog.yaml` in the first place (only the prerequisite condition + a `/reload` were called, no file edit),
+so item 2's "root-cause why the fix did not prevent this reversion / ship a fix + regression test" premise (assuming a
+code-level revert) is likely moot — there is nothing in `regen_backlog_from_plan.py` that strips `prereqs.prerequisites`
+from a still-current task (verified independently twice in that sibling doc). Item 1 ("re-apply the park") duplicates
+that sibling doc's own still-open `[OPERATOR] P1` todo #3 verbatim (same task, same fix). **Not reclassified** — the
+sibling is itself still open pending the same `[OPERATOR]` action, so this is a CONFLICT (duplicate claim), not a
+stale/moot item to silently drop: whoever performs the sibling's `[OPERATOR]` re-park action resolves both docs' item-1
+asks in one edit, and should close item 2 here as NOT-A-REGRESSION per the sibling's evidence unless a fresh read of the
+live `backlog.yaml`/orchestrator log at that time shows this occurrence's edit DID land and then got reverted (a
+genuinely new, distinct finding the sibling doc did not have). Item 3 (a standing hygiene assertion for
+parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains a distinct, genuinely-open ask.
+`assigned_vm` unchanged (NA) — this is a citation/conflict finding, not a reclassification.
+
 - **context-scout 2026-08-01**: populated context_scope (4 entries).

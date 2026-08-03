@@ -850,6 +850,13 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
       NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
       (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
+      **Blocker-currency note (na-eligibility-audit 2026-08-03, reclassify pass)**: the branch decision itself is no
+      longer open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s "Deferred — operator decision needed" section
+      records **RULED 2026-07-28: proceed with the quota bump** (applying the general "cost under $100 is not a concern,
+      full backfills get done" theme). What remains is the vendor account-tier upgrade action itself (a spend/credential
+      action, not a branch choice) — per that ruling, "only the operator (or AO's self-service ambient identity, if it
+      can provision this per finding W) can complete" it; the code/launcher side is already prepped and ready to fire
+      once the account tier lands. Item stays open (credential/spend-gated), not flipped.
 
 > **History extracted 2026-07-24** (line-cap remediation) → `data_completion_sports_history_2026_07_24.md`: the earliest
 > dated Progress Log entries (2026-06-24 DIAGNOSIS through 2026-06-21 RATE-LIMIT root-cause) — the campaign-opening
@@ -882,3 +889,12 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   next move and is a plan-authoring call, parked** for the operator (same disposition as
   `sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s marker) — this skill's Phase 3 flips `assigned_vm` in place, it
   does not author carve-out batches, and an in-place flip here would dispatch the two genuinely-NA todos alongside them
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: MIXED, left NA — re-verified the 4 currently-open todos (ramp-
+  to-429 probe line ~414; Transfermarkt PLAYER_VALUES relaunch + ODDS/PREDICTIONS re-measure line ~477/487, both already
+  operator-cleared per the 2026-08-02 entry above; enrichment-ceiling line ~851). Found the enrichment-ceiling item's
+  blocker (which spend branch to take) is no longer genuinely open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`
+  recorded **RULED 2026-07-28: proceed with the quota bump** — but the item itself stays open (the vendor account-tier
+  action is still a credential/spend ask); updated the item's own text in place with this citation (see the todo above),
+  did not flip `assigned_vm`. No conflict found for the 3 already-cleared candidates beyond what the 2026-08-02 entry
+  already recorded. Doc stays NA; extraction of the 3 cleared candidates into a `planning` batch remains a
+  plan-authoring call for the operator, not this pass's to execute.

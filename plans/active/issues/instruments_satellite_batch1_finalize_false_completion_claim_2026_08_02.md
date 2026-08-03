@@ -30,9 +30,9 @@ related:
   ]
 created: "2026-08-02"
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -179,6 +179,16 @@ No design call needed — every piece here is independently checkable, not a jud
 
 - **2026-08-02**: Filed while working `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4. Full evidence
   trail above; root cause traced via `git log --follow --name-status`.
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, both real `- [ ]` checkboxes ([DATA] P1
+  "reconcile the source doc's todo-4 item for real"; [DATA] P2 "bounded sweep for the same false-claim pattern in other
+  archived finalize twins") are bounded, worker-determinable (a checkable fact + a scoped grep/spot-check audit with a
+  stated done-when), no open judgment/design/operator call in either. The 2 `[PLAN_RECONCILER]`-routed digest bullets
+  are NOT standard `- [ ]` checkboxes and stay outside `regen_backlog_from_plan.py`'s ingestion per the doc's own
+  convention — this flip does not newly dispatch them; the operator ruling `BLK-9fadbbb8` (2026-08-02) only decided
+  ad-hoc-in-session-fix vs tracked-follow-up (chose tracked-follow-up), it did not forbid AO dispatch of the tracked
+  items. Conflict-check: grepped `plans/active/*.md` for claims on this exact work (reconciling
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`'s todo-4 item, or a sweep of archived
+  `*_finalize_*.md` docs for the same false-claim pattern) — no other `assigned_vm: planning` doc claims either; CLEAR.
 - **2026-08-02 (operator ruling, `BLK-9fadbbb8`)**: escalated whether to fix the 2 archival-touching items in-session or
   leave all 4 as tracked follow-up. Operator ruled leave-all-4 (option A), with a routing refinement: the 2
   archival-touching todos are now formatted as non-ingestable digest bullets explicitly ROUTED to plan_reconciler's

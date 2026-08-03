@@ -44,8 +44,9 @@ related:
 created: "2026-07-21"
 parent_epic: infrastructure_master
 priority: P3
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
+assigned_role: data_engineering
 drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-006]
 resolved_by:
@@ -58,8 +59,8 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
     unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
   ]
-depends_on: [plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md]
-gate_on_depends: true
+depends_on: []
+gate_on_depends: false
 ---
 
 # What I found
@@ -193,3 +194,14 @@ overhead.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — both remaining todos carry `depends_on` +
   `gate_on_depends: true` on `cefi_chain_tail_v6_canonicalisation_2026_07_21`, whose todos 5-8 are still open — never
   re-litigate a live gate.
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning. The gating prerequisite
+  (`cefi_chain_tail_v6_canonicalisation_2026_07_21.md`) resolved 2026-08-03 (see the `[CODE] P3` todo's own inline note
+  above) — 0 real v5 cefi chain objects needed migrating, so the "surfacing pre-migration data would be misleading"
+  reason for the gate is moot. Both remaining todos are now bounded, worker-determinable engineering (add
+  `quote_asset`/`margin_type` to a deployment-api response + a deployment-ui heatmap filter on those fields, pw:L2 spec
+  required) with no judgment/design call left. Conflict-check clear: grepped `plans/active/*.md` +
+  `plans/active/issues/*.md` for `quote_asset`/`margin_type`; no other `assigned_vm: planning` doc claims this exact
+  work — corroborated by `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s own prior conflict-check on this
+  same doc ("No genuine conflict found, and nothing is stealthily duplicating this doc's ground"). `locked_by` empty.
+  `execution_scope` was already `orchestrator-agent` (no change needed); only `assigned_vm` flipped. A companion
+  finalize doc is owed (not authored here).
