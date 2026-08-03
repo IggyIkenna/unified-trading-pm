@@ -90,12 +90,20 @@ once the corresponding todo below is actually done — not this plan.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Trim `launch-features-backfill-vm.sh` to its redirect stub.** Delete the unreachable dead body
+- [x] ✅ [SCRIPT] P3. **Trim `launch-features-backfill-vm.sh` to its redirect stub.** Delete the unreachable dead body
       (lines ~170-309), the duplicate `lc_verify_tarball_freshness` definition (~274-278 vs ~280-284, keep one), and the
       pre-consolidation module names still referenced in `_python_module_for`. Repo: deployment-service. Source:
       `mdps_features_deadcode_consolidation_2026_07_20.md` #4. Done when: the script contains no unreachable code past
       the redirect stub, `lc_verify_tarball_freshness` is defined once, and `_python_module_for` only names
-      post-consolidation module paths — `bash scripts/quality-gates.sh` green.
+      post-consolidation module paths — `bash scripts/quality-gates.sh` green. — deployment-service@77c0206. Confirmed
+      `_python_module_for`/`_is_viable_cell` had no external callers (grepped repo-wide — only self-referential launch
+      scripts define their own local copies) and `lc_verify_tarball_freshness` was never a duplicate function definition
+      (it's defined once in `lib/launcher_common.sh`; the "duplicate" was two identical call-sites in the dead body,
+      both removed). Deleted the entire unreachable post-redirect body (viable-cell matrix, `_python_module_for`,
+      CMD/metadata building, the duplicated tarball-freshness calls, `gcloud compute instances     create`) plus the
+      now-unused `source lib/launcher_common.sh` and `ON_DEMAND` var (both only consumed by the deleted body); kept a
+      minimal usage-banner fallback for missing-args/missing-consolidated-launcher. 311→141 lines, `shellcheck` clean,
+      `bash scripts/quality-gates.sh` green (sentinel=77c020626a02f65b0e8ab3d3fbfedcd7be29f456).
 - [ ] [SCRIPT] P3. **Delete 8 stale `features_*_service` keys from `setup-data-pipeline-vm.sh`'s `SERVICE_TARBALLS`**
       (post-2026-05-08 consolidation; only `features_service` is built now) and adjacently fix the stale `ml_*_service`
       keys in the same map. Repo: deployment-service. Source: `mdps_features_deadcode_consolidation_2026_07_20.md` #5.
@@ -226,3 +234,10 @@ once the corresponding todo below is actually done — not this plan.
   launch confirmed STARTED, monitored to a terminal EXIT_STATUS via a background watchdog, self-deleted per
   `VM_SHUTDOWN_ON_COMPLETION`. CEFI's candle canonical-path migration+purge (P7c) is now fully converged, 0 outstanding
   residual.
+- **2026-08-03 (slot 12, infra)**: trimmed `launch-features-backfill-vm.sh` to its redirect stub
+  (deployment-service@77c0206). Deleted the ~185-line unreachable dead body past the hard-redirect (viable-cell matrix,
+  `_python_module_for`/`_is_viable_cell`, CMD/metadata assembly, `gcloud compute instances create`, the duplicated
+  `lc_verify_tarball_freshness` call) plus the now-unused `source lib/launcher_common.sh` and `ON_DEMAND` var — nothing
+  external referenced the deleted local functions (repo-wide grep: only sibling launch scripts define their own local
+  `_is_viable_cell` copies). 311→141 lines, matches the established redirect-stub shape already used by
+  `launch-features-onchain-backfill-vm.sh`. `shellcheck` clean, `quality-gates.sh` green.
