@@ -42,7 +42,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T14:33Z
+last_updated: 2026-08-03T14:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -841,3 +841,29 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   beyond this doc edit; the unrelated stale `.git/rebase-merge` state found in this slot's `unified-trading-pm` worktree
   at session start — leftover from an unconnected data-recovery task — was left untouched, out of scope for this
   wall-clearing task).
+
+- **2026-08-03 ~13:04-14:50Z (`cicd` escalation `agt-a46033`, slot 13, `deployment-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — live confirmation of todo 1's "still red past the 300s raise" branch for `deployment-service`
+  specifically (the repo-local mitigation from `agt-771546`'s 09:30-11:10Z entry above did not fully clear it)**: found
+  the single-runner bottleneck compounded by a genuinely redundant job first — PR #677's own post-merge PR-scoped
+  `quality-gates-v2` run (`30813928001`) was still occupying the sole `glue-ip-172-31-5-118-1` runner 53min after PR
+  #677 had already merged (`ce1239d`, `mergedAt=12:31:28Z`), starving the real `push:main` gate run (`30813934094`,
+  queued 1h29m). Cancelled the moot post-merge run (`gh run cancel 30813928001`) — safe since merging had already
+  happened and nothing depends on that run's outcome — which freed the runner within ~1min for the real gate.
+  `push:main` then ran for real: `checks` slice passed; `tests` slice ran 30min (vs the prior contended run's 67min)
+  with only 1 failure
+  (`TestApiFootballLauncherHardenedPreemptionSignal::test_launcher_writes_launch_params_with_replayable_scope`,
+  `Failed: Timeout (>300.0s)`, 2866 passed/17 skipped) — the exact test class `agt-771546` already diagnosed and
+  mitigated with `PYTEST_TIMEOUT=300` (`deployment-service@eb131cd`), now timing out again AT that already-raised
+  ceiling. Verified the mitigation is still intact on `live-defi-rollout` (unchanged). Per todo 1's own anticipated
+  branch, did NOT raise `PYTEST_TIMEOUT` a third time — root-cause fix remains
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (out of scope for a one-shot task). No run
+  was in-flight against current `main` HEAD (`ce1239d`) after `30813934094` completed — dispatched a fresh
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-service --ref main` → run `30824452052`, confirmed
+  queued cleanly. **Disposition: no code change — cancelled one genuinely-redundant runner-hogging job (a new mitigation
+  distinct from anything else in this doc: freeing a runner already occupied by moot post-merge work, rather than purely
+  waiting), then dispatched a fresh run against the untested current head.** Outcome of `30824452052` left for a
+  follow-up occurrence per this doc's established practice. `GET /api/repo-blockers` → `open: []`. Slot left clean
+  (`deployment-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean throughout — only this doc
+  edited). This doc is now approaching its 1000-line hard cap (870+ lines) — flagging for whoever hits it next to split,
+  per this doc's own precedent for its parent.
