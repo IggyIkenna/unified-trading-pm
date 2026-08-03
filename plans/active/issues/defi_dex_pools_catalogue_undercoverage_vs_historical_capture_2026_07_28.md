@@ -221,7 +221,7 @@ captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap direct
       `instrument_id` is UUID-shaped, not a pool address; writing it into `pool_address` verbatim would be incorrect,
       not just incomplete). Honest Coverage's `expected_unattempted` re-derivation does not need a manual run here — see
       Progress Log for the standing daily Cloud Run Job mechanism that already covers it.
-- [ ] [DATA] P2. **Split off from the todo above (2026-08-03).** KAMINO's DeFi pool catalogue gap needs a DIFFERENT
+- [x] [DATA] P2. ✅ **Split off from the todo above (2026-08-03).** KAMINO's DeFi pool catalogue gap needs a DIFFERENT
       discovery technique than `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` uses (that script deliberately
       excludes KAMINO — see its module docstring — because KAMINO's `dex_pool_state` `instrument_id` values are
       UUID-shaped vault ids, not EVM/Solana-address-shaped, and KAMINO also captures `lending_indices`/`solana_lending`
@@ -230,7 +230,14 @@ captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap direct
       protocols (2026-08-03)" section above already measured the gap size (kamino: 513 captured, 113 catalogued, 400
       captured-only) — this todo is the FIX, not further measurement. Done-when: KAMINO's catalogue-vs-captured gap is
       closed the same way the other 15 protocols now are (or a documented reason it cannot be, e.g. a UUID vault id has
-      no stable on-chain address to catalogue against). (repo: instruments-service)
+      no stable on-chain address to catalogue against). (repo: instruments-service) — **DONE, and the premise was
+      wrong**: `instruments-service@a7810c65` — direct manifest sampling found KAMINO's `dex_pool_state` `instrument_id`
+      values are 44-char base58 Solana addresses (e.g. `BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7`), NOT UUID-shaped;
+      the UUID-shaped ids belong to KAMINO's separate `lending_indices` rows, a data_type this script never reads — the
+      two were conflated. No new discovery technique was needed: added KAMINO to `_SOLANA_PROTOCOLS` and re-ran the SAME
+      already-shipped script. Catalogue promoted 78,267 → 79,045 rows (891 KAMINO gap addresses found — matches this
+      doc's own Solana quantification section — 775 genuinely new listings, monotonic guard ACCEPT). See Progress Log
+      for full detail.
 
 ## Progress Log
 
