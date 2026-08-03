@@ -462,3 +462,11 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   instrument across delta_one's feature-group batches — consistent with real, continuing work, not a stall). No
   `EXIT_STATUS` file yet. Continuing to monitor; will re-run CEFI:cross_instrument/multi_timeframe once a terminal
   verdict lands.
+- 2026-08-03 ~14:34Z (slot-12, data_engineering, INTERIM #7): ~1h of continued bounded-watchdog monitoring since INTERIM
+  #6. CEFI:delta_one's VM (still `features-e2e-cefi-20260803-030432-d7c1a5`, now ~11.5h elapsed) remains `RUNNING`
+  throughout with consistently healthy forward progress — `run.log` grew from 616,884 to 713,686 lines (~97k new lines)
+  over 9 sampled checks at 3-min intervals, no interval flat/stalled. No `EXIT_STATUS` yet. Switched the progress metric
+  from "distinct new instrument names" (plateaued at 173 after ~13:47Z — a false-stall signal, since delta_one revisits
+  the same instrument set across multiple feature-group passes) to raw log-line growth, which is monotonically
+  increasing and a more reliable liveness proxy for this workload shape. Still waiting for a terminal verdict before
+  re-running CEFI:cross_instrument/multi_timeframe.
