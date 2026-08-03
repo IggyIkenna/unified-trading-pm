@@ -176,12 +176,26 @@ NEW root cause in the same incident family, not a duplicate.
       relaunched VM (`backfill-defi-dex-swaps-20260803-103749`) is running the OLD pre-fix metadata and is on track to
       hit the identical self-kill imminently. Todo 1's reap-zombies.sh log-path fix remains a real, independently
       worthwhile fix — it just wasn't the cause of THIS incident.
-- [ ] [INFRA] P2. **Determine (or rule out) what actually invoked `reap-zombies.sh` at `2026-08-03T10:30:56Z`** — grep
-      is inconclusive (no Terraform/GHA/systemd wiring found in this repo checkout); check agent-orchestrator activity
-      logs / other slots' session history around that timestamp for an ad-hoc invocation, or confirm it's dispatched
-      from infrastructure not checked into this repo (an external cron on a VM, a different repo). If a recurring
-      schedule is found, ensure it uses `--silence-threshold-sec` sanely and the path fix from todo 1 lands before it
-      runs again. (repo: deployment-service, unified-trading-pm)
+- [x] ✅ [INFRA] P2. **Determine (or rule out) what actually invoked `reap-zombies.sh` at `2026-08-03T10:30:56Z`** —
+      **RULED OUT: `reap-zombies.sh` was never invoked at this timestamp at all.** Two independent lines of evidence
+      converge: (1) a repo-wide grep for `reap-zombies` across `deployment-service`, `unified-trading-pm`, and
+      `agent-orchestrator` (`*.yml`/`*.yaml`/`*.tf`/`*.sh`/`*.py`, plus a plain filename grep) finds the script only at
+      its own source path and its own new test — zero Terraform/GHA/systemd/cron wiring anywhere in any repo checkout
+      that could have fired it on a schedule or from CI; (2) direct read of
+      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` lines 432-471 (the `VM_SHUTDOWN_ON_COMPLETION=true`
+      self-delete block) shows it fires
+      `gcloud compute instances delete '$VM_NAME_SELF' --zone='$VM_ZONE_SELF' --quiet     --delete-disks=all` from a
+      detached background subshell **running on the VM itself**, under the VM's own attached `uts-prd-sa` service
+      account — which independently and exactly reproduces every signature element previously attributed to
+      reap-zombies.sh (`gcloud` CLI binary, `interactive/False from-script/True`, `uts-prd-sa` principal, caller IP =
+      the VM's own network egress). This is the SAME mechanism
+      `vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md` already root-caused as the actual killer of the
+      flagged VM (a `WORKER_STALLED` self-kill, not an external reap). Combined with todo 2's 30-day fleet-wide audit
+      (zero evidence of reap-zombies.sh's list+delete-loop pattern ever running against prod), there is no remaining
+      candidate actor other than each VM's own documented self-delete convention — the question is answered, not just
+      left inconclusive. No recurring schedule exists to harden, so todo 1's path fix (already shipped) is
+      defense-in-depth for a script that is invoked ad hoc/manually only, not a currently-scheduled process. (repo:
+      deployment-service, unified-trading-pm) — doc-only, no code change required.
 - [ ] [DATA] P2. **Make `backfill_defi_dex_pool_swaps_source_correction.py`'s day-level checkpoint durable against an
       early kill** — write `_write_checkpoint` after EVERY completed day (or wrap the loop body in a try/finally that
       always persists `done_days` on any exit path, not just the `i % 20 == 0` cadence + a full-completion tail-call),
@@ -225,3 +239,12 @@ NEW root cause in the same incident family, not a duplicate.
   (P0). Todo 1's reap-zombies.sh fix stays valid/necessary (a real bug, just not this incident's cause). Todos 3-4
   remain open. No GCS deletes/mutations performed — read-only investigation (30-day `gcloud logging read`, GCS log
   reads, `gcloud compute instances describe`) plus the launcher-script edit filed in the new doc.
+- **2026-08-03T~11:45Z** (AO dispatch, slot 6, `infra`, todo 3) — Ruled out `reap-zombies.sh` as ever having been
+  invoked at `2026-08-03T10:30:56Z` (or in the broader 30-day window todo 2 already audited). Repo-wide grep across
+  `deployment-service`/`unified-trading-pm`/`agent-orchestrator` found zero Terraform/GHA/systemd/cron wiring of the
+  script anywhere. Direct read of `vm-exec-with-gcs-tee.sh`'s `VM_SHUTDOWN_ON_COMPLETION=true` self-delete block (lines
+  432-471) confirms it independently reproduces the exact audit-log signature previously attributed to reap-zombies.sh
+  (gcloud CLI, `from-script/True`, `uts-prd-sa`, VM's own egress IP) — consistent with
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`'s finding that this specific VM self-killed via its
+  own stall watchdog. No new investigation needed beyond cross-referencing the two already-completed audits. No code
+  shipped (doc-only closure); no GCS/VM mutations performed.
