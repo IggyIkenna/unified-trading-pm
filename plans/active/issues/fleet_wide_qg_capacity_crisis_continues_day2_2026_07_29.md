@@ -420,3 +420,25 @@ assembles a ci satellite batch once this doc's Progress Log stabilizes.
   worker-owned (a worker files when its task is CI-blocked), main does not file it. Root fix = runner capacity
   (operator/infra), already this doc's open remediation. Recorded here so the next incarnation inherits the datapoint
   instead of re-discovering it.
+
+- **2026-08-03 ~20:30Z (interactive session, `/autonomous` on
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) — material improvement, NOT full resolution.** One of
+  this crisis's root causes — the reservation-ledger governor resolving a SEPARATE, isolated ledger per repo on this
+  same shared host (confirmed 2026-08-02, ~10 repos piling on with zero shared admission) — is now fixed and live:
+  `unified-trading-pm@fada7dc20` extends `_qg_shared_root()` to collapse every glue-runner pool's ledger onto one
+  shared, host-writable path (`/opt/.qg-governor-glue-shared`), propagating organically to every pool via its next CI
+  run (no fleet "flip" step). Live-validated via direct host introspection (not just synthetic test): **before** — 10
+  repos, each blind to the other 9's reservations, admitting as if it owned the whole host; **after** — 6+ real
+  concurrent repos (`client-reporting-api`, `deployment-service`/`-api`, `batch-live-reconciliation-service`,
+  `instruments-service`, `features-service`, `unified-api-contracts`, seen across 3 separate spot-checks this session)
+  correctly sharing one ledger, admission math (`running heavy phases` vs `CPU slots (80%×N)`) actually binding, 0 OOM
+  observed. **What this does NOT fix** — the `~19:56Z` entry immediately above this one is a DIFFERENT root cause this
+  fix doesn't touch: runner-POOL starvation (a pool with zero available runner processes queues forever, never even
+  starting — a capacity/count problem, not an admission-coordination one; this doc's own remediation for that is
+  runner-count policy, separate from the ledger fix). Also out of scope: AO slot-worker QG runs (a separate
+  `.tabs`-scoped ledger population on this same host) are still NOT unified with the glue-runner pools' ledger — two
+  populations sharing a host but not yet a combined budget view. Neither this doc nor
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (at 995/1000 lines — no new entry added there, see
+  that doc's own note on why continuations land here) should be marked resolved on this fix alone. A ~90min live soak of
+  the ledger fix specifically is running in the background at time of writing; see
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`'s Progress Log for its outcome.
