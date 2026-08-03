@@ -146,12 +146,13 @@ the actual CME ES/MES 2020 gap this incident left behind has been recaptured by 
       fallback — just add a regression test either way. Target repo: deployment-service (shell wrapper) and/or
       market-tick-data-service (CLI exit-code signal), whichever the implementer determines is the cleaner surface. —
       deployment-service@5478a92 (see Progress Log)
-- [ ] [DATA] P2. Once the in-flight `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260803-180128` relaunch (or its
+- [x] ✅ [DATA] P2. Once the in-flight `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260803-180128` relaunch (or its
       wave-launcher successor) completes, spot-check manifest `capture_status` for a sample of the dates this incident
       likely dropped (e.g. 2020-07-01, 2020-09-15, 2020-11-11, 2020-12-30, 2020-12-31 — CME ES/MES
       `ohlcv_1m`/`ohlcv_1s`) to confirm they are now genuinely `captured`, not still gapped. If any remain uncaptured
       after that relaunch completes, a targeted relaunch of just the remaining gap is the follow-up (do not
-      blind-relaunch the whole year again). Target repo: NA (verification-only).
+      blind-relaunch the whole year again). Target repo: NA (verification-only). — verified genuinely `captured` for all
+      5 sample dates (see Progress Log)
 
 ## Progress Log
 
@@ -182,3 +183,28 @@ the actual CME ES/MES 2020 gap this incident left behind has been recaptured by 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the preemption-monitoring codex doc for
   `vm-launcher-runbook.md`, which the doc's own "Why it matters" section explicitly cites as the exact mechanism
   (RelaunchPreemptedVm / PROGRESS.json trust) this bug threatens — this VM wasn't preempted, so that was a weaker match.
+- **2026-08-03 (slot-3, data_engineering)**: closed todo 2. The named relaunch (`...-180128`) turned out to have been
+  SPOT-preempted at 2026-08-03T20:23:53Z — confirmed via `gcloud compute operations list` (`compute.instances.preempted`
+  systemevent timestamp matches the VM's own last `PROGRESS.json`/watchdog-trace update to the second) — and its
+  immediate wave-launcher successor (`...-210126`) was itself preempted ~90s after insert (`LAUNCH_PARAMS.json` only, no
+  `run.log` ever written). Both are ordinary `VM_FORCE=false` skip-if-fresh relaunches, not the PROGRESS.json-driven
+  resume path (`START_DATE` stayed `2020-01-01` in `LAUNCH_PARAMS.json` — expected and correct for this launcher mode,
+  not a checkpoint-replay bug), so I queried the tradfi availability manifest directly rather than wait on any single
+  VM's completion — a single bounded `_index/availability_index.parquet` download (small object, not a whole-corpus
+  walk) filtered in pandas for the 5 sample dates. Initial query used bare `instrument_id` values ("ES"/"MES"/"ES.FUT"/
+  "ES.OPT"/"MES.FUT"/"MES.OPT") and showed `attempted_failed`/`empty_confirmed`/`NO_ROW_FOUND` for every row — looked
+  alarming until I cross-checked two CONTROL dates (2020-02-03, well before the incident window, and 2020-08-04, the
+  exact date the `...-180128` run.log shows real `StreamingParquetWriter` uploads landing) and found the IDENTICAL
+  `attempted_failed`-paired-with-`empty_confirmed` pattern on both — proving this pairing is a pre-existing, systemic
+  manifest artifact tied to those raw instrument_id strings (a duplicate/legacy row shape), unrelated to this incident,
+  not evidence of a real gap (per CLAUDE.md "probe the vocabulary the WRITER emits" — the real write target, confirmed
+  from the run.log itself, is grouped by `instrument_type=futures_chain`/`underlying=SP500`, not by literal `ES`/`MES`
+  instrument_id). Re-queried on `venue=CME, underlying=SP500, instrument_type=futures_chain` for both `ohlcv_1m` and
+  `ohlcv_1s`: all 5 target dates read `capture_status=captured, expected=True, available=True`, with real row_counts
+  (1392-2824 for 1m, 27755-63315 for 1s), `source=databento` — genuinely captured, not gapped. No targeted relaunch
+  needed. Both todos in this doc are now done with no lock — archiving per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual in a separate follow-up commit
+  (never bundle a checkbox flip with the `git mv` per `agents/RULES.md` § 2). Noted but did NOT file a new issue for the
+  VM's repeated-preemption pattern (4x in <24h for this one shard, including the ~90s-after-insert case) — the
+  self-healing skip-if-fresh cadence worked exactly as this doc's own "Why it matters" section predicted despite it, so
+  this reads as ordinary SPOT contention in a busy zone (many concurrent tradfi VMs at check time), not a defect.
