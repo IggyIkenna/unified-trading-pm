@@ -35,7 +35,7 @@ related:
     /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md,
     /plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
-    /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
     /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,

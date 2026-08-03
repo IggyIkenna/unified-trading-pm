@@ -39,7 +39,7 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/cleanup_legacy_twins.py,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
   ]
 drift_direction: advance-code

@@ -731,9 +731,9 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       not a full integration-test run; a value-only change can pass `SIT_VALIDATED` while still breaking a consumer).
       Verified on `origin/live-defi-rollout` (`git merge-base --is-ancestor 33cf6f0 origin/live-defi-rollout`) and no
       other repo/doc under `full-workspace-sit`'s naming carries the same over-claim (grep swept `sit-gate.yml`,
-      `ldr_to_main_fleet_promote.sh`, `codex/08-workflows/ci-cd-flow.md`,
-      `codex/06-coding-standards/integration-testing-layers.md`, `codex/15-runbooks/sit-runbook.md` — all reference the
-      `SIT_VALIDATED` state mechanically, none claim it proves the resolved combination executed). This todo was
+      `ldr_to_main_fleet_promote.sh`, `/codex/08-workflows/ci-cd-flow.md`,
+      `/codex/06-coding-standards/integration-testing-layers.md`, `/codex/15-runbooks/sit-runbook.md` — all reference
+      the `SIT_VALIDATED` state mechanically, none claim it proves the resolved combination executed). This todo was
       extracted 2026-08-02, after the fix had already landed — checkbox was simply never flipped.
 
 ## Deferred

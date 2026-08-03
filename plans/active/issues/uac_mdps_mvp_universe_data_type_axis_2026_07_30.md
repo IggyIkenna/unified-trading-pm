@@ -142,7 +142,7 @@ ordering hazard).
       state regardless of the source doc's path) or a live re-derivation-on-every-tick (NOT safe to archive without
       first re-pointing the dependent plan's `depends_on` at the archived path or confirming archived docs are still
       scanned). Then run the 6-step archival ritual
-      (codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fix the 2 referrers
+      (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fix the 2 referrers
       (`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
       `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` — the latter's
       `depends_on`/`gate_on_depends`/banner all cite this doc by slug), add the archived-banner, `git mv` to
