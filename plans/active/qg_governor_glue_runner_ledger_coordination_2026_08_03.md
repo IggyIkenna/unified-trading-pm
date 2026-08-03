@@ -126,24 +126,32 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
 
 ### Phase 0 — Confirm topology + decide the resolution strategy
 
-- [ ] [INFRA] P0. Enumerate the actual directory layout on at least 2-3 different glue-runner hosts (not just the one
+- [x] [INFRA] P0. Enumerate the actual directory layout on at least 2-3 different glue-runner hosts (not just the one
       observed 2026-08-02) — `ls /opt/ | grep github-glue-runners` (or equivalent) per host — to confirm whichever
       strategy is picked below actually generalizes, not just fits the one host already seen. Gate: a recorded layout
-      sample from ≥2 hosts in this plan's Progress Log.
-- [ ] [INFRA] P0. Decide the shared-root resolution strategy (one of the 3 above, or a combination) and record the
+      sample from ≥2 hosts in this plan's Progress Log. — 2026-08-03: **premise corrected, not literally met** — there
+      is exactly ONE glue-runner host in this fleet (see Progress Log). Sampled the real layout on that one host via SSM
+      (24 pool dirs, every one matching `/opt/github-glue-runners[-<repo>]`).
+- [x] [INFRA] P0. Decide the shared-root resolution strategy (one of the 3 above, or a combination) and record the
       decision + reasoning in this plan's Progress Log before writing any code — this is a real design choice, not a
-      mechanical follow-on.
+      mechanical follow-on. — 2026-08-03: decided (see Progress Log) — neither of the 3 candidates as literally written
+      survives a live permissions check; shipped a 4th, evidence-driven design.
 
 ### Phase 1 — Implementation (additive, flag-gated — mirrors the parent plan's own rollout discipline)
 
-- [ ] [INFRA] P1. Extend `_qg_shared_root()` in `scripts/quality-gates-base/qg-host-governor.sh` to detect the
+- [x] [INFRA] P1. Extend `_qg_shared_root()` in `scripts/quality-gates-base/qg-host-governor.sh` to detect the
       glue-runner topology and resolve the chosen host-shared path — additive only, so a host not yet on the new path
       keeps its exact current (broken-but-unchanged) behavior until explicitly cut over. Gate: `shellcheck` clean + the
-      function's existing test harness pattern extended, not replaced.
-- [ ] [INFRA] P1. Fixture-based unit tests (no live-host dependence, same style as `qg_host_capacity`'s tests): assert
+      function's existing test harness pattern extended, not replaced. — 2026-08-03: done,
+      `scripts/quality-gates-base/qg-host-governor.sh` (new case arm, purely additive) +
+      `scripts/self-hosted-runners/setup-glue-runners.sh` (idempotent shared-dir provisioning in `install`).
+- [x] [INFRA] P1. Fixture-based unit tests (no live-host dependence, same style as `qg_host_capacity`'s tests): assert
       two DIFFERENT simulated repos' runner workdirs on the SAME simulated host resolve to the identical ledger path,
       and that two simulated DIFFERENT hosts never collide. Gate: new test file green, all existing governor test suites
-      (5, per the parent plan) still green — zero regression on the slot-worktree path.
+      (5, per the parent plan) still green — zero regression on the slot-worktree path. — 2026-08-03: done,
+      `scripts/quality-gates-base/tests/test-qg-glue-runner-shared-root.sh` (6/6 PASS). Ran all 14 `test-qg-*.sh` +
+      `test-trap-release.sh` governor suites: 13/14 green, 1 pre-existing macOS-only `systemd-run` SKIP confirmed
+      identical on `git stash` (unrelated to this change) — zero regression.
 
 ### Phase 2 — Live validation on the actual glue-runner topology
 
@@ -182,3 +190,64 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
   local) across 9 repos — root-caused the bulk of it to this exact gap via the parent governor plan's own 2026-08-02
   entry, which had already diagnosed but explicitly deferred the fix ("needs its own scoped plan/PR"). This plan is that
   fork. No code changed yet — Phase 0 is the next actionable step.
+
+### 2026-08-03 — Phase 0: topology-premise correction + strategy decision (autonomous run, /autonomous)
+
+**Topology finding (corrects this plan's own Phase 0 premise).** Dispatched a research sub-agent to verify "2-3
+different glue-runner hosts" before enumerating anything. Verdict: **there is exactly ONE glue-runner host in this
+fleet** — the central/planning VM (`agent-orchestrator-vm-1`, AWS `i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`, private
+hostname `ip-172-31-5-118`, 16 vCPU/61GB — the SAME box observed 2026-08-02). Proof:
+`deployment-service/scripts/vm/launch-central-brain-aws.sh` is the ONLY launcher (of ~180) that references
+`setup-glue-runners.sh`/`POOL_TAG`/`github-glue-runners`; no other repo has its own `self-hosted-runners/` dir;
+`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
+`codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` both confirm the single-VM architecture explicitly.
+This is a spec-clarification WITHIN the plan's documented intent (AUTONOMOUS_AGENT_RULES.md rule 12f) — the plan's
+actual GOAL ("resolve to one shared path per physical host, without merging across hosts") is unaffected; only the
+Phase-0 verification METHOD changes from "compare N hosts" to "sample the one host's N pool dirs."
+
+**Live layout sample (via `scripts/self-hosted-runners/ssm-run.sh`, AWS SSM — no inbound SSH on this box by design).**
+`ls -la /opt/ | grep github-glue-runners` on the one host: **24 pool directories**, every one matching
+`/opt/github-glue-runners[-<repo-slug>]` (untagged for PM's own pool, `-ao` for agent-orchestrator, `-<repo>` for the
+other 22 service/UI repos) — exactly the shape `setup-glue-runners.sh`'s `POOL_TAG`/`RUNNER_BASE` derivation predicts
+(`RUNNER_BASE="${RUNNER_BASE:-/opt/github-glue-runners${_TAG_SUFFIX}}"`). Confirms the plan's problem-statement path
+shape is right, modulo one correction: `quality-gates.sh:42`'s
+`WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"` resolves to
+`/opt/github-glue-runners[-<repo>]/glue-N/_work/<repo>` (one level, not two, above the checkout — GHA's
+`_work/<repo>/<repo>` double-nesting minus one `..`) — verified live: `_work/ml-service/.benchmarks` already exists on
+disk under ml-service's own pool, the isolated ledger dir the bug predicts.
+
+**Permissions blocker (neither of the plan's 3 candidate strategies survives this, as literally written).** Verified via
+SSM (root): `/opt/github-glue-runners[-<repo>]` top-level dirs are **`root:root 0755`** — `sudo -u ubuntu mkdir` under
+any of them fails `Permission denied`. So candidate (1) ("strip to the stable `/opt/github-glue-runners-*` parent")
+cannot work by simply reusing an EXISTING pool's own top-level dir as the shared root — no pool's top-level dir is
+writable by the runner user. Candidate (2) (host-identity env var) and (3) (`/etc/machine-id`) both sidestep this
+specific blocker but add complexity candidate (1)'s SIMPLICITY was the whole point of — and since every ledger path in
+this design is already a local-filesystem path (never networked storage, per the existing `.tabs`-stripped design's own
+comment), cross-host merge safety is already structurally guaranteed by locality, not by which detection mechanism is
+used — so machine-id's main advantage over a hardcoded path buys nothing here.
+
+**Decision: a 4th, evidence-driven design** — additive detection (any `WORKSPACE_ROOT` under
+`/opt/github-glue-runners*`) resolving to a NEW, purpose-provisioned, `ubuntu`-owned shared directory
+(`/opt/.qg-governor-glue-shared`, dot-prefixed so it can never collide with a real `POOL_TAG` value, which are always
+repo slugs) — not a literal `/opt/github-glue-runners*` path. Provisioned once via a root SSM step on the live host
+(verified `ubuntu` can write + the test artifact was cleaned up), and self-provisioning added to
+`setup-glue-runners.sh`'s `install` (idempotent `install -d`) so any FUTURE host bootstrap creates it automatically —
+closing candidate (2)'s stated downside ("a host bootstrapped before this ships would silently fall back to the broken
+path") without needing a separate runner-install-time env var.
+
+### 2026-08-03 — Phase 1: implementation + tests (autonomous run, /autonomous)
+
+- **`scripts/quality-gates-base/qg-host-governor.sh`**: added one `case` arm to `_qg_shared_root()` —
+  `/opt/github-glue-runners*) echo "$_QG_GLUE_RUNNER_SHARED_ROOT" ;;` — purely additive, existing `.tabs`/empty/catchall
+  branches untouched.
+- **`scripts/self-hosted-runners/setup-glue-runners.sh`**: added one idempotent
+  `install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "/opt/.qg-governor-glue-shared"` next to the existing
+  `SLOT_VENV`/`SLOT_REPO` pre-create (same root-owned-parent problem, same fix shape, cross-referenced to the 2026-07-16
+  incident comment already there).
+- **New test**: `scripts/quality-gates-base/tests/test-qg-glue-runner-shared-root.sh` — 6/6 PASS (3 different
+  repos'/pool-tags' glue-runner workdirs → identical shared root; `.tabs` branch unchanged; unrelated path unchanged;
+  empty-`WORKSPACE_ROOT` fallback unchanged).
+- **Regression sweep**: ran all 14 existing `test-qg-*.sh`/`test-trap-release.sh` governor suites — 13/14 green, 1
+  (`test-qg-mem-cap.sh`) exits non-zero on a macOS-only `systemd-run`-absent SKIP, confirmed **identical** via
+  `git stash` before this change (pre-existing environment gap, not a regression).
+- **Committed**: `unified-trading-pm@<pending — see next commit>`.
