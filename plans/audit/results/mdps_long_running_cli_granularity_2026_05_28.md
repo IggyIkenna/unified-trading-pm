@@ -16,7 +16,7 @@ repos: [features-service, instruments-service, market-tick-data-service, ml-serv
 scope: [engineer, admin]
 tags: [audit, mdps, mtds, backfill, data-correctness, uac]
 related:
-  - plans/audit/instructions/mdps_long_running_efficiency_audit_instructions.md
+  - plans/audit/instructions/mtds_mdps_master_audit_instructions.md
   - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
@@ -40,9 +40,9 @@ parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 
 ## What I read
 
-The audit scope is **Concern B** from `plans/audit/instructions/mdps_long_running_efficiency_audit_instructions.md` §
-66-88. The codex contract is `/codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity"
-(lines 108-219).
+The audit scope is **Concern B** from `plans/audit/instructions/mtds_mdps_master_audit_instructions.md` § "Mode 2 —
+Efficiency Audit" § 66-88. The codex contract is `/codex/06-coding-standards/cli-convention.md` § "Instrument Identity
+and CLI Granularity" (lines 108-219).
 
 **MDPS source files read:**
 

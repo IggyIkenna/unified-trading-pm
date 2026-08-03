@@ -16,6 +16,7 @@ related:
   [
     /codex/04-architecture/operational-modes.md,
     /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
     /codex/05-infrastructure/per-venue-paper-policy.md,
     /codex/04-architecture/reconciliation-resolution.md,
   ]

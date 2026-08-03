@@ -248,11 +248,14 @@ terminology, not broken links.
       the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
       botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely closed (a
       content call — do not guess). (repo: `unified-trading-pm`)
-- [ ] [DOC] P2. **Retire the 5 bare-name `unified-trading-codex` mentions (P2-E)** in the rules trees — stale
+- [x] ✅ [DOC] P2. **Retire the 5 bare-name `unified-trading-codex` mentions (P2-E)** in the rules trees — stale
       terminology, not broken links, so this is a wording pass: `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and
-      `.cursor/rules/testing/test-coverage-targets.mdc:80` are the two genuinely stale ones (the
-      `pipeline-mode-partition-structure.mdc:79` mention is already correct, and two more were fixed in-place this run).
-      (repo: `unified-trading-pm`)
+      `.cursor/rules/testing/test-coverage-targets.mdc:80` were the two remaining genuinely stale ones (the
+      `pipeline-mode-partition-structure.mdc:79` mention was already correct, and two more were fixed in-place in the
+      2026-07-30 run). **RESOLVED 2026-08-03** by the docs_reconciler autonomous sweep: `act-secrets-setup.mdc`'s
+      example sibling-repo now reads `unified-api-contracts` (a real, live sibling); `test-coverage-targets.mdc`'s "four
+      permanently exempt repos" table dropped the `unified-trading-codex` row and now correctly says "three". All 5
+      original P2-E mentions are now accounted for. (repo: `unified-trading-pm`)
 
 ## Applied this run (no ruling needed — recorded for the audit trail)
 

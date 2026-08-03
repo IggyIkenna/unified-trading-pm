@@ -72,12 +72,11 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 
 ### Approved floor exceptions (closed list)
 
-**Only these four repos are permanently exempt from the standard floors.** No other repo may lower MIN_COVERAGE below its type floor.
+**Only these three repos are permanently exempt from the standard floors.** No other repo may lower MIN_COVERAGE below its type floor.
 
 | Repo | Status | Reason |
 |------|--------|--------|
 | `unified-trading-pm` | Skipped by rollout | Has its own quality-gates; rollout never overwrites |
-| `unified-trading-codex` | Skipped by rollout | Has its own quality-gates; rollout never overwrites |
 | `ibkr-gateway-infra` | Override → 51 | Gateway client wraps proprietary IBKR API; most paths require live broker connection |
 | `system-integration-tests` | Override → 0 | Pure test-harness repo — no production source package to measure |
 

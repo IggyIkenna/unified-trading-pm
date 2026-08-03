@@ -5,8 +5,7 @@ summary: >-
   Aligns the three "layers of truth" for the Tier 0 UI demo — Codex strategy prose, UI mock fixtures
   (`lib/strategy-registry.ts` / `*-mock-data.ts`), and backend/OpenAPI (T1+) — so field names and enums stay consistent;
   specifies cross-strategy UX expectations (shared facet filters, multi-venue first-class view model) and the Tier
-  0-vs-T1+ no-feature-creep rule. Points to the UI playbook `END_TO_END_STATIC_TIER_ZERO_TESTING.md` for the P0 journeys
-  + institutional demo bar.
+  0-vs-T1+ no-feature-creep rule. Points to the UI playbook `TIER_ZERO.md` for the P0 journeys + institutional demo bar.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -39,14 +38,14 @@ code_refs:
 
 **Audience:** Engineers and PM aligning **Codex strategy prose**, **UI mock fixtures**, and **future API tiers**.
 
-**UI playbook (repeatable testing):**
-[`END_TO_END_STATIC_TIER_ZERO_TESTING.md`](../../unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md)
-(path from workspace root: `unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md`)
+**UI playbook (repeatable testing):** [`TIER_ZERO.md`](../../../unified-trading-system-ui/docs/TIER_ZERO.md) (path from
+workspace root: `unified-trading-system-ui/docs/TIER_ZERO.md`; supersedes the former
+`END_TO_END_STATIC_TIER_ZERO_TESTING.md`, folded in by the target file itself)
 
 **Runtime tier model:** `unified-trading-pm/plans/archive/2026_07/e2e_testing_system_tiers_2026_03_22.md`
 
 **Institutional demo bar (workflows, subscriptions, admin approvals, API handoff):** UI playbook §1b —
-`unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md` (“Institutional-grade demo target”).
+`unified-trading-system-ui/docs/TIER_ZERO.md` (“Institutional-grade demo target”).
 
 **Derived capability lattice (org hierarchy, pre-trade, order lifecycle, MD entitlements, post-trade, audit, etc.):**
 same file, §1b subsection **“Derived capability lattice”** — use when Codex or API specs must cover _what a desk does_,

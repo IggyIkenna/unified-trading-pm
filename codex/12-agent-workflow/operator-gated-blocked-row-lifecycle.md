@@ -147,7 +147,8 @@ Two ruling shapes:
 (`authority-operator-gated` CSS class), distinct from the amber `authority-operator` style still used for a live
 worker's own escalation, and from the default style for an ordinary blocked question. It shows:
 
-- The three canned options — A submits plain (stays open, per D2); B/C now submit as an `instruct` ruling (see path 2
+- The three canned options — A submits plain via the `disposition="partial"` path (`partial_answer_blocked`), which
+  deliberately leaves `answered_at` unset so the row stays open; B/C now submit as an `instruct` ruling (see path 2
   above), not plain answers.
 - A **"Reclassify to role…" dropdown**, populated from `GET /api/roles` (the real role registry —
   `role_registry.load_registry()`, one row per `agents/<role>.md`) filtered client-side to exclude `project_management`
