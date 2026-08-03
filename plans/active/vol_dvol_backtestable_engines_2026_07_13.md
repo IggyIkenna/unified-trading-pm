@@ -182,19 +182,24 @@ what's missing.
       the live state; no registry code change needed (nothing to revert). Filed the `BLOCKED-*` todo below naming the
       specific failure + citing the exact metrics. No code shipped this todo (a leave-as-is decision, not a
       registration) — plan-only commit.
-- [ ] [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_CARRY fails the HARD CONTRACT bar, no further work planned unless a
-      concrete param-sweep candidate is proposed.** The 2026-07-30 (slot-7) real backtest — `iv_atm` from the captured
-      DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series, full honest
-      intersection window 2021-03-24→2026-05-22, `entry_vrp=0.04`/`exit_vrp=0.01` (carry.py defaults, untested) — came
-      back non-passing for both underlyings: BTC `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`, `total_pnl=-119.76`,
-      `win_rate=22.8%` (29 cycles/58 fills); ETH `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`, `total_pnl=-191.40`,
-      `win_rate=24.75%` (51 cycles/102 fills). Both Sharpes are indistinguishable-from-noise, PnL is flat-to-negative,
-      and win rate ~23-25% has no compensating asymmetric payoff — this is a genuine "no edge at the default thresholds"
-      result, not a methodology gap (real captured data both legs, real `GroupBRunner` wiring, full available window).
-      **Not scheduling a param sweep here** — `entry_vrp`/`exit_vrp` were left at defaults and a different threshold
-      pair MIGHT clear the bar, but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to
-      pursue, not a mechanical follow-up. VOL_CARRY stays `not_available`; re-open only if a specific alternative
-      parameterization is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
+- [x] ✅ [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_CARRY fails the HARD CONTRACT bar, no further work planned
+      unless a concrete param-sweep candidate is proposed.** The 2026-07-30 (slot-7) real backtest — `iv_atm` from the
+      captured DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series,
+      full honest intersection window 2021-03-24→2026-05-22, `entry_vrp=0.04`/`exit_vrp=0.01` (carry.py defaults,
+      untested) — came back non-passing for both underlyings: BTC `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`,
+      `total_pnl=-119.76`, `win_rate=22.8%` (29 cycles/58 fills); ETH `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`,
+      `total_pnl=-191.40`, `win_rate=24.75%` (51 cycles/102 fills). Both Sharpes are indistinguishable-from-noise, PnL
+      is flat-to-negative, and win rate ~23-25% has no compensating asymmetric payoff — this is a genuine "no edge at
+      the default thresholds" result, not a methodology gap (real captured data both legs, real `GroupBRunner` wiring,
+      full available window). **Not scheduling a param sweep here** — `entry_vrp`/`exit_vrp` were left at defaults and a
+      different threshold pair MIGHT clear the bar, but that is a fresh trading-judgment hypothesis the
+      operator/quant_dev should decide to pursue, not a mechanical follow-up. VOL_CARRY stays `not_available`; re-open
+      only if a specific alternative parameterization is proposed with a stated rationale. Repo: strategy-service (no
+      code — decision record). — **DONE 2026-08-03 (slot-13, `data_engineering`).** This todo IS the decision record
+      (filed 2026-07-30 by slot-14); no code task exists to ship. Re-verified live: `VOL_CARRY` still has zero hits in
+      `strategy_service/engine/strategies/v2/factory.py` (`ARCHETYPE_ENGINE_REGISTRY`), so `not_available` still holds
+      and nothing has drifted since the decision was recorded. No concrete alternative param-sweep candidate has been
+      proposed since filing, so per the todo's own instruction there is no further mechanical action — flipping closed.
 - [ ] [SCRIPT] P1. Same backtest-then-conditionally-register sequence for **VOL_ARB_RV_IV**
       (`vol_trading/arb_rv_iv.py`). Repo: strategy-service.
 - [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
@@ -319,3 +324,11 @@ what's missing.
   (not a code task) so it doesn't silently vanish from the plan. Next: the VOL_ARB_RV_IV todo below runs the same
   backtest-then-conditionally-register sequence independently (separate engine, separate verdict expected).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+
+- 2026-08-03 (slot-13, `data_engineering`): Flipped the `BLOCKED-INSUFFICIENT-EDGE` P3 todo above. It was already a
+  complete decision record (filed 2026-07-30 by slot-14) — no code task attached to it, so there was nothing to ship.
+  Re-verified live that `VOL_CARRY` still has zero hits in `strategy_service/engine/strategies/v2/factory.py`
+  (`ARCHETYPE_ENGINE_REGISTRY`), confirming `not_available` hasn't drifted since the decision was recorded, and that no
+  alternative param-sweep candidate has since been proposed (the only stated condition for re-opening). Next open todo
+  is the `[SCRIPT] P1` VOL_ARB_RV_IV backtest-then-conditionally-register todo below — separate engine, independent
+  verdict, genuinely dispatchable next.
