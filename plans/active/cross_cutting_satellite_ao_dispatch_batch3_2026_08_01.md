@@ -61,27 +61,23 @@ source: >-
 
 ## Todos
 
-- [ ] [DIAG] P2. **Audit `multi_timeframe`'s `feature_builder_registry.py` `depends_on` entries.** Source:
-      `issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md`. That doc already found + fixed a live bug in
-      `cross_instrument`'s `composite_sr`/`flow_interaction` builders (a declared DAG dependency whose consuming
-      calculator never actually received the upstream-computed DataFrame — silently recomputed internally instead) and
-      confirmed `delta_one` is harmless/decorative scaffolding. Read
-      `features_service/multi_timeframe/schemas/feature_builder_registry.py`'s declared `depends_on` entries; for each,
-      check whether the dependent calculator's `__init__`/build path accepts an upstream-injected DataFrame (real bug →
-      apply the same thread-the-frame fix already demonstrated on `composite_sr`) vs. recomputes internally (harmless,
-      no action, note it) vs. is genuinely dead scaffolding (delete the stale `depends_on` entry). **Done when**: every
-      declared dependency in this module is classified real-bug-fixed / confirmed-harmless / deleted-dead-code with
-      cited evidence, and the source doc's corresponding checkbox is flipped.
-- [ ] [DIAG] P2. **Audit `onchain`'s `feature_builder_registry.py` `depends_on` entries.** Source:
-      `issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md`. Same method as the `multi_timeframe` todo
-      above, applied to `features_service/onchain/schemas/feature_builder_registry.py`. **Done when**: every declared
-      dependency in this module is classified real-bug-fixed / confirmed-harmless / deleted-dead-code with cited
-      evidence, and the source doc's corresponding checkbox is flipped.
-- [ ] [DIAG] P2. **Audit `volatility`'s `feature_builder_registry.py` `depends_on` entries.** Source:
-      `issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md`. Same method as the `multi_timeframe` todo
-      above, applied to `features_service/volatility/schemas/feature_builder_registry.py`. **Done when**: every declared
-      dependency in this module is classified real-bug-fixed / confirmed-harmless / deleted-dead-code with cited
-      evidence, and the source doc's corresponding checkbox is flipped.
+- [x] ✅ [DIAG] P2. **Audit `multi_timeframe`'s `feature_builder_registry.py` `depends_on` entries.** Source:
+      `archive/issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md` (archived 2026-08-03,
+      `status:     resolved`). **ALREADY DONE by the time this draft batch would have been dispatched** — the source
+      doc's own Progress Log (2026-08-03, slot 8) shows this exact audit completed: only 1 of 9 registry entries
+      declares a non-empty `depends_on` (`tf_risk_reward` → `wedge_confluence`), classified CONFIRMED-HARMLESS with
+      cited evidence. No action needed; flagged here only so this draft batch doesn't dispatch duplicate work if
+      approved.
+- [x] ✅ [DIAG] P2. **Audit `onchain`'s `feature_builder_registry.py` `depends_on` entries.** Source:
+      `archive/issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md` (archived 2026-08-03,
+      `status:     resolved`). **ALREADY DONE** — Progress Log (2026-08-03, slot 11): 2 of 16 entries declare non-empty
+      `depends_on`; `aave_rate_impact` CONFIRMED-HARMLESS, `onchain_regime` was a genuine gap (separately wired +
+      shipped, `features-service@8b602744`). No action needed here.
+- [x] ✅ [DIAG] P2. **Audit `volatility`'s `feature_builder_registry.py` `depends_on` entries.** Source:
+      `archive/issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md` (archived 2026-08-03,
+      `status:     resolved`). **ALREADY DONE** — Progress Log (2026-08-03, slot 11): 4 of 8 entries declare non-empty
+      `depends_on`, all CONFIRMED-HARMLESS; the compounding "6 groups fully unwired" finding was separately wired +
+      shipped (`features-service@1ce877a4` + `@a5bd1fea`). No action needed here.
 - [ ] [OPS] P3. **Verify the manifest-consolidator cadence-reduction billing savings materialized.** Source:
       `issues/manifest_consolidator_cadence_cost_audit_2026_07_20.md` § 5/§6 "Resolution criteria (b)". The
       cadence-reduction fix shipped `deployment-service@7b832cb0` on 2026-07-30; today (2026-08-01) the first fully-
