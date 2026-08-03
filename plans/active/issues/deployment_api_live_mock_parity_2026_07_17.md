@@ -156,8 +156,24 @@ mock parity — the drift is historical, not systemic.
       `test_overview_staging_dormant_contract_fields` + extended `test_overview_shape`'s key-set assertion to pin the
       contract. Full `quality-gates.sh` green (sentinel `dc7eece`), shipped via `quickmerge --agent`, verified on
       origin.
-- [ ] [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
-      `total`. Pick one; the UI reads whichever it was written against.
+- [x] ✅ [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
+      `total`. Pick one; the UI reads whichever it was written against. — **DONE 2026-08-03 (slot-7, backend_engineer),
+      `deployment-api@e1e100e`.** Investigated both the backend consumer surface and the frontend: no live code path
+      anywhere in the workspace reads `has_more`/`total_count`/`total` off this endpoint — deployment-ui's only consumer
+      (`DeploymentHistory.tsx` via `client.ts`'s `getDeployments()`) destructures only `.deployments`, so consumption
+      was a wash. Standardized the mock branch (`deployment_api/routes/deployments/_crud.py`) on live's shape
+      (`deployment_state.py:62-68`) since (a) every prior fix in this doc brought mock into line with live, never the
+      reverse, and (b) `total_count`+`has_more` is the pagination convention already used by every other paginated
+      endpoint in this service (`catalogue_lifecycle.py`, `_repo_ci_alerts.py`, `data_status/_catalogue.py`,
+      `data_status_drilldown/_instruments.py`). Updated `tests/unit/test_route_deployments_mock.py`'s two pagination
+      assertions to match. `quality-gates.sh` green (sentinel `e1e100e`), shipped via `quickmerge --agent`, verified on
+      origin. Adjacent finding filed as a new todo below (deployment-ui's own frontend mock still returns `total`).
+- [ ] [UI] P3. **Update deployment-ui's own dev-mode/Playwright mock** (`deployment-ui/src/lib/mock-api.ts:4528-4534`,
+      the `VITE_MOCK_API`-gated frontend fixture, distinct from deployment-api's backend `CLOUD_MOCK_MODE`) to emit
+      `total_count`+`has_more` for `/api/deployments`, matching the backend contract fixed by the todo above. No live
+      consumer reads either field today, so this is stale-fixture hygiene, not a functional bug — but leaving it
+      diverged means deployment-ui's dev/Playwright surface no longer matches deployment-api's real (both live and
+      now-fixed-mock) response shape. (repo: deployment-ui)
 - [ ] [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
       2026-06-10 · inventory 2026-06-22 · escalations 2026-06-27) — a fixture that never moves silently trains the UI on
       stale shapes.
@@ -200,3 +216,15 @@ mock parity — the drift is historical, not systemic.
   (`promotion_model="ldr_main"` + `staging_dormant_mode=True` fleet-wide; `deploy_model`/`deploy_host=None` since none
   of the 7 fixture repos are source-deployed or bundled). Added a regression test pinning the new keys.
   `quality-gates.sh` green (sentinel `dc7eece`), shipped via `quickmerge --agent`, verified on origin.
+- **slot-7 2026-08-03**: Reconciled the `/api/deployments` pagination contract — `deployment-api@e1e100e`. Explored both
+  consumer surfaces (deployment-api's own callers + deployment-ui) before picking a side: nothing reads
+  `has_more`/`total_count`/`total` off this endpoint anywhere in the workspace today (deployment-ui's sole consumer,
+  `DeploymentHistory.tsx`, only destructures `.deployments`), so the choice came down to precedent + convention rather
+  than a forced UI dependency. Standardized the mock branch on live's `total_count`+`has_more` shape (matches
+  `deployment_state.py` and every other paginated endpoint in this service) rather than the reverse, consistent with
+  every prior fix in this doc. Updated the two affected pagination assertions in
+  `tests/unit/test_route_deployments_mock.py`. `quality-gates.sh` green (sentinel `e1e100e`), shipped via
+  `quickmerge --agent`, verified on origin. Filed a new `[UI]` P3 todo for the adjacent finding: deployment-ui's own
+  frontend dev-mode/Playwright mock (`src/lib/mock-api.ts:4528-4534`, gated by `VITE_MOCK_API` — a separate mechanism
+  from deployment-api's `CLOUD_MOCK_MODE`) still returns `total`; out of scope for this backend_engineer task (UI/TS
+  work), left for a `ui_developer` pickup.
