@@ -40,7 +40,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T11:50Z
+last_updated: 2026-08-03T12:30Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -548,3 +548,28 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   outcome. This is the second escalation for this exact PR/commit (after `agt-e5e387`'s 09:47-11:30Z entries) with no
   state change between them — corroborates todo 3's operator-flagged concern about escalation re-fire lacking a
   dedup/cooldown guard, now observed for `ldr_qg_failure` as well as `main_ci_red`.
+
+- **2026-08-03 ~12:20-12:30Z (`cicd` escalation `agt-6db24c`, slot 9, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 11th escalation for this repo's wall, one genuine state change found**: `main` still red at the same
+  already-diagnosed run `30780455914` (pre-`c092df50` 150s-timeout shape, fix on LDR, pending promotion — nothing new).
+  Checked LDR run `30810458524` (dispatched by `agt-1e081d`'s 11:30-11:41Z entry against headSha `eaf99c9a`): its
+  `checks` slice had by now completed — FAILED again at the identical `[4/6] TYPE CHECK` signature, timing out at
+  exactly the 300s `PYRIGHT_TIMEOUT` ceiling (`11:50:42→11:55:42`), fetched via `gh api .../jobs/91675802327/logs`
+  directly (job log available mid-run even with the parent run still `in_progress`). Its `tests` slice was still
+  running. **The state change**: LDR HEAD had advanced 3 commits past `eaf99c9a` (`b24122c5`→`7aca28ce`→`b261f1e5`, none
+  touching test-timeout config or `delta_one`/typecheck-relevant paths per `git log --oneline`) with no run in-flight
+  for the new true HEAD — unlike every entry since 10:48Z, this wasn't a "wait for the same in-flight run" case, it was
+  "no one has tested the current head yet." Dispatched
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/features-service --ref live-defi-rollout` → run `30813594354`,
+  confirmed queued against the true current head `b261f1e5` (not a stale one) — this does NOT discard
+  contention-survival progress the way a same-head redispatch would, since `30810458524` was already testing a
+  superseded commit regardless. Verified all three timeout mitigations (`PYTEST_TIMEOUT=300`, `PYRIGHT_TIMEOUT=300`,
+  `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at LDR HEAD — no regression.
+  `GET /api/repo-blockers` → `open: []`. Did not raise any timeout further (root-cause fix remains
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, correctly out of scope for a one-shot
+  task). **Disposition: no code change — dispatched the first fresh run against the true current, previously-untested
+  LDR head**; outcome of `30813594354` not yet observed, left for a follow-up occurrence. Slot left clean
+  (`features-service` on `live-defi-rollout`, 0 commits ahead of origin). `AUTHORING_SLOT=ci-reconcile` (sentinel, not a
+  real numbered slot) — per cicd.md, skipped the authoring-slot ping (dispatch-time Slack alert already covers the FYI).
+  This is the 11th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains open
+  and unaddressed by this entry.
