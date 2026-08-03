@@ -32,7 +32,7 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/09-strategy/architecture-v2/archetypes/,
-    /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md,
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
     /codex/02-data/pipeline-mode-partition.md,
     /plans/epics/strategy_master.md,
@@ -238,7 +238,7 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     reference — steeper than ref → bet flatten (BUY near / SELL far); flatter → bet steepen (inverse). Leg tests pin the
     slope-view direction + reference-feature override. **NOT registered** + matrix UNCHANGED. Tardis to backtest.
 - [x] [SCRIPT] P2. **→ SPLIT to
-      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md)
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md)
       2026-07-13, dispatched to AO** (bundled with VOL_CARRY). Backtest+register work no longer tracked here.
       **VOL_ARB_RV_IV** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
@@ -249,7 +249,7 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     surface). -- CLOSED (na-eligibility-audit 2026-08-01): backtest+register work for VOL_ARB_RV_IV was split to
     vol_dvol_backtestable_engines_2026_07_13.md, **now ✅ ARCHIVED 2026-08-03** (real backtest ran, came back
     non-passing — BLOCKED-INSUFFICIENT-EDGE, stays `not_available`) at
-    `/plans/active/vol_dvol_backtestable_engines_2026_07_13.md` (will be archived to `plans/archive/2026_08/`).
+    `/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md`.
 - [ ] [SCRIPT] P3. **VOL_0DTE_GAMMA_SCALPING** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (intraday 0DTE marks need Tardis).
     `Vol0dteGammaScalpingEngine` (`vol_trading/gamma_scalping_0dte.py`): near-expiry long-gamma scalp — open (BUY
@@ -258,7 +258,7 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
       `rehedge_delta`; close (SELL back) when the edge collapses. Leg tests pin open/rehedge/no-rehedge/close. **NOT
       registered** + matrix UNCHANGED.
 - [x] [SCRIPT] P3. **→ SPLIT to
-      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md)
+      [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md)
       2026-07-13, dispatched to AO** (bundled with VOL_ARB_RV_IV — both are DVOL-index-backtestable, don't need Tardis).
       Backtest+register work no longer tracked here. **VOL_CARRY** — real engine SHIPPED (template wave).
   - code: strategy-service@697e0641, unit-tested; **BACKTEST-PENDING** (but **DVOL-index-backtestable** — see note).
@@ -275,7 +275,7 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
     CLOSED (na-eligibility-audit 2026-08-01): backtest+register work for VOL_CARRY was split to
     vol_dvol_backtestable_engines_2026_07_13.md (2026-07-13, bundled with VOL_ARB_RV_IV), **now ✅ ARCHIVED 2026-08-03**
     (real backtest ran, came back non-passing — BLOCKED-INSUFFICIENT-EDGE, stays `not_available`) at
-    `/plans/active/vol_dvol_backtestable_engines_2026_07_13.md` (will be archived to `plans/archive/2026_08/`).
+    `/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md`.
 - [ ] [SCRIPT] P3. **VOL_CROSS_ASSET_SPREAD** — real engine SHIPPED (wave 2). Repo: strategy-service.
   - code: strategy-service@1a058e88, unit-tested; **BACKTEST-PENDING** (dual-asset per-strike surfaces need Tardis).
     `VolCrossAssetSpreadEngine` (`vol_trading/cross_asset_spread.py`): relative vol of two assets — `iv_a - iv_b` beyond
@@ -539,7 +539,7 @@ work into 5 small `assigned_vm: planning` child plans, each single-discipline an
 
 - [`uac_venue_registry_completion_2026_07_13.md`](uac_venue_registry_completion_2026_07_13.md) — FX/BITFINEX/BITGET/
   KRAKEN registry + leg-eligibility (7 todos, unified-api-contracts only).
-- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) —
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md) —
   VOL_CARRY + VOL_ARB_RV_IV backtest+register via free DVOL history (7 todos, incl. an `[OPERATOR]` gate on
   historical-depth — DVOL is credential-free but a bulk historical pull is still a backfill decision per this plan's own
   constraint). **✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/`** — all 5 todos done, both engines' backtests

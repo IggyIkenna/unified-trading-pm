@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (38)
+### cefi (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -153,9 +153,6 @@ by hand._
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
   UTL…
-- [`vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30`](./vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)
-  — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
-  na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
 ### defi (35)
 
@@ -281,7 +278,7 @@ by hand._
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
   todo…
 
-### tradfi (26)
+### tradfi (27)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -329,6 +326,10 @@ by hand._
   — Gated closeout for `tradfi_consolidated_native_ao_extract_2026_07_25.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 10 of that plan's todos are done. Unlike the batch1/batch2 satellite extractions
   (whose "source…
+- [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
+  **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
+  timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics
+  archive. ForexFactory…
 - [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](./tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md) —
   Small follow-up forked out of tradfi_v9_stage1_finish_2026_07_06.md (now archived, all its other tasks closed) during
   the 2026-07-24 plan-hygiene line-cap remediation. Carries the single remaining legacy-twin bucket delete todo — after
@@ -614,7 +615,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (61)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -821,14 +822,10 @@ by hand._
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
   UTL's…
-- [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
-  **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
-  timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics
-  archive. ForexFactory…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (11)
+### ao (12)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -858,6 +855,10 @@ by hand._
   — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
   control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
   context/cost/throughput/planning-quality…
+- [`context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03`](./context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md)
+  — Gated closeout for context_scout_source_hunting_gap_2026_08_03.md -- machine-held via depends_on + gate_on_depends:
+  true until all of that doc's todos are done. Reconciles the source doc's own checkboxes once its AO-dispatched todos
+  ship…
 - [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
@@ -870,7 +871,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (11)
+### ci (13)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -902,9 +903,17 @@ by hand._
 - [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) — Master coordinator
   for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a
   single-pane view of repo pipeline state and slot health.
+- [`qg_governor_glue_runner_ledger_coordination_2026_08_03`](./qg_governor_glue_runner_ledger_coordination_2026_08_03.md)
+  — The reservation-ledger admission governor (qg_host_adaptive_resource_governor_2026_07_14.md) is shipped and
+  validated on the interactive slot-worktree topology, but does NOT coordinate across different repos' CI jobs on a
+  GitHub Actions…
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…
+- [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](./test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
+  — Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
+  market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
+  estimate from a…
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 

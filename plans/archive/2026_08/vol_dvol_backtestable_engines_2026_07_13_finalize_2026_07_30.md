@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -48,7 +48,7 @@ source: >-
   was RULED 2026-07-28 ("no longer operator-gated, now AO-dispatchable").
 context_scope:
   [
-    /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

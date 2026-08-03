@@ -44,7 +44,7 @@ related_plans:
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-  - ../active/vol_dvol_backtestable_engines_2026_07_13.md
+  - ../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -127,7 +127,7 @@ successor + CI-runner openapi regen follow-up
 **status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
 Construction, Signal Research & Paper-Trading POC
 
-### [`vol_dvol_backtestable_engines_2026_07_13`](../active/vol_dvol_backtestable_engines_2026_07_13.md)
+### [`vol_dvol_backtestable_engines_2026_07_13`](../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md)
 
 **status**: ✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/` — all 5 todos done; both VOL_CARRY and VOL_ARB_RV_IV
 backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE), stay `not_available`; matrix regen confirmed 0/2 flipped

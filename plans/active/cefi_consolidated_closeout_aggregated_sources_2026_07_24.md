@@ -767,8 +767,9 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
 
 - [`crypto_alpha_research_2026_07_24.md`](/plans/active/crypto_alpha_research_2026_07_24.md) — book construction /
   signal research / paper-trading POC, overwhelmingly Binance-perp/CeFi content.
-- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) (+ its
-  gated [`_finalize_2026_07_30.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)) —
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md) (+
+  its gated
+  [`_finalize_2026_07_30.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)) —
   DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading. **ARCHIVED
   2026-08-03 to `plans/archive/2026_08/`** — both engines' backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE),
   stay `not_available`.
