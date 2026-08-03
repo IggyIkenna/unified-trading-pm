@@ -123,22 +123,22 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       re-check todo. (repo: market-data-processing-service, deployment-service — verification only, no new code.)
 
       **Correction (slot-16, 2026-08-03T~14:35Z): the resolved-date list above does not match a direct manifest read —
-                  superseding it.** Ran a direct post-completion `ManifestWriter.lookup()` query (the same fixed, bounded
-                  filtered path from `unified-trading-library@4dc12dbe`, one call per date, memory-bounded via
-                  `run-bounded-analysis.sh`) against all 26 dates on the SAME completed run
-                  (`mdps-sports-bucket-20260803-134154`). Result: **4 dates now read `captured`** — 2025-07-31, 2025-08-26,
-                  2025-10-07, 2025-10-14 — not 2025-09-04/10-07/11-13 as stated above (only 10-07 overlaps). **22 dates remain
-                  `attempted_failed`**: 14 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-08-05, 08-12, 08-13, 08-21, 09-02, 09-03, 09-04,
-                  09-09, 09-10, 11-11, 11-13, 12-18, 12-24, 12-31), 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24, unchanged), 4
-                  `LOSS_GUARD_BLOCKED` (2025-02-16, 08-14, 09-18, 10-23, unchanged). Root cause of the discrepancy: at least one
-                  date (2025-10-14, directly confirmed via `run.log`) logs an interim `WARNING ... recording attempted_failed`
-                  partway through the day's own processing, then the coarse per-day manifest row is later overwritten to
-                  `captured` once other data for that date lands — the manifest's last-write-wins semantics mean a mid-run log
-                  line is not a reliable proxy for the final row; only a post-completion manifest read is authoritative. The
-                  aggregate run tally above (571 total/48 success/19 failed/500 skipped/4 blocked) is unaffected and still correct
-                  — only the specific resolved-vs-still-failed date attribution changes. (repo: market-data-processing-service,
-                  unified-trading-library — verification-only correction, no new code; verification script deleted per its own
-                  `Delete-when:` marker after use.)
+                          superseding it.** Ran a direct post-completion `ManifestWriter.lookup()` query (the same fixed, bounded
+                          filtered path from `unified-trading-library@4dc12dbe`, one call per date, memory-bounded via
+                          `run-bounded-analysis.sh`) against all 26 dates on the SAME completed run
+                          (`mdps-sports-bucket-20260803-134154`). Result: **4 dates now read `captured`** — 2025-07-31, 2025-08-26,
+                          2025-10-07, 2025-10-14 — not 2025-09-04/10-07/11-13 as stated above (only 10-07 overlaps). **22 dates remain
+                          `attempted_failed`**: 14 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-08-05, 08-12, 08-13, 08-21, 09-02, 09-03, 09-04,
+                          09-09, 09-10, 11-11, 11-13, 12-18, 12-24, 12-31), 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24, unchanged), 4
+                          `LOSS_GUARD_BLOCKED` (2025-02-16, 08-14, 09-18, 10-23, unchanged). Root cause of the discrepancy: at least one
+                          date (2025-10-14, directly confirmed via `run.log`) logs an interim `WARNING ... recording attempted_failed`
+                          partway through the day's own processing, then the coarse per-day manifest row is later overwritten to
+                          `captured` once other data for that date lands — the manifest's last-write-wins semantics mean a mid-run log
+                          line is not a reliable proxy for the final row; only a post-completion manifest read is authoritative. The
+                          aggregate run tally above (571 total/48 success/19 failed/500 skipped/4 blocked) is unaffected and still correct
+                          — only the specific resolved-vs-still-failed date attribution changes. (repo: market-data-processing-service,
+                          unified-trading-library — verification-only correction, no new code; verification script deleted per its own
+                          `Delete-when:` marker after use.)
 
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
@@ -146,3 +146,16 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       `gcloud storage ls -r` on exactly the 4 dates, both `pipeline_mode` variants — unchanged from this doc's original
       finding). Cross-linked both directions (this doc's `related:` above + the new doc's own `related:`). No
       backfill/re-derivation attempted — escalation/documentation only, per the todo's own scope.
+- [ ] [DATA] P3. **Tie-break the 2025-09-04 / 2025-11-13 resolved-vs-`attempted_failed` reconciliation dispute** (raised
+      2026-08-03 by review agt-de20d5 after a run.log cross-check). slot-9 (`@1554b1f63`) attributed {09-04, 10-07,
+      11-13} as resolved; slot-16 (`@d6ac66d77`) corrected the set to {07-31, 08-26, 10-07, 10-14}, claiming 2025-09-04
+      and 2025-11-13 are STILL `attempted_failed`. But review independently pulled the underlying VM's run.log
+      (`mdps-sports-bucket-20260803-134154`, under `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/`) and
+      found `Manifest pre-flight: prior status=captured` for BOTH 2025-09-04 and 2025-11-13 (only 2 mentions of each
+      date in the whole log, no later re-processing) — which CONTRADICTS slot-16's correction and matches slot-9's
+      original read. Plausible-but-unconfirmed cause: the coarse-per-day-row vs fine-grained-shard manifest discrepancy
+      slot-16 itself cited for why 10-14 needed correcting. Review could not adjudicate (no pyarrow/polars venv in its
+      slot). Repo: market-data-processing-service. Non-blocking (known-thin historical odds tail either way). **Done
+      when**: with a pyarrow/polars venv, re-run `ManifestWriter.lookup()` for EXACTLY 2025-09-04 and 2025-11-13, record
+      the authoritative per-date status in this doc, and reconcile the resolved-date list to match (correcting whichever
+      of slot-9/slot-16 is wrong) so this doc can be treated as settled.
