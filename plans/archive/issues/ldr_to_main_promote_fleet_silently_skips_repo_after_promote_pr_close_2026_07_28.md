@@ -58,6 +58,13 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,
+  ]
 source: "cicd agent, slot-11, escalation agt-7ea8ad (deployment-service ldr_qg_failure, PR #576), 2026-07-28"
 resolved_by: "cicd agent, slot-3, 2026-07-31"
 ---

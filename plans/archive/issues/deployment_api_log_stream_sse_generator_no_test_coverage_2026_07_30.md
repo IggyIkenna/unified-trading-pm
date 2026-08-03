@@ -45,8 +45,9 @@ source: >-
 context_scope:
   [
     deployment-api/deployment_api/routes/log_stream.py,
-    deployment-api/deployment_api/routes/vm_events.py,
     deployment-api/tests/unit/test_route_log_stream.py,
+    deployment-api/deployment_api/routes/vm_events.py,
+    deployment-api/tests/unit/test_vm_events.py,
     /codex/06-coding-standards/integration-testing-layers.md,
   ]
 ---

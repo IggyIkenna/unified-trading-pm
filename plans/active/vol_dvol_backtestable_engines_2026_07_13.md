@@ -37,9 +37,10 @@ sequential: true
 context_scope:
   [
     /plans/active/v2_engine_venue_buildout_2026_06_15.md,
-    /plans/epics/strategy_master.md,
+    /plans/active/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/epics/strategy_master.md,
   ]
 ---
 

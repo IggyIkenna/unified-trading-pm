@@ -42,6 +42,12 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+  ]
 ---
 
 # CeFi satellite AO batch 1 — finalize

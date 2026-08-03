@@ -48,9 +48,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
+    /codex/02-data/honest-coverage-model.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
-    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    deployment-api/deployment_api/services/data_status/coverage.py,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 ---

@@ -86,6 +86,14 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
+    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/orchestrator/ldr-to-main-promote-heartbeat.sh,
+    scripts/cicd/promotion_lag_monitor.py,
+  ]
 source:
   "cicd agent, slot-11, follow-on discovery while diagnosing
   ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md, 2026-07-30"

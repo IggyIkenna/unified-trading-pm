@@ -53,6 +53,13 @@ source: >-
   after the sports orphan-audit found 26 genuinely orphaned docs. Triage workflow `wf_74a99101-69b` (26 agents, 0
   errors) produced 25 AO-eligible candidates + 33 flagged conflicts; this doc is the conflict-cleared subset only.
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+  ]
 sequential: false
 drift_direction: advance-code
 ---

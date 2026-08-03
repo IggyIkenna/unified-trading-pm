@@ -47,10 +47,12 @@ resolved_by: slot-8 (2026-08-02)
 depends_on: []
 context_scope:
   [
+    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
   ]
 ---
 

@@ -49,6 +49,12 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    /plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # CeFi misc audits + hygiene

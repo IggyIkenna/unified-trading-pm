@@ -54,10 +54,11 @@ source: >-
   (new `asset_group: ui` enum value + skill wiring), not the cheaper `infrastructure`-tag route.
 context_scope:
   [
-    /plans/epics/deployment_and_user_management_master.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/03-deployment/data-status-ui-surface.md,
     /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/11-project-management/,
+    /plans/epics/deployment_and_user_management_master.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---

@@ -44,6 +44,13 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
+    /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -107,5 +114,5 @@ drift_direction: advance-code
       done"), done as a separate commit per that same doc's HARD RULE against combining a checkbox flip with a `git mv`
       in one commit (`RULES.md` § 2, 2026-07-30 incident). One stale referrer found + will be fixed in the archival
       commit: the archived target plan's own `related:` frontmatter still points at
-      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md` (this doc's pre-archival
-      path). Repo: unified-trading-pm.
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md` (this doc's
+      pre-archival path). Repo: unified-trading-pm.

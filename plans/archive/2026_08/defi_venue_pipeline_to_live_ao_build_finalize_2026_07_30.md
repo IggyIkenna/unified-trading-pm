@@ -33,16 +33,18 @@ gate_on_depends: true
 sequential: true
 locked_by:
 locked_since:
-context_scope:
-  [
-    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-  ]
 supersedes:
 superseded_by:
 source: >-
   Operator ruling 2026-07-24 — every AO-dispatched plan needs a gated finalize companion (see
   /plans/active/task_template.md §4).
+context_scope:
+  [
+    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+  ]
 ---
 
 # Finalize — DeFi 6-venue pipeline→live build

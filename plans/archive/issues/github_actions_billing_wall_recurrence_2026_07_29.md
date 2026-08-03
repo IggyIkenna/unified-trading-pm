@@ -50,6 +50,14 @@ assigned_vm: NA
 resolved_by: interactive session, 2026-07-31 — GitHub Actions billing wall confirmed cleared via live gh run checks
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/github_actions_billing_wall_2026_06_11.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
+  ]
 ---
 
 # GitHub Actions billing wall recurrence (2026-07-29)

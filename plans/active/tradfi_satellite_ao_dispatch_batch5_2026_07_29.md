@@ -76,10 +76,11 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/epics/tradfi_master.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/epics/tradfi_master.md,
   ]
 ---
 

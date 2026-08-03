@@ -49,6 +49,14 @@ resolved_by:
   substantive plans out of this marathon's scope) — the durable value is the tooling fix + the bugs fixed, not the
   topline count."
 locked_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    /plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md,
+    scripts/plan-hygiene/check_archive_candidates.sh,
+    cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+  ]
 locked_since:
 ---
 
@@ -251,16 +259,16 @@ already has; baseline shrank 1→0 for real (not just re-tolerated).
 **Operational note — this session hit unusually severe shared-clone churn**: mid-session, a
 `git pull --rebase --autostash` cycle (run by this session, reconciling against the fast-moving fleet) collided badly
 with the sheer volume of concurrent commits landing on this exact clone (dozens of `docs(plans):` commits from other
-slots within the same working window) — two files picked up literal `<<<<<<<`/`|||||||`/`=======`/`>>>>>>>` conflict
-markers mid-content (resolved by hand, keeping the more-complete side in both cases — one was a trivial duplicate, one
-was a genuine two-session convergence on the same finding), and a full autostash-recovery cycle briefly lost ~10 edits
-across 9 files (referrer-path fixes + Progress Log notes) that had to be individually re-diffed against `HEAD` and
-re-applied. A follow-up commit was also needed to remove 8 stale duplicate-content files at the old (pre-archival) paths
-that an intermediate scoped `--files` commit had left behind (the deletion side of a rename wasn't in that commit's
-explicit file list). All losses were caught by systematically grepping each intended change's marker text against the
-post-ship `HEAD`, not assumed from local session state — a discipline worth calling out explicitly for whoever runs wave
-5 (or the periodic hygiene-gate mode this doc now recommends): **verify every shipped claim against a fresh
-`git show HEAD:<path>` / `origin/<branch>`, never trust an in-session diff view on a clone this actively contended.**
+slots within the same working window) — two files picked up literal git conflict markers mid-content (resolved by hand,
+keeping the more-complete side in both cases — one was a trivial duplicate, one was a genuine two-session convergence on
+the same finding), and a full autostash-recovery cycle briefly lost ~10 edits across 9 files (referrer-path fixes +
+Progress Log notes) that had to be individually re-diffed against `HEAD` and re-applied. A follow-up commit was also
+needed to remove 8 stale duplicate-content files at the old (pre-archival) paths that an intermediate scoped `--files`
+commit had left behind (the deletion side of a rename wasn't in that commit's explicit file list). All losses were
+caught by systematically grepping each intended change's marker text against the post-ship `HEAD`, not assumed from
+local session state — a discipline worth calling out explicitly for whoever runs wave 5 (or the periodic hygiene-gate
+mode this doc now recommends): **verify every shipped claim against a fresh `git show HEAD:<path>` / `origin/<branch>`,
+never trust an in-session diff view on a clone this actively contended.**
 
 **Final recount (post-wave-4)**: 646 active docs (was ~641 entering wave 4 — 9 archived by this wave, ~14 net new landed
 from the concurrent fleet during the same window). Fresh 1-2-open-todo pool: 314. Confirms the standing observation

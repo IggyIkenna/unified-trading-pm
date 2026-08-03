@@ -75,8 +75,10 @@ depends_on: []
 context_scope:
   [
     instruments-service/scripts/backfill_orphan_class_e.py,
-    instruments-service/scripts/migration_orphan_sweep.py,
     /plans/archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /codex/02-data/orphan-object-detection.md,
+    instruments-service/scripts/migration_orphan_sweep.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---

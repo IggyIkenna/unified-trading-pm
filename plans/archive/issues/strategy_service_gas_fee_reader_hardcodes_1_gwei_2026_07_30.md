@@ -57,6 +57,14 @@ resolved_by:
   the fix, verified to fail against pre-fix code). Full-suite QG 5640 passed / 0 failed."
 locked_by:
 locked_since:
+context_scope:
+  [
+    strategy-service/strategy_service/pnl/engine/pnl_input_builder.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
+  ]
 ---
 
 # strategy-service gas-fee reader hardcodes 1 gwei

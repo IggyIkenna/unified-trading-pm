@@ -44,6 +44,13 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 locked_since:
 supersedes:
 superseded_by:

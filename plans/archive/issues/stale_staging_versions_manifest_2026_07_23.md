@@ -38,6 +38,13 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 locked_by:
 resolved_by: unified-trading-pm@b3abf1bd5 (STAGE 1.6 dormancy-aware gate) — na-eligibility-audit 2026-08-01 closeout
+context_scope:
+  [
+    scripts/quickmerge.sh,
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 depends_on: []
 source:
   - "fleet staging-machinery audit 2026-07-23 (operator ask: what still runs for staging, can we stop it)"

@@ -42,10 +42,12 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
+    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 

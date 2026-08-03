@@ -31,6 +31,10 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 context_scope:
   [
+    /codex/09-strategy/architecture-v2/archetypes/,
+    /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /plans/active/l2_book_microstructure_capture_2026_07_13.md,
+    /codex/02-data/pipeline-mode-partition.md,
     /plans/epics/strategy_master.md,
     /codex/09-strategy/architecture-v2/archetypes,
     /unified-api-contracts/openapi/capability-verdict-matrix.json,

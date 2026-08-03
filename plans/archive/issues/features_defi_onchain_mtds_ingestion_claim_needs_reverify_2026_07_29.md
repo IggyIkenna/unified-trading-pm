@@ -43,6 +43,14 @@ resolved_by:
   /plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md (now archived)
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/features_service/onchain/app/core/dependency_checker.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+  ]
 ---
 
 # DEFI onchain "MTDS never ingested" claim vs data_completion_defi's captured counts — reconcile

@@ -34,9 +34,13 @@ assigned_role: ui_developer
 drift_direction: advance-code
 context_scope:
   [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
+    scripts/setup.sh,
+    scripts/quality-gates-base/base-ui.sh,
     /plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md,
     /plans/epics/infrastructure_master.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 

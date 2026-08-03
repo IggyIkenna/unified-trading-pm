@@ -40,9 +40,12 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
+    /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
     instruments-service/instruments_service/engine/orchestrator/process_completeness.py,
     instruments-service/instruments_service/engine/orchestrator/process_write.py,
     /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
+    unified-trading-library/unified_trading_library/manifest_consolidator.py,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 ---
 
@@ -295,7 +298,8 @@ runs on every merge for all rows, not just new writes). Independently verified v
 non-sports rows are the already-tracked Finding C rows, not a new gap. Held stable across a re-check ~90s later.
 **Finding B is closed. Both todos above (the heal + the redeploy follow-up) are DONE — no manual Cloud Build/redeploy
 action was actually required.** Full evidence:
-`unified-trading-pm/plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.
+`unified-trading-pm/plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log,
+2026-07-15 entry.
 
 ## Progress Log
 

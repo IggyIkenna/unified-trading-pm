@@ -33,6 +33,12 @@ drift_direction: advance-code
 depends_on: []
 resolved_by: slot 8 (cicd→backend_engineer craft, task ci_satellite_ao_dispatch_batch2-010), 2026-07-31
 locked_by:
+context_scope:
+  [
+    /codex/04-architecture/ci-alerting.md,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    .github/workflows/plan-health-agent.yml,
+  ]
 supersedes:
 superseded_by:
 source:

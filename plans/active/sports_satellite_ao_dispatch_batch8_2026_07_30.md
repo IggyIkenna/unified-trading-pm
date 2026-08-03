@@ -69,10 +69,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/epics/sports_master.md,
   ]
 ---

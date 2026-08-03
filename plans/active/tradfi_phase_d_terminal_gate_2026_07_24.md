@@ -46,10 +46,12 @@ source:
   the Phase D todos themselves (unchanged from the parent), not encoded as a dispatch gate.
 context_scope:
   [
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
   ]
 ---
 

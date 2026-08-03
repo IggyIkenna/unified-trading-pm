@@ -45,7 +45,13 @@ depends_on: []
 last_updated: 2026-07-17
 locked_by:
 locked_since:
-context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, scripts/quickmerge.sh]
+context_scope:
+  [
+    /plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    scripts/quickmerge.sh,
+  ]
 ---
 
 # `--autostash` restores foreign WIP into the index → by-name `git add` does not scope your commit

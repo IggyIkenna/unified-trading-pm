@@ -40,7 +40,14 @@ drift_direction: advance-code
 source: [ui_codex_gate_blind_to_app_router_layout-002]
 resolved_by: unified-trading-system-ui@030d2575
 locked_by:
-context_scope: [/codex/06-coding-standards/ui-testing-layers.md, /codex/06-coding-standards/quality-gates.md]
+context_scope:
+  [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/06-coding-standards/quality-gates.md,
+    unified-trading-system-ui/lib/taxonomy.ts,
+    unified-trading-system-ui/lib/reference-data.ts,
+    unified-trading-system-ui/lib/design-tokens.ts,
+  ]
 depends_on: []
 ---
 

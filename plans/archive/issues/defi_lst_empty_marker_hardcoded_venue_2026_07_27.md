@@ -45,6 +45,13 @@ resolved_by:
   soft-delete-retention check"
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
+    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
+    /plans/active/defi_venue_lst_rates_residual_2026_07_24.md,
+  ]
 ---
 
 > **🗄️ ARCHIVED 2026-07-31 (operator-ruled locked-plan unlock + archive sweep, 2026-07-30 Q&A session)** — the lock on
