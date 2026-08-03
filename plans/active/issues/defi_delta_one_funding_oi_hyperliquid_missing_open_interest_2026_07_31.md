@@ -181,7 +181,7 @@ fixes above.
       (`2023-05-12..2023-10-31`). Repo: features-service. Done when: a verification-window run writes real
       `record_captured` rows for `funding_oi` (not `record_failed`/rejected-shard). **Not yet met** — the real launch
       this session still wrote only `record_failed` (see below); re-attempt once `[BACKEND] P1` lands.
-- [ ] [BACKEND] P1. **NEW, this session.** `_enrich_funding_oi_from_derivative_ticker`
+- [x] ✅ [BACKEND] P1. **NEW, this session.** `_enrich_funding_oi_from_derivative_ticker`
       (`features_service/delta_one/app/core/_passthrough_loader.py:345`) is silently failing to find ANY matching
       `derivative_ticker` rows for HYPERLIQUID over `2023-05-12..2023-10-31`, even though real `derivative_ticker` data
       for that exact window is confirmed present on GCS (see Progress Log — dozens of
@@ -201,7 +201,35 @@ fixes above.
       future silent failures into a one-line diagnosis) before hunting further. Repo: features-service. Done when: the
       real symbol/matching gap is found + fixed, a new unit test reproduces the SPECIFIC HYPERLIQUID symbol-format shape
       this session found broken (not just the already-covered exact/nearest-prior-asof-match case), and a live
-      verification-window re-run (the `[DATA] P3` todo above) writes real `record_captured` rows.
+      verification-window re-run (the `[DATA] P3` todo above) writes real `record_captured` rows. **DONE (2026-08-03,
+      slot-12, backend_engineer craft)** — the leading hypothesis (symbol-format mismatch) was WRONG; traced the real
+      gap myself per the todo's own instruction. Both `perp_funding`'s and the recursive `derivative_ticker` call's
+      `raw_symbol` are BLANK for the real production instrument_id (`HYPERLIQUID:PERP_FUNDING:`, a per-venue bundle row
+      — matches the actual failed shard ID `HYPERLIQUID:perpetual:/funding_oi` in slot-2's run.log), so NO symbol filter
+      ever applies on either side — the real bug is a BUCKET/asset_group mismatch. Confirmed live (bounded single-day
+      `gcloud storage ls`, same `2023-07-11` date): `derivative_ticker` for HYPERLIQUID has ZERO objects in the DEFI
+      bucket (`market-data-tick-defi-prd-...`) and dozens in the CEFI bucket (`market-data-tick-cefi-prd-...`) —
+      HYPERLIQUID's `derivative_ticker` (S3 asset_ctxs OI/mark/index) capture writes exclusively to CEFI since its
+      2026-07-06 DeFi->CeFi reclassification, mirroring the EXACT precedent already shipped for this venue in
+      `onchain/calculators/perp_funding_rates_defi.py::_resolve_mtds_defi_perp_bucket`. `perp_funding` itself is
+      unaffected (confirmed present in the DEFI bucket already, so untouched). Fix: new
+      `_resolve_passthrough_source(data_type, venue)` resolves `(bucket, asset_group)` together (never independently, so
+      they can't silently mismatch) — defaults to the run's own asset_group, overridden to CEFI only for
+      `derivative_ticker` + HYPERLIQUID. Also added the requested log line (plus a matching one on the sibling
+      `oi_only.is_empty()` empty-result branch) via a shared `_log_empty_oi_enrichment` helper (kept the enriching
+      method under the 50-line cap). 8 new/extended unit tests (`TestResolvePassthroughSource`, `TestLoadPassthroughDay`
+      x2, `TestEnrichFundingOIFromDerivativeTicker` x4) — critically, a NEW end-to-end regression
+      (`test_real_bug_shape_blank_raw_symbol_wrong_bucket_end_to_end`) drives the real bucket-resolution/needle-filter
+      path (does NOT mock `_load_passthrough_day` away, unlike every pre-existing test in this suite) using the REAL
+      blank-raw_symbol production shape — this is why the prior `[BACKEND] P2` session's own unit tests passed while the
+      real production join still failed (they used a fictitious `"ETH"` raw_symbol and mocked the loader too deep to
+      exercise bucket resolution at all). All 18350 features-service tests pass; `bash scripts/quality-gates.sh` green
+      (2 full runs). `features-service@6b2282c5` (verified ancestor of `origin/live-defi-rollout`). Did NOT run a live
+      GCS verification-window run — that's the `[DATA] P3` todo below (data_engineering craft, its own done-when covers
+      exactly that; same craft-scope split this issue's prior sessions established for `[BACKEND] P2`). Session also hit
+      a pre-existing, unrelated `features-service` QG red (`tests/onchain/unit/test_smoke_matrix.py`, cross-repo drift
+      from a sibling `e2e-testing` commit) — joined the already-open repo-blocker (`RB-417918ff`, filed by slot 13) as a
+      waiter rather than duplicate; it resolved independently (`features-service@617388c5`) before this todo shipped.
 
 # Progress Log
 
@@ -272,3 +300,51 @@ fixes above.
   `funding_oi` is now blocked on `[BACKEND] P1` instead of `[BACKEND] P2` (which itself IS done, just insufficient
   against real data). No manifest-integrity issue from this run itself — the one row it wrote is an honest
   `attempted_failed`, not a masked/fake success.
+- **2026-08-03 (slot-12, backend_engineer craft) — `[BACKEND] P1` SHIPPED, real root cause found (NOT the leading
+  hypothesis).** Traced the silent empty-result gap myself per the todo's own instruction, rather than assuming the
+  symbol-format hypothesis. Both `perp_funding`'s manifest-discovered `raw_symbol` AND the recursive `derivative_ticker`
+  call's `raw_symbol` are BLANK for the real production instrument_id (a per-venue bundle row,
+  `HYPERLIQUID:PERP_FUNDING:`) — confirmed against the real failed shard ID slot-2 logged
+  (`HYPERLIQUID:perpetual:/funding_oi`, blank middle segment). So the symbol filter never even engages on either side —
+  the hypothesis was a plausible-sounding guess that turned out wrong. The REAL bug:
+  `_enrich_funding_oi_from_derivative_ticker`'s recursive load reused `self._get_source_bucket()`, scoped to the run's
+  own `asset_group` (DEFI) — but HYPERLIQUID's `derivative_ticker` (S3 asset_ctxs OI/mark/index) capture writes
+  EXCLUSIVELY to the CEFI bucket, since HYPERLIQUID was reclassified DeFi->CeFi 2026-07-06 (same precedent already
+  shipped for this exact venue in `onchain/calculators/perp_funding_rates_defi.py::_resolve_mtds_defi_perp_bucket`,
+  which I found by grepping for how the pattern this module generalised off already solved the identical problem).
+  Confirmed live (bounded single-day `gcloud storage ls`, `2023-07-11`, not a corpus walk):
+  `market-data-tick-defi-prd-central-element-323112` has ZERO `derivative_ticker` objects for HYPERLIQUID;
+  `market-data-tick-cefi-prd-central-element-323112` has dozens. `perp_funding` itself is unaffected (already correctly
+  reads from the DEFI bucket, confirmed present there too — untouched by the fix). Shipped
+  `_resolve_passthrough_source(data_type, venue)`, resolving `(bucket, asset_group)` TOGETHER (never as two independent
+  lookups, so the bucket and the needle-filter's `asset_group=` path segment can never silently mismatch — a mismatch
+  wouldn't error, `list_blobs` would just return zero objects). Also added the requested log line on the empty-result
+  path (plus its sibling `oi_only.is_empty()` branch, same silent-no-op class) via a shared `_log_empty_oi_enrichment`
+  helper (needed to keep `_enrich_funding_oi_from_derivative_ticker` under the 50-line QG cap after adding both warnings
+  — first full QG run caught this at 53L, fixed + re-ran green). 8 new/extended unit tests:
+  `TestResolvePassthroughSource` (4, unit-level bucket/asset_group resolution), `TestLoadPassthroughDay` (+2, confirm
+  the CEFI bucket + `asset_group=cefi/` needle are actually used for HYPERLIQUID+derivative_ticker and that
+  `perp_funding` is unaffected), `TestEnrichFundingOIFromDerivativeTicker` (+2 warning-log tests via caplog, verified
+  against real polars null-Datetime semantics before writing, not assumed; +1 critical end-to-end regression,
+  `test_real_bug_shape_blank_raw_symbol_wrong_bucket_end_to_end`, which does NOT mock `_load_passthrough_day` away
+  unlike every pre-existing test in this class — drives the real bucket-resolution + needle-filter path down to a mocked
+  storage client using the REAL blank-raw_symbol shape). This last test is the direct fix for why the prior
+  `[BACKEND] P2` session's own unit tests passed while the real production join still failed: they used a fictitious
+  `"ETH"` raw_symbol (matching the doc's original — also-wrong — hypothesis) and mocked `_load_passthrough_day` away
+  entirely, so they never exercised bucket resolution at all. All 18350 features-service tests pass twice (once before
+  committing to verify WIP after a session restart, once after committing on the real SHA per the QG-sentinel ordering
+  rule); `bash scripts/quality-gates.sh` green. `features-service@6b2282c5` (independently verified ancestor of
+  `origin/live-defi-rollout`, not just trusting quickmerge's own "Landed" message). Session also hit a pre-existing,
+  unrelated `features-service` QG red (`tests/onchain/unit/test_smoke_matrix.py`,
+  `TypeError: _verify_test_manifest() takes 3 positional arguments but 4 were given` — cross-repo drift from a sibling
+  `e2e-testing` commit landing via the background fresh-pull cron mid-session) — verified it was unrelated to this diff
+  (different feature family, dynamically loads a script from a repo I never touched, commit timestamp fell exactly
+  between two consecutive QG runs of mine), found slot 13 had already independently confirmed + repo-blocked it
+  (`RB-417918ff`, tracked in `features_smoke_matrix_verification_findings_2026_08_01.md`), joined as a waiter rather
+  than duplicating; it resolved on its own (`features-service@617388c5`) before this todo needed to ship. Separately,
+  this session's original QG-green state was lost to an orchestrator session restart mid-task; recovered cleanly via
+  `git cherry-pick --no-commit` of the auto-preserved `chore(orphan-wip)` commit the orchestrator's dirty-state gate had
+  committed on my behalf (`f3e899e0`, clean cherry-pick, no conflicts, confirmed byte-identical to the pre-restart diff)
+  rather than redoing the investigation. Did NOT run a live GCS verification-window run — that's the `[DATA] P3` todo
+  above (data_engineering craft, its own done-when covers exactly that; same craft-scope split this issue's prior
+  sessions established for `[BACKEND] P2`).
