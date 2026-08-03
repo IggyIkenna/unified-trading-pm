@@ -452,7 +452,40 @@ inherited from the first shipped batch:
       but unconfirmed OOM (e2-standard-8; VM self-deleted before deeper memory metrics could be pulled). Full evidence +
       next-dispatch relaunch instructions (skip-if-fresh resumes from ~2026-06-02, escalate to a memory-tier bump if it
       repeats) in the freshness-preflight issue doc's own P1 todo — not duplicated here to keep this doc lean. Step 2
-      (backfill) remains **incomplete**; step 3 (residual drop) still untouched pending step 2's actual completion.
+      (backfill) remains **incomplete**; step 3 (residual drop) still untouched pending step 2's actual completion. —
+      **Re-verified 2026-08-03 (slot 16, data_engineering): step 2 IS actually complete (confirmed via the batch2 plan's
+      own tracker, not re-derived here) — `af-backfill-20260727-064958` finished chunk=25/25
+      (range=2026-05-06→2026-07-25), `DEPLOYMENT_COMPLETED exit_code=0`, 2026-07-28T05:34:06Z. No sports
+      curated-universe backfill VM is currently running**
+      (`gcloud compute instances list --filter='name~"^af-backfill-"'` shows only `af-backfill-20260803-070016`, RUNNING
+      — confirmed via its own `run.log` launch line this is an UNRELATED task,
+      `--sports-entity FIXTURE_EVENTS --recovery-fixture-ids .../recovery_fixture_ids_2026_08_03.parquet`, i.e.
+      `sports_fixture_events_refetch_progress_2026_07_25.md`'s recovery job, not this todo's backfill). The AO
+      prerequisite `sports-curated-universe-backfill-walk-complete` (gates the batch2 plan's mirror of this todo) is
+      still `false` — correctly so, since step 3 below is still not done; **not flipping it here**. **Ran the
+      completeness/residual measurement (a) this check-in** — memory-bounded dry-run of
+      `instruments-service/scripts/canonicalize_sports_league_id_schema_2026_06_24.py`
+      (`run-bounded-analysis.sh     --mem-cap 22G`, single manifest read, no new whole-corpus GCS walk) against the
+      CURRENT `LEAGUE_REGISTRY` (**390 leagues** — confirms all 11 domestic batches + continental majors are live in the
+      registry this script reads). Sports `_index` is now **11,853,072 rows** (up from the 2026-06-24 baseline of ~4.6M,
+      consistent with the curated-universe FIXTURES walk having run). Findings: **1,075,234** numeric/suffixed rows
+      still resolve in-universe (need re-keying — the June P0a canonicalize pass's "0 residual" guarantee has eroded for
+      rows written since, most likely from this very backfill; a plain `--apply` [no `--drop-out-of-universe`] re-closes
+      this, it is idempotent and non-destructive — safe to run any time). The real out-of-curated residual (the actual
+      `--drop-out-of-universe` mask, i.e. every row — canonical-string or numeric — whose canonical league is NOT one of
+      the 390) is **1,165,348 rows, 9.83% of the manifest**. **NOT executed**: this script only rewrites the MANIFEST
+      `_index`, never touches the underlying GCS parquet OBJECTS for those out-of-curated leagues — so even a full
+      `--apply --drop-out-of-universe` run leaves this todo's "objects" half of "residual out-of-curated rows/objects"
+      completely unaddressed; no script for that half currently exists and would need its own five-part-proof-style
+      scoping (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) before any object delete. Given the real
+      scale (1.16M rows, ~9.8% of a production manifest) and that "drop the truly-junk leagues" is an explicit judgment
+      call in the source plan's own words (not a mechanical fact), **did not run `--apply`** — raising the drop decision
+      to the operator via a structured `/blocked` question rather than guessing; if the AO server is unreachable when
+      this lands (it was mid-session, connection refused on :8765 — see this doc's own Progress Log), the question is
+      filed here instead. **Next dispatch**: (1) run `--apply` alone (no `--drop-out-of-universe`) to close the
+      1.075M-row re-key gap — safe, idempotent, non-destructive, no operator gate needed; (2) get the operator's ruling
+      on the 1.165M-row drop (keep as extra reference data vs. drop manifest rows only vs. drop manifest rows +
+      scope+execute the separate GCS-object cleanup); (3) only then re-verify + flip this checkbox.
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
@@ -480,3 +513,10 @@ themselves.
 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the archived freshness-preflight issue doc,
   which holds the actual next-dispatch relaunch instructions for step 2's incomplete backfill VM.
+- **2026-08-03 (slot 16, data_engineering)**: confirmed step 2 (curated-universe backfill WALK) genuinely complete since
+  2026-07-28; measured the real step-3 residual via a memory-bounded dry-run (1,165,348/11,853,072 manifest rows, 9.83%,
+  out-of-the-390-league registry) — full detail in the todo above. Did not execute the destructive
+  `--drop-out-of-universe --apply` (real production-data judgment call, not a mechanical fact); the AO server was
+  unreachable (connection refused, :8765) when attempting to file a structured `/blocked` question — retrying per
+  RULES.md's network-error backoff before end of session. Not flipping this todo's checkbox — step 3 is genuinely not
+  done yet.
