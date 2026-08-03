@@ -161,6 +161,14 @@ run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_form
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
 run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
+# Prettier proseWrap continuation-padding gate — a DISTINCT prettier corruption class from the
+# emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
+# item; each reformat pass ADDS leading-space padding instead of converging). Corpus already
+# carries real debt (found while root-causing 2026-08-03), so this is a shrinking ratchet like
+# check_archive_candidates.sh below — full-corpus only, not wired into --precommit (a staged-subset
+# count would trivially pass against the corpus-wide baseline). SSOT + repro:
+# plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
+run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh"
 # Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
 # referrer's path being updated) — the same check the --precommit fast path runs on any staged
 # plans/ change, run here too so the operator's daily sweep catches drift from commits that landed
