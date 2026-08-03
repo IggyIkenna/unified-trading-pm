@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, close-out, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
 created: "2026-08-03"
@@ -45,7 +45,7 @@ assigned_role: review
 drift_direction: correct-codex
 context_scope:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, ratchet, mechanical, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/task_template.md,
