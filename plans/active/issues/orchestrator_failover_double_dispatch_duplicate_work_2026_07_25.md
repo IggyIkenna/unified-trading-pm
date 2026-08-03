@@ -186,6 +186,19 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   once, discovered only because slot 6 happened to ask a question before acting rather than starting an implementation
   blind.
 
+## Incident 5 — perp-funding observed-cadence drift tracker on market-tick-data-service (slots 9 & 12), ~2026-08-03
+
+- Surfaced by review (fleet-git-health, msg #3590, 2026-08-03) + confirmed by main (agt-1756f6): slots 9 AND 12 each
+  independently produced the SAME feature commit on market-tick-data-service — slot-9 `0c5a472d` and slot-12 `e93d54ac`,
+  both titled `feat(perp-funding): add observed-cadence drift tracker (GCS-persisted)`, slot-12 committed ~18:12Z /
+  slot-9 ~19:02Z. Both are 1-ahead-unpushed and already safely captured on wip-preserve refs (no work lost); neither
+  shipped.
+- Same root cause as Incidents 1-4: one task concurrently held by two workers because failover/dispatch re-dispatched
+  without confirming the prior owner released it. This is a 5th dated occurrence — reinforces prioritizing the
+  `agent-orchestrator/server/dispatch.py` release-confirmation gap. Resolution is a WORKER dedup (pick one commit,
+  verify it meets the perp-funding done-definition, ship it, drop the other); main cannot push code, so it's flagged
+  here rather than resolved by main.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are held by established conflict-gated rulings
