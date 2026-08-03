@@ -193,11 +193,17 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   both titled `feat(perp-funding): add observed-cadence drift tracker (GCS-persisted)`, slot-12 committed ~18:12Z /
   slot-9 ~19:02Z. Both are 1-ahead-unpushed and already safely captured on wip-preserve refs (no work lost); neither
   shipped.
-- Same root cause as Incidents 1-4: one task concurrently held by two workers because failover/dispatch re-dispatched
-  without confirming the prior owner released it. This is a 5th dated occurrence — reinforces prioritizing the
-  `agent-orchestrator/server/dispatch.py` release-confirmation gap. Resolution is a WORKER dedup (pick one commit,
-  verify it meets the perp-funding done-definition, ship it, drop the other); main cannot push code, so it's flagged
-  here rather than resolved by main.
+- **TIMING — this is a POST-FIX recurrence, not stale residue** (verified by review #3593 via `git show`): the
+  release-confirmation fix `agent-orchestrator@7911083` landed **2026-08-01T08:39Z**, but both dupe commits are
+  **2026-08-03** (slot-12 18:12Z, slot-9 19:02Z) — ~2 days AFTER the fix. So the shipped `WorkerLivenessWatchdog`
+  liveness-re-check did NOT prevent this occurrence.
+- **HYPOTHESIS — possibly a DIFFERENT mechanism than Incidents 1-4** (for the backend/doc owner to confirm, not a
+  main/review priority call): Incidents 1-4 were failover-RELEASE races (a task re-dispatched off an apparently-silent
+  owner). This one presents as two slots concurrently building the SAME feature FROM SCRATCH — which could instead be a
+  claim-time race (the same queued task claimed by two slots), a path the release-confirmation fix wouldn't cover. Worth
+  a backend look at whether @7911083's gate covers concurrent-claim, or whether that's an uncovered delta.
+- Resolution of THIS instance is a WORKER dedup (pick one commit, verify it meets the perp-funding done-definition, ship
+  it, drop the other); main cannot push code, so it's flagged here rather than resolved by main.
 
 ## Progress Log
 
