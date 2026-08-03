@@ -6,7 +6,7 @@ summary: >-
   cross_instrument, delta_one, multi_timeframe, onchain, and volatility each carry the same
   registry+depends_on+resolve_build_order() scaffolding, but grep confirms no orchestrator/service in those 5 ever calls
   resolve_build_order() or otherwise honors depends_on — it's pure dead documentation, not a wired pipeline stage.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [features]
@@ -29,10 +29,13 @@ priority: P2
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-last_updated: "2026-08-01"
+last_updated: "2026-08-03"
 locked_by:
 locked_since:
 resolved_by:
+  "all 6 todos resolved across 3 sessions 2026-08-03: multi_timeframe/onchain/volatility audits (slots 8/11);
+  onchain_regime wiring (slot 8, features-service@8b602744); volatility 3/6 groups (slot 2, features-service@1ce877a4);
+  volatility remaining 3/6 groups (slot 2, features-service@a5bd1fea) — see Progress Log"
 ---
 
 # feature_builder_registry DAG scaffolding is dead code outside sports
@@ -137,18 +140,18 @@ deleted, not left as misleading documentation.
       tests), mirroring how `onchain_regime`'s fix was scoped as its own separate unit of work.
 
       **DONE 2026-08-03 (slot-2, backend_engineer craft) for the 3 drop-in groups** — `gamma_exposure`,
-          `vol_surface_term_structure`, `tradfi_vol_surface` all take the SAME raw options-chain input options_iv already
-          loads (no cross-calculator scalar threading needed), so wired identically to it: added to `FEATURE_GROUPS`,
-          widened `_load_raw_data` to route them to `load_options_chain_raw`, added
-          `_calculate_gamma_exposure`/`_calculate_vol_surface_term_structure`/`_calculate_tradfi_vol_surface` dispatch
-          methods mirroring `_calculate_options_iv`. `tradfi_vol_surface` gated to `--asset-group TRADFI` only (the
-          calculator is explicitly CME/CBOE-specialized). 9 new unit tests (dispatch + `_load_raw_data` routing + edge
-          cases + a real-computation test per group asserting genuine non-null output, not just "doesn't crash") +
-          6 new calculator-level integration tests (`tests/volatility/integration/test_volatility_integration.py`).
-          `bash scripts/quality-gates.sh` green (18130 passed). `features-service@1ce877a4` (verified ancestor of
-          `origin/live-defi-rollout`).
+              `vol_surface_term_structure`, `tradfi_vol_surface` all take the SAME raw options-chain input options_iv already
+              loads (no cross-calculator scalar threading needed), so wired identically to it: added to `FEATURE_GROUPS`,
+              widened `_load_raw_data` to route them to `load_options_chain_raw`, added
+              `_calculate_gamma_exposure`/`_calculate_vol_surface_term_structure`/`_calculate_tradfi_vol_surface` dispatch
+              methods mirroring `_calculate_options_iv`. `tradfi_vol_surface` gated to `--asset-group TRADFI` only (the
+              calculator is explicitly CME/CBOE-specialized). 9 new unit tests (dispatch + `_load_raw_data` routing + edge
+              cases + a real-computation test per group asserting genuine non-null output, not just "doesn't crash") +
+              6 new calculator-level integration tests (`tests/volatility/integration/test_volatility_integration.py`).
+              `bash scripts/quality-gates.sh` green (18130 passed). `features-service@1ce877a4` (verified ancestor of
+              `origin/live-defi-rollout`).
 
-- [ ] [BACKEND] P1. **NEW, this session (split from the todo above).** Wire (or delete) the remaining 3 volatility
+- [x] ✅ [BACKEND] P1. **NEW, this session (split from the todo above).** Wire (or delete) the remaining 3 volatility
       feature groups — `variance_risk_premium`, `second_order_greeks`, `vol_greeks_features` — which need real
       cross-calculator/cross-service data-threading, not the drop-in raw-data pattern the other 3 used: -
       `second_order_greeks` (`SecondOrderGreeksCalculator.compute(call_delta, sigma, tau, vega)`): per its own docstring
@@ -168,9 +171,45 @@ deleted, not left as misleading documentation.
       integrating that cross-service read instead.
 
       Genuinely bigger/riskier than the other 3 (sequencing within `_process_date`, a cross-family dependency, and a
-          dangling-class registry bug needing its own design call) — correctly NOT rushed into the same session as the
-          drop-in 3. Done when: same bar as the parent todo's (a)/(b) — each of the 3 either wired + integration-tested,
-          or deleted per operator ruling. Repo: features-service.
+              dangling-class registry bug needing its own design call) — correctly NOT rushed into the same session as the
+              drop-in 3. Done when: same bar as the parent todo's (a)/(b) — each of the 3 either wired + integration-tested,
+              or deleted per operator ruling. Repo: features-service.
+
+          **DONE 2026-08-03 (slot-2, backend_engineer craft)** — all 3 wired (option (a)), not deleted:
+          - `second_order_greeks`: sigma/call_delta sourced from the SAME `VolatilityCalculator` that computes options_iv's
+            `atm_iv` — called in-process on the same raw options-chain group rather than requiring a separate GCS round-trip
+            of options_iv's own persisted output (avoids sequencing options_iv as a prerequisite CLI run, and avoids the
+            confirmed-live path-divergence risk in `canonical_path_oracle...`/`candle_feature_canonical_path_divergence_2026_07_20.md`
+            for reading this service's own output back). `call_delta=0.5` exactly — not an approximation, since ATM IV is
+            *defined* as the IV interpolated at 50-delta, so 50-delta is the correct `call_delta` for that same point.
+            vega/tau sourced from the nearest-ATM raw chain row (`days_to_expiry`-gated, honest-absence if missing).
+          - `variance_risk_premium`: `rv_20` fetched via the previously-dead (never-called) `VolatilityDataLoader.load_realized_vol_raw`
+            — the cross-family delta_one read the todo flagged as never-threaded, confirmed already fully built, just
+            unwired. front/back ATM IV split by `days_to_expiry` bucket (nearest/furthest). Rolling `vrp_atm` history owned
+            by the orchestrator across the date-range loop for the 252d z-score (`VRPCalculator` itself is stateless,
+            mirrors `VolSurfaceTermStructureCalculator`'s own `_atm_iv_history` pattern).
+          - `vol_greeks_features`: resolved the design call as (a) registry fix, not (b) cross-service greeks-service
+            integration — confirmed via `pricing_ledger_reader.py`/`pricing_ledger_writer.py` that greeks-service's actual
+            GCS-published shape is a flat PricingLedger `option_delta` row, NOT `CanonicalGreeksSnapshot`/
+            `CanonicalImpliedVolSurface`; reading those cross-service would also violate the "NO service↔service deps" tier
+            rule. New `engine/vol_greeks_surface_adapter.py` instead builds both UAC canonical types DIRECTLY from the raw
+            options chain (delta/gamma/vega/theta/mark_iv/strike/option_type/days_to_expiry — the same columns the other 5
+            groups already read), then runs them through the real `extract_vol_greeks_feature_dict`. Fixed the registry's
+            dangling `_CALCULATOR_CLASS_MAP["vol_greeks_features"] = "VolGreeksFeaturesExtractor"` entry (a class that never
+            existed) to name the real function instead.
+          - Added all 3 to the CLI's `FEATURE_GROUPS` (previously only in `resolve_build_order`'s dead metadata, unreachable
+            via CLI — the exact bug class this whole audit doc is about) and to `_OPTIONS_CHAIN_FEATURE_GROUPS`.
+          - Split the heavy per-group logic into 2 new modules (`engine/second_order_and_vrp.py`,
+            `engine/vol_greeks_surface_adapter.py`) to keep `feature_group_service.py` under the 900-line QG file-size
+            ceiling (727 → 810 lines; would have been ~1000+ inline).
+          - 34 new unit tests (dispatch + `_load_raw_data` routing + `_load_rv_20` + real-computation + honest-absence edge
+            cases for all 3 groups, plus dedicated pure-function tests for the two new modules).
+          - `bash scripts/quality-gates.sh` caught a real STEP 5.23 deep-UAC-import violation on the first full run
+            (`from unified_api_contracts.canonical.domain.derivatives.greeks import CanonicalIVSurfacePoint` instead of the
+            top-level facade) — fixed, re-ran clean (second full run: 0 `❌`, `REAL_EXIT_CODE=0`, verified via an explicit
+            post-pipe exit-code marker since the initial `| tee` run's own reported exit code was misleadingly 0 from
+            `tee`, not the gate). Shipped: `features-service@a5bd1fea` (quickmerge --agent, verified ancestor of
+            `origin/live-defi-rollout` via `merge-base --is-ancestor`).
 
 - [x] ✅ [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
       feature group in features-service's onchain engine. `compute_onchain_regime_features()`
