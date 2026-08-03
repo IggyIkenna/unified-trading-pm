@@ -39,7 +39,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T11:10Z
+last_updated: 2026-08-03T11:15Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -115,6 +115,18 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       `features-service@c092df50`, verified green — see Progress Log entries below), so this todo is partially
       addressed, but "other repos" beyond `features-service` is broader than one confirmed repo — staying open, not
       closing.
+- [ ] 3. [OPERATOR] P2. The `features-service` `wall_type=main_ci_red` escalation has now fired **9 times today**
+      (agents `agt-4e5bc3`/`agt-637862`/`agt-a7a7b6`/`agt-3bc731`/`agt-0dbb62`/this session, plus 3 more implied by the
+      numbering) for the literal same underlying state — LDR fix shipped, waiting on a runner slot, nothing new to do —
+      each dispatch independently re-reads the same run IDs and re-confirms the same "no action, pure wait" verdict. Per
+      `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle (standing conditions
+      should fire on change/RESOLVED, never every tick), this trigger appears to lack a cooldown/state-transition guard
+      — it is spending a full one-shot cicd agent session every ~15-70 min purely to re-derive "still waiting," burning
+      shared CI-firefighter capacity that a genuinely actionable wall elsewhere would need. Recommend: gate this
+      escalation's re-fire on either (a) a minimum cooldown since the last `main_ci_red` dispatch for the same repo with
+      an unchanged LDR HEAD, or (b) suppressing re-dispatch entirely while `ldr-to-main-promote-fleet`'s own GATE BLOCK
+      reason is unchanged from the prior escalation's — operator decision, not something a one-shot wall-clearing
+      session should self-implement.
 
 ## Progress Log
 
@@ -361,3 +373,22 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `ldr_qg_failure` escalation; not touched here, flagging for whoever picks up that wall. Slot left clean
   (`deployment-service` on `live-defi-rollout`, 0 commits ahead of `origin`). Pinged the authoring slot (`planning`)
   with the outcome.
+
+- **2026-08-03 ~11:05-11:15Z (`cicd` escalation `agt-b8bcdb`, slot 10, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 9th escalation for the same wall, no material change since the 11:04Z entry ~10min prior**: `main`
+  still red at the same already-diagnosed run `30780455914` (pre-`c092df50` 150s-pytest-timeout shape, fix on LDR,
+  pending promotion). LDR: the same run flagged in-flight at the end of the prior two entries (`30804251677`, headSha
+  `d387ba7f`, dispatched 10:07:07Z) is STILL the live run, ~68min elapsed, `status=in_progress`, no newer LDR run
+  exists; LDR HEAD unchanged at `9fb37033`. Verified all three timeout mitigations still intact on `live-defi-rollout`
+  (unchanged from the 11:04Z check). `ldr-to-main-promote-fleet` latest tick (`30807769375`, 11:00:10Z) still
+  `success` + still `GATE BLOCK features-service: ci_status=FAILING` (cached from the 09:11Z red run, awaiting the
+  in-flight run's verdict) — will auto-promote the instant it reports green. `GET /api/repo-blockers` → `open: []`.
+  Root-cause plan `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` confirmed still
+  `assigned_vm: NA` / local / Phase 2-3 open — unchanged, still correctly out of scope for a one-shot task.
+  **Disposition: no code or workflow change made or needed** — identical to entries 3, 4 (partial), 6, and 8. Did NOT
+  re-dispatch a fresh run (would cancel 68min of contention-survival progress via the concurrency group for zero
+  benefit). Given this is now the 9th consecutive re-derivation of the exact same "wait" verdict, added todo 3 above
+  flagging the escalation trigger's apparent lack of a dedup/cooldown guard as an operator-level finding — this is a
+  distinct, actionable gap (unlike the wall itself, which has no action available) and worth fixing so future
+  occurrences don't spend a full agent session re-confirming an unchanged state. Slot left clean (`features-service` on
+  `live-defi-rollout`, 0 commits ahead, no local changes). Pinging the authoring slot (`ci-reconcile`) with the outcome.
