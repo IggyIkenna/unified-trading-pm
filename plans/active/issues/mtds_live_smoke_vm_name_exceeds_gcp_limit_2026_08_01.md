@@ -71,8 +71,10 @@ suffix intact for uniqueness) once the combined name would exceed 63 chars, or s
 
 ## Todos
 
-- [ ] [BACKEND] P3. Bound `mtds-live-smoke-*` VM names to GCP's 63-char instance-name limit in
+- [x] ✅ [BACKEND] P3. Bound `mtds-live-smoke-*` VM names to GCP's 63-char instance-name limit in
       `market-tick-data-service/scripts/pipeline_e2e_check.py:2141` (truncate/hash the shard_spec portion, keep `run_ts`
       for uniqueness). (repo: market-tick-data-service). **Done when**: a live-leg cell for a long venue/data_type combo
       (e.g. `SPORTS:BETFAIR_SB_UK:arbitrage_opportunity`) no longer fails at `gcloud compute instances create` with an
-      `Invalid value for field 'resource.name'` error.
+      `Invalid value for field 'resource.name'` error. — market-tick-data-service@bccb95ea (extracted a testable
+      `_live_smoke_vm_name()` helper hashing the (venue, data_type) portion, mirroring `_vm_name()`'s existing
+      collision-resistance fix; 4 regression tests added, full quality-gates.sh green).
