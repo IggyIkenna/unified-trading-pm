@@ -867,3 +867,26 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   (`deployment-service` on `live-defi-rollout`, 0 commits ahead of origin, working tree clean throughout — only this doc
   edited). This doc is now approaching its 1000-line hard cap (870+ lines) — flagging for whoever hits it next to split,
   per this doc's own precedent for its parent.
+
+- **2026-08-03 ~14:53-15:05Z (`cicd` escalation `agt-7af91d`, slot 4, `deployment-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — re-escalation of the SAME wall the prior entry (`agt-a46033`) just closed out, no material change**:
+  independently re-diagnosed from scratch (classification per this session's boot context: promotion-stuck vs
+  main-only-stale-workflow) before finding this doc — confirmed promotion is NOT stuck (`gh pr list --base main` →
+  empty, PRs #676/#677 already merged) and main/LDR trees are structurally identical bar one unrelated 21-line commit,
+  ruling out both hypotheses in the boot context in favor of this doc's already-established diagnosis. Independently
+  reproduced the root cause at the code level (not just re-confirming "host is loaded"): the failing test class
+  invokes `launch-api-football-backfill-vm.sh`, which calls `PYTHONPATH=$REPO_ROOT $PY -` twice per invocation to
+  import `deployment_service.data_pipeline_monitors.launch_budget_registry` for rate-budget/machine-type lookups —
+  traced via `bash -x` with `PS4` timestamps to two ~6s gaps (bare python-interpreter-cwd import, no test mocking
+  possible) that are the proximate per-test tax; under this host's measured contention this ordinarily-~12s tax is what
+  blows through the 300s ceiling across the 6-test class. Not a new finding vs. this doc's host-contention diagnosis,
+  but pins the specific mechanism (heavy-import subprocess calls, not the subprocess launcher itself) for anyone who
+  next considers whether a code-level mitigation (e.g. caching/lazy-loading the registry import, or `--forked`
+  isolation) would help more than a timeout raise. Run `30824452052` (dispatched by the prior entry) was STILL queued,
+  16min after dispatch, when checked at 15:04Z — did not re-dispatch (would cancel accrued queue position for zero
+  benefit, per this doc's established precedent). `GET /api/repo-blockers` → `open: []`. **Disposition: no code or
+  workflow change — pure re-confirmation of the prior entry's diagnosis and wait state.** This is now the 2nd
+  consecutive escalation for this exact wall within ~15min of each other with zero state change, reinforcing todo 3's
+  finding below (the escalation trigger appears to lack a cooldown/dedup guard) — an operator-level fix, not something
+  this session can self-implement. Slot left clean (`deployment-service` on `live-defi-rollout`, 0 commits ahead of
+  origin, working tree clean; only this doc edited).
