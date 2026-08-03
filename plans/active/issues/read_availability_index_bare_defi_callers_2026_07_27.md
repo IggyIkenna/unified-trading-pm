@@ -435,8 +435,25 @@ not a mechanical column-list copy.
       import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
       caller and this todo is closed as not-applicable.
 
+- [ ] [SCRIPT] P1. **instruments-service** — 3 NEW bare `read_availability_index(bucket)` call sites in
+      `instruments_service/cli/main.py` (lines 82 `_run_coverage_status()`, 154 `_run_refresh_league_entity_coverage()`,
+      294 `_run_reprocess_shards()`), introduced by CLI subcommand additions landed 2026-08-03 (after the 2026-07-31
+      gate-add + re-verify sweep found 0 new occurrences) — confirmed via
+      `check_bare_read_availability_index.py --scope instruments-service` on a clean-tree HEAD unrelated to any other
+      in-flight diff. Each needs `columns=`/`filters=` added per this doc's caution (confirm via a DIRECT read of each
+      function's downstream column usage, do not guess/copy a list from another site), or a
+      `# QG-allow: bare-read-availability-index` marker if genuinely unprojectable. Currently blocking
+      `quality-gates.sh` for ANY instruments-service change (a repo-blocker was declared for this — see this doc's
+      Progress Log below).
+
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `features-service/features_service/volatility/core/orchestration_service.py`, the target of the sole remaining P3
   dead-code-investigation todo.
+- **2026-08-03 (slot-8)**: hit this gate's STEP 5.106 failure while shipping an unrelated Pyth oracle_prices fix
+  (`defi_satellite_ao_dispatch_batch3-013`) — verified pre-existing via a clean re-run of
+  `check_bare_read_availability_index.py --scope instruments-service` (no diff of mine touches `cli/main.py`; my commit
+  `8a5fcdce` only touches `reference_data/adapters/defi/pyth.py` + its test). Added the 3-site todo above (new since the
+  2026-07-31 zero-new-occurrences re-verify — these came from CLI subcommands added 2026-08-03) and declared a
+  repo-blocker (`qg_red`) rather than fixing this out-of-scope regression inline.
