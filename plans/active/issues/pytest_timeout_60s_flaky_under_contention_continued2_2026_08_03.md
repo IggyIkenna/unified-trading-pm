@@ -622,3 +622,32 @@ repeated here.
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo). Added
   `batch-live-reconciliation-service` to this doc's `repos:` frontmatter (1st occurrence for this repo in the
   doc-chain).
+
+- **2026-08-03 ~19:00-19:25Z (`cicd` escalation `agt-684220`, slot 5, `deployment-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — re-dispatch of the same repo's earlier entry, promotion not stuck, no code gap**: classified per this
+  doc-chain's standard first check — `gh pr list --base main --state open` → 0 open PRs (the latest promotion PR, #679,
+  already merged `19:02:20Z`); this is NOT a promotion-stuck wall. Confirmed no code/test diff between `origin/main` and
+  `origin/live-defi-rollout` for the file behind the last genuine (non-cancelled) main failure —
+  `tests/unit/test_turbo_data_validation.py` (failing selector
+  `TestDataTypeValidation::test_expected_instrument_types_cefi_deribit`, `Failed: Timeout (>300.0s)` in run
+  `30824452052`, a `workflow_dispatch` re-run, 1/2867 tests failed) — the code is identical on both branches, so this is
+  the same host-contention-timeout class already established fleet-wide in this doc, not a regression to fix.
+  `origin/main`'s own fresh push-triggered run (`30843993487`, from #679's merge commit) is genuinely progressing:
+  `content sentinel` completed success, `tests`/`checks` slices `queued` since `19:04:05Z` (~21min at check time) behind
+  the single online runner (`gh api .../actions/runners` → exactly one, `glue-ip-172-31-5-118-1`, `busy=true` — same
+  runner name/bottleneck as every other repo in this doc-chain). Cross-checked sibling repos at the same moment
+  (`market-tick-data-service` run in-progress 3h23m elapsed but its jobs ARE advancing serially — `checks` completed
+  failure, `tests` in-progress since `19:10:00Z`; `instruments-service` 1h21m; `agent-orchestrator` 1h;
+  `execution-service` 20m; `unified-api-contracts` 2 concurrent in-progress) — confirms the ONE shared runner is
+  serializing the entire fleet's queue, exactly the structural bottleneck this doc-chain's todo 1 already tracks
+  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). Did NOT cancel/redispatch the queued
+  `30843993487` (would forfeit its accumulated queue position for zero benefit), per established practice.
+  `GET /api/repo-blockers` → `open: []`. **Disposition: no code or workflow change made or needed** — the promotion has
+  already landed, the confirmatory `main` run is genuinely queued (not stuck/hung) behind the fleet-wide single-runner
+  bottleneck, and the underlying code is unchanged/correct on both branches; the "RED" ci_status is stale, dating to the
+  earlier flaky-timeout workflow_dispatch run, and will self-clear once `30843993487` completes.
+  `AUTHORING_SLOT=ci-reconcile` fails `cicd.md`'s `^[0-9]+$` check (not a real numbered slot —
+  `server/ci_reconcile.py`'s self-detected bare-LDR wall path) — skipped the authoring-slot ping per the established
+  carve-out. Slot left clean (`deployment-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead
+  of origin beyond this doc's own commit; no branch changes in either repo). `deployment-service` already present in
+  this doc's `repos:` frontmatter — no frontmatter change needed.
