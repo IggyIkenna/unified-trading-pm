@@ -269,6 +269,20 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T10:38Z** (AO dispatch, slot 15, `data_engineering`) — **INCIDENT**:
+  `backfill-defi-dex-swaps-20260803-092530` was DELETED (not preempted) at `10:30:56Z` by an unrelated fleet script bug
+  (`reap-zombies.sh` checks the wrong GCS log path, `logs/` instead of the canonical `vm-logs/`, so it always sees "no
+  run.log" for any healthy VM and reaps purely on a 10-minute creation-time threshold — a fleet-wide false-positive
+  risk, NOT specific to this campaign). Root-caused, mitigated, and filed as its own big-finding issue doc:
+  `/plans/active/issues/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` (P0, `infra` role, 4 fix todos).
+  **Mitigation**: immediately relaunched the campaign — `backfill-defi-dex-swaps-20260803-103749` (same command,
+  `--force` to bypass the singleton lock), verified running the correct fixed tool code
+  (`market-data-processing-service@ce64a98`, confirmed an ancestor of the freshly-published tarball pin despite a
+  staleness warning from one unrelated later commit). No data was lost or corrupted (the tool's copy-not-move +
+  `record_captured` writes are durable/idempotent); the only cost is wasted wall-clock (the killed VM's checkpoint was
+  never persisted — it only writes every 20 days — so the relaunch redoes days 1-12, ~15-20min of otherwise-real work,
+  safely). Continuing to monitor the relaunched VM via the same bounded-watchdog discipline; still NOT flipping this
+  todo's checkbox until a real terminal VERDICT line lands.
 - **2026-08-03T10:15Z** (AO dispatch, slot 15, `data_engineering`) — Monitoring checkpoint on the "Verify ... to
   completion" follow-up todo (still `- [ ]`, not flipped — no VERDICT yet). `backfill-defi-dex-swaps-20260803-092530`
   remains healthy: `last_completed_date` monotonically advanced from `2023-01-01` (09:29Z start) through `2023-01-09`
