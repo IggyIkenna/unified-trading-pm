@@ -45,7 +45,7 @@ related:
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
   ]
 created: 2026-08-01
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -123,11 +123,39 @@ locked_since:
 
 ## Todos
 
-- [ ] [DATA] P2. Read `features_service.cross_instrument`'s compute path (the code actually exercised by
+- [x] ✅ [DATA] P2. Read `features_service.cross_instrument`'s compute path (the code actually exercised by
       `--operation compute --mode batch --asset-group CEFI --start-date 2026-05-03 --end-date 2026-05-03`) and determine
       whether it shares the unfiltered-wide-manifest-read anti-pattern already fixed in the 4 sibling incidents this
       week. If confirmed, apply the same fix shape (column-pruned/filtered read, `os._exit()` after the real work
-      completes to avoid a lingering-thread hang). (repo: features-service)
+      completes to avoid a lingering-thread hang). (repo: features-service) — features-service@2aea0e59. **Confirmed**:
+      `BatchHandler._ingest_delta_one` listed `delta_one/by_date/day={D}/` UNSCOPED — that prefix spans ALL
+      `feature_group=` dirs (18 for CEFI/DEFI) AND all 7 `DEFAULT_TIMEFRAMES`, even though every cross_instrument
+      calculator computes at exactly ONE timeframe (`config.base_timeframe`, default "15s" — no CLI knob requests
+      another, confirmed via `base_calculator.py`'s `timeframe` default + the batch handler's total absence of any
+      per-timeframe branching downstream of `_input_data`). The unfiltered listing therefore pulled ~7x more
+      per-instrument parquet files than the compute ever uses, downloaded+retained ONE AT A TIME in a plain Python loop
+      (`_load_parquets_concat`'s `for p in paths: ... frames.append(df)`, one `pl.concat` at the end) — this explains
+      BOTH observed symptoms: the 4.5h runtime (thousands of sequential GCS round-trips) and the continuously-climbing
+      RSS (an ever-growing `frames` list before the single final concat). Same anti-pattern class as the 4 sibling
+      incidents, manifested as an unscoped GCS-prefix listing rather than an unfiltered parquet-column read.
+      Deliberately did NOT prune the `feature_group=` axis — `feature_builder_registry.py`'s per-group `sources`
+      metadata plus a pre-existing regression test (`test_cross_asset_correlation_collision_safe_join`, whose own
+      docstring already documents "`_ingest_delta_one` concatenates every delta_one feature group") both confirm the
+      multi-feature_group concat is intentional (multiple indicator families feed the calculators) — narrowing that axis
+      without deeper verification would risk a silent correctness regression, out of this todo's evidenced scope. **Fix
+      applied** (mirrors the sibling fix shape): (1) `_ingest_delta_one` now takes a `timeframe` param and filters
+      listed paths to `/timeframe={base_timeframe}/` before downloading (same cheap listing call; only the expensive
+      download+concat step is scoped down) — mirrors the already-correct scoped-prefix pattern in this same module's
+      `paired_dispatch.py` sibling. (2) `__main__.py` now catches the `SystemExit` that `ServiceBootstrap.run()` raises
+      after all real work (compute+persist+manifest) has completed, and force-terminates via `os._exit()` on the
+      resolved exit code — defensive parallel to the sibling `expand_defi_pool_catalogue` fix, since `sys.exit()` alone
+      still waits on interpreter teardown (atexit + non-daemon-thread joins), the same hang class. Added
+      `TestIngestDeltaOne` (3 cases: timeframe-filters, keeps every feature_group at that timeframe, raises
+      `FileNotFoundError` when none match) + fixed 3 pre-existing tests whose `MagicMock` config never set
+      `base_timeframe` (would've silently mismatched under the new filter). Also trimmed two pre-existing docstrings in
+      `batch_handler.py` (900-line QG file-size cap — file was already at 898/900 before this change).
+      `quality-gates.sh` full green (18097 passed, 0 failed; sentinel `2aea0e593872ad0d83409d62a0bb29db35b34cab`);
+      quickmerge landed on `live-defi-rollout`, verified present on origin via `merge-base --is-ancestor`.
 - [x] ✅ [INFRA] P2. Fix or replace the `timeout 150` protection in all 8
       `e2e-testing/scripts/<family>/smoke_matrix.py`'s `_invoke_cli()` — e2e-testing@404e4d8. **Correction to this
       todo's premise**: `_invoke_cli()` never actually contained a literal shell `timeout 150` wrapper (grepped full git
@@ -179,3 +207,11 @@ locked_since:
   `features_smoke_verify_timeout_hardening_landed` prerequisite green now so
   `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md`'s parked `[DATA] P3`-adjacent re-verification work can
   unpark.
+- **2026-08-03 (slot 12, data_engineering)**: `[DATA] P2` shipped — features-service@2aea0e59, QG green (18097 passed, 0
+  failed; full no-skip-flags run). Root-caused `cross_instrument`'s compute path directly: `_ingest_delta_one`'s
+  unscoped `delta_one/by_date/day={D}/` listing (spanning all 18 CEFI feature_group dirs x all 7 DEFAULT_TIMEFRAMES,
+  though only 1 timeframe is ever consumed) is the same unfiltered-wide-read anti-pattern class as the 4 sibling
+  incidents, applied via a client-side timeframe path-filter + a defensive `os._exit()` in `__main__.py` — see the
+  flipped todo above for the full finding + fix detail. `[DATA] P3` (resume the remaining unverified smoke_matrix.py
+  legs) is now unblocked but explicitly OUT of this todo's scope — left for the dispatcher to hand out as its own task
+  per the /boot-per-shippable-unit discipline.
