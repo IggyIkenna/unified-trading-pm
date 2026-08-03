@@ -105,12 +105,23 @@ to matter most.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Manually run `/context-scout` Phase 1 against
+- [x] ✅ [SCRIPT] P2. Manually run `/context-scout` Phase 1 against
       `/plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` and confirm
       it now surfaces `market_data_processing_service/app/core/dependency_checker.py` and/or
       `market_tick_data_service/scripts/reclass_per_instrument_weekend_holiday_eu.py` (or the actual correct
       weekend-marker-write module, once identified) as source-path entries. This is a live demonstration the fix works
-      on the exact repro case, not a theoretical claim.
+      on the exact repro case, not a theoretical claim. — unified-trading-pm (this commit). Manually ran Phase 1 against
+      the target doc: extracted 2 explicitly-named-in-prose source paths verified to exist
+      (`market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`, already-named in
+      the doc's root-cause section) and, per SKILL.md step 4's grep-fallback for the MTDS side (doc names only concepts
+      — `venue_trading_calendar`/`EXPECTED_WEEKEND` — not a literal filename), grepped market-tick-data-service and
+      traced the actual live write path (`non_trading_day_reason()` → `record_expected_empty()`) to
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+      `_emit_nontrade_venue_sentinels()` — the suggested `reclass_per_instrument_weekend_holiday_eu.py` turned out to be
+      a post-hoc backfill reclassifier, not the live per-day marker writer, so `manifest_finalize.py` is the "actual
+      correct weekend-marker-write module" this todo asked to identify. Both entries added to the target doc's
+      `context_scope` (3 → 5 entries) + a dated `context-scout 2026-08-03` Progress Log marker, committed to the target
+      doc.
 - [ ] [SCRIPT] P2. Spot-check a fresh sample (20-30 docs scouted since 2026-08-01, after the SKILL.md spec revision that
       added the "near-automatic include" / "unfinished Phase-1 pass" language) for real source-path presence, the same
       way the 2026-07-30 342-doc baseline was measured. Report whether the rate improved from 51% or is still flat --
