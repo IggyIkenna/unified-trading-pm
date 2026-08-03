@@ -188,3 +188,16 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   doc's own commit). Flagged the currently-running relaunched VM as time-sensitive (todo 3). No GCS deletes/mutations
   performed — read-only investigation (log/audit-log reads, `gcloud compute instances describe`) plus the one
   launcher-script edit.
+- **2026-08-03T11:42Z** (AO dispatch, slot 5, `infra`, todo 3) — Checked `backfill-defi-dex-swaps-20260803-103749`:
+  status `RUNNING`, `run.log` actively advancing (`day=2023-04-05` as of 11:41:44Z, ~10-13s/day at the current point in
+  the range vs. the ~2-7min/day this doc's estimate assumed), `WATCHDOG_TRACE.log` shows the (old, pre-fix)
+  `STALL_PROGRESS_REGEX=checkpoint` token DID match twice recently (iter=54 at 11:36:42Z, iter=57 at ~11:39:55Z,
+  `progress=1`) — the per-20-day checkpoint cadence is landing well inside the 3600s stall window at this run's actual
+  pace, so the predicted ~11:38-11:43Z self-kill did **not** occur on this VM. Prediction was directionally correct (the
+  bug is real and deterministic at the ~2-7min/day pace originally observed) but this run's per-day rate turned out
+  faster than that estimate, so it may complete or hit further checkpoints without ever stalling — not yet provably safe
+  for the FULL remaining ~1,300-day range if the per-day rate slows again later (e.g. denser days). Armed a bounded (6h,
+  5min-poll) background watchdog (`dex_swaps_watchdog.sh`, this session) that detects a genuine self-delete,
+  distinguishes `DEPLOYMENT_COMPLETED` (no action) from a stall/preemption kill (auto-relaunches via the now-fixed
+  launcher and keeps tracking the new VM name). No GCS deletes/mutations performed this entry — read-only checks + one
+  background monitoring process armed.
