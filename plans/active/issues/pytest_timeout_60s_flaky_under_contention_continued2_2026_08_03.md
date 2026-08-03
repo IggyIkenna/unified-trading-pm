@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T20:10Z
+last_updated: 2026-08-03T20:40Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -697,3 +697,50 @@ repeated here.
   Slot left clean (`ml-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
   this doc's own commit; no branch changes in either repo). `ml-service` already present in this doc's `repos:`
   frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~20:26-20:40Z (`cicd` escalation `agt-48c16d`, slot 12, `market-data-processing-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`) — MDPS's 1st occurrence in this doc-chain, both established failure shapes
+  reproduced back-to-back, no code gap**: escalation cited run `30833923988` (commit `363b62b1`, since superseded — 5
+  commits behind the true current LDR HEAD `28ffed1` at investigation time). Read both failed slices' full job logs
+  directly via `gh api .../actions/jobs/<id>/logs` (`--log-failed`'s 50KB truncation cut off before the real failure, so
+  fetched raw logs instead): (1) `checks` slice — `qg-governor` `WAIT_CPU`'d 862s before admission, then
+  `[4/6] TYPE CHECK` hit the plain 120s `PYRIGHT_TIMEOUT` default (0 errors/0 warnings extracted, `exit=124`) — the
+  established typecheck wall-clock-timeout signature. (2) `tests` slice — ran to ~100% of the suite (dots visible up to
+  the final batch) then crashed during `pytest_sessionfinish` teardown with `OSError: cannot send (already closed?)` (an
+  xdist worker-pipe-closed race), never reaching a `FAILURES`/summary section — consistent with this doc-chain's
+  scheduler-starvation class, a distinct crash mechanism from the wall-clock-timeout shape but the same root cause.
+  Checked the very next run (`30842024762`, ~2h later): `checks` passed this time (34m36s wall, sanctioned mitigations
+  unaffected) but `tests` failed again — this time silently, zero pytest output at all between "Coverage floor" passing
+  and the selector's `FAILED (exit=1)` 31s later (narrowed by the test-impact selector to a single file,
+  `test_backfill_defi_dex_pool_swaps_source_correction.py`), after another 764s `WAIT_CPU` — same signature class,
+  different specific manifestation (silent kill vs. teardown `OSError` vs. wall-clock timeout), all three now attested
+  for this repo alone within ~2 hours. Checked `scripts/quality-gates.sh`: `PYTEST_TIMEOUT=300` already sanctioned-set,
+  but **`PYRIGHT_TIMEOUT` has no override — still the bare 120s `base-service.sh` default** (unlike
+  `features-service`/`deployment-service`, both at `PYRIGHT_TIMEOUT=300`, or `execution-service` at `900`). Per this
+  doc-chain's established practice (todo 1: root-cause is capacity-side; `alerting-service`'s and `ml-service`'s prior
+  entries both explicitly declined a same-shape timeout-raise for a single non-sustained occurrence), did **not** bump
+  `PYRIGHT_TIMEOUT` here either — noting the gap as a candidate for the _next_ occurrence to weigh, not actioning it
+  now. Confirmed `gh api .../actions/runners`: `market-data-processing-service` reports the identical single
+  `glue-ip-172-31-5-118-1` runner, `status=online busy=true` — the same fleet-wide bottleneck, not repo-specific.
+  `GET /api/repo-blockers` → `open: []`. A fresh run (`30850649487`) was already queued against the true current LDR
+  HEAD (`28ffed1`) by an earlier tick before this session started — left it alone rather than dispatching a duplicate
+  (would only discard its already-elapsed queue-position progress). `ldr-to-main-promote-fleet`'s latest tick
+  (`30850478435`, `20:30Z`) confirms
+  `GATE BLOCK market-data-processing-service: ci_status=FAILING (cached= 'SIT_VALIDATED', live='FAILING')` — will
+  auto-promote the instant the in-flight run (`30850649487`) reports green; no manual promotion action taken or needed.
+  **Disposition: no code or workflow change made or needed** — every candidate fix already exists or is deliberately
+  withheld per established precedent; outcome of `30850649487` left for the next occurrence. **Timely note for todo
+  1/3**: mid-investigation, `qg_governor_glue_runner_ledger_ coordination_2026_08_03.md`'s glue-runner-topology fix
+  landed on LDR (`4247e957f`, `20:36Z` — pulled in via this session's own pre-commit rebase) and is documented as
+  live-validated the same day (≥6 real concurrent repos correctly sharing one ledger, admission gating actually binding,
+  up from the zero-shared-admission state that produced this doc-chain's whole failure class). Both of my cited MDPS
+  runs (`16:49Z`, `18:36Z`) predate the fix, so they are NOT evidence against it landing successfully — the still-queued
+  `30850649487` (dispatched `20:32Z`, 4 min before the fix commit, but each CI job self-clones
+  `unified-trading-pm@live-defi-rollout` fresh at job-start rather than at dispatch-time) is the first real chance to
+  observe whether MDPS's `WAIT_CPU` pileup shape actually disappears — worth the next occurrence (or a deliberate
+  re-check of `30850649487`'s outcome) confirming this, before archiving todo 1/3 as closed.
+  `AUTHORING_SLOT=ldr-ci-monitor` fails `cicd.md`'s `^[0-9]+$` check (not a real numbered slot) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean
+  (`market-data-processing-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
+  beyond this doc's own commit; no branch changes in either repo). `market-data-processing-service` already present in
+  this doc's `repos:` frontmatter — no frontmatter change needed.
