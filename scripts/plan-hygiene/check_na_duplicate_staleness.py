@@ -15,11 +15,22 @@ but that's queue-depth-dependent and per-batch, not a corpus-wide sweep. This sc
 sweep: a repeatable, non-LLM-dependent check for the specific case where the AO-side
 duplicate has ALREADY completed but the NA-side original checkbox was never reconciled.
 
-Matching is doc-level, not checkbox-level: a `Source:` citation rarely pins an exact line
-in the cited doc, so this script reports "NA doc D has N open checkboxes; a DONE task
-elsewhere cites D as Source" as a CANDIDATE for manual verification, not an auto-close.
-Auto-closing on this signal alone would risk marking the wrong checkbox done in a doc with
-several unrelated open items.
+Matching is CHECKBOX-level (2026-08-03 rewrite), not doc-level: a first version flagged
+every open checkbox in a doc whenever ANY citation of that doc existed anywhere, with zero
+correlation between what the checkbox said and what the citing task actually did. A
+122-candidate hand-verification pass the same day found 114 of 122 (93%) were false
+positives on exactly this failure mode — e.g. a doc with 20 open checkboxes and 2 done
+citations had all 20 flagged, when the citations covered 2 different, already-closed items
+in the same doc. This version fixes two things: (1) a checkbox already carrying a prior
+audit's own "stays open"/"still open"/"na-eligibility-audit YYYY-MM-DD" disclaimer is
+excluded outright (re-flagging an already-adjudicated item wastes the next verification
+pass on a settled question); (2) a checkbox is only matched against a citation if their
+texts share a genuinely distinctive code span (a specific file path, script, or commit sha
+— see `_is_distinctive_span`, not just any backtick-quoted word) — pure doc-level citation
+presence is no longer sufficient. This is still a candidate filter, not an auto-closer:
+token overlap is a heuristic, not semantic understanding, so a false positive is still
+possible (two causally-related but not identical todos can genuinely share a commit sha) —
+but it should no longer be the DEFAULT outcome the way pure doc-level matching was.
 
 Usage:
     python3 scripts/plan-hygiene/check_na_duplicate_staleness.py [--pm-root <path>] [--json]
@@ -46,6 +57,82 @@ SOURCE_CITE_RE = re.compile(
     r"Source:\**\s*[`(]?\s*(?:/?plans/active/(?:issues/)?|issues/)?"
     r"([A-Za-z0-9_]+\.md)",
 )
+
+# A checkbox whose own text already carries a prior audit pass's verdict that it stays
+# open is already-adjudicated -- re-flagging it wastes the next verification pass on a
+# settled question. Patterns are drawn directly from real disclaimer text found in the
+# 2026-08-03 122-candidate hand-verification pass (see module docstring).
+DISCLAIMER_RE = re.compile(
+    r"na-eligibility-audit\s*20\d\d-\d\d-\d\d"
+    r"|ag-closeout-audit\s*20\d\d-\d\d-\d\d"
+    r"|plan-reconcile\s*20\d\d-\d\d-\d\d"
+    r"|CORRECTED\s*20\d\d-\d\d-\d\d"
+    r"|STILL\s+OPEN"
+    r"|GENUINELY\s+(?:OPEN|NOT\s+DONE)"
+    r"|genuinely\s+(?:open|not\s+done|still\s+open)"
+    r"|stays?\s+(?:open|unflipped)"
+    r"|checkbox\s+stays"
+    r"|remains?\s+(?:open|genuinely)"
+    r"|not\s+(?:flipping|done\b|yet\s+(?:done|executed|implemented|shipped))",
+    re.IGNORECASE,
+)
+
+# Distinctive-token overlap: a checkbox and a citing task are only considered a plausible
+# match if their texts share a genuinely rare identifier -- a backtick-quoted code span
+# that looks like a specific file/script/commit reference, not just any backticked word.
+# Plain-word overlap was tried first and dropped: this corpus's domain vocabulary (bucket,
+# manifest, backfill, canonical, shard, venue, repo:, source:, script, design...) repeats
+# constantly across totally unrelated todos in dispatch/extract docs specifically BECAUSE
+# they share the same tagging boilerplate, so even a 3+-shared-word bar matched on
+# "repo:"/"source:"/"script" between semantically unrelated checkboxes (confirmed
+# empirically 2026-08-03). Bare-backtick overlap was tried next and ALSO too loose: field/
+# column names like `instrument_id`/`chain`/`captured`/`-prd` are backtick-quoted
+# constantly across this pipeline's entire vocabulary, not rare at all (confirmed
+# empirically the same session) -- so a code span only counts as distinctive when it
+# additionally looks like a real identifier: a path (`/`), a repo@sha or bare commit sha,
+# a source file (a known code-file extension), or a long SCREAMING_SNAKE_CASE constant.
+_CODE_SPAN_RE = re.compile(r"`([^`]{4,})`")
+_SHA_RE = re.compile(r"^[0-9a-f]{7,40}$")
+_FILE_EXT_RE = re.compile(r"\.(?:py|sh|md|ya?ml|json|ts|tsx|js|sql|tf)$", re.IGNORECASE)
+_SCREAMING_SNAKE_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+){2,}$")
+# Named, not auto-detectable: these specific paths/filenames are cited in near-every todo
+# across this corpus (the QG entrypoint, the plan-authoring template, common CI configs),
+# so path-shape/extension alone doesn't make them distinctive. Denylist over auto-detection
+# since there's no cheap structural signal that separates "ubiquitous infra file" from
+# "specific script" -- both are real paths with real extensions.
+_UBIQUITOUS_REFS = {
+    "quality-gates.sh",
+    "task_template.md",
+    "readme.md",
+    "claude.md",
+    "index.md",
+    "cloudbuild.yaml",
+    "buildspec.aws.yaml",
+    "plan_format.md",
+}
+_MIN_PATH_LEN = 12  # filters bare "scripts/"/"docs/" while keeping real multi-segment paths
+
+
+def _is_distinctive_span(tok: str) -> bool:
+    low = tok.lower()
+    if low in _UBIQUITOUS_REFS:
+        return False
+    if "/" in tok or "@" in tok:
+        return len(tok) >= _MIN_PATH_LEN
+    if _FILE_EXT_RE.search(tok):
+        return True
+    if _SHA_RE.match(tok) and not tok.isdigit():
+        return True
+    return bool(_SCREAMING_SNAKE_RE.match(tok))
+
+
+def _code_spans(text: str) -> set[str]:
+    out: set[str] = set()
+    for m in _CODE_SPAN_RE.finditer(text):
+        tok = m.group(1).strip()
+        if tok and _is_distinctive_span(tok):
+            out.add(tok.lower())
+    return out
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -147,33 +234,49 @@ def collect_all(pm_root: Path) -> list[DocInfo]:
 
 
 def find_stale_candidates(docs: list[DocInfo]) -> list[dict]:
-    # citation_index: cited basename -> list of (citing_path, citing_line, done)
-    citation_index: dict[str, list[tuple[Path, int, bool]]] = {}
+    # citation_index: cited basename -> list of (citing_path, citing_line, done, block_text)
+    citation_index: dict[str, list[tuple[Path, int, bool, str]]] = {}
     for d in docs:
         for b in d.blocks:
             if b.source_cite:
-                citation_index.setdefault(b.source_cite, []).append((d.path, b.line, b.done))
+                citation_index.setdefault(b.source_cite, []).append((d.path, b.line, b.done, b.text))
 
     candidates: list[dict] = []
     for d in docs:
         if d.assigned_vm != "na" or d.status not in ("active", "open"):
             continue
-        own_open = [b for b in d.blocks if not b.done]
-        if not own_open:
-            continue
         cites = citation_index.get(d.path.name, [])
         done_cites = [c for c in cites if c[2]]
         if not done_cites:
             continue
-        candidates.append(
-            {
-                "doc": str(d.path),
-                "own_open_count": len(own_open),
-                "own_open_lines": [b.line for b in own_open],
-                "done_citations": [{"citing_doc": str(c[0]), "citing_line": c[1]} for c in done_cites],
-                "open_citations": [{"citing_doc": str(c[0]), "citing_line": c[1]} for c in cites if not c[2]],
-            }
-        )
+        for b in d.blocks:
+            if b.done:
+                continue
+            if DISCLAIMER_RE.search(b.text):
+                continue  # already adjudicated by a prior audit pass, don't re-flag
+            own_code = _code_spans(b.text)
+            if not own_code:
+                continue  # nothing distinctive to correlate against in this checkbox's own text
+            matched = []
+            for citing_path, citing_line, _done, citing_text in done_cites:
+                shared = own_code & _code_spans(citing_text)
+                if shared:
+                    matched.append(
+                        {
+                            "citing_doc": str(citing_path),
+                            "citing_line": citing_line,
+                            "shared_tokens": sorted(shared)[:8],
+                        }
+                    )
+            if matched:
+                candidates.append(
+                    {
+                        "doc": str(d.path),
+                        "checkbox_line": b.line,
+                        "checkbox_snippet": b.text[:200],
+                        "matched_citations": matched,
+                    }
+                )
     return candidates
 
 
@@ -268,10 +371,14 @@ def find_plain_stale_candidates(
         for b in d.blocks:
             if b.done:
                 continue
+            if DISCLAIMER_RE.search(b.text):
+                continue  # already adjudicated by a prior audit pass, don't re-flag
+            seen_refs_this_block: set[str] = set()
             for m in ANY_MD_REF_RE.finditer(b.text):
                 ref_stem = m.group(1).lower()
-                if ref_stem == own_stem:
-                    continue
+                if ref_stem == own_stem or ref_stem in seen_refs_this_block:
+                    continue  # same doc citing itself, or the same ref repeated in one block
+                seen_refs_this_block.add(ref_stem)
                 ref_status = resolved_index.get(ref_stem)
                 if ref_status in ("archived", "resolved", "complete", "superseded"):
                     hits.append({"line": b.line, "references": f"{ref_stem}.md", "ref_status": ref_status})
@@ -305,20 +412,16 @@ def main() -> int:
 
     print(f"Scanned {len(docs)} docs (plans + issues).\n")
 
-    print("=== STALE-CANDIDATES (AO-side duplicate already DONE, NA copy still open) ===")
+    print("=== STALE-CANDIDATES (checkbox-level; token-overlap matched, disclaimer-filtered) ===")
     print(f"{len(candidates)} found\n")
     for c in candidates:
-        print(f"  {c['doc']}")
-        print(f"    own open checkboxes: {c['own_open_count']} (lines {c['own_open_lines']})")
-        for dc in c["done_citations"]:
-            print(f"    DONE citation from: {dc['citing_doc']}:{dc['citing_line']}")
-        for oc in c["open_citations"]:
-            print(f"    (also open citation from: {oc['citing_doc']}:{oc['citing_line']})")
+        print(f"  {c['doc']}:{c['checkbox_line']}")
+        print(f"    checkbox: {c['checkbox_snippet']!r}")
+        for mc in c["matched_citations"]:
+            print(f"    DONE citation: {mc['citing_doc']}:{mc['citing_line']}  shared={mc['shared_tokens']}")
         print()
     if not candidates:
-        print(
-            "  (none — every duplicate-cited NA doc's AO-side original is still open too, nothing to reconcile yet)\n"
-        )
+        print("  (none found)\n")
 
     dup_tracked = overlap["duplicate_tracked_conservative"]
     print("=== GENUINELY-OUTSIDE-AO ESTIMATE (conservative bound, doc-level) ===")
