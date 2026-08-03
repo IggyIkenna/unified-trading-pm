@@ -119,6 +119,17 @@ SSOT" suggestion surfaced in Phase 1 step 3. Like `docs_reconciler`/`ag_closeout
 is chat-text only — there is no separate structured-findings endpoint. NEVER write agent memory; NEVER create a
 `*_SUMMARY.md` file.
 
+**Post-hoc source-hunting lint (advisory, not a blocker)**: run
+`python3 scripts/plan-hygiene/generate_context_scope_source_lint.py` and fold its output into the report. This is a
+cheap deterministic regex-only second pass — not a re-run of Phase 1's judgment — over every already-scouted doc whose
+`context_scope` has zero source-path entries: it checks whether the doc body still names a plausible source-code token
+(a `*_service` identifier, a `.py` filename, or a `repos:` frontmatter name followed by a path-like token) that isn't
+covered anywhere in the written `context_scope`, and skips the doc shapes SKILL.md already exempts (dispatch-batch
+coordinators, `*_finalize` gates). A hit is a candidate for human spot-check, not a fact — the token could be a false
+positive (a generic phrase, a renamed/deleted file, a doc discussing a service in the abstract). This exists because
+Phase 1's hunting is pure agent judgment with no other check that it actually ran as specified (confirmed miss:
+`/plans/active/issues/context_scout_source_hunting_gap_2026_08_03.md`).
+
 ## Modes
 
 **Interactive** (operator present, or invoked directly against one doc — `/context-scout <path>`): scout that one doc

@@ -145,11 +145,23 @@ to matter most.
       effect corpus-wide. Script: `scratchpad/spotcheck_source_path_rate.py` (session-scoped, not committed -- one-off
       analysis, not a standing tool; the P3 item below (item 3, the deterministic post-hoc lint) is the tracked
       follow-up if a repeatable version is wanted).
-- [ ] [SCRIPT] P3. Add a cheap deterministic post-hoc lint to Phase 3's report (not a blocker, a surfaced warning): for
-      each doc scouted with zero source-path entries, check whether the doc body contains any token matching a known
+- [x] ✅ [SCRIPT] P3. Add a cheap deterministic post-hoc lint to Phase 3's report (not a blocker, a surfaced warning):
+      for each doc scouted with zero source-path entries, check whether the doc body contains any token matching a known
       filename/module pattern (e.g. `\w+_service\b`, `\.py\b`, a `repos:` frontmatter repo name followed by a path-like
       token) that doesn't appear anywhere in the written `context_scope`. Flag those in the Phase 3 report for human
       spot-check, since Phase 1's hunting is pure agent judgment with no other check that it actually ran as specified.
+      — unified-trading-pm (this commit). Added `scripts/plan-hygiene/generate_context_scope_source_lint.py`: a
+      regex-only, deterministic, advisory-only pass (no baseline, not wired into `run_hygiene_sweep.sh`) over every
+      already-scouted doc whose `context_scope` has zero source-path entries (an entry not starting `/codex/` or
+      `/plans/`), flagging any `*_service` token, `.py` filename, or `repos:`-frontmatter-name+path-token found in the
+      doc body but not covered by `context_scope`. Exempts the doc shapes SKILL.md's own Phase 1 already treats as
+      legitimately code-free (`*_satellite_ao_dispatch_batchN_*` coordinators, `*_finalize_YYYY_MM_DD.md` gates).
+      Verified on the live repro: run against the corpus, 176 scanned / 152 flagged after the exemption filter;
+      confirmed the P2 todo's own fixed target doc
+      (`tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md`, now carrying 2 source-path
+      entries) is correctly NOT flagged. `ruff check`/`ruff format --check`/`basedpyright` all clean. Wired into
+      `cursor-configs/skills/context-scout/SKILL.md` Phase 3 as a new "Post-hoc source-hunting lint" subsection so
+      future scheduled/interactive runs fold its output into the report.
 - [ ] [SCRIPT] P3. Verify whether `generate_context_scope_inventory.py`'s STALE/UP_TO_DATE fallback (git last-commit
       date, when frontmatter `last_updated` is absent) can produce a false UP_TO_DATE when a content-irrelevant
       mechanical commit (e.g. a corpus-wide hygiene/reference-path-fix sweep) bumps a doc's git last-commit date past
