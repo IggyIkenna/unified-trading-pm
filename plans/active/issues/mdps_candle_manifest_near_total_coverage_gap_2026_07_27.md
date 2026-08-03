@@ -269,6 +269,20 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T10:15Z** (AO dispatch, slot 15, `data_engineering`) — Monitoring checkpoint on the "Verify ... to
+  completion" follow-up todo (still `- [ ]`, not flipped — no VERDICT yet). `backfill-defi-dex-swaps-20260803-092530`
+  remains healthy: `last_completed_date` monotonically advanced from `2023-01-01` (09:29Z start) through `2023-01-09`
+  (10:14Z), zero `copy_errors`/`footer_failed` observed in any completed-day line, VM status `RUNNING`, no preemption.
+  **Revised pace estimate** (supersedes the original todo's "genuinely multi-hour" framing): ~9 days processed in ~45min
+  wall-clock (~5min/day average, with real per-day variance — `2023-01-02`'s 10,297-gap day took ~7min,
+  `2023-01-07`/`2023-01-08` each took longer than the smaller days). At this observed rate, the full 1,155-day corpus
+  trends toward **multi-hour-to-multi-day** wall-clock, not the few-hours original estimate — expected to accelerate for
+  dates at/after the 2026-06-08 `SOURCE_PRIORITY` fix landing (those days should have zero/near-zero `needs_copy` and
+  process fast), so the average should improve once the campaign clears the ~2.5-year pre-fix window, but that has not
+  yet been observed directly. Not a stall (progress metric is climbing every check), not an error — just a longer
+  wall-clock commitment than originally scoped. Continuing to monitor via bounded (≤30min) watchdog cycles per the
+  async-wait HARD RULE; will flip this todo only on the real terminal VERDICT line, per the doc's own explicit
+  anti-smoke-test-green instruction below.
 - **2026-08-03T09:38Z** (AO dispatch, slot 15, `data_engineering`) — Remaining P2 sub-todo (defi
   `dex_pool_swaps`/`batch_onchain_rpc` source correction), IN PROGRESS, not yet complete — do NOT flip until the §
   "Remaining to close" steps below finish. Work this session:
