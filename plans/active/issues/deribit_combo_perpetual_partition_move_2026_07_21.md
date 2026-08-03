@@ -362,22 +362,22 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       `tardis_cefi_shards.py`") needed no separate port — that file calls the same shared
       `self._classify_row_instrument_type(s, venue)` method the fix modified, confirmed by direct grep/read
       (`tardis_cefi_shards.py:298,590`), so both ingestion paths share one fixed classifier already.
-- [ ] [DATA] P2. Implement + dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b;
-      canary on the two objects named in §6 before any full `--apply`. **IN PROGRESS 2026-08-03 (slot 15, task
-      `deribit_combo_perpetual_partition_move-003`)** — script implemented at
-      `market-tick-data-service/scripts/deribit_combo_perpetual_partition_move_2026_08_03.py` (census + full 7-step move
-      mechanic per §5, `--apply` gated behind an explicit refusal citing §7 until the sibling todo below clears;
-      `--dry-run`/`--canary` fully implemented and exercised against live data, read-only). Not yet committed —
-      `quality-gates.sh` was still running on `market-tick-data-service` at session-end; will ship + flip in the next
-      turn once green. **Significant finding surfaced while testing, not yet in this doc's earlier sections**: the live
-      manifest today shows ZERO qualifying candidate rows, a sharp drop from this doc's 2026-07-21 measurement (15,119
-      rows: 8,849 `perpetual` + 6,270 `future`). Verified concretely: a full census run found only false-positive shape
-      matches (`BTC-USDC@LIN`-style linear-perp symbols, correctly rejected by the catalogue cross-check, 0 real combo
-      hits survive it); `instrument_type=COMBO` now has **0 rows manifest-wide, for any venue** (down from this doc's
-      own §2b baseline of 662 DERIBIT `combo` rows) — the entire combo classification appears to have been pruned from
-      the manifest sometime in the intervening 13 days (unrelated migration work — the cefi tranche has seen heavy churn
-      this period per its own consolidated-closeout history). **The underlying GCS objects were NOT necessarily moved
-      along with this** — directly re-confirmed one of §6's two canary objects
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot 15, task `deribit_combo_perpetual_partition_move-003`)** — Implement +
+      dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b; canary on the two objects
+      named in §6 before any full `--apply`. Shipped: `market-tick-data-service@04d48b3c` (census + full 7-step move
+      mechanic per §5, `--apply` gated behind an explicit self-refusal citing §7 until the sibling todo below clears;
+      `--dry-run`/`--canary` fully implemented and exercised against live production data, read-only — no GCS object
+      written/moved/deleted, `--apply` never invoked). `quality-gates.sh` green (9847 passed, coverage 80.68%),
+      sentinel-verified on the shipped SHA, quickmerge landed on `live-defi-rollout`. **Significant finding surfaced
+      while testing, not yet in this doc's earlier sections**: the live manifest today shows ZERO qualifying candidate
+      rows, a sharp drop from this doc's 2026-07-21 measurement (15,119 rows: 8,849 `perpetual` + 6,270 `future`).
+      Verified concretely: a full census run found only false-positive shape matches (`BTC-USDC@LIN`-style linear-perp
+      symbols, correctly rejected by the catalogue cross-check, 0 real combo hits survive it); `instrument_type=COMBO`
+      now has **0 rows manifest-wide, for any venue** (down from this doc's own §2b baseline of 662 DERIBIT `combo`
+      rows) — the entire combo classification appears to have been pruned from the manifest sometime in the intervening
+      13 days (unrelated migration work — the cefi tranche has seen heavy churn this period per its own
+      consolidated-closeout history). **The underlying GCS objects were NOT necessarily moved along with this** —
+      directly re-confirmed one of §6's two canary objects
       (`.../instrument_type=perpetual/data_type=book_snapshot_5/BTC-FS-26DEC25_PERP.parquet`, 37,258 rows,
       `instrument_id` content column still reads the wrong `DERIBIT:PERPETUAL:BTC-FS-26DEC25_PERP`) still physically
       exists at its OLD wrong-partition path, but the manifest now carries **no row mentioning this symbol at all** —
