@@ -284,3 +284,8 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   `docs(plans):` commit.
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. All 3 open items remain genuine
+  judgment/operator-gated work: an explicit P1 operator policy decision the doc itself refuses to pre-select (still
+  unruled as of the latest ~02:48Z Progress Log entry), an implementation item textually sequenced behind it, and a
+  best-effort non-gating diagnostic already being actively advanced live by the review-agent chain documented in the
+  Progress Log (7+ recurrence entries). Incident remains ACTIVE — still-unruled OPERATOR decision, ongoing recurrences.

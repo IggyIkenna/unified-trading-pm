@@ -303,3 +303,7 @@ cleanly instead of ending on an issue-doc corroboration.
   needs a request-schema change plus full slot-reuse-lifecycle tracing on the fleet-wide `/done` endpoint. Doc is
   `sequential: true` behind the shipped P2, and the 2026-08-01 slot-4 recurrence (7th instance, new `main_ci_red`
   wall_type) confirms the finding is live, not moot.
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Sole open todo remains explicitly
+  DECLINED-for-now backend design work (a `/done`-endpoint identity-matching change touching every worker's completion
+  path), unchanged since the 2026-08-02 marker. Only file change since is a mechanical `context_scope` path fix — no
+  content drift.

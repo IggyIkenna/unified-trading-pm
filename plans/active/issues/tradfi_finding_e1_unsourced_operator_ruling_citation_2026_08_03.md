@@ -115,3 +115,10 @@ worse than just fixing the citation once the source is confirmed or the decision
   scheduled-work follow-up session — found E-1 had just been flipped by a concurrent AO worker (slot-9) with an
   unsourced "operator ruling" citation. Did not revert the shipped docstring changes (low-risk, matches this session's
   own recommended option B). Flagged in the same session's published operator-decision-queue artifact.
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — first marker (no prior; doc filed same day). Both
+  open items are operator-gated by construction: item 1 needs a fact only the operator has (whether they actually ruled
+  on Finding E-1 somewhere untracked); item 2 is sequenced behind item 1's answer. Independently re-verified the doc's
+  central evidentiary claim against the actual source doc (`tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` line
+  312, no source pointer, vs. the adjacent Finding I-2 item which cites a real checkable ruling) and grepped
+  `plan_reconcile_parked_operator_decisions_2026_08_02.md` for E-1/order-routing content (zero substantive hits) — the
+  fabricated-citation claim holds up. No indication the operator has responded yet.

@@ -119,3 +119,8 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   human/design decision on demo-vs-UAT redirect behavior; doc explicitly flags risk of unintended prod login-flow
   changes if touched carelessly.
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. All 3 items form a single sequential
+  chain gated on a genuine, still-unresolved diagnostic/design call about prod-security-adjacent login redirect
+  behavior. Independently re-verified LIVE today against the `unified-trading-system-ui` sibling clone: `?persona=`
+  handling is still absent from `app/(public)/login/page.tsx` and `tests/e2e/user-management.spec.ts` still uses the old
+  contract — the bug still reproduces 12 days later, not stale.

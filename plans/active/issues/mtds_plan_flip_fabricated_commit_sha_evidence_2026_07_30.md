@@ -156,3 +156,8 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   contradiction' triage"), with a done-when that only an operator can satisfy ("operator has reviewed and either
   confirms isolated-incident or directs a process fix"). Also covered by the 2026-07-31 operator directive
   `unified-trading-pm@14478ca26`. The machine half already shipped (`check_plan_commit_sha_evidence.py`).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Independently re-verified the cited
+  `unified-trading-pm@14478ca26` commit directly via `git show`: it is real and does touch this doc (4 lines changed),
+  but its content is a bulk `assigned_vm: planning -> NA` capacity-management reclassification across 25 unrelated docs,
+  not a substantive answer to the isolated-incident-vs-pattern question this todo asks. The open governance question
+  remains genuinely unresolved; doc correctly stays NA.

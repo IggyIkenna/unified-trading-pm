@@ -707,3 +707,11 @@ note above already covers. Independently re-verified before declining:
     false premise that batch8 shipped; not touching `lst_rate_honest_coverage_2026_07_21.md`'s Phase-3 checkbox.
     Skipping via `POST /api/slots/15/skip-current-task` (`reason_code: GATED`) per this doc's established disposition
     rather than filing a duplicate `/blocked` or issue doc.
+
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. The doc's `## Todos` section is fully
+  `[x]` done; the 5 grep-matched `- [ ]` lines are a confirmed false positive (verbatim quotation of a now-archived
+  upstream plan's todos inside a fenced code block, already self-flagged by this doc's own Counting note — real open
+  count is 0). The doc stays NA on its most-recent Progress Log entries: a still-unresolved "zero-derived-parent-row"
+  third root-cause mechanism, reproduced again the same day on an unrelated plan pair, plus the 2026-07-31 operator
+  directive routing AO-machinery/dispatch-logic docs to `execution_scope: local-only`. Only change since the last marker
+  is a mechanical `context_scope` path fix reflecting the quoted plan's archival — no substantive content changed.

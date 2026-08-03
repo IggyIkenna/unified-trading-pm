@@ -126,3 +126,9 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
   is authoritative from the repo alone — the doc's own "Why I did not fix this myself" section says exactly that.
   Independently corroborated by the 2026-08-02 `/ag-closeout-audit infra` run's classification of the same doc.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed, 4th consecutive pass. Sole open item
+  requires a human decision among stated options with no mechanical way to determine the correct answer from the repo
+  alone (5 different item-counts across 6 files, the one path every citing doc names does not exist); doc's own "Why I
+  did not fix this myself" section states this explicitly, independently corroborated by a different skill
+  (`/ag-closeout-audit` infra, 2026-08-02). Only changes since the last marker are a mechanical `context_scope` backfill
+  and an earlier asset_group retag, both content-neutral.

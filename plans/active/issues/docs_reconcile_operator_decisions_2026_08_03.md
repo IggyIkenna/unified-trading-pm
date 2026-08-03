@@ -101,3 +101,9 @@ near-mechanical choice — see "Why this needed a human anyway" below.
   `paper-vs-live-execution-seam.md`, and the missing hub-doc `related:` link on `prediction-batch-live.md` mentioned
   above.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — first marker (no prior). Sole open item is a
+  genuine `authoritative_for` topic-ownership judgment call between two codex-ssot docs and a hub doc, correctly
+  escalated `BLOCKED-OPERATOR-DECISION` with A/B/Other options per the workspace escalation format; two independent
+  adversarial reviewers split on the verdict (refuter UPHELD as a genuine collision, confirmer NOT CONFIRMED), which
+  itself confirms this is not mechanically resolvable. Doc's own summary states the authority call is "an authority call
+  this skill never auto-decides, in any mode."

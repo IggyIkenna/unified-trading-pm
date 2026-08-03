@@ -217,3 +217,11 @@ follows correctly — only the webhook config is missing).
   `generate_na_doc_tranche_inventory.py --tranche ao` returns 61 docs and does not include this one, so the tranche the
   retag is reserved for provably cannot see it. Tranche-level BLOCKED-OPERATOR-DECISION with options recorded in
   `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Doc has 3 total todos, 2 already
+  closed; the sole surviving open item is an `[OPERATOR]`-tagged host-level Slack-webhook secret-configuration task on a
+  ROOT checkout, explicitly outside any slot worker's authorized scope per `agents/RULES.md` § 1, requiring an external
+  credential a worker cannot self-provision. No evidence the webhook has since been configured. **Also closing the loop
+  on the mistag deadlock flagged above**: `generate_na_doc_tranche_inventory.py`'s 2026-08-02 fix (`owning_tranche()`'s
+  sole-generic-infra-bucket fallback, per that script's own docstring) resolved it — `--tranche ao` now returns 81 docs
+  and DOES include this one (confirmed live: this doc is in this run's own Phase 0 in-scope population), so the
+  tranche-level deadlock this doc's 2026-08-02 marker flagged no longer applies.
