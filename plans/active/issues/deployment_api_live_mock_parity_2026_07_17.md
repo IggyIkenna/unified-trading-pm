@@ -146,8 +146,16 @@ mock parity — the drift is historical, not systemic.
       the Dockerfile's explicit `uv pip install` block; version constraint matches `deployment-service/pyproject.toml`'s
       own declared `google-cloud-functions>=1.16.0,<2.0.0`. `quality-gates.sh` green, shipped via `quickmerge --agent`,
       verified on origin.
-- [ ] [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
-      `staging_dormant_mode`, `image_gcp`/`image_aws`, `image.deploy_host`/`deploy_model`).
+- [x] ✅ [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
+      `staging_dormant_mode`, `image_gcp`/`image_aws`, `image.deploy_host`/`deploy_model`). — **DONE 2026-08-03 (slot-7,
+      backend_engineer), `deployment-api@dc7eece`.** `_mock_row()` now sets `promotion_model="ldr_main"` +
+      `staging_dormant_mode=True` on every row (matches the current fleet manifest — every repo but `unified-trading-pm`
+      itself is already `ldr_main`, fleet toggle is on) and adds `image_gcp`/`image_aws` (mirroring `image`, since every
+      fixture repo is a standalone deploy); `_mock_image()` now also sets `deploy_model=None`/`deploy_host=None`
+      (correct for these 7 repos — none are in `_SOURCE_DEPLOYED`/ `_BUNDLED_IN`). Added
+      `test_overview_staging_dormant_contract_fields` + extended `test_overview_shape`'s key-set assertion to pin the
+      contract. Full `quality-gates.sh` green (sentinel `dc7eece`), shipped via `quickmerge --agent`, verified on
+      origin.
 - [ ] [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
       `total`. Pick one; the UI reads whichever it was written against.
 - [ ] [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
@@ -185,3 +193,10 @@ mock parity — the drift is historical, not systemic.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **slot-13 2026-08-02**: Added `google-cloud-functions>=1.16.0,<2.0.0` to the Dockerfile's explicit `uv pip install`
   list — `deployment-api@d1d2a21`, `quality-gates.sh` green, shipped via `quickmerge --agent`, verified on origin.
+- **slot-7 2026-08-03**: Closed the `/api/repo-ci/overview` mock's staging-dormant contract gap —
+  `deployment-api@dc7eece`. `_mock_row()`/`_mock_image()` now unconditionally set `promotion_model`,
+  `staging_dormant_mode`, `image_gcp`/`image_aws`, and `image.deploy_model`/`deploy_host` on every row, mirroring what
+  `_overview_row()`/`_image_signal()` always set live. Values chosen to match the actual current fleet manifest
+  (`promotion_model="ldr_main"` + `staging_dormant_mode=True` fleet-wide; `deploy_model`/`deploy_host=None` since none
+  of the 7 fixture repos are source-deployed or bundled). Added a regression test pinning the new keys.
+  `quality-gates.sh` green (sentinel `dc7eece`), shipped via `quickmerge --agent`, verified on origin.
