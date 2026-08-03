@@ -44,6 +44,7 @@ related:
     /plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md,
   ]
 created: 2026-07-27
 priority: P0
@@ -516,6 +517,36 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   `::test_unregistered_group_falls_back_to_version_zero`); all 55 `multi_timeframe` unit tests green; full
   `quality-gates.sh` green (sentinel verified against HEAD). Shipped **`features-service@87942ac0`**, verified on origin
   (`git merge-base --is-ancestor`). Relaunched CEFI:cross_instrument (force+skip) and CEFI:multi_timeframe (force+skip)
-  against the fixed code — both backgrounded local driver processes, in flight, not yet resolved. **Remaining open**:
-  both relaunched legs' verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
-  be written and the checkbox flipped.
+  against the fixed code — both backgrounded local driver processes, in flight, not yet resolved. **VM-tarball-staleness
+  gotcha found + worked around**: the first relaunch of CEFI:multi_timeframe reproduced the IDENTICAL 346-skip symptom
+  even after the fix landed on origin — the deployed VM tarball's manifest
+  (`gs://deployment-scripts-central-element-323112/code/features-service-code.manifest.json`) was pinned to
+  `commit_sha=3b0c0b05` (one commit BEHIND the fix, built 15:31:19Z, before the fix pushed ~15:38Z) — a false negative,
+  not a fix regression. `lc_verify_tarball_freshness` runs in non-blocking `warn` mode by default, so a stale tarball
+  never stops a launch. Rebuilt via `bash scripts/vm/create-code-tarballs.sh --include features-service` (confirmed
+  manifest re-pinned to the fixed sha), deleted the stale-code VM, relaunched — **anyone re-verifying a features-service
+  fix via a VM launch MUST rebuild the tarball first, verifying the manifest sha, or risk re-confirming the OLD bug**.
+  **Second, deeper bug found on the SAME relaunch**: once the feature_group_version fix let real data actually reach the
+  join, CEFI:multi_timeframe crashed with `column with name 'open_1h_right' already exists` — every delta-one
+  feature-group parquet embeds the raw OHLCV context alongside its own computed columns, so 3+ `SourceSpec`s sharing a
+  timeframe (e.g. `market_structure@1h`+`momentum@1h`+`volatility_realized@1h`+`oscillators@1h`, all confirmed via
+  direct parquet reads to carry `open`) all produce an identical `open_1h` column — Polars' default `_right` collision
+  suffix survives exactly one repeat collision, so the THIRD spec crashes instead of silently overwriting. This means
+  **`multi_timeframe` had never successfully joined real multi-spec data before** (root cause B's date bug and this
+  session's feature_group_version bug both masked it earlier). Fixed `_join_spec_df` to drop columns already present in
+  the accumulated base frame before each join (first spec's copy wins — the values are identical raw candle data, not
+  distinct signals); 2 new regression tests (`test_drops_duplicate_columns_instead_of_right_suffix`,
+  `test_chained_joins_survive_three_way_duplicate_column`); full `multi_timeframe` suite green (596 passed, 26 skipped);
+  full `quality-gates.sh` green. Shipped **`features-service@52a7de5c`**, verified on origin. Rebuilt the tarball again
+  (manifest re-confirmed at `52a7de5c`) and relaunched CEFI:multi_timeframe a third time. **Separately, a recurring
+  infra finding (NOT fixed, filed as its own doc)**: CEFI:cross_instrument's re-check VM hung TWICE in a row on the
+  exact same step (`"Loading delta-one features from gs://.../day=2026-07-05/ timeframe=15s"`) — first hang 44+ min (VM
+  `features-e2e-cefi-20260803-144527-526e13`), second hang 14+ min after a clean relaunch (VM
+  `features-e2e-cefi-20260803-154630-526e13`). Both confirmed genuinely stalled (not just slow) via the same 3-signal
+  check: GCS run.log + heartbeat blob both frozen well past the 60s cadence, Cloud Monitoring CPU utilization flatlined
+  at a suspiciously constant ~19-20% (real work fluctuates), zero output progress. Both VMs deleted per the craft's
+  VM-delete guardrail; relaunched a third time (unrelated to either of today's code fixes — `cross_instrument`'s loader
+  code was never touched). Filed `issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md` for
+  investigation (out of scope for this verification-only todo to fix). **Remaining open**: CEFI:cross_instrument (3rd
+  attempt) and CEFI:multi_timeframe (3rd attempt, first with BOTH fixes deployed) both relaunched, in flight, not yet
+  resolved.
