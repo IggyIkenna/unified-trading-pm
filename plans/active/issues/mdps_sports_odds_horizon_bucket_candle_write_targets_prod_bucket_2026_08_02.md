@@ -25,7 +25,7 @@ summary: >-
   here). The IAM 403 is doing its job (preventing a smoke-check VM from writing fabricated test data into PROD) — but if
   the IAM condition were ever more permissive, this bug would let a `--output-bucket <test>` smoke-check silently
   corrupt real PROD candle data for SPORTS:odds_horizon_bucket.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -42,7 +42,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: infra
@@ -57,12 +57,22 @@ source: >-
   ("New corroborating instance, different service" — add SPORTS:odds_horizon_bucket timeout override to MDPS's
   pipeline_e2e_check.py and verify with a real from-scratch run). This finding is a byproduct of that verification run,
   not the task's own scope.
-resolved_by:
+resolved_by: slot-7 (data_engineering), 2026-08-03 — all 5 todos done
 locked_by:
 depends_on: []
 ---
 
 # MDPS SPORTS:odds_horizon_bucket candle write targets PROD instead of `--output-bucket`
+
+> **✅ ARCHIVED — resolved (archived 2026-08-03)** — every todo done. The bucket-targeting bug is fixed
+> (`market-data-processing-service@9642cbb`) and re-verified working across 3 from-scratch force+skip attempts (all
+> cells wrote to the `--output-bucket` test bucket, never PROD). A genuine, non-403/non-timeout terminal verdict was
+> obtained on the 3rd attempt (2 prior attempts hit real SPOT preemption, confirmed via
+> `gcloud compute operations list`): `EXIT_STATUS=1`, 84/90 cells succeeded, 6 failed with a real, distinct
+> data-derivation bug (`[partition_mismatch]` venue-mismatch). That new bug is tracked separately as finding 5 in
+> [`mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`](/plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md)
+> (still active). Codex updated: `/codex/05-infrastructure/bucket-isolation-model.md` § 13 now documents the
+> `MDPS_OUTPUT_BUCKET_{cat}` override contract this doc's fix restored.
 
 ## What I found
 
@@ -157,12 +167,28 @@ further this session (outside this task's scope — filed here instead of silent
       `--output-bucket` wiring is CORRECT. This todo's contingent branch ("if the env var is genuinely missing") did not
       materialize; no launcher fix is needed. Repo: deployment-service (no code change — closing as not-applicable, not
       as done-with-a-fix).
-- [ ] [DATA] P2. Once fixed, re-run a from-scratch force+skip
-      `pipeline_e2e_check.py --asset-group SPORTS     --data-types odds_horizon_bucket` and confirm a genuine (non-403,
-      non-timeout) verdict — either a real pass or a real data-derivation failure, not an infra/bucket-targeting
-      artifact. Feeds back into `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS) checkpoint
-      cadence. **UNBLOCKED 2026-08-02** — todo 5's fix (`market-data-processing-service@9642cbb`) landed; this re-run
-      can proceed whenever next dispatched.
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-7, data_engineering)** — Ran 3 from-scratch force+skip attempts
+      (`pipeline_e2e_check.py --day 2026-08-01 --legs force,skip --require-captured --auto-day --asset-group SPORTS     --data-types odds_horizon_bucket`,
+      auto-day resolved to 2026-04-14 all 3 times). Bucket-targeting fix (`9642cbb`) CONFIRMED WORKING on every attempt:
+      parquet bucket == manifest bucket == `market-data-tick-sports-test-central-element-323112` (the `--output-bucket`
+      test bucket, never PROD) across all force+skip cells, all 3 attempts. Attempts 1-2 (force-leg VMs
+      `...pipelinecheck-20260803-075107-...` and `...-080019-...`) each hit a genuine `compute.instances.preempted` SPOT
+      event (confirmed via `gcloud compute     operations list`) before writing anything — infra noise, not a code
+      defect; retried per SPOT's expected recovery pattern (on-demand not used: no env-var override exists on this
+      launcher, and CLAUDE.md's HARD RULE keeps backfill-shaped launches on SPOT). Attempt 3 (VM
+      `mdps-backfill-sports-pipelinecheck-20260803-080815-     d0c755`) got a genuine, non-403, non-timeout terminal
+      verdict: `EXIT_STATUS=1`, 84/90 instrument-timeframe cells succeeded (8,730 candles written), 6 genuinely failed
+      with a real data-derivation bug (`[partition_mismatch]` venue-mismatch for SPORT888/BETONLINEAG/CORAL/UNIBET
+      bookmaker instruments) — satisfies this todo's exact bar ("either a real pass or a real data-derivation failure,
+      not an infra/bucket-targeting artifact"). The partition_mismatch bug is a NEW, distinct defect (not the
+      bucket-targeting bug, not a 403/timeout) — filed as finding 5 in
+      [`mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`](/plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md)
+      (same file/function its findings 3/4 already implicate), root-caused to
+      `candle_write_mixin.py::_build_candle_output_path` never asset-group-correcting `venue` for SPORTS when
+      `input_venue` is truthy. Feeds back into `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track K (MDPS)
+      checkpoint cadence — this todo's own scope (re-verify + confirm genuine verdict) is complete; the
+      partition_mismatch fix is separately tracked. Repos: market-data-processing-service (evidence + new finding),
+      deployment-service (evidence only).
 - [x] ✅ [CODE] P1. **DONE 2026-08-02 (slot-4, infra) — verified + checkbox-flipped by slot-16**.
       `market-data-processing-service@9642cbb` ("fix(mdps): streaming chain-bundle write path resolves output bucket,
       not source bucket"). Root cause: `_streaming_write_per_tf` in `live_workers_streaming.py`

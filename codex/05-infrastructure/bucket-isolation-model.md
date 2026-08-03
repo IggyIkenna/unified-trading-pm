@@ -466,3 +466,24 @@ wrong-answer** (reported "no data available") rather than an error, and would be
 Note that `get_available_dates()` also performs a `_list_blobs(bucket, "raw_tick_data/by_date/")` — a whole-corpus
 prefix listing. If that method does turn out to be live, it is a single-walk-discipline concern as well as a 404
 concern.
+
+## 13. MDPS output-bucket override (test-isolation for smoke checks)
+
+_Added 2026-08-03, closing out `mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md`. This
+contract already existed in code before that doc; it was simply undocumented in codex._
+
+MDPS candle writes resolve their target bucket via `config.py::get_output_bucket_for_asset_group(category)`, which reads
+`MDPS_OUTPUT_BUCKET_{CAT}` and falls back to the normal source/PROD bucket getter (`get_bucket_for_asset_group()`, §§
+1–10 above) only when that override env var is unset. `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` threads
+a launcher `--output-bucket <bucket>` flag into `MDPS_OUTPUT_BUCKET_{CAT}` on the launched VM's environment — this is
+how `market-data-processing-service/scripts/pipeline_e2e_check.py`'s real-VM smoke checks write candles into a `-test-`
+bucket instead of `-prd-` while still reading raw input ticks from PROD (`--source-bucket`), without ever risking a PROD
+write.
+
+**Every real write call site must resolve the bucket via `get_output_bucket_for_asset_group()`, never
+`get_bucket_for_asset_group()` directly** — a 2026-08-02 defect (`market-data-processing-service@9642cbb`) found the
+streaming chain-bundle write dispatcher (`live_workers_streaming.py::_streaming_write_per_tf`) calling the source/PROD
+getter instead, so a `--output-bucket <test>` smoke-check VM 403'd trying to write real candles into the PROD bucket
+(caught by IAM, not by this contract — see § 8). The eager write path (`candle_write_mixin.py::_write_candles`) was
+already correct; the bug was isolated to the separate streaming dispatcher every SPORTS `ticks.parquet` chain-bundle
+routes through before the eager path is ever reached.

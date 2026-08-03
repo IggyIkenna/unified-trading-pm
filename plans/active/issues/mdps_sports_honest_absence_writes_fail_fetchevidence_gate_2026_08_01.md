@@ -294,6 +294,78 @@ above, now on a second independent date) would not surface new information — i
 `~50/N "Unknown error"` crash and burn compute. Escalation ping sent to the authoring slot per the
 `data_pipeline_failure` role contract; this doc remains the tracking surface. Status stays `open`.
 
+## Finding 5 (NEW, open) — `_build_candle_output_path` never asset-group-corrects `venue` for SPORTS when `input_venue` is truthy, causing `[partition_mismatch]` write rejects
+
+A genuine from-scratch force+skip re-verification of `SPORTS:odds_horizon_bucket`
+([`mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md`](/plans/archive/2026_08/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md)
+todo 4, day=2026-04-14 auto-day, VM `mdps-backfill-sports-pipelinecheck-20260803-080815-d0c755`, `EXIT_STATUS=1`, 84/90
+instrument-timeframe cells succeeded, 6 genuinely failed) surfaced a distinct, previously-undocumented write-path bug —
+NOT the `9642cbb` bucket-targeting fix's issue (this run's bucket paths were confirmed correct: both legs wrote to the
+`--output-bucket` test bucket) and NOT findings 3/4's empty-message "Unknown error" crash (this bug's error message is
+fully populated, so it is a different failure signature).
+
+`run.log` shows repeated:
+
+```
+ERROR Error writing candles to GCS: StreamingParquetWriter pre-write validation failed: [partition_mismatch] 8 row(s)
+inconsistent with partition_path 'day=2026-04-14/asset_group=sports/venue=FOOTBALL/instrument_type=MATCH_ODDS/
+data_type=odds_horizon_bucket_15m': venue mismatch in
+'FOOTBALL:SPORT888:MATCH_ODDS:SERIE_B:2026-27:US_CATANZARO_1929-MODENA::AWAY': partition declares FOOTBALL, id has
+SPORT888; ...
+```
+
+Affected this run: SPORT888 + BETONLINEAG + CORAL (all on the `US_CATANZARO_1929-MODENA` match, different markets) and
+UNIBET (`SOUTHAMPTON-BLACKBURN` match) — all 6 failed cells trace to the identical root: the partition path's `venue=`
+segment is stamped `FOOTBALL` (the sport) while the row's own `instrument_id` carries the true bookmaker in its
+BOOKMAKER position — the same "sport-token-as-venue" bug class already fixed once
+(`sports_closeout_batch1_ao_ready_2026_07_24.md` todo 2, via the asset-group-aware
+`_venue_token_from_canonical_id(raw, asset_group=SPORTS)` helper in `canonical_writer_shaping.py`), recurring here in a
+DIFFERENT call site that fix never reached.
+
+**Root cause, precisely located**: `candle_write_mixin.py::_build_candle_output_path` (lines 258-306):
+
+```python
+venue = input_venue.upper() if input_venue else "UNKNOWN"
+if venue == "UNKNOWN" and "instrument_id" in candles_df.columns and candles_df.height > 0:
+    ...  # _venue_token_from_canonical_id(..., asset_group=category) correction
+if venue == "UNKNOWN":
+    venue = _venue_token_from_canonical_id(instrument_id, asset_group=category).upper()
+```
+
+The asset-group-aware `_venue_token_from_canonical_id` correction only fires when `venue` is still `"UNKNOWN"` after the
+`input_venue` shortcut — i.e. only when `input_venue` was falsy to begin with. For SPORTS chain-bundle calls,
+`input_venue` is the bundle's top-level sport token (`"FOOTBALL"`, non-empty), so the shortcut on line 286 wins and the
+correction never runs. This is correct for every OTHER asset_group (venue really is one constant per file/bundle there)
+but wrong for SPORTS, where each instrument within one chain-bundled match file can carry a DIFFERENT bookmaker as its
+true "venue". Shared by BOTH write paths — `candle_write_mixin.py:187` (eager) and `live_workers_streaming.py:410`
+(streaming chain-bundle) both call this same function — so this is not streaming-path-only like the bucket-targeting
+bug.
+
+**Fix**: gate the `input_venue` shortcut on `category != MarketAssetGroup.SPORTS` (or equivalently, run the
+asset-group-aware `_venue_token_from_canonical_id(instrument_id, asset_group=category)` derivation unconditionally for
+SPORTS before falling back to `input_venue`), mirroring how `_venue_token_from_canonical_id` and
+`_resolve_empty_failed_shard_tuple` are already asset-group-gated elsewhere in this same file family.
+
+**Possible connection to findings 3/4 (not confirmed, worth a cheap check before assuming independence)**: findings 3/4
+hypothesize an unguarded raise producing a `str(e)==""` "Unknown error". This finding's validation error is fully
+populated when logged directly at the write call site, so it is not itself the empty-message crash — but if some OTHER
+caller catches the same `StreamingParquetWriter` validation exception without preserving `args`, it could explain a
+subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here (outside this task's scope).
+
+### Finding 5 todos
+
+- [ ] [CODE] P2. In `candle_write_mixin.py::_build_candle_output_path`, gate the `input_venue.upper()` shortcut
+      (line 286) on `category != MarketAssetGroup.SPORTS` so SPORTS always resolves `venue` via
+      `_venue_token_from_canonical_id(instrument_id, asset_group=category)` regardless of whether `input_venue` is
+      truthy. Done-when: a from-scratch `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket`
+      force run against day=2026-04-14 produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
+      (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells (this finding's repro instruments). (repo:
+      `market-data-processing-service`)
+- [ ] [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check whether
+      any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming findings
+      3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the findings) or
+      the grep comes back empty (confirmed independent). (repo: `market-data-processing-service`)
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-02**: KEEP-NA, valid (sports tranche) — first verdict on this doc (created 2026-08-01,
@@ -310,3 +382,13 @@ above, now on a second independent date) would not surface new information — i
   `execution_scope: local-only` with its own conversion banner stating these do NOT enter the AO backlog. Escalated in
   this run's report as a parked `BLOCKED-OPERATOR-DECISION` (the A-vs-B call); no in-file retag, since the todo already
   carries the correct `[OPERATOR]` tag
+
+- 2026-08-03 (slot-7, data_engineering): Added finding 5 while executing
+  [`mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md`](/plans/archive/2026_08/mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md)
+  todo 4 (re-verify SPORTS: odds_horizon_bucket force+skip after the bucket-targeting fix; that doc is now archived, all
+  5 of its todos done). That re-verification succeeded on its own terms — bucket paths confirmed correct across 3
+  attempts (2 SPOT-preempted, 1 genuine completion) — but the genuine completion's force leg hit a NEW, distinct bug:
+  `[partition_mismatch]` write rejects for 6/90 cells, root-caused to `candle_write_mixin.py::_build_candle_output_path`
+  never asset-group-correcting `venue` for SPORTS when `input_venue` is truthy. Filed here rather than a new doc since
+  it lands in the exact function this doc's findings 3/4 already implicate. Did not fix inline (outside this task's
+  scope; findings-closure HARD RULE).
