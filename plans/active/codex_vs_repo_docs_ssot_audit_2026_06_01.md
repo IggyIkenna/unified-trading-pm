@@ -534,13 +534,23 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       verify; + 2 DELETEs (`scripts/README.md` documenting only a non-existent `run_quality_gates.py`;
       `.github/BRANCH_PROTECTION_SETUP.md` dead manual how-to). All cited codex/UAC targets VERIFIED-EXIST (registry
       Verification notes, line ~792). Opus-gated editorial rewrite. (repo: instruments-service)
-- [ ] [CODE] P3. **instruments-service `Makefile` FIX-STALE** (follow-up finding, slot-5 2026-08-01): the `Makefile`'s
-      `ci-local`/`test`/`type-check`/`lint` targets are stale — `make test` runs `pytest --cov-fail-under=35` (real
-      floor is the ratcheted `MIN_COVERAGE=88` in `scripts/quality-gates.sh`), and `install`/`test`/`lint`/`type-check`
-      invoke `pip install`/`pytest`/`ruff`/`basedpyright` STANDALONE, which violates the workspace "never run
-      `pytest`/ruff/ basedpyright directly — `scripts/quality-gates.sh` is the entrypoint" rule. Either repoint
-      `make ci-local` to shell out to `bash scripts/quality-gates.sh` (single canonical gate) or delete the Makefile and
-      drop the last `make` references. Surfaced while fixing `.github/BRANCH_PROTECTION.md` (which no longer cites
+- [x] ✅ [CODE] P3. **instruments-service `Makefile` FIX-STALE** — instruments-service@563af797 (repoint) +
+      instruments-service@d775054b (unrelated flaky-test fix surfaced en route). Repointed `ci-local`/`lint`/
+      `type-check`/`test`/`lint-fix` to shell out to `bash scripts/quality-gates.sh` (`--lint`/`--test`/
+      `QG_SLICE=typecheck` respectively) instead of calling `pytest`/`ruff`/`basedpyright`/`pip` directly; dropped the
+      stale `--cov-fail-under=35` (real floor is `MIN_COVERAGE=88` in `scripts/quality-gates.sh`). Confirmed via grep no
+      other repo doc/script referenced the old `make ci-local`/`make test` targets. Full-suite QG re-gate hit a
+      pre-existing, unrelated intermittent failure
+      (`test_orchestrator_sports_pipeline.py::     TestGwFalseEmptyWritePath20260714::test_skip_as_present_league_not_demoted_to_empty`)
+      only reproducible under `--cov` instrumentation — root cause: the test never mocked `read_availability_index`/
+      `_read_per_league_entity_df`, so it made a REAL unmocked GCS call that pytest-socket's `--allow-hosts` blocked,
+      which the code's fail-safe `except Exception` path (correctly) treats as "cannot prove captured status" and skips
+      empty-gap emission — nondeterministic because whether the real network attempt reaches the blocked-socket layer
+      before another safe short-circuit fires is timing-dependent. Fixed by mocking both call sites (matching the
+      pattern already used elsewhere in the same test file) in both affected tests
+      (`test_skip_as_present_league_not_demoted_to_empty` +
+      `test_presence_guard_protects_present_parquet_under_redo_all`); verified green across 3 consecutive full-suite
+      runs post-fix before shipping. Surfaced while fixing `.github/BRANCH_PROTECTION.md` (which no longer cites
       `make ci-local`). (repo: instruments-service)
 - [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
       needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
