@@ -309,12 +309,19 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       through past a silent miss). Updated `test_cancel_order_real_not_found` (previously asserted the buggy
       fabricated-success behavior) to assert the raise instead. Repo: execution-service — execution-service@2514bd6b.
 
-- [ ] [OPERATOR] P1. **DECISION — execution-service tradfi order-routing is entirely unreachable** (Finding E-1): all 6
-      venue adapters (`cme_adapter.py`, `cboe_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`,
-      `fx_adapter.py`) + shared `ibkr_tradfi.py` base are registered+tested but excluded by both the
-      `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the UAC-capability-declarations manual-HTTP gate. Cross-refs this
-      plan family's open todo 1 (backfill=paper=live wiring proof). Decide: bridge the two vocabulary gates, or document
-      as intentional not-yet-activated scaffolding. Repos: execution-service, unified-api-contracts.
+- [x] ✅ [BACKEND] P1. **DECIDED 2026-08-03 (operator ruling) — keep it gated; documented as intentional
+      not-yet-activated scaffolding** (Finding E-1): all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`,
+      `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain
+      registered+tested but excluded by both the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the
+      UAC-capability-declarations manual-HTTP gate — ruling was NOT to bridge the two vocabulary gates. Added STATUS
+      documentation at both gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s
+      `NAUTILUS_UNSUPPORTED_VENUES`,
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/     _tradfi.py`'s module docstring)
+      plus the `TRADFI_VENUES` registration site (`execution-service/execution_service/trade_execution/factory.py`) and
+      the shared base's own module docstring (`ibkr_tradfi.py`), each cross-referencing this finding and this same plan
+      family's still-open todo 1 (backfill=paper=live wiring proof,
+      `tradfi_consolidated_native_ao_extract_2026_07_25.md`) as the condition for future activation. Repos:
+      execution-service@d87002da, unified-api-contracts@e39170d5.
 
 - [x] ✅ [BACKEND] P2. **instruments-service `ibkr.py` dead-code candidate** (Finding I-3): registered twice
       (`factory.py:168`, `router.py:236,329`), tested, but zero entries for adapter key `"ibkr"` in UAC's
@@ -380,3 +387,9 @@ that plan's own stated reconciliation pattern.
   ancestor of origin and re-checked codex `tradfi-databento-sourcing-ssot.md` + workspace CLAUDE.md's "removed... 2026
   -07-19" language against the now-actually-removed code — both already read true as written, no further doc edits
   needed. Flipped the checkbox citing the landed commit; no new code shipped by this slot.
+- **2026-08-03 (slot 9, backend_engineer)**: applied the operator ruling for Finding E-1 (keep tradfi order-routing
+  gated, document as intentional scaffolding rather than bridging the gates). Added STATUS notes at both gate sites
+  (`nautilus_compatibility.py::NAUTILUS_UNSUPPORTED_VENUES`, UAC `_tradfi.py` module docstring) plus
+  `factory.py::TRADFI_VENUES` and `ibkr_tradfi.py`'s module docstring, each cross-referencing this finding + the
+  still-open backfill=paper=live wiring-proof todo. No behavior change — documentation only, gates stay closed.
+  `execution-service@d87002da`, `unified-api-contracts@e39170d5`.
