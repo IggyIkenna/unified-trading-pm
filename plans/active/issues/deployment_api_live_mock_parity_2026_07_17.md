@@ -168,12 +168,20 @@ mock parity — the drift is historical, not systemic.
       `data_status_drilldown/_instruments.py`). Updated `tests/unit/test_route_deployments_mock.py`'s two pagination
       assertions to match. `quality-gates.sh` green (sentinel `e1e100e`), shipped via `quickmerge --agent`, verified on
       origin. Adjacent finding filed as a new todo below (deployment-ui's own frontend mock still returns `total`).
-- [ ] [UI] P3. **Update deployment-ui's own dev-mode/Playwright mock** (`deployment-ui/src/lib/mock-api.ts:4528-4534`,
-      the `VITE_MOCK_API`-gated frontend fixture, distinct from deployment-api's backend `CLOUD_MOCK_MODE`) to emit
-      `total_count`+`has_more` for `/api/deployments`, matching the backend contract fixed by the todo above. No live
-      consumer reads either field today, so this is stale-fixture hygiene, not a functional bug — but leaving it
-      diverged means deployment-ui's dev/Playwright surface no longer matches deployment-api's real (both live and
-      now-fixed-mock) response shape. (repo: deployment-ui)
+- [x] ✅ [UI] P3. **Update deployment-ui's own dev-mode/Playwright mock**
+      (`deployment-ui/src/lib/mock-api.ts:4528-4534`, the `VITE_MOCK_API`-gated frontend fixture, distinct from
+      deployment-api's backend `CLOUD_MOCK_MODE`) to emit `total_count`+`has_more` for `/api/deployments`, matching the
+      backend contract fixed by the todo above. No live consumer reads either field today, so this is stale-fixture
+      hygiene, not a functional bug — but leaving it diverged means deployment-ui's dev/Playwright surface no longer
+      matches deployment-api's real (both live and now-fixed-mock) response shape. (repo: deployment-ui) — **DONE
+      2026-08-03 (slot-14, ui_developer), `deployment-ui@7f5f850`.** Replaced the `total: deps.length` field with
+      `total_count: deps.length` + `has_more: false` (the endpoint returns the full mock list un-paginated, so there is
+      never a next page) — matches deployment-api's live/mock shape exactly (`_crud.py`'s `total_count`/`has_more`
+      pair). Strengthened the existing `mock-api.ph3.test.ts` regression test with real assertions on the new fields (it
+      previously only type-annotated `total: number` without ever reading it). `tsc --noEmit` clean, `eslint` clean,
+      full `vitest run` green (1096 passed), `pw:L2 ✓` (`npx playwright test --project=chromium tests/smoke/` — 428
+      passed) | regression: `src/lib/mock-api.ph3.test.ts`. `quality-gates.sh` green (sentinel `7f5f850`), shipped via
+      `quickmerge --agent`, verified on origin.
 - [x] ✅ [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
       2026-06-10 · inventory 2026-06-22 · escalations 2026-06-27) — a fixture that never moves silently trains the UI on
       stale shapes. — **DONE 2026-08-03 (slot-6, backend_engineer), `deployment-api@c0aabe0`.** Rather than a one-time
@@ -288,3 +296,14 @@ mock parity — the drift is historical, not systemic.
   `MagicMock()` stubs (not awaitable, so any route touching them false-positives 500 regardless of real correctness).
   Shelved rather than shipped flaky; filed as a new, properly-scoped follow-up todo above rather than bundled into this
   one. `quality-gates.sh` green (sentinel `6027b54`), shipped via `quickmerge --agent`, verified on origin.
+- **slot-14 2026-08-03**: Closed the adjacent `[UI]` finding slot-7 filed — `deployment-ui@7f5f850`. deployment-ui's own
+  frontend dev-mode/Playwright mock (`src/lib/mock-api.ts`, `VITE_MOCK_API`-gated — separate from deployment-api's
+  `CLOUD_MOCK_MODE`) still returned `total` for `GET /api/deployments` after the backend standardized on
+  `total_count`+`has_more` (`deployment-api@e1e100e`). Replaced `total: deps.length` with `total_count: deps.length` +
+  `has_more: false` (the fixture returns the full un-paginated list, so there's never a next page). Confirmed via
+  `getDeployments()` in `src/api/client.ts` that no live consumer reads either field, matching the original finding.
+  Strengthened `mock-api.ph3.test.ts`'s existing coverage of this endpoint with real assertions on the new fields
+  (previously only type-annotated, never read). `tsc`/`eslint` clean, full `vitest run` green (1096 passed), `pw:L2 ✓`
+  (`--project=chromium tests/smoke/`, 428 passed). `quality-gates.sh` green (sentinel `7f5f850`), shipped via
+  `quickmerge --agent`, verified on origin. One todo remains open in this doc (the exhaustive mock-endpoint crash-smoke
+  QG gate), so the doc stays active.
