@@ -139,12 +139,17 @@ NEW root cause in the same incident family, not a duplicate.
 
 ## Recommended decision
 
-- [ ] [INFRA] P0. **Fix the log path in `deployment-service/scripts/vm/reap-zombies.sh`** — change
+- [x] ✅ [INFRA] P0. **Fix the log path in `deployment-service/scripts/vm/reap-zombies.sh`** — change
       `log_path="gs://${BUCKET}/logs/${instance}/run.log"` to `log_path="gs://${BUCKET}/vm-logs/${instance}/run.log"`
       (matching the canonical SSOT — ideally source the path via the same `vm_log_stream_uri()` convention the Python
       side uses, or at minimum hardcode the correct `vm-logs/` segment). Add a regression test/fixture (or a `--dry-run`
       smoke invocation against a known-healthy running VM showing it now correctly finds `tail_text` non-empty and skips
-      it) so this exact mismatch cannot silently reappear. (repo: deployment-service)
+      it) so this exact mismatch cannot silently reappear. (repo: deployment-service) — `deployment-service@60d9f7e`.
+      Added `tests/test_reap_zombies.sh` — a stubbed-gcloud regression harness proving (a) a healthy VM at the canonical
+      `vm-logs/` path is read + skipped, (b) the queried path is exactly `vm-logs/` never `logs/`, (c) a VM with a
+      terminal `rc=` line is reaped, (d) `--dry-run` never calls delete. Verified the test fails on the pre-fix script
+      (reproduces the exact incident: healthy VM read as zombie) and passes on the fix. `quality-gates.sh` green,
+      quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
 - [ ] [INFRA] P1. **Audit whether `reap-zombies.sh` has ever been invoked against prod in a way that could have silently
       killed other healthy VMs** — check `gcloud logging read` for `v1.compute.instances.delete` events fleet-wide over
       the last 30 days where `callerSuppliedUserAgent` matches the `gcloud` CLI (`from-script/True`, NOT the Python
@@ -178,3 +183,14 @@ NEW root cause in the same incident family, not a duplicate.
   session stayed in `data_engineering` craft per the craft-not-domain rule; `reap-zombies.sh` is infra-lifecycle
   tooling, not data-pipeline code). No GCS deletes/mutations performed by this investigation — every action was
   read-only (log/operation inspection, GCS listing, git history) plus the one legitimate VM relaunch.
+- **2026-08-03T~11:05Z** (AO dispatch, slot 10, `infra`) — Fixed todo 1: `reap-zombies.sh`'s `log_path` now reads
+  `gs://${BUCKET}/vm-logs/${instance}/run.log` (was `.../logs/${instance}/run.log`). Added
+  `deployment-service/tests/test_reap_zombies.sh`, a stubbed-`gcloud` shell harness (same pattern as
+  `tests/test_launch_expected_universe_v2.sh`) covering: healthy-VM skip at the canonical path, a regression guard
+  asserting the exact queried path, terminal-`rc=` reap, and `--dry-run` never deleting. Confirmed empirically that the
+  test FAILS against the pre-fix script (reproduces the incident: a healthy VM at an old creation timestamp gets reaped
+  because the wrong path reads empty) and PASSES against the fix — this is a real regression guard, not a vacuous one.
+  `quality-gates.sh` full run green (3019 passed); shipped via `quickmerge --agent`, `deployment-service@60d9f7e`
+  verified ancestor of `origin/live-defi-rollout`. Todos 2-4 (audit for other false-positive reaps, determine what
+  invoked the script, harden the source-correction script's checkpoint cadence) remain open — out of this task's scope
+  (single P0 todo dispatched).
