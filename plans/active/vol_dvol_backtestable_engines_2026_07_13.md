@@ -200,8 +200,32 @@ what's missing.
       `strategy_service/engine/strategies/v2/factory.py` (`ARCHETYPE_ENGINE_REGISTRY`), so `not_available` still holds
       and nothing has drifted since the decision was recorded. No concrete alternative param-sweep candidate has been
       proposed since filing, so per the todo's own instruction there is no further mechanical action — flipping closed.
-- [ ] [SCRIPT] P1. Same backtest-then-conditionally-register sequence for **VOL_ARB_RV_IV**
-      (`vol_trading/arb_rv_iv.py`). Repo: strategy-service.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-03 (slot-2, `backend_engineer`).** Same backtest-then-conditionally-register
+      sequence for **VOL_ARB_RV_IV** (`vol_trading/arb_rv_iv.py`) — strategy-service@`8996e3c2` (script wiring
+      `8c9198da`, a scripts-package import-collision fix `8996e3c2`). Real production-data backtest run: both
+      underlyings came back NON-passing (near-zero Sharpe, strongly negative PnL) — see Progress Log below for the full
+      methodology + results. Verified `VOL_ARB_RV_IV` is NOT in `ARCHETYPE_ENGINE_REGISTRY`
+      (`strategy_service/engine/strategies/v2/factory.py` — zero hits), so `not_available` is already the correct live
+      state; no registry code change made. Filed the `BLOCKED-INSUFFICIENT-EDGE` decision-record todo below citing the
+      exact metrics.
+- [ ] [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_ARB_RV_IV fails the HARD CONTRACT bar, no further work planned
+      unless a concrete param-sweep candidate is proposed.** The 2026-08-03 (slot-2) real backtest — `iv_atm` from the
+      captured DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series,
+      full honest intersection window 2021-03-24→2026-05-22 (1866/1886 candidate days, same window VOL_CARRY used),
+      `entry_gap=0.03` (arb_rv_iv.py default, untested), `vega_budget_per_leg=10` — came back non-passing for both
+      underlyings: BTC `sharpe_ratio=0.0099`, `sortino_ratio=0.0082`, `total_pnl=-9826.53`, `win_rate=24.1%` (1786
+      instructions/3572 fills); ETH `sharpe_ratio=0.0095`, `sortino_ratio=0.0080`, `total_pnl=-9612.40`,
+      `win_rate=23.7%` (1784 instructions/3568 fills). Both Sharpes are indistinguishable-from-noise (same bar VOL_CARRY
+      was held to), PnL is strongly negative for both assets (this engine has no exit/flatten state machine — unlike
+      VOL_CARRY, it re-enters a fresh straddle on EVERY day `|iv_atm - rv| >= entry_gap`, which is why trade count is
+      ~70x VOL_CARRY's at this same threshold), and win rate ~24% has no compensating asymmetric payoff — this is a
+      genuine "no edge at the default threshold" result, not a methodology gap (real captured data both legs, real
+      `GroupBRunner` wiring, full available window, unmodified engine code — the script does not add position-tracking
+      logic the engine itself doesn't have). **Not scheduling a param sweep here** — `entry_gap` was left at its default
+      and a different threshold MIGHT clear the bar (a wider gap would fire far less often, closer to VOL_CARRY's trade
+      cadence), but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to pursue, not a
+      mechanical follow-up. VOL_ARB_RV_IV stays `not_available`; re-open only if a specific alternative parameterization
+      is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
 - [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
       for whichever of the 2 engines actually flipped to `available` (may be 0, 1, or 2 — do not force both). Repo:
       unified-api-contracts.
@@ -332,3 +356,44 @@ what's missing.
   alternative param-sweep candidate has since been proposed (the only stated condition for re-opening). Next open todo
   is the `[SCRIPT] P1` VOL_ARB_RV_IV backtest-then-conditionally-register todo below — separate engine, independent
   verdict, genuinely dispatchable next.
+
+- 2026-08-03 (slot-2, `backend_engineer`): Wired + ran the VOL_ARB_RV_IV DVOL backtest — strategy-service@`8996e3c2`
+  (`scripts/vol_arb_rv_iv_dvol_backtest.py` + `tests/unit/scripts/test_dvol_backtest_data.py`, full `quality-gates.sh`
+  green before ship). **Refactor note**: extracted the DVOL/underlying-close fetch + tick-assembly helpers VOL_CARRY's
+  script already had (identical logic — neither archetype needs anything archetype-specific in the data layer) into a
+  new shared `scripts/_dvol_backtest_data.py` module, and updated `vol_carry_dvol_backtest.py` to import from it instead
+  of duplicating ~150 lines; its superseded `tests/unit/scripts/test_vol_carry_dvol_backtest.py` was folded into the new
+  shared test file (same test bodies, now covering the shared module directly rather than via the carry script's
+  re-exports). **Import-path pitfall found
+  - fixed along the way**: the first commit (`8c9198da`) wired the shared module via
+    `from scripts import _dvol_backtest_data`, which passed a direct-python smoke check but hit a real pytest collection
+    `ImportError` under the full `quality-gates.sh` run — `unified-api-contracts` installs its OWN `scripts/__init__.py`
+    package (a real, non-namespace package), which wins the ambiguous `scripts` name over this repo's plain `scripts/`
+    directory whenever its site-packages entry is resolved first on `sys.path`. Fixed (`8996e3c2`) by having both
+    scripts insert their own directory onto `sys.path` and import the sibling module by its bare (unqualified) name
+    instead, and having the test module load it via `importlib.util.spec_from_file_location` by explicit file path — the
+    same technique the superseded test file already used for exactly this class of problem. Full `quality-gates.sh`
+    re-run green after the fix (sentinel matched HEAD); shipped via quickmerge, verified on `origin/live-defi-rollout`.
+
+  **Real backtest run** (production GCS data, same honest-intersection window VOL_CARRY used: `2021-03-24`→`2026-05-22`,
+  1866/1886 candidate days — the 20-day gap is the RV lookback warmup): ran the UNMODIFIED `VolArbRvIvEngine` (no
+  position-tracking added — the engine itself has no in-position/flatten state machine; it emits a fresh straddle
+  instruction every day `|iv_atm - rv| >= entry_gap`, unlike VOL_CARRY's open/hold/flatten cycle) via the real
+  `GroupBRunner`, `entry_gap=0.03` (arb_rv_iv.py default, untested) + `vega_budget_per_leg=10` (matching VOL_CARRY's
+  convention). **Results (both underlyings, full window, no synthetic data)**:
+  - BTC: 1786 atomic instructions / 3572 fills, `total_pnl=-9826.53`, `sharpe_ratio=0.0099`, `sortino_ratio=0.0082`,
+    `win_rate=24.1%`.
+  - ETH: 1784 atomic instructions / 3568 fills, `total_pnl=-9612.40`, `sharpe_ratio=0.0095`, `sortino_ratio=0.0080`,
+    `win_rate=23.7%`. Full JSON re-runnable:
+    `GCP_PROJECT_ID=central-element-323112 python scripts/vol_arb_rv_iv_dvol_backtest.py --underlyings BTC,ETH` (this
+    script's `resolve_bucket_name(...)` call needs `GCP_PROJECT_ID` set in the shell env — not exported by default on
+    this host; `gcloud config get-value project` gives the right value). **Verdict against the HARD CONTRACT bar**: does
+    NOT clear it — both Sharpes are indistinguishable-from-noise (same bar VOL_CARRY failed on), PnL is strongly
+    negative for both assets, and win rate ~24% has no compensating asymmetric payoff. Trade count is ~70x VOL_CARRY's
+    at this window (the no-flatten re-entry-every-threshold-day behavior described above), which also explains the much
+    larger absolute PnL loss at the same per-leg size. Flipped the register-or-not todo `[x]` directly (folded the two
+    steps VOL_CARRY split across separate todos, since this plan only carries one combined todo for VOL_ARB_RV_IV) and
+    filed the `BLOCKED-INSUFFICIENT-EDGE` decision record above citing these numbers. Next: the `[SCRIPT] P2`
+    matrix-regen todo below is a separate task (not dispatched to this slot) — since 0 of 2 engines flipped to
+    `available`, whoever picks it up should confirm the regenerated matrix is unchanged rather than assume no regen is
+    needed.
