@@ -20,7 +20,7 @@ summary: >-
   canonical set, where a blind enum addition needs the denominator/blast-radius caution from that doc's own RESULT 4
   ("UAC canonical-set additions are NOT safe-code") applied first. NOT investigated further here (read-only audit
   scope); filed per this session's findings-closure requirement.
-status: open
+status: complete
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -76,6 +76,10 @@ depends_on: []
 ---
 
 # Sports MDPS instrument_type market-token SSOT gap
+
+> **✅ ARCHIVED 2026-08-03** — 2/2 todos done, 0 open checkboxes, unlocked. Both the UAC registry export
+> (`unified-api-contracts@26092ac8`) and the deployment-api wiring + regression test
+> (`deployment-api@7988451`/`@36f6da1`) landed; the 34→4 non-canonical drop is proven by a permanent test.
 
 ## What I found
 
