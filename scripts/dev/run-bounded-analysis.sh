@@ -45,7 +45,7 @@
 # whole process group the first time RSS exceeds the cap.
 #
 # This used to be a per-process RLIMIT_AS hard cap via `ulimit -v` instead — REMOVED
-# 2026-08-03 (`read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md` Todo 2):
+# 2026-08-03 (/plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md Todo 2):
 # RLIMIT_AS caps virtual address space, not physical residency, and pyarrow/grpc-heavy
 # workloads routinely reserve large virtual-address arenas (mmap pools, arena allocators)
 # well beyond what they actually touch — confirmed live, an 8G `ulimit -v` cap spuriously
