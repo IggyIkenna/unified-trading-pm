@@ -206,7 +206,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       (backfill + investigation todos live there, not here). `commodity` remains genuinely unwired (flat JSON
       `signal.json`, not parquet, positional day+feature_group with no hive keys at all, own dedicated bucket) — split
       to todo 2c below rather than guessed at in this dispatch.
-- [ ] 2c. [SCRIPT] P2. **Design + wire the `commodity` feature_family** into `feature_orphan_sweep.py` — genuinely
+- [x] 2c. ✅ [SCRIPT] P2. **Design + wire the `commodity` feature_family** into `feature_orphan_sweep.py` — genuinely
       different shape from every other wired family: writes a flat JSON `signal.json` (not parquet) at
       `{commodity}/{date}/signal.json` with NEITHER segment hive-style (both `commodity` and `date` are raw positional
       segments), no `feature_group`/`day` hive keys at all, and its own dedicated bucket (`features-commodity` kind,
@@ -215,7 +215,24 @@ lets each one be built, validated, and run to real completion on its own timelin
       design pass, not a mechanical port of `calendar`'s or `cross_instrument`'s positional handling. See
       `feature_orphan_sweep.py`'s module docstring for the full citation trail
       (`commodity/cli/handlers/batch_handler.py` `_write_signal_to_gcs`/`_write_signal_and_manifest`). Repo:
-      features-service.
+      features-service. **Built + unit-tested 2026-08-03** (`features-service@fa18180b`): added
+      `FamilyConfig.     object_suffix` (generalizing the prior hardcoded `.parquet` gate — `commodity=".json"`), a
+      dedicated `_COMMODITY_POSITIONAL_FAMILIES` path in `extract_feature_group`/new `extract_day` (both segments
+      positional, no hive keys), and generalized the `_infra_label`/`_checkpoint_path` helpers for commodity's
+      whole-bucket `walk_prefix=""` walk (that bucket is dedicated solely to commodity, so a whole-bucket walk is still
+      a single-walk of exactly this family's own data). Also found + fixed a genuine CASE MISMATCH: the object path
+      segment is lower-cased (`signal.commodity.lower()`, batch_handler.py:207) but the manifest `feature_group` column
+      is written from the un-lowered `commodity` code (`config.enabled_commodities` defaults to upper-case
+      `["NG", "CL"]`) — without upper-casing the extracted path segment, every real captured commodity object would
+      misclassify as a false orphan. 8 new/updated unit tests added (61 total, all green); commodity is now the last of
+      the 8 UAC `FeatureFamily` members wired (`_UNSUPPORTED_FAMILIES` now empty). Real-data VM-run validation
+      (mirroring todo 1's + todo 2b's own real-prod-data validation pattern) is split to todo 2d below, not a gate on
+      this todo (which scoped BUILD + WIRE only, per this todo's own title).
+- [ ] 2d. [SCRIPT] P2. **Validate the `commodity` feature_orphan_sweep wiring against real GCS data** (Tier-2 SPOT VM,
+      never in-session — per STEP 0.56 of `unified-trading-pm/agents/data_engineering.md`) — mirrors todo 1's + todo
+      2b's own real-prod-data validation (which each caught a genuine bug: todo 1's sports bucket-resolution bug, todo
+      2c's case-mismatch bug caught by reading the code — a real VM run against the live `features-commodity` bucket may
+      surface further gaps this session's code-reading alone could not). Repo: features-service.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
       not day-sharded); scope the actual shard key first before writing the sweep (may need its own design pass, not a
       mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.
@@ -277,3 +294,22 @@ lets each one be built, validated, and run to real completion on its own timelin
   Flipped todo 2b — genuinely complete (tool validated against real data for all 5 wired families, 2 of the 3
   originally-unwired families now wired). Split `commodity` (JSON not parquet, needs its own classification path) to new
   todo 2c rather than guess at its shape under time pressure.
+- **2026-08-03** (AO dispatch, slot 14) — Picked up todo 2c. Wired `commodity` (`features-service@fa18180b`): read
+  `commodity/cli/handlers/batch_handler.py`'s `_write_signal_to_gcs`/`_write_signal_and_manifest` + `config.py`'s
+  `get_output_bucket` to confirm the exact write shape (`{commodity.lower()}/{date}/signal.json`, no hive keys at all).
+  Generalized the sweep's object-type gate from a hardcoded `.parquet` check to a per-family
+  `FamilyConfig.object_suffix` (default `.parquet`, `commodity=".json"`) — the prior gate would have misclassified every
+  real commodity object as manifest-infra, masking real orphans, exactly the risk this todo's own text flagged. Added a
+  dedicated positional-parsing path (`_COMMODITY_POSITIONAL_FAMILIES`) for both feature_group (index 0) and a new
+  `extract_day` helper (index 1), since neither segment is hive-style. Found + fixed a genuine CASE MISMATCH the design
+  brief hadn't anticipated: the object path segment is lower-cased at write time (`signal.commodity.lower()`) but the
+  manifest `feature_group` column carries the un-lowered commodity code (`config.enabled_commodities` defaults to
+  `["NG", "CL"]`, upper-case) — without normalizing, a real captured object would never match its manifest row and would
+  misclassify as a false orphan; `extract_feature_group` upper-cases the positional segment for this family
+  specifically. Also generalized `_infra_label`/`_checkpoint_path` for commodity's `walk_prefix=""` (whole-bucket walk —
+  safe here since the bucket is dedicated solely to commodity), fixing a latent leading-slash bug those helpers would
+  have hit for any empty-prefix family. 8 new/updated unit tests (61 total, all green); `_UNSUPPORTED_FAMILIES` is now
+  empty — commodity was the last of the 8 UAC `FeatureFamily` members to wire. Flipped todo 2c — scope was BUILD + WIRE
+  (mirrors todo 2's own build/validate split), genuinely done. Added todo 2d for the real-data Tier-2 SPOT VM validation
+  (never in-session per STEP 0.56), mirroring todo 1's + todo 2b's own real-prod-data validation pattern, rather than
+  skip it silently.
