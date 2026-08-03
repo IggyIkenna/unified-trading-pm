@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-              pushed the live plan over the 1000-line hard cap. Moved verbatim to
-              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                  chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                  pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                  the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                  chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                  2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                  6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                  timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                  `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-              `returns`/onchain reconfirmed). Evidence:
-              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                  **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                  `returns`/onchain reconfirmed). Evidence:
+                  `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -557,3 +557,20 @@ part of this plan was migrated elsewhere.
   "status: draft — NOT INGESTED / NOT DISPATCHED") and its summary line are STALE against the current frontmatter
   (`status: active`) — flagging for a future doc-body fix; left unedited per this pass's scope (frontmatter + Progress
   Log only).
+- **2026-08-03 (slot-10, data_engineering craft) — C6 Pyth `oracle_prices` backfill: found already in-flight from an
+  apparently-interrupted prior dispatch on this exact todo (this session's own `/boot` returned
+  `already_in_progress: true` with zero preceding Progress Log entry, so the prior session must have launched work but
+  never got to log it).** Live-verified via `gcloud compute instances list` + `gcloud compute instances describe` (not
+  from memory): two SPOT VMs RUNNING in `asia-northeast1-c`, both `VM_OPERATION=collect-oracle-prices`,
+  `VM_ASSET_GROUP=DEFI`, `DEPLOYMENT_ENV=prod`. `pyth-lst-backfill-20260803-081601` (`VM_START_DATE=2026-04-15`,
+  `VM_END_DATE=2026-08-03`) carries the **exact C6 gap window** — this is the real fix.
+  `mtds-pyth-archive-20260803-074918` (`VM_START_DATE=2026-05-22`, `VM_END_DATE=2026-08-03`, launched ~27 min earlier)
+  is a redundant SUBSET of the same window, most likely an earlier mis-scoped attempt before the correct one was
+  launched — harmless (SPOT, idempotent re-fetch, `MANIFEST_PER_VM_SHARDS=true` + last-writer-wins consolidation), not
+  deleted (VM-delete guardrail: it is NOT stale — `run.log` tail confirms it is actively progressing through
+  `2026-07-14` with zero errors, most of its window already done, no benefit to killing it this late). Did NOT relaunch
+  — no new VM needed; both are producing clean real captures (Pyth Hermes + multi-chain Chainlink + AAVE oracle feeds,
+  zero tracebacks in either tail). Monitoring both to `DEPLOYMENT_COMPLETED exit_code=0` / self-shutdown via a
+  background watch; will re-verify the consolidated `market-data-tick-defi` `_index` shows the full
+  `2026-04-15..present` window `captured`/`empty_confirmed` with zero gap days before flipping this checkbox. **Checkbox
+  stays UNFLIPPED** pending that verification.
