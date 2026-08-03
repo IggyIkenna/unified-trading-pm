@@ -560,3 +560,26 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   Both remaining todos in this doc (`[DATA] P3` and the always-open Progress Log) are unaffected. No GCS/manifest write,
   no VM launch; PM plan-doc edit only.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-52c156):** A DP-FETCH-009 CRITICAL page for
+  `(cefi, book_snapshot_5)` dispatched this worker with no issue doc pre-linked (`context`: "300674 attempted_failed
+  cells of 1123966 attempted; ratio 26.8%") but the alert body itself already carried the
+  `attempted_failed_staleness.py` verdict — **"STATIC BACKLOG — only 210 attempted_failed row(s) in the last 1d (below
+  the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression."** This is the
+  exact `(cefi, book_snapshot_5)` cell this doc's own § "Root cause — per data_type" and the
+  `VENUE_FETCH_FAILED`/DERIBIT-combo-`expiry_date` sections already root-caused in detail (34.4% ratio / 378,817
+  attempted_failed at this doc's 2026-07-23 writing vs 26.8% / 300,674 now — the ratio has fallen, consistent with the
+  guard-widen fix + partial organic recovery already documented, not a new regression). Did not re-run a fresh manifest
+  read or attempt a new root-cause pass — the alert's own staleness label plus this doc's existing findings are
+  sufficient to confirm: no new code fix is required, the residual backlog is the same historical DERIBIT-combo
+  - Tardis-403/aiodns/expiry_date population already covered by the open `[DATA] P3` todo (unattributed
+    `VENUE_FETCH_FAILED` sub-causes) and gated on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s Track-2
+    resume (still blocked on Track-1 per the 2026-07-26 entry above — not independently re-checked this session).
+    **Root-cause confirmation this session adds**: the 2026-07-29 paging-cadence fix (`alerting-service@bb76cae`, this
+    doc's now-`[x]` `[BACKEND]` P2 todo) downgrades the SLACK/PagerDuty severity for a STATIC BACKLOG cell from CRITICAL
+    to WARN, but a **separate mechanism — the escalation fast path (`repository_dispatch escalate-to-orchestrator`,
+    `wall_type=data_pipeline_failure`) — is NOT covered by that fix** and still spawned this full worker session for the
+    identical already-tracked condition. This is precisely the gap
+    `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` describes (its P2 `[DESIGN]`/`[CODE]` todos are
+    still open, unimplemented) — cross-linking this occurrence there as further corroborating evidence rather than
+    attempting a unilateral fix of that still-gated design decision. No GCS/manifest write, no VM launch, no code
+    shipped this session (PM plan-doc edit only).

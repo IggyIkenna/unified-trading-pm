@@ -331,3 +331,10 @@ regression) is worse.**
     operator/design decision on Option A/B/C.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
   body; no change needed.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-52c156, slot 5) — another `(cefi, book_snapshot_5)`
+  dispatch (300,674/1,123,966, ratio 26.8% — ratio has fallen from the 34.4% originally logged in the book_snapshot_5
+  doc, no regression).** Alert already carried the STATIC BACKLOG / decaying-trickle label (210 rows/24h, below the
+  500-row materiality floor). No fresh manifest read, no code change — full writeup in the book_snapshot_5 doc's own
+  Progress Log. Further corroborates Option A: the materiality/severity fix (`alerting-service@bb76cae`) only touches
+  Slack/PagerDuty routing, not the separate escalation fast path that spawned this session — still the open gap this doc
+  tracks.
