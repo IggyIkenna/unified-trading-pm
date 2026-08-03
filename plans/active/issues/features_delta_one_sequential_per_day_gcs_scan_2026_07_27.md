@@ -119,9 +119,34 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       QG-green (17,908 tests passed) + quickmerge shipped. The end-to-end from-scratch wall-clock re-measurement in the
       "Done when" clause is the SAME work as the next todo below (re-measure real per-shard completion time) — not
       re-run separately here since it requires a real multi-hour VM backfill, out of scope for this code-change todo.
-- [ ] [DATA] P2. Once fixed, re-measure the real per-shard completion time and correct `_FAMILY_TIMEOUT_OVERRIDES` in
+- [x] [DATA] P2. ✅ Once fixed, re-measure the real per-shard completion time and correct `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` (likely lowerable back toward the generic default) and the
-      SKILL.md benchmark section — same "Done when" the companion timeout issue's P2 todo already asks for.
+      SKILL.md benchmark section — same "Done when" the companion timeout issue's P2 todo already asks for. —
+      **RE-MEASURED 2026-08-03, slot-14, data_engineering — honest finding: the override was RAISED, not lowered** (real
+      evidence contradicted the "likely lowerable" framing). Used real, already-captured post-fix GCS/VM evidence rather
+      than launching a fresh multi-hour VM (single-walk/efficiency north-star — this is genuine `gcloud`/GCS-verified
+      data, not a guess): VM `features-e2e-cefi-20260730-133536-025349` (launched 2026-07-30, well after
+      `features-service@1ad44550` landed 2026-07-27 15:02 UTC) ran a genuine from-scratch CEFI:delta_one force leg
+      (254/254 instruments, 18 feature groups, 4-worker pool) and reached `EXIT_STATUS=0` at **61793s (17h9m53s)** — but
+      only a PARTIAL completion: 10/18 groups succeeded, the other 8 failed on an unrelated, already-tracked bug
+      (`orchestrator_returned_false`, see
+      `plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`) — not a timeout. Per-group
+      timeline confirmed groups run on a 4-worker pool (not fully sequential), and one group alone (`moving_averages`,
+      the 200-candle-lookback @ 24h-output-timeframe cell) took **10h20m** on its own slot; a failed group (`returns`)
+      still ran 5h23m before erroring, so the failures were not uniformly fast. A genuine 18/18 completion has still
+      never been directly observed — blocked by that unrelated bug, not by this timeout. 61793s already consumed 86% of
+      the prior 72000s budget with 8 groups' worth of real compute unaccounted for; extrapolating the 10 confirmed
+      successes' per-group average across all 18 groups at the same 4-way concurrency projects a full completion around
+      **~24h** — ABOVE the prior 72000s (20h) ceiling. **Real bottleneck for this cell is per-day candle
+      download+merge/feature-compute cost for large-lookback groups, not the GCS existence-probe round trips the P1 fix
+      batched — a distinct, still-open bottleneck**, consistent with why the fix (which targeted I/O round-trips) did
+      not bring this cell's wall-clock down materially. Shipped: `_FAMILY_TIMEOUT_OVERRIDES[("delta_one","CEFI")]`
+      raised 72000s→108000s (30h, ~25% margin over the ~24h projection) with the full reasoning as a code comment, 1 new
+      regression test (`test_cefi_delta_one_override_exceeds_its_measured_partial_completion`) pinning the override
+      against the real 61793s measurement, and this SKILL.md's benchmark section corrected to match —
+      `features-service@086812b0` (QG green, verified on origin). **Caveat carried forward**: do not lower this override
+      again without a genuine, directly-observed 18/18 completion (currently blocked by the unrelated
+      `orchestrator_returned_false` bug, not by this todo's scope).
 - [ ] [DATA] P2. Check whether the 8 currently-running `features-e2e-cefi-*`/`features-e2e-tradfi-*` VMs (as of
       2026-07-27 12:57 UTC) ever produce `EXIT_STATUS`, and if any are genuinely stuck (not just slow) rather than
       progressing, per the VM-delete guardrail (`agents/infra.md` STEP 0.65) — do not force-delete a VM that is still
@@ -204,3 +229,18 @@ independently prove it. **Next**: P1 batch/parallelize todo (below) is unblocked
   committed SHA before quickmerge. Did NOT re-run the full from-scratch CEFI wall-clock measurement described in the
   todo's "Done when" — that requires a real multi-hour VM backfill and is the same work as the next todo (re-measure +
   correct `_FAMILY_TIMEOUT_OVERRIDES`), left for that todo rather than duplicated here.
+- 2026-08-03 (slot-14, data_engineering): Picked up the re-measure/correct-override todo. Rather than launching a fresh
+  multi-hour VM (efficiency north-star — real post-fix evidence already existed in GCS), pulled the actual
+  post-`1ad44550` CEFI:delta_one VM run history (`gcloud storage ls`/`cat` on
+  `gs://deployment-scripts-central-element-323112/vm-logs/`) and found a genuine from-scratch force-leg run
+  (`features-e2e-cefi-20260730-133536-025349`) that reached `EXIT_STATUS=0` at 61793s but only 10/18 groups succeeded (8
+  failed on the unrelated `orchestrator_returned_false` bug). Downloaded the full 1.69M-line run.log and extracted
+  per-group start/complete timestamps to confirm the pool is 4-worker concurrent (not sequential) and that
+  `moving_averages` alone took 10h20m. Concluded the override should be RAISED (108000s), not lowered as the todo's own
+  speculative framing suggested — real evidence (61793s partial run already at 86% of the prior 72000s budget, plus a
+  ~24h full-completion projection) contradicted that framing, so followed the evidence per CLAUDE.md's "trust the actual
+  distribution, not the assumed number." Shipped `features-service@086812b0` (code comment + override value + 1 new
+  regression test, QG green, verified on origin) and this doc's SKILL.md pointer
+  (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`). Did not touch the separate
+  `orchestrator_returned_false` bug (already tracked elsewhere) or the still-open "check the 8 running VMs" todo below
+  (out of this todo's scope — those VMs are 6+ days stale and have almost certainly already self-deleted).
