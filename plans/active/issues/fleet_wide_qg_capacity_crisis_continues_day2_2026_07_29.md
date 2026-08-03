@@ -41,7 +41,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-02
+last_updated: 2026-08-03
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -614,3 +614,24 @@ not just noting.
   exact repo+signature within ~90min — reinforcing the `agt-68298f`/`agt-dbfcd7` entries' own dispatcher-dedupe
   observation: the escalation dispatcher is re-firing on a still-progressing (not stuck) `K=1` FIFO queue faster than it
   can drain.
+
+- **2026-08-03 ~00:36-00:44Z (cicd escalation `agt-6db91d`, slot 2, `market-data-processing-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`)** — FOURTH dispatch for this exact repo+wall within the same rolling window
+  as `agt-68298f`/`agt-dbfcd7`/`agt-2c266f` above (all within ~90min), independently re-derived the identical diagnosis
+  before finding the `agt-2c266f` entry immediately above it: both failing runs (`30758737872` 17:22:44Z, `30772053085`
+  23:20:31Z, both against LDR HEAD `9642cbb`) show the same `Coverage floor` → 14-16min silence →
+  `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` teardown crash → `exit=1` shape, zero
+  `FAILED tests/...` lines in either raw log; `checks` slice green both times. Did not re-run `quality-gates.sh` locally
+  — `agt-2c266f` (3-8min earlier, same-class investigation) already verified `✅ ALL QUALITY GATES PASSED (137s)` at the
+  current LDR HEAD `beb9fed` (one commit ahead of the failing SHA, an unrelated migration-script fix), and re-running
+  the same gate on this already-oversubscribed host would only add load. Live CI cross-check: the same
+  `workflow_dispatch` run `30774747037` (started `00:33:20Z`) `agt-2c266f` observed was STILL genuinely progressing at
+  this check (`content sentinel` success, `QG slice (tests)` `in_progress`, `QG slice (checks)` `queued` — real FIFO
+  progress, not a stuck wedge). `GET /api/repo-blockers` → `open: []` — nothing to fast-path. **Disposition: no
+  code/test/workflow change made or needed.** Did not add a 6th redundant retrigger. This is the fourth escalation
+  dispatched for the identical repo+wall condition in ~90min (`agt-68298f`, `agt-dbfcd7`, `agt-2c266f`, this one) —
+  strongly reinforcing the dispatcher-dedupe gap those entries already flagged: consider this a fourth data point that
+  the escalation dispatcher should dedupe against an already-active/recently-resolved escalation for the same
+  `(repo, wall_type)` pair before spawning another one-shot worker, rather than relying on each new worker to
+  independently re-discover "someone already handled this." Slot left clean on `live-defi-rollout` (only this doc
+  touched; `market-data-processing-service` working tree already clean).
