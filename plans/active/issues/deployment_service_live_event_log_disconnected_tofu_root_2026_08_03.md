@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [terraform, opentofu, gcp, state-hygiene, live_event_log]
 related:
   [
-    /plans/active/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md,
+    /plans/archive/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md,
     /codex/05-infrastructure/deployment-service-gcp-tofu-state.md,
   ]
 created: "2026-08-03"
