@@ -17,7 +17,6 @@ known_broken:
   - "codex/04-architecture/README.md::compute.md"
   - "codex/04-architecture/README.md::scaling.md"
   - "codex/04-architecture/batch-live-architecture.md::communication-patterns.md"
-  - "codex/05-infrastructure/workspace-root-variable.md::ci-cd.md"
   - "codex/06-coding-standards/README.md::./PREK_MIGRATION_WALKTHROUGH.md"
   - "codex/06-coding-standards/README.md::configuration-management.md"
   - "codex/06-coding-standards/README.md::formatting-standards.md"

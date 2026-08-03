@@ -407,12 +407,13 @@ dedicated-VM (never in-session, per the heavy-I/O rule):**
 **Residual — was NOT covered by this migration, tracked + progressively closed in a separate issue doc:** discovered
 2026-08-03 during 7c/7d — sports's live writer never actually emitted the assumed flat `day=/venue=` shape (it emitted a
 THIRD, unrecognized shape, `day=/league=/venue=`, ~172,595 objects), and prediction had TWO additional unrecognized
-shapes (`canonical_question_group=/day=/venue=` + `market_lifecycle`'s `day=/group=/venue=`, ~25,745 objects combined,
-group-before-day). **Status as of 2026-08-03 (same day):** sports's writer fix + migration-tool extension are
-CODE-SHIPPED (`instruments-service@ba87cc32`) but the writer fix is not yet confirmed live in production (see "live
-writer" row above) and the ~172,595-object historical backlog has not yet been applied/copied; prediction's two shapes
-are recognized + migration-tool-extended (`instruments-service@aaa0866c`), dropping `unrecognized` from 25,745 to 12,463
-— the residual 12,463 is a THIRD, even older prediction shape (`day=/market=/venue=`, predates the
+shapes (`canonical_question_group=/day=/venue=` + `market_lifecycle`'s `day=/group=/venue=`, group-before-day) — these
+two plus a third, older prediction shape (see below) totaled 25,745 unrecognized objects combined, not just the two
+named shapes. **Status as of 2026-08-03 (same day):** sports's writer fix + migration-tool extension are CODE-SHIPPED
+(`instruments-service@ba87cc32`) but the writer fix is not yet confirmed live in production (see "live writer" row
+above) and the ~172,595-object historical backlog has not yet been applied/copied; prediction's two shapes are
+recognized + migration-tool-extended (`instruments-service@aaa0866c`), dropping `unrecognized` from 25,745 to 12,463 —
+the residual 12,463 is a THIRD, even older prediction shape (`day=/market=/venue=`, predates the
 `canonical_question_group` scheme, needs an operator ruling before it can be migrated, not a mechanical rename). Full
 writeup + todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution policy, the residual
 `market=` shape):
