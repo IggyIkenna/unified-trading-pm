@@ -389,11 +389,17 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       BOTH the `.tabs` strip and the `/opt/github-glue-runners*` collapse resolve to the SAME final path when running on
       this one host (they're currently two different literal constants). SSOT for the fix already shipped:
       `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
-- [ ] [OPERATOR] P3. Block ticket `BLK-7eedce54` (raised via `cicd`'s `/blocked`, AO escalation system) has its
-      underlying issue resolved and documented (this plan + the glue-runner ledger fork), but its status was never
-      flipped in the AO `/blocked` ticket system itself — no verified API access from the interactive session that did
-      the fix (dashboard JWT / internal proxy auth not configured there). If the operator wants the ticket-system record
-      formally closed, flip it via the dashboard or grant a session the needed auth.
+- [x] [OPERATOR] P3. ~~Block ticket `BLK-7eedce54` ... needs its ticket-system status flipped~~ — 2026-08-04:
+      **CORRECTED, nothing to do.** Queried `state.db`'s `blocked_queue` table directly (read-only, via SSM same-box
+      trust boundary — no JWT needed, same mechanism `check-ao-backlog-status.sh` uses for its GET calls). Confirmed
+      `BLK-7eedce54` was already `answered_at=2026-08-02 16:01:50`, `answered_by=main` — answered within ~3min of being
+      filed, over a day before this plan's glue-runner fork even existed. This plan's own framing ("flagged via `cicd`'s
+      `/blocked` ... rather than fixed in-scope") overstated what the ticket actually was: the real question (from
+      `agt-fea289`, slot 2) was narrower — "keep holding this slot waiting on a slow CI retry, or exit given host
+      contention" — answered "exit now," with the systemic resource-contention finding explicitly routed to a DIFFERENT
+      already-open escalation, not deferred as its own new ticket. There was never an open ticket-system record waiting
+      on the ledger fix; the prior "needs operator API access to close it" framing was itself the error, not a genuine
+      gap.
 
 ## Progress Log
 
