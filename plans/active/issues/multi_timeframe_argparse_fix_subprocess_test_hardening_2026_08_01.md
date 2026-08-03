@@ -68,11 +68,14 @@ Two blind spots the in-process test has, that the subprocess test closes:
 
 # Follow-up todo
 
-- [ ] [BACKEND] P3. Port the subprocess-based `--help` exit-code regression test below onto the landed `multi_timeframe`
-      argparse-dup fix (`features-service@39cc8653`), in `tests/multi_timeframe/unit/test_cli_main.py`. Confirm it
-      PASSES against the landed fix and FAILS if the fix is reverted (parser-construction dup restored). Cite this doc +
-      source SHA `b0a58bb9` in the commit. The test body (verbatim from the discarded `b0a58bb9`, so no reflog recovery
-      is needed once this doc lands):
+- [x] ✅ [BACKEND] P3. Port the subprocess-based `--help` exit-code regression test below onto the landed
+      `multi_timeframe` — features-service@0f894013 (added `test_cli_help_exits_zero_via_subprocess` to
+      `tests/multi_timeframe/unit/test_cli_main.py`; confirmed PASSES against landed fix `39cc8653` and FAILS with the
+      exact `ArgumentError: argument --start-date:     conflicting option string` when the parser-construction dup is
+      reintroduced, matching this todo's done-when). argparse-dup fix (`features-service@39cc8653`), in
+      `tests/multi_timeframe/unit/test_cli_main.py`. Confirm it PASSES against the landed fix and FAILS if the fix is
+      reverted (parser-construction dup restored). Cite this doc + source SHA `b0a58bb9` in the commit. The test body
+      (verbatim from the discarded `b0a58bb9`, so no reflog recovery is needed once this doc lands):
 
 ```python
     def test_cli_help_exits_zero_via_subprocess(self) -> None:
