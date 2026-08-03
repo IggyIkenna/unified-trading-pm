@@ -221,9 +221,12 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 > `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" — the single settled
 > location Track V now cites. Execute here as before; that section is visibility only.
 
-- [ ] [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
+- [x] ✅ [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
       league_ids to a `LeagueTier` key in `EXPECTED_BOOKMAKER_MARKET_SETS`** — without it, runtime cluster-validation
-      code cannot determine which expected bookmaker set applies to a given manifest row.
+      code cannot determine which expected bookmaker set applies to a given manifest row. **DONE** —
+      unified-api-contracts@53f2e48f. Added LEAGUE_ID_TO_TIER dict mapping 23 league_ids that cleanly fit the existing 3
+      tiers (tier_1_domestic, tier_1_international, tier_2_domestic). Both naming conventions included (odds_api
+      SOCCER_* prefix + canonical slugs). 28 non-EU leagues left unmapped per next todo. Quality gates green.
 - [ ] [AGENT] P1. **Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids** (A-LEAGUE,
       ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP,
       SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_CHINA_SUPERLEAGUE,
