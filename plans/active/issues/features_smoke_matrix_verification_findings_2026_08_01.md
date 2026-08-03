@@ -231,13 +231,28 @@ not duplicated here.
       raises `SystemExit(1)` on any uncaught exception, which a bare `pytest.raises(SystemExit)` can't distinguish from
       a genuine `--help` exit). Verified live: `python -m features_service.multi_timeframe --help` exits 0.
       `features-service@39cc8653` — full `quality-gates.sh` green (`18072 passed, 209 skipped, 0 failed`).
-- [ ] [SCRIPT] P2. **e2e-testing** — fix calendar's `smoke_matrix.py` verifier: change `SMOKE_FEATURE_GROUP` to a real
-      calendar feature group (e.g. `economic_events`) and correct `_verify_gcs_parquet`'s prefix to
+- [x] ✅ [SCRIPT] P2. **e2e-testing** — fix calendar's `smoke_matrix.py` verifier: change `SMOKE_FEATURE_GROUP` to a
+      real calendar feature group (e.g. `economic_events`) and correct `_verify_gcs_parquet`'s prefix to
       `calendar/{feature_group}/by_date/day={date}/` (no `features/` root, no `feature_group=` directory segment).
       Correct `_verify_test_manifest`'s asset_group filter to match how calendar's manifest rows are actually tagged
       (read a real manifest row first to confirm the field/value rather than assuming). **Done when**: a real
       (non-dry-run) calendar smoke run returns PASS from the harness itself, not just a cited gs:// path in the CLI's
-      own log output.
+      own log output. — `SMOKE_FEATURE_GROUP` changed to `time_features` (not `economic_events`: a real read of the
+      `features-calendar-test-central-element-323112` manifest showed `time_features` is written on nearly every date
+      while `economic_events` is sparse — time_features is deterministic, no external-source dependency).
+      `_verify_gcs_parquet` prefix corrected to match `CalendarOrchestrationService._resolve_output_paths`'s real
+      canonical path exactly (confirmed via source read, `calendar_orchestrator.py:278`). `_verify_test_manifest`
+      switched from an `asset_group` filter to a `feature_group` filter — confirmed via a real manifest read
+      (`MANIFEST_ALLOW_STALE_FALLBACK=true`) that every calendar manifest row carries `asset_group=""`
+      (category-agnostic service), so the asset_group filter could never match; `feature_group` is the column that
+      actually distinguishes rows. Verified live (non-dry-run) against real GCS + manifest across 5 separate runs (dates
+      2026-08-03, 2026-08-01, 2015-03-10, 2026-07-15 ×2; both CEFI/TRADFI cells): harness returns genuine PASS via
+      `_classify_cell_outcome`, either `captured`+parquet or the legitimate `empty_confirmed` path (calendar's
+      `time_features` is consistently `EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` — confirmed intentional/by-design via
+      the enum's own `EXPECTED_` naming, not a new bug — no new finding needed). One transient CLI `rc=1` observed
+      (retry succeeded identically) — a flaky external-data fetch in a sibling feature-group generator, unrelated to
+      this fix, out of scope. `e2e-testing@8425ec5`, full `quality-gates.sh` green (70s), sentinel-verified, confirmed
+      landed on `live-defi-rollout` via `git merge-base --is-ancestor`.
 - [ ] [SCRIPT] P2. **e2e-testing** — fix delta_one's `smoke_matrix.py` `_verify_gcs_parquet` prefix to match
       `OUTPUT_PATH_TEMPLATE` (`by_date/day={date}/feature_group={group}/timeframe={timeframe}/`, no `features/` prefix)
       — confirm the exact `timeframe` value the smoke cell's CLI invocation implies (check `_build_cli_invocation`'s
@@ -379,3 +394,19 @@ not duplicated here.
     re-run to produce the real feature/manifest row for 2026-07-28 is worth doing but is a separate, larger action
     (writes to prod) than this todo's own root-cause-and-fix scope. 6 findings total; 3 closed (this one + findings 1,
     6), 3 still open (2, 3, and the sports-`-test-` consolidator gap).
+- 2026-08-03 (slot-5, data_engineering, backlog task `features_smoke_matrix_verification_findings-002`): closed finding
+  2 (calendar `smoke_matrix.py` verifier). Confirmed both sub-bugs via source read, not assumption:
+  `_resolve_output_paths` in `calendar_orchestrator.py:278` builds `calendar/{feature_group}/by_date/day=.../` (matches
+  the doc's prediction exactly); a real manifest read of `features-calendar-test-central-element-323112`
+  (`MANIFEST_ALLOW_STALE_FALLBACK=true`, since that -test- bucket's consolidator is also stale — same class as finding
+  4, not re-litigated here) showed every row's `asset_group` column is blank, confirming the asset_group filter could
+  never match. Picked `time_features` over the doc's own `economic_events` suggestion after the same manifest read
+  showed `economic_events` only appears on a handful of dates vs. `time_features` on nearly every date. Verified live
+  (non-dry-run, real GCS + manifest, no mocks) across 5 runs spanning 4 distinct dates and both CEFI/TRADFI cells — all
+  returned genuine PASS from the harness's own `_classify_cell_outcome`. Along the way, confirmed calendar's
+  `time_features` is consistently WriteGate-rejected as `EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` (`empty_confirmed`,
+  no parquet) rather than `captured` — traced this to the `EXPECTED_` prefix in the reason enum itself, i.e.
+  intentional/by-design behavior already correctly handled as a PASS by the harness's own empty-confirmed contract, not
+  a new bug — no new finding filed. `e2e-testing@8425ec5`, full `quality-gates.sh` green (70s), sentinel-verified,
+  confirmed landed on `live-defi-rollout` via `git merge-base --is-ancestor`. 6 findings total; 4 closed (this one +
+  findings 1, 5, 6), 2 still open (3, and the sports-`-test-` consolidator gap).
