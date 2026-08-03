@@ -221,9 +221,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                  todos 6 and 7 below.
+                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                      todos 6 and 7 below.
 
 - [ ] [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -240,7 +240,7 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       hardening improvement, not the fix for why the original VM died. Update that doc's Progress Log to reference this
       correction (this doc's own filing already cross-references it via `related:`; this todo is a light consistency
       pass, not new investigation). (repo: unified-trading-pm)
-- [ ] [INFRA] P1. **Extend `launch-mdps-sharded-backfill.sh`'s `Processing|Skipping` stall-progress marker from
+- [x] ✅ [INFRA] P1. **Extend `launch-mdps-sharded-backfill.sh`'s `Processing|Skipping` stall-progress marker from
       `sports`-only to the `cefi`/`defi`/`tradfi`/`prediction` categories of the SAME launcher** (found during todo 2's
       sweep). All 5 categories invoke the identical entrypoint
       (`python -m market_data_processing_service --operation     process --mode batch`, confirmed by direct read of the
@@ -257,7 +257,10 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       `scripts/vm/launch-mdps-sharded-backfill.sh` (currently `[[ "$cat" == "sports" ]] && md=...`) to cover all 5
       categories, since the target script and its logging invariant are identical across them — this is a low-risk,
       mechanical change (same regex, same script, just currently gated needlessly narrow), not a new per-category
-      investigation. (repo: deployment-service)
+      investigation. (repo: deployment-service) — `deployment-service@84bd8a0`, `quality-gates.sh` green (253s),
+      quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin. Both `[[ "$cat" == "sports" ]] &&`
+      guards on `STALL_TIMEOUT_SEC=7200` and `STALL_PROGRESS_REGEX=Processing|Skipping` removed (now unconditional for
+      all 5 categories: cefi/tradfi/defi/sports/prediction).
 - [ ] [INFRA] P2. **Audit + roll out `STALL_PROGRESS_REGEX` for the remaining ~20 `launch-canonical-migration-vm.sh`
       categories beyond `cefi-content-apply`** (found during todo 2's sweep) — e.g. `defi`/`tradfi`/`prediction`/
       `sports`/`*-candle-census`/`*-candle-apply`/`*-candle-orphan-sweep`/`*-iah`/`*-iah-purge`/`cefi-dedup-apply`/
@@ -311,3 +314,10 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   shape as this doc's own todo 2 but scoped to that one launcher's remaining categories). Read-only this session
   (grep/read across deployment-service, instruments-service, features-service, market-data-processing-service,
   market-tick-data-service, unified-trading-library source + plans/codex docs) — no code shipped, only this doc edited.
+- **2026-08-03T~12:45Z** (AO dispatch, slot 2, `infra`, task `vm_exec_stall_watchdog_checkpoint_regex_mismatch-004`) —
+  Shipped todo 6: widened `launch-mdps-sharded-backfill.sh`'s `STALL_TIMEOUT_SEC=7200` +
+  `STALL_PROGRESS_REGEX=Processing|Skipping` metadata from `cat=="sports"`-only to unconditional (all 5 categories —
+  cefi/tradfi/defi/sports/prediction all invoke the identical `--operation process --mode batch` entrypoint through the
+  same `process_handler.py` per-date loop the sports invariant was already proven against).
+  `deployment-service@84bd8a0`, `quality-gates.sh` green (253s), quickmerge landed on `live-defi-rollout`, SHA verified
+  ancestor of origin.
