@@ -147,10 +147,11 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       `features-service@086812b0` (QG green, verified on origin). **Caveat carried forward**: do not lower this override
       again without a genuine, directly-observed 18/18 completion (currently blocked by the unrelated
       `orchestrator_returned_false` bug, not by this todo's scope).
-- [ ] [DATA] P2. Check whether the 8 currently-running `features-e2e-cefi-*`/`features-e2e-tradfi-*` VMs (as of
+- [x] [DATA] P2. ✅ Check whether the 8 currently-running `features-e2e-cefi-*`/`features-e2e-tradfi-*` VMs (as of
       2026-07-27 12:57 UTC) ever produce `EXIT_STATUS`, and if any are genuinely stuck (not just slow) rather than
       progressing, per the VM-delete guardrail (`agents/infra.md` STEP 0.65) — do not force-delete a VM that is still
-      genuinely advancing.
+      genuinely advancing. — **CHECKED 2026-08-03, slot-15, data_engineering — none stuck; none still exist; see
+      Progress Log for full evidence.**
 
 ## Confirmation findings (2026-07-27)
 
@@ -244,3 +245,38 @@ independently prove it. **Next**: P1 batch/parallelize todo (below) is unblocked
   (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`). Did not touch the separate
   `orchestrator_returned_false` bug (already tracked elsewhere) or the still-open "check the 8 running VMs" todo below
   (out of this todo's scope — those VMs are 6+ days stale and have almost certainly already self-deleted).
+- 2026-08-03 (slot-15, data_engineering): Picked up the final "check the 8 VMs" todo, confirming slot-14's suspicion.
+  Live `gcloud compute instances list --filter="name~'features-e2e'"` shows ZERO `features-e2e-cefi-*`/
+  `features-e2e-tradfi-*` instances (only an unrelated, already-`TERMINATED` `features-e2e-sports-*` VM from 2026-08-01
+  remains) — every VM from the 2026-07-27 CEFI/TRADFI fleet is gone, confirmed individually via
+  `gcloud compute instances describe <name> --zone=asia-northeast1-c` returning "resource ... was not found" for
+  `-063401`/`-102228`/`-112159`/`-114259` (CEFI) and both `b1a99f`-suffixed TRADFI VMs. Reconstructed which VMs were
+  actually running at the 12:57 UTC checkpoint by cross-referencing each 2026-07-27 `vm-logs/<vm>/` directory's
+  `EXIT_STATUS` write-time (`gcloud storage objects describe ... --format="value(updateTime)"`) against its name-encoded
+  creation time (UTC): a VM created before 12:57 with no `EXIT_STATUS` by then, or one written after 12:57, was still
+  running at the checkpoint. This confirms `-063401` (06:34 launch) really was the oldest still running at 12:57
+  (everything created 04:33-06:21 had already exited by then) and that 2 TRADFI VMs (`-112901-b1a99f`, `-124921-b1a99f`)
+  were the ones running at 12:57, both later exiting `EXIT_STATUS=0` — matches this doc's "x2 tradfi" count exactly. The
+  CEFI count from the vm-logs listing alone read as 8 running-before-12:57 directories rather than the doc's stated 6 (a
+  launcher retry can leave a log-dir behind with no real VM attached to it, and no historical `gcloud instances list`
+  snapshot survives to fully reconcile which log-dirs had a live VM at the exact checkpoint) — not fully reconcilable
+  now, but immaterial to the actual question asked. The real finding: of the CEFI VMs running past 12:57, 5 (`-063401`,
+  `-071402`, `-083854`, `-101851`, `-120200`) eventually wrote a real `EXIT_STATUS` (1, 1, 1, 1, 0 respectively) between
+  19:50 UTC 2026-07-27 and 11:17 UTC 2026-07-28 — clean natural completions/failures, not stuck. 3 more (`-102228`,
+  `-112159`, `-114259`) never wrote `EXIT_STATUS` despite actively advancing `run.log` for ~19-21h (last writes
+  2026-07-28T07:29:06-07:30:52 UTC) — cross-checked
+  `gcloud compute operations list --filter="operationType=compute.instances.preempted"` and found all 3 have a genuine
+  `compute.instances.preempted` system event at 2026-07-28T07:31:0[5-7] UTC, seconds after their last log line: these
+  were SPOT-preempted, not stuck. A separate, earlier trio of 2026-07-27 launches
+  (`features-e2e-cefi-20260727-052137`/`-053419`, `features-e2e-tradfi-20260727-054139`) that never wrote a `run.log` at
+  all were ALSO preempted, within minutes of creation (2026-07-27 ~05:22-05:44 UTC) — so those weren't launch failures,
+  they were preempted before writing their first log line. Verdict for this todo: no VM is or was "genuinely stuck" —
+  every long-running CEFI/TRADFI VM from that window either completed naturally (wrote a real `EXIT_STATUS`) or was
+  SPOT-preempted (a distinct, already-understood termination mode, not a hang); none exist today, so no
+  VM-delete-guardrail judgment call is needed since there is nothing left to delete. Tangential note (not actioned, out
+  of scope): these VMs carrying `compute.instances.preempted` events means they're SPOT/preemptible -provisioned,
+  consistent with CLAUDE.md's "backfill VMs default to SPOT" rule — the sibling issue doc's cost estimate assumed
+  on-demand pricing for these same VMs, which if actually SPOT means that estimate was conservative-high, not a
+  correctness problem worth its own follow-up. No code change was needed for this investigation-only todo. This is the
+  last open item in this doc — every todo is now closed, so this doc is archival-eligible (no `locked_by`) as a
+  housekeeping follow-up for whoever next runs the archival sweep.
