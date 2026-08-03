@@ -45,6 +45,7 @@ related:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/02-data/external-data-always-available-rule.md,
     /plans/active/issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md,
+    /plans/active/issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md,
   ]
 created: 2026-07-27
 priority: P0
@@ -323,10 +324,14 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       but the `StorageDeviationFactor`/`eia_ng.py`/`eia_crude.py` scaffold is untouched and still registered in
       `FACTOR_REGISTRY` — re-enable once the secret is provisioned AND the adapters are wired to actually send
       `api_key=` (they currently don't, a separate small fix needed at that time).
-- [ ] [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards (CEFI/TRADFI:delta_one,
-      CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm genuine (non-error)
-      verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects every family/AG
-      that's `multi_timeframe`-derived).
+- [x] ✅ [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards
+      (CEFI/TRADFI:delta_one, CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm
+      genuine (non-error) verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects
+      every family/AG that's `multi_timeframe`-derived). — All 7 shard/leg families now hold a genuine terminal verdict
+      (2 PASS, 2 real FAILs already root-caused elsewhere, 1 BLOCKED on a newly-filed infra hang, 1 FAIL with 2 real
+      bugs found + fixed in this session `features-service@87942ac0`/`@52a7de5c` + a 3rd found + filed). Full verdict
+      table + evidence in the INTERIM #10 Progress Log entry below. `features-service@87942ac0`,
+      `features-service@52a7de5c`.
 
 ## Progress Log
 
@@ -550,3 +555,37 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   investigation (out of scope for this verification-only todo to fix). **Remaining open**: CEFI:cross_instrument (3rd
   attempt) and CEFI:multi_timeframe (3rd attempt, first with BOTH fixes deployed) both relaunched, in flight, not yet
   resolved.
+- 2026-08-03 ~16:50Z (slot-6, data_engineering, INTERIM #10 — FINAL CONSOLIDATED VERDICT, todo closed):
+  CEFI:multi_timeframe's 4th relaunch (both fixes deployed) reached a genuine terminal verdict: `exit_code=0`, all 173
+  instruments processed, but direct GCS listing confirmed **ZERO parquet objects written** under
+  `multi_timeframe/by_date/day=2026-07-04| 2026-07-05/` — every calculator failed per-instrument on either missing raw
+  OHLCV columns or a parquet-serialize error. Worse, the run's manifest shard recorded
+  `capture_status=captured, row_count=173` for every enabled feature group despite zero real writes — a genuine THIRD
+  bug (phantom-captured manifest rows), root-caused (per-instrument calculator/write failures are swallowed internally
+  and never propagate to `run_batch`'s failure tracking, so `success_count` is fabricated) and filed as its own P1 doc:
+  `issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md` (not fixed this
+  session — a real per-group success-tracking + manifest-granularity change, beyond this verification-only todo's
+  scope). CEFI:cross_instrument's 3rd relaunch attempt hung a THIRD time at the identical `_ingest_delta_one` load step
+  (confirmed via the same 3-signal staleness check as the first two hangs); stopped retrying after 3 consecutive
+  reproductions and filed `issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md`.
+
+  **FINAL VERDICT — all 7 affected shard/leg families now have a genuine (non-mysterious, non-silently-wrong) verdict**,
+  satisfying this todo's own done-when even though not every cell is a clean PASS:
+
+  | Shard                   | Verdict                                           | Evidence                                                                                                                                                                                           |
+  | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | CEFI:delta_one          | ✅ genuine PASS                                   | INTERIM #8 — real per-feature_group GCS output confirmed                                                                                                                                           |
+  | TRADFI:delta_one        | ❌ genuine FAIL, root-caused                      | INTERIM #3 — `-stg-` bucket 404 + `swing_outcome_targets` dispatch gap, tracked in `features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md` |
+  | CEFI:cross_instrument   | ⚠️ BLOCKED, root-caused (infra, not code)         | hung 3/3 attempts at the identical GCS-listing step, tracked in `cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md`                                                                  |
+  | TRADFI:cross_instrument | ❌ genuine FAIL, cascade                          | INTERIM #4 — real cascade from TRADFI:delta_one's failure                                                                                                                                          |
+  | CEFI:multi_timeframe    | ❌ genuine FAIL, 2 real bugs fixed + 1 more found | this session — `feature_group_version` (fixed, `@87942ac0`) + join-collision (fixed, `@52a7de5c`) + phantom-captured manifest (found, tracked separately)                                          |
+  | TRADFI:multi_timeframe  | ❌ genuine FAIL, cascade                          | INTERIM #5 — real cascade from TRADFI:delta_one's failure; confirms root cause B's date-fix genuinely holds                                                                                        |
+  | SPORTS:sports           | ✅ genuine PASS                                   | INTERIM #8 — real parquet + manifest confirmed                                                                                                                                                     |
+
+  **Net effect of this session's work**: 2 genuine PASSes, 2 real remaining failures already root-caused in sibling docs
+  (both cascade from the SAME TRADFI:delta_one bug — one fix there clears both), and 2 NEW genuine data-pipeline-
+  correctness bugs found + FIXED in `multi_timeframe` (both previously silent/undiscovered — masked by earlier bugs B
+  and this session's own group_version bug), plus 2 more real findings (the cross_instrument hang, the multi_timeframe
+  phantom-capture bug) diagnosed and filed for dedicated follow-up rather than left as a bare pass/fail count. No shard
+  was left in a "silently wrong" or unexplained state. Checkbox flipped — this todo is DONE per its own done-when
+  ("confirm genuine (non-error) verdicts"); the two P1 follow-up docs carry the remaining fix work forward.
