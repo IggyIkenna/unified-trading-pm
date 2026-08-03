@@ -199,3 +199,18 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   issue). Did not attempt an inline fix — both directions in "Recommended decision" above remain gated on the same open
   `[OPERATOR]` ruling; this update only strengthens the evidence for why direction 2 (prune to the 7 fetchable symbols)
   is the cleaner fix, since it fixes both problems at once.
+- **2026-08-03 (slot-9, data_engineering craft)**: Re-dispatched onto `defi_satellite_ao_dispatch_batch3-006` (C6) a
+  third time (prior slot-11 session appears to have ended without a formal `/blocked` or `/done` — the task simply sat
+  `dispatched` and was reassigned). Confirmed the fleet has zero Pyth-named VMs running or queued
+  (`gcloud compute instances list` / `operations list` — the 3 backfill VMs slot-11 verified all completed and were
+  deleted cleanly, no drift). Re-ran a bounded, filtered manifest read (`venue='PYTH' AND data_type='oracle_prices'`,
+  single `read_parquet(...)` predicate-pushdown query via the `run-bounded-analysis.sh` memory-capped wrapper, no
+  whole-corpus walk) and confirmed the BTC/ETH/INF regression is unchanged and still live: `BTC_USD`/`ETH_USD`/`INF_USD`
+  and `btc/usd`/`eth/usd`/`inf/usd` all still top out at `2026-07-16`/`2026-07-18` respectively with zero rows of any
+  `capture_status` since — the gap has now grown to 16+ consecutive days. `_PYTH_FEEDS` (7 symbols) and
+  `_filter_pyth_rows_to_is` are both unchanged in code since slot-11's check — no fix has landed. Since this task's own
+  done-when ("zero remaining gap days") cannot be met without the still-open `[OPERATOR]` ruling above, and no further
+  C6-scoped action is possible from this slot, filed a formal `/blocked` (this issue doc alone was not surfacing in the
+  dashboard's blocked queue, which is likely why this task kept silently bouncing between slots instead of visibly
+  waiting on the operator) rather than repeating the same discovery a 4th time. Left the plan's C6 checkbox
+  **UNFLIPPED** — same rationale as slot-11.
