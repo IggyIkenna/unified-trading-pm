@@ -337,12 +337,13 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       pointer comments at both registration sites. `instruments-service@1bf5467c`, `quality-gates.sh` PASSED (122s),
       verified on origin.
 
-- [ ] [OPERATOR] P2. **DECISION — 4 unregistered MTDS macro adapters** (Finding M-2): `baker_hughes_adapter.py`,
-      `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py` are complete + tested but never registered in
-      `factory.py`'s `VENUE_REGISTRY`/`PLANNED_VENUES`, no CLI/orchestrator path. Decide: register + wire a CLI
-      operation, delete, or (minimum) document scaffold status matching `databento_equity.py`'s precedent. Correct
-      `factory.py:149`'s stale `# TradFi (9 venues)` comment (only 7 registered) once decided. Repo:
-      market-tick-data-service.
+- [x] ✅ [BACKEND] P2. **DECIDED 2026-08-03 (operator ruling) — document, don't register or delete** (Finding M-2):
+      `baker_hughes_adapter.py`, `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py` remain complete +
+      tested but unregistered in `factory.py`'s `VENUE_REGISTRY`/`PLANNED_VENUES`, no CLI/orchestrator path. Added a
+      STATUS note to each module's docstring matching `databento_equity.py`'s existing scaffold-status precedent
+      (intentional not-yet-activated scaffolding, cross-referencing this finding + the operator ruling). Also corrected
+      `factory.py:149`'s stale `# TradFi (9 venues)` comment to the actual registered count of 7. Repo:
+      market-tick-data-service@7db75b1a.
 
 - [ ] [OPERATOR] P2. **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
       `DatabentoCmeConverter` and `databento_opra_converter.py`'s `DatabentoOpraConverter` produce an orphaned
@@ -414,3 +415,10 @@ that plan's own stated reconciliation pattern.
   block above; added the one-line `tradfi/`-groups-by-vendor clarifying comment above `factory.py`'s `"tardis": (...)`
   registration. `market-tick-data-service@4dc7bf9f` (`quality-gates.sh` full green, shipped via
   `quickmerge.sh --agent`). Both checkboxes flipped above.
+- **2026-08-03 (slot 14, backend_engineer)**: applied the operator ruling for Finding M-2 (document the 4 unregistered
+  MTDS macro adapters, don't register or delete). Added a STATUS note to each of `baker_hughes_adapter.py`,
+  `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py`'s module docstring, matching `databento_equity.py`'s
+  scaffold-status precedent and cross-referencing this finding + the ruling; corrected `factory.py:149`'s stale
+  `# TradFi (9 venues)` comment to the actual registered count (7). No behavior change — documentation only.
+  `market-tick-data-service@7db75b1a` (`quality-gates.sh` full green, shipped via `quickmerge.sh --agent`, verified
+  ancestor of origin). Checkbox flipped above.
