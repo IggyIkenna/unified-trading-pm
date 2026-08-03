@@ -9,7 +9,7 @@ summary: >-
   pre-existing: stashing my entire diff and re-running the same grep on a clean tree at origin/live-defi-rollout HEAD
   still returns 659. My own changed files contain zero `# type: ignore` occurrences. This blocks EVERY worker's
   `--apply`/quickmerge Pass-1 QG in this repo, not just mine.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -22,7 +22,7 @@ priority: P1
 parent_epic: mtds_mdps_master
 assigned_vm: planning
 source: [tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
-resolved_by:
+resolved_by: market-tick-data-service@840c816d
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -75,13 +75,22 @@ retrying, per `unified-trading-pm/agents/RULES.md` § 4b.
 3. If it's NOT justified, fix the underlying type error and keep the baseline at 658 (ratchet shrinks, never grows
    without cause).
 
-- [ ] [BACKEND] P1. Root-cause the commit that added the 659th `# type: ignore[code]` in market-tick-data-service since
-      `d072b035` (2026-07-31) and either (a) fix the underlying type error and keep the baseline at 658, or (b) bump
-      `_MTDS_TYPE_IGNORE_BASELINE` to 659 in `scripts/quality-gates.sh` with the specific line cited as justification.
-      Unblocks STEP 5.95 for every worker in this repo. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P1. Root-cause the commit that added the 659th `# type: ignore[code]` in market-tick-data-service
+      since `d072b035` (2026-07-31) and either (a) fix the underlying type error and keep the baseline at 658, or (b)
+      bump `_MTDS_TYPE_IGNORE_BASELINE` to 659 in `scripts/quality-gates.sh` with the specific line cited as
+      justification. Unblocks STEP 5.95 for every worker in this repo. (repo: market-tick-data-service) —
+      market-tick-data-service@840c816d
 
 ## Progress Log
 
 - 2026-08-03 (slot-8): filed after `tradfi_combo_casing_direction_ssot_contradiction-003`'s prep-work Pass-1 QG hit this
   red on an otherwise-unrelated 2-file diff; verified pre-existing via stash+clean-tree re-check. Declared repo-blocker
   `RB-9732d071` for market-tick-data-service. No code changed this entry — doc only.
+- 2026-08-03 (slot-13): root-caused — not one single commit but a genuine cumulative drift across 9 commits since
+  `d072b035` that touched `# type: ignore[code]` lines with mixed net effects (749ca622 net 0, a1198300 +4, 5d856acb -4,
+  13f14b78 +3, 69c7ba7c -3, dc037373 +1, ce275975 +2, d3260d2f -2, 06cd3ca5 +1), netting to +1 overall (658→659).
+  Slot-10 had already shipped the fix at `840c816d` (bumped `_MTDS_TYPE_IGNORE_BASELINE` 658→659, citing the
+  zero-broad-ignore audit) but never flipped this checkbox. Independently re-verified on a clean
+  `origin/live-defi-rollout` HEAD tree: live repo-wide count == baseline == 659, and `grep -v -F "# type: ignore["`
+  (broad/bare ignore detector) returns 0 — confirms option (b) was applied correctly and STEP 5.95 now passes. Closing
+  as resolved; no further code change needed.
