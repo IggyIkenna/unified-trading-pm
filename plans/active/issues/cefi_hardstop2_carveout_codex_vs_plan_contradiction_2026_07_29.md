@@ -21,7 +21,7 @@ summary:
   stakes (~1.2M objects, the same scale as the 70,570-object accidental-deletion incident earlier this cycle) and that
   overriding a hard-stop requires naming it explicitly in the same turn -- the operator's 2026-07-29 authorization named
   the protocol/conditions but not 'hard-stop #2' as an override target."
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, meta]
 stage: [data]
@@ -39,6 +39,9 @@ priority: P1
 parent_epic: infrastructure_master
 source: "Found while recording the operator's 2026-07-29 CeFi orphan-sweep authorization (interactive decision session)"
 resolved_by:
+  "Operator ruling 2026-08-03 ('run the census to check deletes are safe then do them'); executed for real --
+  287,074/287,074 raw legacy objects twin-verified deleted, 0 errors, re-verify confirms 0 remain. Candles confirmed
+  already-canonical (0 needed)."
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -106,13 +109,33 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
       na-eligibility-audit item 23): pursue reading (a) first** — verify whether Part 5's 100% twin-coverage proof has
       actually been run for the CeFi ~1.2M-object corpus before assuming reading (b)'s deliberate-stricter-carve-out
       interpretation. Converted to a checkable verification todo below rather than a further judgment call.
-- [ ] [DATA] P2. **Run/locate Part 5's 100%-twin-coverage proof for the CeFi ~1.2M-object corpus-wide sweep** (the
-      `/data-pipeline-reconciliation` census + orphan-detection procedure, `/codex/02-data/orphan-object-detection.md`).
-      Done-when: either (i) the proof comes back 100% and this issue resolves itself — human-execution-only was simply
-      correct-for-now, not permanent, re-banner the plan to say so and drop this issue; or (ii) the proof is incomplete
-      / cannot reach 100% for this corpus, in which case reading (b) (a deliberate stricter carve-out) is the remaining
-      explanation and the general codex text needs the scale/precondition caveat this issue's Progress Log describes.
-      (repo: unified-trading-pm)
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-03 — reading (i): proof came back effectively 100% and the sweep was executed for
+      real, twin-verified, per-object.** Operator ruling 2026-08-03 ("run the census to check deletes are safe then do
+      them") authorized running Part 5's proof and, if clean, executing Phase B. What actually happened (full evidence
+      in `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase B): 1. **Dry-run census**
+      (`launch-canonical-migration-vm.sh cefi-drop-stale ... dry`) found the real target population is ~287,074
+      raw_tick_data legacy objects (NOT ~1.2M — that estimate was contaminated by a separate bug, below), 99.97%
+      twin-coverage (286,996/287,074), the only gap being 78 objects from the trailing 6 days (expected lag, not a real
+      orphan). 2. **`--apply` run**: per-object twin-verified backup+delete via `_migrate_drop_stale.py` (describe twin
+      → backup-copy → verify size+crc32c parity → delete → verify gone; HARD-ABORT on any mismatch, never a bulk
+      operation). Result: **287,074/287,074 deleted, 0 errors.** 3. **Post-delete re-verify** (fresh dry-run after the
+      code fix below): **checked=0 deleted=0** — confirms the raw legacy population is now fully empty, including the
+      trailing-6-days gap (closed naturally by ongoing live-copy activity in the ~3h between the initial census and the
+      re-verify). 4. **Separately found + fixed a real code bug**: the dry-run also showed 971,025 `processed_candles/`
+      objects reporting "no canonical twin" — traced to `_canon_day_rel`/`_canon_rel` always building a
+      `raw_tick_data`-shaped destination with no concept of a `processed_candles/` target, so every candle-tree object
+      was checked against a destination it could never match, regardless of whether a real twin existed. This inflated
+      the "~1.2M orphans" estimate and would have wasted ~90min on every future re-run without ever being ABLE to
+      correctly delete a real candle orphan (the tool's per-object skip-on-no-twin means it never wrongly deleted
+      anything — it just could never help either). Fixed by excluding candles from this sweep entirely
+      (`market-tick-data-service@fa991f12` — candles are correctly owned by `migrate_candle_canonical_2026_07.py` in
+      market-data-processing-service, a separate purpose-built tool). 5. **Ran the correct dedicated tool for candles**
+      (`cefi-candle-census`, dry): **982,789/982,789 objects are CANONICAL_NOOP — 0 need migration, 0 orphans
+      (`ORPHAN count = 0, PASS — total map`).** The CeFi `processed_candles/` corpus was never actually stale; there is
+      no candle-side delete needed at all. **Conclusion**: reading (a) was correct — the plan's blanket "Phase B: never
+      an autonomous-agent action" banner was the stale one; codex's §3a-extends-to-hard-stop-2-once-Part-5-clears
+      framing was right, and once applied for real it found a much smaller, now-fully-resolved population, not a
+      1.2M-object risk. No general codex caveat is needed. (repo: unified-trading-pm, market-tick-data-service)
 
 ## Progress Log
 
@@ -133,3 +156,7 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
   byte-identical to the 07-30 reading (`git diff f3b018596..HEAD` = the `context_scope` block only). Verdict unchanged:
   the sole todo asks the operator to resolve a genuine same-day SSOT contradiction (codex vs plan banner) governing
   whether an agent may execute a ~1.2M-object delete. Requires an explicit ruling, not worker-determinable.
+- **2026-08-03 (final)**: Operator ruled, and the sweep was executed for real — see the resolved todo above for full
+  evidence (287,074/287,074 raw legacy objects deleted, 0 errors; candles confirmed 0 need migration; a real
+  candle-scope code bug found + fixed along the way, `market-tick-data-service@fa991f12`). Phase B of
+  `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` is done — see that doc for its own evidence entry.

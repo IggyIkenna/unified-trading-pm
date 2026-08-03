@@ -23,7 +23,9 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-30 # (rulings-closeout re-confirm — Phase B still correctly gated, no change)
+last_updated: 2026-08-03 # Phase B executed for real, see its todo for evidence — the summary/banner above describes
+# the ORIGINAL 2026-07-28 human-only ruling, since superseded by the 2026-08-03 operator ruling; kept as historical
+# record rather than rewritten, per Phase B's own todo.
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -148,22 +150,30 @@ step.
 
 ## Phase B — E4a(ii): orphan-sweep DELETE (irreversible, `[OPERATOR]`, hard-stop #2)
 
-- [ ] [OPERATOR] P0. **Operator-authorized 2026-07-29** (see ruling above), pending a human to execute the apply —
-      **only after Phase A is confirmed clean.** Launch the delete sweep on a dedicated SPOT VM:
-      `bash launch-canonical-migration-vm.sh cefi-drop-stale 2019-03-30 <today> full` — deletes the ~1.2M
-      (`~474/day × ~2,613 days`) OLD `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide + the 9
-      L-flat root orphans, via the twin-verify/backup/delete/verify-gone contract in `_migrate_drop_stale.py`. Cite
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § Part 5 (LEGACY-COPIED-NOT-MOVED) — this is hard-stop
-      #2, human-execute-only regardless of the §3a soft-delete carve-out (§3a narrows hard-stop #1 only). **Also
-      covers**: the pre-existing legacy-FORM `-prd` objects measured 2026-06-02 (`market-data-tick-cefi-prd` was ~65% of
-      legacy object count, ~17 days stale, INTERMEDIATE FORM — has `asset_group=cefi` in the path but no
-      `pipeline_mode=` partition) — these become orphans the SAME way once their `pipeline_mode=` siblings exist, so
-      this sweep must delete them too, not only a separate legacy SOURCE-bucket pass. **Done when**: post-sweep object
-      count via Cloud Monitoring `storage/v2/total_count` (`type=live-object` — never a naive recursive `ls`, which
-      double-counts noncurrent versions + soft-deleted objects) confirms the pre-`pipeline_mode=` shape is gone
-      corpus-wide. Cite the before/after Monitoring counts as evidence. Absorbs the measured-evidence content of the
-      former `data_completion_cefi_2026_07_15.md` "Orphan sweep + bucket-state evidence" todo
-      (`data_completion_cefi-013`).
+- [x] ✅ [DATA] P0. **DONE 2026-08-03.** Operator ruled 2026-08-03 ("run the census to check deletes are safe then do
+      them") resolving `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` in favor of reading (a):
+      codex's §3a-extends-to-hard-stop-2-once-Part-5-clears framing governs, not this plan's blanket "never an
+      autonomous-agent action" banner (now superseded). - **Dry-run census** (`cefi-drop-stale ... dry`) found the real
+      target population is ~287,074 raw legacy objects (NOT ~1.2M — that estimate was contaminated by a separate bug,
+      below), 99.97% twin-coverage, the only gap being 78 objects from the trailing 6 days (expected copy-lag, not a
+      real orphan). - **`--apply` run**: twin-verified backup+delete via `_migrate_drop_stale.py` (per-object
+      describe→backup→ verify parity→delete→verify-gone, HARD-ABORT on any mismatch). **287,074/287,074 deleted, 0
+      errors.** - **Post-delete re-verify** (fresh dry-run): **checked=0 deleted=0** — the raw legacy population,
+      including the trailing-days gap, is now fully empty. - **Also found + fixed a real code bug**: candles were
+      separately checked and ALL 971,025 showed "no canonical twin" — root cause was `_canon_day_rel` always building a
+      `raw_tick_data`-shaped destination for `processed_candles/` sources too (no concept of the correct candle target
+      shape), so every candle check was against an unreachable destination regardless of real twin status. This inflated
+      the plan's own ~1.2M estimate. Fixed by excluding candles from this sweep (`market-tick-data-service@fa991f12`) —
+      candles are correctly owned by `migrate_candle_canonical_2026_07.py` (market-data-processing-service), a separate
+      tool. - **Ran that correct tool for candles** (`cefi-candle-census`, dry): **982,789/982,789 already
+      CANONICAL_NOOP, 0 need migration, `ORPHAN count = 0` (total map)** — the candle corpus was never actually stale;
+      nothing to delete there. **This sweep also covers** the pre-existing legacy-FORM `-prd` objects (the raw-shape
+      delete above is the same no-`pipeline_mode=` population). No separate legacy SOURCE-bucket pass was needed —
+      confirmed empty by the re-verify. Evidence: this session's VM run logs
+      (`canonical-migration-cefi-drop-stale-20260803-102447` dry, `-120428` apply, `-144150` re-verify,
+      `canonical-migration-cefi-candle-census-20260803-144337`), staged mapping/ reconcile reports at
+      `gs://deployment-scripts-central-element-323112/vm-logs/` and
+      `.../canonical-migration-candle-census/20260803-144337/`.
 
 ## Phase C — E4b: legacy→canonical gap-fill (additive, VM-scale) — 🔴 CANNOT-RUN-AS-WRITTEN
 
