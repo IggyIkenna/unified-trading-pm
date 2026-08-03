@@ -98,3 +98,15 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
   parent's `NA -> planning` reclassification. No work done on the parent's own todo in this pass; this doc exists so the
   reclassified plan has the finalize coverage `plans/active/task_template.md` requires for a `doc_type: plan`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-03 (slot 7, data_engineering)**: The parent's gating todo just flipped `[x]` — this plan's `depends_on` is
+  now satisfied. Recording both verification legs ahead of this todo's own dispatch, since I already have full context
+  loaded working the adjacent issue doc: **Leg (1) is MOOT, not pending** — the api_football `/odds` in-play
+  second-source wiring was explicitly STRUCK 2026-08-02 (`BLK-b969f5f0`, decision B — conflicts with the 2026-06-24 wipe
+  ruling), so there is nothing to verify-as-wired; the parent's todo closes without that half ever being built, by
+  design. **Leg (2) is DONE**: live-verified `mtds-live-sports-odds-api-trades-20260803-172841` (RUNNING, created
+  2026-08-03T17:28:48Z) via its `run.log` (35+ min, zero errors/401s/`OUT_OF_USAGE_CREDITS`) and per-VM manifest shard
+  (writing 5 new entries/min matching the 5-league MVP set) — a genuine production poll cycle, not just a
+  direct-API-call check. **Leg (3)**: grepped the parent doc — 0 open `- [ ]` top-level todos remain, so it IS an
+  archival candidate. Did not execute the archival itself in this pass (13+ corpus-wide referrers — a larger blast
+  radius than my own assigned task that session covered); left this todo open for its own dispatch to run the 6-step
+  ritual, now that both verification legs are already recorded here.
