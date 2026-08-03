@@ -45,6 +45,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
@@ -123,3 +124,7 @@ source: >-
   dispatch). `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check
   gates → archive sources → archive self) and several touch the same files. Ships `status: active` per the skill's
   2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added
+  `agent-orchestrator-single-vm-architecture.md` (§ Dispatch-scope eligibility), already cited in this doc's own Codex
+  SSOTs section above but missing from context_scope; needed for todo 3's re-check of the 29 declined-orphan docs'
+  gates.

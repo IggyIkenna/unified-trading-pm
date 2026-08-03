@@ -40,8 +40,9 @@ context_scope:
   [
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md,
+    scripts/self-hosted-runners/ssm-run.sh,
+    scripts/self-hosted-runners/hosted-baseline.sh,
     scripts/self-hosted-runners/setup-glue-runners.sh,
-    scripts/self-hosted-runners/classify-glue-workflows.sh,
   ]
 source: ["operator request, interactive session, 2026-08-03 — infra cost comparison + capacity-crisis follow-through"]
 locked_by:
@@ -232,3 +233,7 @@ launch+resize. Operator approved: terminate human-planning VM (deferred idle-che
 plan (not AO-dispatched) before executing the AO/escalation-VM split. Human-planning termination timer armed (session
 cron `67ed27cd`, fires 19:37 BST). No other todos started yet — next action is the fleet enumeration todo (P0) before
 any VM is launched.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `classify-glue-workflows.sh` (never
+  mentioned in this doc's own body) for `ssm-run.sh` and `hosted-baseline.sh`, which the doc's own "Mechanics carried
+  over" section explicitly flags as "read before touching either VM."

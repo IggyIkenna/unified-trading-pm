@@ -158,3 +158,8 @@ intentional — tracked as its own follow-up at
   no new diff was introduced. `state rm` only edits local state tracking via the GCS backend — no GCP API create/delete
   call was made, and `live_event_log/`'s separate root/state was not touched. No code change in `deployment-service`
   (state-only op); this plan-doc edit is the full evidence trail.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — verified all 3 pre-existing entries
+  still resolve on disk and remain the right minimal set for this self-contained infra fix. Written against the doc
+  while it was still `plans/active/issues/`; landed here after the doc's own concurrent archival to `status: resolved` —
+  context_scope is no longer operationally load-bearing now that the doc is out of context-scout's in-scope status set,
+  kept only as historical record.

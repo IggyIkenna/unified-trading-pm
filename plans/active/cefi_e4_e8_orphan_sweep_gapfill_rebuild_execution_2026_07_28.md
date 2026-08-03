@@ -43,11 +43,12 @@ depends_on:
 source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main-agent ruling BLK-650261be (slot-4)]
 context_scope:
   [
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_cefi_manifest.py,
+    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/data_completion_cefi_2026_07_15.md,
-    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
-    /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
+    /plans/audit/instructions/cefi_master_audit_instructions.md,
   ]
 ---
 
@@ -299,3 +300,8 @@ todo's isolated wording. No reclassification.
   blocked on `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (status: open, unchanged); Phase C
   still blocked on the CF-11 investigation. No change since the 2026-07-31 marker above.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — Phase B (the delete) is now DONE (2026-08-03) and
+  its gate, `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`, is now `status: resolved`, so it was
+  dropped; added the two source-code entry points the now-actionable remaining phases actually invoke (Phase D's
+  `rebuild_cefi_manifest.py`, Phase E's `cf_manifest_audit.py`) plus the audit-instructions doc Phase E requires
+  editing.

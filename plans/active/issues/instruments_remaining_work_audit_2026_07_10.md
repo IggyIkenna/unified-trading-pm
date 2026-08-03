@@ -995,3 +995,6 @@ Script:
   remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
   independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
   operator-gated (e.g. the HUOBI/BITSTAMP SSOT contradiction)
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all 6 cited source docs still
+  exist at their given (post-archival-correction) paths; this is a pure synthesis/index doc over other plans/issues,
+  genuinely code-free by design.

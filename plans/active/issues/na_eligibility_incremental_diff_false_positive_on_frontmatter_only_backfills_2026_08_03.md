@@ -165,3 +165,6 @@ rather than the filer marking their own work ready-to-dispatch in one unbroken a
   discipline — not a hypothetical, all 5 false positives in the measurement table were independently confirmed via
   direct commit inspection, and the correct KEEP-NA-unchanged verdicts were still written for those 5 docs (this finding
   did not block or delay this run's own Phase 1/3 work).
+- **context-scout 2026-08-03**: refreshed context_scope (2 entries, unchanged) — both entries already map 1:1 onto this
+  doc's two todos (the SCRIPT todo touches `generate_na_doc_tranche_inventory.py`, the DOCS todo touches the SKILL.md
+  Phase-0 section); genuinely minimal and correct, no expansion needed.

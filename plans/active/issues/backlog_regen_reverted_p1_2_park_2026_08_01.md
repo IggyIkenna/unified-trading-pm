@@ -50,6 +50,7 @@ source: >-
   (~3h45m of the required 24h elapsed).
 context_scope:
   [
+    /plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md,
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -144,3 +145,7 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
 `assigned_vm` unchanged (NA) — this is a citation/conflict finding, not a reclassification.
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added
+  `p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` as the first entry: that sibling doc already reached a
+  conclusive root-cause (this is NOT a `backlog_regen_drops_handtuned_prereqs`-class regression) and this doc's item 1
+  duplicates its still-open `[OPERATOR]` todo verbatim — a worker must read it before acting here.

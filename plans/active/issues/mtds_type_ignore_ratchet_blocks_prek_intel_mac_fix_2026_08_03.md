@@ -32,6 +32,13 @@ locked_by:
 resolved_by:
 stage: [meta]
 related: []
+context_scope:
+  [
+    /plans/active/issues/mtds_blanket_pyright_suppressions_ssot_contradiction_2026_07_30.md,
+    market-tick-data-service/scripts/quality-gates.sh,
+    market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md,
+    scripts/quickmerge.sh,
+  ]
 ---
 
 # market-tick-data-service type:ignore ratchet blocks a ready-to-ship, unrelated commit
@@ -99,3 +106,15 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
       PASSED" despite the ❌ line) while `quickmerge.sh`'s internal re-gate treats the identical finding as fatal —
       likely intentional (re-gate may run a stricter/full mode) but worth a comment or confirming, since the
       inconsistent signal cost time to understand during this session.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries) — root-caused the exact ratchet mechanism: this
+  issue's own "Recommended next step" points at `scripts/quality-gates-base/base-service.sh` STEP 5.95, but that shared
+  script's STEP 5.95 is actually the unrelated DTZ/TID251 ratchet. The real type:ignore-count ratchet is a LOCAL STEP
+  5.94/5.95 block added directly inside `market-tick-data-service/scripts/quality-gates.sh`
+  (`market-tick-data-service@d072b035`, baseline 658 per `QUALITY_GATE_BYPASS_AUDIT.md` §2.3) — the local labels
+  deliberately collide with `base-service.sh`'s own STEP 5.94/5.95 (documented in
+  `mtds_blanket_pyright_suppressions_ssot_contradiction_2026_07_30.md` as "cosmetically confusing... but functionally
+  harmless"), which is very likely why quickmerge's re-gate treats this finding as fatal while the standalone script
+  reports "ALL QUALITY GATES PASSED."
