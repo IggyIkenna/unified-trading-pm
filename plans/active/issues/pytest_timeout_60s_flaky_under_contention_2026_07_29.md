@@ -33,6 +33,7 @@ repos:
     unified-trading-api,
     market-data-processing-service,
     deployment-service,
+    ml-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
@@ -42,7 +43,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-02T22:20Z
+last_updated: 2026-08-03T01:39Z
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -562,3 +563,21 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   under its 1000-line hard cap. Slot left clean (market-data-processing-service already on `live-defi-rollout`, 0
   commits ahead of `origin`; only this doc + the new archive file touched, both in `unified-trading-pm`). Pinging the
   authoring slot (`ci-reconcile`) with the outcome.
+- **2026-08-03 ~01:39Z (`cicd` escalation `agt-00c046`, slot 7, `WALL_TYPE=ldr_qg_failure`) — 10th confirmed repo
+  (ml-service), already fixed before dispatch**: failing run
+  [30770280299](https://github.com/IggyIkenna/ml-service/actions/runs/30770280299) (promotion PR #329, LDR→main, head
+  `fbacb82681e2`) —
+  `tests/inference/integration/test_prediction_pipeline_integration.py::TestPredictionWithMissingFeatures::test_prediction_with_model_unavailable_returns_none`
+  hit `Failed: Timeout (>150.0s) from pytest-timeout`, traceback captured mid-`MagicMock()` construction inside a
+  fully-mocked test (`_make_inference_request`) — same trivial-construction-can't-legitimately-hang signature as this
+  doc's other entries. By the time this escalation reached me, it was already resolved: `ml-service@9841d71` (a
+  different slot, slot-9, ~00:07Z) had already root-caused this exact failure and fixed it by adding
+  `@pytest.mark.timeout(300)` to this one test, citing the identical commit (`fbacb82`, "raise pytest-timeout to 300s
+  for real-computation SHAP explainer tests") as same-day precedent for the fix pattern — so ml-service already had this
+  doc's established convention in place for one test class and slot-9 extended it to a second. Verified independently
+  rather than trusting the fix commit's own claim: `gh pr view 329` → `state=MERGED` (`updatedAt=23:57:36Z`); LDR
+  `quality-gates-v2` run `30773909086` (head=`9841d71`, the fix commit itself) → `conclusion=success`; zero open PRs,
+  zero open `/api/repo-blockers` for ml-service. No code/doc action needed beyond this log entry — no re-fix, no re-push
+  (the fix already landed and re-doing it risks a duplicate/conflicting change). Did not attempt the `AUTHORING_SLOT`
+  ping — `AUTHORING_SLOT=ci` is this doc's own already-documented dead end for non-integer slot ids (see the 2026-08-02
+  ~16:25Z entry above), not retried. Widens the confirmed-repo list to 10.
