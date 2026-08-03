@@ -957,3 +957,14 @@ not just noting.
   `slot_id`), same class as the `ci`/`ci-reconcile` precedents above; this doc entry is the outcome record. Slot left
   clean on `live-defi-rollout` (only this doc touched; `deployment-service` working tree already clean, no commit needed
   there).
+
+- **2026-08-03 ~05:20-05:40Z (cicd escalation `agt-c77b30` re-dispatch, slot 4, `deployment-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`)** — same escalation id as the entry immediately above (slot 6's session
+  ended before it resolved; re-dispatched). HEAD advanced one commit to `2349b67` (test-only `LC_TARBALL_FRESHNESS` pin
+  in `test_vm_launcher_scripts.py`, unrelated). Independently reproduced the 3 `pytest-timeout` casualties from run
+  `30782058442` directly — all 3 PASS in 34s. Ran full local `bash scripts/quality-gates.sh` at `2349b67`:
+  **`✅ ALL QUALITY GATES PASSED (217s)`**, 3017 passed/5 skipped, sentinel written — 16th corroboration, 3rd
+  independent local-green confirmation for this one escalation alone. No run was in-flight for this HEAD, so triggered
+  one fresh `workflow_dispatch` per the established posture (`30787484781`). `GET /api/repo-blockers` → `open: []`
+  (unrelated `features-service` entry only). No code/test change made or needed. Slot left clean on `live-defi-rollout`
+  (only this doc touched).
