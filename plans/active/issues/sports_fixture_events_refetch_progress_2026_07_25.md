@@ -816,3 +816,28 @@ earlier point). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not
 meaningfully longer than 15min again (projected terminal time is still many hours out — late tonight/early tomorrow
 UTC); once terminal, re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping
 this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002` todo.
+
+**TERMINAL COMPLETION 2026-08-03T04:29-04:31Z (autonomous continuation) — VM reached `date=2026-07-25`,
+`DEPLOYMENT_COMPLETED (exit_code=0)`, self-deleted cleanly. BUT the mandated post-completion census shows ZERO
+improvement — NOT flipping this checkbox, this is now a genuine open correctness question, not a monitoring task.**
+`run.log` tail confirms clean completion: `last_completed_date=2026-07-25 monotonic=true`,
+`[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... (exit_code=0)`. Ran
+`census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) immediately after:
+**`canonical_13col: 35,997`, `degenerate_5col_stub: 1,943`, `af_prefixed_10col: 2,383`, `named_9col: 1`, `missing: 74`**
+— non-canonical total = **4,327, IDENTICAL to the pre-recovery-pass-2 baseline**, and it wrote the SAME 19,850-row
+recovery-ids parquet again (`scripts/_fixture_events_recovery_ids_2026_07_25.parquet`). This is despite the VM's own log
+showing thousands of successful `Recovery-mode merge for fixture_events/league=X on Y: N existing + M new = T total`
+lines across the FULL date range with zero failure signatures anywhere. Either (a) the recovery writes are landing at
+GCS paths the census doesn't read (a path-resolution mismatch between the writer and `candidate_parquet_paths()`), (b)
+the writes ARE landing at the right paths but `new_rows` itself isn't actually canonical-schema despite the merge log
+claiming success, or (c) the census script has its own bug and the writer is actually fine. **Dispatched an Explore
+agent (opus) to trace the exact write path vs. read path** in `sports_fixtures.py`'s recovery-merge helper (`fid_col`
+value, whether `new_rows` is guaranteed canonical, whether the writer's actual GCS path matches
+`candidate_parquet_paths("FIXTURE_EVENTS", ...)` for the same `(date, league_id)`) — not yet returned as of this entry.
+**Blocking downstream work until resolved**: NOT flipping this issue doc's status or the parent plan's
+`sports_satellite_ao_dispatch_batch2-002` todo; also holding off launching the FIXTURE_STATS/FIXTURE_LINEUPS widening
+backfill (todo below) since it shares the same `sports_fixtures.py` orchestrator code path — if there's a genuine
+write/read path mismatch, that backfill could suffer the identical silent-no-op failure mode at much larger scale (138k+
+shards) before anyone notices. Next dispatch: read the Explore agent's findings once returned, fix the root cause if
+it's a genuine bug (writer path mismatch, or schema gap in `new_rows`), re-run the recovery pass if a code fix was
+needed, and only then re-census before flipping anything.
