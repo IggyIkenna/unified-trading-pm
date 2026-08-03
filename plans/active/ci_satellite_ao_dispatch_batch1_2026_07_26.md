@@ -690,14 +690,22 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       billing-wall detection heuristic (e.g. correlating the GH `timing` API's `run_duration_ms`/`billable` fields with
       the run, or the 0-recorded-steps + expired-log-blob signature) is a real code change outside this confirm-scoped
       P3's 1h estimate.
-- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md` investigation, 2026-08-03)** Teach
+- [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md` investigation, 2026-08-03)** Teach
       `agent-orchestrator/server/ci_reconcile.py`'s `repo_ldr_qg_conclusion()`/escalation path to distinguish a
       billing-wall-induced run `conclusion: "failure"` (the "partial" signature: sibling jobs succeed, only the
       `quality-gates-v2` aggregation job fails in ~11-12s with 0 recorded steps + an expired log blob) from a genuine QG
       break, and skip the `ldr_qg_failure` escalation dispatch for the former (a worker cannot fix an account-level
       billing block). Candidate signal: the GH `timing` API's `run_duration_ms`/`billable` fields for the failing run,
       or a direct check for the 0-recorded-steps pattern via the jobs list. See the confirmed root-cause analysis in the
-      todo immediately above this one for full evidence + code citations.
+      todo immediately above this one for full evidence + code citations. **DONE 2026-08-03 —
+      `agent-orchestrator@1f2fcc648fb5b2aba7ea7aab2badd5948606cc89`** (slot-4, independently dispatched on the same todo
+      — a parallel-dispatch race; confirmed the shipped implementation covers this todo in full: `_run_jobs` fetches the
+      failing run's job list, `_is_billing_wall_partial_signature` matches the aggregation job by name suffix + requires
+      0 recorded steps + a short duration + no sibling job also failing, and
+      `is_genuine_qg_failure`/`CIReconcileLoop._billing_wall_gate` wire it into the dispatch path — QG green, 2277
+      passed). This worker (slot-14) independently authored an equivalent implementation but discovered the collision
+      via `check-branch-drift` on commit; verified slot-4's shipped code is complete and correct, discarded the
+      duplicate work, and is flipping this checkbox instead of re-shipping.
 - [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
       `ldr_qg_failure` escalation passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a real numbered slot, so a dispatched `cicd` worker's
