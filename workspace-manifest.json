@@ -205,7 +205,7 @@
       ],
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
       "codebase_health": {
         "qg_red_reason": "pytest",
@@ -342,10 +342,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
       "codebase_health": {
-        "qg_red_reason": "basedpyright",
-        "large_file_count": 0,
         "coverage_pct": null,
-        "warn_file_count": 18
+        "large_file_count": 0,
+        "warn_file_count": 18,
+        "qg_red_reason": "pytest"
       }
     },
     "deployment-service": {
@@ -487,7 +487,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -594,10 +594,10 @@
         "subscription-redemption"
       ],
       "codebase_health": {
+        "coverage_pct": 83.9,
+        "large_file_count": 0,
         "warn_file_count": 0,
-        "qg_red_reason": "qg",
-        "coverage_pct": null,
-        "large_file_count": 0
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -858,7 +858,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -887,10 +887,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "basedpyright",
+        "coverage_pct": null,
         "large_file_count": 0,
-        "coverage_pct": 83.69,
-        "warn_file_count": 47
+        "warn_file_count": 47,
+        "qg_red_reason": "qg"
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1019,9 +1019,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
+        "qg_red_reason": null,
         "warn_file_count": 10,
-        "qg_red_reason": "basedpyright",
-        "coverage_pct": 85.98,
         "large_file_count": 5
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -1112,10 +1112,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
       "codebase_health": {
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "large_file_count": 0,
-        "coverage_pct": 9.54,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "trading-agent-service": {
@@ -1198,7 +1198,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 35,
-        "qg_red_reason": "qg",
-        "coverage_pct": 96.47,
-        "large_file_count": 27
+        "coverage_pct": null,
+        "large_file_count": 27,
+        "warn_file_count": 36,
+        "qg_red_reason": "pytest"
       }
     },
     "unified-trading-library": {
@@ -2195,8 +2195,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.72.1.dev1+g9bd66bc84",
-      "published_at": "2026-08-03T17:49:50Z",
+      "version": "0.72.1.dev2+gdab27a5f0",
+      "published_at": "2026-08-03T21:19:37Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
