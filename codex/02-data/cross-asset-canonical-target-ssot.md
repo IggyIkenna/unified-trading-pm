@@ -420,12 +420,33 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   > (no writer grain rollup) and add `league=` to the canonical key set as an additional TRAILING key, appended
   > **after** `venue=` and before the leaf file, preserving the base template's existing key ORDER:
   > `instrument_availability/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group=sports/venue={V}/league={L}/instruments.parquet`.
-  > This is `migration_pending`, same as the base template above — the live sports writer as of 2026-08-02 still emits a
-  > flat, un-hived shape (`day={D}/league={L}/venue={V}/instruments.parquet`, no `pipeline_mode=`/`asset_group=`, and
-  > `league=` positioned BEFORE `venue=` rather than trailing after it), so a writer fix + migration-tool extension are
-  > both still required to reach this ruled target — tracked as todo 2 of the same issue doc. `market_lifecycle` /
-  > `futures_contracts` are not sports-scoped (sports has no analogous surfaces in those trees today) and are unaffected
-  > by this exception.
+  > **CODE SHIPPED 2026-08-03, `instruments-service@ba87cc32` (todo 2 of the same doc) — NOT YET LIVE IN PRODUCTION.**
+  > `_write_sports_fixture_venue` now writes via `_instrument_availability_sink_for` (full-hive prefix) with `league=`
+  > as a trailing partition key after `venue=`, and the migration tool recognizes + migrates the legacy flat shape
+  > (`day={D}/league={L}/venue={V}/instruments.parquet`, no `pipeline_mode=`/`asset_group=`, `league=` positioned BEFORE
+  > `venue=`). **The code merged to `live-defi-rollout` at 08:48:16Z, but a live GCS check the same day (09:11:53Z, 23
+  > min later) still shows the OLD flat shape** — `ba87cc32` had not yet reached `main` at check time (the sports
+  > `instrument_availability` writer runs as the `uts-prod-instruments-service-sports-fixtures` Cloud Run Job, which
+  > pins an image digest built from `main`, not `live-defi-rollout` — a merge alone does not redeploy it). **Do not read
+  > this note as "sports's writer is now emitting canonical data" without re-verifying `main` has since caught up**
+  > (`git merge-base --is-ancestor ba87cc32 origin/main`) and a fresh write actually lands in the hive shape. **Scope
+  > correction (this note, 2026-08-03): the base "Shipped... instruments-service@a9be6ce9" line above covers
+  > cefi/defi/tradfi/prediction only — `a9be6ce9` never touched sports's write path** (`_write_sports_fixture_venue` is
+  > a separate function); sports needed this dedicated later fix. `market_lifecycle` / `futures_contracts` are not
+  > sports-scoped (sports has no analogous surfaces in those trees today) and are unaffected by this exception.
+
+  > **prediction — two additional legacy flat shapes, recognized + migrated (2026-08-03, `instruments-service@aaa0866c`,
+  > todo 3 of the same issue doc).** Unlike sports, prediction's WRITER itself was correctly fixed by the base
+  > `a9be6ce9` commit above (confirmed via live GCS: both shapes below stopped being written at 2026-07-22T00:37:29Z,
+  > the batch run immediately before the `a9be6ce9` deploy) — this is purely historical-backlog recognition, not a
+  > writer scope gap. The migration tool's `hive_target_for()` now also recognizes: (1)
+  > `instrument_availability/by_date/canonical_question_group={G}/day={D}/venue={V}/...` (group BEFORE day — the
+  > pre-`a9be6ce9` writer's 3-key alphabetically-sorted partition dict), and (2)
+  > `market_lifecycle/by_canonical_group/day={D}/group={G}/venue={V}/...` (venue third, never matched the base flat
+  > regex). Live dry-run: prediction `unrecognized` dropped from 25,745 to 12,463 — the residual is a THIRD, even older
+  > `day={D}/market={M}/venue={V}/...` shape (predates the `canonical_question_group` bundling scheme entirely, no
+  > `canonical_question_group` column in its content) pending an operator ruling (todo 8 of the same issue doc, not yet
+  > resolved).
 
 ## 9. empty_confirmed vs out-of-scope (the denominator basis)
 
