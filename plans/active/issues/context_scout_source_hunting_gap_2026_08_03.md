@@ -48,11 +48,11 @@ source:
   via corpus grep, dozens of other docs have `.py` entries)."
 locked_by:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 assigned_role: docs_reconciler
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: NA
+assigned_vm: planning
 depends_on: []
 context_scope:
   [
@@ -127,3 +127,22 @@ to matter most.
       its last real context-scout marker. If confirmed, the fix is comparing against the latest commit that touched doc
       BODY content (via `git log -p` diff classification, or excluding known hygiene-sweep commit patterns) rather than
       any commit touching the file at all.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-03** (ao tranche): RECLASSIFY, conflict-check CLEAR — flipped
+  `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. All 4 open items are bounded,
+  mechanically-checkable audit/tooling tasks against plan-hygiene scripts (`generate_context_scope_inventory.py`) or a
+  scripted live-demo verification run against one named repro doc — no undecided design/judgment call, no
+  live-dispatch-critical orchestrator code touched, no BLOCKED-OPERATOR banner or `depends_on` gate anywhere in the doc.
+  Conflict-check (3 surfaces): (a) no open todo in any active `assigned_vm: planning` doc in
+  `parent_epic: agent_operating_framework_master` claims this same ground (checked all 9 —
+  `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` is the closest topical neighbor but covers
+  line-cap/locked-doc mechanics, not Phase-1 source-hunting accuracy; two topically-adjacent NA docs,
+  `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s backfill-coverage todo and
+  `context_scope_consumption_enforcement_2026_07_30.md`'s consumption-enforcement todo, are both different claims — "is
+  it scouted at all" / "is it read once scouted" vs. this doc's "did scouting find the right paths"); (b) no sibling
+  batch/finalize doc drafted earlier in this run; (c) the ao consolidated-closeout doc
+  (`ao_open_issues_consolidated_close_out_2026_07_17.md`) does not touch this topic. Frontmatter already carried
+  `assigned_role: docs_reconciler` + `model_tier: sonnet-doable`, no correction needed. Companion finalize plan:
+  `context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md`.
