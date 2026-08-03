@@ -4,7 +4,7 @@ title: Scoped reference-path hygiene pass over plans/archive/
 summary: >-
   Run scripts/plan-hygiene/fix_reference_paths.py over the plans/archive/ population specifically to clear the
   check_reference_paths format/exist regression (+47/+14 over baseline) that an active-corpus-only pass cannot reach.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,7 +17,7 @@ related:
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-02
+last_updated: 2026-08-03
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -34,6 +34,15 @@ supersedes:
 superseded_by:
 source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 4, option A, 2026-08-02."
 ---
+
+> **✅ ARCHIVED 2026-08-03** — all 6/6 todos done, 0 open checkboxes. Verified via the gated finalize plan
+> `plans_archive_reference_path_hygiene_2026_08_02_finalize.md` (re-ran the ratchet check + spot-checked the
+> AMBIGUOUS/UNRESOLVED triage — both confirmed clean, no drift). Archived alongside its finalize companion per the
+> standard 6-step ritual. Two other finalize plans that also gated on this doc
+> (`plans_archive_reference_path_hygiene_finalize_2026_08_02.md`,
+> `plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md`) were duplicate authorings of the same
+> closeout — archived alongside as `status: superseded` since their reconciliation work is now redundant with the
+> finalize plan that actually did it.
 
 # Scoped reference-path hygiene pass over `plans/archive/`
 

@@ -6,7 +6,7 @@ summary: >-
   until both of that plan's todos are done. Re-verifies the reference-path ratchet actually moved (check_reference_paths
   back at/below the pre-regression baseline: format 161, exist 901), confirms no AMBIGUOUS/UNRESOLVED entry was silently
   dropped, and archives this plan pair once confirmed.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -19,7 +19,7 @@ related:
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-02
+last_updated: 2026-08-03
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,6 +48,10 @@ source: >-
   regression 1). Authored same-session to close the regression, mirroring the shape of existing finalize plans (e.g.
   ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md).
 ---
+
+> **✅ ARCHIVED 2026-08-03** — all 3/3 todos done, 0 open checkboxes. Both the parent plan's ratchet-move and its
+> AMBIGUOUS/UNRESOLVED triage confirmed clean; archived alongside the parent. See this doc's own final todo for the
+> duplicate-finalize-plan finding surfaced during the archival ritual's referrer-fix step.
 
 # Scoped reference-path hygiene pass over `plans/archive/` — finalize
 
@@ -92,9 +96,26 @@ source: >-
       basename — no candidate resolves anywhere in the live corpus, matching the "frozen historical record, not chased"
       disposition. The 33→31 delta is a benign decrease (fewer dangling, not more) from ordinary corpus churn since
       2026-08-02/03, not a sign any entry was mis-triaged. No drift found; no new todo needed.
-- [ ] [PLAN] P2. **Archive both plans** once the two todos above confirm clean — standard 6-step archival ritual
+- [x] ✅ [PLAN] P2. **Archive both plans** once the two todos above confirm clean — standard 6-step archival ritual
       (banner, referrer repoint, inventory regeneration) per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. **RESULT (slot-10, 2026-08-03): archived
+      the parent + this finalize doc, PLUS discovered and resolved a duplicate-plan defect along the way.** While
+      grepping for referrers (step 5 of the ritual) found TWO OTHER finalize plans also gated on the same parent
+      (`plans_archive_reference_path_hygiene_finalize_2026_08_02.md`,
+      `plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md`) — independent duplicate authorings of
+      this exact closeout, both still `active` with open todos that would have dispatched redundant reconciliation work
+      to future AO workers against an already-archived parent. Marked both `status: superseded`,
+      `superseded_by: plans_archive_reference_path_hygiene_2026_08_02_finalize` (this doc), closed their open todos with
+      a pointer here, and archived all 4 docs together in the same commit. No new codex contract from this plan's
+      completion (mechanical hygiene pass over an existing script/population, already covered by
+      `/codex/11-project-management/cross-reference-path-convention.md`'s existing archive-scope-exclusion ruling).
+      Corpus referrers fixed: `plans/active/INDEX.md` regenerated via `scripts/plans/regenerate_active_plan_index.py`; 3
+      prose Progress Log mentions in other active plans (`ao_satellite_ao_dispatch_batch3_2026_07_31.md`,
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, `plan_reconcile_parked_operator_decisions_2026_08_02.md`) are
+      frozen historical narrative describing past actions, not live navigational links — left as-is per the same "frozen
+      historical record" precedent this plan's own todo 1 result already established for `plans/archive/**` citers; one
+      archived frozen-snapshot dashboard (`plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`) is a
+      point-in-time report, not edited.
 
 ## Progress Log
 
