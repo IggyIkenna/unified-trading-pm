@@ -344,6 +344,15 @@ concurrent workers do not collide on this file.
       on both repos, shipped via `quickmerge --agent --files`. Sources:
       `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P2 sub-finding,
       2026-07-25) + `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2 messaging).
+- [ ] [CI] P1. **Mirror the batch1-036 auto-merge-arm-failure fix to the sibling standalone `ldr-to-main-promote.yml`.**
+      batch1-036 (`unified-trading-pm@4bf65b67c`) fixed the silent-swallow of auto-merge-arm failures in
+      `.github/workflows/ldr-to-main-promote-fleet.yml`, but the PM-own standalone
+      `.github/workflows/ldr-to-main-promote.yml` has the IDENTICAL silent-swallow bug and is failing LIVE (review
+      agt-39a53d confirmed via `gh run view 30774619258`, 00:30-00:31Z: "WARN: auto-merge unavailable"; PR #2061 OPEN,
+      mergeStateStatus=UNSTABLE, autoMergeRequest=null; zero ARM_FAILED-equivalent tally/Slack). Apply the same
+      arm-failure tally + alerting as `4bf65b67c`. **Done when**: the standalone workflow surfaces an arm-failure
+      non-silently (+ alert), regression-tested, QG green, shipped via quickmerge. Source: review batch chat msg 3383,
+      2026-08-03; same failure class as the original ~10h-silent promote incident this plan traces to.
 - [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
       slowness.** The treadmill is currently only observable as a promotion-lag alert, which reads as latency. Add a
       regression test / monitor that fires on N consecutive `SIT GATE BLOCK <repo>` verdicts for the same repo.
