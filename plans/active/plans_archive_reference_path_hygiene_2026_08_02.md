@@ -132,12 +132,32 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
       targets in its DANGLING/format-violation output (post-edit format 81/81 unchanged; the existence count moved
       91→104 since the 2026-08-02/03 session but that drift is from unrelated concurrent corpus activity —
       grep-confirmed none of it traces to these 3 files).
-- [ ] [DOCS] P3. **Pre-existing +1 existence-ratchet discrepancy, unrelated to `plans/archive/`.** As of
+- [x] ✅ [DOCS] P3. **Pre-existing +1 existence-ratchet discrepancy, unrelated to `plans/archive/`.** As of
       `unified-trading-pm@dfdb0887` (the commit that re-baselined `check_reference_paths` existence to 90 after
       excluding `plans/archive/`), the live count was already 91 at that same commit — a 1-off measurement gap at
       authoring time, not a subsequent regression. Find the specific dangling `/plans/...` or `/codex/...` reference
       responsible (outside `plans/archive/`, since that's excluded from this check) and either fix it or lower the
-      baseline to 91 with a note. (repo: `unified-trading-pm`)
+      baseline to 91 with a note. (repo: `unified-trading-pm`) **RESULT: the original +1 genuinely resolved on its own**
+      (verified via a scratch `git worktree` diff against `dfdb0887`: 4 of that commit's 91 dangling refs got fixed by
+      unrelated concurrent work — e.g. `defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` and
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` now exist — while 3 NEW dangling refs appeared elsewhere,
+      netting 91→90, exactly at baseline, when this session started). **Two adjacent, in-scope findings fixed instead of
+      just closing the todo as moot**: (1) a genuine NEW `check_reference_paths` **format** regression (85 vs baseline
+      81, +4) from concurrent worker edits — 3 bare `codex/...` refs added to
+      `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (prose, not `related:`) and 1 to
+      `plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — fixed by adding the leading slash. (2)
+      the 3 NEW existence dangling refs were themselves genuine, fixable stale paths (docs since archived, cited by
+      `related:`/`context_scope` under their old `plans/active/...` location):
+      `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` →
+      `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (repointed to `/plans/archive/issues/...`),
+      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` and `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`
+      → `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md` (repointed to `/plans/archive/2026_07/...`). Net result:
+      format 81/81 ✅ (regression cleared), existence 87/90 ✅ (genuinely shrunk, not just restored) — baseline lowered
+      to `format_count: 81, existence_count: 87` via `--update-baseline` per the script's own ratchet-down discipline.
+      Did NOT touch the separate, already-tracked `[SCRIPT] P3` "delete stray active-tree duplicate" todo in
+      `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` (different plan/craft scope) even though its premise looks
+      already-satisfied (no active-tree copy of `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`
+      currently exists) — flagging for that todo's owner rather than freelancing it.
 
 ## Progress Log
 
@@ -151,3 +171,13 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
   plan is "not urgent now that the ratchet itself is green, but still useful hygiene." The actual remaining hygiene
   value surfaced by this pass is two NEW findings (duplicate-named archived docs with diverged content; a pre-existing
   +1 existence-count gap), both tracked as fresh todos above rather than fixed by guessing.
+- **2026-08-03 (slot-10, review craft, dispatched to the last open todo)**: re-ran the check live rather than trusting
+  the doc's stale snapshot — found the corpus had drifted further since 2026-08-02/03: the pre-existing +1 existence gap
+  (91 vs 90) had genuinely resolved via unrelated churn, but a NEW format regression (85 vs baseline 81, +4) had
+  appeared, plus 3 new existence dangling refs (net effect masked as "still +1-ish" until diffed against a scratch
+  `git worktree` checkout of the baseline commit `dfdb0887`). Fixed all of it: 4 bare `codex/...` refs missing their
+  leading slash (2 files), 3 stale `/plans/active/...` refs to docs since archived (3 files) — repointed to their real
+  `/plans/archive/...` locations. Verified end-to-end: `check_reference_paths.py` now reports format 81/81 ✅, existence
+  87/90 ✅ (a real 3-count improvement, not just a restore), and lowered the baseline to
+  `format_count: 81, existence_count: 87` via `--update-baseline` so the gate locks in the gain rather than leaving
+  slack. This closes this plan's last open todo — see the todo's own RESULT note for the full file-by-file detail.

@@ -67,10 +67,11 @@ source: >-
       (each todo's text ends with `Source:`). For each: flip the corresponding checkbox, citing the batch commit that
       shipped it — verify the commit actually exists before citing it. After flipping, re-check each source doc for 0
       remaining open items (checkbox AND prose-form) and only then consider flipping its `status` to `resolved`.
-      Specifically: `issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md` (3 of this batch's todos cite it
-      — flip all 3 corresponding checkboxes, then check if the doc's own remaining scope — the `calendar`/`sports`
-      engines the source doc itself notes as already checked or out of this audit's scope — is genuinely 0 open before
-      flipping doc status), `issues/manifest_consolidator_cadence_cost_audit_2026_07_20.md`,
+      Specifically: `archive/issues/feature_builder_registry_dag_dead_code_audit_2026_08_01.md` — **already fully
+      resolved + archived 2026-08-03** (all 6 of its own todos done across 3 sessions; the 3 batch3 todos citing it were
+      also independently marked done + annotated 2026-08-03, since the audits they described were already complete by
+      the time this finalize doc would run — no action needed here),
+      `issues/manifest_consolidator_cadence_cost_audit_2026_07_20.md`,
       `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md` (2 todos cite it — both must flip before
       the doc has 0 open), `issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` (only follow-up 2 closes
       here — follow-up 1 stays open, operator-gated, so this doc stays `status: open`, do NOT flip it to resolved),

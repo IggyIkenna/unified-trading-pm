@@ -388,3 +388,27 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
     as this note is written (session ending on context pressure — see the D1 todo's Progress Log for the exact resume
     command). `features-service@94fd3c8b` itself is shipped and green.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **2026-08-03 (slot-14, data_engineering craft, dispatched to todo 2 /
+  `delta_one_candle_loader_no_pass_through_path_defi-003`) — confirmed still blocked on the same unfixed backend bug;
+  skipping rather than duplicating in-flight work.** `returns` remains complete (1337 real day-partitions, confirmed
+  2026-08-02). `funding_oi` remains blocked: verified via
+  `git log origin/live-defi-rollout -- features_service/delta_one/app/core/_passthrough_loader.py` that HEAD is still
+  `0699c5db` (the `[BACKEND] P2` derivative_ticker-join implementation) with NO fix yet for the NEW `[BACKEND] P1`
+  symbol/venue-key mismatch bug found today by slot-2
+  (`defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[BACKEND] P1` todo,
+  `_enrich_funding_oi_from_derivative_ticker` silently matching zero `derivative_ticker` rows). Checked the live
+  backlog: that exact `[BACKEND] P1` fix (`defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006`) is
+  currently `dispatched` to slot 4 RIGHT NOW — did not attempt to freelance the same fix (would collide with slot 4's
+  in-flight work) and did not relaunch `funding_oi` (would reproduce the identical deterministic NaN/empty-join failure
+  slot-2 already confirmed hours ago on `features-delta-one-defi-20260803-031632`). This todo's own done-when (D1's
+  checkbox flip, both legs) cannot be met until slot 4's fix lands + a fresh verification-window run confirms real
+  `record_captured` rows for `funding_oi`. Also noted this todo is a near-duplicate of
+  `delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md`'s own todo 2 (`-003`,
+  currently `queued`, not yet dispatched) — both will independently unblock once
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006` lands; whichever slot picks up first should do the
+  resume run and flip D1, at which point the sibling todo becomes a pure duplicate-close. Skipping this slot's dispatch
+  of `-003` via `/api/slots/14/skip-current-task` (reason: missing prereq — waiting on
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006`) rather than idling or re-launching a doomed VM;
+  other slots remain eligible to pick this up once the backend fix ships. The still-open `[OPERATOR] P1` parking todo
+  (todo 3) is now `status: blocked` in the live backlog (already gated by someone), so the redispatch-storm concern it
+  raised appears addressed separately.

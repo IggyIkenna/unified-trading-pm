@@ -466,6 +466,11 @@ degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_live
   `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverse of the legacy opt-in `MANIFEST_FAIL_ON_STALE_FALLBACK`, which still
   forces fail-fast). A genuinely-empty bucket, and a writer-VM reading back its OWN just-written self-shard on a fresh
   bucket, are NOT outages (the `exclude_self` guard) and read normally.
+- **Traced to a concrete incident, not just theoretical** — the opt-in `MANIFEST_ALLOW_STALE_FALLBACK` gap (the
+  per-VM-only fallback read never sees a legacy-CAS canonical write) was confirmed as the root cause of the 2026-07-19
+  sports incident; closed in practice by this loud-fail default (opt-in only) plus a 2026-08-02 fleet-wide sweep that
+  gave the specific closer script `per_vm_shards=True` (`instruments-service@d0e4e5a3`) — see
+  `/plans/archive/issues/sports_legacy_cas_shard_fallback_gate_investigation_2026_08_03.md`.
 - **Preflight gate** — `assert_consolidator_healthy(bucket)` (exported from `unified_trading_library`): a shared SSOT
   that raises if the heartbeat is stale past `MANIFEST_CONSOLIDATED_STALENESS_SEC` while other-VM shards exist. VM
   bootstrap / batch preflight / the shell preflight in `setup-data-pipeline-vm.sh` (`deployment-service@7add531`) should

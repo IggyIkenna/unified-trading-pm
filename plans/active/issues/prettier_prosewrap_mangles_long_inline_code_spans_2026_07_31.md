@@ -85,13 +85,15 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
 
 ## Todos
 
-- [ ] [BACKEND] P3. Reproduce the prettier proseWrap mangling with a minimal `.md` fixture (long backtick inline-code
-      span near printWidth=120), determine root cause (config vs prettier-version bug), then apply (A) a `.prettierrc`
-      fix or (B) a plan-hygiene/prek lint check that catches multi-space runs inside backtick spans + over-padded
-      continuation lines. Confirm the fix against the fd1b02c2c-style pattern. (repo: unified-trading-pm)
-- [ ] [BACKEND] P3. Re-run prettier / hand-fix the still-live mangled span in
-      `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`
-      (unified-trading-pm@fd1b02c2c), verifying content-only via `git diff -w`. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-03 (slot 11, backend_engineer)** — Reproduce the prettier proseWrap mangling with
+      a minimal `.md` fixture (long backtick inline-code span near printWidth=120), determine root cause (config vs
+      prettier-version bug), then apply (A) a `.prettierrc` fix or (B) a plan-hygiene/prek lint check that catches
+      multi-space runs inside backtick spans + over-padded continuation lines. Confirm the fix against the
+      fd1b02c2c-style pattern. (repo: unified-trading-pm) — see Progress Log for evidence.
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-03 (slot 8, backend_engineer)** — Re-run prettier / hand-fix the still-live
+      mangled span in `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`
+      (unified-trading-pm@fd1b02c2c), verifying content-only via `git diff -w`. (repo: unified-trading-pm) — see
+      Progress Log for evidence.
 
 ## Progress Log
 
@@ -106,3 +108,40 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
   — exactly the reclassification this doc's own filing note invited. Conflict-check: zero mentions of prettier/proseWrap
   in any other active plan/issue doc or the cross-cutting consolidated closeout — cleared. Added `assigned_role: infra`
   (was missing). `doc_type: issue` — exempt from the finalize-plan-coverage rule, no companion finalize doc authored.
+- **2026-08-03 (slot 11, backend_engineer) — todo 1 DONE**: reproduced with a minimal 4-line fixture (a list item + a
+  nested 2nd-paragraph continuation, `npx prettier@3.9.5 --write` run repeatedly on the same file). **Root cause is
+  broader than the "unbreakable inline-code span" framing this doc opened with**: the bug reproduces identically with
+  zero backtick spans present — it is a genuine prettier **idempotency defect** in the markdown proseWrap printer for a
+  paragraph that is the 2nd+ block nested inside a list item; each pass over the SAME file adds +4 leading spaces to the
+  paragraph's continuation lines instead of converging (measured 18→22→26→30→... across repeated passes). Confirmed
+  still present on `prettier@latest` (3.9.6, the newest release at investigation time) — so (A) pin/upgrade is not
+  available; disabling `proseWrap` entirely would be a workspace-wide formatting-behavior change outside this P3 task's
+  authority (broad tradeoff, not a bounded fix). Applied **(B)**: added
+  `scripts/plan-hygiene/check_prosewrap_padding.sh` (two detectors — multi-space runs inside backtick spans, and
+  over-padded continuation lines above a threshold calibrated against the live corpus's legitimate max indent) and wired
+  it into `run_hygiene_sweep.sh`'s full sweep as a shrinking ratchet (same shape as `check_archive_candidates. sh` —
+  full-corpus only, not `--precommit`, since a staged-subset count would trivially pass against a corpus-wide baseline).
+  **Confirmed against the fd1b02c2c-style pattern**: running the new gate directly against
+  `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` (still mangled, todo 2 below) correctly flags
+  all 30 corrupted lines, including the exact `read_availability_index()` backtick-internal-padding shape the parent
+  doc's finding cited. **Corpus-wide calibration scan surfaced far more existing damage than this doc's original 2
+  instances** — 82 files / 4472 lines, up to 1290 leading spaces in `tradfi_satellite_ao_dispatch_batch2_2026_07_25. md`
+  (a mirror of the doc that produced this issue's original 2 flagged commits). That remediation is out of this todo's
+  bounded scope (reproduce + build the gate) — tracked separately per the findings-closure rule:
+  `/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`. Evidence: `unified-trading-pm@<sha>`
+  (this commit) — `scripts/plan-hygiene/check_prosewrap_padding.sh` +
+  `scripts/plan-hygiene/prosewrap_padding_baseline.yaml` (seeded `violation_count: 4472`) + `run_hygiene_sweep.sh`
+  wiring; full sweep run clean (`✅ PASS [hard] No prettier proseWrap continuation-padding (ratchet)`), two pre-existing
+  unrelated hard failures (`Reference path convention`, `Archive candidates`) confirmed NOT caused by this change.
+- **2026-08-03 (slot 8, backend_engineer) — todo 2 DONE**: hand-fixed the still-live
+  `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` (unified-trading-pm@fd1b02c2c). Ran
+  `scripts/plan-hygiene/check_prosewrap_padding.sh` against the file first to enumerate the exact 30 corrupted lines (10
+  backtick-internal multi-space runs + 20 continuation lines padded to 382 leading spaces in the
+  `deployment-service@a172915` DONE block, lines 458-476) rather than re-running prettier (its own idempotency bug —
+  confirmed by todo 1 — would have ADDED padding, not fixed it). Hand-repaired: collapsed every 3+-space run inside a
+  backtick span to a single space (a Python pass scoping the regex to `` `[^`\n]*` `` spans only, so prose outside
+  backticks was untouched), and reset the 382-space block to the doc's normal 6-space continuation indent. Verified: (1)
+  `check_prosewrap_padding.sh` on the file now reports `0 violating line(s)` (down from 30); (2) `git diff -w` against
+  the pre-fix tree is byte-empty (confirms content-only — no meaning change) while `git diff --stat` shows the expected
+  30 lines changed; (3) full `quality-gates.sh --no-fix` green, sentinel SHA matches HEAD. Evidence:
+  `unified-trading-pm@<sha>` (this commit).

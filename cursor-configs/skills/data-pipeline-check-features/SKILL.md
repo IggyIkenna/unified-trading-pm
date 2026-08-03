@@ -273,7 +273,7 @@ parallelization fix (`features-service@1ad44550`, shipped 2026-07-27) does NOT b
 materially. A genuine post-fix from-scratch force-leg run (VM `features-e2e-cefi-20260730-133536-025349`, launched
 2026-07-30) reached `EXIT_STATUS=0` at **61793s (17h9m53s)** — but only a **partial** completion (10/18 feature groups;
 the other 8 failed on an unrelated, already-tracked bug, `orchestrator_returned_false`, NOT a timeout — see
-`plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`). One group alone (`moving_averages`, a
+`plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md`). One group alone (`moving_averages`, a
 200-candle-lookback @ 24h-output-timeframe cell) took **10h20m** on its own worker slot inside the 4-worker pool. A
 genuine 18/18 completion has still never been directly observed — blocked by that unrelated bug, not by this timeout.
 Extrapolating the 10 confirmed successes' per-group average across all 18 groups at the same 4-way concurrency projects

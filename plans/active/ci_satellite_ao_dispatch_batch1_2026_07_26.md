@@ -360,13 +360,22 @@ concurrent workers do not collide on this file.
       single-repo/per-tick). Added `scripts/quality-gates-base/tests/test-ldr-promote-standalone-arm-failed-tally.sh`
       (structural + a functional extraction of a real if/else arm-site block evaluated against a stubbed `gh`, 8/8
       pass). Full `quality-gates.sh` green. — unified-trading-pm@5047141d0
-- [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
-      slowness.** The treadmill is currently only observable as a promotion-lag alert, which reads as latency. Add a
-      regression test / monitor that fires on N consecutive `SIT GATE BLOCK <repo>` verdicts for the same repo.
-      **Constraint**: implement as a NEW detector file — do **not** edit `ldr-to-main-promote-fleet.yml` (todo 12 owns a
-      comment there, and this doc's other promote-fleet todo is gated on an unmade direction ruling, `## Deferred` D12).
-      **Done when**: the detector fires on a synthetic N-tick block and stays silent on a block→revalidate→pass cycle.
-      Source: `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
+- [x] ✅ [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
+      slowness.** Added `scripts/cicd/sit_gate_stuck_detector.py` — a standalone detector (does NOT edit
+      `ldr-to-main-promote-fleet.yml`) that fetches the workflow's recent run LOGS via `gh run view --log` (the run's
+      own `conclusion` stays `success` on a SIT-gate block, so run-level status can't distinguish it — only the log text
+      can), extracts every `SIT GATE BLOCK <repo>: ...` line per tick, and pages once the SAME repo has been blocked on
+      the `--threshold` (default 3) most-recent CONSECUTIVE ticks — always counted from the newest tick backward, so a
+      block→revalidate→PASS cycle self-silences the moment the newest tick is clean, regardless of the prior streak
+      length. Wired a new `.github/workflows/sit-gate-stuck-detector.yml` (every 30 min, mirrors
+      `promote-fleet-startup-failure-monitor.yml`'s shape) posting via the `notify-slack.yml` carrier with its own
+      `dedup_key: sit-gate-stuck` / `cooldown_min: 60` (distinct from promotion-lag's / startup-failure's, no shared
+      cooldown). **Done when, verified**: `tests/unit/test_sit_gate_stuck_detector.py` (22/22 pass) proves both
+      acceptance cases directly on synthetic tick histories — `test_stuck_repos_fires_on_exact_threshold_streak` (fires
+      on a synthetic 3-tick block) and `test_stuck_repos_silent_on_block_revalidate_pass_cycle` (silent once a
+      block→revalidate→PASS cycle completes), plus insufficient-history / multi-repo-independent-streak /
+      report-formatting coverage. Full `quality-gates.sh` green. — unified-trading-pm@409c35437 Source:
+      `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
       Applied the identical first-push-wins guard from `cloudbuild.yaml` to both `cloudbuild-tier3.yaml` and
       `cloudbuild-dashboard.yaml`: a `sha-tag-guard` step writing `/workspace/.sha_tag_preexists`, a conditional push
@@ -410,12 +419,21 @@ concurrent workers do not collide on this file.
       triggers table + default-branch schedule gotcha + measure-don't-assume verification). (c) corrected the
       strict-quickmerge line from "WARN-default" to "BLOCKS by default" (operator policy 2026-06-26). prettier +
       `check_reference_paths.py` both clean (at baseline); shipped via `quality-gates.sh` → `quickmerge --agent`.
-- [ ] [INFRA] P3. **The two husky UI repos carry no strict-quickmerge guard.** The pre-push self-heal skips them
-      (`case "${_hooks_dir}" in */.husky/*) continue`), so `deployment-ui` and `unified-trading-system-ui` are the only
-      clones with no provenance guard at all. Wire the strict guard into each repo's husky `pre-push`. This touches
-      `.husky/` hooks only — **no UI source, so the playwright gate does not apply**; do not touch any `src/`/`app/`
-      file. **Done when**: a synthetic non-quickmerge code push is blocked in both repos, a quickmerged range passes,
-      and the self-heal recognises the husky installs. Source:
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-9, infra)** — **The two husky UI repos carry no strict-quickmerge guard.**
+      Added a COMMITTED `<repo>/.husky/pre-push` in each — a thin delegate (mirrors `.husky/pre-commit`'s prek
+      delegation) that `exec`s the fleet's canonical `scripts/hooks/pre-push` after resolving the workspace root (same
+      sibling-repo walk-up the canonical guard itself uses), so it ships via normal commits rather than a per-tick
+      content-heal — `deployment-ui@a3268d0`, `unified-trading-system-ui@563f6238`. Also updated
+      `slot-cron-ff-pull.sh`'s self-heal: it still never writes into a husky repo's hooks dir (that would clobber
+      husky's own `.husky/_/` dispatcher shim), but now WARNs loudly when a husky repo's `.husky/pre-push` delegate is
+      missing instead of a silent, no-signal skip — `unified-trading-pm@69b858288`. **Done-when, verified**: a new
+      regression test (`test-husky-pre-push-strict-quickmerge-delegate.sh`, 15/15 cases) runs the REAL committed
+      delegates against synthesized git fixtures — proves a synthetic non-quickmerge `.ts` source push is BLOCKED in
+      both repos, a quickmerged (`Quickmerge: agent` trailer) push PASSES in both, a missing canonical guard degrades
+      gracefully (warns, exit 0), and the extracted self-heal recognition block warns on a missing delegate / stays
+      silent once present. Also manually verified live via husky's own internal dispatcher shim (`.husky/_/pre-push`) in
+      both repos — confirmed it now resolves to the new delegate instead of no-op'ing. Full `quality-gates.sh` green on
+      all three repos (deployment-ui, unified-trading-system-ui, unified-trading-pm). Source:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **D13 orphan-reader census + remediate `sync-manifest-versions.py`.** —
       unified-trading-pm@45b25799b + agent-orchestrator@12e0f2e. Census: live-measured all 24 manifest repos — only
@@ -713,9 +731,9 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       not a full integration-test run; a value-only change can pass `SIT_VALIDATED` while still breaking a consumer).
       Verified on `origin/live-defi-rollout` (`git merge-base --is-ancestor 33cf6f0 origin/live-defi-rollout`) and no
       other repo/doc under `full-workspace-sit`'s naming carries the same over-claim (grep swept `sit-gate.yml`,
-      `ldr_to_main_fleet_promote.sh`, `codex/08-workflows/ci-cd-flow.md`,
-      `codex/06-coding-standards/integration-testing-layers.md`, `codex/15-runbooks/sit-runbook.md` — all reference the
-      `SIT_VALIDATED` state mechanically, none claim it proves the resolved combination executed). This todo was
+      `ldr_to_main_fleet_promote.sh`, `/codex/08-workflows/ci-cd-flow.md`,
+      `/codex/06-coding-standards/integration-testing-layers.md`, `/codex/15-runbooks/sit-runbook.md` — all reference
+      the `SIT_VALIDATED` state mechanically, none claim it proves the resolved combination executed). This todo was
       extracted 2026-08-02, after the fix had already landed — checkbox was simply never flipped.
 
 ## Deferred

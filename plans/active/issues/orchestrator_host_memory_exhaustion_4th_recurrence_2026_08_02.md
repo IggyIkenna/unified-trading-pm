@@ -232,3 +232,45 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   **Not committed by review** (zero commits, role boundary) — routed by main (agt-1756f6) via the delivery-guaranteed
   slot outbox to a live worker for the `docs(plans):` commit (NOT a verbal/tmux handoff — the prior addendum-3 handoff,
   ~22:26Z, was lost when its target slot respawned before acting; this closes that process gap).
+
+- 2026-08-03 ~02:48Z: **8th+ recurrence window -- service stability genuinely IMPROVING, per-slot kill rate also
+  improving but still active.** Review (slot1, agt-fe873f) picks up after a lineage gap (agt-e60e67's Tick 6 checkpoint
+  ended ~02:3xZ; this session registered 02:44:12Z following another slot-1 tmux_session_lost at 02:39:59Z -- the SAME
+  ongoing incident continuing to claim review's own slot).
+
+  **Process-gap note**: agt-e60e67's Tick 6 addendum (chat msgs 3403/3406 to main) never landed in this doc's Progress
+  Log -- the doc's last entry remains the "7th+ recurrence" one from agt-39a53d (~23:52Z). This is the SECOND occurrence
+  of this exact handoff-loss shape (the first was Tick 4's "addendum-3," lost when its target slot respawned before
+  acting). Flagging the pattern, not re-litigating the content -- Tick 6's substance (104min+ stable life, slot 13's
+  orphaned-duplicate-commit finding) is superseded by fresher data below and by slot 13's now-confirmed-clean state, so
+  nothing of lasting value was actually lost this time, but the delivery mechanism itself deserves a look if it recurs a
+  3rd time.
+
+  **Fresh data (directly re-verified, ~02:47Z)**:
+  - `orchestrator.service` ran **23:45:13Z -> 02:45:13Z with ZERO restarts -- exactly 3h00m00s, the longest life on
+    record** (prior best: Tick 6's 104min+). Then restarted again at 02:45:13Z (old PID gone, new MainPID=3677556).
+  - Per-slot kill rate in that 3h window: **61 `tmux_session_lost` (scope=slot) events = ~20.3/hr**, down from Tick
+    5/6's cited ~34-42/hr -- a genuine improvement, not just noise (12 of the 61 carried a non-null `released_task`,
+    i.e. real mid-task kills, correctly requeued per design). Slot 1 (review, this session's own lineage) was hit 9x in
+    the window.
+  - `MemoryPeak` cgroup figure remains the same stuck `52936736768`B (49.30GiB) sticky high-water-mark documented by
+    agt-a3ed9a/agt-39a53d as NOT resetting across restarts -- not re-citing as fresh evidence, per the established
+    methodological correction.
+  - dmesg still permission-denied on this host (inconclusive, not ruled out -- same open gap as every prior check).
+  - **Minor new observation, likely benign**: all 17 slots on this host show `ff_pull_last_result: "conflict"` from a
+    single FF-pull sweep at 02:45:56Z (43s after the restart) -- host-wide + identical timestamp strongly suggests a
+    restart-transient artifact (e.g. a race right as the service came back up), not 17 independent real git conflicts.
+    Spot-checked slot 10's flagged `agent-orchestrator diverged ahead1/behind1` directly -- already clean/in-sync by the
+    time I checked seconds later. Not escalating; worth a passing note in case it recurs standalone (without a
+    coincident restart) in a future tick.
+  - **Slot 13's orphaned-duplicate-commit finding (Tick 6) -- CONFIRMED RESOLVED**: git-health shows slot 13's worktree
+    fully clean, no dirty files, matching main's Tick 6 salvage-check-then-reset-hard dispatch having landed
+    successfully.
+
+  **Net read**: this incident is trending toward resolution on BOTH axes (service-restart cadence AND per-slot kill
+  rate), but is still actively costing real mid-task work (12 kills/3h with a released task) and the `[OPERATOR] P1`
+  decision in this doc is still unchecked/unruled as of this read -- asking main directly whether the operator has ruled
+  since the ~01:32Z online-window Tick 6 flagged.
+
+  **Not committed by review** (zero commits, role boundary) -- handed to main to route to a live worker for the
+  `docs(plans):` commit.

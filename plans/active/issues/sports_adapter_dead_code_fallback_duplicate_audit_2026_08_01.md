@@ -225,10 +225,12 @@ named) rather than left as prose, per the findings-closure hard rule.
       → `test_get_standings_error_propagates`, the old test asserted the swallowed behavior). Verified
       `_fetch_and_cache_standings` (sports_reference_core.py:592-604) already catches `Exception` and calls
       `hooks.note_failed` — no caller change needed. Full QG green (5133 passed).
-- [ ] [BACKEND] P3. `open_meteo.py::OpenMeteoAdapter.get_weather` (lines 71-122, instruments-service) — either delete
+- [x] ✅ [BACKEND] P3. `open_meteo.py::OpenMeteoAdapter.get_weather` (lines 71-122, instruments-service) — either delete
       (zero callers, not part of the abstract interface) or add an explicit "registered but intentionally unreached"
       note matching this codebase's own precedent (`adapters/tradfi/ibkr.py`'s unreached-note style). (repo:
-      instruments-service)
+      instruments-service) — instruments-service@5489328a. Deleted the method (confirmed zero production callers via
+      grep; only test-file references) + its two dedicated test classes in `tests/unit/test_sports_open_meteo_boost.py`
+      and `tests/unit/test_open_meteo_adapter_coverage.py`. Full QG green.
 - [x] ✅ [BACKEND] P2. Delete `betfair_adapter.py::BetfairAdapter` and `matchbook_adapter.py::MatchbookAdapter`
       (market-tick-data-service `market_interface/adapters/sports/`) — both are dead code superseded by the live-routed
       `execution_service.sports_execution.adapters.exchanges.{betfair,matchbook}` classes per `sports/registry.py`'s own

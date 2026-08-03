@@ -678,3 +678,293 @@ not just noting.
   dep-order/ci_status gate staying as the correct conservative behavior (it should NOT promote onto a repo whose LDR CI
   it can't confirm green) — the real fix is unblocking LDR's `quality-gates-v2` from completing a run at all, which is
   this doc's existing P1 thread, not a new one.
+
+- **2026-08-03 ~02:44-02:55Z (cicd escalation `agt-31a992`, slot 10, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — third `deployment-api`-specific dispatch onto this exact wall; independently re-derived the same
+  root cause as `agt-52cafa`/`agt-bcc6bb` above before reading their entries, then found them and confirms rather than
+  duplicates. `main` HEAD (`969bce0`, tip of the last completed Option-B promotion) fails `quality-gates-v2` on both the
+  `checks` leg (`Type check FAILED/timeout (exit=124)`, run `30767196199`) and STEP 5.106
+  `check_bare_read_availability_index` (2 "new" findings at `_core.py:171`/`388`) — the latter is the same promotion-lag
+  line-shift artifact `agt-bcc6bb` diagnosed (main is missing LDR's `aaa0d1d`, which shifted `_core.py` by +4 lines;
+  `origin/main..origin/live-defi-rollout` shows 445 commits behind for this repo, growing). Re-confirmed the
+  fleet-promote gate is still the blocker, live: `ldr-to-main-promote-fleet` run `30780099205` (02:46:18Z, PM repo)
+  →`GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`.
+  **`live-defi-rollout`'s own `workflow_dispatch` QG (`30777257322`, started 01:36:05Z — the same run `agt-bcc6bb`
+  watched `in_progress` at 01:50Z) has since progressed and FAILED**: `content sentinel` success, `QG slice (checks)`
+  completed `failure` (`❌ Type check FAILED/timeout (exit=124)` again, 01:50:03Z — same signature, not a new one),
+  `QG slice (tests)` still `in_progress` at check time (~1h17m elapsed on that leg alone). Because `checks` already
+  failed, this run's overall conclusion will resolve `failure` once `tests` finishes — it will NOT clear the gate.
+  **Verified code cleanliness independently, cheaply** (own worktree `.tabs/10/deployment-api` at
+  `origin/live-defi-rollout` HEAD `e1e100e`, clean): ran
+  `check_bare_read_availability_index.py --workspace-root . --scope deployment-api` directly →
+  `OK — 9 baselined occurrence(s); 0 new occurrences` — STEP 5.106 is genuinely green on LDR content; the `main`-side "2
+  new occurrences" is purely the line-shift artifact from unpromoted commits, not a real regression. Host corroboration
+  at investigation time: `uptime` load average **25.36/25.37/24.66**, swap **18Gi/47Gi** used, 29 QG-related processes
+  live — same whole-host-thrashing signature as every prior entry in this doc-pair. **Disposition: no code, workflow, or
+  baseline change made or needed** — same conclusion as the two prior `deployment-api` entries above, now with a third
+  independent confirmation and a data point showing the SAME in-flight dispatch (`30777257322`) that `agt-bcc6bb` was
+  watching has since failed on the identical timeout signature rather than resolving green, i.e. the crisis is still
+  active, not trending toward self-resolution on its own within a single dispatch's lifetime. Did not retrigger
+  `live-defi-rollout` — a `workflow_dispatch` is already running and a duplicate would cancel it via the
+  `cancel-in-progress` concurrency group per the established posture in this doc. Did not touch `main`, the promotion
+  pipeline, or the `[OPERATOR]` P1 decision item — those remain this doc's existing P1 thread. Slot left clean (only
+  this doc touched; `deployment-api`/`unified-trading-pm` worktrees already clean, no other commit needed).
+
+- **2026-08-03 ~02:55-03:25Z (cicd escalation `agt-c82335`, slot 5, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — dispatched on the premise "the code fix already exists on `live-defi-rollout` — do not re-fix code
+  that is green there" (classify: promotion-stuck vs main-only-stale-workflow). **That premise is false**: `LDR` is ALSO
+  genuinely red, same root cause as every entry above, not a promotion-lag artifact. `main` HEAD (`4bbc25eb`) and
+  `live-defi-rollout` HEAD-at-time (`fd290224`) both failed `quality-gates-v2` with the identical signature —
+  `❌ Type check FAILED/timeout (exit=124)`, `ERROR_COUNT=0`/`WARN_COUNT=0` (genuine 120s wall-clock timeout, not a real
+  type error: `base-service.sh` only hits `log_fail "Type check FAILED/timeout"` when basedpyright produced NO
+  error/warning output at all). Last confirmed-real `success` for this repo was `2026-08-02T09:16Z` (basedpyright
+  completed in ~34s that run); every completed run since has been `cancelled` (superseded by the next push before
+  finishing) or `failure` (same timeout signature) — ~18h with zero durable green. Fleet-promote gate confirms the same
+  block already documented above:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  (`ldr-to-main-promote-fleet` run `30780650615`, 03:00Z). **Went one step further than prior entries: this session's
+  OWN worktree (`.tabs/5`) is colocated on the exact host running the stuck runner** — `hostname`/`hostname -I` =
+  `ip-172-31-5-118` / `172.31.5.118`, an EXACT match to the registered runner name `glue-ip-172-31-5-118-1`. Live host
+  corroboration from inside the box itself (not inferred from CI logs): `uptime` load average **37.80/46.20/41.10** on a
+  16-vCPU box (>2x oversubscribed), swap **16Gi/47Gi** in use.
+  `glue_pool_starvation_monitor.py --repo IggyIkenna/features-service --threshold-min 20` → **starved, rc=1**: 3
+  `glue`-labelled jobs queued 22.5-23.0min with the repo's single registered runner showing `busy:true` but
+  `GET .../actions/runs?status=in_progress` returning **zero** rows (the runner's busy-flag and GitHub's own in-progress
+  accounting disagree — the classic "dead/stuck-but-not-crashed runner" signature the starvation monitor exists to
+  catch). Direct process inspection on the shared host resolved the discrepancy: PID 4105351 (`check_env_canon.py`, part
+  of the QG `checks` leg, started 03:06Z) IS alive and IS the repo's job — it had actually been claimed by the runner
+  (contradicting the naive "queued" API read) but was sitting in **D-state (uninterruptible disk-I/O wait)** ~14min into
+  a step that normally takes seconds, consistent with the host's own documented disk-I/O contention pattern
+  (`orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`), not a runner crash and not anything wrong with
+  `features-service`'s code. **Disposition: no code/test/workflow change made or needed** — same root cause and same
+  "accept recurring reds on the protected-6, resolve via retrigger/self-heal" posture as every entry above; did not kill
+  the live `check_env_canon.py` process (legitimate in-progress work, not a zombie — killing it would just force a retry
+  under the same contention) and did not retrigger `quality-gates-v2` (a run is already claimed and progressing, however
+  slowly; a duplicate dispatch adds load without helping, per this doc's established reasoning). Corrected the
+  originating escalation's premise via the authoring-slot ping rather than silently "resolving" a wall that isn't
+  code-fixable. Slot left clean (only this doc touched; `features-service`/`e2e-testing` worktrees read-only, already
+  clean, on `live-defi-rollout`; a PRE-EXISTING unrelated unpushed `agent-orchestrator` commit from a prior session in
+  this same slot — `786e1ca`, todo-5 of
+  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — was left untouched as
+  out-of-scope for this one-shot escalation, not silently dropped).
+
+- **2026-08-03 ~03:47-03:59Z (cicd escalation `agt-05a7fe`, slot 5, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — same host/slot as the `agt-c82335` `features-service` entry directly above (`ip-172-31-5-118` /
+  `172.31.5.118`, exact match to runner `glue-ip-172-31-5-118-1`). Confirmed `main`'s prior run `30774745528`
+  (00:33:18Z, HEAD `e7933317`) failed with `qg_red_reason=pytest`, `1 failed, 1270 passed` at 24% progress: a single `F`
+  mid-stream, then a `pytest-timeout` `SIGALRM` fired while an xdist worker was mid-write on its execnet report pipe
+  (`pytest_timeout.py:317 handler` → `execnet/gateway_base.py:544 write` blocked >150s), corrupting the IPC channel and
+  cascading through `worker_internal_error` → `RuntimeError: Unexpectedly no active workers available` — the exact
+  signature this doc's sibling `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` / `..._continued_2026_08_02.md`
+  docs track (pipe-write-under-SIGALRM race, not a real hang or test defect). **Verified code cleanliness directly**:
+  full local `quality-gates.sh` (backgrounded per mandatory pattern) at LDR HEAD `5a6a3cba` (one commit ahead of the
+  failing SHA) — **100% green, 5120 passed, 6 skipped, 53.09s** — proving no code/test regression exists; the specific
+  `F` from the crashed run is unrecoverable (no `FAILURES`/short-summary section printed before the crash) but is very
+  unlikely a genuine regression given the full-suite local green. A newer commit (`5489328a`,
+  `refactor(sports): delete dead OpenMeteoAdapter.get_weather`, slot-12) landed on LDR mid-investigation; verified
+  independently via targeted grep — zero remaining callers of the deleted method anywhere in the tree — rather than
+  re-running the full (now 4th-in-queue) suite on an already-thrashing host. Host corroboration at investigation time:
+  `uptime` load average **38.87/38.46/38.19** (16 vCPUs, >2x oversubscribed), swap **24Gi/47Gi** in use, **39**
+  concurrent `quality-gates.sh` processes — same or worse than every prior entry. Live CI cross-check: a
+  `workflow_dispatch` run (`30780872143`, created 03:05:05Z, HEAD `73824258` — FIFO-queued 3 commits behind current tip)
+  was genuinely progressing at investigation time (`content sentinel` success, `QG slice (tests)` `in_progress`,
+  `QG slice (checks)` `queued`) — direct process inspection confirmed real work (two live `pytest` xdist worker
+  subprocesses under the runner's venv, PIDs 246291/246316, both in `D`-state disk-I/O wait, started 03:21Z), not a
+  stuck/dead runner despite ~50min of elapsed wall-clock on the FIFO queue. **Disposition: no code/test/workflow change
+  made or needed** — this is a single completed failure (not yet a sustained non-self-clearing red across multiple hours
+  the way `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` documents for `unified-trading-api`), so
+  the repo-local `PYTEST_TIMEOUT` raise mitigation that doc applies was not yet warranted here per its own stated
+  threshold; a fresh FIFO-queued run is already progressing toward its own natural resolution on the current LDR HEAD,
+  and retriggering would only cancel it via the `cancel-in-progress` concurrency group. `GET /api/repo-blockers` →
+  `open: []` — nothing to fast-path. `AUTHORING_SLOT=ci-reconcile` (this wall's boot context) is not a live numeric
+  worker slot — `POST /api/slots/{slot_id}/message` requires an int `slot_id` and rejected the ping (a direct-push
+  `ldr_qg_failure` wall with `pr_number=0` has no attributable authoring worker to page); this doc entry is the outcome
+  record instead. Slot left clean on `live-defi-rollout` in both `instruments-service` and this PM worktree (only this
+  doc touched in PM; the same pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this
+  slot, referenced in the `agt-c82335` entry above, was again left untouched as out-of-scope for this one-shot
+  escalation).
+
+- **2026-08-03 ~04:29-04:40Z (cicd escalation `agt-15e651`, slot 5, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — a re-dispatch of the exact same wall `agt-c82335` (above) diagnosed ~65min earlier; same
+  boot-context false premise repeated verbatim ("the code fix already exists on `live-defi-rollout`" — still false, LDR
+  is still genuinely red, same root cause). Confirms rather than re-derives: `main` HEAD unchanged (`4bbc25eb`,
+  445-vs-5-commit gap now at 5 unpromoted LDR commits), its `quality-gates-v2` run `30780455914` (started 02:55Z, same
+  run `agt-c82335` was watching) has `QG slice (checks)` completed `failure` (same
+  `Type check FAILED/timeout (exit=124)` signature) and `QG slice (tests)` still `in_progress` (now ~67min on that leg).
+  LDR's own run `30780475199` (queued since 02:55:35) had NOT started either job as of `agt-c82335`'s last check
+  (03:59Z) but **has since started**: direct process inspection on this same host (`ip-172-31-5-118`, still the exact
+  runner match) found two live `pytest` processes for `features-service` — PID 496202 (started 03:34Z, `D`-state
+  disk-I/O wait, matches main's in-progress tests leg) and PID 1738046 (started 04:33Z, `R`-state, 78% CPU, matches
+  LDR's tests leg finally being claimed) — i.e. real forward progress, not a stuck/dead queue entry. Host corroboration:
+  `uptime` load average **41.44/42.30/42.62** (16 vCPUs, >2.5x oversubscribed), swap **27Gi/47Gi** in use — same or
+  worse than every prior entry, consistent with the crisis still not abating. Fleet-promote gate unchanged:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`.
+  **Disposition: no code/test/workflow change made or needed** — same conclusion as `agt-c82335`, now with a 4th
+  independent confirmation for this repo alone (6th combined with the `deployment-api`/`instruments-service` entries
+  above) that the fleet is still capacity-constrained with no durable green since 2026-08-02T09:16Z (~19h and counting).
+  Did not retrigger either run — both are now genuinely claimed and progressing (verified via live process state, not
+  just the CI API's queued/in_progress label, which the `agt-c82335` entry already showed can lag reality) and a
+  duplicate dispatch would cancel real work via `cancel-in-progress`. `GET /api/repo-blockers` → `open: []` — nothing to
+  fast-path. `AUTHORING_SLOT=ci-reconcile` is not a live numeric slot (same non-int rejection as `agt-05a7fe`) — this
+  entry is the outcome record. **Flagging for the operator via this doc's standing P1, not a new escalation**: this is
+  now the 4th consecutive `cicd` dispatch onto the identical `features-service main_ci_red` /
+  `deployment-api main_ci_red` family within ~3 hours, each independently reaching "self-heals, no action" — the
+  self-heal has not actually landed in that window (LDR's own tests leg only started progressing ~40min into THIS
+  entry's investigation), so if the pattern repeats past this run's completion, the next occurrence should stop
+  re-deriving the diagnosis and instead apply this doc's own established escalation path (the `PYTEST_TIMEOUT`-raise
+  precedent in `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`, or an `[OPERATOR]` capacity
+  decision) rather than a 5th identical no-op confirmation. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `features-service`/`agent-orchestrator` worktrees read-only in this session, no commit needed there; the same
+  pre-existing unrelated unpushed `agent-orchestrator@786e1ca` from prior sessions in this slot was again left untouched
+  as out-of-scope for this one-shot escalation).
+
+- **2026-08-03 ~04:44-04:52Z (cicd escalation `agt-ed1b93`, slot 8, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — a re-dispatch of the same `deployment-api main_ci_red` wall `agt-c82335` diagnosed earlier this
+  session; same false boot-context premise repeated verbatim ("the code fix already exists on `live-defi-rollout`" —
+  still false, LDR is still genuinely red). Root cause confirmed unchanged: `main` HEAD (`969bce0`) is 447 commits
+  behind LDR, so the shrinking-ratchet baseline `read_availability_index_bare_call_baseline.yaml` (keyed to
+  `deployment_api/services/data_status_drilldown/_core.py:175/392` on current LDR) no longer line-matches main's stale
+  copy of the same wrapper calls (`:171/388` there) — a spurious drift failure, not a real code defect; fixed
+  automatically once promotion catches main up, never by editing LDR. Fleet-promote gate confirms the sole blocker:
+  `GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  (dep-order block on `unified-api-contracts`/`deployment-service` is advisory-only, "promoting anyway", not the actual
+  gate). **New evidence this entry adds, distinguishing it from the prior 4 same-family entries' "genuinely progressing,
+  leave it alone" disposition**: LDR's own queued run (`30780858931`, created 03:04:48Z) was NOT progressing — direct
+  process inspection of its `tests` leg (PID 11083 + 4 xdist children, `--cov=deployment_api`) found it alive since
+  03:12Z but pinned at ~0% CPU across two 5s-apart snapshots, `S`-state (not `D`-state disk-I/O wait like every prior
+  entry's "verified real progress" case), 32s of accumulated CPU time after ~1h35m wall-clock — a genuine stall, not
+  slow-but-alive. `ps -o ni` confirmed `NI=10` (governor-niced, per `qg-host-governor.sh`'s de-prioritise-on-acquire
+  design) while the host ran ~30+ concurrent `quality-gates.sh` invocations plus ~15 un-niced interactive `claude`
+  sessions each holding a steady 15-20% CPU slice — the niced QG tree was losing the scheduler lottery outright, not
+  merely running slower. Separately notable: `qg-host-governor.sh --status` reported **0 live reservations / 0 running
+  heavy phases** at the same moment ~30 `quality-gates.sh` processes were live host-wide — the K=6 admission cap this
+  governor exists to enforce is not visibly gating the CI-runner-triggered invocations in practice (worth a follow-up
+  investigation into whether CI legs acquire the same reservation ledger as interactive-slot legs, separate from this
+  entry's scope to resolve). Host corroboration: `uptime` load average **34.33/35.08/36.89** (16 vCPUs, >2x
+  oversubscribed), swap **23-28Gi/47Gi** in use — consistent with every prior entry, crisis still not abating (>19h and
+  counting per `agt-15e651`'s count, now going on 20h). **Action taken (per this doc's own standing directive at
+  `agt-15e651` not to re-confirm a 5th/6th time): `gh run cancel 30780858931` +
+  `gh workflow run quality-gates-v2.yml --ref live-defi-rollout`** — the stalled run was genuine dead weight (holding
+  RSS/swap for zero forward progress, one fewer niced contender freed for the rest of the fleet); a fresh run
+  (`30785516231`) is now queued. Not claiming this fixes the crisis — a fresh run under the same host load will face the
+  same contention — but distinguishes "stuck, worth clearing" from "slow but alive, leave it" going forward, and frees
+  the dead process's swap/RSS immediately rather than leaving it to time out on its own. `GET /api/repo-blockers` →
+  checked, `open: []`. `AUTHORING_SLOT` from boot context is `ci-reconcile`, not a numeric slot id —
+  `POST /api/slots/{slot_id}/message` requires an int, same non-int-rejection class as `agt-c82335`/`agt-15e651`; this
+  doc entry is the outcome record. **Escalating per the established path**: this is now the 5th `cicd` dispatch onto
+  this exact wall family within ~4 hours, all independently landing on "fleet capacity crisis, no code fix applicable" —
+  flagging this doc's own P1 status for an operator capacity decision (reduce concurrent interactive slot count, or make
+  the QG governor's niceness/reservation gate actually bind CI-runner legs) rather than continuing to dispatch `cicd`
+  workers to re-derive the same diagnosis. Slot left clean on `live-defi-rollout` in `deployment-api` (read-only this
+  session, no local changes) and this PM worktree (only this doc touched).
+- **2026-08-03 ~04:11-05:02Z (cicd escalation `agt-895b89`, slot 7, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`)** — 5th independent confirmation of the same family (`agt-c82335`,
+  `agt-05a7fe`, `agt-15e651` above, now `market-data-processing-service`). Same false boot-context premise repeated
+  verbatim ("the code fix already exists on `live-defi-rollout`"): confirmed false —
+  `git log origin/main..origin/live-defi-rollout` shows 0 commits main-ahead-of-LDR (main is simply 30 commits stale,
+  nothing diverged/broken). Root-caused the actual lock mechanism this time: `ci_status_store.py`'s `resolve_status()`
+  carve-out ("a STORED `main`-originated `FAILING` may be cleared ONLY by another `main` signal") means a
+  genuinely-green LDR run CANNOT clear a `main`-branch `FAILING` doc by itself — only a fresh green `main` QG run can,
+  which is exactly the thing the capacity crisis prevents. `ldr_to_main_fleet_promote.sh` gate log confirmed:
+  `GATE BLOCK market-data-processing-service: ci_status=FAILING (cached='FAILING', live='FAILING')`. Both the failing
+  `main` runs (`30777098334`, `30780140510`) and the LDR run (`30774747037`) show the identical signature already
+  catalogued above: `OSError: cannot send (already closed?)` during `pytest_sessionfinish` teardown after a `SIGINT`
+  (`30780140510`'s tests leg got the SIGINT at 96% test progress, then sat another ~38min before the step finally
+  reported `exit=1`) — not a real assertion failure. LDR's OWN `quality-gates-v2` had already gone green once
+  (`30777264856`, 01:36Z, 56min) proving the LDR tree itself is fine; per the ratchet above that green could not
+  propagate to unblock `main`. Per the established "resolve via retrigger" ruling, dispatched exactly ONE fresh
+  `workflow_dispatch` on `main` (`30783997794`) — confirmed no run was already in-flight on `main` before firing (the
+  `cancel-in-progress: true` concurrency group is per-`github.ref`, so this could not and did not cancel LDR's
+  concurrently-queued run `30780874357`). Did NOT retrigger a second time despite both runs sitting `queued` for
+  1h40min+ — direct process inspection on this same host (`ip-172-31-5-118`, this session runs ON the host, not just via
+  SSM) confirms this is the same well-known contention, not a dead runner: `uptime` load average **42.03/38.50/37.36**
+  (again >2.5x the 16-vCPU nominal capacity), swap **24Gi/47Gi**, and `market-data-processing-service`'s own `glue-1`
+  runner (`Runner.Listener`/`Runner.Worker`, PIDs 1294281/1294434/1295562) genuinely claimed the LDR run's
+  `QG slice (checks)` job at 04:08Z and is actively executing its step script (PID 1349705, started 04:10Z) — real
+  claimed work, not a stuck/dead queue entry; a duplicate dispatch would only add load per the `agt-15e651` precedent.
+  Fleet-promote gate remains `GATE BLOCK` for this repo as of last check (05:02Z). **Disposition: no code/test/workflow
+  change made or needed** — 6th combined confirmation that the fleet is still capacity-constrained; this entry adds the
+  concrete `resolve_status()` ratchet-mechanism explanation for WHY a proven-green LDR cannot self-clear a `main`-red
+  once the crisis has produced one, which the earlier 4 entries observed but did not trace to code.
+  `GET /api/repo-blockers` → not queried (session predates the AO API check pattern in `agt-c82335`; the repo-blocker
+  fast-path in `cicd.md` is for AFTER a fix lands, not applicable here since no fix landed).
+  `AUTHORING_SLOT=ci-reconcile` is not a live numeric slot (same non-int rejection as `agt-05a7fe`/`agt-15e651`) — this
+  entry is the outcome record. Left `market-data-processing-service` and this PM worktree on `live-defi-rollout`,
+  nothing else touched.
+
+- **2026-08-03 ~03:05-05:10Z (cicd escalation `agt-ff3f0c`, slot 5, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — dispatched against run `30777261237` (LDR HEAD `fd290224`, 01:36:11Z). Both slices failed with the
+  doc's two established shapes: `QG slice (checks)` hit `❌ Type check FAILED/timeout (exit=124)` at 02:18:28Z on its
+  first attempt, then the SAME run's `lint-codex` selector re-ran the full pipeline including typecheck moments later
+  and it passed clean (self-healed within one run — a scheduling-timeout signature, not a real basedpyright finding).
+  `QG slice (tests)` genuinely hung: last progress marker
+  `tests/delta_one/unit/test_feature_groups/test_microstructure.py` at 02:33:45Z (16%), then 8 minutes of total silence
+  before `pytest-timeout` fired inside `test_momentum.py::test_roc_columns_present` → `_add_lagged_features` →
+  `pd.concat(...)` — on a 50-row synthetic dataframe (`_make_ohlcv_df(n=50)`), i.e. not an algorithmic-complexity hang;
+  the code path itself is trivial at that scale. By the time this was investigated, LDR HEAD had advanced 10 commits to
+  `18fd5181` (fd290224 was stale) — confirmed none of the 10 touch `_add_lagged_features`/`base.py`, but one
+  (`2aea0e59`, slot-12, already on HEAD) independently fixed an unrelated-looking-but-plausibly-compounding
+  "lingering-non-daemon-thread hang class" in `cross_instrument/__main__.py` (`os._exit()` after
+  `ServiceBootstrap.run()`), the same failure family this doc's `market-data-processing-service` `OSError: cannot send`
+  entries also trace to abnormal pytest teardown/thread behavior under load.
+
+  **Did not add a redundant local repro or CI retrigger.** Host reading at investigation time: `uptime` load average
+  **31.47/35.30/36.40** (>2x the 16-vCPU nominal capacity), swap **23Gi/47Gi** used, **39** concurrent
+  `quality-gates.sh`-family processes already live — the identical whole-host-thrashing signature every entry in this
+  doc-pair tracks. Confirmed via direct process inspection (this session runs ON `ip-172-31-5-118`, the same box as
+  `features-service`'s `glue-ip-172-31-5-118-1` runner, `busy=true`): the `K=1` runner was occupied by `main`'s own
+  confirmatory `quality-gates-v2` run (`30780455914`, same `main` HEAD `4bbc25eb` that had already failed twice earlier
+  the same day) — `checks` leg failed again (same timeout signature), `tests` leg genuinely running (not `D`-state,
+  actively burning CPU, not a dead wedge) — real FIFO progress, not a deadlock, so no kill-to-unwedge intervention
+  warranted (unlike the `agt-f70a66` `features-service` entry above). A `live-defi-rollout` run (`30780475199`, HEAD
+  `52e80959`) was already genuinely queued behind it at investigation start. Two other slots (12, 14) were independently
+  running local `quality-gates.sh` against `features-service` at the same time for unrelated feature work (confirmed via
+  `GET /api/escalations/active` — no other slot currently holds a `features-service` escalation), not a
+  dispatcher-dedupe gap this time. **Disposition: no code/test/workflow change made or needed** — 14th repo-specific
+  corroboration of the fleet-wide contention root cause, first to combine both established failure shapes (`checks`-leg
+  timeout + `tests`-leg hang) in the same run for the same repo. `GET /api/repo-blockers` → `open: []`. Pinged
+  `AUTHORING_SLOT=ldr-ci-monitor` per the standard completion step (expect the same non-numeric-literal rejection this
+  doc's `ci`/`ci-reconcile` precedents hit). Slot left clean on `live-defi-rollout` (only this doc touched;
+  `features-service` and `e2e-testing` working trees already clean, no commits made).
+
+- **2026-08-03 ~03:13-05:15Z (cicd escalation `agt-c77b30`, slot 6, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`)** — dispatched against run `30772047216` (HEAD `b370df80`, 23:20:21Z,
+  `❌ Type check FAILED/timeout (exit=124)`). Ruled out a code cause immediately: `b370df80`'s diff is
+  `terraform/gcp/defi_collection_scheduler.tf` only (16 lines, Cloud Scheduler wiring) — zero Python touched, so a
+  `basedpyright` timeout cannot be this commit's fault. HEAD advanced during investigation
+  (`a182c68d`→`d98f1643`→`f9cb12e`→`b23e1c9`→`72ea669`→`77c0206`, all VM-launcher/infra script changes, none plausibly
+  typecheck-relevant). Watched the next `workflow_dispatch` (`30780860606`, HEAD `d98f1643`) complete `failure`:
+  `checks` leg hit the identical `exit=124` timeout again; `tests` leg failed on a THIRD failure shape not yet in this
+  doc's catalog — a `uv` dependency-install hardlink race
+  (`error: Failed to install: basedpyright-1.38.2-py3-none-any.whl ... Caused by: failed to hardlink file from .venv/.../basedpyright/... to /home/ubuntu/.cache/uv/archive-v0/... : No such file or directory (os error 2)`),
+  i.e. shared-host `uv` cache corruption under concurrent installs, not a test/code defect. **Reproduced locally FIRST**
+  (backgrounded, heartbeated per the mandatory pattern) at then-current HEAD `77c0206`: `bash scripts/quality-gates.sh`
+  → **`✅ ALL QUALITY GATES PASSED (233s)`** — tests 3017 passed/5 skipped, basedpyright completed with its existing
+  1293/1293-error ceiling (no timeout), sentinel written matching HEAD — decisive confirmation the code is clean.
+
+  Not yet aware of this doc's "don't add load, a duplicate dispatch doesn't help" posture, triggered one
+  `workflow_dispatch` (`30782058442`, HEAD `77c0206`) before finding it. Result: `checks` leg actually passed clean this
+  time (~6min, no timeout — the contention is intermittent, not constant), but `tests` leg hung completely silent for
+  ~90min (03:41→05:12Z, zero output) before cascading `pytest-timeout` (`>150.0s`) failures fired on tests that run in
+  9-48s locally (e.g. `test_launcher_gcloud_create_carries_preemption_shutdown_script`) — the exact tests-leg
+  resource-starvation-hang signature this doc's other entries already catalogue. `GET /api/repo-blockers` → `open: []`
+  both before and after this run — nothing to fast-path. **Disposition: no code/test/workflow change made or needed** —
+  15th repo-specific corroboration of the fleet-wide contention root cause, first `deployment-service`-specific entry,
+  adds the `uv`-hardlink-race dependency-install failure as a third catalogued failure shape alongside the established
+  `checks`-timeout and `tests`-hang. Did not trigger a further retrigger past the one already in flight when this was
+  written — per this doc's established posture, a duplicate dispatch onto an already-contended runner doesn't help.
+  Attempted to ping `AUTHORING_SLOT=ldr-ci-monitor` per the standard completion step — 422 rejected (non-numeric
+  `slot_id`), same class as the `ci`/`ci-reconcile` precedents above; this doc entry is the outcome record. Slot left
+  clean on `live-defi-rollout` (only this doc touched; `deployment-service` working tree already clean, no commit needed
+  there).
+
+- **2026-08-03 ~05:20-05:40Z (cicd escalation `agt-c77b30` re-dispatch, slot 4, `deployment-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`)** — same escalation id as the entry immediately above (slot 6's session
+  ended before it resolved; re-dispatched). HEAD advanced one commit to `2349b67` (test-only `LC_TARBALL_FRESHNESS` pin
+  in `test_vm_launcher_scripts.py`, unrelated). Independently reproduced the 3 `pytest-timeout` casualties from run
+  `30782058442` directly — all 3 PASS in 34s. Ran full local `bash scripts/quality-gates.sh` at `2349b67`:
+  **`✅ ALL QUALITY GATES PASSED (217s)`**, 3017 passed/5 skipped, sentinel written — 16th corroboration, 3rd
+  independent local-green confirmation for this one escalation alone. No run was in-flight for this HEAD, so triggered
+  one fresh `workflow_dispatch` per the established posture (`30787484781`). `GET /api/repo-blockers` → `open: []`
+  (unrelated `features-service` entry only). No code/test change made or needed. Slot left clean on `live-defi-rollout`
+  (only this doc touched).

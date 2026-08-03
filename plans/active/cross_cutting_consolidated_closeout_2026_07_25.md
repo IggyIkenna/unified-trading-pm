@@ -639,7 +639,7 @@ re-checked before dispatch (do not surface pre-migration data through the UI, pe
 (DP_NOT_V9/rate-limit alert false-positives tied to the manifest schema v9 migration + consolidation lag) ·
 [/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md](/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md)
 (DP_* events have no PubSub→subscriber→router path to `#data-pipeline-alerts`) ·
-[issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
+[archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
 (nightly cron VM undersized + launcher SSOT drift across 4 conflicting launcher artifacts → partial `coverage.json`) ·
 [issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
 (fleet-wide latent bug: live-mode lifecycle event sink publishes to non-existent PubSub topics, MTDS/MDPS).

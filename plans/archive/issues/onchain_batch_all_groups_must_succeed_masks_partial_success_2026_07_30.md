@@ -20,7 +20,7 @@ summary: >-
   cared about) succeeded or correctly resolved honest-absence. This is a genuine partial-success-masking defect: an
   operator/monitor watching VM exit codes has no way to tell "everything failed" from "12/13 succeeded, 1 pre-existing
   unrelated group failed" without reading the full run.log.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,6 +30,7 @@ tags: [defi, features-service, onchain, batch-handler, exit-code, partial-succes
 related:
   - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
+  - /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md
 created: "2026-07-30"
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 parent_epic: defi_master
@@ -44,6 +45,10 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  "both todos done 2026-08-03 (slot-12) — DESIGN ruling shipped features-service@ca5e5a96 (slot-5, 2026-07-30); BACKEND
+  root-cause closed via code-inspection cross-reference to
+  features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md §1 (already tracks the fix as its own P0), no
+  code shipped for this todo"
 ---
 
 # What I found
@@ -143,11 +148,45 @@ to avoid being blocked by unrelated calculator gaps. Separately, root-cause the 
       docstring contract exactly. Regression coverage: `TestEmitBatchCompletion` in
       `tests/onchain/unit/test_batch_handler.py` (all-succeed / partial-success / all-fail cases). —
       features-service@ca5e5a96
-- [ ] [BACKEND] P3. Root-cause `calculator_produced_base_columns_only` for the `rewards`/`flash_loan_availability`/
+- [x] ✅ [BACKEND] P3. Root-cause `calculator_produced_base_columns_only` for the `rewards`/`flash_loan_availability`/
       `health_factor`/`liquidation_events` onchain DEFI feature groups (confirmed reproducing on
       `2023-06-01..2023-06-07`, a clean dependency window — not a data-availability gap for THIS finding's window, but
       unexamined further). Repo: features-service. Done when: root cause identified + either fixed or documented as a
-      genuine data/design limitation with an issue-doc update.
+      genuine data/design limitation with an issue-doc update. ✅ — **Root cause: a genuine upstream MTDS
+      data-collection gap, NOT a features-service bug — and already tracked as its own P0, not duplicated here.** All 4
+      groups' calculators (`_calculate_rewards_features`/`_calculate_risk_params_features`/
+      `_calculate_flash_loan_features`/`_calculate_health_factor_features`/`_calculate_liquidation_features`,
+      `features_service/onchain/engine/orchestrator_calculators.py:293-404`) read from the SAME single upstream frame —
+      `rate_data`, sourced exclusively via `OnChainDataLoader.load_rate_indices()`
+      (`features_service/onchain/app/core/data_loader.py:488-522`). That loader resolves ONLY the MTDS
+      `data_type=lending_indices` hive segment — `_resolve_mtds_parquet_files("rate_indices", ...)`
+      (`data_loader.py:224`), whose own docstring at `:233` states "only `rate_indices` → `lending_indices` diverges" —
+      it never reads `risk_params`, `utilization`, `health_factor`, `liquidation_events`, `rewards`, or
+      `flash_loan_availability` as separate MTDS data_types. Each calculator defensively selects only the columns it
+      needs from that one frame (e.g. `_calculate_liquidation_features` wants `liquidation_count`/
+      `liquidated_collateral_amount`/`debt_to_cover`/`liquidator_address`, none of which `lending_indices` carries), so
+      every one collapses to `BASE_OUTPUT_COLUMNS` and correctly trips the `REQUIRED_OUTPUT_COLUMNS` honesty gate
+      (`orchestrator_calculators.py:33-48`, `_require_declared_outputs` at `:84-110`, shipped
+      `features-service@907e17b4` per the doc cited below) into
+      `attempted_failed(calculator_produced_base_columns_only)` — this IS the correct, honest behavior post-fix, not
+      itself a bug. Confirmed this is a genuine upstream absence, not merely a wrong read path: MTDS's own Aave adapter
+      (`market_tick_data_service/market_interface/adapters/defi/aave_positions.py:219-236`, `_fetch_aave_data_type`)
+      only dispatches `lending_indices`/`oracle_prices`/`utilization`/`risk_params` — there is no collector at all (in
+      this adapter) for `health_factor`, `liquidation_events`, `rewards`, or `flash_loan_availability` inputs, even
+      though `unified-api-contracts`'s `market_data_categories.py` registers all five as legitimate, expected DeFi
+      pass-through data_types (not hypothetical/unplanned). **This is the exact same defect already fully root-caused,
+      independently, in [[features_onchain_featureless_shards_and_vocabulary_split_2026_07_20]] §1 + its VERIFIED
+      2026-07-28 (slot-7) addendum** — identical mechanism: multiple calculators sharing one upstream loader, defensive
+      column selection, base-columns-only output, now correctly reported as `attempted_failed` rather than silently
+      `captured`. That doc's own open `[DATA] P0` todo ("build-MTDS-collectors → recompute") is the correct,
+      already-tracked home for the actual fix (new MTDS collection for
+      ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor inputs). Not duplicating that P0 scope
+      here — a P3 root-cause todo shouldn't silently absorb a separate, already-tracked, multi-repo P0 build
+      (dispatch-scope-eligibility). Closing via the "documented as a genuine data/design limitation" branch of this
+      todo's own done-when bar; no code changed in this session. Codex-alignment check: no new contract shipped — the
+      technical contract (the `REQUIRED_OUTPUT_COLUMNS` defensive-column honesty pattern) is already implemented +
+      documented in code (`orchestrator_calculators.py:49-63` module-level docstring) and tracked in the sibling P0 doc;
+      no codex update needed.
 
 # Progress Log
 
@@ -158,3 +197,17 @@ to avoid being blocked by unrelated calculator gaps. Separately, root-cause the 
   (`_emit_batch_completion()` now returns `success_count > 0`, matching delta_one's `_process_groups()` ANY-succeeded
   contract), added `TestEmitBatchCompletion` regression coverage. P3 root-cause todo for the 4
   `calculator_produced_base_columns_only` groups remains open, out of scope for this todo.
+- 2026-08-03 (slot-12): resolved the [BACKEND] P3 root-cause todo via code inspection (no code shipped) — traced all 4
+  groups' calculators to a single shared upstream loader (`load_rate_indices()`) that structurally only ever resolves
+  the MTDS `lending_indices` data_type, never the `risk_params`/`utilization`/`health_factor`/`liquidation_events`/
+  `rewards`/`flash_loan_availability` data_types the 5 calculators actually need — confirmed as a genuine upstream
+  collection gap (MTDS's Aave adapter has no fetch path for 4 of these) against UAC's own registered-expected DeFi
+  data_type list, not a features-service defect. Full evidence in the todo checkbox above. Independently cross-verified
+  against [[features_onchain_featureless_shards_and_vocabulary_split_2026_07_20]] §1 + its 2026-07-28 (slot-7) verified
+  addendum, which root-caused the identical mechanism for the same 5 calculators (`risk_params` included) and already
+  tracks the real fix as an open `[DATA] P0` todo ("build-MTDS-collectors → recompute") — not duplicated here. Every
+  todo in this doc is now done and unlocked; archiving per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) in the same commit: no deferred item to
+  migrate (the fix is already tracked in the sibling P0 doc), no new codex contract to record (the honesty-gate pattern
+  is already documented in-code and in that sibling doc), sole corpus referrer
+  (`plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) repointed to the archive path in the same commit.

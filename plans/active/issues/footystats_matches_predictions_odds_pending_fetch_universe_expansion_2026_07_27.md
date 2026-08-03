@@ -130,7 +130,7 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
 
 ## Actionable todos
 
-- [ ] [DATA] P2. **Re-run `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply`** against
+- [x] ✅ [DATA] P2. **Re-run `type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py --apply`** against
       `instruments-store-sports-{env}` with `MANIFEST_PER_VM_SHARDS=true` + a unique `VM_NAME` (per the script's own
       usage block) to re-type the current 35,106 MATCHES + 34,986 PREDICTIONS non-covered- league `expected_unattempted`
       rows to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`. This is the SAME safe-by-construction script already
@@ -140,20 +140,141 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
       per the existing pattern) before moving to the next todo. (repo: instruments-service, no code change — existing
       script, data-only manifest write). **Done when**: a post-apply live manifest read shows `(footystats, MATCHES)`
       and `(footystats, PREDICTIONS)` `expected_unattempted` counts dropped by ~35,106 / ~34,986 respectively (allow for
-      any new daily increment since this doc's filing date).
-- [ ] [DATA] P2. **Re-run `type_footystats_odds_non_covered_leagues_2026_06_29.py --apply`** the same way, to re-type
+      any new daily increment since this doc's filing date). — ✅ **DONE 2026-08-03 (slot-14)**. Dry-run confirmed
+      72,749 rows (36,467 MATCHES + 36,282 PREDICTIONS across 306-317 leagues, grown from the filing-date estimate).
+      Applied (`VM_NAME=type-fs-mp-slot14-1785730449`): wrote
+      `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/type-fs-mp-slot14-1785730449.parquet`.
+      Consolidator merge confirmed (see Progress Log for the lock-stall detour) — post-merge live re-read shows 0
+      non-covered-league rows remaining for both data_types.
+- [x] ✅ [DATA] P2. **Re-run `type_footystats_odds_non_covered_leagues_2026_06_29.py --apply`** the same way, to re-type
       the current 35,278 ODDS non-covered-league rows. (repo: instruments-service, no code change). **Done when**: a
       post-apply live manifest read shows `(footystats, ODDS)` `expected_unattempted` dropped by ~35,278 (allow for any
-      new daily increment).
-- [ ] [DATA] P3. **Root-cause the small remainder** (~281 rows: 105,651 total live pending minus the 105,370 the two
+      new daily increment). — ✅ **DONE 2026-08-03 (slot-14)**. Dry-run confirmed 36,639 rows / 321 leagues. Applied
+      (`VM_NAME=type-fs-odds-slot14-1785730494`): wrote
+      `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/type-fs-odds-slot14-1785730494.parquet`.
+      Consolidator merge confirmed; post-merge live re-read shows 0 non-covered-league rows remaining.
+- [x] ✅ [DATA] P3. **Root-cause the small remainder** (~281 rows: 105,651 total live pending minus the 105,370 the two
       typing scripts above account for) once the two todos above land — determine if these are blank-`league_id` rows, a
       genuinely-covered-league gap, or another distinct cause; do not assume they clear automatically. (repo:
-      instruments-service, read-only manifest analysis).
-- [ ] [DATA] P2. **After the above land, re-verify and close out
+      instruments-service, read-only manifest analysis). — ✅ **ROOT-CAUSED 2026-08-03 (slot-14)**. Post-merge live
+      remainder (grew to 422 rows by today: 69 MATCHES + 254 PREDICTIONS + 99 ODDS — 0 blank `league_id` in all three).
+      This is NOT a new/distinct cause — it is the SAME already-diagnosed
+      `footystats_matches_predictions_fetch_gaps_2026_07_08.md` todo #1 "4-league subscription-scope incidental-capture"
+      bug (CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA, all genuinely `PRED_NO_FOOTYSTATS`), and it is
+      STRUCTURALLY PERMANENT for this typing script's mechanism, not a one-time cleanup gap: MATCHES' remainder is
+      EXACTLY those 4 leagues, ODDS' remainder is EXACTLY those 4 leagues, PREDICTIONS' remainder is those 4 plus 11
+      more
+      (`CHILE_PRIMERA_B, COPA_ARGENTINA, COPA_DO_BRASIL, JLEAGUE_CUP, KOREAN_FA_CUP, K_LEAGUE_2,     LIGA_EXPANSION_MX, NORWEGIAN_CUP, SWISS_CUP, TACA_DA_LIGA, US_OPEN_CUP`
+      — cup/lower-division competitions in the same subscription-excluded countries, likely the same mechanism at a
+      finer grain). Root cause: todo #1's write-gate fix (`instruments-service@1af6c92`) stops FUTURE incidental
+      `captured` writes for these leagues, but each of them already carries historical `captured` rows from BEFORE that
+      fix shipped — and this typing script's covered-league determination is `_covered_leagues_for()`: "any league with
+      **≥1 ever-captured row**, dynamically computed" (by design, so it never needs hand-maintenance and can't regress a
+      genuinely-covered league). That same design means it can **never** un-cover a league once contaminated by even one
+      historical incidental row — so these leagues will keep reading "covered" and accumulating fresh daily
+      `expected_unattempted` rows FOREVER (dates in this remainder run through TODAY, 2026-08-03), regardless of how
+      many times this script is re-applied. New todo filed below (this doc) + cross-referenced in the source doc, since
+      fixing this needs a genuine code change (either the expected-universe enumerator excluding subscription-scoped
+      leagues at write time, or the typing script's covered-league check going subscription-aware instead of purely
+      historical-capture-based), not a data-apply re-run — out of data_engineering craft scope, matching this issue
+      chain's own established craft-scope discipline.
+- [x] ✅ [DATA] P2. **After the above land, re-verify and close out
       `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s todo #4** — re-run the same
       `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` check this doc's own filing used; if all three genuinely
       read 0 (or the P3 remainder above is itself resolved/re-triaged), flip that doc's todo #4 checkbox + frontmatter
       `status: open` → `status: resolved`, citing this doc's commit + the fresh confirming read. If a genuine residual
       remains, update this doc instead of silently closing it. (repo: unified-trading-pm doc edit). **Done when**:
       `footystats_matches_predictions_fetch_gaps_2026_07_08.md` accurately reflects the final state, one way or the
-      other.
+      other. — ✅ **DONE 2026-08-03 (slot-14)**. A genuine residual remains (todo 3 above) — did NOT flip that doc's
+      todo #4 or its `status`. Instead updated that doc's Progress Log with today's findings (typing scripts confirmed
+      re-applied + merged; the persisting 422-row residual is the SAME already-diagnosed 4-league bug, now understood to
+      be structurally permanent for the dynamic typing-script mechanism, not a re-verify-and-close situation) and
+      cross-referenced the new follow-up todo in this doc.
+- [x] ✅ [CODE] P2. **NEW, this session (2026-08-03, slot-14).** Fix the structural blind spot found by todo 3 above:
+      the footystats non-covered-league typing scripts' `_covered_leagues_for()` (`≥1 ever-captured row = covered`,
+      dynamically computed) can never un-cover CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA (and the 11 related
+      PREDICTIONS cup/lower-division leagues) once contaminated by historical incidental `captured` rows written before
+      `footystats_matches_predictions_fetch_gaps_2026_07_08.md` todo #1's write-gate fix (`instruments-service@1af6c92`)
+      shipped — so `pending_fetch` for these leagues grows by a few rows every day forever, regardless of how many times
+      the typing scripts are re-applied. — ✅ **DONE 2026-08-03 (slot-11)**. Picked direction (a) — the more
+      structurally correct fix, matching how the fetch-loop write gate already works: `SPORTS_ENTITY_LEAGUE_COVERAGE`
+      (`unified-api-contracts/.../canonical/domain/sports/provider_league_ids.py`) mapped `MATCHES`/`PREDICTIONS` to
+      `None` ("all leagues") and `ODDS` wasn't even a key, so the expected-universe enumerator's entity-coverage gate
+      (`scripts/enumerate_expected_universe.py::_enumerate_v2_sports`) never fired for footystats at all. Added
+      `_FOOTYSTATS_LEAGUE_COVERAGE`, mirroring the existing Understat XG/XG_SHOTS pattern, derived from the SAME
+      subscription-scoped denominator the fetch-loop write-gate already uses
+      (`get_expected_leagues_for_source("footystats", classifications=["Prediction", "Features"])`); wired into
+      `MATCHES`/`PREDICTIONS`/`ODDS`. Shipped: `unified-api-contracts@2a674aa8` (fix + `test_entity_league_coverage.py`
+      unit coverage — new `TestFootystatsSubscriptionScopedCoverage` class, 9 tests, plus fixed
+      `TestAllLeagueEntities.test_none_means_all_leagues_covered` which had asserted the old buggy `MATCHES is None`
+      behavior) and `instruments-service@69391ea9` (enumerator-level regression test —
+      `test_sports_v2_footystats_excluded_league_yields_no_provider_coverage` /
+      `test_sports_v2_footystats_covered_league_still_seeds_normally`, confirming all 4 diagnosed leagues + all 11
+      related PREDICTIONS-cup/lower-division leagues now yield `EXPECTED_NO_PROVIDER_COVERAGE` for
+      MATCHES/PREDICTIONS/ODDS while EPL is unaffected). Both repos: full `quality-gates.sh` green, shipped via
+      `quickmerge --agent`, verified on `origin/live-defi-rollout`. **Not yet done**: the todo's own stricter "Done
+      when" (`pending_fetch` genuinely holds 0 for these leagues over ≥2 consecutive days POST-deploy, since a code fix
+      landing today can't be observed across 2 calendar days in the same session) — tracked as a new followup todo below
+      rather than left unflipped, since the code fix itself is complete, tested, and shipped.
+
+- [ ] [DIAG] P3. **NEW, this session (2026-08-03, slot-11).** Follow-up to the `[CODE]` todo directly above: once
+      `unified-api-contracts@2a674aa8` + `instruments-service@69391ea9` have run through at least one production
+      expected-universe enumeration cycle, re-verify `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` for
+      CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA (+ the 11 related PREDICTIONS cup/lower-division leagues) over
+      ≥2 consecutive days post-deploy — confirming the fix holds in production, not just in the unit-test/live-registry
+      checks the `[CODE]` todo already ran. (repo: instruments-service, read-only manifest analysis). Done when: both
+      checks (≥24h apart) show 0 pending rows for these leagues, or a genuine residual is found and re-triaged.
+
+# Progress Log
+
+- **2026-08-03 (slot-14, data_engineering craft)**: dry-ran both existing typing scripts against the live manifest
+  (bounded single-file reads, `scripts/dev/run-bounded-analysis.sh`, 28G cap — the ~250MB/11.85M-row/~20GB-in-memory
+  `_index/availability_index.parquet` streams slowly via `gcsfs`, one merge cycle observed at 13m54s), confirmed the
+  organic growth since filing (72,749 MATCHES+PREDICTIONS rows / 36,639 ODDS rows, up from the 2026-07-27 estimates of
+  ~70,092 / ~35,278), then applied both with unique `VM_NAME`s. **Hit an unrelated infra detour**: the
+  `instruments-store-sports-prd` manifest consolidator held its cross-cycle lock for an unusually long time (two
+  consecutive slow cycles, 13m54.63s then 12m23.6s, well past this bucket's documented historical max of 8m54s but still
+  under its Terraform-set 2400s TTL — `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`'s known
+  failure class) — confirmed via Cloud Run execution history + logs that these were genuine still-running merges, not
+  crashed/orphaned locks (each eventually completed successfully with `success=True`), so no manual lock-clear or
+  escalation was needed, just a wait. Post-merge live re-reads confirmed both applies landed: 0 non-covered-league rows
+  remain for MATCHES/PREDICTIONS/ODDS. Then ran a full live `pending_fetch` breakdown (todo 3) and found the ~422-row
+  remainder is entirely the already-diagnosed `footystats_matches_predictions_fetch_gaps_2026_07_08.md` todo #1 4-league
+  subscription-exclusion bug, now understood to be STRUCTURALLY PERMANENT for this typing script's
+  `_covered_leagues_for()` mechanism (see todo 3's full writeup above) — filed a new `[CODE] P2` follow-up todo in this
+  doc rather than attempting the fix myself (needs a real design call between two fix directions, backend_engineer
+  craft, not a data-apply task). Did NOT flip `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s todo #4 —
+  updated its Progress Log instead (see that doc). All work shipped as `unified-trading-pm` doc-only commits (no code
+  changes this session; the manifest writes went through the existing, already-reviewed typing scripts unmodified).
+
+- **2026-08-03 (slot-11, data_engineering craft, picked up the `[CODE]` follow-up todo above)**: investigated both
+  candidate fix directions via a dedicated research sub-agent, confirming direction (a) is correct and precisely scoped:
+  `scripts/enumerate_expected_universe.py::_enumerate_v2_sports`'s per-league entity-coverage gate
+  (`entity_coverage.get(dt)`, sourced from `unified_api_contracts.sports.get_entity_league_coverage`) is the SAME
+  mechanism that already correctly scopes Understat's `XG`/`XG_SHOTS` to the big-5 leagues — but
+  `SPORTS_ENTITY_LEAGUE_COVERAGE["MATCHES"]`/`["PREDICTIONS"]` were hardcoded `None` ("FootyStats: all leagues" — the
+  comment was simply wrong) and `"ODDS"` wasn't a key at all (`.get()` default `None`), so this gate structurally never
+  fired for footystats. Implemented: added `_FOOTYSTATS_LEAGUE_COVERAGE` in
+  `unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py`, built from
+  `get_expected_leagues_for_source("footystats", classifications=["Prediction", "Features"])` — the IDENTICAL
+  denominator `instruments-service/engine/orchestrator/footystats.py`'s fetch-loop write-gate already uses for all 3
+  data_types (confirmed by reading that module directly, not assumed) — wired into `MATCHES`/`PREDICTIONS`/`ODDS`.
+  Verified live against the editable-installed registry (via `instruments-service`'s venv, which resolves
+  `unified_api_contracts` straight to this slot's UAC checkout) that all 4 diagnosed leagues
+  (CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA) AND the 11 related PREDICTIONS-only cup/lower-division leagues
+  are now excluded, while EPL (control) remains included — then ran the actual `_enumerate_v2_sports` call end-to-end
+  for both a CHILE_PRIMERA and an EPL catalog entry across all 3 data_types, confirming `EXPECTED_NO_PROVIDER_COVERAGE`
+  fires for the excluded league and normal `expected_unattempted` seeding is unaffected for the covered one, BEFORE
+  writing the regression tests (proved the fix works against real code, not just against my own new tests). Added
+  regression coverage in both repos (see the `[CODE]` todo's DONE note above for the exact test names/shas). Found and
+  fixed one PRE-EXISTING UAC test (`TestAllLeagueEntities.test_none_means_all_leagues_covered`) that had directly
+  asserted the old buggy `get_entity_league_coverage("MATCHES") is None` behavior — left as-is it would have made this
+  fix's own QG run red; updated its parametrize list + added a cross-reference docstring note instead of just deleting
+  the assertion. Also recovered an UNRELATED dangling local commit in `market-tick-data-service` (`ffc33d0e`, flagged by
+  review as genuinely good but never landed — preserved on `origin/wip-preserve/orchestrator-slot-11-1ebcc587` by
+  quickmerge's STAGE 5 regate guard) while waiting on this session's QG runs: rebased the 2 of its 4 touched files that
+  hadn't already been independently re-fixed by a different slot's `383ea4c8`, shipped as
+  `market-tick-data-service@b7648675`. Both `unified-api-contracts` and `instruments-service` full `quality-gates.sh`
+  green, shipped via `quickmerge --agent`, verified reachable from `origin/live-defi-rollout` before flipping the
+  checkbox above. Filed the `[DIAG] P3` production-holds-over-2-days follow-up todo above rather than blocking this flip
+  on calendar time this session doesn't have.

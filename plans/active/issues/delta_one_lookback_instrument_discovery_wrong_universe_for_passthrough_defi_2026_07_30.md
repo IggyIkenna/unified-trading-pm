@@ -168,12 +168,14 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
       check discovers oracle-price/perp-funding-shaped instrument ids (not DEX-pool ids), verified by a new unit test,
       and `bash scripts/quality-gates.sh` green. — features-service@8e62dc30, quality-gates.sh ALL PASSED
       (sentinel=HEAD).
-- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one
-      leg: launch `features-service --feature-family delta_one --asset-group DEFI --feature-group funding_oi` (and
-      `returns`) with `TIMEFRAME=15m`, over a clean window verified against the live MTDS manifest for the resolved
-      pass-through data_type (`perp_funding` has a confirmed clean block `2023-05-12..2023-10-31`; `oracle_prices` needs
-      the same clean-window check before picking dates). Repo: features-service. Done when: `features-delta-one-defi`
-      has a populated index, and D1's checkbox is flipped citing this evidence.
+- [ ] [DATA] P2. **`returns` DONE (2026-08-02, slot-6); `funding_oi` still BLOCKED (2026-08-03, slot-2) — see Progress
+      Log, cannot flip D1's checkbox yet.** Once the above lands, resume
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one leg: launch
+      `features-service --feature-family delta_one --asset-group DEFI --feature-group     funding_oi` (and `returns`)
+      with `TIMEFRAME=15m`, over a clean window verified against the live MTDS manifest for the resolved pass-through
+      data_type (`perp_funding` has a confirmed clean block `2023-05-12..2023-10-31`; `oracle_prices` needs the same
+      clean-window check before picking dates). Repo: features-service. Done when: `features-delta-one-defi` has a
+      populated index, and D1's checkbox is flipped citing this evidence.
 
 # Progress Log
 
@@ -231,3 +233,38 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   this is the same resolved-moot finding, not a new defect. Pinged the authoring monitor slot (`dp-fleet-monitor`) with
   this outcome so a future occurrence of this exact alert for this VM prefix is recognized as expected noise, not a
   fresh incident.
+- **2026-08-03 (slot-2, data_engineering craft, dispatched to todo 2)**: `funding_oi`'s backend join fix
+  (`features-service@0699c5db`, `[BACKEND] P2` in the sibling
+  `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`) landed today, so `funding_oi` was
+  legitimately re-dispatchable — but `returns` was already confirmed complete (slot-6, 2026-08-02, above), so this
+  session only needed to launch `funding_oi`. Launched the real verification-window run over the confirmed clean window:
+  `features-delta-one-defi-20260803-031632` (SPOT, `2023-05-12..2023-10-31`, `--launch-mode full`). Dependency-check +
+  lookback-validation both PASSED (confirms THIS doc's own todo-1 fix is holding correctly in production) — but every
+  processed date hit the SAME 100%-NaN open_interest/mark_price/index_price rejection the sibling doc's `[BACKEND] P2`
+  fix was supposed to have resolved; VM exited `rc=1`, `ALL feature groups failed: ['funding_oi']`; independently
+  re-verified against the manifest itself (not just the log) — the run's per-VM shard has exactly 1 row,
+  `capture_status=attempted_failed`, zero `record_captured`. This is a NEW, distinct bug from the one this doc fixes —
+  confirmed `derivative_ticker` HYPERLIQUID data genuinely exists in-window (live GCS check), so the join is failing to
+  MATCH real available data, not failing on absent data. Full evidence + a new `[BACKEND] P1` todo filed in the sibling
+  doc (its Progress Log, same date) rather than duplicating the investigation here — this doc's craft-scope
+  (data_engineering) correctly stops at launch-and-diagnose, not backend debugging. **Still cannot flip this todo's own
+  done-when** — `returns` remains complete, `funding_oi` is now blocked on the sibling doc's `[BACKEND] P1` instead of
+  its (now-insufficient) `[BACKEND] P2`. No manifest-integrity issue from this run — the one row written is an honest
+  `attempted_failed`, not a masked success. Did not relaunch — the failure is systematic across every processed date
+  (not a one-off), so a retry with the same code would reproduce identically; re-attempt only after `[BACKEND] P1`
+  lands.
+- **2026-08-03 (slot-14, data_engineering craft, dispatched to this same todo 2 right after skipping its near-duplicate
+  `delta_one_candle_loader_no_pass_through_path_defi-003`)**: re-confirmed nothing has changed since slot-2's entry
+  above — `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006` (the `[BACKEND] P1` fix) is still
+  `dispatched` to slot 4 in the live backlog, not yet shipped. Skipping rather than re-launching the same doomed
+  `funding_oi` run or idling; see `delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s matching entry
+  (`unified-trading-pm@88a43a57d`) for the full cross-reference.
+- **2026-08-03 (slot-9, data_engineering craft, dispatched to this same todo 2)**: re-checked from scratch (not trusting
+  the prior slots' snapshot) — `features-service` fresh-pulled to HEAD `18fd5181`; `git log` on `_passthrough_loader.py`
+  still shows `0699c5db` as the newest commit touching that file (no new commit past the `[BACKEND] P2`
+  join-implementation landed). Cross-checked the live local backlog (`curl localhost:8765/api/backlog`, not just
+  re-reading this doc) directly: `defi_delta_one_funding_oi_hyperliquid_missing_open_interest-006` (`[BACKEND] P1`, the
+  symbol-match fix) is still `status: "dispatched", dispatched_to: 5` — genuinely in flight, not stalled/abandoned.
+  Block persists; not a new finding. Did NOT relaunch `funding_oi` (same deterministic failure the prior 2 attempts
+  already reproduced) and did NOT touch `[BACKEND]`-scoped code (craft-scope, not mine to freelance). Skipping this task
+  rather than idling — `[BACKEND] P1` landing is what unblocks re-attempt.

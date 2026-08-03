@@ -35,6 +35,11 @@ drift_direction: advance-code
 depends_on: []
 source: [sports_consolidated_native_ao_extract_2026_07_25.md Track S2 legacy-CAS-question + 205-227-cell-refetch todo]
 last_updated: "2026-08-03"
+context_scope:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 # Sports enrichment closer misses holiday/today false-positive classes; gap-fill launcher has no SPOT option
@@ -73,6 +78,23 @@ honest-absence stamp before the mirror rule can fire).
 FIXTURE_LINEUPS, PLAYER_STATS), narrow `--start-date 2026-07-03 --end-date 2026-07-14` window (manifest-skip makes the
 wider window free for already-captured days).
 
+**UPDATE 2026-08-03 (same-day follow-up, closing the parent todo's own done-when) — 3 of the 6 "genuine gap" dates were
+themselves a 3rd false-positive sub-class, not a fetch-execution gap.** A fresh, filtered manifest read
+(`read_availability_index(..., filters=[("date",">=","2026-07-03"),("date","<=","2026-07-14")])`) after the re-fetch
+above showed FIXTURE_LINEUPS/FIXTURE_STATS/PLAYER_STATS fully resolved (0 stuck) but **FIXTURE_EVENTS still had 162
+stuck cells, 100% concentrated on 2026-07-12 (64) / 07-13 (2) / 07-14 (96)** — their `written_at`/`attempted_at` were
+unchanged from original seeding, proving the just-run VM never actually attempted them. Re-launched a scoped follow-up
+(`instr-backfill-sports-fixture-events-20260803-024441`,
+`--entity FIXTURE_EVENTS --start-date 2026-07-12 --end-date 2026-07-14`, completed rc=0) to rule out a simple
+under-scoping bug — its own log shows **0 API calls queued** for 2026-07-14 (23 candidate fixtures, all 23
+skip-classified: 8 policy-scope, 3 observed-out-of-coverage, 12 pre-fetch-already-captured), and the stuck-cell count
+was **byte-identical before and after** (162/64/2/96). This is the SAME "no genuine fixture that date+league"
+false-positive class as the Christmas/today dates above, just for a different league population (SWISS_CHALLENGE_LEAGUE,
+MLS, AUSTRIAN_BUNDESLIGA, EKSTRAKLASA, SCOTTISH_PREMIERSHIP, SUPER_LIG, NORWEGIAN_CUP, BUNDESLIGA_2, LA_LIGA,
+SUPERCOPPA_ITALIANA, and others — 96 distinct leagues) — not an execution bug, and not fixable by re-running the same
+fetch again. Folded into the "Recommended decision" todo below rather than filed as a separate doc (identical root
+cause + identical fix).
+
 **Second, smaller finding**: `launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call
 (deployment-service/scripts/vm/launch-sports-is-gap-fill.sh:125-136) has no `--provisioning-model=SPOT` flag — it always
 launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HARD RULE)"
@@ -95,7 +117,9 @@ launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HAR
       independently-provable bar to also close a cell when FIXTURES' OWN row for the identical (date, league) is
       `expected_unattempted` with zero fixtures scheduled that day per the provider's schedule endpoint (not just
       `empty_confirmed`) — OR file a targeted FIXTURES honest-absence backfill for the 4 Christmas dates first, then
-      re-run this closer (the mirror rule should then fire on its own). (repo: instruments-service)
+      re-run this closer (the mirror rule should then fire on its own). **Scope now also covers** the 162 FIXTURE_EVENTS
+      2026-07-12/13/14 cells found in the 2026-08-03 follow-up above (same root cause, 96 different leagues) — one fix
+      closes both populations. (repo: instruments-service)
 - [ ] [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
       `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`, matching the pattern other backfill launchers use,
       to close the SPOT-default gap. (repo: deployment-service)

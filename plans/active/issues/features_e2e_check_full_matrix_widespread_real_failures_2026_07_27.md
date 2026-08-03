@@ -375,3 +375,44 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md` + declared repo-blocker
   `RB-ca8f005d` per RULES.md §4b, waited (bounded background watcher, ~4min) for the real VM to clear, then shipped once
   green.
+- 2026-08-03 (slot-16, data_engineering, INTERIM — re-verification P2 todo still in progress): picked up the last
+  unchecked todo (re-run the 6/7 affected shards). Ran
+  `features-service/scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --project central-element-323112`
+  per shard. **SPORTS:sports — genuine PASS**: force wrote 28 parquet objects to
+  `features-sports-test-central-element-323112` with `captured` manifest; skip leg verified genuine (object
+  byte-unchanged fingerprint). Confirms root cause D (manifest staleness/env-parity) stays fixed.
+  **CEFI/TRADFI:cross_instrument + CEFI/TRADFI:multi_timeframe — self-inflicted cascading failures, not a regression**:
+  fired all 7 shards concurrently rather than sequencing delta_one first per the skill's own "Ordering matters" rule (a
+  derived family reads delta_one's freshly-written `-test-` output as its input) — each failed with the expected
+  `FileNotFoundError`/`No upstream data ... produced 0 instruments. Run features-delta-one-service first` once its VM
+  actually ran, confirmed via direct `run.log` reads on the failed VMs (`features-e2e-cefi-20260803-023759-526e13`,
+  `features-e2e-tradfi-20260803-023804-c54481`, `features-e2e-tradfi-20260803-023752-c81739` / `-024133-c81739`,
+  `features-e2e-cefi-20260803-023805-38e1b8` / `-024152-38e1b8`). Re-run pending delta_one completion.
+  **CEFI/TRADFI:delta_one — still in flight**: found an ALREADY-RUNNING pair of VMs
+  (`features-e2e-cefi-20260803-023001-d7c1a5`, `features-e2e-tradfi-20260803-022954-b3b034`) at session start — most
+  likely a resumed continuation of this same task from an earlier turn (boot response carried
+  `dispatch_reason: "resume"` + `already_in_progress: true`); confirmed genuinely active (not stuck) via fresh `run.log`
+  timestamps before deciding to wait rather than duplicate-launch (this driver's own dedup guard also refused my own
+  concurrent attempts with `duplicate_in_flight`, consistent with that read). CEFI's VM was later confirmed
+  **SPOT-preempted** (`compute.instances.preempted` op at 2026-08-03T03:00:19Z) — a normal, expected termination mode
+  for a SPOT-provisioned backfill VM, not a hang; relaunched (`features-e2e-cefi-20260803-030432-d7c1a5`, currently
+  running). Two earlier relaunch attempts also hit a transient `compute.instances.create` "Required permission" error
+  under the `github-deploy@` service account that cleared on retry with no IAM change — same ambient identity had just
+  successfully created a VM minutes earlier, so read as an API/quota blip, not a real access gap; noting in case it
+  recurs. TRADFI's VM has run past its client-side 40min default timeout window with no enforcing driver process still
+  attached (my own invocation exited early via the dedup guard) — this is expected: the timeout is a polling-loop budget
+  on the ORIGINAL driver call, not something enforced against the VM itself, so it continues running to natural
+  completion. Both VMs' `run.log`s show real, continuously-advancing work (delta_one feature computation for CEFI; MDPS
+  candle scans for TRADFI), not a stall. **Not yet done**: waiting for both delta_one legs to reach a terminal
+  `EXIT_STATUS`, then re-running the 4 derived shards against the freshly-written delta_one `-test-` output, then
+  closing out this todo with the final consolidated verdict. No code changes needed for this todo (verification-only);
+  nothing shipped against `features-service` this session.
+- 2026-08-03 ~05:31Z (slot-16, data_engineering, INTERIM #2): TRADFI:delta_one's VM
+  (`features-e2e-tradfi-20260803-022954-b3b034`) was **SPOT-preempted after running ~3h** (`compute.instances.preempted`
+  op at 2026-08-03T05:30:48Z; no `EXIT_STATUS` written, consistent with a genuine preemption, not a hang) — relaunched
+  (`features-e2e-tradfi-...` new VM, in flight). The long runtime before preemption is consistent with this shard's
+  known-large buffer window (348d TRADFI vs 240d CEFI, `features_delta_one_sequential_per_day_gcs_scan_2026_07_27.md`)
+  and a genuinely large volume of honest `Continuous series absent ... MDPS build-continuous must run first` warnings
+  (upstream data gaps, not a driver bug) rather than a stall — confirmed via continuously-advancing `run.log` timestamps
+  right up to the preemption instant. CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) remains healthy
+  and running. Still not done; continuing to monitor both.

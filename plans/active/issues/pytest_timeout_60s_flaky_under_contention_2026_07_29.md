@@ -43,7 +43,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
-last_updated: 2026-08-03T01:39Z
+last_updated: 2026-08-03T02:56Z
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -581,3 +581,24 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   (the fix already landed and re-doing it risks a duplicate/conflicting change). Did not attempt the `AUTHORING_SLOT`
   ping — `AUTHORING_SLOT=ci` is this doc's own already-documented dead end for non-integer slot ids (see the 2026-08-02
   ~16:25Z entry above), not retried. Widens the confirmed-repo list to 10.
+- **2026-08-03 ~02:44-02:56Z (`cicd` escalation `agt-e7be1f`, slot 4, `WALL_TYPE=main_ci_red`) — direct continuation of
+  the 01:32Z entry above**: dispatched off the same wall brief (binary "(A) promotion stuck" / "(B) main-only stale
+  workflow" split, `live-defi-rollout` assumed green). Found `main` HEAD (`0f775529`, PR #568) failing on run
+  `30777098334` — the exact run the `agt-dbfcd7`/slot-5 entry above triggered — with the identical
+  `OSError: cannot send (already closed?)` / `PluggyTeardownRaisedWarning` signature after ~14min silence post-
+  `Coverage floor`. No promotion PR is open or needed right now (LDR has advanced 12 files/820 insertions past PR #568
+  on unrelated work; `main` isn't behind on anything this doc's flake would fix). Independently re-confirmed the
+  cross-branch-flake conclusion by reading LDR's own `30774747037` (00:33Z) log directly: identical signature, and it
+  self-resolved via plain retry (`30777264856`, 01:36Z) with zero code change. Zero open PRs, zero open
+  `/api/repo-blockers`. Triggered a fresh `workflow_dispatch` (`30780140510`) since nothing was actually in flight — a
+  first candidate (`30780003919`) was mis-tracked as the retry before confirming via `--workflow quality-gates-v2.yml`
+  that it was an unrelated `dependency-update` run, caught before drawing any conclusion from it. A bounded 480s wait
+  confirmed genuine progress rather than a wedge: `content sentinel` success, `QG slice (tests)` `in_progress`,
+  `QG slice (checks)` `queued` — real FIFO movement, same shape as this doc's other "genuinely progressing" entries.
+  Host corroboration: load average climbed 20.53→30.24, swap 16→18Gi/47Gi, concurrent `quality-gates.sh` processes 12→19
+  over the ~10min investigation — live contention, consistent with every prior entry. No market-data-processing-service
+  code or `live-defi-rollout`/`main` change made or needed — same "fleet-wide capacity crisis, tree not actually broken"
+  conclusion as every prior entry in this doc. Left the fresh run to resolve asynchronously per this doc's established
+  precedent, not babysat to completion. Slot left clean (market-data-processing-service + unified-trading-pm both
+  already on `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinging the authoring slot
+  (`ci-reconcile`) with the outcome.
