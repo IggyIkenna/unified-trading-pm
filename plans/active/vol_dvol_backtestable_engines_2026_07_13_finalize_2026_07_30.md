@@ -49,9 +49,9 @@ source: >-
 context_scope:
   [
     /plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 ---
 

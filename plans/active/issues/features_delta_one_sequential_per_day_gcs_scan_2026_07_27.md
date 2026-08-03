@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [infra, features-service, performance, sequential-loop, gcs, delta_one]
 related:
   [
-    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-27
@@ -41,7 +41,7 @@ context_scope:
   [
     features-service/features_service/delta_one/app/core/data_loader.py,
     features-service/scripts/pipeline_e2e_check.py,
-    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 resolved_by:
@@ -119,13 +119,39 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       QG-green (17,908 tests passed) + quickmerge shipped. The end-to-end from-scratch wall-clock re-measurement in the
       "Done when" clause is the SAME work as the next todo below (re-measure real per-shard completion time) — not
       re-run separately here since it requires a real multi-hour VM backfill, out of scope for this code-change todo.
-- [ ] [DATA] P2. Once fixed, re-measure the real per-shard completion time and correct `_FAMILY_TIMEOUT_OVERRIDES` in
+- [x] [DATA] P2. ✅ Once fixed, re-measure the real per-shard completion time and correct `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` (likely lowerable back toward the generic default) and the
-      SKILL.md benchmark section — same "Done when" the companion timeout issue's P2 todo already asks for.
-- [ ] [DATA] P2. Check whether the 8 currently-running `features-e2e-cefi-*`/`features-e2e-tradfi-*` VMs (as of
+      SKILL.md benchmark section — same "Done when" the companion timeout issue's P2 todo already asks for. —
+      **RE-MEASURED 2026-08-03, slot-14, data_engineering — honest finding: the override was RAISED, not lowered** (real
+      evidence contradicted the "likely lowerable" framing). Used real, already-captured post-fix GCS/VM evidence rather
+      than launching a fresh multi-hour VM (single-walk/efficiency north-star — this is genuine `gcloud`/GCS-verified
+      data, not a guess): VM `features-e2e-cefi-20260730-133536-025349` (launched 2026-07-30, well after
+      `features-service@1ad44550` landed 2026-07-27 15:02 UTC) ran a genuine from-scratch CEFI:delta_one force leg
+      (254/254 instruments, 18 feature groups, 4-worker pool) and reached `EXIT_STATUS=0` at **61793s (17h9m53s)** — but
+      only a PARTIAL completion: 10/18 groups succeeded, the other 8 failed on an unrelated, already-tracked bug
+      (`orchestrator_returned_false`, see
+      `plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`) — not a timeout. Per-group
+      timeline confirmed groups run on a 4-worker pool (not fully sequential), and one group alone (`moving_averages`,
+      the 200-candle-lookback @ 24h-output-timeframe cell) took **10h20m** on its own slot; a failed group (`returns`)
+      still ran 5h23m before erroring, so the failures were not uniformly fast. A genuine 18/18 completion has still
+      never been directly observed — blocked by that unrelated bug, not by this timeout. 61793s already consumed 86% of
+      the prior 72000s budget with 8 groups' worth of real compute unaccounted for; extrapolating the 10 confirmed
+      successes' per-group average across all 18 groups at the same 4-way concurrency projects a full completion around
+      **~24h** — ABOVE the prior 72000s (20h) ceiling. **Real bottleneck for this cell is per-day candle
+      download+merge/feature-compute cost for large-lookback groups, not the GCS existence-probe round trips the P1 fix
+      batched — a distinct, still-open bottleneck**, consistent with why the fix (which targeted I/O round-trips) did
+      not bring this cell's wall-clock down materially. Shipped: `_FAMILY_TIMEOUT_OVERRIDES[("delta_one","CEFI")]`
+      raised 72000s→108000s (30h, ~25% margin over the ~24h projection) with the full reasoning as a code comment, 1 new
+      regression test (`test_cefi_delta_one_override_exceeds_its_measured_partial_completion`) pinning the override
+      against the real 61793s measurement, and this SKILL.md's benchmark section corrected to match —
+      `features-service@086812b0` (QG green, verified on origin). **Caveat carried forward**: do not lower this override
+      again without a genuine, directly-observed 18/18 completion (currently blocked by the unrelated
+      `orchestrator_returned_false` bug, not by this todo's scope).
+- [x] [DATA] P2. ✅ Check whether the 8 currently-running `features-e2e-cefi-*`/`features-e2e-tradfi-*` VMs (as of
       2026-07-27 12:57 UTC) ever produce `EXIT_STATUS`, and if any are genuinely stuck (not just slow) rather than
       progressing, per the VM-delete guardrail (`agents/infra.md` STEP 0.65) — do not force-delete a VM that is still
-      genuinely advancing.
+      genuinely advancing. — **CHECKED 2026-08-03, slot-15, data_engineering — none stuck; none still exist; see
+      Progress Log for full evidence.**
 
 ## Confirmation findings (2026-07-27)
 
@@ -204,3 +230,53 @@ independently prove it. **Next**: P1 batch/parallelize todo (below) is unblocked
   committed SHA before quickmerge. Did NOT re-run the full from-scratch CEFI wall-clock measurement described in the
   todo's "Done when" — that requires a real multi-hour VM backfill and is the same work as the next todo (re-measure +
   correct `_FAMILY_TIMEOUT_OVERRIDES`), left for that todo rather than duplicated here.
+- 2026-08-03 (slot-14, data_engineering): Picked up the re-measure/correct-override todo. Rather than launching a fresh
+  multi-hour VM (efficiency north-star — real post-fix evidence already existed in GCS), pulled the actual
+  post-`1ad44550` CEFI:delta_one VM run history (`gcloud storage ls`/`cat` on
+  `gs://deployment-scripts-central-element-323112/vm-logs/`) and found a genuine from-scratch force-leg run
+  (`features-e2e-cefi-20260730-133536-025349`) that reached `EXIT_STATUS=0` at 61793s but only 10/18 groups succeeded (8
+  failed on the unrelated `orchestrator_returned_false` bug). Downloaded the full 1.69M-line run.log and extracted
+  per-group start/complete timestamps to confirm the pool is 4-worker concurrent (not sequential) and that
+  `moving_averages` alone took 10h20m. Concluded the override should be RAISED (108000s), not lowered as the todo's own
+  speculative framing suggested — real evidence (61793s partial run already at 86% of the prior 72000s budget, plus a
+  ~24h full-completion projection) contradicted that framing, so followed the evidence per CLAUDE.md's "trust the actual
+  distribution, not the assumed number." Shipped `features-service@086812b0` (code comment + override value + 1 new
+  regression test, QG green, verified on origin) and this doc's SKILL.md pointer
+  (`cursor-configs/skills/data-pipeline-check-features/SKILL.md`). Did not touch the separate
+  `orchestrator_returned_false` bug (already tracked elsewhere) or the still-open "check the 8 running VMs" todo below
+  (out of this todo's scope — those VMs are 6+ days stale and have almost certainly already self-deleted).
+- 2026-08-03 (slot-15, data_engineering): Picked up the final "check the 8 VMs" todo, confirming slot-14's suspicion.
+  Live `gcloud compute instances list --filter="name~'features-e2e'"` shows ZERO `features-e2e-cefi-*`/
+  `features-e2e-tradfi-*` instances (only an unrelated, already-`TERMINATED` `features-e2e-sports-*` VM from 2026-08-01
+  remains) — every VM from the 2026-07-27 CEFI/TRADFI fleet is gone, confirmed individually via
+  `gcloud compute instances describe <name> --zone=asia-northeast1-c` returning "resource ... was not found" for
+  `-063401`/`-102228`/`-112159`/`-114259` (CEFI) and both `b1a99f`-suffixed TRADFI VMs. Reconstructed which VMs were
+  actually running at the 12:57 UTC checkpoint by cross-referencing each 2026-07-27 `vm-logs/<vm>/` directory's
+  `EXIT_STATUS` write-time (`gcloud storage objects describe ... --format="value(updateTime)"`) against its name-encoded
+  creation time (UTC): a VM created before 12:57 with no `EXIT_STATUS` by then, or one written after 12:57, was still
+  running at the checkpoint. This confirms `-063401` (06:34 launch) really was the oldest still running at 12:57
+  (everything created 04:33-06:21 had already exited by then) and that 2 TRADFI VMs (`-112901-b1a99f`, `-124921-b1a99f`)
+  were the ones running at 12:57, both later exiting `EXIT_STATUS=0` — matches this doc's "x2 tradfi" count exactly. The
+  CEFI count from the vm-logs listing alone read as 8 running-before-12:57 directories rather than the doc's stated 6 (a
+  launcher retry can leave a log-dir behind with no real VM attached to it, and no historical `gcloud instances list`
+  snapshot survives to fully reconcile which log-dirs had a live VM at the exact checkpoint) — not fully reconcilable
+  now, but immaterial to the actual question asked. The real finding: of the CEFI VMs running past 12:57, 5 (`-063401`,
+  `-071402`, `-083854`, `-101851`, `-120200`) eventually wrote a real `EXIT_STATUS` (1, 1, 1, 1, 0 respectively) between
+  19:50 UTC 2026-07-27 and 11:17 UTC 2026-07-28 — clean natural completions/failures, not stuck. 3 more (`-102228`,
+  `-112159`, `-114259`) never wrote `EXIT_STATUS` despite actively advancing `run.log` for ~19-21h (last writes
+  2026-07-28T07:29:06-07:30:52 UTC) — cross-checked
+  `gcloud compute operations list --filter="operationType=compute.instances.preempted"` and found all 3 have a genuine
+  `compute.instances.preempted` system event at 2026-07-28T07:31:0[5-7] UTC, seconds after their last log line: these
+  were SPOT-preempted, not stuck. A separate, earlier trio of 2026-07-27 launches
+  (`features-e2e-cefi-20260727-052137`/`-053419`, `features-e2e-tradfi-20260727-054139`) that never wrote a `run.log` at
+  all were ALSO preempted, within minutes of creation (2026-07-27 ~05:22-05:44 UTC) — so those weren't launch failures,
+  they were preempted before writing their first log line. Verdict for this todo: no VM is or was "genuinely stuck" —
+  every long-running CEFI/TRADFI VM from that window either completed naturally (wrote a real `EXIT_STATUS`) or was
+  SPOT-preempted (a distinct, already-understood termination mode, not a hang); none exist today, so no
+  VM-delete-guardrail judgment call is needed since there is nothing left to delete. Tangential note (not actioned, out
+  of scope): these VMs carrying `compute.instances.preempted` events means they're SPOT/preemptible -provisioned,
+  consistent with CLAUDE.md's "backfill VMs default to SPOT" rule — the sibling issue doc's cost estimate assumed
+  on-demand pricing for these same VMs, which if actually SPOT means that estimate was conservative-high, not a
+  correctness problem worth its own follow-up. No code change was needed for this investigation-only todo. This is the
+  last open item in this doc — every todo is now closed, so this doc is archival-eligible (no `locked_by`) as a
+  housekeeping follow-up for whoever next runs the archival sweep.

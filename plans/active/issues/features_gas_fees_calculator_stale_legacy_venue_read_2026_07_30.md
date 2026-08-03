@@ -109,10 +109,10 @@ green.
 
 - [x] [DATA] P1. Repoint `block_priority_gas_distribution_calculator.py`'s shard spec from `venue=chain` to
       `venue="ALCHEMY"`, correct the two stale docstrings. — **Done 2026-07-30**, `features-service@7f800b45`.
-- [ ] [DATA] P2. `_GAS_FEE_CHAINS` in this same calculator lists `GNOSIS`, which is not in `gas_fee_handler.py`'s
-      `DEFAULT_GAS_FEE_CHAINS` (no Gnosis chain_id in `CHAIN_ID_TO_NAME`'s coverage) — the calculator silently reads an
-      always-empty shard for that chain. Not a correctness bug (empty read is harmless), but worth reconciling the two
-      chain lists so they don't silently drift further. (repo: features-service)
+- [x] [DATA] P2. ✅ `_GAS_FEE_CHAINS` in this same calculator lists `GNOSIS`, which is not in `gas_fee_handler.py`'s
+      `DEFAULT_GAS_FEE_CHAINS` — the calculator silently reads an always-empty shard for that chain. Reconciled the two
+      chain lists. — **Done 2026-08-03**, `features-service@09c07ead`. **Scope note**: the reconciliation surfaced a
+      second, more consequential drift than this todo's own text described — see Progress Log. (repo: features-service)
 - [ ] [DATA] P3. The dead-code `_collect_latest_fees`/`_write_latest_fees_shard` path in `gas_fee_handler.py` (lines
       822-886) writes to an even-older, venue-less flat path (`gas_fees/chain_id={id}/date={d}/...`) that bypasses
       `write_defi_rows` entirely. Confirmed unreachable in the current prod scheduler wiring
@@ -127,3 +127,18 @@ green.
   what changes the delete-safety proof's disposition for the legacy `venue=<CHAINNAME>` gas_fees prefix from a hoped-for
   `yes-twin-confirmed` to `no-migrate-first` UNTIL this fix (now shipped) is confirmed live — see the delete-safety
   proof recorded in `plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`.
+- **2026-08-03 (data_engineering slot-6)**: closed the P2 todo (`features-service@09c07ead`), and while comparing the
+  two chain lists in full (not just the GNOSIS entry the todo named), found the drift was bigger than described in BOTH
+  directions: `_GAS_FEE_CHAINS` had `GNOSIS` (never collected by `gas_fee_handler.py`'s `DEFAULT_GAS_FEE_CHAINS` —
+  confirmed always-empty read, harmless) AND was separately _missing_ `LINEA`, `FANTOM`, `CELO`, `MANTLE`, `AURORA` —
+  five chains `DEFAULT_GAS_FEE_CHAINS` DOES collect gas-fee data for, that `block_priority_gas_distribution_calculator`
+  was silently never reading at all. That second half is a real (if lower-severity than the venue-name bug above)
+  data-correctness gap in the same feature/engine (`ArbitrageMevBackrunEngine` priority-gas sizing) this doc's main
+  finding covers — LINEA in particular is fully backfill-capable per `gas_fee_handler.py`'s own comments, so real
+  historical rows for that chain existed and were never picked up by this calculator until now. Fixed in the same commit
+  (removed `GNOSIS`, added the five missing chains); repointed the module comment to cite `DEFAULT_GAS_FEE_CHAINS`
+  directly as the sync source instead of the vaguer "Tier 1+2" framing, since a cross-repo import isn't allowed here (T4
+  forbids features-service -> market-tick-data-service deps) and the old framing is what let this drift happen
+  unnoticed. No test hardcoded the list contents, so no test changes were needed
+  (`tests/onchain/unit/test_defi_pipeline_extension_calculators.py` only exercises `calculate_features`/`source_name`,
+  confirmed by reading it, same as the original 2026-07-30 fix's note).

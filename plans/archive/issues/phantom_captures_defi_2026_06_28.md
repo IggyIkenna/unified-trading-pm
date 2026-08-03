@@ -27,6 +27,13 @@ resolved_by:
   root cause diagnosed 2026-07-28 (slot-15) with the same evidence as defi_satellite_ao_dispatch_batch1_2026_07_25 todo
   52; current-writer confirmation 2026-07-26"
 locked_by:
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

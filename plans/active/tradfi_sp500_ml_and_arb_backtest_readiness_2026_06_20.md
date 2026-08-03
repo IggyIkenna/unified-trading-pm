@@ -37,8 +37,11 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/epics/tradfi_master.md,
+    /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/epics/tradfi_master.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
   ]

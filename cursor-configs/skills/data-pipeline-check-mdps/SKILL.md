@@ -88,6 +88,29 @@ Verified 2026-07-20: all five (`cefi/defi/tradfi/sports` + `pred`) exist. A miss
 provision it mirroring the PROD sibling (`--location=asia-northeast1 --uniform-bucket-level-access`), never silently
 skip the asset_group.
 
+### 2a. Resolved-bucket assertion — closes the fail-open gap (HARD, run immediately before every Phase-1 launch)
+
+The provisioning gate above only proves the `-test-` **siblings exist**; it does NOT prove the string you are about to
+pass via `--output-bucket` actually resolves to one of them. `launch-mdps-backfill-vm.sh` is **fail-OPEN** on this flag
+(`deployment-service/scripts/vm/launch-mdps-backfill-vm.sh:114`, `:222-223`, `:281`) — an omitted or mistyped
+`--output-bucket` silently writes PROD candles, no guard fires
+(`backfill_smoke_write_path_canonical_audit_2026_07_20.md` §1). Before **every** Phase-1 `launch-mdps-backfill-vm.sh`
+invocation this skill makes, assert the EXACT resolved bucket string you are about to pass — never a hardcoded example —
+contains `-test-`, and refuse loudly (never fall through) if it doesn't:
+
+```bash
+OUTPUT_BUCKET="market-data-tick-${ag}-test-${PROJECT_ID}"   # the literal value you are about to pass to --output-bucket
+case "$OUTPUT_BUCKET" in
+  *-test-*) : ;;
+  *) echo "REFUSING to launch: resolved --output-bucket '${OUTPUT_BUCKET}' does not contain '-test-' — this would write PROD candles. Aborting before any VM launch." >&2
+     exit 1 ;;
+esac
+```
+
+This assertion is mandatory on every invocation of this skill (interactive or `/autonomous`, scoped or unscoped) — it is
+the skill-layer fail-closed guard the launcher itself does not provide. There is no operator override: a PROD run is out
+of scope for `/data-pipeline-check-mdps` entirely, so this assertion never has a legitimate reason to fail open.
+
 ## 3. Phase 1 — force + skip matrix
 
 ```bash

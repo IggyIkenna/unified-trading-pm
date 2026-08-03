@@ -45,6 +45,13 @@ source: >-
   after the tradfi orphan-audit found 21 genuinely orphaned docs (of 23). Triage workflow `wf_92bc129c-2a8` (21 agents,
   0 errors) produced 43 AO-eligible candidates; this doc is the conflict-cleared subset only (5 of 43).
 assigned_role: data_engineering
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
+    /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
+  ]
 sequential: false
 drift_direction: advance-code
 ---

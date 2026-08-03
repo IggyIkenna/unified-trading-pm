@@ -52,6 +52,12 @@ source:
   operator directive 2026-06-30 (Harsh, Ikenna offline 2 days) — "we don't need the complex pipeline; MVP = run SIT and
   merge LDR→main; everything else out of scope"
 assigned_role: infra
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md,
+  ]
 drift_direction: advance-code
 ---
 

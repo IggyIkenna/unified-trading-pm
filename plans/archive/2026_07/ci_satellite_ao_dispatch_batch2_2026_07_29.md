@@ -64,6 +64,14 @@ estimate_class: infra
 estimate_baseline_ai_days: 5.5
 estimate_calibrated_ai_days: 4.4
 assigned_role: cicd
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/task_template.md,
+  ]
 drift_direction: advance-code
 locked_by:
 locked_since:

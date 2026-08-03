@@ -39,6 +39,12 @@ resolved_by:
   (2026-07-28); the strategy-service market-tick-data-service vendoring was confirmed a non-issue (the real dependency
   was dropped 2026-06-10 in d1f5a6a8) and its vestigial COPY removed as a side effect"
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    alerting-service/Dockerfile,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

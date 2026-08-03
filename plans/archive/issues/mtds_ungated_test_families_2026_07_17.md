@@ -35,6 +35,12 @@ source:
   base-service.sh only ever collected tests/unit/
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /codex/06-coding-standards/quality-gates.md,
+    market-tick-data-service/scripts/quality-gates.sh,
+  ]
 depends_on: []
 ---
 

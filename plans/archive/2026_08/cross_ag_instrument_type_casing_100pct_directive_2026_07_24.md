@@ -71,6 +71,9 @@ context_scope:
   [
     /codex/02-data/reconciliation-finding-taxonomy.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]

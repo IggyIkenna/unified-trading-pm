@@ -85,6 +85,29 @@ Verified 2026-07-20: all six exist (cefi has objects; the rest empty — normal 
 `commodity` resolves to the non-env-split `commodity-signals-batch-*` bucket; resolve it via `resolve_bucket_name`
 rather than assuming the `-test-` infix.
 
+### 2a. Resolved-bucket assertion — closes the fail-open gap (HARD, run immediately before every Phase-1 launch)
+
+The provisioning gate above only proves the `-test-` sibling buckets **exist**; it does NOT prove the string you are
+about to pass via `--sink-bucket` actually resolves to one of them. `launch-features-vm.sh` is **fail-OPEN** on this
+flag (`deployment-service/scripts/vm/launch-features-vm.sh:111-112`, `:159`, `:263-266`) — an omitted or mistyped
+`--sink-bucket` silently drops `IS_TEST_RUN` and the sink override, writing PROD features with no guard
+(`backfill_smoke_write_path_canonical_audit_2026_07_20.md` §1). Before **every** Phase-1 `launch-features-vm.sh`
+invocation this skill makes, assert the EXACT resolved bucket string you are about to pass — never a hardcoded example —
+contains `-test-`, and refuse loudly (never fall through) if it doesn't:
+
+```bash
+SINK_BUCKET="features-${ag}-test-${PROJECT_ID}"   # the literal value you are about to pass to --sink-bucket
+case "$SINK_BUCKET" in
+  *-test-*) : ;;
+  *) echo "REFUSING to launch: resolved --sink-bucket '${SINK_BUCKET}' does not contain '-test-' — this would write PROD features. Aborting before any VM launch." >&2
+     exit 1 ;;
+esac
+```
+
+This assertion is mandatory on every invocation of this skill (interactive or `/autonomous`, scoped or unscoped) — it is
+the skill-layer fail-closed guard the launcher itself does not provide. There is no operator override: a PROD run is out
+of scope for `/data-pipeline-check-features` entirely, so this assertion never has a legitimate reason to fail open.
+
 ## 3. Phase 1 — force + skip matrix (with per-family multi-day lookback)
 
 ```bash
@@ -243,12 +266,22 @@ and see `features-service/scripts/profile_compute_costs.py` for per-family compu
 the whole run** (never a peak minute), show the per-5min profile, exclude the first 300 s, and report **UNMEASURED**
 rather than substituting a completion-derived number if Monitoring has no data yet.
 
-**CEFI:delta_one materially exceeds the documented throughput assumption** (issue
-`features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`): a from-scratch force-leg run genuinely
-still computing (not stalled) has now been observed exceeding BOTH a 10h (36000s) and a prior ~20h SPOT-preemption
-window without reaching `EXIT_STATUS`. Do not assume the ~25.9s/instrument-day write-bound rate holds for this cell —
-its real per-shard completion time is unconfirmed and tied to the known S1 sequential-per-instrument-timeframe-loop
-bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`), not a simple timeout-tuning gap.
+**CEFI:delta_one materially exceeds the documented throughput assumption — CONFIRMED even after the GCS-probe fix**
+(issue `features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, re-measured
+`features_delta_one_sequential_per_day_gcs_scan_2026_07_27.md` 2026-08-03): the per-day GCS existence-probe
+parallelization fix (`features-service@1ad44550`, shipped 2026-07-27) does NOT bring this cell's wall-clock down
+materially. A genuine post-fix from-scratch force-leg run (VM `features-e2e-cefi-20260730-133536-025349`, launched
+2026-07-30) reached `EXIT_STATUS=0` at **61793s (17h9m53s)** — but only a **partial** completion (10/18 feature groups;
+the other 8 failed on an unrelated, already-tracked bug, `orchestrator_returned_false`, NOT a timeout — see
+`plans/active/issues/features_smoke_matrix_verification_findings_2026_08_01.md`). One group alone (`moving_averages`, a
+200-candle-lookback @ 24h-output-timeframe cell) took **10h20m** on its own worker slot inside the 4-worker pool. A
+genuine 18/18 completion has still never been directly observed — blocked by that unrelated bug, not by this timeout.
+Extrapolating the 10 confirmed successes' per-group average across all 18 groups at the same 4-way concurrency projects
+a full completion around **~24h**, i.e. it would have exceeded the PRIOR 72000s (20h) override — so
+`_FAMILY_TIMEOUT_OVERRIDES[("delta_one","CEFI")]` was **raised, not lowered**, to 108000s (30h). Do not assume the
+~25.9s/instrument-day write-bound rate holds for this cell — the real bottleneck now appears to be per-day candle
+download+merge/feature-compute cost for large-lookback groups, a distinct, still-open bottleneck from the one the
+GCS-probe fix addressed.
 
 **Projection model** — identical to the MDPS skill:
 

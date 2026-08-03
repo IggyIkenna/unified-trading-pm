@@ -38,12 +38,16 @@ source: [cicd escalation agt-c3b939 (plan_health gate), archive-candidates deep-
 drift_direction: worsening-slowly
 depends_on: []
 locked_by:
-resolved_by: "both target docs archived via the zero-open-todo ritual (2026-08-02); no split needed per the 2026-07-30 ruling"
+resolved_by:
+  "both target docs archived via the zero-open-todo ritual (2026-08-02); no split needed per the 2026-07-30 ruling"
 context_scope:
   [
     /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
-    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    scripts/plan-hygiene/check_line_caps.sh,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
   ]
 ---
 

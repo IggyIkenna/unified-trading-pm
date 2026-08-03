@@ -114,8 +114,9 @@ staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §
 (prod terraform drift backlog — 21 add / 18 change — reconcile-apply) ·
 [issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
 (VM startup/helper scripts have no auto-rollout to GCS) ·
-[issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/active/issues/managed_by_label_launcher_standardization_2026_07_13.md)
-(generic VM/Cloud-Run launcher "managed-by" label convention for deployment-api provenance) ·
+[issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/archive/issues/managed_by_label_launcher_standardization_2026_07_13.md)
+(ARCHIVED 2026-08-03, RESOLVED — deployment-service@db67173 + deployment-api@95a7a19; generic VM/Cloud-Run launcher
+"managed-by" label convention adopted, deployment-api echoes it as `managed_by`) ·
 [issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
 (fleet-wide VM-launcher billing-waste audit + pre-flight gate design).
 

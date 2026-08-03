@@ -19,6 +19,7 @@ related:
   - plans/active/cefi_consolidated_closeout_2026_07_18.md
   - plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md
   - plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
+  - plans/active/issues/cefi_manifest_combo_instrument_type_rebuild_overwrite_2026_08_03.md
 created: 2026-07-21
 parent_epic: cefi_master
 assigned_vm: planning
@@ -44,7 +45,9 @@ resolved_by:
   "§9 [DESIGN] P1 cross-check + [WRITER] P1 guard-widen both DONE — unified-api-contracts@11adf279 (DERIBIT-COMBO
   deregistration) + market-tick-data-service@2ddc6d4a (bare-DERIBIT combo classifier fix, both ingestion paths),
   independently re-verified 2026-07-27 (slot-15), no conflict between the two efforts. The [DATA] P2. partition-MOVE
-  --apply remains unstarted and operator-gated per §7."
+  --apply remains unstarted and operator-gated per §7. The manifest-row-disappearance P1 root-cause is DONE (2026-08-03,
+  slot-14): a genuine Surface C v2 dedup-apply consolidation bug, not an intentional purge — see the 9th todo. Two new
+  follow-on todos filed (an [OPERATOR] MVP-scope decision + a low-priority [DATA] bookkeeping-regen todo); both open."
 ---
 
 # DERIBIT combo instruments mispartitioned as perpetual/future — design of record
@@ -362,7 +365,172 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       `tardis_cefi_shards.py`") needed no separate port — that file calls the same shared
       `self._classify_row_instrument_type(s, venue)` method the fix modified, confirmed by direct grep/read
       (`tardis_cefi_shards.py:298,590`), so both ingestion paths share one fixed classifier already.
-- [ ] [DATA] P2. Implement + dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b;
-      canary on the two objects named in §6 before any full `--apply`.
-- [ ] [DATA] P2. Operator review of §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any
-      `--apply` is scheduled.
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot 15, task `deribit_combo_perpetual_partition_move-003`)** — Implement +
+      dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b; canary on the two objects
+      named in §6 before any full `--apply`. Shipped: `market-tick-data-service@04d48b3c` (census + full 7-step move
+      mechanic per §5, `--apply` gated behind an explicit self-refusal citing §7 until the sibling todo below clears;
+      `--dry-run`/`--canary` fully implemented and exercised against live production data, read-only — no GCS object
+      written/moved/deleted, `--apply` never invoked). `quality-gates.sh` green (9847 passed, coverage 80.68%),
+      sentinel-verified on the shipped SHA, quickmerge landed on `live-defi-rollout`. **Significant finding surfaced
+      while testing, not yet in this doc's earlier sections**: the live manifest today shows ZERO qualifying candidate
+      rows, a sharp drop from this doc's 2026-07-21 measurement (15,119 rows: 8,849 `perpetual` + 6,270 `future`).
+      Verified concretely: a full census run found only false-positive shape matches (`BTC-USDC@LIN`-style linear-perp
+      symbols, correctly rejected by the catalogue cross-check, 0 real combo hits survive it); `instrument_type=COMBO`
+      now has **0 rows manifest-wide, for any venue** (down from this doc's own §2b baseline of 662 DERIBIT `combo`
+      rows) — the entire combo classification appears to have been pruned from the manifest sometime in the intervening
+      13 days (unrelated migration work — the cefi tranche has seen heavy churn this period per its own
+      consolidated-closeout history). **The underlying GCS objects were NOT necessarily moved along with this** —
+      directly re-confirmed one of §6's two canary objects
+      (`.../instrument_type=perpetual/data_type=book_snapshot_5/BTC-FS-26DEC25_PERP.parquet`, 37,258 rows,
+      `instrument_id` content column still reads the wrong `DERIBIT:PERPETUAL:BTC-FS-26DEC25_PERP`) still physically
+      exists at its OLD wrong-partition path, but the manifest now carries **no row mentioning this symbol at all** —
+      not even a stale/wrong one. **Practical implication for the operator-review todo below**: do not schedule
+      `--apply` against this doc's stated 15,119-row scope without first re-running this script's `--dry-run` to get the
+      CURRENT candidate list — the manifest-driven scope may have shrunk to near-zero, OR (more likely, per the
+      orphaned-object evidence) the real remaining population is now UNDER-COUNTED by any manifest-only census, because
+      these specific objects still sit at the wrong path with wrong content but are invisible to a manifest-only scan. A
+      GCS-object-level re-scan (not just the manifest) is probably needed before the operator review can trust either "0
+      remaining" or "15,119 remaining" as the true count. Root cause of the manifest-row disappearance not investigated
+      this session (out of scope for the implement+dry-run todo; flagging for whoever does the operator-review pass, or
+      as a fresh finding if it recurs).
+- [ ] [DATA] P2. **BLOCKED-OPERATOR — genuine sign-off decision, not worker-determinable, per §7.** Operator review of
+      §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any `--apply` is scheduled. **Scope
+      re-verified 2026-08-03 (task `deribit_combo_perpetual_partition_move-004`, slot 13)**: re-ran §2a's own
+      methodology (bounded, single-day-prefix-per-call GCS listing, no full corpus walk) against the same 13 sampled
+      days for both `perpetual`/`future` partitions. Result: **every object §2a originally found is still physically
+      present, unchanged, at its original wrong-partition path** — per-day counts are byte-identical to §2a's table
+      (e.g. `2023-06-01/perpetual`: 60 objects/6 combo-shaped then and now; `2025-01-15/perpetual`: 38/2 then and now;
+      1,106 objects scanned across the sample, 14 combo-shaped stems found, matching §2a's original 14/980 exactly).
+      **Conclusion: the manifest census's drop to 0 candidates (prior todo's 2026-08-03 finding) is NOT evidence the
+      defect was fixed or any data moved — no GCS object was touched.** The manifest lost visibility into rows it
+      previously tracked; treat the true remaining scope as still ~15,119 rows (§2b's count) for this review, not 0,
+      until the manifest-row-disappearance is root-caused (new todo below). **This todo cannot be completed by a
+      worker** — §7 explicitly requires operator sign-off on (a) the widened scope (now reconfirmed as real and current,
+      not stale), (b) sequencing against the live fleet touching the same manifest/GCS prefixes, and (c) landing the
+      code fix before any backfill move (already done — §9's `[WRITER] P1` todo, `2ddc6d4a`, both ingestion paths
+      confirmed covered). Filed as a `/blocked` question this session; awaiting operator answer.
+- [x] ✅ [DATA] P1. **DONE 2026-08-03 (slot 14, task `deribit_combo_perpetual_partition_move-005`)** — Root-caused via
+      direct evidence, not inference: read the ACTUAL pre-apply manifest snapshot the Surface C v2 dedup script itself
+      wrote
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_d4_20260724T232332Z/availability_index.parquet`,
+      189,313,328 bytes, one bounded whole-object read) and diffed it against the CURRENT live manifest (same bucket,
+      `_index/availability_index.parquet`), plus the actual VM run.log for the exact apply
+      (`gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-dedup-apply-20260724-232055/run.log`).
+      **Verdict: (b) — a genuine manifest-consolidation correctness bug, NOT an intentional purge.**
+
+      **Direct proof of timing + scope**: the pre-apply snapshot (taken by the script itself at 2026-07-24T23:23:32Z,
+                  seconds before its own write) has EXACTLY 662 `instrument_type=combo` rows, 100% `venue=DERIBIT`, 100%
+                  `capture_status=empty_confirmed` (zero real tick data — honest-absence bookkeeping only, matching this doc's own
+                  §2b baseline exactly). The current live manifest (2026-08-03) has 0 combo rows, any venue, any status. Per this
+                  doc's own `cefi_4surface_migration_execution_log_2026_07_24.md` history, the ONLY write to
+                  `availability_index.parquet` in the entire 2026-07-21→2026-08-03 window is this one Surface C v2 `--apply` run
+                  (Finding 7, `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) — so the drop is bounded to this
+                  exact event, not a slow drift.
+
+                  **This was NOT the intentional part of that apply.** The apply's own run.log shows exactly one COMBO-labeled,
+                  reviewed, ruled drop: `[v2 P3b] DERIBIT-COMBO (purge): rows=196 captured=0 purged=196 renamed=0` — the SEPARATE,
+                  operator-ruled `venue=DERIBIT-COMBO` purge (`combo_mask = venue.str.upper() == "DERIBIT-COMBO"` in
+                  `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, confirmed by direct code read — scoped to the VENUE
+                  label only, never touches bare `venue=DERIBIT` rows regardless of `instrument_type`). Our 662 bare-DERIBIT
+                  combo rows appear in NEITHER this stat NOR the run's only other named drop counters
+                  (`dropped_orphan=2015` corpus-wide, `okx_noise_drop=7`) — they were never a reviewed/logged target of this
+                  migration; they were silently swept into one of the run's two large, itype-unbroken-down bulk counters:
+                  `eu-dropped=261630` or `de-dup-collapsed=1267269` (`by status: {expected_unattempted: 562590,
+                  empty_confirmed: 549447, attempted_failed: 155170, captured: 62}`).
+
+                  **Code-level narrowing (rules out 2 of 3 candidate mechanisms, does not fully pin the 3rd to one line):**
+                  `_reconcile_eu_duplicates` filters strictly to `capture_status == "expected_unattempted"` — our rows were
+                  `empty_confirmed`, so eu-reconcile structurally cannot be the mechanism. The per-tuple orphan-drop path
+                  (`_classify_tuple`) short-circuits any ALREADY-canonical id (`if kind == "canonical": return cur,
+                  "already_canon"`) straight to `relabel` (keep), never `drop` — and these rows already carried canonical
+                  `DERIBIT:COMBO:...` ids pre-apply, so the orphan-drop path is also structurally ruled out. That leaves
+                  `_dedup_blob`'s per-blob duplicate-collapse (`drop_duplicates` on the effective key, keep-best-`_STATUS_RANK`)
+                  as the only remaining candidate in this script — its own key (`PIN_ATOM` = date+venue+data_type+
+                  instrument_type+instrument_id+pipeline_mode) DOES include `instrument_type`, so it should only collapse
+                  same-itype duplicates, not cross-itype (i.e. NOT colliding against the separately-tracked 15,119 mispartitioned
+                  perpetual/future rows for the same symbols — verified those are still present, see the sibling todo above).
+                  The aggregate log has no per-`instrument_type` breakdown of which rows lost a collapse, so the exact
+                  colliding sibling per group could not be confirmed without a live, corpus-wide re-run of the classification
+                  pipeline — correctly out of scope/budget for this root-cause todo (heavy, would need the memory-bounding
+                  guardrail); flagged below as a residual open question only if the exact line-level mechanism ever becomes
+                  load-bearing.
+
+                  **Independently confirmed contributing correctness gap (verified live against the current catalogue, not
+                  assumed):** `unified-api-contracts@11adf279` (2026-07-21, the SAME day as this doc's §2b baseline) removed
+                  `"COMBO"` from `CeFiMvpRule.instrument_types` entirely (`MVP_SCOPE_CONFIG_VERSION` 19→20), on the commit's own
+                  stated premise **"DERIBIT-COMBO was the only CeFi consumer of 'COMBO'"** — empirically FALSE per this doc's own
+                  §2 census (662 + 15,119 rows, 100% catalogue-cross-check-confirmed `instrument_type=COMBO` for BARE
+                  `venue=DERIBIT`, not `DERIBIT-COMBO`). Verified live this session: `prod/catalog.parquet` still declares
+                  **70,128** bare-`DERIBIT` `instrument_type=COMBO` rows, but **100% now carry `mvp=False`**. The dedup script
+                  itself never reads the `mvp` column (`_load_catalog` projects only
+                  `venue/instrument_type/raw_symbol/instrument_id/canonical_instrument_id`), so this is NOT the direct drop
+                  mechanism traced above — but it is a real, independent, confirmed SSOT contradiction with two compounding
+                  consequences: (1) these bookkeeping rows will not self-heal on any future MVP-scope-driven
+                  expected-universe/expected_unattempted materialization while `mvp=False` persists, and (2) this doc's own
+                  PENDING §9 `[DATA] P2.` 15,119-row partition-MOVE (once operator-approved) would land real CAPTURED combo data
+                  that STILL reads as non-MVP even after being correctly repartitioned — undermining coverage/expected-universe
+                  tracking for the exact population this whole doc exists to fix, not just the historical 662-row bookkeeping
+                  loss. Flagging as its own decision below (do NOT unilaterally revert part of a 2026-07-21 explicit operator
+                  ruling without operator awareness — filed a `/blocked` question this session, see Progress Log).
+
+                  **No CAPTURED tick data was lost** (the apply's own `[INVARIANT] CAPTURED rows in the v2 drop set: 0` gate is
+                  real and correctly enforced) — this is a bookkeeping/tracking-fidelity regression, not a data-loss incident.
+
+- [ ] [OPERATOR] P2. **NEW, this session** — Decide whether to re-add `"COMBO"` to
+      `unified_api_contracts.canonical.crosscutting._mvp_scope_rules.CeFiMvpRule.instrument_types` for BARE
+      `venue=DERIBIT` (not `DERIBIT-COMBO`, already correctly deregistered and out of scope). The 2026-07-21
+      `uac@11adf279` removal's stated premise ("DERIBIT-COMBO was the only CeFi consumer of 'COMBO'") is now empirically
+      disproven by this doc's own measurements — 70,128 catalogue-declared, real bare-DERIBIT COMBO instruments exist
+      and are tagged `mvp=False`. Filed as an operator decision (not auto-fixed) because it partially reverses a recent,
+      explicit, named operator ruling in a different repo — genuinely not a worker-determinable call. If approved:
+      `unified-api-contracts`, bump `MVP_SCOPE_CONFIG_VERSION` 20→21, restore the removed
+      `TestDeribitComboInstrumentTypeV16`-style tests scoped to bare `DERIBIT` (not `DERIBIT-COMBO`).
+- [ ] [DATA] P3. Once the above is resolved either way, decide whether to backfill/regenerate the 662 lost
+      `empty_confirmed` bookkeeping rows (low priority — no real capture was lost, purely cosmetic tracking; likely
+      simplest to let them regenerate naturally on the next expected-universe materialization once (or if) MVP scope is
+      corrected) or explicitly accept the gap. Repo: instruments-service / market-tick-data-service, whichever owns the
+      expected_unattempted regeneration path for this axis.
+
+## Progress Log
+
+- **2026-08-03** (slot 15, data_engineering, task `deribit_combo_perpetual_partition_move-003`) — Implemented the
+  census + partition-move script (see todo 3 above for full evidence). Session ended mid-QG-run (shared host, several
+  concurrent `quality-gates.sh` invocations queued); script is dry-run-tested and correct but not yet committed. No GCS
+  object was written, moved, or deleted this session — every check was a read (`gcs_describe_object`/
+  `download_bytes`/bounded `list_blobs`), and `--apply` was never invoked (the script itself refuses `--apply` with a
+  citation to §7 pending the operator-review todo). Next session: confirm QG result, `quickmerge --agent` the script,
+  flip todo 3 with the shipped SHA, and consider whether the manifest-drift finding warrants its own issue doc if the
+  root cause turns out to be a live-data-correctness regression rather than an already-intentional cleanup.
+- **2026-08-03** (slot 13, data_engineering, task `deribit_combo_perpetual_partition_move-004`) — Task was the remaining
+  "operator review of §7" todo. This is a genuine operator-sign-off gate per §7 (production-data MOVE, widened scope,
+  live-fleet sequencing) — not worker-determinable, so no attempt was made to flip that checkbox unilaterally. Did the
+  doable prep the todo itself calls for: re-ran §2a's bounded GCS-listing methodology (same 13 days, both
+  `perpetual`/`future` partitions, read-only, no full corpus walk) to resolve whether the prior session's
+  manifest-census-drop-to-0 meant the defect was fixed. It was not — every originally-flagged object is still physically
+  present unchanged at its wrong-partition path; only the manifest's visibility into these rows changed. Updated the
+  operator-review todo with the reconfirmed ~15,119-row scope and filed a new P1 todo for the manifest-row-disappearance
+  root cause (untouched — genuinely separate work, flagged not fixed). Filed a `/blocked` question to the operator
+  carrying §7's three sign-off items plus this session's reconfirmed numbers. No GCS object written/moved/deleted; no
+  manifest row written; investigation script kept in scratchpad (one-off, not committed per script-homes). Next session
+  (whoever the operator's answer routes to): if approved, schedule the `--apply` per §5-6's canary-then-full-batch plan
+  using `market-tick-data-service@04d48b3c`'s script; either way, someone should pick up the new manifest-drift
+  root-cause todo independently since it doesn't block the operator decision itself.
+- **2026-08-03** (slot 14, data_engineering, task `deribit_combo_perpetual_partition_move-005`) — Task was the
+  manifest-row-disappearance root-cause todo (662→0 combo rows). Root-caused with direct evidence rather than inference:
+  read the pre-apply manifest snapshot the Surface C v2 dedup script itself wrote
+  (`_index/snapshots/pre_d4_20260724T232332Z/availability_index.parquet`, one bounded whole-object read) and diffed it
+  against the current live manifest, plus the exact apply VM's `run.log`
+  (`canonical-migration-cefi-dedup-apply-20260724-232055`) and the live catalogue (`prod/catalog.parquet`). Verdict: (b)
+  a genuine consolidation correctness bug (silent, unreviewed drop of 662 non-captured bookkeeping rows during the
+  2026-07-24 Surface C v2 `--apply`), NOT the intentional part of that migration (the apply's only reviewed
+  combo-labeled drop was the separate, correctly-scoped `venue=DERIBIT-COMBO` purge, 196 rows). No CAPTURED tick data
+  was lost — the apply's own captured-data invariant held. Also independently confirmed, live, a related SSOT
+  contradiction: `uac@11adf279` (2026-07-21) removed `COMBO` from `CeFiMvpRule.instrument_types` entirely on a premise
+  ("DERIBIT-COMBO was the only consumer") this doc's own measurements disprove — 70,128 real bare-DERIBIT COMBO
+  catalogue rows exist, now all `mvp=False`. Filed two new todos (an `[OPERATOR]` MVP-scope decision + a follow-on
+  `[DATA]` bookkeeping-regen todo) rather than unilaterally reverting part of a recent explicit operator ruling. Filed a
+  `/blocked` question this session to surface this as a data-correctness finding per CLAUDE.md's "big finding" criteria.
+  All reads were bounded single-object GETs (2 manifest blobs pre/post, 1 catalogue blob, 1 log file) — no whole-corpus
+  walk, no GCS write, no manifest write. Investigation scripts kept in scratchpad (one-off, not committed per
+  script-homes). Next session: awaiting operator answer on the MVP-scope todo; the bookkeeping-regen todo is
+  low-priority and can wait indefinitely.

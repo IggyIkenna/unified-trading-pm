@@ -53,9 +53,10 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/02-data/sports-2020-06-data-floor.md,
   ]
 ---

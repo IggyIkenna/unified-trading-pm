@@ -41,6 +41,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 resolved_by: agent-orchestrator@8fc338d
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/repo_health_watcher_false_positive_green_2026_07_21.md,
+    /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
+    agent-orchestrator/server/ci_reconcile.py,
+  ]
 depends_on: []
 ---
 

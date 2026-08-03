@@ -37,6 +37,14 @@ drift_direction: advance-code
 depends_on: []
 resolved_by: [unified-api-contracts@4f215b4c, instruments-service@5cbf4d3e, market-tick-data-service@9ae23495]
 locked_by:
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    instruments-service/scripts/check_enumeration_completeness.py,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md,
+  ]
 source:
   sub-agent, distinct_values_noncanonical_audit_2026_07_20.md DeFi-venue-adapter-test-and-add workflow (wxmjyre65);
   root-caused by a dedicated verify+adversarial-verify workflow (wf_7a8796e2-7a6) 2026-07-22 after the operator asked

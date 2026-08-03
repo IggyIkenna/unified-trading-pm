@@ -5,7 +5,7 @@ summary:
   pipeline_e2e_check.py's mtds-live-smoke VM name is built from the raw shard_spec (asset_group:venue:data_type) +
   timestamp with no length bound, so long venue/data_type combos exceed GCP's 63-char instance-name limit and the
   live-leg fails at VM creation before it can prove anything.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -18,14 +18,21 @@ assigned_vm: planning
 parent_epic: infrastructure_master
 source: [market-tick-data-service/scripts/pipeline_e2e_check.py]
 priority: P3
-resolved_by:
+resolved_by: market-tick-data-service@bccb95ea
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: 2026-08-03
 ---
 
 # data-pipeline-check-mtds live-leg VM name can exceed GCP's 63-char instance-name limit
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md's archive-immediately rule. Sole todo shipped:
+> market-tick-data-service@bccb95ea (extracted a testable `_live_smoke_vm_name()` helper hashing the (venue, data_type)
+> portion, mirroring `_vm_name()`'s existing collision-resistance fix for the batch-leg name; 4 regression tests added,
+> full quality-gates.sh green).
 
 ## What I found
 
@@ -71,8 +78,10 @@ suffix intact for uniqueness) once the combined name would exceed 63 chars, or s
 
 ## Todos
 
-- [ ] [BACKEND] P3. Bound `mtds-live-smoke-*` VM names to GCP's 63-char instance-name limit in
+- [x] ✅ [BACKEND] P3. Bound `mtds-live-smoke-*` VM names to GCP's 63-char instance-name limit in
       `market-tick-data-service/scripts/pipeline_e2e_check.py:2141` (truncate/hash the shard_spec portion, keep `run_ts`
       for uniqueness). (repo: market-tick-data-service). **Done when**: a live-leg cell for a long venue/data_type combo
       (e.g. `SPORTS:BETFAIR_SB_UK:arbitrage_opportunity`) no longer fails at `gcloud compute instances create` with an
-      `Invalid value for field 'resource.name'` error.
+      `Invalid value for field 'resource.name'` error. — market-tick-data-service@bccb95ea (extracted a testable
+      `_live_smoke_vm_name()` helper hashing the (venue, data_type) portion, mirroring `_vm_name()`'s existing
+      collision-resistance fix; 4 regression tests added, full quality-gates.sh green).

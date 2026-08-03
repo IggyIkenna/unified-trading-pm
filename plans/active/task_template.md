@@ -26,7 +26,14 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 locked_by:
 locked_since:
-context_scope: # elective minimal reading-list — codex SSOTs, related docs, key source paths; see doc-frontmatter-schema.md
+context_scope:
+  [
+    /plans/PLAN_FORMAT.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 supersedes:
 superseded_by:
 depends_on:

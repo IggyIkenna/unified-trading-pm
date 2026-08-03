@@ -635,3 +635,46 @@ not just noting.
   `(repo, wall_type)` pair before spawning another one-shot worker, rather than relying on each new worker to
   independently re-discover "someone already handled this." Slot left clean on `live-defi-rollout` (only this doc
   touched; `market-data-processing-service` working tree already clean).
+
+- **2026-08-03 ~01:36-01:50Z (cicd escalation `agt-bcc6bb`, slot 2, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — a DIFFERENT downstream symptom of this same crisis, not the tests-teardown-crash signature the
+  entries above track. `main`'s `quality-gates-v2` was RED (STEP 5.106 `check_bare_read_availability_index`: 2
+  "non-baselined" bare `read_availability_index(bucket)` calls in
+  `deployment_api/services/data_status_drilldown/ _core.py` at lines 171/388) while the boot context asserted
+  `live-defi-rollout` was green. Root-caused via direct branch diff
+  (`git log origin/main..origin/live-defi-rollout --oneline -- deployment_api/...`): `main` is **445 commits behind
+  `live-defi-rollout`** for this repo — the specific commit that shifted `_core.py`'s line numbers
+  (`aaa0d1d fix(data-status): ml-service manifest rollup used the sunset ml-models-store bucket alias`) landed on LDR
+  but was never promoted, so `main`'s copy of the file still has the calls at 171/388 while the (already-promoted, PM
+  repo) baseline yaml expects LDR's shifted 175/392 — a cross-repo promotion-timing skew (PM's own LDR→main promotion
+  outran deployment-api's), not a code defect on either side. Confirmed via
+  `unified-trading-pm/.github/workflows/ ldr-to-main-promote-fleet.yml`'s own latest run log (`30777006712`, PM repo):
+  `GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  — the fleet promoter itself refuses to promote deployment-api because it cannot observe a confirmed-green
+  `quality-gates-v2` run on LDR, which is exactly this doc's root cause:
+  `gh run list --branch live-defi-rollout --repo IggyIkenna/deployment-api` shows 5 consecutive `workflow_dispatch` runs
+  CANCELLED back-to-back since the last real success (12:23:51Z 2026-08-02), all triggered by the same `IggyIkenna`
+  automation actor spaced ~2-3h apart — each new dispatch cancels the prior run's `cancel-in-progress` concurrency group
+  before it can finish a multi-hour run, so LDR's `ci_status` never resolves to a durable PASS and the 445-commit
+  promotion backlog keeps growing. **Verified the actual code is clean, cheaply, without a full `quality-gates.sh`
+  run**: ran the standalone checker directly against the local LDR checkout (`.tabs/2/deployment-api` at HEAD `dc7eece`,
+  matching `origin/live-defi-rollout` exactly, clean tree) —
+  `check_bare_read_availability_index.py --workspace-root . --scope deployment-api` →
+  `OK — 9 baselined occurrence(s); 0 new occurrences`, confirming this specific gate step is genuinely green on LDR (not
+  just a stale local read) at minimal host cost. Live CI cross-check: a 6th `workflow_dispatch` (`30777257322`, started
+  `01:36:05Z`) was genuinely progressing at investigation time (`content sentinel` success, `QG slice (checks)`
+  `in_progress`, `QG slice (tests)` `queued` — real FIFO progress). Host corroboration: `uptime` load average
+  **42.60/39.95/38.00**, swap **18Gi/47Gi** in use — same whole-host-thrashing signature. **Disposition: no
+  code/test/workflow change made or needed** — the fix already exists on `live-defi-rollout` (commit `aaa0d1d` among the
+  445-commit backlog); hand-editing `main`'s baseline or file to force STEP 5.106 green would violate both the
+  INTEGRATION-BRANCH RULE (never push to protected `main`) and the "don't re-fix code that's already green upstream"
+  instruction — the correct fix is the pending promotion, which self-heals once LDR's `quality-gates-v2` completes one
+  full uninterrupted run. Did not add a 7th redundant retrigger — a dispatch was already in flight and progressing; per
+  this doc's established posture, a duplicate dispatch onto an already-contended host doesn't help and risks cancelling
+  the one that's actually making progress. `GET /api/repo-blockers` → `open: []` — nothing to fast-path. Slot left clean
+  on `live-defi-rollout` (only this doc touched; `deployment-api` working tree already clean, no commit needed there).
+  New failure-mode data point for this incident: promotion-lag-induced `main`-only gate failures (distinct from the
+  tests-teardown-crash signature above) are a second visible symptom of the same root cause, worth the fleet-promoter's
+  dep-order/ci_status gate staying as the correct conservative behavior (it should NOT promote onto a repo whose LDR CI
+  it can't confirm green) — the real fix is unblocking LDR's `quality-gates-v2` from completing a run at all, which is
+  this doc's existing P1 thread, not a new one.

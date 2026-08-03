@@ -89,6 +89,15 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+  ]
 drift_direction: none
 locked_by:
 locked_since:

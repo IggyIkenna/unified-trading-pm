@@ -18,7 +18,7 @@ summary: >-
   issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md) that was mistaken for fast
   success. No confirmed non-timeout example exists yet within this run; the universe-size hypothesis is still plausible
   but unproven by this doc's own evidence.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi]
 stage: [data]
@@ -52,9 +52,18 @@ context_scope:
     /cursor-configs/skills/data-pipeline-check-features/SKILL.md,
   ]
 resolved_by:
+  features-service@4d71b1b5 (timeout overrides) + features-service@dcf8a3d0 (loud duplicate-VM warning) +
+  market-data-processing-service@dbcba44 (MDPS twin) + unified-trading-library@34c9b5ef + features-service@9e7a5ee3
+  (post-run abandoned-VM reconciliation)
 ---
 
 # /data-pipeline-check-features default timeout too short for delta_one CEFI/TRADFI — orphaned duplicate VMs
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, all 4 todos done. Timeout overrides (`features-service@4d71b1b5`) + loud
+> duplicate-VM warning (`features-service@dcf8a3d0`) + the MDPS twin fix (`market-data-processing-service@dbcba44`)
+>
+> - the post-run abandoned-VM reconciliation step (`unified-trading-library@34c9b5ef` + `features-service@9e7a5ee3`)
+>   close out every recommended-fix item. See Progress Log for full history.
 
 ## What I found
 
@@ -159,9 +168,10 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
       exact scenario either waits longer, refuses to launch a concurrent duplicate, or at minimum emits an explicit
       "shard N: force-leg VM <name> abandoned STILL RUNNING — launching skip-leg VM concurrently, expect duplicate
       compute" log line. — `features-service@dcf8a3d0`.
-- [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
-      VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
-      abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
+- [x] [DATA] P2. ✅ Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether
+      any VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it
+      (so abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible). —
+      `unified-trading-library@34c9b5ef` + `features-service@9e7a5ee3`.
 - [x] [SCRIPT] P2. ✅ **New corroborating instance, different service**:
       `market-data-processing-service/scripts/pipeline_e2e_check.py` (MDPS's own driver, same shared-engine class as
       this doc, not features-service) hit the identical `vm_not_success:timeout_no_exit_status` false-failure pattern
@@ -380,3 +390,17 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   from both already-tracked IAM docs — the write targets PROD itself, not a bucket-tier IAM-condition mismatch). Report:
   `plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md`. One todo remains open in this doc (the P2 post-run
   VM-reconciliation todo) — not in scope for this task.
+- 2026-08-03 (slot-6, data_engineering): **Closed the last open todo (post-run abandoned-VM reconciliation).** Shipped
+  `unified-trading-library@34c9b5ef`: adds `PipelineCheckReport.orphaned_vms_still_running: list[str]` plus an "Orphaned
+  VMs still running (post-run reconciliation)" markdown section in `render_markdown()` (shared
+  `pipeline_e2e_check/report.py`, so any driver on this engine can populate it). Shipped `features-service@9e7a5ee3`:
+  `scripts/pipeline_e2e_check.py` gets `_check_abandoned_vms_still_running()` (one label-scoped
+  `aggregated_list_instances` call for the whole batch, not per-name; fails OPEN on a transport error — same contract as
+  the existing `_find_inflight_duplicate_vm`) and `_reconcile_abandoned_vms()`, called from `main()` right after
+  `run_pipeline_check()` returns and before `write_report()`. Scoped to cells whose `reason == "timeout_no_exit_status"`
+  (a self-deleted VM is already gone — nothing to reconcile); any still-running name is both `logger.warning()`'d loudly
+  and recorded on `report.orphaned_vms_still_running` so it is visible in the written report, not just a log line. 7 new
+  unit tests in features-service (`tests/unit/test_pipeline_e2e_check_abandoned_vm_reconciliation.py`) + 3 in
+  unified-trading-library (`tests/unit/test_pipeline_e2e_check_report_orphaned_vms.py`). Full `quality-gates.sh` green
+  in both repos on the shipped SHAs, both verified on origin via `merge-base --is-ancestor`. Every todo in this doc is
+  now checked and unlocked — archiving per the plan-completion-and-archival-discipline ritual in the same session.

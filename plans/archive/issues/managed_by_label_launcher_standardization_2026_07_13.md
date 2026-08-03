@@ -8,7 +8,7 @@ summary:
   provenance (adhoc / control-plane / fleet-reconciliation) which covers the REVIEW parity check; this issue tracks the
   remaining DEVOPS piece — a launcher-side `managed-by` label convention that deployment-api would then surface as
   `managed_by`.
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -20,7 +20,7 @@ created: 2026-07-13
 parent_epic: observability_master
 priority: P3
 assigned_vm: planning
-resolved_by:
+resolved_by: deployment-service@db67173 (launcher label), deployment-api@95a7a19 (managed_by echo)
 locked_by:
 context_scope:
   [
@@ -37,6 +37,10 @@ last_updated: 2026-07-31
 ---
 
 # `managed-by` launcher label standardization (deferred from cost-provenance)
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Both todos shipped: deployment-service@db67173 (launcher label) + deployment-api@95a7a19
+> (managed_by echo).
 
 > **Migrated from** `deployment_full_estate_cost_provenance_2026_07_09.md` on archival (2026-07-13). The parent plan
 > shipped `launched_by` provenance (adhoc / control-plane / fleet-reconciliation, the REVIEW parity signal) and
@@ -63,8 +67,13 @@ last_updated: 2026-07-31
       value). Also added the missing `labels` block (`managed-by=terraform`) to the one `google_cloud_run_v2_job`
       resource in `terraform/gcp/` that had none (`vm_log_archival_scheduler.tf`) — every other Cloud-Run job (via the
       `container-job` module or hand-declared) already carried it; `tofu validate` clean.
-- [ ] [BACKEND] P3. Once the label is standardized, wire the `managed_by` echo in the deployment-api inventory item (the
-      `labels` read is already scaffolded) + a unit asserting the round-trip. — **deployment-api**
+- [x] ✅ [BACKEND] P3. Once the label is standardized, wire the `managed_by` echo in the deployment-api inventory item
+      (the `labels` read is already scaffolded) + a unit asserting the round-trip. — **deployment-api@95a7a19**. Added
+      `DeploymentItem.managed_by: str | None` alongside `labels`; both `_vm_item` (registry-backed VMs) and
+      `_unmanaged_vm_item` (adhoc/control-plane VMs — the only two builders that already populate `labels`) now echo
+      `labels.get("managed-by")` verbatim, honest `None` when labels are absent or lack the key. New
+      `test_build_inventory_surfaces_managed_by_label_echo` covers the registry-VM + unmanaged-VM positive round-trip,
+      the labels-present-but-no-key case, and the no-GCE-join absence case.
 
 ## Notes
 

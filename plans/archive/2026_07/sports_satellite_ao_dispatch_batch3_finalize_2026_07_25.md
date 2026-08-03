@@ -41,6 +41,14 @@ source: >-
   /autonomous session 2026-07-25, per task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs
   a companion gated finalize plan, mirroring the batch2/batch2_finalize precedent.
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+  ]
 sequential: true
 drift_direction: advance-code
 ---

@@ -50,6 +50,12 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/quickmerge_silent_push_failure_under_contention_2026_07_27.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    scripts/quickmerge.sh,
+  ]
 resolved_by:
   '2026-07-30 — root-caused via direct reproduction (COMMIT_EDITMSG is an unlocked, shared, cross-invocation file; index
   and HEAD are properly guarded, prek''s patch-stash is PID-namespaced, both ruled out). Discipline + mechanism

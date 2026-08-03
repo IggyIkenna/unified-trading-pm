@@ -46,9 +46,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    market-data-processing-service/scripts/reprocess_sports_odds.py,
+    market-tick-data-service/scripts/sports/league_id_relocation/,
     /plans/epics/sports_master.md,
   ]
 ---

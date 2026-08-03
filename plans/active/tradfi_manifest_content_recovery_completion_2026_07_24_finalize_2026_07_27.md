@@ -47,9 +47,9 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 

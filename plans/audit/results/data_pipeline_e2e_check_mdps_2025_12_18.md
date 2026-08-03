@@ -14,7 +14,7 @@ tags: [pipeline-e2e-check, data_pipeline_e2e_check_mdps]
 related:
   [
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
-    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
   ]
 created: 2026-08-01
 audited_scope: "data_pipeline_e2e_check_mdps real-VM force/skip/live pipeline check for day=2025-12-18, legs=force,skip"
@@ -35,7 +35,7 @@ generated_at: 2026-08-01T14:52:31.795026+00:00
 **Legs:** force, skip **Started:** 2026-08-01T13:45:35.199608+00:00 **Finished:** 2026-08-01T14:52:31.742247+00:00
 (spans the 3-cell no-input run + two separate real-VM `odds_horizon_bucket` driver invocations, both of which hit the
 driver's own `--timeout-sec` default too early relative to this shard's real ~30-35min runtime — see the corroborating
-finding filed in `/plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — but
+finding filed in `/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — but
 whose launched VMs ran to genuine completion independently, verified via the VM's own GCS `run.log`/`EXIT_STATUS`,
 ground truth per this skill's own instruction, not re-derived).
 

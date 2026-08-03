@@ -45,6 +45,13 @@ source:
   VMs redeployed with new code?" — confirmed the bucket has real, verified redundant partitioning (asset_group=defi +
   instrument_type=pool segments duplicating what the bucket name and instrument_id already encode) and asked for this to
   be scoped as its own follow-on plan.'
+context_scope:
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
+    /plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+  ]
 ---
 
 # Migrate dex-pools/lst-rates/perp-funding off dedicated buckets onto the shared DeFi tick bucket

@@ -27,6 +27,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
+    unified-api-contracts/unified_api_contracts/external/databento/databento_classifier.py,
+  ]
 assigned_vm: planning
 resolved_by: mtds@f645ea02+uac@7e179ae8 (recovery+guard, 2026-07-20); root-cause doc uac@8080b645+mtds@377dd90c
   (2026-07-26) # all 3 Remediation items struck through/done

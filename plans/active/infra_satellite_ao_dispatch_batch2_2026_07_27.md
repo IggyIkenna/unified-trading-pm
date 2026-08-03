@@ -144,9 +144,9 @@ once the corresponding todo below is actually done — not this plan.
       (sentinel = this SHA). **The mop-up pass itself is split to the new todo directly below** — it's a real prod-GCS
       VM-scale operation (historically multi-hour with SPOT preemptions per the P7c progress log), a different-shaped
       unit of work than this code fix, not something to fold into the same dispatch cycle.
-- [ ] [SCRIPT] P2. **Run the CEFI mop-up pass now that `_copy_verify_delete()`'s retry-idempotency gap is fixed** (todo
-      above, market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e). **TRADFI needs no mop-up** —
-      confirmed via `candle_feature_canonical_path_divergence_history_part2_2026_07_25.md` lines 666-669 ("P7d: TRADFI
+- [x] ✅ [SCRIPT] P2. **Run the CEFI mop-up pass now that `_copy_verify_delete()`'s retry-idempotency gap is fixed**
+      (todo above, market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e). **TRADFI needs no mop-up**
+      — confirmed via `candle_feature_canonical_path_divergence_history_part2_2026_07_25.md` lines 666-669 ("P7d: TRADFI
       DONE"): TRADFI's own migration converged to 0 outstanding legacy-path objects and never hit a single
       `KEPT_SRC`-class straggler across either of its two runs — this todo is CEFI-only. The original CEFI apply run
       never logged per-object URIs for `KEPT_SRC`-class outcomes (only
@@ -161,14 +161,27 @@ once the corresponding todo below is actually done — not this plan.
       SPOT provisioning, idempotent/safe re-run (this todo's own prerequisite fix is what makes it safe — `KEPT_SRC`
       never deletes source on any residual failure, retried or not). Repo: market-data-processing-service. Source:
       `candle_feature_canonical_path_divergence_2026_07_20.md` #19. Done when: a fresh CEFI dry-run classify + `--apply`
-      mop-up pass reports 0 remaining `SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC` (149-object baseline).
-- [ ] [SCRIPT] P2. **Add a Phase-0 `-test-` bucket assertion on the resolved WRITE bucket** to
+      mop-up pass reports 0 remaining `SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC` (149-object baseline). —
+      deployment-service@a182c68 (launcher support) + market-data-processing-service unchanged (no code fix needed
+      beyond the already-shipped retry-idempotency fix). Fresh `cefi-candle-census` dry-run over the LIVE 938,607-object
+      CEFI corpus found exactly 149 `SPLIT_BRAIN_DUPLICATE` objects (0 orphans) — an EXACT match to the 149-object
+      baseline, confirming no drift since the original P7c run. Ran a targeted `--apply` (no
+      `--quarantine`/`--content-repair`) against just those 149 objects via the new `CANDLE_MOPUP_ENUMERATION_GS`
+      launcher override (skips a fresh full-corpus walk): run 1 converged 144/149 (`MIGRATED`), 5 still
+      `CRC32C_MISMATCH_KEPT_SRC`; the SAME idempotent re-run (retry 2) converged the remaining 5 —
+      `outcomes: {'SRC_ALREADY_GONE': 144, 'MIGRATED': 5}`, "0 non-success outcomes", rc=0. Hard-verified directly:
+      0/149 legacy-path objects still exist in GCS. CEFI's candle canonical-path migration+purge is now fully converged
+      (0 outstanding `KEPT_SRC`-class residual).
+- [x] ✅ [SCRIPT] P2. **Add a Phase-0 `-test-` bucket assertion on the resolved WRITE bucket** to
       `/data-pipeline-check-mdps` and `/data-pipeline-check-features`, closing their fail-open
       `--output-bucket`/`--sink-bucket` mechanism (a skill invocation with a bad bucket flag currently fails open rather
       than refusing before any write). Repo: unified-trading-pm. Source:
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #4 (audit § 1). Done when: both skills assert the
       resolved bucket contains `-test-` before any write in non-prod invocations, and refuse loudly (not silently fall
-      through) when it doesn't.
+      through) when it doesn't. — unified-trading-pm@0f13ea066. Added new "§2a Resolved-bucket assertion" subsections to
+      both `SKILL.md`s: a `case`-statement guard run immediately before every Phase-1 launcher invocation, checking the
+      EXACT resolved `--output-bucket`/`--sink-bucket` string for `-test-` and refusing loudly (exit 1) if absent —
+      closes the gap where an omitted/mistyped flag silently fell through to PROD.
 - [ ] [DOC] P3. **Add an explicit "never pass `--allow-live-prod-writes`" prohibition** to
       `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md`. Repo: unified-trading-pm. Source:
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a). Done when: the skill doc states the
@@ -192,3 +205,24 @@ once the corresponding todo below is actually done — not this plan.
   operation, historically multi-hour with SPOT preemptions, not the same-shaped unit of work as the code fix. Confirmed
   via the linked history doc that TRADFI needs no mop-up (converged clean, 0 `KEPT_SRC` stragglers) — the new todo is
   CEFI-only.
+- **2026-08-03 (slot 4, infra)**: shipped the Phase-0 resolved-bucket assertion for `/data-pipeline-check-mdps` and
+  `/data-pipeline-check-features` (unified-trading-pm@0f13ea066, prek-green doc-only change). Added a §2a
+  "Resolved-bucket assertion" subsection to each `SKILL.md`: a `case`-statement guard, run immediately before every
+  Phase-1 launcher invocation, that checks the EXACT resolved `--output-bucket`/`--sink-bucket` string for `-test-` and
+  refuses loudly (`exit 1`) if absent — closes the fail-open gap where an omitted/mistyped bucket flag previously fell
+  through to a silent PROD write.
+- **2026-08-03 (slot 16, infra)**: ran the CEFI mop-up pass todo to completion. Shipped deployment-service@a182c68
+  (`CANDLE_MOPUP_ENUMERATION_GS` support on `launch-canonical-migration-vm.sh`'s `*-candle-apply` categories — download
+  a small pre-built enumeration instead of a fresh full-corpus walk, and drop `--quarantine`/`--content-repair` in full
+  mode since a mop-up only ever needs the plain MIGRATE/SPLIT_BRAIN_DUPLICATE gate). Launched `cefi-candle-census`
+  (fresh dry-run, SPOT VM `canonical-migration-cefi-candle-census-20260803-014804`) over the LIVE 938,607-object CEFI
+  `processed_candles/` corpus: 149 `SPLIT_BRAIN_DUPLICATE` + 938,458 `CANONICAL_NOOP`, 0 orphans — an EXACT match to the
+  149-object baseline (no drift since the original P7c run). Built a 149-line enumeration from those rows and ran a
+  targeted `--apply` (`canonical-migration-cefi-cdlap-20260803-015619` / `-015935`): run 1 converged 144/149
+  (`MIGRATED`), 5 reproduced `CRC32C_MISMATCH_KEPT_SRC`; the SAME idempotent re-run converged all 5
+  (`outcomes: {'SRC_ALREADY_GONE': 144, 'MIGRATED': 5}`, 0 non-success, rc=0) — confirming the earlier retry-idempotency
+  fix actually closes the gap on real prod stragglers, not just the fixture tests. Hard-verified directly
+  (`gcloud storage objects describe` on all 149 legacy URIs): 0/149 still exist. No VM ran fire-and-forget — every
+  launch confirmed STARTED, monitored to a terminal EXIT_STATUS via a background watchdog, self-deleted per
+  `VM_SHUTDOWN_ON_COMPLETION`. CEFI's candle canonical-path migration+purge (P7c) is now fully converged, 0 outstanding
+  residual.

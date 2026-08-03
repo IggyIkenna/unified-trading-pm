@@ -403,3 +403,34 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   correct place for that decision once a FRESH `generate_context_scope_inventory.py` run (not this entry's now-stale
   snapshot) reports 0 `NEVER_SCOUTED`/`STALE`; re-measure before acting on any count in this Progress Log, including
   this one.
+- **2026-08-03 (same interactive session, slot 1, continued after a context-compaction boundary)** — landed the 456-file
+  staged batch (context_scope backfill + `fix_conflict_markers.py` + the strengthened `/context-scout` SKILL.md
+  wording + `docspec.py`'s sibling-repo dead-reference fix) that the prior entry left staged-but-unshipped. Also
+  authored `plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md` to clear a
+  `check_finalize_plan_coverage.py` regression (a peer's plan shipped without its required gated finalize-plan
+  companion) that was blocking every PM quickmerge. Commits: `3b0b706c9` (docspec.py sibling-repo fix, shipped
+  standalone first), `e00de791b`/`9cfc2d4d5`/`5eece578f`/`21a96df33`/`972f43c80` (the 456-file batch, split into 5
+  chunks of ~90 files after 3 whole-batch attempts failed). **Three hard-won lessons from this shipping attempt**: (1)
+  `quickmerge.sh --files` is **space-separated, not comma-separated** (`--files "a b c"`, per its own usage banner) —
+  joining with `paste -sd,` collapses the whole list into one unmatched shell word (no whitespace for
+  `for f in $FILES_ARG` to split on), so the loop's `git add` never fires for any of them; the run still reports success
+  if something else was already staged, silently shipping only that subset while looking like a full-batch win — always
+  sanity-check `git show <sha> --stat`'s file count against what you intended to ship, not just the exit code. (2) A
+  `--files`-scoped quickmerge invocation still does a full-tree `git stash`/pop internally for its own `STAGE 0.4`
+  rebase (this branch is behind origin essentially continuously given fleet velocity) — on a large batch this can and
+  did repeatedly knock already-staged files back to unstaged, requiring a re-`git add`-by-name immediately before every
+  retry, never assumed-still-staged from a prior check. (3) `check_conflict_markers.sh`'s detector is a raw substring
+  match for the open/close marker sequences anywhere in a line (see its own `PAT` — deliberately, to catch prettier's
+  mid-line/mangled-blockquote variants), which means **prose that itself describes the conflict- marker bug class in a
+  backtick-quoted example trips the same gate as a real marker** — hit 3 times this session (2 in docs this session's
+  earlier entry wrote, 1 in a pre-existing, unrelated archived doc that happened to be swept into this batch) — the fix
+  each time was rewording the prose to describe the marker without typing the literal 7-character run, not touching the
+  detector (a corpus-wide `check_conflict_markers.sh` false-positive ratchet — grepping for other backtick-quoted marker
+  examples across `plans/` before they trip the gate on their next touch — is a reasonable, currently-undispatched
+  follow-up, not done here). Given (2) and (3) recur on ANY large batch on this checkout, splitting into ~90-file chunks
+  with a self-retrying loop (5-8 attempts, ~10-25s backoff, re-`git add` before each) proved reliable in practice even
+  though a whole-batch single shot did not. **Final inventory snapshot this session** (2026-08-03, re-measure before
+  trusting): 651 in-scope docs, 280 `UP_TO_DATE`, 290 `STALE`, 81 `NEVER_SCOUTED` — STALE now outnumbers UP_TO_DATE,
+  consistent with this corpus's churn rate outpacing a single session's scouting throughput; still correctly far from
+  the 0/0 threshold this plan's own todo above requires before flipping `docspec.py`'s `FieldSpec` to `Req.R`. **Not
+  done, deliberately**: same as the prior entry — the `FieldSpec` flip stays untouched.

@@ -30,6 +30,13 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
+    /plans/active/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
+  ]
 drift_direction: none
 locked_by:
 locked_since:
@@ -53,8 +60,8 @@ source:
 > alongside this doc.
 
 > **Gated twin.** `depends_on` + `gate_on_depends: true` hold every todo here until every todo in
-> `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` is done. Do not
-> start these before that.
+> `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` is done. Do
+> not start these before that.
 
 ## Codex SSOTs
 
@@ -137,8 +144,8 @@ source:
   (7,070 correctly `lending` + 94 `None`). Flipped todo 1. Todos 2-4 (cron state, distinct-values panel, archival
   eligibility) remain open for the next dispatch.
 - **2026-07-30 (slot-2)** — Gate opened: all 5 todos in the source plan
-  (`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) are now done
-  (`locked_by:` empty). Flipped `status: draft` -> `active` per `gate_on_depends: true`. Not yet worked — the todos
+  (`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) are now
+  done (`locked_by:` empty). Flipped `status: draft` -> `active` per `gate_on_depends: true`. Not yet worked — the todos
   below still need their own independent re-verification against live prod (not the source plan's self-report), per this
   doc's own design.
 - **2026-07-30** — Authored by `/na-eligibility-audit defi` as the paired finalize twin for a `NA -> planning`

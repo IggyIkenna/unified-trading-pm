@@ -33,7 +33,14 @@ source:
   ]
 assigned_role: infra
 drift_direction: advance-code
-context_scope: [/plans/epics/infrastructure_master.md, /codex/05-infrastructure/per-tab-worktrees.md]
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    scripts/dev/audit-stash-pile.sh,
+    /plans/epics/infrastructure_master.md,
+  ]
 ---
 
 # Workspace-wide git stash pile — audit + cleanup (per-host runbook)

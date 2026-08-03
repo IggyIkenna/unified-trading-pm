@@ -32,6 +32,12 @@ source:
 assigned_vm: planning
 resolved_by: agent-orchestrator@ec74605
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
+    agent-orchestrator/scripts/quality-gates.sh,
+    unified-trading-pm/scripts/quality-gates-base/qg-common.sh,
+  ]
 execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code

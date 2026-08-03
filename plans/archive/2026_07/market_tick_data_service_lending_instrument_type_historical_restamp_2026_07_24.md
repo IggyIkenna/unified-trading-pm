@@ -32,6 +32,12 @@ estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+  ]
 drift_direction: advance-code
 depends_on:
 locked_by:

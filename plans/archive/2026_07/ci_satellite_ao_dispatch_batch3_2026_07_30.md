@@ -57,6 +57,14 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.5
 assigned_role: cicd
+context_scope:
+  [
+    /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/task_template.md,
+  ]
 sequential: false
 drift_direction: advance-code
 locked_by:

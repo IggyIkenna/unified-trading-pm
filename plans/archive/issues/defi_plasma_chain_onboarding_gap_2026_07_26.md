@@ -46,6 +46,14 @@ resolved_by:
   (RPC-fallback routing fix) + unified-api-contracts@06c54fee (AAVE-PLASMA phase flip) + unified-api-contracts@18ed167f
   (adapter-key registration), 2026-08-01, slot-8 (final leg)"
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
+    unified-api-contracts/unified_api_contracts/registry/chain_env.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_liquidity_resolver.py,
+  ]
 locked_since:
 ---
 

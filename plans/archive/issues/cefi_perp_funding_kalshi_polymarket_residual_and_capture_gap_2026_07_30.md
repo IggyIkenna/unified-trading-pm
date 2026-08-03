@@ -81,9 +81,13 @@ resolved_by: >-
 depends_on: []
 context_scope:
   [
+    /plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
+    deployment-api/deployment_api/routes/data_status/_axis_census.py,
     /plans/archive/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 

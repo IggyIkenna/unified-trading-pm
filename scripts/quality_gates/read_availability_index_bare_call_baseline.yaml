@@ -135,7 +135,7 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: unified-trading-library
     file: unified_trading_library/manifest_writer/_writer_io.py
-    line: 164
+    line: 196
     function: lookup
     status: intentionally_bare_verbatim_schema_required
     successor: read_availability_index_bare_defi_callers_2026_07_27
@@ -191,7 +191,7 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: unified-trading-library
     file: unified_trading_library/pipeline_e2e_check/shard_verify.py
-    line: 154
+    line: 161
     function: verify_manifest_row
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27

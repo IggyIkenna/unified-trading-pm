@@ -31,6 +31,12 @@ drift_direction: advance-code
 depends_on: []
 last_updated: "2026-08-01"
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    agent-orchestrator/server/worktree_clean_check/_orphan.py,
+    agent-orchestrator/server/worktree_clean_check/_liveness.py,
+  ]
 locked_since:
 ---
 

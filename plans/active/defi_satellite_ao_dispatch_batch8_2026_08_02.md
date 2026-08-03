@@ -88,7 +88,7 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
       `roles/storage.objectAdmin`, both confirmed via live `gcloud`. The operator separately approved `--auto-day`, so
       the day does **not** need to come from an operator ask for this run. - **Known execution hazards, budget for
       them** (each has burned a prior pipeline-check run, all already filed): driver timeouts orphaning duplicate VMs
-      ([`/plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`](/plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md)),
+      ([`/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`](/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md)),
       worker-session teardown killing a long-running check
       ([`/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`](/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md)),
       and a missing env flag producing a `-test-` bucket 403

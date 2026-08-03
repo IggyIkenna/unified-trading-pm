@@ -54,6 +54,7 @@ context_scope:
     deployment-api/deployment_api/routes/_repo_ci_alerts.py,
     /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md,
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
+    /plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md,
   ]
 source:
   [

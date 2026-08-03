@@ -49,8 +49,9 @@ context_scope:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 

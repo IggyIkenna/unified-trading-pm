@@ -46,6 +46,14 @@ resolved_by:
   v2_engine_venue_buildout_2026_06_15.md, not orphaned by this archival. Live promotion + Betfair
   account/credential/jurisdiction sign-off stay operator-gated as documented above."
 locked_by:
+context_scope:
+  [
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    execution-service/execution_service/v2/atomic_leg_executor.py,
+    execution-service/execution_service/v2/handlers.py,
+  ]
 source:
   [
     "discovered 2026-07-20 during the operator-authorized football 3-venue arb wiring (Kalshi↔Polymarket↔Betfair); the
