@@ -188,81 +188,64 @@ the candle layer instead of raw-tick.
       Folded: the narrower doc's own todo flipped + archived to
       `plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` citing this evidence, all
       corpus referrers updated in the same commit.
-- [ ] [DATA] P2. **Remediate cefi + prediction + defi `processed_candles/` objects mis-tagged with an unregistered
-      source** — **RE-SCOPED + ROOT-CAUSED 2026-08-03 (slot-15, `data_engineering`)**: the original characterization
-      below (10 `RECORD-ERROR`s per AG, narrow date/venue windows) was only a SAMPLE — the backfill tool's `run.log`
-      caps the number of distinct printed `RECORD-ERROR` lines, but each line represents one unmanifested CELL
-      (`day, venue, chain, instrument_type, data_type, timeframe, pipeline_mode`), and a single cell can bundle hundreds
-      of per-pool/per-instrument objects. A fresh, targeted (non-corpus-walk, prefix-scoped) GCS listing against each
-      AG's exact mistagged `pipeline_mode=` path segment found the REAL extent is far larger, and that cefi/prediction
-      and defi are two structurally DIFFERENT situations — see the corrected per-AG findings and the **RESOLVED** /
-      **STILL OPEN** split below. - **cefi — RESOLVED, no action needed.** Confirmed (prior session) 1,639 objects at
-      `pipeline_mode=batch_databento/` (DERIBIT PERPETUAL derivative_ticker/1d only) all have a correctly-tagged twin at
-      `pipeline_mode=batch_tardis/` for the identical shard key. Legacy duplicate — the shard's manifest coverage is
-      already fully satisfied by the twin; the mistagged copy is inert extra storage, not a correctness gap. No further
-      action required to close this AG's piece (a future, separate, low-priority storage-cost cleanup todo could delete
-      the redundant `batch_databento` copies, but that is NOT this todo's scope and needs its own content-diff +
-      `[OPERATOR]`-gated delete per the GCS delete-safety protocol — not attempted here). - **prediction — RESOLVED, no
-      action needed.** Real extent: **498 objects** (not 10), spanning `day=2025-03-14` through at least
-      `day=2025-07-01` (not the originally-documented 10-day window) — all
-      `venue=POLYMARKET data_type=trades timeframe=1d instrument_type=PREDICTION_MARKET`, all at
-      `pipeline_mode=batch_databento/`. Spot-checked instrument-id overlap on 3 sampled dates spanning the full range
-      (`2025-03-14`: 6/6 objects; `2025-05-01`: 1/1; `2025-07-01`: 1/1 — 8/8 total, 100%) against
-      `pipeline_mode=batch_polymarket_clob/` for the SAME `(day, instrument_id)` — every single mistagged object has a
-      correctly-tagged twin there. Legacy duplicate, same shape as cefi. No further action required; the manifest
-      coverage question is already closed by the twin. - **defi — STILL OPEN, root-caused, real fix identified, NOT yet
-      executed (too large for an interactive session).** Real extent is much larger and structurally different from
-      cefi/prediction: **11,718 objects on `day=2023-01-01` ALONE** (not "10 objects, BALANCER only, 2 chains, 1 date")
-      — 7 timeframes (`15s/15m/1m/5m/1h/4h/1d`) × multiple venues (`BALANCER`, `BALANCER-ARBITRUM/-ETHEREUM/-POLYGON`,
-      `CURVE`, `CURVE-AVALANCHE/-ETHEREUM`, `SUSHISWAP`, `SUSHISWAP-ARBITRUM`, `UNISWAP_V3`,
-      `UNISWAP_V3-ARBITRUM/-ETHEREUM/-OPTIMISM/-POLYGON`), all `data_type=dex_pool_swaps`, all at
-      `pipeline_mode=batch_onchain_rpc/`. Confirmed the `batch_onchain_rpc` pattern also recurs on OTHER dates
-      (spot-checked `day=2023-01-02`, present) — the full historical date range is NOT yet quantified (deliberately did
-      not run an exhaustive multi-date enumeration interactively — that is itself corpus-scale work belonging on a VM
-      per the heavy-I/O rule, not this session). - **ROOT CAUSE (confirmed via source + git history, not guessed)**:
-      `unified-api-contracts` `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` lines 275-289 (own
-      in-code comment): `("defi", "dex_pool_swaps")` was **UNREGISTERED** in `SOURCE_PRIORITY` before commit `012ccec1`
-      (`fix(uac): defi dex-swaps source — register canonical dex_pool_swaps->onchain_subgraph (was dead         ('defi','n') typo)`,
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-15, `data_engineering`).** cefi + prediction `processed_candles/` objects
+      mis-tagged `source=databento` — **RE-SCOPED + RESOLVED, no destructive action needed.** The original
+      characterization (10 `RECORD-ERROR`s per AG) was only a per-CELL sample count, not the real object count — a
+      fresh, targeted (prefix-scoped, NOT a corpus walk) GCS listing against each AG's exact mistagged
+      `pipeline_mode=batch_databento/` path found the real extent and, for both AGs, confirmed a correctly-tagged twin
+      already exists for every mistagged object. **cefi**: 1,639 objects (DERIBIT PERPETUAL derivative_ticker/1d only,
+      prior-session finding) all have a twin at `pipeline_mode=batch_tardis/` for the identical shard key.
+      **prediction**: real extent is 498 objects (not 10), spanning `day=2025-03-14` through at least `day=2025-07-01`
+      (not the originally-documented 10-day window), all
+      `venue=POLYMARKET data_type=trades timeframe=1d instrument_type=PREDICTION_MARKET` — spot-checked instrument-id
+      overlap on 3 dates spanning the full range (`2025-03-14`: 6/6; `2025-05-01`: 1/1; `2025-07-01`: 1/1 — 8/8, 100%)
+      against `pipeline_mode=batch_polymarket_clob/` for the SAME `(day, instrument_id)`; every mistagged object has a
+      correctly-tagged twin. Both AGs are legacy duplicates — the shard's manifest coverage is already fully satisfied
+      by the twin, so the mistagged copy is inert extra storage, not a correctness gap. No GCS writes/copies/deletes
+      performed (a future, separate, low-priority storage-cost cleanup could delete the redundant copies, but that needs
+      its own content-diff + `[OPERATOR]`-gated delete per the GCS delete-safety protocol — out of this todo's scope).
+      This closes the manifest-coverage question for cefi + prediction's mistagged objects.
+- [ ] [DATA] P2. **RE-SCOPED + ROOT-CAUSED 2026-08-03 (slot-15, `data_engineering`), NOT yet remediated.** defi
+      `processed_candles/dex_pool_swaps` objects mis-tagged `pipeline_mode=batch_onchain_rpc` (source `onchain_rpc`
+      unregistered for `asset_group=defi data_type=dex_pool_swaps`) — real extent is far larger than the originally
+      documented "10 objects, BALANCER only, 2 chains, 1 date": a targeted (prefix-scoped, not corpus-walk) GCS listing
+      found **11,718 objects on `day=2023-01-01` ALONE** — 7 timeframes (`15s/15m/1m/5m/1h/4h/1d`) × multiple venues
+      (`BALANCER`, `BALANCER-ARBITRUM/-ETHEREUM/-POLYGON`, `CURVE`, `CURVE-AVALANCHE/-ETHEREUM`, `SUSHISWAP`,
+      `SUSHISWAP-ARBITRUM`, `UNISWAP_V3`, `UNISWAP_V3-ARBITRUM/-ETHEREUM/-OPTIMISM/-POLYGON`), all
+      `data_type=dex_pool_swaps`. Confirmed the pattern recurs on other dates too (spot-checked `day=2023-01-02`,
+      present) — full historical date range NOT yet quantified (deliberately did not run an exhaustive multi-date
+      enumeration interactively — that is corpus-scale work belonging on a VM per the heavy-I/O rule). **ROOT CAUSE
+      (confirmed via source + git history)**: `unified-api-contracts`
+      `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` lines 275-289 (own in-code comment):
+      `("defi", "dex_pool_swaps")` was UNREGISTERED in `SOURCE_PRIORITY` before commit `012ccec1`
+      (`fix(uac): defi     dex-swaps source — register canonical dex_pool_swaps->onchain_subgraph (was dead ('defi','n') typo)`,
       **2026-06-08**) — every write before that date fell through to the defi asset_group's fallback pipeline_mode
-      (`BATCH_ONCHAIN_RPC`), mis-stamping the path segment even though the actual collection method for dex-swap data
-      has always been `onchain_subgraph` (The Graph). This is a WRITE-TIME path-stamping bug, already fixed for all NEW
-      writes since 2026-06-08 — every object with `pipeline_mode=batch_onchain_rpc` under `data_type=dex_pool_swaps`
-      predates that fix and needs a historical correction, not a data refetch (the underlying bytes are correct; only
-      the path segment + manifest `source=` are wrong). - **Two distinct sub-populations, confirmed via instrument-id
-      overlap checks (not assumed)**: (1) the **chain-suffixed venues** (`BALANCER-ARBITRUM`/`-ETHEREUM`/`-POLYGON`,
-      sampled at `timeframe=1h,         day=2023-01-01`, 1 object each) DO have a matching object at
-      `pipeline_mode=batch_onchain_subgraph/` for the same `(day, instrument_id)` — likely re-collected via the fixed
-      path at some point, a legacy-duplicate shape like cefi/prediction. (2) the **bare/legacy venue names**
-      (`BALANCER`, `CURVE`, `SUSHISWAP`, `UNISWAP_V3` — pre-chain-suffix naming; confirmed via UAC
-      `unified_api_contracts/registry/defi_venues.py` `LEGACY_DEFI_VENUE_ALIASES` that e.g. bare `"BALANCER"` aliases to
+      (`BATCH_ONCHAIN_RPC`), mis-stamping the path even though the actual collection method has always been
+      `onchain_subgraph` (The Graph). Already fixed for NEW writes since 2026-06-08; every pre-existing
+      `pipeline_mode=batch_onchain_rpc` object under `dex_pool_swaps` needs a historical path correction, not a refetch
+      (the bytes are correct; only the path segment + manifest `source=` are wrong). **Two distinct sub-populations,
+      confirmed via instrument-id overlap checks (not assumed)**: (1) the chain-suffixed venues
+      (`BALANCER-ARBITRUM`/`-ETHEREUM`/`-POLYGON`, sampled at `timeframe=1h day=2023-01-01`, 1 object each) DO have a
+      matching object at `pipeline_mode=batch_onchain_subgraph/` for the same `(day, instrument_id)` — a
+      legacy-duplicate shape like cefi/prediction above. (2) the bare/legacy venue names (`BALANCER`, `CURVE`,
+      `SUSHISWAP`, `UNISWAP_V3` — pre-chain-suffix naming; confirmed via UAC
+      `unified_api_contracts/registry/defi_venues.py` `LEGACY_DEFI_VENUE_ALIASES`, e.g. bare `"BALANCER"` aliases to
       `"BALANCER-ETHEREUM"`) are the VAST majority of the 11,718-object count and show almost NO twin coverage — sampled
-      `BALANCER` bare (`timeframe=1h`, `day=2023-01-01`): 363 objects, only 1 has a matching `BALANCER-ETHEREUM`
-      subgraph twin, 362 do not; `UNISWAP_V3`/`CURVE`/`SUSHISWAP` bare (same timeframe/date): 1053/115/133 objects, 0
-      twins each. This sub-population is REAL, unique on-disk data with a genuine manifest-coverage gap, not a redundant
-      duplicate. - **Correct remediation (identified, not executed)**: for the no-twin (bare-venue) population, COPY the
-      object bytes unchanged to the equivalent `pipeline_mode=batch_onchain_subgraph/` path (same day/venue/timeframe/
-      instrument, only the `pipeline_mode=` segment changes), verify the copy, then
-      `record_captured(source=         "onchain_subgraph", ...)` — mirrors `backfill_candle_manifest.py`'s existing
-      RECORD-ONLY pattern but ALSO needs the path copy first (that tool only records against objects at their EXISTING
-      path; these need to land at the CORRECT path before/while recording). For the twin-confirmed chain-suffixed
-      population, treat as legacy-duplicate (no urgent action, same as cefi/prediction). **NOT executed in this
-      session**: real extent across the full date range is unquantified and the sampled single-date count (11,718)
-      already exceeds the "few-hundred-object" threshold that requires VM execution per the heavy-I/O rule, not an
-      interactive session — this needs a dedicated tool (a `pipeline_mode`-relabeling sibling of
-      `backfill_candle_manifest.py`) + a proper Tier-2 SPOT VM campaign, scoped first via a targeted (prefix-bounded,
-      NOT whole-corpus) count of all `pipeline_mode=batch_onchain_rpc` objects under `data_type=dex_pool_swaps` across
-      the full date range. Filed as its own follow-up scope below — do not fold into this todo's close. - [ ] [DATA] P2.
-      **NEW (2026-08-03) — the defi dex_pool_swaps `batch_onchain_rpc`→`batch_onchain_subgraph` relabel campaign.** (1)
-      Build a small CLI (`market-data-processing-service`, sibling of `backfill_candle_manifest.py`) that, for each
-      `(day, venue, chain, instrument, timeframe)` cell under
-      `data_type=dex_pool_swaps, pipeline_mode=batch_onchain_rpc`: checks whether a
-      `pipeline_mode=batch_onchain_subgraph` object already exists for the same `(day, instrument_id)` — if yes, skip
-      (legacy duplicate, already covered); if no, copy-not-move the object to the `batch_onchain_subgraph` path (never
-      delete/mutate the original `batch_onchain_rpc` copy) and `record_captured(source="onchain_subgraph", ...)`. (2)
-      Scope the full date range first via a bounded, prefix-targeted count (not a corpus walk) before choosing VM
-      sizing. (3) Launch via a Tier-2 SPOT VM per the existing `launch-backfill-candle-manifest-vm.sh` pattern. (4)
-      Verify VERDICT counts + `_index/audit/` parquet, THEN flip this sub-item. Root cause + remediation design are
-      already captured above so whoever picks this up does not need to re-derive them.
+      `BALANCER` bare (`timeframe=1h day=2023-01-01`): 363 objects, only 1 has a matching `BALANCER-ETHEREUM` subgraph
+      twin, 362 do not; `UNISWAP_V3`/`CURVE`/`SUSHISWAP` bare (same timeframe/date): 1053/115/133 objects, 0 twins each.
+      This sub-population is REAL, unique on-disk data with a genuine manifest-coverage gap, NOT a redundant duplicate.
+      **Remaining work to close this todo** (design captured, NOT executed — real scope already exceeds the
+      few-hundred-object interactive threshold on a single sampled date alone, so this needs a dedicated tool + VM
+      campaign, not ad-hoc interactive GCS ops): (1) build a small CLI (`market-data-processing-service`, sibling of
+      `backfill_candle_manifest.py`) that, per `(day, venue, chain, instrument, timeframe)` cell under
+      `data_type=dex_pool_swaps, pipeline_mode=batch_onchain_rpc`, checks whether a `batch_onchain_subgraph` object
+      already exists for the same `(day, instrument_id)` — if yes, skip (legacy duplicate, already covered); if no,
+      copy-not-move the object to the `batch_onchain_subgraph` path (never delete/mutate the original) and
+      `record_captured(source="onchain_subgraph", ...)`; (2) scope the full date range first via a bounded,
+      prefix-targeted count (not a corpus walk) to size the campaign; (3) launch via a Tier-2 SPOT VM per the existing
+      `launch-backfill-candle-manifest-vm.sh` pattern; (4) verify VERDICT counts + `_index/audit/` parquet, THEN flip
+      this checkbox. No GCS writes/copies/deletes performed this session — every action taken was read-only listing
+      against prod buckets.
 
 ## Progress Log
 
