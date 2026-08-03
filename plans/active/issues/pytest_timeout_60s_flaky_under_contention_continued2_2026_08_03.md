@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T17:45Z
+last_updated: 2026-08-03T17:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -493,3 +493,41 @@ repeated here.
   already-recorded disposition). `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) —
   skipped the authoring-slot ping. Slot left clean (`deployment-service` and `unified-trading-pm` both on
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo).
+
+- **2026-08-03 ~17:35-17:50Z (`cicd` escalation `agt-83db42`, slot 9, `ml-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=333`) — this repo's 2nd occurrence in the doc-chain (1st: `agt-2336b3`, `main_ci_red`,
+  `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` ~11:15-11:38Z), first occurrence via the
+  `typecheck`/basedpyright exit-124 signature rather than a pytest timeout, no code gap**: read the cited failing run
+  (`30825406243`, `checks` job `91725696087`) directly — `qg-governor` queued the job `WAIT_CPU`/`WAIT_HOST_PRESSURE`
+  for 1582s (`15:34:29Z`→`16:01:23Z`) before admission, then `[4/6] TYPE CHECK` ran `16:01:23Z`→`16:03:23Z` (~120s) and
+  hit `❌ Type check FAILED/timeout (exit=124)` — the identical exit-124 wall-clock-timeout shape already established
+  fleet-wide in this doc-chain (`features-service`, `market-tick-data-service`, `execution-service` above), just
+  ml-service's first manifestation via `typecheck` instead of `tests`. Confirmed `ml-service/scripts/quality-gates.sh`
+  carries NO `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT` override — stays at `base-service.sh`'s shared defaults (120s pyright /
+  150s pytest), the LOWEST ceiling of any repo in this doc-chain, consistent with (not a cause of) the contention
+  signature. Confirmed `gh api .../actions/runners`: exactly ONE online runner, `glue-ip-172-31-5-118-1` (identical
+  name/IP to every other repo in this doc-chain), `busy=true` — same fleet-wide bottleneck. Per this doc-chain's
+  established practice (todo 1: capacity-side root cause; `alerting-service`/`market-tick-data-service`/
+  `instruments-service` precedent of NOT bumping a still-at-default repo's timeout), did NOT add a
+  `PYRIGHT_TIMEOUT`/`PYTEST_TIMEOUT` override for ml-service — a single non-sustained occurrence (2nd total, 1st of this
+  specific sub-signature) does not meet the sustained-red bar that justified the one-time raises elsewhere. Separately
+  noted: PR#333 (the promotion PR this escalation cited) had **already self-merged** (`mergedAt: 2026-08-03T15:00:22Z`,
+  6s after `createdAt: 15:00:16Z` — the same self-merge-before-confirmatory-check-completes pattern this doc-chain
+  documents repeatedly for `deployment-service`/`market-tick-data-service`) — `gh pr list --state open` for `ml-service`
+  → 0 open PRs, confirms nothing is actually blocked. Checked current state rather than assuming the cited run still
+  applies: both LDR's and `main`'s most recent COMPLETED `quality-gates-v2` runs are already `success` (LDR
+  `30833929143` @`16:49:38Z`, `main` `30829050842` @`15:46:20Z`) — the gate had already self-cleared via a later
+  re-verify before this investigation started. `GET /api/repo-blockers` → `open: []`. The only queued LDR run
+  (`30837391154`) targeted headSha `1b3df5a2` — one commit behind true current HEAD `48843e56`
+  (`chore(deps): re-pin unified-trading-library to 0.72.0`, a dep-pin bump, not inert but unrelated to the
+  typecheck-timeout failure class) — dispatched a fresh run against the true current head
+  (`gh workflow run quality-gates-v2.yml --repo IggyIkenna/ml-service --ref live-defi-rollout` → run `30838304919`,
+  confirmed `queued` against `48843e56` within seconds) rather than relying solely on the one-behind run, per this
+  doc-chain's established practice of preferring a true-current-head verification when the cost is low. **Disposition:
+  no code or workflow change made or needed** — every sanctioned mitigation already exists at its correct (default)
+  level, the cited failure was a one-off host-contention timeout that already self-cleared on a later run, and the
+  promotion PR is not actually blocked (already merged); outcome of `30838304919` left for the next occurrence per
+  established practice. `AUTHORING_SLOT=planning` is not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) —
+  skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`ml-service`
+  and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no
+  branch changes in either repo).
