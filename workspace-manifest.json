@@ -2203,6 +2203,11 @@
       "version": "0.87.0",
       "published_at": "2026-08-03T02:45:38Z",
       "registry": "artifact-registry"
+    },
+    "instruments-service": {
+      "version": "0.96.1.dev10+g1c9a7c5b8",
+      "published_at": "2026-08-03T06:33:55Z",
+      "registry": "artifact-registry"
     }
   }
 }
