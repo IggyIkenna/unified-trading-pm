@@ -246,9 +246,28 @@ compare case-insensitively in the interim (`migration_pending`).
       `gcs_bucket_soft_delete_retention_seconds()` check on the tradfi manifest bucket returning ≥604800s at execution
       time qualifies this CAS re-stamp as reversibility-verified, no `[OPERATOR]` sign-off required. Add
       `continuous_future → FUTURE` to the restamp's canonical map first so its self-verify does not refuse. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **BLOCKED, NOT EXECUTED (2026-08-03, slot-7)**: both prerequisites confirmed met (UTL
+      seam content-verified present at deployed `v0.72.0`; all three writer fleet images — mtds/IS/MDPS — rebuilt
+      2026-08-03 with `unified-trading-library>=0.72.0` pinned; `continuous_future → FUTURE` already lives in UTL's
+      `canonicalize_manifest_instrument_type`, not a local map, so no separate add was needed). Dry-run found 1,400,429
+      candidate rows — 17x this doc's last-known 82,311 residual and past the script's own STOP-ON-SURPRISE ceiling
+      (500,000); it correctly refused rather than blind-rewrite. Root-caused to a SEPARATE archived migration that
+      already flipped ~1.3M of these same rows the OPPOSITE direction (lowercase) on 2026-07-29 — a genuine cross-repo
+      SSOT contradiction, not a new writer bug. Full diagnosis + operator decision needed:
+      `/plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`. This todo stays open, gated
+      on that doc's `[OPERATOR]` ruling.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries).
+- **slot-7 2026-08-03**: worked `tradfi_casing_100pct_redrift-014` (the final P2 todo). Verified both prerequisites
+  independently (UTL seam content-present at deployed `v0.72.0` despite the squash-merge non-ancestry false-negative;
+  all three writer-fleet Cloud Run images rebuilt 2026-08-03 pinning `unified-trading-library>=0.72.0`;
+  `gcs_bucket_soft_delete_retention_seconds()` = 604800s on the tradfi bucket). Dry-run surfaced a 17x population
+  surprise (1,400,429 vs 82,311) that the script's own STOP-ON-SURPRISE guard correctly refused — root-caused to an
+  unrelated archived migration (`tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md`, resolved 2026-07-29)
+  that flipped ~1.3M of the same rows the opposite (lowercase) direction, a genuine SSOT contradiction against UAC's own
+  `InstrumentType.COMBO = "COMBO"` enum. Filed `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md` with
+  full evidence + an `[OPERATOR]` decision gate; did NOT force `--apply`. No code shipped this session — diagnosis +
+  issue-doc only.
