@@ -485,3 +485,37 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   CEFI:multi_timeframe verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
   be written and the checkbox flipped.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- 2026-08-03 ~15:40Z (slot-6, data_engineering, INTERIM #9 — new root cause found + fixed): task resumed on this slot
+  (`dispatch_reason: "resume"`, `already_in_progress: true`); no drift since INTERIM #8. Found CEFI:cross_instrument's
+  re-check VM (`features-e2e-cefi-20260803-144527-526e13`, launched by INTERIM #8) genuinely stalled: run.log and the
+  GCS heartbeat blob both frozen at 14:51:05Z (heartbeat stuck on `starting`) for 44+ minutes on a 60s cadence, Cloud
+  Monitoring CPU utilization flatlined at a suspiciously constant ~20% from 14:53Z onward (real work fluctuates; a flat
+  plateau is a stuck/spinning-thread signature), and SSH (via the `unified-trading-sa` ambient identity, after
+  confirming the active `github-actions-deploy` identity is the wrong one to self-grant IAP-tunnel access on per
+  RULES.md §5) timed out rather than connecting. All three of the craft's VM-delete-guardrail signals (heartbeat age,
+  run.log tail, no manifest/output progress) confirmed genuine staleness; deleted the VM
+  (`gcloud compute instances delete`, confirmed via `gcloud compute instances list` afterward). **Root-caused why
+  CEFI:multi_timeframe's two INTERIM #8 runs both exited 0 with ZERO GCS output** (a false PASS if read by exit code
+  alone): `orchestrator.py::_load_spec` built the delta-one read path WITHOUT the writer's `feature_group_version={N}/`
+  hive segment (`feature_writer.py` stamps every write under that segment; the code even carried a stale comment "omits
+  ... flagged separately, not addressed here") — so `blob_exists()` always probed a path that never existed, every real
+  HYPERLIQUID instrument (173 × 2 days = 346) silently logged "No source data ... skipping", and the run exited 0 anyway
+  since a per-instrument miss is a soft warning, not a hard error. Confirmed via direct GCS listing that real delta_one
+  output for CEFI/day=2026-07-05/feature_group=momentum/timeframe=15s DOES exist (created ~06:12-06:14Z, mid-way through
+  the 11.5h delta_one run) at exactly `feature_group_version=1/.../{instrument}.parquet` — the exact segment the probe
+  omitted. This is the SAME bug class already found+fixed once in delta_one's own `FeatureWriter.check_exists()` (its
+  docstring literally documents "the prior bug" of omitting this segment) — never applied to the sibling multi_timeframe
+  probe. Confirmed TRADFI's multi_timeframe failure is UNRELATED (a different, legitimate hard-gate:
+  `_resolve_batch_instruments` found 0 TRADFI instruments at all, cascading from TRADFI:delta_one's real terminal
+  failure already tracked in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`
+  — not touched by this fix). Fixed `features_service/multi_timeframe/engine/orchestrator.py::_load_spec` to resolve
+  `feature_group_version` via the same `compute_group_version` registry SSOT the writer uses (0-sentinel fallback for an
+  unregistered group, mirroring `feature_writer.py` exactly); added 2 regression tests
+  (`tests/multi_timeframe/unit/test_orchestrator.py::test_blob_path_includes_feature_group_version`,
+  `::test_unregistered_group_falls_back_to_version_zero`); all 55 `multi_timeframe` unit tests green; full
+  `quality-gates.sh` green (sentinel verified against HEAD). Shipped **`features-service@87942ac0`**, verified on origin
+  (`git merge-base --is-ancestor`). Relaunched CEFI:cross_instrument (force+skip) and CEFI:multi_timeframe (force+skip)
+  against the fixed code — both backgrounded local driver processes, in flight, not yet resolved. **Remaining open**:
+  both relaunched legs' verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
+  be written and the checkbox flipped.
