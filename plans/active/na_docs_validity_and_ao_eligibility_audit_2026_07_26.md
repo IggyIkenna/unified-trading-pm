@@ -703,3 +703,16 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   banner + `resolved_by` added; the one durable fact (Cloud Run Job is the real live path, not the VM launcher) migrated
   to `/codex/04-architecture/runtime-deployment-topology.md` § 18; 4 corpus referrers fixed (1 prose citation annotated
   archived, 3 path references repointed to `plans/archive/issues/`); moved to `plans/archive/issues/`.
+- **na-eligibility-audit 2026-08-03 (reconcile-65 pass — null result)**: measured 65 NA docs with >=1 open checkbox
+  cited by an ALREADY-DONE `assigned_vm: planning` todo — the "should just need reconciliation" bucket. 7 already
+  carried a disclaimer from the earlier same-day pass and were skipped; the remaining 58 (240 open lines) got a full
+  fresh line-by-line hand-verification via 6 parallel agents. **Result: 0 checkboxes closed.** Every single citation was
+  confirmed to reference a DIFFERENT, already-closed item in the same target doc, or an explicitly-excluded/
+  time-gated/redirect-banner item — not the specific flagged checkbox. One real, mechanically-blocked exception found:
+  `lst_rate_honest_coverage_2026_07_21.md` has 3 genuinely-done items (verified independently against
+  `strategy-service@e93902d8`/`@23bd8b76`) that cannot be flipped because the doc is still over its 1000L hard cap (same
+  known blocker already tracked above). This confirms the "cited by done AO work" signal, even restricted to its
+  strongest sub-case, is currently fully saturated by the earlier 122-candidate pass — no further exploitable matches
+  remain in this specific population at this corpus snapshot. Also flagged (not fixed):
+  `cefi_consolidated_native_ao_extract_2026_07_25.md` has `status: active` in frontmatter but its own body text says
+  "Status: draft... never auto-shipped to active" — a self-contradiction worth a maintainer's look.
