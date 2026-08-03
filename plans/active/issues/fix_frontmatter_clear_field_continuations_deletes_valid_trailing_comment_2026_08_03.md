@@ -101,13 +101,13 @@ intentionally-changed files won't surface it either.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `_clear_field_continuations()` to recognize "value + trailing `#`-comment, possibly wrapped
+- [x] ✅ [BACKEND] P1. Fix `_clear_field_continuations()` to recognize "value + trailing `#`-comment, possibly wrapped
       across further indented comment-only lines" as a fourth legitimate pattern, distinct from both accidental-fold
       garbage and a quoted multiline scalar — e.g. treat any continuation line whose STRIPPED content starts with `#` as
       a comment continuation (keep it, or strip only the comment while preserving the value line itself), and only apply
       the existing garbage-strip to continuation lines that carry neither a leading quote nor a leading `#`. Add a
       regression test using the exact `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` shape as
-      a fixture. Repo: unified-trading-pm.
+      a fixture. Repo: unified-trading-pm. — unified-trading-pm@458ba0180
 - [ ] [DATA] P2. Audit `plans/active/**/*.md` for any OTHER `execution_scope`/`last_updated` field carrying this same
       "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior fixer run
       before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an indented
@@ -124,3 +124,11 @@ intentionally-changed files won't surface it either.
   to NA. Conflict-check: no other active plan/issue references `_clear_field_continuations` or this bug shape — cleared.
   Done as part of resolving the `check_na_corpus_ratchet` hard-gate failure (361 > baseline 360) by fixing a genuine
   misclassification rather than raising the ratchet.
+- **2026-08-03 (slot 6, backend_engineer)**: shipped todo 1 — `_clear_field_continuations()` now treats a first
+  continuation line with real content before an unquoted `#` as a value+trailing-comment pattern and preserves the whole
+  block, instead of only guarding on a leading quote. Added
+  `tests/unit/test_fix_frontmatter_clear_field_continuations.py` using the exact
+  `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` shape as a regression fixture, plus coverage
+  confirming the quoted-scalar guard and the accidental-fold-garbage strip both still work unchanged.
+  `unified-trading-pm@458ba0180`, full quality-gates.sh green (1663 passed/11 skipped, coverage 69.99%). Todo 2 ([DATA]
+  P2 corpus audit) remains open for a data_engineering worker.
