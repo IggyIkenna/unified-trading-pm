@@ -88,10 +88,17 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       Plausibly this custody/wallet-adjacent plan was simply never authored.
 - [ ] [DOCS] P3. `codex/README.md` cites `.github/PRE_COMMIT_SETUP.md` — `.github/` contains only `actionlint.yaml`,
       `actions/`, `workflows/`; no pre-commit doc under any name/case.
-- [ ] [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites codex `04-architecture`'s
-      `feature-dictionary.md` — file does not exist anywhere in the repo, not a rename.
-- [ ] [DOCS] P2. `cursor-rules/testing/tradfi-path-builder-byte-identity.mdc` cites codex `04-architecture`'s
-      `path-canonicalization.md` — file does not exist anywhere in the repo, not a rename.
+- [x] ✅ [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites codex `04-architecture`'s
+      `feature-dictionary.md` — file does not exist anywhere in the repo, not a rename. **MOOT — the citing rule is no
+      longer live.** `unified-trading-pm@b45eab084`/`@d4f7fab9d` (2026-08-02) archived the entire top-level
+      `cursor-rules/` tree to `plans/archive/cursor-rules_2026_08_02/`; `.cursor/rules/` (a wholly separate, canonical,
+      150-file tree with zero overlap — see `docs_reconcile_operator_decisions_2026_08_02.md`) is the sole
+      live/symlinked source. Verified 2026-08-03 (na-eligibility-audit): `cursor-rules/` absent at the top level, the
+      archived copy present at the cited archive path.
+- [x] ✅ [DOCS] P2. `cursor-rules/testing/tradfi-path-builder-byte-identity.mdc` cites codex `04-architecture`'s
+      `path-canonicalization.md` — file does not exist anywhere in the repo, not a rename. **MOOT** — same archival
+      event as the item above; this file also independently verified moved to
+      `plans/archive/cursor-rules_2026_08_02/testing/tradfi-path-builder-byte-identity.mdc`.
 
 ## New from 2026-08-03 sweep — genuinely dead links, no successor (verified via direct invocation of the live checkers, not re-implemented logic)
 
@@ -186,3 +193,25 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   reached yet (only ~16 of the 27 `doc_body_link_baseline.yaml` entries had been individually investigated before
   today).
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, 2 items closed.** In scope
+  because the doc was edited since the 2026-08-02 marker. Independently re-verified all 18 open items live today (not
+  just re-read from prior investigation notes). **Closed 2 as STALE_CLOSEABLE above** (the two `cursor-rules/*.mdc`
+  dead-link findings, lines ~91/93 pre-edit) — their citing rules were archived out of the live `cursor-rules/` tree on
+  2026-08-02 (23:26-23:27Z), mooting the "a live rule cites a dead target" premise; verified via `find`/`git`, not
+  inference. Of the 16 survivors, **6 are BOUNDED_RECLASSIFY** — genuinely mechanical dead-link deletions or repoints
+  with no open design question, a larger bounded fraction than the 2026-08-02 pass found (it flagged only 1 of 15 as
+  individually bounded): the `provider-api-version-manifest.mdc` dead CODEX pointer (already has a confirmed live
+  successor named), the transient `.cursor/plans/` artifact citation in `E2E_WORKFLOW_UNIFIED.md`, the
+  `mev-protection.md` retired-plan citation (this run closed a research gap the original finding missed —
+  `plans/archive/questions_README_retired_2026_05_20.md`'s own retirement table names 2 concrete successors), the 6 dead
+  `AUDIT_2026_05_15` slot-file links (verified via `git show --stat` that the cited deletion commit is a superset), the
+  `agent_operating_framework_master.md` epic's dead `related:` entry (the epic's OWN body already states its target was
+  superseded, no further judgment needed), and the `uac_citadel_architecture` citation in
+  `contracts-scope-and-layout.md` (`plans/archive/INDEX.md` already names the exact fact, only a factual rewrite
+  needed). **10 remain genuinely VALID_JUDGMENT** (unknown original intent, genuinely ambiguous target, custody/wallet-
+  adjacent scoping, or the high-visibility root README.md pass this doc's own text deliberately scoped out to avoid an
+  under-verified rewrite). Per this skill's MIXED rubric the doc stays NA as a whole (no clean roll-up either way) —
+  flagging the 6 bounded items (doc lines ~55, 61, 78, 98, 103, 119 as of this edit) as candidates for a possible FUTURE
+  partial split, matching this doc's own existing `assigned_role: infra`; not drafted by this audit (outside this
+  skill's Phase 3 action set for MIXED). Doc-level disposition unchanged from the 2026-08-02 pass; this both closes 2
+  genuinely moot items and refines the bounded-item count with fresh verification.

@@ -198,3 +198,27 @@ convention's scope).
       landed that day too — exact commit that introduced the +1 not identified). **Done when**: run
       `python3 scripts/plan-hygiene/check_reference_paths.py` fresh, diff against this doc's last-known-good baseline
       number, find + fix the specific new dangling ref, `--update-baseline`.
+
+- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, but this is a REVISED read,
+  not a re-stamp.** In scope because the doc was edited since the 2026-08-02 marker. The P2 REVIEW item (line 85,
+  archival physical-move-vs-banner policy) is real, unresolved, and VALID_JUDGMENT — confirmed fresh, doc must stay NA
+  on this alone. **This run found direct counter-evidence against the prior 3 audit passes' "the mechanical items depend
+  on the policy answer, so the whole doc waits" framing**: the 2 large reference-hygiene backlogs (line 92: 109 format
+  violations; line 98: 1,286 existence violations) and the remaining 2 specific bounded fixes (line 131: the
+  sports_satellite_batch2 body-prose fix, easier now since that file sits at 996L, under its own former 1000L-cap
+  blocker; line 194: the 2026-08-03 baseline-drift item directly above) do NOT structurally depend on the
+  archival-policy answer — this doc's own history already closed materially similar dangling-ref regressions (items 7
+  and 9, plus the sports_shard_enumeration fix a concurrent session just closed today, line ~106 above, without waiting
+  on the policy ruling) and `/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (an active
+  `assigned_vm: planning` doc) independently assessed this exact backlog as real, appropriately-scoped corpus-cleanup
+  work — parking it only for collision-timing against concurrently-running tranche audits, not for being unbounded. So 4
+  of 5 open items are bounded work sitting idle, but the doc cannot cleanly roll up to RECLASSIFY as a whole (line 85 is
+  real, unresolved, human-only) and per this skill's MIXED rubric a doc with both survivor classes stays NA in full —
+  flipping would dispatch the still-unresolved policy item too. **Flagging for a human to decide whether to split lines
+  92/98/131/194 into a dedicated reference-cleanup plan** (line 98's own text already calls its 1,286-item backlog "a
+  candidate for a Workflow fan-out") while line 85 remains a standalone NA policy-decision doc — this audit does not
+  draft that split itself (outside this skill's Phase 3 action set for MIXED). Not contradicting the 3 prior KEEP-NA
+  verdicts' doc-level disposition (stays NA, unchanged) — refining the REASON with a more granular per-item read. (Note:
+  a concurrent session landed `unified-trading-pm@ca9551fbc`-adjacent work on this exact file between this audit's
+  initial read and its commit — re-verified against the post-pull state before writing this marker, so the item counts
+  above are current as of the actual commit, not the initial read.)

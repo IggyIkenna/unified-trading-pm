@@ -875,3 +875,28 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   role-lifecycle 'Operator-owned timing'; tmux_session_lost root-cause '⛔ SEQUENCED, do NOT start before the
   prereq-reaper P0 lands'). Flipping `assigned_vm` would dispatch those four alongside the two now-due calendar
   re-measurements.
+- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, per-item read.** In scope
+  because the doc was edited since the 2026-08-02 marker (1000L→877L line-cap remediation extraction, no todo content
+  changed). Applied the per-item rubric fresh: 6 of 8 open items are genuinely VALID_JUDGMENT (4 carry the explicit
+  dated operator-timing citations already named above; the ao_docs_reconciliation close-out and archival-ritual items
+  are ongoing judgment-laden meta-work). But **2 items are clean BOUNDED_RECLASSIFY candidates whose gates have now
+  cleared and were never individually assessed** (only ever audited as part of the whole-doc NA framing) — naming them
+  explicitly so they aren't silently dropped:
+  - Line ~726, Phase 8 residual: re-measure the `tmux_session_lost` rate vs. the 192-events-since-07-18 baseline and
+    record the delta — pure read-only activity_log count query over a comparable window with a stated gate, no design
+    call.
+  - Line ~733, Phase 8 residual: the stale-dispatch invariant 24h spot-check (dispatched count == live-worker-held
+    count) — code + 9 regression tests already shipped (`agent-orchestrator@aa81706`); only the operational proof
+    remains, a pure read-only count comparison with a stated gate.
+
+  This skill's Phase 3 only flips a doc's `assigned_vm` IN PLACE as a whole — it does not carve out a partial-doc
+  satellite the way `/ag-closeout-audit` does for orphans, so the doc stays NA as a whole (flipping would also dispatch
+  the still-genuinely-gated items). Per this doc's own established pattern (8 prior child-plan spin-outs already visible
+  in its "Split-out child plans" table), the correct mechanism for these 2 items — if a human decides to act on this —
+  is a small dedicated satellite plan, not a whole-doc flip. NOT drafted by this audit (outside this skill's Phase 3
+  action set for a MIXED verdict); flagging for a human/future run to decide. Explicitly NOT recommending the Phase-8
+  line-738 `plan_reconciler` item despite its own operator-timing gate having since cleared (all 6 named prerequisite
+  plans now archived) — its content targets a since-deleted mechanism (`typed_agent_sessions`, replaced by
+  `ao_uniform_agent_liveness_contract_2026_07_20.md`) and touches the fleet's most incident-prone subsystem
+  (`WorkerLivenessWatchdog`); it needs a human re-scope pass before it could be safely dispatched, not a mechanical
+  bounded-check.

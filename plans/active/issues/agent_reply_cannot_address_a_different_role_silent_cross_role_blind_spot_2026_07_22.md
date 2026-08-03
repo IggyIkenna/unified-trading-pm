@@ -196,3 +196,18 @@ too large.
   where a careless change breaks the reply-ack / redelivery-cap machinery), and one of the 3 open todos is an explicit
   `[REVIEW] P3` operator sign-off gate that must be recorded BEFORE the P1 routing change ships. In scope only via the
   2026-08-02 meta-retag sweep (`0409fa053`); content unchanged.
+- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, per-item refinement.** In
+  scope because the doc was edited since the 2026-08-02 marker (`context_scope` backfill). 2 of the 3 open items (line
+  168 P1 backend routing fix, line 179 P3 review sign-off gate) remain genuinely operator-gated per the doc's own
+  explicit "do NOT dispatch blind" banner on live agent-messaging-routing code — VALID_JUDGMENT, unchanged. **New
+  finding this run**: the 3rd item (line 182, `[DOCS] P2` — mirror the already-shipped `agents/main.md` STEP 2B fix
+  verbatim into `agents/review.md` STEP 2) is BOUNDED_RECLASSIFY — its own "Gate: same as the main.md item above" refers
+  to the SHIPPED line-173 docs-only item's functional-verification gate ("the diff lands and the next live cross-role
+  exchange shows a `to_agent` message"), not the P3 operator-sign-off gate on the P1 backend code change; confirmed by
+  re-reading the shipped item's own gate text. This is a pure docs-only edit mirroring an already-decided,
+  already-shipped pattern (`unified-trading-pm@026b79fff`) into a second procedure file, with no remaining design
+  judgment. Grepped the active plans corpus for "review.md STEP 2" / "peer-vs-operator" / cross-role reply duplication:
+  zero hits, not DUP_ELSEWHERE either. Per this skill's MIXED rubric the doc stays NA as a whole (flipping would also
+  dispatch the still-gated P1/P3 items) — flagging the review.md item as a legitimate future manual carve-out candidate
+  rather than silently dropping it. Doc-level disposition unchanged from the 2 prior passes; this refines the reason
+  with a per-item read.
