@@ -69,7 +69,7 @@ source:
       `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`,
       `wip_preserve_refs_silently_unrecovered_2026_07_29`. **Done when**: each doc has a recorded ruling (fold into a
       batch, park explicitly, or close as moot).
-- [ ] [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
+- [x] ✅ [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
       skill's own iterative-drain methodology, check whether the competing claim each collided with (in
       `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `## Deferred` section) has since shipped or superseded:
       `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24`,

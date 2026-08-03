@@ -140,14 +140,13 @@ this session's available repo set) to find where (if anywhere) those exact GCS p
       real green 06:00Z batch-live recon run (provision the missing execution-service/ml-service Cloud Run Jobs,
       implement `_SUCCESS`-marker writers, un-pause the feature schedulers) -- superseded by that more detailed todo
       rather than being a distinct action.
-- [ ] [SCRIPT] P3. Confirm whether `launch-batch-live-recon-cron-vm.sh` (the VM launcher) and the live Cloud Run job
-      (`uts-prod-batch-live-reconciliation-service`) are meant to be the SAME reconciliation running via two different
-      deployment mechanisms (in which case the VM launcher is dead/redundant code, since the Cloud Run job already
-      covers the nightly cadence) or genuinely different use cases (VM = manual/backfill re-run; Cloud Run = live
-      nightly). If the former, the VM launcher + its `setup-data-pipeline-vm.sh` dispatch branch (just added this
-      session, see `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`) may be effectively
-      unused — worth a lifecycle-marker check, not a reason to revert that fix (a manual-backfill use case is still
-      plausible and the fix is harmless either way).
+- [x] ✅ [SCRIPT] P3. **CLOSED (na-eligibility-audit 2026-08-03)** — the confirm-whether question is answered by
+      `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`'s own resolution (its
+      `[INFRA] P3` todo, archived/resolved): "Neither VM launcher is wired to a live Cloud Scheduler job" and
+      "batch-live-recon's live nightly runs via a separate Cloud Run Job" — confirming genuinely different use cases
+      (Cloud Run = the scheduled live-nightly path; the VM launcher is not scheduled at all, so any use is
+      manual/backfill), not the same reconciliation double-running. The "if redundant, lifecycle-check it" conditional
+      doesn't apply since the answer resolved to the non-redundant branch.
 
 ## Progress Log
 

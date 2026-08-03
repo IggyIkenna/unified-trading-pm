@@ -114,7 +114,7 @@ depends_on: []
       below, not this regression) — `existence_count` now 956 (< prior baseline 1257, a net IMPROVEMENT since the fix
       touched every occurrence of each stale target, not just the new ones), baseline ratcheted down via
       `--update-baseline`. `pm@<commit-pending>`.
-- [ ] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
+- [x] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
       terminal-status archival sweep (`ad4b1952c`) not updating referrers — `/plans/active/issues/<slug>.md` targets
       moved to `/plans/archive/issues/<slug>.md`. Fixed 2 of 3
       (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` → `cefi_tardis_throughput_collapse_350x_2026_07_17.md`;
@@ -125,7 +125,9 @@ depends_on: []
       (now archived) — that file is itself 1216L, over the 1000L hard cap (RULE-11), so staging it for even a 1-line
       reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
       when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap
-      cleanup below or its own pass), then fix the reference.
+      cleanup below or its own pass), then fix the reference. — CLOSED (na-eligibility-audit 2026-08-03): the 3rd
+      reference was repointed to the archive path without a split, `unified-trading-pm@ca9551fbc` (2026-07-29);
+      confirmed live in the file today.
 - [ ] [DOC] P3. Same class of gap as the todo above, second instance (found 2026-07-25, slot-8):
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (exactly 1000 lines, at the hard cap) carries a
       body-prose reference `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` that needs

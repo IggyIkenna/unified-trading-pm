@@ -295,6 +295,30 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (all `plans/active/issues/` unless
       noted). Full per-doc reasoning in the workflow journal (`wf_f263f118-37a`, `whqfflv82.output`) — do not re-derive
       verdicts, re-read each doc against its own cited evidence before converting.
+- [x] [SCRIPT] P2. **DONE (2026-08-03) — re-ran `check_na_duplicate_staleness.py`'s candidate list (65 dup-stale + 57
+      plain-stale = 122 unique docs) and hand-verified every item with 10 parallel agents (one crashed mid-run on a
+      transient API error, retried clean).** Result: 8 checkboxes closed across 6 docs
+      (`sports_odds_feature_naming_canonicalization_2026_07_21` ×3, `lst_rate_honest_coverage_2026_07_21` [see the
+      line-cap blocker below — closed in-session but reverted before commit],
+      `ao_orphan_audit_followup_triage_2026_07_30`, `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30`,
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24`, `reference_path_convention_2026_07_23`), the rest (114
+      of 122) confirmed false positives on full-context reading — reaffirms the prior finding that citation-presence
+      alone is a weak signal; every close required reading both the flagged checkbox's own surrounding text AND the
+      citing task's actual scope, not just checking a `Source:` line exists. Several docs already carried same-dated
+      `na-eligibility-audit 2026-08-03` verdict markers from a concurrent process when opened — confirms this class of
+      audit is now also running on another schedule/slot in parallel; no conflicting edits resulted since agents
+      verified content directly rather than trusting pre-existing markers.
+- [ ] [DOC] P2. **`lst_rate_honest_coverage_2026_07_21.md` line 381 (A2 staking leg, `[STRATEGY] P2`) verified DONE**
+      (`strategy-service@e93902d8`, cited at `defi_satellite_ao_dispatch_batch3_2026_07_26.md:191`) but the checkbox
+      flip could not be committed: the doc is 1017L, over the 1000L hard cap, and the SCOPED-mode small-marker-append
+      exception (operator ruling 2026-08-02) requires zero deletions in the staged diff — a same-line `[ ]`→`[x]`
+      replace is 1 insertion + 1 deletion, so it does not qualify even though total line count doesn't change. This is
+      one of the 4 docs the exception's own docstring already names as chronically stuck
+      (`lst_rate_honest_coverage_2026_07_21.md`, `data_completion_to_100_all_ag_2026_06_21.md`,
+      `instruments_completion_tracker_2026_07_06.md`, `master_data_canonicalisation_migration_catalogue_2026_06_07.md`)
+      — a checkbox flip on any of them hits the same wall. **Done when**: the doc is split/condensed under 1000L (or a
+      future operator ruling extends the append-only exception to cover a single same-line checkbox flip specifically),
+      then this A2 staking-leg checkbox gets flipped with the evidence above.
 
 ## Phase 4 — Final QA on everything this plan touched
 
