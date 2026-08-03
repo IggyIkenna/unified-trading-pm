@@ -122,11 +122,29 @@ to matter most.
       correct weekend-marker-write module" this todo asked to identify. Both entries added to the target doc's
       `context_scope` (3 → 5 entries) + a dated `context-scout 2026-08-03` Progress Log marker, committed to the target
       doc.
-- [ ] [SCRIPT] P2. Spot-check a fresh sample (20-30 docs scouted since 2026-08-01, after the SKILL.md spec revision that
-      added the "near-automatic include" / "unfinished Phase-1 pass" language) for real source-path presence, the same
-      way the 2026-07-30 342-doc baseline was measured. Report whether the rate improved from 51% or is still flat --
-      this determines whether the SKILL.md spec tightening actually changed sub-agent behavior or the miss found here is
-      representative of an ongoing gap.
+- [x] ✅ [SCRIPT] P2. Spot-check a fresh sample (20-30 docs scouted since 2026-08-01, after the SKILL.md spec revision
+      that added the "near-automatic include" / "unfinished Phase-1 pass" language) for real source-path presence, the
+      same way the 2026-07-30 342-doc baseline was measured. Report whether the rate improved from 51% or is still flat
+      -- this determines whether the SKILL.md spec tightening actually changed sub-agent behavior or the miss found here
+      is representative of an ongoing gap. — measured, not a theoretical claim. Reused `scripts/docs/docspec.py`'s
+      frontmatter parser (same pattern `generate_context_scope_inventory.py` uses) in a one-off scratchpad script to
+      find every `plans/active/*.md` + `plans/active/issues/*.md` doc whose most recent `context-scout YYYY-MM-DD`
+      Progress Log marker is >= 2026-08-01, then checked whether each doc's `context_scope` carries >=1 entry that isn't
+      a `/plans/` or `/codex/` reference (a real source path). **Population: 447 docs** (far larger than the requested
+      20-30 -- the whole corpus got touched by that day's backfill batches, not a small slice), of which 67 are
+      legitimate zero-source carve-outs per SKILL.md's own bar (dispatch-batch coordinators / `*_finalize` gates).
+      **Rate excluding legitimate carve-outs: 236/380 = 62.1%** (raw across all 447: 63.5%) -- **up from the 2026-07-30
+      baseline of 51%**, a genuine ~11-point improvement, not flat. Also drew a 25-doc seeded-random sample from the
+      same non-carveout population (matching the task's requested sample size/methodology): 21/25 = 84.0% -- higher than
+      the full-population rate, illustrating real sampling variance at n=25 (this is why the full 380-doc denominator is
+      the more reliable number, not the small sample). Did not further prune the "zero-source, non-carveout" list for
+      other legitimate-but-unflagged coordinator shapes (e.g. `*_consolidated_closeout` docs, which read similarly to
+      dispatch-batch coordinators but weren't in the exclusion regex) -- so 62.1% is a conservative floor, the true rate
+      is likely somewhat higher. **Verdict: the SKILL.md spec tightening measurably changed sub-agent behavior** (51% ->
+      62-64%); the miss found in item 1 above was a real individual-doc failure, not evidence the tightening had zero
+      effect corpus-wide. Script: `scratchpad/spotcheck_source_path_rate.py` (session-scoped, not committed -- one-off
+      analysis, not a standing tool; the P3 item below (item 3, the deterministic post-hoc lint) is the tracked
+      follow-up if a repeatable version is wanted).
 - [ ] [SCRIPT] P3. Add a cheap deterministic post-hoc lint to Phase 3's report (not a blocker, a surfaced warning): for
       each doc scouted with zero source-path entries, check whether the doc body contains any token matching a known
       filename/module pattern (e.g. `\w+_service\b`, `\.py\b`, a `repos:` frontmatter repo name followed by a path-like
@@ -157,3 +175,8 @@ to matter most.
   (`ao_open_issues_consolidated_close_out_2026_07_17.md`) does not touch this topic. Frontmatter already carried
   `assigned_role: docs_reconciler` + `model_tier: sonnet-doable`, no correction needed. Companion finalize plan:
   `context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md`.
+- **2026-08-03 (slot 2, docs_reconciler)**: closed item 1 (live-repro Phase-1 re-run on the tradfi MDPS staleness doc —
+  see that doc's own Progress Log for the 2 source paths added) and item 2 (corpus-wide source-path-rate spot-check:
+  62.1% excluding legitimate carve-outs / 63.5% raw across 447 docs scouted since 2026-08-01, vs. the 2026-07-30 51%
+  baseline — a genuine improvement, not flat; full detail + the 25-doc sample in item 2's own checkbox above). Items 3
+  and 4 (the deterministic post-hoc lint, and the STALE/UP_TO_DATE false-positive check) remain open.
