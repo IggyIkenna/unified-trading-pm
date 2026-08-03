@@ -272,7 +272,21 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    on the SAME physical line, never across a blank line; (b) **internal self-consistency** — any stated
    rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
    or itself mid-sentence.
-8. **Moved-doc referrer hunter** — added 2026-08-02 (`issues/reference_path_convention_2026_07_23.md`'s "Confirm
+8. **Hedge-pointer / stale-candidate hunter** — added 2026-08-03 after a real todo
+   (`data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3) named 3 "candidates found by grep" for 4 follow-up
+   items — only 1 of the 3 was a real owner, and 2 of the 4 items were actually owned by an entirely different, unlisted
+   doc found only by a fresh corpus-wide grep. Grep the corpus for hedge language a doc's own prose/todos use in place
+   of a confirmed reference — "candidates found by grep", "likely owned by", "probably tracked in", "TBD which doc
+   covers this", "not yet identified" — and treat every hit as an unverified claim, same bar as hunter 4's plan↔codex
+   drift: grep-then-READ every named candidate, confirm whether it actually owns/tracks the claim, and (per this
+   workspace's grep-then-conclude ban) don't stop at the named candidates — a fresh corpus grep for the item's real
+   owner is required before concluding "not yet identified" is still accurate. Mirrors
+   `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4, which does the identical verification but can only
+   ever update `context_scope` — it is this skill's job (not context-scout's) to actually rewrite the doc's own hedge
+   prose once a candidate is confirmed right, wrong, or replaced by a different real owner. If a confirmed owner's todo
+   also happens to already be `- [x]`/shipped, fold the finding into Phase 2's done-but-unchecked flip too (this was the
+   exact shape of the motivating incident — a stale pointer AND a flippable-done item at once).
+9. **Moved-doc referrer hunter** — added 2026-08-02 (`issues/reference_path_convention_2026_07_23.md`'s "Confirm
    `/plan-reconcile` catches a doc moving without its referrers being updated" todo, dispatched via
    `infra_satellite_ao_dispatch_batch1_2026_07_26.md`), after determining the existing mechanism does NOT reliably catch
    this class for the dominant referrer shape. Verified by reading the actual code, not assuming from this skill's own
@@ -370,15 +384,16 @@ the same way: the refuter attacks the evidence chain (sha actually reachable? ar
 
 **Auto-fix (no ruling needed — apply in Phase 5):**
 
-| Class                                                          | Fix                                                                                                                                                                                                              |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Done-but-unchecked with HARD evidence                          | Flip checkbox with `<repo>@<sha> + evidence`                                                                                                                                                                     |
-| Terminal-status doc parked in `plans/active/`                  | Run the 5-step archival ritual — but `locked_by:` blocks archival without `[unlock-plan]` (ASK; in autonomous mode park it)                                                                                      |
-| Fully-done plan (every todo `[x]`, `status: active`, UNLOCKED) | Verify each todo genuinely done via Phase-2 HARD evidence (a plan can be false-checked), then run the 5-step archival ritual. Any todo only soft-supported, or `locked_by:` set → park, never autonomous-archive |
-| Superseded content with no banner                              | Add the `> **SUPERSEDED by <doc> (<date>)**` banner; point to the successor                                                                                                                                      |
-| Frontmatter status contradicting body completion banner        | Align frontmatter to reality (verify reality first, both directions possible)                                                                                                                                    |
-| Dangling ref where the target moved to archive/codex           | Repoint the ref                                                                                                                                                                                                  |
-| Duplicate/stale index rows (INDEX.md / ACTIVE_INDEX.md)        | Regenerate via the inventory tooling, never hand-sync                                                                                                                                                            |
+| Class                                                          | Fix                                                                                                                                                                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Done-but-unchecked with HARD evidence                          | Flip checkbox with `<repo>@<sha> + evidence`                                                                                                                                                                        |
+| Terminal-status doc parked in `plans/active/`                  | Run the 5-step archival ritual — but `locked_by:` blocks archival without `[unlock-plan]` (ASK; in autonomous mode park it)                                                                                         |
+| Fully-done plan (every todo `[x]`, `status: active`, UNLOCKED) | Verify each todo genuinely done via Phase-2 HARD evidence (a plan can be false-checked), then run the 5-step archival ritual. Any todo only soft-supported, or `locked_by:` set → park, never autonomous-archive    |
+| Superseded content with no banner                              | Add the `> **SUPERSEDED by <doc> (<date>)**` banner; point to the successor                                                                                                                                         |
+| Frontmatter status contradicting body completion banner        | Align frontmatter to reality (verify reality first, both directions possible)                                                                                                                                       |
+| Dangling ref where the target moved to archive/codex           | Repoint the ref                                                                                                                                                                                                     |
+| Duplicate/stale index rows (INDEX.md / ACTIVE_INDEX.md)        | Regenerate via the inventory tooling, never hand-sync                                                                                                                                                               |
+| Hedge-pointer confirmed (hunter 9)                             | Rewrite the doc's own prose/todo to name the confirmed real owner directly (or state plainly that no owner exists), dropping the "candidates found by grep"/"TBD" framing — a confirmed fact, not a preference call |
 
 **Completion + consolidation lifecycle (verify-then-archive; destination is operator-gated):**
 
@@ -522,4 +537,6 @@ an on-demand run.
   conflict-check protocol, and the assigned_vm:NA corpus ratchet
 - `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (NA-doc validity/reclassification, disjoint
   population from this skill's contradiction/false-unchecked sweep)
+- `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4 — the mirrored hedge-pointer verification; that skill
+  can only write `context_scope`, this skill (hunter 9) is the one that rewrites the doc's own prose
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract + escalation format
