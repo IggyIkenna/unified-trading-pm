@@ -188,3 +188,5 @@ this service relative to its documented, measured requirement.
   `2026-08-01T00:06Z` entry both impose is still not met; do not re-attempt the cutover based on a clean
   `revisions list`/log-sweep alone — the ONLY reliable signal is an actual fresh tag/traffic operation, which just
   failed. No code shipped — live verification only. (repo: deployment-service, deployment-api)
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — still the right minimal set (SIGABRT
+  crash-loop doc, the gating bucket-IAM plan, and the fixed `deploy-shared.sh`).

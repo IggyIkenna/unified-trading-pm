@@ -307,3 +307,4 @@ cleanly instead of ending on an issue-doc corroboration.
   DECLINED-for-now backend design work (a `/done`-endpoint identity-matching change touching every worker's completion
   path), unchanged since the 2026-08-02 marker. Only file change since is a mechanical `context_scope` path fix — no
   content drift.
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).

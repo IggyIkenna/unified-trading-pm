@@ -68,7 +68,6 @@ depends_on: []
 context_scope:
   [
     /plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md,
-    /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     instruments-service/scripts/migration_orphan_sweep.py,
     instruments-service/scripts/backfill_orphan_class_e.py,
     features-service/features_service/cefi/calculators/perp_funding_corpus.py,
@@ -348,3 +347,7 @@ in this read-only audit pass (time-bounded scope).
   a different, already-tracked cleanup, not a new decision this todo needed to make. Neither accepted-exception nor
   schema-change was applied; ruling + full reasoning recorded on the (c) checkbox above. Doc stays `status: open` (item
   (b) and the separate `[OPERATOR] P2` cross-AG architecture todo both remain open).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — dropped
+  `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (tangential to the two remaining `[OPERATOR]` items;
+  covered the already-resolved BLAZESTAKE/HYPERLIQUID phase exception, not the physical-duplicate-delete or
+  cross-AG-architecture questions still open).

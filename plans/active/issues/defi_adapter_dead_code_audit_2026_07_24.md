@@ -69,7 +69,6 @@ last_reviewed:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md,
     /plans/active/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py,
     instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py,
@@ -476,3 +475,6 @@ files.
   native_staking_handler consolidation) — none worker-determinable. The 2026-08-01 § 7 addendum changed nothing here: it
   explicitly records that "the 4 still-open follow-up todos in § 6 remain open, unaffected by this pass". Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — dropped the archived
+  `defi_governance_params_refresh_2026_06_20.md` plan reference (already fully quoted inline in this doc's own headline
+  finding) to stay within the 2-6 entry budget; kept the 6 live-code targets for the 4 still-open section-6 decisions.

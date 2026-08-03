@@ -40,6 +40,7 @@ context_scope:
     /cursor-configs/skills/context-scout/SKILL.md,
     scripts/plan-hygiene/check_line_caps.sh,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
 ---
 
@@ -277,3 +278,6 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   session — a completed edit reverted to HEAD with no trace in `git stash list`, no data lost since the recipe +
   archive-doc target were still reconstructable, but redo work was needed); the fix is procedural — never touch this
   repo's working tree while a quickmerge you started is still running.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the sibling
+  `ao_satellite_ao_dispatch_batch3_2026_07_31.md` (the plan whose context_scope FieldSpec flip todo this issue directly
+  unblocks).

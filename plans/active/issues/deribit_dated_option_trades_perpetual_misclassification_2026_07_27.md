@@ -167,3 +167,5 @@ reproduce.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - `execution_scope: human`; the sole
   todo bundles a writer root-cause, a corpus-wide census, and a reclassify migration of already-captured multi-GB
   objects.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — all four still resolve and remain the
+  right minimal set for the still-open writer root-cause todo.

@@ -36,7 +36,12 @@ estimate_calibrated_ai_days:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [scripts/quality_gates/check_doc_body_links.py, scripts/quality_gates/doc_body_link_baseline.yaml]
+context_scope:
+  [
+    scripts/quality_gates/check_doc_body_links.py,
+    scripts/quality_gates/doc_body_link_baseline.yaml,
+    /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -110,3 +115,6 @@ corpus actually uses was never brought into the checker's purview.
   checklist, and P1 is explicitly flagged as needing a live violation-count measurement before its baseline-seed size is
   known. Choosing between them is a real scope/risk judgment call on a change to shared QG infra, not a bounded,
   worker-determinable outcome — stays NA.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added
+  `/plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md`, the checker's own origin doc named in this
+  doc's "Why this matters" section.

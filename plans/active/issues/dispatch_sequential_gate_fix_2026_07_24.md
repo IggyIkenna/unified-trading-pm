@@ -150,3 +150,5 @@ backfill).
   `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`) and states its own gate verbatim: '**Operator
   sign-off required before editing a codex SSOT** (workspace HARD RULE — codex edits are never autonomous)'. Its sibling
   `[BACKEND] P1` was already self-serviced + closed 2026-07-29.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

@@ -50,9 +50,9 @@ source:
 
 ## What I found
 
-`/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" ASCII diagram (§ near the top) and its Gate
-1/2/3 walkthrough sections describe promotion as: quickmerge → `gh pr create` to `staging` (auto-merge) → `workspace-qg`
-GHA on the staging PR → semver-agent bumps on staging → `staging-to-main.yml` squash-merges to `main`.
+`/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" ASCII diagram (§ near the top) and its
+Gate 1/2/3 walkthrough sections describe promotion as: quickmerge → `gh pr create` to `staging` (auto-merge) →
+`workspace-qg` GHA on the staging PR → semver-agent bumps on staging → `staging-to-main.yml` squash-merges to `main`.
 
 This is the **retired** model. Per CLAUDE.md § "Git discipline + shipping pipeline" (current) and
 `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the migration plan, `status: active`, already substantially shipped):
@@ -122,3 +122,6 @@ open checkbox above this run so a future pass does not re-flag the same content 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) —
+  `ci_satellite_ao_dispatch_batch4_2026_07_31.md` confirmed still `status: draft` and still carrying this todo verbatim,
+  so the set stands.

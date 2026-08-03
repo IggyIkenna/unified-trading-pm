@@ -246,3 +246,4 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
   `locked_by: live-defi-rollout`; the remaining defi/tradfi/sports legacy-bucket deletes are documented as 'hard-stop,
   never-autonomous' operator sign-off.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).

@@ -355,3 +355,5 @@ FLAT shape, tracked under the other doc).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate against the sole remaining P3
+  todo (re-open the FLAT-shape delete question once the hive canonicalisation doc's copy-up migration completes).

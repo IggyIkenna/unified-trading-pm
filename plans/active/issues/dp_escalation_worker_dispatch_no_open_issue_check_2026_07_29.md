@@ -329,3 +329,5 @@ regression) is worse.**
     GCS read (the slot-4 twin had just pulled a fresh live read moments earlier), no code change. Combined across both
     tracked conditions, this backlog has now consumed 31+ full orchestrator-agent dispatches — still awaiting the
     operator/design decision on Option A/B/C.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

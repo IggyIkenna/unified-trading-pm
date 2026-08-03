@@ -47,6 +47,7 @@ context_scope:
     instruments-service/scripts/build_instrument_catalogue.py,
     instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
   ]
 ---
 
@@ -193,3 +194,5 @@ session's shared host.
   attempt against a redundant, already-completed corpus-scale migration. **Did not relaunch** (bound-exceeded +
   goal-already-achieved, both independently sufficient stop conditions per the runbook); no code change needed. Pinged
   the authoring monitor slot with this outcome.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the originating
+  `instrument_id_format_canonicalization_2026_07_08.md` (this doc's finding 2 re-check target).

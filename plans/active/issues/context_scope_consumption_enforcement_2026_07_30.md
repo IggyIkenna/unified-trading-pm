@@ -142,3 +142,4 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   rendering / RULES.md STEP 0 / a QG-style first-tool-call gate) AND to answer the ask-before-creating HARD RULE's
   LOCAL-vs-AO track question; todo 2 is gated behind todo 1 shipping. In scope this run only because of the 2026-08-01
   prose correction (`307b55bd8`) and the 2026-08-02 retag sweep — neither changed the open todos.
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (4 entries).

@@ -178,3 +178,5 @@ rows, that's a separate write-path bug to diagnose via its logs.
   touched file, so the referrer edit cannot land until the plan is trimmed below the cap first. Deciding what content is
   safe to cut from an active 1000+-line plan is a judgment call, not a mechanical fix — correctly skipped.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate against the sole remaining todo
+  (fix the stale referrer in `lst_rate_honest_coverage_2026_07_21.md`, gated on a line-cap trim).

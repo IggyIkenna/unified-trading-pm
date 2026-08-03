@@ -62,7 +62,6 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 
@@ -628,3 +627,5 @@ absorb the actual remediation work.
   planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
   diagnostics / a VM restart onto current code; no design or authority call left
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — deduplicated a repeated
+  `defi_satellite_ao_dispatch_batch1_2026_07_25.md` entry (no content change beyond the dedup).

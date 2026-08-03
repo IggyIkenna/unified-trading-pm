@@ -142,3 +142,5 @@ concrete, currently-failing symptom; the classification question is the census a
   reroute / accept as a historical gap). The 2 `[DIAG] P2` checkboxes are bounded but secondary, and the same gap-day +
   `_migrated_kalshi_perp_*` forensics are already claimed by an active planning plan
   (`defi_satellite_ao_dispatch_batch6_2026_07_30.md:310`), so flipping this doc would dispatch a duplicate.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate against the doc's central open
+  (a)/(b)/(c) operator decision and the 2 secondary `[DIAG]` todos.

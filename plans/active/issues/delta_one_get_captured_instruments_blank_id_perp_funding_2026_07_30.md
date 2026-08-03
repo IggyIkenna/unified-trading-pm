@@ -201,3 +201,5 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`. This doc's todo 2
   is SUPERSEDED by that chain (see its updated text); it stays non-dispatchable until the `[BACKEND] B` fix lands. Did
   not implement B (repo-owner-ratifiable per operator) and did not relaunch (no fix landed yet).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — verified all four still resolve and
+  remain the right minimal set.

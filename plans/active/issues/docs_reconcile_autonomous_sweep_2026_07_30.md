@@ -365,3 +365,5 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   fixed by `unified-trading-pm@7509ec538` (2026-07-31) — 2 days before the 2026-08-02 pass re-verified it as open
   without checking the target file's content — closed it above with evidence. The 2 survivors (P0-A codex-freshness
   cliff, P1-C dead-doctrine-refs) remain genuine authority calls, matching every prior pass; doc stays NA.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

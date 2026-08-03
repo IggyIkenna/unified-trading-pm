@@ -52,6 +52,8 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
     /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
+    /codex/02-data/orphan-object-detection.md,
+    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
   ]
 ---
 
@@ -160,3 +162,7 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
   evidence (287,074/287,074 raw legacy objects deleted, 0 errors; candles confirmed 0 need migration; a real
   candle-scope code bug found + fixed along the way, `market-tick-data-service@fa991f12`). Phase B of
   `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` is done — see that doc for its own evidence entry.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 3) — added `orphan-object-detection.md` (the
+  Part-5 twin-coverage procedure the open P2 todo directs a worker to run/locate) and
+  `plan_reconcile_parked_operator_decisions_2026_08_02.md` (where the operator's 2026-08-02 "pursue reading (a) first"
+  ruling on this doc's open question is recorded).

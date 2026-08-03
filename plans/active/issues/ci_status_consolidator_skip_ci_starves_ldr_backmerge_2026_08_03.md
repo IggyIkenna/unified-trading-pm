@@ -51,6 +51,14 @@ source: agt-368655
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
+    .github/workflows/ci-status-consolidator.yml,
+    .github/workflows/main-backmerge-to-ldr.yml,
+    scripts/orchestrator/ldr-to-main-promote-heartbeat.sh,
+  ]
 ---
 
 # ci-status-consolidator's `[skip ci]` starves the LDR backmerge — fleet-promote gate can stall indefinitely
@@ -127,3 +135,7 @@ resolution.
 - Fleet-promote run 30812812761 (12:15Z) —
   `TIER A PASS deployment-service: ci_status cached='FEATURE_GREEN' live='FEATURE_GREEN'`, closed PR #675, merged PR
   #676.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

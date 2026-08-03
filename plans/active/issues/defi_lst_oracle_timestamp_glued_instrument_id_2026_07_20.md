@@ -392,3 +392,6 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
   is now fully resolved (either shipped/verified, in the case of the forward write-path fix, or folded into the closeout
   plan's P0 phantom-row purge, in the case of the historical residual rows); no standalone action remains here.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — doc's scope is fully resolved (all todos
+  checked, folded into the closeout plan's phantom-row purge for the residual); list still accurately anchors the
+  historical fix evidence.

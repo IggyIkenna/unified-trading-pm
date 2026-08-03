@@ -36,14 +36,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    plans/active/data_completion_defi_2026_07_15.md,
-    plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py,
+    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/data_completion_defi_2026_07_15.md,
     /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/morpho_adapter.py,
   ]
 ---
 
@@ -948,3 +945,7 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   is still `assigned_vm: NA` with 20 open todos, so the gate has not cleared. The doc's own Morpho scope is complete;
   the residual `expected_unattempted` mass belongs to that other plan's expected-universe-v2 seed chain. KEEP-NA on the
   gate citation alone, per this skill's never-re-litigate-an-established-gate rule.
+- **context-scout 2026-08-03**: deduplicated context_scope (was 8 entries with 3 duplicated bare-vs-leading-slash paths
+  — `data_completion_defi_2026_07_15.md`, `defi_expected_unattempted_backlog_1m_2026_07_03.md`,
+  `mvp_backfill_defi_onchain_v10_2026_06_27.md` each appeared twice; now 5 entries, all leading-slash-normalized per the
+  cross-reference convention).

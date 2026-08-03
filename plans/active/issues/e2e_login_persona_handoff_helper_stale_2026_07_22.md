@@ -124,3 +124,5 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   behavior. Independently re-verified LIVE today against the `unified-trading-system-ui` sibling clone: `?persona=`
   handling is still absent from `app/(public)/login/page.tsx` and `tests/e2e/user-management.spec.ts` still uses the old
   contract — the bug still reproduces 12 days later, not stale.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

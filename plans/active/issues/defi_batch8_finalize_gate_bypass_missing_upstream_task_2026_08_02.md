@@ -64,6 +64,7 @@ context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
   ]
 supersedes:
@@ -319,3 +320,7 @@ No design call needed — every fact here is independently checkable:
   passed, 2 skipped, dashboard tsc/vitest clean) before shipping. Shipped as `agent-orchestrator@11f2d4a`, verified on
   origin via `git merge-base --is-ancestor`. Todo 4 (DATA-craft re-verification + source-doc reconciliation once
   batch8's real todo actually completes) remains open for its own dispatch — outside this task's scope.
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped in
+  `lst_rate_honest_coverage_2026_07_21.md` (the actual reconciliation target for the sole remaining todo 4) alongside
+  the existing entries.

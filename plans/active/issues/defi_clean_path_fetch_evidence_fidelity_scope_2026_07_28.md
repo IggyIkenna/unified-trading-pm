@@ -181,3 +181,6 @@ below is explicitly gated on a human design call) — a future triage pass shoul
   include that undecided design call and a `[CODE] P2` the doc itself says to "re-scope to the actual highest-value
   single file once picked up", so a whole-doc flip would dispatch under-scoped work. Left for a future extraction rather
   than reclassified.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate against the 4 remaining open
+  items (Aave/Alchemy + Chainlink/Pyth research, subgraph-HTTP status threading, the governance dual-source design
+  question).

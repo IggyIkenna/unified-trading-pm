@@ -471,3 +471,4 @@ Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).

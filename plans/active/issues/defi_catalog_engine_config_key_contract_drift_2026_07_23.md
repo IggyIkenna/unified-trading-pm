@@ -752,3 +752,5 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   archetypes — a textbook judgment call (trading-parameter/outcome-id/option-strike rulings), correctly held as visible
   `xfail(strict=True)` pending a human ruling, not a bounded worker task. Only diff since the 2026-08-01 marker was the
   context-scout metadata backfill (no content change). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate against the doc's only remaining
+  open item (the P0 design decision on `catalog_trading.py`'s 5 broken archetypes, all under `target_universe/`).

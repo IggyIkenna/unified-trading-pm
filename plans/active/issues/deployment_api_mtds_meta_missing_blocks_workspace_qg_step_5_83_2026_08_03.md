@@ -59,7 +59,8 @@ source: >-
 context_scope:
   [
     scripts/qg/no_adapter_contract_regression.sh,
-    unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml,
+    scripts/quality_gates/adapter_contract_baseline.yaml,
+    deployment-api/deployment_api/services/data_status/mtds_meta.py,
     /plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
   ]
 ---
@@ -188,3 +189,6 @@ decision made either way. Checked the cross-referenced sibling
 active): its own open todo is about making the file-walk faster/lighter, a related but distinct concern (speed, not
 source-of-truth staleness) — no duplication. Not RECLASSIFY-eligible (the outcome isn't worker-determinable without a
 design call). No ARCHIVE.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries) — added the actual `mtds_meta.py` target file and
+  dropped the redundant `unified-trading-pm/` repo prefix on the baseline-yaml entry (this doc's own repo).

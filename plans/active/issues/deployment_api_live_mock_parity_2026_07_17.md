@@ -341,3 +341,5 @@ mock parity — the drift is historical, not systemic.
   other test in the same class. Full `quality-gates.sh` green (sentinel `b8e609c`), shipped via `quickmerge --agent`,
   verified on origin. **Every todo in this doc is now done — archival-eligible** (no `locked_by`); left for a follow-up
   archival pass rather than bundled into this commit per the never-combine-flip-with-git-mv rule.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — still the right minimal set; note the
+  doc is now archival-eligible per the entry above (all todos closed).
