@@ -485,7 +485,31 @@ inherited from the first shipped batch:
       filed here instead. **Next dispatch**: (1) run `--apply` alone (no `--drop-out-of-universe`) to close the
       1.075M-row re-key gap — safe, idempotent, non-destructive, no operator gate needed; (2) get the operator's ruling
       on the 1.165M-row drop (keep as extra reference data vs. drop manifest rows only vs. drop manifest rows +
-      scope+execute the separate GCS-object cleanup); (3) only then re-verify + flip this checkbox.
+      scope+execute the separate GCS-object cleanup); (3) only then re-verify + flip this checkbox. — **Re-key APPLIED
+      2026-08-03 (slot 16, data_engineering), per main's interim BLK-aa587dbf ruling** (split the two operations by risk
+      class: the safe re-key is main-cleared to run now regardless of the drop decision; the destructive drop itself
+      stays operator-owned, this todo stays OPEN). Ran `canonicalize_sports_league_id_schema_2026_06_24.py --apply`
+      (memory-bounded, `run-bounded-analysis.sh --mem-cap     40G`, no `--drop-out-of-universe`). Snapshot written
+      FIRST:
+      `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/pre_league_id_canonicalize_20260803T183639Z.parquet`.
+      Result: `_index` rewritten `11,853,072 → 6,550,528` rows; **in-universe numeric residual = 0** (verified, the
+      script's own must-be-0 assertion held); out-of-universe numeric residual = 8,914 (expected nonzero, untouched —
+      `--drop-out-of-universe` was NOT passed). **Notable, larger-than-expected side effect**: the dedup pass alone
+      collapsed **5,302,544 rows (45% of the pre-run total)** — far above the June baseline run's ~11% dedup rate
+      (509,227/4,599,952) — i.e. the manifest has accumulated a large volume of true duplicate rows (same
+      `service_name/date/data_type/league_id/timeframe/pipeline_mode/source` key, different `written_at`) since June,
+      most likely from the many concurrent VM relaunches across this curated-universe backfill campaign each writing
+      overlapping shards that the consolidator never fully collapsed. Flagging as a finding worth a follow-up look (why
+      is per-VM-shard consolidation leaving this many true duplicates), not blocking — the dedup itself is the script's
+      documented, intended behavior (keeps the BEST status per key) and is what it has always done; only the SCALE this
+      run is new. **Still NOT run**: `--drop-out-of-universe --apply` (the 1.165M-row / 9.83%-of-manifest destructive
+      drop) — this remains genuinely `[OPERATOR]`-gated per main's BLK-aa587dbf ruling (destructive prod-data mutation
+      on the sole copy + a real retention-scope judgment call, not main's or a worker's to authorize). **Todo stays
+      OPEN** (per main's explicit instruction not to pre-decide the drop by closing this) — next dispatch: wait for the
+      operator's actual ruling on BLK-aa587dbf (keep-as-reference vs. drop-manifest-only vs.
+      drop-manifest-plus-scope-GCS-objects), execute per whichever they choose (citing
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` if they choose a drop), THEN re-verify + flip this
+      checkbox.
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
@@ -520,3 +544,12 @@ themselves.
   unreachable (connection refused, :8765) when attempting to file a structured `/blocked` question — retrying per
   RULES.md's network-error backoff before end of session. Not flipping this todo's checkbox — step 3 is genuinely not
   done yet.
+- **2026-08-03 (slot 16, data_engineering) — resumed after main's BLK-aa587dbf interim ruling**: main split the decision
+  by risk class — cleared the safe numeric/suffixed re-key to run now (main-owned, non-destructive, idempotent), kept
+  the 1.165M-row destructive drop operator-owned and this todo OPEN. Ran the re-key
+  (`canonicalize_sports_league_id_schema_2026_06_24.py --apply`, no `--drop-out-of-universe`): snapshot taken first,
+  `_index` rewritten 11,853,072 → 6,550,528 rows, in-universe numeric residual verified 0. Notable finding: the dedup
+  pass alone collapsed 45% of pre-run rows (5,302,544) — far above June's ~11% baseline rate, worth a follow-up look at
+  why per-VM-shard consolidation is leaving this many true duplicates (not blocking, script behavior is intended and
+  unchanged, only the scale is new). The destructive drop remains un-run, `[OPERATOR]`-gated per main's ruling — todo
+  stays open pending the operator's actual answer to BLK-aa587dbf.
