@@ -589,9 +589,28 @@ safely-completable work. Terminal state:
 
 ## Todos (follow-up)
 
-- [ ] [DOC] P3. Confirm the 4 still-unbanked "⏳ Remaining" table rows above (non-Tardis confirmed venue bugs, cache_oom
-      24h soak, Downloads CeFi re-capture, Downloads CSV-download smoke) each already have a real tracked `- [ ]` todo
-      in an owning doc (candidates found by grep: `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`,
-      `artifact_pipeline_observability_2026_07_17.md`, `cost_observability_deferred_followups_2026_07_10.md`) — or file
-      the missing ones. This table itself is prose, not a tracked todo, per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2.
+- [x] [DOC] P3. ✅ **DONE — all 4 confirmed already tracked + resolved in their owning docs; nothing missing, no new
+      issue doc needed.** The 2 grep candidates named in this todo (`artifact_pipeline_observability_2026_07_17.md`,
+      `cost_observability_deferred_followups_2026_07_10.md`) do NOT own any of the 4 items (checked both in full — zero
+      relevant hits: no `cache_oom`/`soak`/`EIGEN`/`csv` content tied to these rows). The real owning docs, found by
+      targeted grep + full read: - **non-Tardis confirmed venue bugs** (LIGHTER override, EXTENDED book_snapshot date,
+      HYPERLIQUID phantom) — owned by `plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`
+      (the 3rd grep candidate). All three are tracked `- [x]` FIX todos and are now DONE: LIGHTER `_VENUE_OVERRIDES`
+      core-fixed `unified-trading-library@d59f14db` + re-verified 2026-07-30; EXTENDED `book_snapshot_5` date bug fixed
+      `market-tick-data-service@55dac12a` (honest-absence skip, no fabricated timestamp) + re-verified 2026-07-30;
+      HYPERLIQUID phantom rows un-flipped via `reconcile_phantom_manifest_rows_all.py --unphantom-only` (2026-07-19,
+      1,277 rows healed). Two narrower follow-on todos remain genuinely open in that same doc (HYPERLIQUID k-prefix
+      case-sensitivity P3, RULE 11 cefi-CEX relax P3) — both real, already `- [ ]` tracked there, not orphaned. -
+      **cache_oom 24h soak** — owned by the archived
+      `plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` (18/18 todos done). The soak
+      todo is `- [x]` CLOSED per operator 2026-07-18 ruling ("no 24h wait needed") on the strength of the partial GREEN
+      signal (0 OOM in 24h at rev 00205, 16Gi/4CPU, stable across ~7 revisions) — not an open gap. - **Downloads CeFi
+      re-capture** (EIGEN + added bases) — owned by
+      `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`, `- [x]` DONE (verified 2026-07-18: 25
+      EIGEN rows across 8 venues in the live cefi catalogue). - **Downloads CSV-download smoke + path-fix** — same doc,
+      `- [x]` DONE: smoke ran 2026-07-18 (DeFi/CeFi/ prediction/MTDS-DeFi all 200; sports/tradfi 500 found),
+      root-caused + fixed same window (`deployment-api@65f5593`, streamed CSV build for the >32 MiB Cloud Run
+      buffered-response cap), archived at
+      `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`. Net: this plan's "⏳
+      Remaining" table (above) is stale prose as of this check — all 4 rows are actually resolved, just tracked in other
+      docs rather than restated here. No new issue doc filed; nothing was orphaned.
