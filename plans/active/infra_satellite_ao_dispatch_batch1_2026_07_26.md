@@ -474,20 +474,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       invalid-Epic/invalid-Lifecycle/na-misuse even once the missing-field precondition clears). Did **not** build or
       wire the checker, per scope. Source: `repo_scripts_governance_audit_2026_06_18.md`.
 
-- [ ] [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
-      Dockerfile.** `strategy-service`'s Dockerfile vendors `COPY market-tick-data-service/` into its build context —
-      the source doc flags this as possibly a service↔service import, which the HARD RULE forbids (a T4 service depends
-      only on UTL/UAC/`unified-*-interface`; services integrate by API contract + mocks, never Python import). Read what
-      strategy-service actually imports from MTDS at runtime (grep then READ — the vendoring may be a leftover build
-      artifact with no live import, in which case the fix is just dropping the `COPY`). If a genuine import exists, do
-      NOT paper over it with vendoring: report which symbol and propose the shared-lib relocation, matching how
-      `databento_classifier`→UAC and the treasury NAV functions→UTL were resolved. Note the sibling precedent already
-      recorded in `utl_uac_reuse_consolidation_remediation_2026_06_10.md`: strategy-service's ONLY MTDS coupling was a
-      single test, and the path-dep was removed at `strategy-service@d1f5a6a8` — so the Dockerfile `COPY` may now be
-      pure dead weight. **Done when**: a written verdict names either (a) zero live MTDS imports → drop the `COPY` + the
-      `stage-siblings` step + verify a green build, or (b) the specific violating symbol + a proposed relocation target,
-      filed as a follow-up todo. Repos: strategy-service (read), unified-trading-pm (the verdict). Source:
-      `issues/service_dockerfile_pattern_normalization_2026_06_17.md`.
+- [x] ✅ [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
+      Dockerfile.** **VERDICT (a): zero live MTDS imports — already resolved, no code change needed this session.**
+      Re-verified fresh against current `strategy-service` HEAD across every surface this todo names: (1)
+      `grep -rn     "import market_tick_data_service\|from market_tick_data_service"` over all `.py` files → 0 hits; (2)
+      `pyproject.toml` → no `market-tick-data-service`/`market_tick_data_service` entry; (3) `uv.lock` → no
+      `market-tick-data-service` package entry; (4) `Dockerfile` → no `COPY market-tick-data-service/` (Pattern-A
+      single-context `COPY . .` only, with an explanatory comment on the removal); (5) `cloudbuild.yaml` → no
+      `stage-siblings` step or MTDS vendoring (only a comment documenting the prior removal); (6) `buildspec.aws.yaml` →
+      MTDS clone explicitly removed (comment: "market-tick-data-service is NOT cloned here (Pattern-A normalization
+      2026-07)"). This confirms — and is consistent with — the archived source doc's own resolution:
+      `plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md` `resolved_by` field states the
+      Pattern-A normalization fan-out (2026-07-28) already dropped the vestigial `COPY` + `stage-siblings` step as a
+      side effect, after confirming the real dependency was removed 2026-06-10 (`strategy-service@d1f5a6a8`). This todo
+      in the active plan was stale (duplicate of already-landed work) — no follow-up todo needed. Repos:
+      strategy-service (read-only verification). Source: `issues/service_dockerfile_pattern_normalization_2026_06_17.md`
+      (archived, resolved).
 
 - [x] ✅ [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
       2026-06-01.** (a) **AUDIT-03 F-45**: code wins — the events GCS path keys on `instance_id`; `correlation_id` is a
