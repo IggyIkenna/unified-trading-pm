@@ -203,3 +203,18 @@ from `calculators/__init__.py`'s module-level registry):
   `orchestrator.py::_create_calculator`'s local `calculator_map` dict (features-service@b261f1e5). Verified via a live
   import smoke (not just code review) confirming the group is now dispatchable, plus a clean full `quality-gates.sh`
   run.
+- 2026-08-03 (slot-4, data_pipeline_failure escalation agt-285d66): Dispatched via `POST /api/escalate`
+  (`DP_VM_EXIT_NONZERO`/DP-VM-001, VM `features-e2e-tradfi-20260803-113749-c81739`, exit_code=1) with a default RELAUNCH
+  suggestion per `codex/15-runbooks/incidents/rb_infra_relaunch.md`. Diagnosed instead of blindly relaunching: read the
+  VM's `run.log` directly —
+  `FileNotFoundError: No delta-one features found under gs://features-tradfi-test-central-element-323112/delta_one/by_date/day=2026-01-21/ for timeframe=15s. Run features-delta-one-service for TRADFI/2026-01-21 first.`
+  — the exact same cascade already root-caused above (INTERIM #4/#5 entries) and gated on this doc's still-open Root
+  cause 2 P2 todo (0/586 usable TRADFI instruments for the `2026-01-20/2026-01-21` window). Cross-checked
+  `DeploymentsRegistry.list_recent_archive()`: the `features-e2e-tradfi-` prefix has failed identically (exit_code∈{1,
+  125}, all non-OOM) **8 times today** across delta_one/cross_instrument/multi_timeframe legs — the runbook's own step-4
+  stop condition ("re-fails the SAME way twice → STOP relaunching, file an issue") is triggered many times over, and the
+  in-image actuator's own gate (`scripts/recovery/relaunch_backfill_vm.py::RelaunchBackfillVm.relaunch`,
+  `exit_code != 137` → `status=SKIPPED reason=not_oom, "page tier owns it"`) confirms a non-OOM exit is never meant to
+  auto-relaunch. **Did NOT relaunch** — doing so would only reproduce the identical, already-tracked failure; no new
+  issue filed (this doc + the parent already cover it in full). No code change; annotation-only per the "fits another
+  plan → annotate it, don't fix" findings-triage rule. Pinged authoring slot (`dp-fleet-monitor`) with this outcome.
