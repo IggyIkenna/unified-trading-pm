@@ -129,3 +129,6 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
   prerequisite in parallel — partial-parallelism is not expressible in one doc (CLAUDE.md § Plans). The `[BACKEND] P3`
   is additionally declared 'not actionable today' pending an upstream Claude Code CLI change.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified (5 entries, unchanged; prior marker undercounted) — all still resolve and
+  cover both the `[UI]`/`[DATA]` todo pair (dashboard + orm.py) and the `[BACKEND]` follow-up
+  (worker_liveness/**init**.py).

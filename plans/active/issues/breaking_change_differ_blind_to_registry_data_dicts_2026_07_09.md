@@ -56,9 +56,8 @@ context_scope:
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     scripts/cicd/detect_breaking_change.py,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    unified-api-contracts/unified_api_contracts/registry/venue_constants.py,
     /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 ---
 
@@ -236,3 +235,6 @@ no reclassification. No stale items, not an archive candidate (1 substantive ope
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a literal duplicate entry, added the
+  registry source file (`venue_constants.py`) since the sole open todo (P2 provider-promote fan-out policy) concerns the
+  registry data-dicts directly.

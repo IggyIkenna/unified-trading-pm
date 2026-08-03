@@ -175,3 +175,5 @@ Two independent, complementary fixes — either alone helps, both together close
   session-specific absolute paths (`/home/ubuntu/.../.tabs/12/agent-orchestrator/...`) that don't resolve for any other
   worker/host. Replaced with repo-relative paths, added `server/plan_health.py` (todo 2's other named call site) and
   `agents/worker.md` (the STEP 2 example todo 1 says to mirror) — now 6 entries.
+- **context-scout 2026-08-03 (re-pass)**: re-verified under the updated methodology, unchanged (6 entries) — all still
+  resolve and remain the right minimal set for the 3 open todos.

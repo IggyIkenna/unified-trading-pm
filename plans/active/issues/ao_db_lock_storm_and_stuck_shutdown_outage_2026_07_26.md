@@ -356,3 +356,5 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   in the Progress Log or a note OUTSIDE the checkbox's own text, never inside the todo's own bold lead-in — editing that
   text is indistinguishable from editing the todo itself.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and cover the two remaining open
+  todos (apply the live `--reload` removal + confirm via journalctl).

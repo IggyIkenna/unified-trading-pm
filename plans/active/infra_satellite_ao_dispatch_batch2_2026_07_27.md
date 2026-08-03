@@ -206,7 +206,7 @@ once the corresponding todo below is actually done — not this plan.
 
 ## Progress Log
 
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (6 entries) — dispatch-batch coordinator.
 - **2026-08-03 (slot 9, infra)**: shipped the `_copy_verify_delete()` retry-idempotency fix
   (market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e, QG-green, 6 new fixture tests). Split the
   "Done when" clause's mop-up-pass requirement into its own todo (below the fix todo) — a real prod-GCS VM-scale

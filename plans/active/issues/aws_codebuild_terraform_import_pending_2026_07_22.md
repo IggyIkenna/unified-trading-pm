@@ -210,3 +210,5 @@ table). No reclassification, no stale items to close.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries — corrects the 2026-08-01 marker's stale count, the
+  list itself already carried 4) — all still resolve; matches the doc's current NA-gate (rulings table D1-D4).

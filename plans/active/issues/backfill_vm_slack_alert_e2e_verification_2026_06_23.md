@@ -271,3 +271,6 @@ for these messages to close the verification loop.
   operator-only by construction (a Slack-channel spot-check, and a render-verification with no real DP_VM_EXIT_NONZERO
   occurrence to inspect).
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries — corrects the 2026-08-01 marker's stale count, the
+  list itself already carried 6) — all still resolve; both remaining open todos (VERIFY spot-check + DEPLOY
+  render-verification) are operator-only with no live occurrence to inspect yet, per the doc's own progress log.

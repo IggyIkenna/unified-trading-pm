@@ -151,4 +151,4 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the per-field disposition todo carries an explicit OPERATOR
   JUDGMENT field (`min_order_size`: ADD only if execution needs the order-minimum) that gates the ADD/REMOVE pass.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still minimal and accurate.

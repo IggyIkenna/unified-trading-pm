@@ -66,6 +66,8 @@ context_scope:
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
+    /codex/02-data/defi-completeness-oracle.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
   ]
 supersedes:
 superseded_by:
@@ -359,4 +361,8 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
   frontmatter, body byte-identical): KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator sign-off
   ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work delegated to
   child plans.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — added the DeFi completeness-oracle
+  codex doc + its `honest_coverage.py` source target (the doc's only genuinely-open inline work; the tradfi child kept).
+  Found stale dead-end pointers in this doc's own "Related execution plans"/Phase-2 prose
+  (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and `sports_fixture_completeness_oracle_2026_06_24.md`
+  are both archived, not left in context_scope) — flagged for `/plan-reconcile`, not rewritten here.

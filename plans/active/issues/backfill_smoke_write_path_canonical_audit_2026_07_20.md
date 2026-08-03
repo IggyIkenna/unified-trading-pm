@@ -61,8 +61,6 @@ context_scope:
   [
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
-    /codex/02-data/four-surface-reconciliation-procedure.md,
-    /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/pipeline-mode-partition.md,
     /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
@@ -316,3 +314,8 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   sports-primary, so extraction of the 3 bounded items belongs to the cross-cutting/infra tranche
 
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: trimmed context_scope to 5 entries (had drifted to 7, over the 2-6 cap) — dropped
+  `/codex/02-data/four-surface-reconciliation-procedure.md` and `/codex/05-infrastructure/bucket-isolation-model.md`
+  (both cover § 1's test-bucket-enforcement question, already fully DONE via todos 1/2/4/5); kept the codex + plan +
+  source-file entries most load-bearing for the two still-open todos (3, 6 — canonical-grammar comment fixes and the
+  `market_lifecycle`/`futures_contracts` scope decision).

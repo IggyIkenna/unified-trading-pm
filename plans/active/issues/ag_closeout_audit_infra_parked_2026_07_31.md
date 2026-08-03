@@ -59,7 +59,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
-    /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
+    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
   ]
 ---
@@ -191,6 +191,8 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
   `prediction` tranche's own same-day precedent (`unified-trading-pm@e89cdd5eb`, "verified unchanged, 0 new orphans").
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- finding 1's target (now resolved/checked off)
+  swapped for finding 2's still-open target doc; process/parked-findings register, no code target.
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, stale items — 1 of 3 closed.** First
   verdict for this doc (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **3** at entry, matching this
   verdict's item count, **now 2**. Finding 1's todo is closed above with independently re-derived evidence. Doc stays NA

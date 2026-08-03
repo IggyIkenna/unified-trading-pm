@@ -54,9 +54,11 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/defi_migration_audit_log_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    instruments-service/scripts/migrate_instruments_store_v9.py,
   ]
 ---
 
@@ -423,3 +425,5 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's loader wiring; G1.run-full-history
   explicitly DEFERRED pending operator review of a 190M index blow-up).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped the sibling defi audit-log link, added
+  the 3 real source-code targets this log's shipped commits actually touch (catalogue builder, enumerator, v9 migrator).

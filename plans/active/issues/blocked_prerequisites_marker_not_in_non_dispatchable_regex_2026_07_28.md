@@ -49,13 +49,12 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
-    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
-    /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
-    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agents/RULES.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
   ]
 ---
 
@@ -199,6 +198,10 @@ same-corpus dependencies). Instead:
   cover, worth a follow-up note when that audit todo is worked.
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: trimmed context_scope to 6 entries (had drifted to 7, over the 2-6 cap) — dropped
+  `/plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md` (background on the credential, not needed for
+  the still-open per-file audit todo) and reordered so the source file + rules/codex mechanism docs lead, ahead of the
+  two concrete classification-example docs (case (a) mislabeled-external vs case (b) same-corpus-dependency).
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — covered by the 2026-07-31 operator
   directive `unified-trading-pm@14478ca26` (`planning` → `NA` + local-only). Independently, the doc's own "Important
   nuance" section and the slot-6 per-file disposition establish that the remaining ~13-file audit is NOT mechanical:

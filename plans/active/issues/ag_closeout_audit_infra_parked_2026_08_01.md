@@ -231,6 +231,8 @@ no drift:
   new for this run to add beyond confirming the classification, so it is reported in the Phase 2 summary, not duplicated
   into a Todos entry here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-confirmed context_scope (4 entries, unchanged) -- already includes the real source
+  target for the still-open finding-5 tooling fix (generate_ag_closeout_audit_candidates.py).
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
   (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **4**, matching this verdict's item count. NA is correct
   on the merits for the doc as a whole: it is a parked-findings register whose four todos are each explicitly routed

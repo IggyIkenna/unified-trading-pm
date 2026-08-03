@@ -182,3 +182,6 @@ source:
   explicit current blocking condition (a paused epic, an unresolved upstream design call, a void-pending-retest
   measurement) — genuine external/design gates, not defaulted work.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and cover the 3 open todos
+  (escalation-route collision blocked on the now-active epic, the blocked-upstream-design UI item, and the l2_book
+  re-test gate).

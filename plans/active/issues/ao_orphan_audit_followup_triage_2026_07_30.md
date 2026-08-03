@@ -123,3 +123,8 @@ source:
   approve/dispatch ask is satisfied even though the checkbox stays open pending batch2's own remainder. The other 3 open
   todos (rule on 12 operator-gated docs, bucket 7 unclear docs — todo 3 already closed) are unchanged judgment-heavy
   work per the 2026-08-01 verdict. Not a RECLASSIFY case. `assigned_vm` untouched.
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (4 entries). **Stale-candidate-
+  pointer finding (not fixed here, flagged for `/plan-reconcile`)**: todo 1's list of 6 docs
+  `ao_satellite_ao_dispatch_ batch2_2026_07_30.md` allegedly "carries real, ready fixes" for includes
+  `ao_recovery_audit_layer1_deleted_2026_07_15` — `grep -in recovery` against the live batch2 doc returns zero hits
+  naming that doc or its subject matter; batch2 does not actually cover it.

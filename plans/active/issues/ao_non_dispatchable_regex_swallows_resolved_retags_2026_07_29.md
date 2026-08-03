@@ -209,6 +209,8 @@ past tense rather than deleting it outright.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — verified all still accurate and
   resolve.
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (4 entries) — still the right
+  minimal set for the sole open todo (rephrase the 27 confirmed-affected resolution notes).
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — **this doc's own 2026-07-30
   RECLASSIFY→`planning` (infra tranche, agt-30721a, recorded above) was REVERTED** by the 2026-07-31 operator directive
   `unified-trading-pm@14478ca26` ("work these interactively now rather than queue behind AO's current busy backlog"),

@@ -47,12 +47,9 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/epics/orchestrator_master.md,
-    /plans/epics/agent_operating_framework_master.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
-    /plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
     /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
@@ -510,3 +507,9 @@ post-pivot re-sweep.
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: trimmed context_scope 7→4 entries (the prior pass carried 7, over this skill's 2-6
+  target) — kept the two direct targets of the doc's 2 remaining open todos
+  (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`, `local-slot-host-symmetric-worker-model.md`) plus the execution
+  redirect (`ao_open_issues_consolidated_close_out_2026_07_17.md`, "do NOT start work from this doc alone") and the
+  anchoring single-vm-architecture SSOT; dropped both epics and the now-resolved `..._dead_code_refs_2026_07_23.md` as
+  no longer load-bearing for the remaining work.

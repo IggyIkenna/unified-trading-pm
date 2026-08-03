@@ -280,3 +280,4 @@ forces an operator/main manual DB patch outside the normal flow.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all still accurate and
   resolve; doc's own remaining work (the `[DOC] P3` `task_template.md` note-add) is already reflected.
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (6 entries).

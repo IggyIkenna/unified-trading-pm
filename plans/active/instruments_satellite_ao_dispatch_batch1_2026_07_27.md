@@ -56,7 +56,6 @@ context_scope:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /codex/02-data/honest-coverage-model.md,
     deployment-api/deployment_api/services/data_status/breakdowns_core.py,
@@ -278,7 +277,8 @@ checkbox found anywhere.
 
 ## Progress Log
 
-- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; trimmed context_scope from 7 to 6 entries (dropped the archived finalize
+  twin — 0 open todos remain here; flagged for archival separately, out of this skill's scope).
 - **data_engineering 2026-08-02 (instruments_satellite_ao_dispatch_batch1-004)**: closed todo 4 (TradFi POLYGON/FRED
   conflation audit). Verdict + full evidence trail on the flipped checkbox above; one gap found and filed as
   `plans/active/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`. All 5 todos in this batch are now
