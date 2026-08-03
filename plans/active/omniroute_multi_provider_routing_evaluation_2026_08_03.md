@@ -83,6 +83,23 @@ req/day · gemini free = Flash-family only (`gemini-3.1-pro-preview` is listed b
 **6. Not a fleet capacity source.** Even Mistral's ~1B tokens/month is throttled to ~1 req/sec — exhausted in 5 calls.
 Against 15+ continuously-running slots these tiers are a quality-comparison target, never capacity.
 
+**7. Context floor eliminates half the provider set — measure this FIRST on any future provider.** `CLAUDE.md` is
+**10,235 tokens** and is mandatory on every task; the median active plan adds ~5,394 (p90 ~22,113). So the floor is
+**~15.6k tokens before any code is read**, realistically 25-60k once codex SSOTs and source are included. Against that:
+
+| Provider        | Ceiling             | Verdict                                                    |
+| --------------- | ------------------- | ---------------------------------------------------------- |
+| DeepSeek V4 Pro | 1M ctx, paid        | ✅ viable — the only frontier-class option in the set      |
+| Gemini Flash    | 1M ctx, free        | ✅ viable on context; quality unproven                     |
+| Mistral         | 128k ctx, ~1 req/s  | ⚠️ fits one todo; ~1 req/s makes agentic loops impractical |
+| Groq            | **6,000 TPM**       | ❌ cannot ingest `CLAUDE.md` (10,235 tok) inside 1 minute  |
+| Cerebras        | **8,192 ctx** + 402 | ❌ cannot hold `CLAUDE.md` at all — not slow, impossible   |
+
+**Process failure worth not repeating**: Groq and Cerebras were signed up for before this floor was measured, even
+though both disqualifying numbers were already known and written down at suggestion time. The context floor is a
+30-second check and MUST gate any future provider onboarding — capability and price are irrelevant if the model cannot
+hold the mandatory rules file.
+
 ## Codex SSOTs
 
 - `/codex/06-coding-standards/model-tier-selection.md` — the qualitative `opus-required` contract any automated routing
@@ -100,18 +117,19 @@ Against 15+ continuously-running slots these tiers are a quality-comparison targ
       diffable across days. `stream:false` and `max_tokens>=300` are mandatory (README traps 1-2).
 - [ ] [SCRIPT] P1. **Quality run — mistral** (`mistral-large-latest`, `codestral-latest`, `devstral-latest`) against 3
       real tasks drawn from this workspace's repos, not synthetic prompts. Record `served_by` per response.
-- [ ] [SCRIPT] P1. **Quality run — groq** (`llama-3.3-70b-versatile`, `openai/gpt-oss-120b`, `qwen/qwen3.6-27b`). Note
-      the model-substitution bug hit Groq specifically; verify each `served_by` matches the request or record the
-      divergence.
+- ~~[SCRIPT] P1. Quality run — groq~~ **DROPPED 2026-08-03: structurally disqualified, do not re-add.** Groq free tier
+  is **6,000 tokens/minute**. `CLAUDE.md` alone is **10,235 tokens**, so a Groq worker needs ~2 minutes of its entire
+  per-minute budget to ingest the mandatory rules file before reading a plan, a codex SSOT, or any code. Its 159 ms
+  latency (fastest measured here) is irrelevant against that. Useful only as a latency reference point.
 - [ ] [SCRIPT] P1. **Quality run — gemini** (`gemini-3-flash-preview`, `gemini-3.5-flash`). Free tier is Flash-only;
       confirm whether any Pro variant is reachable or record the 429 metric name as proof it is not.
 - [ ] [SCRIPT] P1. **Quality run — deepseek** (`deepseek-v4-pro`, `deepseek-v4-flash`) — the frontier-class control and
       the only paid key. Capture `reasoning_tokens` separately; it is real cost the others do not incur.
 - [ ] [SCRIPT] P1. **Baseline run — Claude Sonnet 5** on the identical 3 tasks, so every number above has a reference
       point. Without this the matrix scores models against nothing.
-- [ ] [SCRIPT] P2. **Rate-limit characterisation per provider** — ramp concurrency until first 429, record the
-      threshold, the `Retry-After` hint if any, and time-to-recovery. Confirms or corrects the published ceilings in
-      finding 5 with measured numbers.
+- [ ] [SCRIPT] P2. **Rate-limit characterisation — deepseek + gemini + mistral only** (groq/cerebras dropped, finding 7)
+      — ramp concurrency until first 429, record the threshold, the `Retry-After` hint if any, and time-to-recovery.
+      Confirms or corrects the published ceilings in finding 5 with measured numbers.
 
 ### Phase 2 — routing behaviour
 
