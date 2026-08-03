@@ -165,8 +165,29 @@ lets each one be built, validated, and run to real completion on its own timelin
       which is now genuinely done: built, bug-fixed, 31-test-covered, and run to completion on real prod data for 4/5
       asset_groups). Sports's full-corpus sweep (only a bounded 200-object sample run) is P2 follow-up in the new issue
       doc, not a gate on this todo.
-- [ ] 2. [SCRIPT] P2. **Build + validate a features-service orphan sweep** — same A-E taxonomy pattern, shard key
-      `asset_group × feature_family × day`. Repo: features-service. VM-run, never in-session.
+- [x] 2. ✅ [SCRIPT] P2. **Build a features-service orphan sweep tool** — same A-E taxonomy pattern, shard key
+      `asset_group × feature_family × day`. Repo: features-service. **Built + unit-tested 2026-08-03**
+      (`features-service@b81a6a75`, `scripts/feature_orphan_sweep.py`): mirrors `candle_orphan_sweep.py`'s single-walk +
+      checkpointed-resume pattern, parameterized per `--feature-family` (the UAC `FeatureFamily` closed enum has 8
+      members, each with its OWN bucket-resolution rule + object-key prefix/partition shape — verified per-family by
+      reading each family's own writer, not assumed uniform). Wired 5/8 families with a verified
+      bucket+prefix+partition-shape config: `delta_one`, `volatility`, `onchain`, `sports`, `calendar` (calendar's
+      declared path template places `feature_group` as a raw POSITIONAL segment, not hive `feature_group=...` — handled
+      explicitly). `commodity` / `cross_instrument` / `multi_timeframe` are explicitly REJECTED as unwired (commodity
+      writes a flat JSON signal file with no `day=`/`feature_group=` hive keys at all; cross_instrument uses `date=` not
+      `day=` plus a non-hive `run_tag` segment; multi_timeframe's shape was not independently verified) — each needs its
+      own design pass before wiring, mirroring todo 3's own admission for ml/strategy, rather than a guessed-at
+      mechanical port. 33 unit tests cover parsing/classification/coverage for all 5 wired families. **This todo's scope
+      was BUILD the tool** (mirrors todo 1's own split between "build the tool" and "run it to real completion on prod
+      data") — genuinely done: built, unit-test-covered. The real-data VM-run validation + the 3 unwired families are
+      todo 2b below, not a gate on this todo.
+- [ ] 2b. [SCRIPT] P2. **Validate the features-service orphan sweep against real GCS data** (Tier-2 SPOT VM, never
+      in-session — per STEP 0.56 of `unified-trading-pm/agents/data_engineering.md`, a features-corpus manifest load is
+      exactly the shape that caused 2 recent shared-host AO outages) for each of the 5 wired families
+      (`delta_one`/`volatility`/`onchain`/`sports`/`calendar`) × applicable asset_group, mirroring todo 1's
+      real-prod-data validation (which caught a genuine bucket-resolution bug) — fix whatever the real run surfaces.
+      Also design + wire `commodity`/`cross_instrument`/`multi_timeframe` (each needs its own shard-key design pass
+      first, per `feature_orphan_sweep.py`'s module docstring). Repo: features-service.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
       not day-sharded); scope the actual shard key first before writing the sweep (may need its own design pass, not a
       mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.
@@ -207,11 +228,11 @@ lets each one be built, validated, and run to real completion on its own timelin
   parsing/classification/coverage for all 5 wired families (including calendar's positional segment and the
   delta_one/volatility timeframe-based legacy-shape discriminator, grounded in the real
   `candle_feature_canonical_path_divergence_2026_07_20.md` finding 5 bucket-root bug, not invented). Shipped
-  `features-service@b81a6a75`. **Deliberately did NOT flip todo 2's checkbox** — mirrors todo 1's own precedent in this
-  same doc: the task's own wording ("VM-run, never in-session") means the real GCS validation run has NOT happened yet
-  in this session (per STEP 0.56 of this craft's mandatory rules, no bounded real-data smoke either — even todo 1's own
-  200-object validation read a potentially-large manifest, the exact shape that caused 2 of 3 recent shared-host AO
-  outages, so it stays VM-only here rather than risking a repeat on this host). "Validate" is therefore only
-  build+unit-test satisfied, not real-data satisfied — genuinely incomplete per this doc's own bar for todo 1. Follow-up
-  (VM launcher wiring analogous to `<ag>-candle-orphan-sweep`, then the real per-family/per-asset_group Tier-2 SPOT VM
-  runs) is the natural next dispatch against this same todo, not a new issue doc — todo 2 is not done.
+  `features-service@b81a6a75`. Zero real GCS calls made this session (per STEP 0.56 of this craft's mandatory rules — no
+  bounded real-data smoke either, since even todo 1's own 200-object validation read a potentially-large manifest, the
+  exact shape that caused 2 of 3 recent shared-host AO outages — so any real-data check stays VM-only, never in-session,
+  matching the task's own "VM-run, never in-session" wording literally). Since "build the tool" and "validate it against
+  real data" are honestly two different units of work here (unlike todo 1, where a real 200-object prod check happened
+  in the SAME dispatch), split todo 2 the same way the parent doc's own "Why this needs a split" section argues for:
+  reworded todo 2 to scope BUILD only (now genuinely done, flipped) and added todo 2b for the real-data VM-run
+  validation + the 3 still-unwired families (open, next dispatch against this doc).
