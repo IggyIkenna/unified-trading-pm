@@ -8,7 +8,7 @@ summary:
   snapshot, not a full historical discovery mechanism. Makes
   /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 5's literal "zero unattributed
   leaves remain" done-when unsafe to pursue (would require deleting content with no verified replacement).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,6 +30,11 @@ estimate_class: research
 drift_direction: worsening-slowly
 source: [/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
 resolved_by:
+  "all 4 todos done: 12-protocol EVM + 4-protocol Solana quantification complete (see results tables);
+  catalogue expanded via expand_defi_pool_catalogue_from_manifest_2026_07_31.py (instruments-service,
+  78,267 rows) + KAMINO fix (instruments-service@a7810c65, 79,045 rows). Honest Coverage
+  expected_unattempted re-derivation confirmed covered by the standing daily
+  expected-universe-v2-defi Cloud Run Job (reads catalog.parquet fresh every run)."
 locked_by:
 depends_on: []
 assigned_role: data_engineering
@@ -44,6 +49,14 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per
+> /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. All 4 todos closed:
+> the catalogue-vs-historical-capture gap was quantified for all 16 default DEX protocols (12 EVM + 4
+> Solana) and closed via a full historical-discovery backfill (instruments-service, catalogue promoted
+> 71,545 → 79,045 rows). Residual `glued_pair_id` retroactive-backfill scope (a separate, narrower gap
+> found 2026-08-03) is tracked in
+> `/plans/active/issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md`, not here.
 
 # DeFi dex_pools instruments-service catalogue drastically under-covers historically-captured pools
 

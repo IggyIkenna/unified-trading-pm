@@ -12,7 +12,7 @@ summary:
   operator decision + the enumerated real scope, mirroring
   [[defi_lending_atoken_debttoken_instrument_split_2026_07_07]]'s pattern (a real, decided target-state, current-state
   vs target-state framing in the mockup, staged migration to follow — not fixed today)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi, prediction]
 stage: [data, meta]
@@ -50,6 +50,15 @@ source:
   between leaving this as an unscoped finding vs a real decided target-state.'
 assigned_vm: planning
 resolved_by:
+  "all 9 todos closed 2026-08-03: DEX-pool catalog regeneration reframed+code-fixed
+  (instruments-service@7a86f13f, retroactive backfill split to
+  [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]]); on-chain-perp quote-currency confirmed
+  for all 3 named venues (2 shipped @57f8a754, PACIFICA removed @4d65d468); migration mechanics,
+  builder-architecture, and TradFi-combo decisions all RESOLVED (operator); manifest
+  consumer-trace DONE (no consumer parses the instrument_id string); Bitfinex asset-filter bug
+  fixed (unified-api-contracts@4e096316); TradFi combo fix + dedicated fix plan shipped
+  ([[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]]); prediction extraction bug
+  fixed same-session (instruments-service). See Progress Log for full evidence per todo."
 locked_by:
 context_scope:
   [
@@ -73,6 +82,16 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per
+> /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. All 9 todos closed;
+> the operator-decided target formats + the migration-mechanics/builder-architecture/TradFi-combo
+> decisions are all resolved, with the remaining code fixes and follow-up migrations tracked in their
+> own dedicated plans/issue docs (see `resolved_by` above and the `related:` list for pointers —
+> [[canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08]],
+> [[prediction_canonical_identity_migration_2026_07_08]],
+> [[defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03]] chief among them). This doc stays the
+> historical record of the operator decision + original scope enumeration.
 
 > **OPERATOR DECISION 2026-07-08 — target-state only, not fixed today** (was: still fully accurate as of authoring;
 > **PARTIALLY EXECUTED — banner corrected 2026-07-15**). Every finding below gets a canonical target format. This doc

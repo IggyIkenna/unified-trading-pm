@@ -650,7 +650,7 @@ context_scope:
     - **[OPS] P1.** Close issue when DERIBIT options_chain af=0 in prd manifest.
     - **[DATA] P0.** `futures_chain` retry path must STOP attempting a structurally-absent channel — gate at the WRITER
       (SUPERSEDED note: it's our bundle, not a source absence).
-  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols) — re-run instrument discovery and
       rewrite the 6,180 stale catalog rows.
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (ASTER/PACIFICA/LIGHTER-ZKSYNC).

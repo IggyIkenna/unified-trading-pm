@@ -71,7 +71,7 @@ related:
     /plans/active/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
@@ -470,7 +470,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
     - **[SCRIPT] P3.** Extend UAC's `build_leg()` with an opt-in venue-omission mode
-  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols)
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)
   - [`plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md`](/plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md)
