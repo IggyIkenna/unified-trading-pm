@@ -402,15 +402,16 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       open item today. Tracker's Progress Log now states the archive-readiness verdict + the `[unlock-plan]` ask
       (tracker NOT archived — lock untouched, per instruction).
 
-- [ ] [CODE] P3. **Fix the execution-service `service_name` manifest drift.** `results/save_operations.py` writes
-      `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural) — one producer must emit one
-      canonical `service_name`, or every manifest consumer filtering on it silently sees two services. Pick the singular
-      canonical form (it matches every other service and the `SERVICE_TO_KIND` families), fix the plural site, and grep
-      for any consumer or fixture that hardcodes the plural before changing it (grep-then-READ: a 0-hit grep is not
-      proof, features are runtime-resolved). **Done when**: `rg 'execution-services' execution-service/` returns no
-      producer site, a test asserts the emitted `service_name`, and any manifest rows already written with the plural
-      form are either noted for a follow-up backfill or confirmed absent. Repo: execution-service. Source:
-      `issues/issue_docs_remediation_sweep_2026_06_02.md`.
+- [x] ✅ [CODE] P3. **DONE 2026-08-03 (slot-4, backend_engineer) — execution-service@8479a77f.** Normalized every
+      `service_name` producer to canonical singular `"execution-service"`. Wider than the source doc's 1-file framing:
+      all 3 `ManifestWriter(...)` sites were ALREADY singular (`git log --all -S`, never plural — **manifest backfill
+      NOT needed**); real drift was the config default + 3 CLI event-setup sites + 2 `DependencyReport(...)` sites (9
+      occurrences/5 files) + 9 dependent test-sites/8 files. Also fixed a live silent-skip this drift caused:
+      `test_shard_combinatorics.py`'s `SERVICE_NAME` looked up a nonexistent sharding config, masked by `pytest.skip`.
+      Left ~50 prose/path/unrelated-namespace hits untouched. **Evidence**: `quality-gates.sh` green (203s, 7811
+      passed); runtime log confirms `service=execution-service` emitted. Repo: execution-service. Source:
+      `issues/issue_docs_remediation_sweep_2026_06_02.md`. **Follow-up filed** (different repo):
+      `issues/deployment_service_execution_service_plural_naming_gaps_2026_08_03.md`.
 
 - [x] ✅ [BUILD] P2. **CHECKBOX-FLIP CLOSEOUT 2026-08-01 (slot-5, infra) — both sub-fixes already shipped BEFORE this
       dispatch, no code change needed.** (a) `MANIFEST_ALIGNMENT_SKIP=true` was added to
