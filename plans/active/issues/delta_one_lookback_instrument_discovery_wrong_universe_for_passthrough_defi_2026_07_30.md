@@ -186,17 +186,21 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
   this doc was filed (candle-loader pass-through gap, buffer-too-short, symbol-format mismatch, NaN-warmup gate,
   dependency-checker false-negative, unfiltered-manifest OOM — all now fixed — plus a genuinely open `funding_oi`
   OI-availability question). Checked current prod state instead of blindly relaunching per D1's own repeated lesson:
-  `returns` is essentially complete (real data `2022-11-25..2026-07-23` in `features-defi-prd-.../delta_one/by_date/`);
-  found + closed the one real remaining gap (`2022-11-01..2022-11-24`, 24 days) via a narrow gap-fill VM
-  (`features-delta-one-defi-20260802-235804`). `funding_oi`'s fix-direction was just RULED today (= B, source OI from
-  the existing `derivative_ticker` capture) in the sibling
+  `returns` is CONFIRMED COMPLETE — real contiguous data `2022-11-25..2026-07-23` in
+  `features-defi-prd-.../delta_one/by_date/`. Initially misread the pre-`2022-11-25` span as an unfilled gap and
+  launched a VM to close it (`features-delta-one-defi-20260802-235804`, `2022-11-01..2022-11-24`) — it failed
+  deterministically at preflight (`Lookback validation FAILED: 21/21 instruments have insufficient candles`, only 96/182
+  required candles on `2022-11-01`, the very first day real data exists). This is a genuine, non-fixable lookback-warmup
+  limit (no history predates the corpus start), NOT a bug or real gap — `2022-11-25` IS the true earliest computable
+  date, and coverage already reaches it. Do not relaunch that window again. `funding_oi`'s fix-direction was just RULED
+  today (= B, source OI from the existing `derivative_ticker` capture) in the sibling
   `defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`, but the actual `[BACKEND] P2`
   implementation is NOT yet shipped — correctly left untouched (backend_engineer scope, not mine to freelance). **Cannot
   flip this todo's own done-when** ("D1's checkbox is flipped citing this evidence") — D1's own done-when needs BOTH
-  `funding_oi` and `returns` complete, and `funding_oi` remains genuinely blocked pending that unlanded backend join.
-  Full detail + VM status in `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo and
-  `delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md`'s todo 2 (this same VM closes that todo's scope
-  too — its originally-scoped ~192-day gap turned out to be only 24 real days).
+  `funding_oi` and `returns` complete; `returns` now genuinely IS complete, but `funding_oi` remains blocked pending
+  that unlanded backend join. Full detail in `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo;
+  `delta_one_skip_dependency_check_oom_pre_2023_05_dates_2026_07_31.md`'s todo 2 flipped RESOLVED-MOOT (doc
+  `status: resolved`) on the same finding — there was never a real gap to backfill.
 - 2026-07-30 (slot-14): todo 1 shipped — features-service@8e62dc30. `_discover_instruments` now routes to a new
   `_discover_instruments_from_manifest` when every requested `candle_data_types` entry is pass-through
   (`needs_candle_processing()` False); candle-processed and mixed sets keep the unchanged `processed_candles` walk.
