@@ -249,6 +249,66 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T09:38Z** (AO dispatch, slot 15, `data_engineering`) — Remaining P2 sub-todo (defi
+  `dex_pool_swaps`/`batch_onchain_rpc` source correction), IN PROGRESS, not yet complete — do NOT flip until the §
+  "Remaining to close" steps below finish. Work this session:
+  1. **Corrected the twin-detection design** from the prior checkpoint's proposal: live GCS verification
+     (`market-data-tick-defi-prd-...`) found the writer keeps the SAME `venue=` path segment across BOTH provenances
+     (mistagged `batch_onchain_rpc` vs correctly-sourced `batch_onchain_subgraph`) — only `pipeline_mode=` differs. A
+     direct destination-path existence check (swap the segment, `gcs_describe_object`) is the correct per-object dedup
+     test, NOT an alias-canonicalised (`LEGACY_DEFI_VENUE_ALIASES`) instrument-id join as originally proposed. Confirmed
+     twin coverage is genuinely per-object/day-dependent (0% to 100% across a
+     `BALANCER`/`CURVE`/`SUSHISWAP`/`UNISWAP_V3` × 2-date sample) — never a population-level constant either way.
+  2. **Built + shipped** `market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py`
+     (`market-data-processing-service@ce64a98`, 3 follow-up commits folded into this final SHA — import-pattern fix,
+     empty-string-fallback annotations, and a real performance bug fix, see point 4) + 11 unit tests
+     (`tests/unit/scripts/test_backfill_defi_dex_pool_swaps_source_correction.py`). `--scope` (cheap count-only),
+     `--dry-run` (classify + dst-check, no writes), `--apply` (copy-not-move +
+     `record_captured(source="onchain_subgraph")`) modes; day-level checkpoint
+     (`processed_candles/_index/_dex_swaps_source_correction_checkpoint.json`) for safe SPOT- preemption resume.
+     Smoke-tested end-to-end against real prod data multiple times (day 2023-04-11, 2023-05-31, 2023-07-20 — each 98-112
+     real objects copied + recorded, 0 errors, idempotent re-run confirmed each time).
+  3. **Built + shipped** the Tier-2 SPOT VM launcher (`deployment-service@83ec913`:
+     `scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh` +
+     `vm_prefix_registry.py`/`launcher_registry.py` entries + a new `setup-data-pipeline-vm.sh`
+     `VM_TASK=backfill-defi-dex-swaps` dispatch branch, mirroring `launch-backfill-candle-manifest-vm.sh`'s shape).
+  4. **Found + fixed a real quadratic-blowup bug via a live prod run**: the first `--apply` VM
+     (`backfill-defi-dex-swaps-20260803-091142`) showed per-cell latency growing from ~0.6s to ~40s within its first 10
+     cells — root cause: a FRESH `ManifestWriter` was created (and implicitly closed) per cell, and
+     `ManifestWriter.close()`'s `_close_drain(process_final=True)` forces a full per-VM-shard read-modify-rewrite on
+     EVERY call, not the cheap debounced write normal `record_captured()` calls get — O(N²) over N cells. Killed the VM
+     (safe: pure copy-not-move + manifest writes already durably landed, no data lost), fixed
+     (`market-data-processing-service@ce64a98`: ONE writer for the whole `--apply` run, closed once in a `finally` block
+     — mirrors the sibling `backfill_candle_manifest.py::record_cells` pattern this tool should have followed from the
+     start), re-verified on real prod data (112 objects on day 2023-07-20: copy + footer-read + record_captured for all
+     112 in 26.8s total, vs. the ~4,480s the broken per-cell rate would have taken), shipped, relaunched.
+  5. **Relaunched the real `--apply` campaign**: `backfill-defi-dex-swaps-20260803-092530` (Tier-2 SPOT,
+     `asia-northeast1-c`, `LC_TARBALL_FRESHNESS=auto` confirmed the fix's tarball current). As of this checkpoint: day
+     `2023-01-01` (the largest known single day, 11,718 total mistagged objects) completed clean —
+     `already_covered=9941 needs_copy=1777 copied=1777 recorded_cells=2 errors=0` (the `already_covered=9941` reflects
+     BOTH already-existing twins AND partial progress the killed VM had already durably recorded before being stopped —
+     not lost, not re-done). Day `2023-01-02` (~10,297 real gaps per the earlier bounded sample) in progress, healthy,
+     no `copy_errors`/`footer_failed`, no preemption. **Noted, not fixed, real efficiency characteristic** (not a bug):
+     the per-cell copy loop copies each cell's member objects SEQUENTIALLY (`gcs_copy_object` one at a time), so a cell
+     with many members (e.g. `UNISWAP_V3`'s ~1,053-object cells) takes proportionally longer (~40s observed) — linear in
+     object count, not quadratic. A future optimization could parallelize this with a `ThreadPoolExecutor` (mirroring
+     the dst-check pass's own 16-worker pool) if full-corpus wall time proves impractical; not required for correctness.
+  - **Remaining to close this todo** (whoever resumes — same session post-compact, or a fresh one): (a) let the VM run
+    to completion — full corpus is 1,155 distinct days (2023-01-01 through 2026-08-02, confirmed via delimiter descent),
+    rough order-of-magnitude estimate ~1-2M total mistagged objects from an earlier bounded 24-day sample, genuinely
+    multi-hour; the day-level checkpoint makes a SPOT preemption relaunch safe (resume via
+    `bash launch-backfill-defi-dex-swaps-source-correction-vm.sh --force`, no `--day` — reads the checkpoint
+    automatically); (b) monitor via
+    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-092530/run.log`
+    for the final `=== VERDICT defi-dex-swaps-source-correction: ... ===` line — acceptance is
+    `copy_errors=0 footer_failed=0`; (c) spot-check the audit report
+    (`gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`);
+    (d) OPTIONALLY re-run `--scope` (cheap) or a fresh `candle_orphan_sweep.py --asset-group defi` to confirm the gap
+    has closed; (e) ONLY THEN flip this todo's `- [ ]` to `- [x]` citing `market-data-processing-service@ce64a98` +
+    `deployment-service@83ec913` + the VERDICT line as evidence, `docs(plans):` commit + push. Do NOT flip early on "VM
+    launched" alone — that is exactly the smoke-test-green false-completion the data-pipeline-correctness HARD RULE
+    forbids, and this doc's own todo-1 history above already established the same discipline for an earlier campaign.
+
 - **2026-08-03** (AO dispatch, slot 15, `data_engineering`) — Re-scoped + root-caused the P2 source-mistag todo (did NOT
   flip it — defi's real remediation still needs a VM campaign, see the new sub-todo). Found the original
   characterization (10 `RECORD-ERROR`s/AG, narrow windows) badly understated the real extent — those were per-CELL
