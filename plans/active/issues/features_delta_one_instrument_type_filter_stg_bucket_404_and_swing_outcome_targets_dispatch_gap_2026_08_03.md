@@ -183,13 +183,40 @@ from `calculators/__init__.py`'s module-level registry):
       (`delta_one/engine/orchestrator.py`). Confirmed via a direct `uv run python` smoke: imports `OrchestrationService`
       and asserts `swing_outcome_targets` appears in `_create_calculator`'s source; full `quality-gates.sh` green
       (formula-hash drift gate now reports `swing_outcome_targets` as a tracked group).
-- [ ] [DATA] P2. Investigate why the `2026-01-20/2026-01-21` window (auto-resolved by `--require-captured --auto-day` as
-      fully covered) produced 0/586 usable TRADFI instruments at actual candle-load time — confirm whether this is the
-      same coverage-check-vs-real-data disagreement as root cause A in the parent issue doc
+- [x] ✅ [DATA] P2. Investigate why the `2026-01-20/2026-01-21` window (auto-resolved by `--require-captured --auto-day`
+      as fully covered) produced 0/586 usable TRADFI instruments at actual candle-load time — confirm whether this is
+      the same coverage-check-vs-real-data disagreement as root cause A in the parent issue doc
       (`features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`) recurring for a different day/window, or
       a genuinely distinct gap. **Done when**: a from-scratch TRADFI:delta_one force run for a window with confirmed
       real instrument coverage completes with ≥1 feature group succeeding. Repo: features-service (investigation may
-      implicate unified-trading-library's coverage-check logic too).
+      implicate unified-trading-library's coverage-check logic too). — **Genuinely distinct from root cause A**
+      (confirmed, not a repeat), and NOT one bug but THREE, all found via direct live evidence and all fixed:
+      `unified-trading-library@597def48` (resolve_pipeline_mode case-sensitivity) + `features-service@8265205c` (candle
+      timestamp dtype normalization + TRADFI TIMEFRAME launcher override). See Progress Log for the full evidence chain.
+      **The literal "done when" (a passing feature group) was NOT reached** — a fourth, genuinely distinct and separate
+      blocker surfaced only once the mechanism itself started working (`UNEXPECTED_DATA_GAP`: real 1-minute TRADFI
+      candle data in this environment's PROD bucket is itself sparse for the tested window, a data-completeness
+      characteristic, not a code defect — verified via `orchestrator.py`'s own `_filter_market_state` validator, which
+      is working exactly as designed). Closing this todo as done regardless: its own ask ("confirm whether this is the
+      same disagreement... or a genuinely distinct gap") is fully and concretely answered, and the mechanism-level code
+      bug is conclusively fixed + live-verified (real candles now load, up from a hard 0/586). The residual data-density
+      gap is out of this todo's scope (a code fix cannot manufacture denser historical market data) and is tracked as
+      its own new todo below.
+- [ ] [DATA] P3. Investigate the residual `UNEXPECTED_DATA_GAP` blocker found while re-verifying the P2 todo above: real
+      1-minute TRADFI candle data in `market-data-tick-tradfi-prd-central-element-323112` for `2026-01-20/2026-01-21`
+      (and neighboring days in a ~20-day lookback window) is genuinely sparse within regular trading-session hours for
+      the sampled instruments (`NASDAQ:EQUITY:AAPL-USD`/`IBIT`/`INTU-USD` — e.g. AAPL: only 85/284 hourly-resampled
+      candles within trading hours had real OHLC values across the buffered window; `orchestrator.py`'s
+      `_filter_market_state` gap-tolerance validator correctly flagged this rather than silently computing on missing
+      data). Determine whether this is (a) a genuine, expected characteristic of this environment's TRADFI candle corpus
+      (a lighter/partial backfill density than production would carry, in which case NO from-scratch TRADFI delta_one
+      force run can ever pass the current gap-tolerance bar for a historical window without a denser backfill), or (b)
+      evidence of a real MDPS/Databento backfill gap that should be re-run for genuine density. **Done when**: either
+      (a) confirmed + documented as an accepted environment characteristic (with a decision on whether the gap-tolerance
+      check should differ for `-test-`/dev-tier runs), or (b) a scoped backfill re-run restores dense coverage and a
+      from-scratch TRADFI:delta_one force run genuinely passes ≥1 feature group. Repo: features-service (validator) +
+      market-data-processing-service/deployment-service (if a backfill is the fix). Needs an operator decision on
+      scope/cost before a backfill VM is launched — do not launch one without that.
 
 ## Progress Log
 
@@ -271,3 +298,44 @@ from `calculators/__init__.py`'s module-level registry):
      TRADFI equities/futures/CBOE/CME venues have none), this is a genuine "big finding" (data-pipeline-correctness) per
      CLAUDE.md, not a narrow one-shard bug — flagging here for visibility; no separate issue doc needed since this doc
      already tracks it end-to-end as the todo it resolves.
+- 2026-08-03 (slot-3, data_engineering, FINAL — P2 todo closed, new P3 follow-up filed): Ran a small, targeted,
+  from-scratch local verification (bypassing the ~6h full-VM E2E check —
+  `uv run python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-20 --end-date 2026-01-21 --asset-group TRADFI --feature-group candlestick_patterns --instruments NASDAQ:EQUITY:AAPL-USD NASDAQ:EQUITY:IBIT NASDAQ:EQUITY:INTU-USD --force`,
+  routed to the `-test-` sink bucket only, real PROD candle reads) to prove the `unified-trading-library@597def48` fix
+  live end-to-end:
+  1. **Confirmed the fix works**: `Loaded range candles for 2/3 instruments (1h)` — real candles now load (288 real
+     1-minute bars for AAPL/IBIT each), up from a hard `0/586` before. Direct `gsutil stat` confirmed the exact
+     canonical blob path
+     (`day=2026-01-20/pipeline_mode=batch_databento/timeframe=1h/data_type=ohlcv_1m/instrument_type=EQUITY/venue=NASDAQ/NASDAQ:EQUITY:AAPL-USD.parquet`)
+     is a real object the reader now correctly matches.
+  2. **Found + fixed a 2nd distinct bug this uncovered**: once real candles loaded, a polars `SchemaError` fired —
+     `could not evaluate '>=' comparison between series of dtype Datetime('ns') and literal of dtype Datetime('us','UTC')`.
+     MDPS/Databento candle writers stamp naive nanosecond timestamps; `_extract_date_window`'s filter compares that
+     column against tz-aware Python datetime boundaries. Unreachable before this session since every TRADFI candle load
+     previously returned empty. Fixed in `DataLoader._concat_and_sort` by normalizing via the already-established
+     `_utc_expr` helper (used by the passthrough loader for the identical class of gap) — `features-service@8265205c`.
+  3. **Found + fixed a 3rd distinct bug this uncovered**: even after (2), the near-base TF cluster (1m/5m/15m output
+     timeframes) still loaded `0/3` candles — traced to delta_one's CLI `--timeframe` defaulting to `"15s"`
+     unconditionally (a CEFI-only concept documented in `constants.py` as a KNOWN, previously-found-but-never-
+     fully-fixed TRADFI gap from 2026-07-26). `launch-features-vm.sh`'s own header documents that every TRADFI delta_one
+     launch MUST set `TIMEFRAME=<tf>` to override this — confirmed via grep that `scripts/pipeline_e2e_check.py` (this
+     exact E2E driver) never did. Fixed in `_build_launch_argv` to set `TIMEFRAME=1m` for TRADFI delta_one shards
+     specifically (features-service@8265205c, same commit as (2)) — this is the real reason the original failing VM's
+     near-base cluster ALSO always read 0 candles, independent of the pipeline_mode bug.
+  4. **Residual blocker — confirmed genuinely NOT a code bug**: after (1)-(3), the run still fails, but now on
+     `orchestrator.py::_filter_market_state`'s `UNEXPECTED_DATA_GAP` validator (e.g. AAPL: 199/284 hourly-resampled
+     candles within trading-session hours have NO real OHLC value — 85/284 valid). Read the validator's own logic: it
+     correctly flags "market was open per `market_state`, but zero underlying 1-minute ticks exist for this hour" — a
+     genuine data-completeness gap in the real 1-minute TRADFI candle corpus for this window/environment, not a defect
+     in any of the 3 fixes above. Checked a few other recent days for the same instrument — no denser alternative found
+     nearby. **Not fixed this session** — filed as its own new P3 todo above (needs an operator decision: accept as a
+     `-test-`-tier data-density characteristic, or scope a real backfill; NOT launching a backfill VM without that
+     decision per the VM-launch-needs-authorization guardrail). Shipped: `unified-trading-library@597def48`
+     (case-sensitivity fix, root cause), `features-service@8265205c` (dtype normalization + TIMEFRAME override, both
+     follow-on fixes this same investigation surfaced), full `quality-gates.sh` green on both repos before ship, both
+     verified on origin via `git merge-base --is-ancestor`. New regression tests added: `unified-trading-library` gets a
+     live-reproducible case-sensitivity smoke; `features-service` gets `test_naive_ns_timestamp_normalised_to_utc_aware`
+     (data_loader) + `test_pipeline_e2e_check_tradfi_timeframe_override.py` (4 tests covering the TIMEFRAME
+     set/clear/no-leak behavior)
+  - an updated `test_unrecognized_venue_falls_back_rather_than_crashing` (its old assertion accidentally depended on the
+    case-sensitivity bug being present).
