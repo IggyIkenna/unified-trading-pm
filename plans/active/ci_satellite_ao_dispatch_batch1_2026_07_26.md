@@ -447,18 +447,21 @@ concurrent workers do not collide on this file.
       reads `importlib.metadata.version("orchestrator")`, the established D13 API-2 pattern). Full census recorded in
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
       (2026-07-31)". Source: `issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (steps 3 + 7).
-- [ ] [INFRA] P3. **`check_workspace_pyproject_pin_drift.py` is D13-blind, same bug class as
-      `sync-manifest-versions.py`.** Found via the D13 orphan-reader re-sweep (census in
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-7, infra)** — **`check_workspace_pyproject_pin_drift.py` DELETED**, not
+      fixed, same verdict as the sibling `sync-manifest-versions.py` deletion above. Confirmed genuinely superseded:
+      `assert_version_coherence.py`'s `_check_dep_floors()` (`DEP_FLOOR_UNSATISFIABLE`) already performs the identical
+      peer-pin-drift check — every internal dep edge's declared range must admit the dep's current version — but
+      resolves the peer's current version from the manifest's git-tag-aware `versions{}` cache (kept current by the
+      versions-consolidator) instead of a static pyproject `[project].version` line, so it works correctly for all 22
+      `version_source: git-tag` repos where the deleted script's `_extract_version()` returned nothing. It is also a
+      strict superset (full `packaging.SpecifierSet` range satisfiability vs. the deleted script's `>=`-only regex)
+      sourced from the actively-maintained `repositories{}[repo].dependencies[]` manifest field (kept in sync with real
+      code imports via `fix-internal-dependency-alignment.py`), and already wired (`quality-gates.sh:979` + the
+      scheduled `version-coherence-check.yml` → Firestore verdict store) — unlike the deleted script, which was inert
+      (grep-confirmed zero workflow/script/test referrers before deletion; only historical mentions remained in archived
+      docs/ping logs). unified-trading-pm@bd0e44dd3. Source:
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
-      (2026-07-31)"). `_extract_version()` reads `project.get("version")` from every repo's live pyproject.toml, but
-      21/22 `version_source: git-tag` repos are dynamic (no static line) — `name_to_version` ends up populated only by
-      static-version repos, so the peer-pin-drift comparison silently never fires for any dynamic repo's dependents. NOT
-      currently wired to `quality-gates.sh` or any workflow (grep-confirmed) — inert today, not actively harmful, but
-      the same "trusted exactly when someone reaches for it manually" trap as the original bug. Either make it
-      git-tag-aware (resolve a git-tag repo's current version from `workspace-manifest.json`'s `versions{}` cache
-      instead of the source pyproject, mirroring `assert_version_coherence.py`'s `_version_source()` dispatch) or delete
-      it if genuinely superseded — state which and why. **Done when**: the script either correctly resolves git-tag repo
-      versions or is gone with zero dangling referrers. Repo: unified-trading-pm.
+      (2026-07-31)".
 - [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
       re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
       `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
