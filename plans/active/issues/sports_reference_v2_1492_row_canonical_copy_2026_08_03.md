@@ -60,10 +60,17 @@ pending exactly this migration.
       `gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_reference_v2_prefloor_census_2026_08_03.parquet`
       (764 rows, one per (day, entity) cell) — this is the exact row list todo 2 should consume.
 - [ ] [DATA] P1. Copy the confirmed rows to canonical storage (the same target path/schema the rest of the sports corpus
-      already uses), verified row-count-conservation + content-identical. **UPDATED SCOPE (2026-08-03)**: copy the 764
-      deduplicated (day, entity) cells listed in `sports_reference_v2_prefloor_census_2026_08_03.parquet` — source from
-      either the `bare_uri` or `pipeline_mode_uri` column (content-identical, crc32c-verified) for each cell, do NOT
-      copy both (would double-write canonical storage for the same logical row).
+      already uses), verified row-count-conservation + content-identical. **UPDATED SCOPE (2026-08-03, slot 14)**: copy
+      the 764 deduplicated (day, entity) cells listed in `sports_reference_v2_prefloor_census_2026_08_03.parquet` —
+      source from either the `bare_uri` or `pipeline_mode_uri` column (content-identical, crc32c-verified) for each
+      cell, do NOT copy both (would double-write canonical storage for the same logical row). **HOLD 2026-08-03 (slot
+      15, task `sports_reference_v2_1492_row_canonical_copy-002`)**: NOT executed, regardless of the corrected 764-cell
+      scope — copying ANY pre-floor row here directly contradicts `/codex/02-data/sports-2020-06-data-floor.md` (the
+      same operator's 2026-07-21 ruling that pre-floor sports data is fabrication-by-construction and must be WIPED, not
+      backfilled/copied — already executed for the canonical-tree equivalent, `sports_reference/fixtures` 4,735
+      objects). See `/plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` for the full
+      evidence and a recommendation to extend the pre-floor wipe to `sports_reference_v2/by_date/` instead of copying.
+      Filed `/blocked` for operator reconciliation between the two rulings.
 - [ ] [VERIFY] P1. Re-run the canonical-twin check against the copied rows — confirm 100% now have a canonical twin.
 - [ ] [OPERATOR] P2. Once verified, retag the two `sports_reference_v2/by_date/` cull todos back to self-justified (drop
       the `[OPERATOR]` + delete-safety §3a citation added 2026-08-02) — this is the reversion B's ruling specified, not
@@ -118,3 +125,14 @@ pending exactly this migration.
     `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Added `sequential: true` to this doc's
     frontmatter to prevent todo 4/5 from suffering the same premature dispatch. Filed a `/blocked` on task -003 rather
     than duplicate slot 15's in-flight copy work.
+- **2026-08-03** (slot 15, backend/data_engineering, task `sports_reference_v2_1492_row_canonical_copy-002`) — Before
+  executing todo 2 (the copy), cross-checked against `/codex/02-data/sports-2020-06-data-floor.md` and found a direct
+  contradiction: the floor SSOT (same operator, 2026-07-21) mandates WIPING pre-floor sports data, not backfilling it,
+  and already executed that wipe for the canonical-tree equivalent of this exact population (`sports_reference/fixtures`
+  4,735 objects). The original 2026-07-22 triage doc (`sports_legacy_duplicate_triage_2026_07_22.md` §2/§7)
+  independently recommended folding these 1,492 rows into that same wipe (delete), not copying them forward — a
+  recommendation that appears to have been lost between then and the § 1b conflict-resolution framing. Filed
+  `/plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` (full evidence + recommendation)
+  and a `/blocked` question rather than executing the copy. No GCS object read or written; no code changed for this
+  todo. Todo 1 (re-run the census) also not executed — pending the disposition ruling, since a fresh census only matters
+  if the copy path is confirmed as correct.
