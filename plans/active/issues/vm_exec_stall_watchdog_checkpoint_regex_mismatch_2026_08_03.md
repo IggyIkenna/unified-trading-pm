@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                                      todos 6 and 7 below.
+                                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -250,13 +250,24 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       for the one real gap this surfaced: a genuine future `WORKER_STALLED` self-delete (as opposed to preemption) is
       NOT covered by this same auto-recovery path — it pages an operator instead, per `exit_code_fleet_monitor.py`'s
       `EscalationTier.PAGE_OPERATOR` routing for any non-137 non-preempted exit.
-- [ ] [DATA] P2. **Cross-link this doc's finding into `reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`'s
+- [x] ✅ [DATA] P2. **Cross-link this doc's finding into `reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`'s
       remaining open todos (2-4)** — todo 2 there ("audit whether reap-zombies.sh has silently killed other healthy
       VMs") is effectively answered NO by this doc's audit (see "What I found" above); its todo 4 ("make the day-level
       checkpoint durable against an early kill") remains independently valid but is now understood to be a SEPARATE
       hardening improvement, not the fix for why the original VM died. Update that doc's Progress Log to reference this
       correction (this doc's own filing already cross-references it via `related:`; this todo is a light consistency
-      pass, not new investigation). (repo: unified-trading-pm)
+      pass, not new investigation). (repo: unified-trading-pm) — **ALREADY DONE, verified 2026-08-03 (slot-12,
+      data_engineering craft)**: read the now-archived
+      `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` — its Progress Log already
+      carries the full cross-link (the `2026-08-03T~11:30Z (AO dispatch, slot 6, infra)` entry states "Correction to
+      this doc's own root cause: the flagged VM was NOT killed by reap-zombies.sh..." with the complete evidence chain
+      and a direct link to this doc, and the `~11:45Z` entry for todo 3 cross-references it again), and its top-of-doc
+      `🟢 RESOLVED` banner explicitly names this doc's path as the source of the correction. All 4 of that doc's own
+      todos (1-4, including todo 4's checkpoint-durability hardening, `market-data-processing-service@8ce3378`) are
+      already flipped `[x]` and the doc itself is archived/closed — the same slot-6 session that filed this issue doc
+      performed the cross-link update contemporaneously, so no additional edit to the archived doc is needed or
+      appropriate (editing a closed/archived doc further, when its content is already accurate and complete, would be
+      scope creep beyond this "light consistency pass" todo).
 - [x] ✅ [INFRA] P1. **Extend `launch-mdps-sharded-backfill.sh`'s `Processing|Skipping` stall-progress marker from
       `sports`-only to the `cefi`/`defi`/`tradfi`/`prediction` categories of the SAME launcher** (found during todo 2's
       sweep). All 5 categories invoke the identical entrypoint
@@ -584,3 +595,11 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   covers both new categories via longest-prefix match so nothing is unregistered/broken, this would only refine
   dashboard/monitoring bucket classification; flagging here rather than expanding scope unrequested. No GCS/VM mutations
   this dispatch — pure code + test change, verified via mocked/replica-argparse harnesses only.
+- **2026-08-03T~23:55Z** (AO dispatch, slot 12, `data_engineering`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-003`, todo "Cross-link ... into reap_zombies ...'s remaining open
+  todos (2-4)") — Verified the requested cross-link already exists: the archived
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` carries it in both its
+  `2026-08-03T~11:30Z`/`~11:45Z` Progress Log entries and its RESOLVED banner, all 4 of that doc's own todos are done,
+  and it is already archived — no further edit needed there. Flipped this todo `[x]` above with that evidence. Doc-only,
+  read-verify pass — no code shipped, no GCS/VM mutations. Two todos remain open in this doc (`tradfi-catalogue-canon`
+  shard-log fan-in gap, `*-iah`/`*-iah-purge` candidate-count risk) so it stays active, not archived.
