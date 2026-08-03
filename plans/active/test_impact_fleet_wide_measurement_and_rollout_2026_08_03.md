@@ -248,13 +248,41 @@ to be per repo — not measured here, out of this todo's scope.
       the 2-week window itself, only running it meaningfully does). Done-when: run against the CI history accumulated so
       far and produces a clean per-run divergence table (even if the window isn't complete yet) — this is what the
       single-repo trial todo's done-when actually reads to determine "zero observed divergences."
-- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial**, only after the single-repo trial passes clean — same methodology, 2
-      weeks, across every repo from the Phase-1 table with the current allowlists. Done-when: zero observed divergences
-      fleet-wide over the full window.
-- [ ] [REVIEW] P2. **Promotion decision** — once the fleet shadow trial is clean, decide whether to let the selector
-      actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand up the post-promotion nightly
-      full-suite canary the design specifies. This is itself an operator call, not a worker todo — state the
-      shadow-trial evidence and ask.
+- [ ] [SCRIPT] P1. **Accelerate validation via a historical-commit backtest (operator decision 2026-08-03 — see Progress
+      Log)**, run ALONGSIDE the live single-repo trial above, not instead of it — the live trial keeps running unchanged
+      (it's zero-cost, purely-additive logging; nothing here stops it). Goal: get the same zero-divergence evidence the
+      design's safety model requires, but in days instead of the full 2-week live window, by replaying the ALREADY-BUILT
+      `test_impact_selector.py` (`unified-trading-pm@1452d5da1`) against commits that already happened, where the real
+      outcome is already known — never against unknowable future commits. Concretely: (1) FIRST check whether historical
+      CI pass/fail + failing-test-name data is actually queryable for a meaningful window
+      (`gh run list`/`gh run view --log-failed` per repo, or the Firestore `ci_status` store referenced in
+      `/codex/08-workflows/ci-cd-flow.md` — confirm which is real and queryable before assuming either is; this is a
+      genuine unknown, not a formality) — if neither is practically queryable at volume, STOP and report that as the
+      finding, do not force a smaller/fabricated sample to make the todo look done. (2) If queryable: for each
+      historical commit across the Phase-1-verified-eligible repos where the REAL full suite FAILED, compute what
+      `test_impact_selector.py` would have narrowed the diff to, and check whether the actual failing test(s) fall
+      inside that narrowed set. A failing test OUTSIDE the narrowed set is a real divergence — the same
+      design-bug-not-noise severity the live trial's own rule already states, not a lesser finding because it came from
+      a backtest. (3) Aim for as large a historical sample as the queryable window allows (more commits = stronger
+      evidence than the 2-week live window would produce in the same calendar time) — state the actual sample size
+      achieved, do not imply it matches "2 weeks of coverage" if it doesn't. Done-when: a report per repo — sample size,
+      divergences found (ideally zero; if any, each one filed as its own issue doc, same severity as a live-trial
+      divergence, and this backtest does NOT count as passing until they're resolved) — committed into this plan's
+      Progress Log, not left in a scratchpad.
+- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency**, gated on EITHER the live single-repo trial
+      (`market-data-processing-service`, done-when 2026-08-17) OR the historical backtest above clearing with zero
+      divergences over a sample the reviewer judges large enough to trust — this plan's `sequential: true` only encodes
+      file-order, not this OR; a human/reviewing-worker must read both todos' actual state and decide which (if either)
+      satisfies the bar, not just check that the prior todo in file order is `[x]`. If the backtest clears first, it
+      does NOT skip the fleet-wide question — it only removes the requirement to wait until 2026-08-17 before extending
+      validation from one repo to the rest of the Phase-1 table with the current allowlists. Done-when: zero observed
+      divergences fleet-wide, from whichever evidence source actually satisfies the reviewer.
+- [ ] [REVIEW] P2. **Promotion decision** — once the fleet-wide evidence bar above is met, decide whether to let the
+      selector actually skip real test execution (vs. keep it shadow-only indefinitely), plus stand up the
+      post-promotion nightly full-suite canary the design specifies. This is itself an operator call, not a worker todo
+      — state the actual evidence (live trial and/or backtest, sample sizes, zero-or-not) and ask. **Explicitly NOT
+      satisfied by**: the backtest todo existing/running, the live trial merely being in progress, or elapsed calendar
+      time alone — only actual zero-divergence evidence, stated plainly, promotes.
 
 ## Progress Log
 
@@ -305,3 +333,17 @@ to be per repo — not measured here, out of this todo's scope.
   decision, explicitly an operator call per its own text) are correctly blocked behind it via `sequential: true`.
   Nothing else in this plan is actionable right now without either the 2-week window elapsing or the divergence-analysis
   tool existing to read it.
+- **2026-08-03 (operator decision, same session) — accelerate via historical backtest, do NOT skip validation.**
+  Operator asked to get the fleet-wide savings immediately rather than wait ~2 weeks. Presented 3 options: (a) keep the
+  live trial as designed, (b) accelerate via a historical-commit backtest — same zero-divergence evidence bar,
+  compressed timeline, since past commits' real outcomes are already known, (c) skip validation and promote fleet-wide
+  now, accepting the risk of a silent under-tested regression reaching execution-critical repos (`execution-service`
+  directly touches live trading) with no CI signal at all. **Operator chose (b).** New todo added above (between the
+  single-repo trial and the fleet-wide trial): build the backtest, gated on first confirming historical CI pass/fail +
+  failing-test data is actually queryable (not assumed) — if it isn't, the todo's done-when is reporting that finding,
+  not forcing a smaller sample to look complete. The live single-repo trial keeps running unchanged alongside it
+  (zero-cost, doesn't conflict). The fleet-wide trial and promotion todos were reworded to accept EITHER evidence source
+  clearing (live trial OR backtest) — `sequential: true` only enforces file-order, so a human/worker must actually read
+  both todos' state, not just check the immediately-prior checkbox, before deciding the bar is met. **Per explicit
+  operator instruction, this update is DOC-ONLY** — the backtest itself is scoped as a todo for a future (fresh-context)
+  session/agent to execute, not started here.
