@@ -580,3 +580,37 @@ not just noting.
   (after `agt-e3d260` ~21:40-21:50Z and `agt-ca1c32` ~23:20-23:32Z) — all three same-day `strategy-service` escalations
   independently landed on the identical non-code diagnosis, reinforcing the dispatcher-dedupe observation the entry
   immediately above already flagged.
+
+- **2026-08-03 ~00:33-00:41Z (cicd escalation `agt-2c266f`, slot 4, `market-data-processing-service`,
+  `wall_type=ldr_qg_failure`, `pr_number=0`)** — THIRD dispatch for this exact repo+wall within the same rolling window
+  as the `agt-68298f`/`agt-dbfcd7` entries above (both `wall_type=main_ci_red`, ~23:20-00:05Z), same
+  `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` signature, one commit further ahead: LDR HEAD
+  is now `beb9fed` (`fix(scripts): retry-idempotency gap in _copy_verify_delete()`, touches only
+  `scripts/migrate_candle_canonical_2026_07.py` + its test — a one-off migration script, not the MDPS service path the
+  failing `tests` slice actually exercises). Independently re-confirmed both failing runs this escalation was dispatched
+  against (`30772053085` 23:20:31Z 1h7m48s, `30758737872` 17:22:44Z 5h55m56s) show the identical shape: `Coverage floor`
+  line, then silence (16min / 14min respectively), then the teardown `OSError`, then `exit=1` 39-59min later — no
+  `FAILED tests/...` line in either raw log (`gh api .../actions/jobs/<id>/logs`, not just `gh run view --log-failed`,
+  to rule out CLI truncation hiding a real failure — confirmed genuinely absent, not hidden).
+
+  **Reproduced locally FIRST** (backgrounded, heartbeated per the mandatory pattern) at current LDR HEAD `beb9fed`:
+  `bash scripts/quality-gates.sh --no-fix` → **`✅ ALL QUALITY GATES PASSED (137s)`** — tests slice **2333 passed, 2
+  skipped, 0 failed in 50.00s**, coverage 87.00%≥70% floor, sentinel written matching HEAD — decisive confirmation the
+  code is clean at the exact HEAD CI is failing on. Live CI cross-check: a 4th `workflow_dispatch` (`30774747037`,
+  started `00:33:20Z`) was genuinely progressing at investigation time — `content sentinel` job `success`,
+  `QG slice (tests)` job `in_progress`, `QG slice (checks)` `queued` behind it (real FIFO progress, not a `K=1` deadlock
+  like the `features-service` entry above). Runner `glue-ip-172-31-5-118-1` confirmed `online`/`busy=true` via
+  `GET /repos/.../actions/runners`. Host corroboration at investigation time: `uptime` load average
+  **44.47/39.62/33.59**, swap **20Gi/47Gi** in use, **26** concurrent `quality-gates.sh` processes already live on this
+  shared host — same whole-host-thrashing signature every other entry in this doc-pair tracks, if anything worse than
+  most prior readings. `GET /api/repo-blockers` → one open entry, unrelated repo (`market-tick-data-service`, a genuine
+  pre-existing test-content issue, own issue doc) — nothing for `market-data-processing-service` to fast-path.
+  **Disposition: no code/test/workflow change made or needed.** Did not add a redundant 5th retrigger — a
+  `workflow_dispatch` run was already `in_progress`/progressing on this exact HEAD at investigation start, and per this
+  doc's established posture a duplicate dispatch onto an already-contended `K=1` runner doesn't help. Did not
+  force-resolve, lower a coverage floor, or pragma-skip anything. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `market-data-processing-service` working tree already clean, no commit needed there). Thirteenth
+  repo-specific corroboration overall, second specific to `market-data-processing-service`, third dispatch for this
+  exact repo+signature within ~90min — reinforcing the `agt-68298f`/`agt-dbfcd7` entries' own dispatcher-dedupe
+  observation: the escalation dispatcher is re-firing on a still-progressing (not stuck) `K=1` FIFO queue faster than it
+  can drain.
