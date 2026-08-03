@@ -73,11 +73,11 @@ Tighten `find_resolution_in_plans()` (agent-orchestrator/server/blocked_reconcil
 Either tightens the false-positive rate without reintroducing the original sync gap (an operator still writes one line
 near the BLK id; workers narrating unrelated pending state stop tripping it).
 
-- [ ] [BACKEND] P2. Tighten `find_resolution_in_plans()`'s marker-matching in
+- [x] ✅ [BACKEND] P2. Tighten `find_resolution_in_plans()`'s marker-matching in
       `agent-orchestrator/server/blocked_reconcile.py` per the recommended decision above (same-line requirement, or an
       explicit `BLK-xxxxxxxx ANSWERED` / `ANSWERED — BLK-xxxxxxxx` compound pattern) — add a regression test asserting a
       nearby-but-unrelated use of "resolved"/"answered"/"operator ruling"/"operator ruled" does NOT auto-answer an open
-      BLK id. (repo: agent-orchestrator)
+      BLK id. (repo: agent-orchestrator) — `agent-orchestrator@209cd00`.
 
 ## Progress Log
 
@@ -85,3 +85,13 @@ near the BLK id; workers narrating unrelated pending state stop tripping it).
   (BLK-17ef2351) was auto-answered by this exact mechanism from my own unrelated comment; corrected the triggering
   comment in that doc (removed the standalone "resolved" near the BLK id mention) in the same commit. No
   agent-orchestrator code changed yet — this doc only.
+- 2026-08-03 (slot-14): implemented option 1 (same-line requirement) — `find_resolution_in_plans()` now requires the
+  resolution marker on the SAME line as the `BLK-xxxxxxxx` mention; the +/-12 line window is kept only for assembling
+  the displayed context text, not for match detection. Verified against the live plans corpus (grepped real `BLK-` usage
+  across `plans/active/`) that this preserves every genuine same-line match convention already in use
+  (`BLK-xxxx ANSWERED`, `operator ruling BLK-xxxx`, etc.) while closing the cross-line false-positive. Updated
+  `test_matches_operator_ruling_marker_within_window` (renamed, expectation flipped to non-match — that test validated
+  exactly the loose-window behavior being removed) and added a dedicated regression test reproducing the live incident
+  shape (BLK id + unrelated "resolved" 5 lines later). Full suite: 16/16 passed locally; `agent-orchestrator@209cd00`
+  shipped via quickmerge, verified on `origin/live-defi-rollout`. Full repo `quality-gates.sh` green (2271 passed, 2
+  skipped; dashboard tsc/vitest green).
