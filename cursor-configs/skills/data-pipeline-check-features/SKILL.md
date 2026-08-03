@@ -85,6 +85,29 @@ Verified 2026-07-20: all six exist (cefi has objects; the rest empty — normal 
 `commodity` resolves to the non-env-split `commodity-signals-batch-*` bucket; resolve it via `resolve_bucket_name`
 rather than assuming the `-test-` infix.
 
+### 2a. Resolved-bucket assertion — closes the fail-open gap (HARD, run immediately before every Phase-1 launch)
+
+The provisioning gate above only proves the `-test-` sibling buckets **exist**; it does NOT prove the string you are
+about to pass via `--sink-bucket` actually resolves to one of them. `launch-features-vm.sh` is **fail-OPEN** on this
+flag (`deployment-service/scripts/vm/launch-features-vm.sh:111-112`, `:159`, `:263-266`) — an omitted or mistyped
+`--sink-bucket` silently drops `IS_TEST_RUN` and the sink override, writing PROD features with no guard
+(`backfill_smoke_write_path_canonical_audit_2026_07_20.md` §1). Before **every** Phase-1 `launch-features-vm.sh`
+invocation this skill makes, assert the EXACT resolved bucket string you are about to pass — never a hardcoded example —
+contains `-test-`, and refuse loudly (never fall through) if it doesn't:
+
+```bash
+SINK_BUCKET="features-${ag}-test-${PROJECT_ID}"   # the literal value you are about to pass to --sink-bucket
+case "$SINK_BUCKET" in
+  *-test-*) : ;;
+  *) echo "REFUSING to launch: resolved --sink-bucket '${SINK_BUCKET}' does not contain '-test-' — this would write PROD features. Aborting before any VM launch." >&2
+     exit 1 ;;
+esac
+```
+
+This assertion is mandatory on every invocation of this skill (interactive or `/autonomous`, scoped or unscoped) — it is
+the skill-layer fail-closed guard the launcher itself does not provide. There is no operator override: a PROD run is out
+of scope for `/data-pipeline-check-features` entirely, so this assertion never has a legitimate reason to fail open.
+
 ## 3. Phase 1 — force + skip matrix (with per-family multi-day lookback)
 
 ```bash
