@@ -120,6 +120,15 @@ false-positive surface). Recommend, in order:
       (mirrors the live L304/`canonical_path_oracle_blind_to_filename_stem-002` false positive — must 409) and
       `test_done_accepts_cross_repo_when_tag_correlation_content_matches` (genuine reworded+annotated correlation still
       accepts). Full `quality-gates.sh` green (2228 passed), verified on origin/live-defi-rollout.
+- [ ] [INFRA] P3. **Guard /done's reported sha against the evidence-text's own cited commit (is-ancestor alone is not
+      enough).** Review (Tick 10, 2026-08-03, chat msg 3423) found task defi_consolidated_native_ao_extract-003 (slot 7)
+      self-reported /done sha=77c0206, which was actually a DIFFERENT slot's unrelated commit (slot 12's
+      infra_satellite_ao_dispatch_batch2-001, landed 28s later, same repo). The durable record was CORRECT (slot 7's
+      real work at 72ea669, author=slot-7, content matches the evidence text, and the plan-flip cites 72ea669), so this
+      was contained to the raw /done API payload's sha field. Blind spot: 77c0206 is a genuinely valid origin ancestor,
+      so the M3 is-ancestor check alone silently PASSES on the wrong commit. Harden /done to cross-check the reported
+      sha against the commit cited in the evidence text and/or an author==reporting-slot check, not just is-ancestor.
+      Low severity (no incident; durable record was right). Repo: agent-orchestrator. Source: review Tick 10.
 
 ## Progress Log
 
