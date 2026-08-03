@@ -262,14 +262,13 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       SMARKETS-purge clauses are struck from `sports_consolidated_closeout_2026_07_19.md`'s Track C todo; the STOP
       banner now records the historical disproof rather than gating a still-live instruction. (repo:
       `unified-trading-pm`)
-- [ ] [OPERATOR] P0. **Rule § 1b — CONFLICT, NOT applied, see below.** A different session on this same host (`slot-3`,
-      commit `df384e4cc`, 2026-08-02T16:32:32+01:00) already ruled + applied option A here ~30 minutes before this
-      operator gave THIS session the opposite instruction (option B — resolve the 1,492 rows first). Given the very
-      recent, already-shipped, explicitly-reasoned prior disposition ("carve-out resolution not selected, todos stay
-      operator-gated pending it"), this session did NOT silently overwrite it. **Needs the operator to confirm which
-      instruction stands** before either: (a) leaving A as final (matches the other session), or (b) actually doing the
-      1,492-row canonical-copy data migration B calls for (real data-pipeline work, not a doc edit) and then flipping
-      the retag. (repo: `unified-trading-pm`, `market-tick-data-service`)
+- [x] ✅ [OPERATOR] P0. **Rule § 1b — CONFLICT RESOLVED 2026-08-03, option B stands.** A different session on this same
+      host (`slot-3`, commit `df384e4cc`) had applied option A first; operator confirmed B overrides it — resolve the
+      1,492 rows (copy to canonical) first, then the two todos revert to self-justified (not permanently
+      `[OPERATOR]`-gated). The existing `[OPERATOR]` + delete-safety §3a retag stays in place in the interim — correct
+      either way, since the carve-out isn't resolved yet. Actual migration filed as its own tracked todo,
+      `sports_reference_v2_1492_row_canonical_copy_2026_08_03.md` (real data-pipeline work, not inline here). (repo:
+      `unified-trading-pm`, `market-tick-data-service`)
 
 - [x] ✅ [OPERATOR] P1. **Rule § 1c** — RULED 2026-08-02, option A (un-check, restate as partial). E7's checkbox now
       reads "complete for the migrated corpus only", cross-references R1's data-loss finding directly. (repo:
