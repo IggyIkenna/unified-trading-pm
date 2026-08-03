@@ -94,7 +94,7 @@ stale-and-opted-in read could still reproduce the same class of silent gap.
 No new code change needed for THIS finding — both practical remediations already shipped independently before this
 investigation started. Leaving open only as a documentation/awareness note:
 
-- [ ] [DOC] P3. Add a one-line pointer to this doc's finding (2) + (3) in
+- [x] ✅ [DOC] P3. Add a one-line pointer to this doc's finding (2) + (3) in
       `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s "Liveness + health contract" section, so a future
       reader of that section knows the opt-in stale-fallback gap was traced to a concrete, now-fixed incident rather
-      than staying a purely theoretical caveat. (repo: unified-trading-pm)
+      than staying a purely theoretical caveat. (repo: unified-trading-pm) — unified-trading-pm@pending
