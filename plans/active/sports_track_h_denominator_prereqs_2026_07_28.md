@@ -164,7 +164,8 @@ quarantine.
 
 **Full-corpus `--apply-prod --confirm-prod-write`**: 1,815 days / 15,155 in-scope objects, sharded across 10 parallel
 workers. Hit a recurring external-kill incident (all 10 workers vanished cleanly, zero tracebacks, twice under raw
-`nohup`/`setsid` shell-backgrounding — filed `issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md`,
+`nohup`/`setsid` shell-backgrounding — filed
+`/plans/archive/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md` (archived 2026-08-03, resolved),
 P2); mitigated with a self-restarting supervisor loop, then switched to harness-tracked `run_in_background` tasks which
 proved stable to completion. Final result: **15,980 canonical targets, 15,980/15,980 verify=PASS, 0 quarantine, 0 FAIL**
 (merged from all 10 shard reports).

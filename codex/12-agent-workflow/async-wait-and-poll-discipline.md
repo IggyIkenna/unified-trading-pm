@@ -245,7 +245,8 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
 
 6. **Self-restarting supervisor + harness `run_in_background` is the standard pattern for a multi-hour LOCAL (non-VM)
    resumable background migration/backfill on a shared slot host (codified 2026-07-31,
-   `plans/active/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md`).** Two DISTINCT kill
+   `/plans/archive/issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md`, archived 2026-08-03).** Two
+   DISTINCT kill
    mechanisms were confirmed on this workspace's shared hosts, hitting different weight classes — don't assume a single
    fix covers both:
    - **`nohup ... & disown` (or `setsid`-detached) dies in a fixed ~1-3 minutes, independent of host load.** Confirmed

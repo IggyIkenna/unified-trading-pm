@@ -13,7 +13,7 @@ summary: >-
   network round trips, which is the most likely actual root cause of CEFI/TRADFI delta_one force-leg runs taking many
   hours (observed still-incomplete past 6h23m) rather than the ~40min the driver's old default `--timeout-sec=2400`
   assumed. Raising `--timeout-sec` (companion issue) is a mitigation, not a fix — this doc tracks the real root cause.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi]
 stage: [data]
@@ -45,7 +45,14 @@ context_scope:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 resolved_by:
+  "All 4 todos shipped: confirmed hypothesis (slot-14, 2026-07-27), parallelized _collect_daily_frames
+  (features-service@1ad44550), re-measured real per-shard completion + corrected timeout overrides (2026-08-03), and
+  confirmed no VM was genuinely stuck (all completed or SPOT-preempted). Archived 2026-08-03 (cicd agent,
+  agt-599b4c) per archive-candidates ratchet — 0 open todos, unlocked, self-noted archival-eligible in doc."
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule (ACKED-INTO-CODE, all 4 todos closed with citable evidence/SHAs).
 
 # features-service delta_one sequential per-day GCS existence-probe loop
 

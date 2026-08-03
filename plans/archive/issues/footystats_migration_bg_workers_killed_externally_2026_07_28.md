@@ -12,7 +12,7 @@ summary:
   time (no dmesg/journalctl/auditd access from this session to identify the actor). Mitigated (not root-caused) via a
   self-restarting supervisor loop per shard; the underlying migration work is CAS-idempotent so no data was lost or
   corrupted by the kills.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [cross-cutting] # corrected 2026-07-29 (ag-closeout-audit orthogonality fix) -- was [sports, cross-cutting], a
@@ -34,6 +34,11 @@ priority: P0
 parent_epic: sports_master
 source: "Self-observed by slot-14 during sports_track_h_denominator_prereqs-002, 2026-07-28"
 resolved_by:
+  "All 4 todos shipped: forensic check (2026-07-29), self-restarting supervisor-loop mitigation
+  scripts/dev/supervised-resume.sh (unified-trading-pm@caa33217b), the pattern documented as the
+  standard in /codex/12-agent-workflow/async-wait-and-poll-discipline.md item 6 (2026-07-31), and
+  the resume-log reuse hardening (market-tick-data-service@383ea4c8). Archived 2026-08-03 (cicd
+  agent, agt-599b4c) per archive-candidates ratchet — 0 open todos, unlocked."
 locked_by:
 context_scope:
   [
@@ -47,6 +52,11 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-31
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule (ACKED-INTO-CODE, all 4 todos shipped with citable SHAs). Self-restarting supervisor-loop
+> pattern codified as the standing standard in
+> /codex/12-agent-workflow/async-wait-and-poll-discipline.md item 6.
 
 # footystats migration background workers killed externally — 2026-07-28
 
