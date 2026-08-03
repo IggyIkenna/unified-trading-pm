@@ -162,22 +162,32 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Rule on the resolution direction: extend `_PYTH_FEEDS` (+ reconcile `instrument_id` naming) to
-      genuinely support JTO/RAY/WIF/JUP/USDC, OR prune the IS PYTH-SOLANA catalogue/seeder scope back to the 7
-      currently-fetchable symbols. Gates the two todos below. (repo: unified-trading-pm, decision only)
-- [ ] [BACKEND] P2. Once ruled: implement the chosen fix. Extend path →
-      `market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py` (`_PYTH_FEEDS`) +
-      `_write_oracle_rows`'s instrument_id derivation. Prune path → `unified-api-contracts`/`instruments-service`
-      PYTH-SOLANA capability declarations. (repo: market-tick-data-service or unified-api-contracts/instruments-service,
-      per ruling)
+- [x] [OPERATOR] P2 → RESOLVED 2026-08-03. **RULED: direction 1 (EXTEND, not prune)** — extend `_PYTH_FEEDS` with real
+      Hermes feed-ids for JTO/RAY/WIF/JUP/USDC AND restore BTC/ETH/INF to the IS `PYTH-SOLANA` enumerated set (support
+      the full universe; do NOT prune the seeder scope). **Provenance**: main's final ruling on `BLK-7318d847`
+      (disposition=final, reported 2026-08-03T14:30:50Z) as relayed by review → main msg #3561 (2026-08-03T17:13Z). The
+      ruling never reached this doc because the filer (slot-9) pivoted to an unrelated one-shot CI dispatch and was
+      recycled 3× before consuming its own blocked-answer. The primary blocked-answer payload was NOT re-fetchable from
+      the live API (item is final→pruned; persisted state shows it only in the operator-gated dedup list + review's
+      concern-verdict ledger entry) — so this is encoded as **review-relayed, pending review's pointer to the source
+      record**. (repo: unified-trading-pm, decision only)
+- [ ] [BACKEND] P2. Per the ruling (EXTEND): add real, LIVE-VERIFIED Hermes feed-ids for JTO/RAY/WIF/JUP/USDC to
+      `market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py` (`_PYTH_FEEDS`) —
+      verify each id resolves against `hermes.pyth.network/v2/price_feeds?query=<SYM>` FIRST (this file documents 2
+      prior transcription-slip incidents where a well-formed-but-wrong id 404'd a whole batch) — AND reconcile
+      `_write_oracle_rows`'s `instrument_id` derivation so newly-fetched SOL/JitoSOL/mSOL/bSOL rows land under (or
+      migrate to) the seeder's `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` key. NOTE: this doc is `execution_scope: local-only`
+      (NA) so this todo does not auto-dispatch — the code fix needs a dispatchable (`assigned_vm: planning`) home to
+      actually be worked (see Progress Log). (repo: market-tick-data-service)
 - [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
       form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
       market-tick-data-service, unified-api-contracts)
-- [ ] [DATA] P1. Regression fix: restore BTC/ETH/INF to IS's `PYTH-SOLANA` `instrument_availability` enumerated set (or
-      change `_filter_pyth_rows_to_is` to never drop a symbol `_PYTH_FEEDS` statically supports) — real Pyth captures
-      for these 3 symbols have been silently discarded every day since 2026-07-19 (see 2026-08-03 update above). Gated
-      on the same `[OPERATOR]` ruling above; NOT fixed by extending `_PYTH_FEEDS` alone. (repo: instruments-service or
-      market-tick-data-service, per ruling)
+- [ ] [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss). Restore BTC/ETH/INF to IS's `PYTH-SOLANA`
+      `instrument_availability` enumerated set (or change `_filter_pyth_rows_to_is` to never drop a symbol `_PYTH_FEEDS`
+      statically supports). This is MANDATORY under BOTH extend and prune (§"Recommended decision" pt 3), so it does NOT
+      depend on the extend-vs-prune ruling and should be fixed IMMEDIATELY / independently — real Pyth Hermes prices for
+      these 3 symbols have been fetched-then-silently-discarded every day since 2026-07-19 (15+ days and counting). NOT
+      fixed by extending `_PYTH_FEEDS` alone. (repo: instruments-service or market-tick-data-service)
 
 ## Progress Log
 
@@ -214,3 +224,21 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   dashboard's blocked queue, which is likely why this task kept silently bouncing between slots instead of visibly
   waiting on the operator) rather than repeating the same discovery a 4th time. Left the plan's C6 checkbox
   **UNFLIPPED** — same rationale as slot-11.
+- **2026-08-03 (main agt-1756f6, via review flag msg #3561)**: Review surfaced a process gap — main's final ruling on
+  `BLK-7318d847` (direction 1 "extend", reported 14:30:50Z) never reached this doc because slot-9 (the filer) pivoted to
+  an unrelated one-shot CI dispatch (agt-1d8016) minutes after filing and was killed/respawned 3× before consuming its
+  own blocked-answer; no slot has touched Pyth/`_PYTH_FEEDS` since, so BTC/ETH/INF oracle_prices kept silently dropping
+  (now 15+ days). **Propagated the ruling** into the `[OPERATOR] P2` todo above (with explicit provenance — the primary
+  blocked-answer payload was not re-fetchable from the live API, so it is encoded as review-relayed pending review's
+  pointer to the source record) and resolved `[BACKEND] P2` to the ruled (extend) direction. **Decoupled `[DATA] P1`**
+  (the BTC/ETH/INF regression) from the extend-vs-prune gate: restoring those 3 symbols is required under BOTH
+  directions (§"Recommended decision" pt 3), so the ongoing data loss can and should be fixed independently/first rather
+  than waiting on the extend-vs-prune choice. **Corrected a stale C6 brief**: the backlog task
+  `defi_satellite_ao_dispatch_batch3-006` brief still says "launch a SPOT backfill VM", but the 3 Pyth backfill VMs
+  already ran to `exit_code=0` completion (slot-11/slot-9 verified live) — another backfill will NOT fix this; the real
+  fix is the code change (IS `PYTH-SOLANA` catalogue filter + `_PYTH_FEEDS`), and C6 should only re-dispatch AFTER that
+  code fix lands. **Open follow-up (flagged to review/operator)**: this doc is `execution_scope: local-only` (NA) so its
+  `[BACKEND]`/`[DATA]` todos are not auto-dispatched — the code fix needs a dispatchable (`assigned_vm: planning`) home;
+  did not author a new dispatchable plan unilaterally (plan-destination is operator's call) nor hand-edit the C6 backlog
+  task brief (derived from `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`; backlog is not
+  hand-editable). Main cannot push code, so shipping the fix itself requires a worker dispatch.
