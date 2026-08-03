@@ -508,46 +508,46 @@ inherited from the first shipped batch:
       sole copy + a real retention-scope judgment call, not main's or a worker's to authorize).
 
       > **⛔ URGENT CORRECTION 2026-08-03 (slot 16, data_engineering), same check-in — the 1.165M/9.83% figure and the
-                  > "junk leagues" framing were WRONG for a large chunk of this residual; DO NOT approve/execute the drop as
-                  > originally scoped.** A read-only per-league breakdown of the CURRENT (post-rekey) residual — now 74,058 rows
-                  > out of 6,550,528 (1.13%; the dedup pass above already collapsed most of the original 1.165M figure's
-                  > duplicate-of-out-of-universe rows) — shows the top offenders are `PRIMERA_DIVISION` (10,564 rows),
-                  > `PREMIER_LEAGUE` (8,483), `CHAMPIONSHIP` (8,477), `FIRST_DIVISION_A` (8,420), `2._BUNDESLIGA` (7,127),
-                  > `SUPER_LEAGUE` (6,813), `SUPERLIGA` (6,570), `PREMIERSHIP` (5,248), `A-LEAGUE` (1,126) — 487 distinct
-                  > `league_id`s, but these 8 account for the vast majority of rows, and their `data_type` breakdown is
-                  > `odds_horizon_bucket` (51,055) + `trades` (13,519) + `MATCHES`/`FIXTURES*` (~9,000) — **real captured
-                  > trading-relevant odds/trades data, not reference-only junk.**
-                  >
-                  > These are NOT genuinely out-of-curated leagues — they are the EXACT raw MTDS display-name `league_id`s
-                  > (`league_cls.name.upper().replace(" ", "_")`) already tracked as a P0 OPEN issue:
-                  > `plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md`. That doc's own 2026-07-20 measurement
-                  > found 214,842 such rows (this residual is the same population, reduced by the dedup above); its operator
-                  > ruling was **canonicalise-at-write** (shipped `market-tick-data-service@ad4f1872`) with **history migration
-                  > still explicitly open** (2 of 3 blockers unshipped as of that doc's 2026-07-28 re-verify: the
-                  > `odds_horizon_bucket` MDPS reprocess Step 7, and the `batch_footystats` copy+swap script, which doesn't exist
-                  > yet). Several of the raw names are **genuinely ambiguous between two real leagues** per that doc's own
-                  > measurement (`CHAMPIONSHIP` = England-or-Scotland, `PRIMERA_DIVISION` = Argentina-or-Chile,
-                  > `SUPER_LEAGUE` = Greek-or-Swiss, `BUNDESLIGA`/`SERIE_A`/`SERIE_B` similarly) — resolvable via the underlying
-                  > parquet's `home_team`/`away_team`, per that doc's own worked analysis, never by a name-keyed alias map (would
-                  > silently MERGE distinct leagues). **Running `--drop-out-of-universe --apply` today would delete real,
-                  > awaiting-migration trading data for major/ambiguous-but-real leagues, not remove junk** — this is a direct
-                  > contradiction with the already-operator-ruled P0 migration plan, not a fresh judgment call for THIS todo to
-                  > make. Sent an urgent `/progress` correction the moment this was found (before any answer to BLK-aa587dbf
-                  > landed). **Revised recommendation for the operator's BLK-aa587dbf ruling**: exclude every raw MTDS
-                  > display-name `league_id` (the population `sports_league_id_namespace_migration_2026_07_20.md` already
-                  > enumerates) from any drop candidate list entirely — that doc, not this one, owns their disposition (migrate,
-                  > once its 2 remaining blockers land). Only the GENUINE residual beyond that population (scattered numeric ids
-                  > like `15746`/`256`/`15066` etc., each ~100-180 rows, `UNKNOWN`=270 rows) is a plausible drop candidate, and
-                  > even that has not been individually verified against every other known-tracked migration in this corpus — do
-                  > not treat the smaller number as automatically safe either, just smaller and less examined so far. Cross-linked
-                  > both issue docs' `related:` frontmatter.
+                      > "junk leagues" framing were WRONG for a large chunk of this residual; DO NOT approve/execute the drop as
+                      > originally scoped.** A read-only per-league breakdown of the CURRENT (post-rekey) residual — now 74,058 rows
+                      > out of 6,550,528 (1.13%; the dedup pass above already collapsed most of the original 1.165M figure's
+                      > duplicate-of-out-of-universe rows) — shows the top offenders are `PRIMERA_DIVISION` (10,564 rows),
+                      > `PREMIER_LEAGUE` (8,483), `CHAMPIONSHIP` (8,477), `FIRST_DIVISION_A` (8,420), `2._BUNDESLIGA` (7,127),
+                      > `SUPER_LEAGUE` (6,813), `SUPERLIGA` (6,570), `PREMIERSHIP` (5,248), `A-LEAGUE` (1,126) — 487 distinct
+                      > `league_id`s, but these 8 account for the vast majority of rows, and their `data_type` breakdown is
+                      > `odds_horizon_bucket` (51,055) + `trades` (13,519) + `MATCHES`/`FIXTURES*` (~9,000) — **real captured
+                      > trading-relevant odds/trades data, not reference-only junk.**
+                      >
+                      > These are NOT genuinely out-of-curated leagues — they are the EXACT raw MTDS display-name `league_id`s
+                      > (`league_cls.name.upper().replace(" ", "_")`) already tracked as a P0 OPEN issue:
+                      > `plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md`. That doc's own 2026-07-20 measurement
+                      > found 214,842 such rows (this residual is the same population, reduced by the dedup above); its operator
+                      > ruling was **canonicalise-at-write** (shipped `market-tick-data-service@ad4f1872`) with **history migration
+                      > still explicitly open** (2 of 3 blockers unshipped as of that doc's 2026-07-28 re-verify: the
+                      > `odds_horizon_bucket` MDPS reprocess Step 7, and the `batch_footystats` copy+swap script, which doesn't exist
+                      > yet). Several of the raw names are **genuinely ambiguous between two real leagues** per that doc's own
+                      > measurement (`CHAMPIONSHIP` = England-or-Scotland, `PRIMERA_DIVISION` = Argentina-or-Chile,
+                      > `SUPER_LEAGUE` = Greek-or-Swiss, `BUNDESLIGA`/`SERIE_A`/`SERIE_B` similarly) — resolvable via the underlying
+                      > parquet's `home_team`/`away_team`, per that doc's own worked analysis, never by a name-keyed alias map (would
+                      > silently MERGE distinct leagues). **Running `--drop-out-of-universe --apply` today would delete real,
+                      > awaiting-migration trading data for major/ambiguous-but-real leagues, not remove junk** — this is a direct
+                      > contradiction with the already-operator-ruled P0 migration plan, not a fresh judgment call for THIS todo to
+                      > make. Sent an urgent `/progress` correction the moment this was found (before any answer to BLK-aa587dbf
+                      > landed). **Revised recommendation for the operator's BLK-aa587dbf ruling**: exclude every raw MTDS
+                      > display-name `league_id` (the population `sports_league_id_namespace_migration_2026_07_20.md` already
+                      > enumerates) from any drop candidate list entirely — that doc, not this one, owns their disposition (migrate,
+                      > once its 2 remaining blockers land). Only the GENUINE residual beyond that population (scattered numeric ids
+                      > like `15746`/`256`/`15066` etc., each ~100-180 rows, `UNKNOWN`=270 rows) is a plausible drop candidate, and
+                      > even that has not been individually verified against every other known-tracked migration in this corpus — do
+                      > not treat the smaller number as automatically safe either, just smaller and less examined so far. Cross-linked
+                      > both issue docs' `related:` frontmatter.
 
-                  **Todo stays OPEN** (per main's explicit instruction not to pre-decide the drop by closing this) — next
-                  dispatch: wait for the operator's actual ruling on BLK-aa587dbf, now informed by the correction above (the
-                  likely real options are: exclude-the-namespace-migration-population-and-reconsider-the-rest vs.
-                  defer-the-whole-drop-until-that-migration-completes), execute per whichever they choose (citing
-                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` if they choose any drop), THEN re-verify + flip this
-                  checkbox.
+                      **Todo stays OPEN** (per main's explicit instruction not to pre-decide the drop by closing this) — next
+                      dispatch: wait for the operator's actual ruling on BLK-aa587dbf, now informed by the correction above (the
+                      likely real options are: exclude-the-namespace-migration-population-and-reconsider-the-rest vs.
+                      defer-the-whole-drop-until-that-migration-completes), execute per whichever they choose (citing
+                      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` if they choose any drop), THEN re-verify + flip this
+                      checkbox.
 
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
@@ -618,6 +618,31 @@ themselves.
   entirely (that doc owns its disposition); only the genuine small-scattered-numeric-id remainder is a plausible drop
   candidate, and even that hasn't been individually cross-checked against every other tracked migration. Todo stays
   OPEN.
+- **2026-08-03 (slot 16, data_engineering) — full residual split completed (not just the top-8 sample)**: re-ran the
+  breakdown against the CURRENT residual (74,074 rows, 503 distinct `league_id`s — a handful more than the earlier
+  74,058 from live crons writing between check-ins) and cleanly separated it by KIND rather than just row count:
+  **NUMERIC api_football ids (356 distinct, 8,930 rows)** — genuinely non-curated leagues by api_football's own id
+  system (no ambiguity; the numeric-in-universe residual was already independently verified 0 by the re-key run above,
+  so every numeric id remaining here truly doesn't match any of the 390 curated leagues). `capture_status` is 8,914
+  `captured` + 16 `attempted_failed`; `data_type` is dominated by `MATCHES`/`FIXTURES_SCHEDULE`/`FIXTURES`/
+  `FIXTURES_OUTCOMES`/`INJURIES` — **reference-only, zero `odds_horizon_bucket`/`trades` rows** — this is the clean,
+  low-risk drop-candidate pool the original Directive A/B intent was actually about. **STRING-FORM ids (147 distinct,
+  65,144 rows)** — NOT just the top-8 sampled earlier; also includes a SECOND raw-naming convention
+  (`SOCCER_<COUNTRY>_<LEAGUE>` / lowercase `soccer_<country>_<league>`, e.g. `SOCCER_EPL`=60 rows,
+  `SOCCER_SPAIN_LA_LIGA`=60, `SOCCER_GERMANY_BUNDESLIGA`=60 — an odds-vendor `sport_key` format, same underlying leagues
+  as the top-8, a DIFFERENT capture path/window) plus ~120 country-prefixed reference-style names at 1-3 rows each
+  (`ENGLAND_CHAMPIONSHIP`/`GERMANY_REGIONALLIGA_BAYERN`/`KENYA_FKF_PREMIER_LEAGUE`/etc., several clearly
+  youth/reserve/lower-tier: `_U18_`/`_U19_`/`_U20_`/`REGIONALLIGA`/`OBERLIGA`) and a scatter of short 1-4-char vendor
+  codes (`GB1`/`FR2`/`ES1`/`RFPL`/etc., 1 row each). **All 147 of these are string-form, so
+  `instruments-service@0877f849`'s fix already protects every one of them, not just the top 8** — none are rekey
+  candidates, so `--drop-out-of-universe` literally cannot touch them regardless of any future flag/apply combination.
+  **Revised, now-precise recommendation for the operator's BLK-aa587dbf ruling**: the numeric pool (356 ids / 8,930
+  rows, reference-only) is the actual well-scoped drop candidate the original todo asked about; the string-form pool
+  (147 ids / 65,144 rows) is out of scope for this todo entirely — already structurally protected by the code fix, and
+  its disposition belongs to `sports_league_id_namespace_migration_2026_07_20.md` (migrate) or a follow-up doc for the
+  vendor-key/reference-tail variants this session surfaced, not a `--drop-out-of-universe` decision. Full per-id
+  breakdown reproducible via `canonicalize_sports_league_id_schema_2026_06_24.py` (dry-run) + the same
+  registry-membership split described here — not re-pasting the full 503-row table inline to keep this doc lean.
 - **2026-08-03 (slot 16, data_engineering) — root cause fixed in code, not just documented**: shipped
   `instruments-service@0877f849` narrowing `canonicalize_sports_league_id_schema_2026_06_24.py`'s
   `--drop-out-of-universe` to its own numeric/suffixed rekey candidates only (`compute_drop_out_of_universe_mask()`,
