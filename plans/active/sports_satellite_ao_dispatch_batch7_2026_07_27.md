@@ -53,11 +53,12 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /codex/02-data/sports-2020-06-data-floor.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -237,3 +238,5 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- swapped in the doc's own remaining open DIAG
+  todo's real fold-in/ruling sources; genuinely code-free (read-only data-anomaly investigation, no fix implementation).

@@ -63,10 +63,11 @@ source: >-
 assigned_role: data_engineering
 context_scope:
   [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
   ]
 sequential: false
@@ -430,4 +431,6 @@ this extraction applied throughout.
 
 ## Progress Log
 
-- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the dispatch-mechanics codex doc for a
+  concrete source-code pointer (`classify_venue_error()`) + its shard-isolation codex SSOT, since only 2 of the 13
+  native todos remain open and both cite specific code/codex targets, not dispatch process.

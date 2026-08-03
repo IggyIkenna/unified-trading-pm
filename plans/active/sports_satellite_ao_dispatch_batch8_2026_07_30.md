@@ -69,12 +69,12 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    instruments-service/instruments_service/engine/orchestrator/venue_core.py,
+    features-service/scripts/sports/verify_ml_readiness.py,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -297,3 +297,5 @@ SSOT for the dedicated-triage-pass procedure this plan followed.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the 2 remaining open [CODE]/[DIAG] todos'
+  real source-code targets (venue_core.py's allow-list, verify_ml_readiness.py).

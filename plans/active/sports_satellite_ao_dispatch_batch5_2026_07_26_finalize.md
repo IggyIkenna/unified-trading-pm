@@ -43,11 +43,10 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -261,3 +260,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the actual root-cause doc for this plan's
+  own multi-dispatch GATED stall (dispatcher never derives a fresh task for the reworded batch5 zombie-tick todo).

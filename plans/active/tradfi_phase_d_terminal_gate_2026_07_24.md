@@ -47,11 +47,11 @@ source:
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /codex/02-data/honest-coverage-model.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py,
+    unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py,
   ]
 ---
 
@@ -120,6 +120,9 @@ context_scope:
 
 ## Progress Log
 
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped 2 general codex/sibling-plan entries for
+  the 2 real `EXCHANGE_CODE_TO_NAME` source files the blocking chain-bundle issue names, since both open todos gate on
+  that contradiction.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** Both open checkboxes
   (P0 MVP-backfill-readiness gate; P1 post-full-backfill reconciliation checkpoint) read end-to-end; count matches
   tranche-inventory tool (2). Both remain explicitly gated exactly per the 2026-07-30 entry below — no new evidence has

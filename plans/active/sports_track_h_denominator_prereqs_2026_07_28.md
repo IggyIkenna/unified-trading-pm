@@ -48,10 +48,10 @@ context_scope:
   [
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
-    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py,
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     market-tick-data-service/scripts/sports/league_id_relocation/,
-    /plans/epics/sports_master.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
   ]
 ---
 
@@ -201,3 +201,5 @@ will commit+push+flip this checkbox the moment the repo clears. The PROD data-co
 and verified independent of the code-ship — this is a shipping-mechanics gap only, not a data-correctness one.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added `bucket_assignment_adapter.py`, the todo 1
+  STOP condition's actual root-caused file (`_get_dedup_columns` excludes `league_id`); dropped the epic doc.

@@ -215,4 +215,6 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   (`deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, `artifact_pipeline_observability_2026_07_17.md`)
   — left as-is, a legitimate cross-tranche mention (same pattern every other tranche's Sources list uses for docs it
   doesn't primarily own), not a dangling reference.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries, all resolving, matches the doc's own "Codex SSOTs"
+  list + epic + skill) — coordination-index doc, legitimately code-free; no changes needed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).

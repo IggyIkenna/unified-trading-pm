@@ -47,10 +47,9 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -130,3 +129,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped the batch-naming/conflict-check codex doc
+  (batch-creation concern, not finalize-reconcile); this is a pure archival gate, no source-code target.

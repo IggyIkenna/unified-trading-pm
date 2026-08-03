@@ -96,3 +96,5 @@ See `sports_track_h_denominator_prereqs_2026_07_28.md`'s Progress Log for the sp
 H line is replaced with a non-checkbox pointer to this plan (so it stops being offered as an open todo there).
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- already accurate (source path
+  `coverage.py::compute_coverage_for_bucket()` matches the todo's own cited function); no change needed.

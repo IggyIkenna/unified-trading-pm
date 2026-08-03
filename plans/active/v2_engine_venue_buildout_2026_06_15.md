@@ -32,11 +32,10 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/09-strategy/architecture-v2/archetypes/,
-    /plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md,
+    /strategy-service/strategy_service/engine/strategies/v2/vol_trading/,
+    /strategy-service/strategy_service/engine/strategies/v2/market_making/,
+    /strategy-service/strategy_service/engine/strategies/v2/batch_harness.py,
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    /plans/epics/strategy_master.md,
-    /codex/09-strategy/architecture-v2/archetypes,
     /unified-api-contracts/openapi/capability-verdict-matrix.json,
   ]
 ---
@@ -652,6 +651,10 @@ checkboxes above), doc stays assigned_vm: NA. Full audit rationale: This doc is 
 case. 23 of 36 open items are the Tier-2 (15 Tardis-credential-blocked VOL_* backtests) / Tier-2 (2
 no-backfill-authorised MARKET_MAKING backtests) / Tier-2 (1 blocked-data QUEUE_MICROSTRUCTURE) / Tier-3 (2
 blocked-model-variant MM engines + 2 sta...
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped a duplicate codex-path entry and a now-
+  archived precedent plan, added the live strategy-service `vol_trading/`+`market_making/` source dirs and
+  `batch_harness.py` (the GroupBRunner backtest gate every remaining engine todo is blocked on).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
