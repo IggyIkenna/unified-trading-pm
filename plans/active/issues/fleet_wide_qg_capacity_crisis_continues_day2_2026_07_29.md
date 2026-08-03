@@ -678,3 +678,34 @@ not just noting.
   dep-order/ci_status gate staying as the correct conservative behavior (it should NOT promote onto a repo whose LDR CI
   it can't confirm green) — the real fix is unblocking LDR's `quality-gates-v2` from completing a run at all, which is
   this doc's existing P1 thread, not a new one.
+
+- **2026-08-03 ~02:44-02:55Z (cicd escalation `agt-31a992`, slot 10, `deployment-api`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — third `deployment-api`-specific dispatch onto this exact wall; independently re-derived the same
+  root cause as `agt-52cafa`/`agt-bcc6bb` above before reading their entries, then found them and confirms rather than
+  duplicates. `main` HEAD (`969bce0`, tip of the last completed Option-B promotion) fails `quality-gates-v2` on both the
+  `checks` leg (`Type check FAILED/timeout (exit=124)`, run `30767196199`) and STEP 5.106
+  `check_bare_read_availability_index` (2 "new" findings at `_core.py:171`/`388`) — the latter is the same promotion-lag
+  line-shift artifact `agt-bcc6bb` diagnosed (main is missing LDR's `aaa0d1d`, which shifted `_core.py` by +4 lines;
+  `origin/main..origin/live-defi-rollout` shows 445 commits behind for this repo, growing). Re-confirmed the
+  fleet-promote gate is still the blocker, live: `ldr-to-main-promote-fleet` run `30780099205` (02:46:18Z, PM repo)
+  →`GATE BLOCK deployment-api: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`.
+  **`live-defi-rollout`'s own `workflow_dispatch` QG (`30777257322`, started 01:36:05Z — the same run `agt-bcc6bb`
+  watched `in_progress` at 01:50Z) has since progressed and FAILED**: `content sentinel` success, `QG slice (checks)`
+  completed `failure` (`❌ Type check FAILED/timeout (exit=124)` again, 01:50:03Z — same signature, not a new one),
+  `QG slice (tests)` still `in_progress` at check time (~1h17m elapsed on that leg alone). Because `checks` already
+  failed, this run's overall conclusion will resolve `failure` once `tests` finishes — it will NOT clear the gate.
+  **Verified code cleanliness independently, cheaply** (own worktree `.tabs/10/deployment-api` at
+  `origin/live-defi-rollout` HEAD `e1e100e`, clean): ran
+  `check_bare_read_availability_index.py --workspace-root . --scope deployment-api` directly →
+  `OK — 9 baselined occurrence(s); 0 new occurrences` — STEP 5.106 is genuinely green on LDR content; the `main`-side "2
+  new occurrences" is purely the line-shift artifact from unpromoted commits, not a real regression. Host corroboration
+  at investigation time: `uptime` load average **25.36/25.37/24.66**, swap **18Gi/47Gi** used, 29 QG-related processes
+  live — same whole-host-thrashing signature as every prior entry in this doc-pair. **Disposition: no code, workflow, or
+  baseline change made or needed** — same conclusion as the two prior `deployment-api` entries above, now with a third
+  independent confirmation and a data point showing the SAME in-flight dispatch (`30777257322`) that `agt-bcc6bb` was
+  watching has since failed on the identical timeout signature rather than resolving green, i.e. the crisis is still
+  active, not trending toward self-resolution on its own within a single dispatch's lifetime. Did not retrigger
+  `live-defi-rollout` — a `workflow_dispatch` is already running and a duplicate would cancel it via the
+  `cancel-in-progress` concurrency group per the established posture in this doc. Did not touch `main`, the promotion
+  pipeline, or the `[OPERATOR]` P1 decision item — those remain this doc's existing P1 thread. Slot left clean (only
+  this doc touched; `deployment-api`/`unified-trading-pm` worktrees already clean, no other commit needed).
