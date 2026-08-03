@@ -109,7 +109,7 @@ scratch. That's why this was kept out of the binance/bybit/okx todo's scope rath
 > `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s "Aster" section for these 2 venues — same ruling applies
 > there.
 
-- [ ] [SCRIPT] P3. **Wire `bitfinex_native.py`/`bitget_native.py` into `factory.py`** — add BITFINEX/BITGET to a
+- [x] ✅ [SCRIPT] P3. **Wire `bitfinex_native.py`/`bitget_native.py` into `factory.py`** — add BITFINEX/BITGET to a
       `DIRECT_REST_VENUES`-style set, a `_create_direct_rest_adapter`-style dispatch branch routing to
       `BitfinexCeFiAdapter`/`BitgetCeFiAdapter`, and both venues into `get_supported_venues()`'s returned list,
       mirroring the existing `DIRECT_REST_VENUES` pattern exactly — full wiring for BOTH venues in the same change, no
@@ -129,3 +129,23 @@ scratch. That's why this was kept out of the binance/bybit/okx todo's scope rath
   change; conflict-check clear (the parent `cefi_consolidated_native_ao_extract` explicitly scoped bitfinex/bitget OUT).
   Shared conflict-check protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 -
   CLEARED.
+- **2026-08-03** (slot-8, backend_engineer): Todo shipped. `execution-service@0f37ec8a` wires BITFINEX/BITGET into
+  `factory.py` — added to `DIRECT_REST_VENUES`, `_create_direct_rest_adapter` dispatch branch routing to
+  `BitfinexCeFiAdapter`/`BitgetCeFiAdapter` (bitget mirrors kraken's spot/futures split via its `futures` flag; bitfinex
+  is spot-only per the adapter's own `__init__`, no futures variant wired), both venues added to
+  `get_supported_venues()`. **Companion cross-repo change discovered mid-task and required**: factory.py's import-time
+  `_unregistered_venues` consistency check requires every `DIRECT_REST_VENUES` entry to resolve against UAC's
+  `CLOB_VENUES | DEX_VENUES` (lowercase-base-split match) — BITFINEX/BITGET were NOT in UAC's `CLOB_VENUES` (despite
+  already being registered elsewhere in UAC: `VENUE_CATEGORY_MAP`, `INSTRUMENT_TYPES_BY_VENUE`, `VENUE_CAPABILITIES`,
+  `venue_collateral.py`, `venue_launch_dates.py` all already carry `BITFINEX-SPOT`/
+  `BITFINEX-FUTURES`/`BITGET-SPOT`/`BITGET-FUTURES`), so wiring bitfinex/bitget into `DIRECT_REST_VENUES` without a UAC
+  change would have raised `ValueError` at module import time. Fixed via `unified-api-contracts@1ee4dbd5`: added
+  `BITFINEX_SPOT`/`BITGET_SPOT`/`BITGET_FUTURES` constants and registered them in `CLOB_VENUES` (mirroring the existing
+  `KRAKEN_SPOT`/`KRAKEN_FUTURES` pattern) — a genuine registry gap-fill, not scope creep, confirmed via
+  `tests/integration/test_registry_consumer_contracts.py::test_all_clob_venues_in_instrument_types` already having
+  `INSTRUMENT_TYPES_BY_VENUE` entries for all three, so no downstream contract broke. Both repos' full
+  `quality-gates.sh` passed (execution-service: 7811 passed/21 skipped/1 pre-existing xpass, unrelated to this change)
+  and both SHAs verified as ancestors of `origin/live-defi-rollout`. Not archiving this doc despite the only todo now
+  being done — it carries `locked_by: live-defi-rollout` and unlock/archival per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` requires an explicit `[unlock-plan]` ask, not
+  autonomous action.
