@@ -588,11 +588,17 @@ which is the ACKED-INTO-PLAN case `/codex/11-project-management/issue-doc-lifecy
 active plan before archival. All 3 source docs were already moved to `plans/archive/issues/` without this step; migrated
 here now, retroactively, to close that gap. Each item cites its source doc + original todo tag/priority.
 
-- [ ] [BACKEND] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
+- [ ] [OPERATOR] P2. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** 3rd+ recurrence of this exact
       billing-wall class (2026-06-11, 2026-06-23, 2026-07-29) — the archived doc's own P3 remediation (spend telemetry /
       50-80-95% budget alert) was never unblocked, `BLOCKED-ON-DECISION` pending an operator-minted `Plan: read`
       billing-scoped token. Mint that token so the workspace can self-detect this before it walls CI, or accept
-      recurring manual operator intervention as the standing posture.
+      recurring manual operator intervention as the standing posture. **Retagged 2026-08-03 (slot 15,
+      `ci_satellite_ao_dispatch_batch1-030`)**: this is a human-only credential-minting decision (a GitHub `Plan: read`
+      billing-scoped PAT can only be minted by the account owner) — not AO-executable code. Independently confirmed
+      operator-gated twice already: `/na-eligibility-audit ci` 2026-07-30 ("KEEP-NA, valid — gated on an operator-minted
+      billing-scoped token") and `ci_satellite_ao_dispatch_batch5_2026_08_02.md`'s D5-4 ("Operator-gated (needs a
+      ruling, not a re-triage)"). Filed a /blocked question with the operator to pick a fork; no code change exists for
+      a worker to ship here.
 - [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Confirm whether
       `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal FAILING status
       on a 0-step billing-kill (the archived doc's still-open P1 "outage-aware v2 status dispatch" item) — if not
@@ -782,6 +788,17 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-03** (slot 15, backend_engineer, task `ci_satellite_ao_dispatch_batch1-030`) — Worked the `[BACKEND] P2`
+  billing-wall spend-telemetry item (migrated from `github_actions_billing_wall_recurrence_2026_07_29.md`). Found no
+  code path exists: the remediation is explicitly a fork between minting an operator-owned GitHub `Plan: read`
+  billing-scoped PAT (a human-only credential action — no worker-held token can create it) or ruling that recurring
+  manual operator intervention stays the standing posture. This exact item was already independently flagged
+  operator-gated twice before this dispatch (`/na-eligibility-audit ci` 2026-07-30 "KEEP-NA, valid"; this plan's sibling
+  `ci_satellite_ao_dispatch_batch5_2026_08_02.md` D5-4 "Operator-gated (needs a ruling, not a re-triage)") — batch1's
+  own todo was simply never retagged/parked to match, so it kept surfacing as a normal AO-dispatchable `[BACKEND]` item.
+  Retagged the todo `[BACKEND]` → `[OPERATOR]` in place (not checked off — nothing is actually resolved) and filed a
+  `/blocked` question so the operator/main can rule which fork to take and park the backlog task per the established
+  pattern (`RULES.md` § 4 "Park a task") so it stops being redispatched to workers in the meantime.
 - **2026-08-02 (operator ruling applied)** — Migrated 7 open prevention/follow-up todos from 3 `status: resolved` issue
   docs that were archived without migration (`unified-trading-pm@17b53df1e`):
   `github_actions_billing_wall_recurrence_2026_07_29.md` (3),
