@@ -164,53 +164,53 @@ locked_since:
       migrated to it. (repo: unified-trading-library)
 
       **Decision: BUILD, but layered rather than blanket-migrated.** Added `read_availability_index_safe(bucket,
-              columns, filters=None)` to `unified_trading_library/manifest_writer/_read_index.py` (re-exported through the
-              normal `manifest_writer/__init__.py` + top-level `unified_trading_library/__init__.py` facade, matching
-              `read_availability_index`'s own convention). Two layered floors: (1) `columns` is a REQUIRED parameter (no
-              `None` default like the underlying function has) — raises `ValueError` if omitted/empty, closing the
-              "silently falls through to the full ~50-column/29M+-row schema" failure mode that caused 2 of the 4 incidents;
-              (2) when `filters` is omitted, logs one loud WARNING per bucket (not a hard raise) citing that `columns=`
-              alone does not bound memory on a large unfiltered index (per `read_availability_index`'s own docstring) —
-              a warning rather than a refusal because a columns-only read is a legitimate, still-supported pattern (e.g.
-              `get_captured_instruments(date=None)` in this same repo, verified below).
+                  columns, filters=None)` to `unified_trading_library/manifest_writer/_read_index.py` (re-exported through the
+                  normal `manifest_writer/__init__.py` + top-level `unified_trading_library/__init__.py` facade, matching
+                  `read_availability_index`'s own convention). Two layered floors: (1) `columns` is a REQUIRED parameter (no
+                  `None` default like the underlying function has) — raises `ValueError` if omitted/empty, closing the
+                  "silently falls through to the full ~50-column/29M+-row schema" failure mode that caused 2 of the 4 incidents;
+                  (2) when `filters` is omitted, logs one loud WARNING per bucket (not a hard raise) citing that `columns=`
+                  alone does not bound memory on a large unfiltered index (per `read_availability_index`'s own docstring) —
+                  a warning rather than a refusal because a columns-only read is a legitimate, still-supported pattern (e.g.
+                  `get_captured_instruments(date=None)` in this same repo, verified below).
 
-              **Migration scope, deliberately NOT blanket**: read `unified_trading_library/feature_service_base/
-              manifest_discovery.py` end-to-end (the in-repo home of `get_captured_instruments`, one of the "3 siblings")
-              directly — every one of its 4 `read_availability_index()` call sites (`read_manifest_rows`,
-              `get_captured_instruments`, `check_dependency_via_manifest`, `resolve_spot_perp_from_manifest`) ALREADY passes
-              explicit `columns=` and conditional `filters=` correctly (the `utl_get_captured_instruments_unfiltered_manifest_
-              read_2026_07_31.md` fix). Migrating already-compliant, already-verified-in-production call sites to the new
-              wrapper is a non-functional rename with zero safety benefit and real regression risk (and would spuriously
-              warn on the legitimate `date=None` all-dates path) — declined per efficiency/correctness craft north-star
-              ("don't add abstractions beyond what's needed"). Same reasoning applies to delta_one's `dependency_checker.py`
-              (features-service, cross-repo, already fixed with `filters=`) — not touched; a future NEW one-off script in
-              either repo is the wrapper's actual target population, not code that already got the lesson the hard way.
-              The 4th sibling (`mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) is write-side
-              (`ManifestWriter.__init__`) — a different mechanism, out of scope for a read helper; its own `__init__`
-              safety-check todo remains separately open in that doc.
+                  **Migration scope, deliberately NOT blanket**: read `unified_trading_library/feature_service_base/
+                  manifest_discovery.py` end-to-end (the in-repo home of `get_captured_instruments`, one of the "3 siblings")
+                  directly — every one of its 4 `read_availability_index()` call sites (`read_manifest_rows`,
+                  `get_captured_instruments`, `check_dependency_via_manifest`, `resolve_spot_perp_from_manifest`) ALREADY passes
+                  explicit `columns=` and conditional `filters=` correctly (the `utl_get_captured_instruments_unfiltered_manifest_
+                  read_2026_07_31.md` fix). Migrating already-compliant, already-verified-in-production call sites to the new
+                  wrapper is a non-functional rename with zero safety benefit and real regression risk (and would spuriously
+                  warn on the legitimate `date=None` all-dates path) — declined per efficiency/correctness craft north-star
+                  ("don't add abstractions beyond what's needed"). Same reasoning applies to delta_one's `dependency_checker.py`
+                  (features-service, cross-repo, already fixed with `filters=`) — not touched; a future NEW one-off script in
+                  either repo is the wrapper's actual target population, not code that already got the lesson the hard way.
+                  The 4th sibling (`mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`) is write-side
+                  (`ManifestWriter.__init__`) — a different mechanism, out of scope for a read helper; its own `__init__`
+                  safety-check todo remains separately open in that doc.
 
-              **Incidental fix found + shipped in the same commit**: while investigating call sites, ran the standing
-              `check_bare_read_availability_index.py` QG gate (STEP 5.106 in `base-service.sh`, wired into EVERY repo's
-              `quality-gates.sh`) directly against `unified-trading-library` and found it was CURRENTLY FAILING — 2 baseline
-              entries (`_writer_io.py:164 lookup()` and `pipeline_e2e_check/shard_verify.py:154 verify_manifest_row()`) had
-              drifted to lines 196 and 161 respectively after unrelated later commits added lines above them; the checker
-              matches baseline entries by exact `(repo, file, line, function)` tuple with no fuzzy/line-drift tolerance, so
-              both genuinely-still-bare-on-purpose sites were misread as brand-new violations, red-gating every
-              `unified-trading-library` ship via `quality-gates.sh`. Fixed by updating the 2 line numbers in
-              `read_availability_index_bare_call_baseline.yaml` to their current positions (both sites' `status` /
-              justification unchanged — confirmed by direct read, still genuinely unprojectable per their existing in-code
-              comments). Re-ran the checker standalone post-fix: `OK — 9 baselined occurrence(s); 0 new occurrences.`
+                  **Incidental fix found + shipped in the same commit**: while investigating call sites, ran the standing
+                  `check_bare_read_availability_index.py` QG gate (STEP 5.106 in `base-service.sh`, wired into EVERY repo's
+                  `quality-gates.sh`) directly against `unified-trading-library` and found it was CURRENTLY FAILING — 2 baseline
+                  entries (`_writer_io.py:164 lookup()` and `pipeline_e2e_check/shard_verify.py:154 verify_manifest_row()`) had
+                  drifted to lines 196 and 161 respectively after unrelated later commits added lines above them; the checker
+                  matches baseline entries by exact `(repo, file, line, function)` tuple with no fuzzy/line-drift tolerance, so
+                  both genuinely-still-bare-on-purpose sites were misread as brand-new violations, red-gating every
+                  `unified-trading-library` ship via `quality-gates.sh`. Fixed by updating the 2 line numbers in
+                  `read_availability_index_bare_call_baseline.yaml` to their current positions (both sites' `status` /
+                  justification unchanged — confirmed by direct read, still genuinely unprojectable per their existing in-code
+                  comments). Re-ran the checker standalone post-fix: `OK — 9 baselined occurrence(s); 0 new occurrences.`
 
-              Also added a short "Reading the manifest safely" section to
-              `/codex/02-data/availability-manifest-and-data-status.md` documenting the new wrapper as the recommended
-              pattern for future one-off scripts, per the post-phase codex-alignment step.
+                  Also added a short "Reading the manifest safely" section to
+                  `/codex/02-data/availability-manifest-and-data-status.md` documenting the new wrapper as the recommended
+                  pattern for future one-off scripts, per the post-phase codex-alignment step.
 
-              Shipped: unified-trading-library@0957f764 (`_read_index.py` + both `__init__.py` re-export files + new
-              `tests/unit/test_manifest_read_index_safe_wrapper.py`, 4 cases covering the required-columns raise, the
-              columns+filters delegate path, the once-per-bucket warning, and the no-warning-when-filtered path — all
-              passing, plus the 62 pre-existing sibling manifest-read tests re-run clean; verified present on origin via
-              `git merge-base --is-ancestor`) + unified-trading-pm (baseline line-number fix + codex section, this commit).
-              `quality-gates.sh` green on the shipping SHA. (repo: unified-trading-library)
+                  Shipped: unified-trading-library@0957f764 (`_read_index.py` + both `__init__.py` re-export files + new
+                  `tests/unit/test_manifest_read_index_safe_wrapper.py`, 4 cases covering the required-columns raise, the
+                  columns+filters delegate path, the once-per-bucket warning, and the no-warning-when-filtered path — all
+                  passing, plus the 62 pre-existing sibling manifest-read tests re-run clean; verified present on origin via
+                  `git merge-base --is-ancestor`) + unified-trading-pm (baseline line-number fix + codex section, this commit).
+                  `quality-gates.sh` green on the shipping SHA. (repo: unified-trading-library)
 
 ## Codex SSOTs
 

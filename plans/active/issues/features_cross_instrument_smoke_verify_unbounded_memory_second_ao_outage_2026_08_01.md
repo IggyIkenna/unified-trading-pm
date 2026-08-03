@@ -40,7 +40,7 @@ tags:
 related:
   [
     /plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
-    /plans/active/issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
+    /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
   ]
