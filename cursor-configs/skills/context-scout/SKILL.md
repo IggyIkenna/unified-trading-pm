@@ -79,7 +79,19 @@ involved). Each hunter, per doc:
    grep-then-READ the candidate (per this workspace's grep-then-conclude ban) and confirm the doc actually exists and
    actually covers the claim before adding it. An unconfirmed guess becomes a Phase 5 suggestion, not a written
    `context_scope` entry.
-4. **Actively hunts for the doc's real source-code target — this is not optional padding, it's the half of the job a
+4. **Resolve any hedged "candidate" pointer already sitting in the doc's own prose/todos** — phrases like "candidates
+   found by grep", "likely owned by", "probably tracked in", "TBD which doc covers this". These read like citations but
+   are unverified guesses the doc's own author never confirmed; treat them exactly like step 3's unstated-SSOT case:
+   grep-then-READ every named candidate and confirm whether it actually owns/tracks the claim (real incident: a plan's
+   own todo named 3 grep candidates for 4 follow-up items — only 1 of the 3 was a real owner, and 2 of the 4 items were
+   actually owned by an entirely different, unlisted doc found only by a fresh corpus-wide grep, per
+   `data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3, 2026-08-03). Any CONFIRMED owner goes straight into
+   `context_scope` — even though the doc's own hedge was never resolved, a future worker should get the verified doc,
+   not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to "no doc found," is
+   surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's own todo/body prose
+   to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes `context_scope` + the dated
+   marker, per its scope boundary above).
+5. **Actively hunts for the doc's real source-code target — this is not optional padding, it's the half of the job a
    codex citation alone doesn't cover.** Re-read the doc's body specifically looking for filenames, script names, class
    names, or module paths already named in prose (root-cause sections, "Plan"/"What shipped" todos, and error messages
    are the highest-yield spots) — every one of those is a near-automatic include once verified to exist. If the body
@@ -90,10 +102,10 @@ involved). Each hunter, per doc:
    code-free doc**: a dispatch-batch coordinator (`*_satellite_ao_dispatch_batchN_*`), a `*_finalize` gate, a pure
    design/proposal not yet executed, or a process/meta-audit-of-docs doc — for these, codex+plan-only is the correct,
    complete answer, not a shortcut.
-5. Verifies every proposed entry actually resolves — `/codex/...` and `/plans/...` paths must exist on disk, source
+6. Verifies every proposed entry actually resolves — `/codex/...` and `/plans/...` paths must exist on disk, source
    paths must exist in the named repo — before returning. A dead pointer in a reading-list field is worse than an absent
    field; drop anything that doesn't resolve and note it was dropped.
-6. Returns a **minimal** ordered list (2-6 entries) — resist padding; if a doc genuinely only needs one codex doc, write
+7. Returns a **minimal** ordered list (2-6 entries) — resist padding; if a doc genuinely only needs one codex doc, write
    one.
 
 ## Phase 2 — apply
@@ -108,15 +120,19 @@ involved). Each hunter, per doc:
   `docs(plans):`, ship per CLAUDE.md's git-discipline section (`quickmerge.sh --agent --files`). Batch by cohort (e.g.
   one commit per ~50 docs), not one mega-commit and not one commit per doc.
 - A Phase-1 "unstated SSOT" suggestion that could NOT be confirmed does not get written anywhere in the doc — carry it
-  into the Phase 3 report only, so a human can judge it without the doc itself making an unverified claim.
+  into the Phase 3 report only, so a human can judge it without the doc itself making an unverified claim. Same rule for
+  a Phase-1 step 4 stale-candidate-pointer finding: the confirmed owner (if any) goes into `context_scope`, but the
+  doc's own hedge-prose is never rewritten by this skill — that goes to the report for `/plan-reconcile` to fix.
 
 ## Phase 3 — report
 
 Finish with text: total docs scouted this run (never-scouted vs stale), total skipped (up-to-date), entries written (avg
 per doc), any doc where Phase 1 found ZERO confirmable entries (report these — a doc with genuinely no reading-list is
-fine, but worth surfacing so a human can sanity-check it isn't a scouting failure), and every unconfirmed "unstated
-SSOT" suggestion surfaced in Phase 1 step 3. Like `docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`, this
-is chat-text only — there is no separate structured-findings endpoint. NEVER write agent memory; NEVER create a
+fine, but worth surfacing so a human can sanity-check it isn't a scouting failure), every unconfirmed "unstated SSOT"
+suggestion surfaced in Phase 1 step 3, and every stale-candidate-pointer finding surfaced in Phase 1 step 4 (which
+candidate(s) named in the doc's own prose/todos turned out wrong, and what the confirmed owner actually is, so
+`/plan-reconcile` can correct the prose itself). Like `docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`,
+this is chat-text only — there is no separate structured-findings endpoint. NEVER write agent memory; NEVER create a
 `*_SUMMARY.md` file.
 
 **Post-hoc source-hunting lint (advisory, not a blocker)**: run
