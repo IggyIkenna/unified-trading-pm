@@ -68,7 +68,7 @@ related:
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
-    /plans/active/tradfi_multisource_backfill_2026_06_22.md,
+    /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
@@ -549,9 +549,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[OPERATOR-DECISION] P1.** `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
       cross-asset axis
     - +9 more (P2/P3) — see file for the rest
-  - [`plans/active/tradfi_multisource_backfill_2026_06_22.md`](/plans/active/tradfi_multisource_backfill_2026_06_22.md)
-    - **[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)
-    - **[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname
+  - [`plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`](/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md)
+    (**ARCHIVED 2026-08-03** — both items below since resolved, digest stale, left for history)
+    - ~~**[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)~~ — done, dry-run verified,
+      `deployment-service@eab5aeb`
+    - ~~**[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname~~ — done,
+      `deployment-service@077a063`
   - [`plans/archive/tradfi_massive_dual_source_2026_05_28.md`](/plans/archive/tradfi_massive_dual_source_2026_05_28.md)
     (`status: superseded`; 10 open — capped; most items below tagged OBSOLETE/WONTFIX in-doc but checkbox not yet
     flipped)

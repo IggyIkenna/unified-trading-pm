@@ -354,8 +354,9 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
      `instruments_tradfi_g1_g5_gate_execution_2026_07_24` (partial) /
      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08` / `tradfi_phase_d_terminal_gate_2026_07_24`
      (partial) / `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24` (partial) /
-     `tradfi_multisource_backfill_2026_06_22` / `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` /
-     `tradfi_backfill_throughput_followups_2026_07_24` / `data_completion_tradfi_2026_07_15` → tradfi batch1/2/4;
+     `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md` (archived 2026-08-03) /
+     `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` / `tradfi_backfill_throughput_followups_2026_07_24` /
+     `data_completion_tradfi_2026_07_15` → tradfi batch1/2/4;
      `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24` /
      `data_completion_defi_2026_07_15` (partial) / `defi_migration_audit_log_2026_07_24` (partial) /
      `defi_track01_per_instrument_and_canon_id_2026_07_24` (partial) /

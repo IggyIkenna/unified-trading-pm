@@ -15,7 +15,7 @@ summary: >-
   done-by-cross-reference below rather than left as live dispatchable work.** The rest of the 13
   orphaned-but-not-drafted docs stay deferred: 4 too-large-or-risky (unchanged from batch1-4), ~7 operator-gated
   (unchanged, not re-asked), 2 conflict-gated on still-unresolved sequencing
-  (`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item,
+  (`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item,
   `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s actual bucket-delete item — both discussed in the Deferred
   section). Also notes 2 process observations for the operator/main-agent (not batch todos):
   `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is 8/8 done and unlocked but its gated finalize is still `status:
@@ -346,8 +346,8 @@ ground to open up, and it did:
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; unchanged, still genuinely unresolved)
 
-- **`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item** — unchanged since batch3. Running
-  `launch-tradfi-bf-fx-ohlcv-24h.sh` to completion still risks writing more mis-stamped rows while
+- **`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item** — unchanged since batch3.
+  Running `launch-tradfi-bf-fx-ohlcv-24h.sh` to completion still risks writing more mis-stamped rows while
   `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s historical re-stamp remains unapplied (that doc
   is `archivable_after_planned_work` this pass — `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s fresh
   2026-07-29 Phase A2 todo now tracks the re-stamp — but the FIX HASN'T SHIPPED yet, only been drafted/tracked, so the

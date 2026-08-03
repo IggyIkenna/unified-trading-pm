@@ -177,16 +177,16 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       anywhere in service non-test code (wiring gap similar to realized_vol). Additionally, VIX cash index (^VIX) is NOT
       in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo rolling 60d.
       **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED entirely; VIX exposure = VX futures via
-      XCBF.PITCH. See tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
+      XCBF.PITCH. See /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
       plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 304). Steps (1)/(2) of the
       original ask are void (no such VIX-index series exists — deleted 2026-06-23); the only live remainder (steps
       (3)/(4)) is carried forward verbatim in the next item, so this one closes rather than sitting open alongside its
       own successor. (Provenance: slot-23 investigation 2026-06-24.)
 - [ ] [AGENT] P2. **Live sub-todo under the resolved VIX ruling above** — steps (1)/(2) in the item above now target the
       existing VX futures_chain IS entry (CBOE venue, XCBF.PITCH, already captured per
-      `tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry / Yahoo-Barchart VIX-index OHLCV
-      path (no such series exists — it was deleted 2026-06-23): derive VIX-equivalent features from VX futures OHLCV.
-      Steps (3)/(4) (add `"vix"`/`"realized_vol_vix"` to `FEATURE_GROUPS` + dispatch in
+      `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry /
+      Yahoo-Barchart VIX-index OHLCV path (no such series exists — it was deleted 2026-06-23): derive VIX-equivalent
+      features from VX futures OHLCV. Steps (3)/(4) (add `"vix"`/`"realized_vol_vix"` to `FEATURE_GROUPS` + dispatch in
       `feature_group_service._calculate_features`) are unchanged and still open.
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)

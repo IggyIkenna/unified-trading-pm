@@ -21,7 +21,11 @@ via public CLOB `/book` → being built as book_snapshot_5 (item 69).
 
 ## CREDENTIAL APPROVAL REQUEST — ICE market data (tradfi) — 2026-06-22
 
-**Ref**: `plans/active/tradfi_multisource_backfill_2026_06_22.md` § `[BLOCKED-CREDENTIALS] P2`
+**UPDATE 2026-07-14 — RESOLVED BY OPERATOR DESCOPE, no credential needed after all**: ICE market data is served via
+Yahoo Finance (`venue_to_data_provider['ICE']='yahoo_finance'`, DXY US Dollar Index) — no Databento subscription
+required. See `/codex/02-data/tradfi-databento-sourcing-ssot.md` § "KRX + ICE + FX are YAHOO FINANCE".
+
+**Ref**: `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md` § `[BLOCKED-CREDENTIALS] P2`
 
 **What it unblocks**: 530,600 ICE (IFEU/IFUS — Brent BRN, Gasoil G, US softs, ICE Dollar-Index DX)
 `expected_unattempted` tradfi cells. The IS instrument catalogue for ICE already exists (2,067 BRN/G FUTURE+COMBO rows);

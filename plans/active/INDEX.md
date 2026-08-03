@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -281,7 +281,7 @@ by hand._
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
   todo…
 
-### tradfi (27)
+### tradfi (26)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -340,8 +340,6 @@ by hand._
   — Gated closeout for tradfi_manifest_content_recovery_completion_2026_07_24.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
-- [`tradfi_multisource_backfill_2026_06_22`](./tradfi_multisource_backfill_2026_06_22.md) — Extend the TradFi OHLCV
-  backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask).
 - [`tradfi_phase_d_terminal_gate_2026_07_24`](./tradfi_phase_d_terminal_gate_2026_07_24.md) — Forked from
   tradfi_consolidated_closeout_2026_07_18.md's 2026-07-24 line-cap remediation split. Carries Phase D — the parent's
   terminal completion gate — post-migration re-smoke-test of every tradfi (venue, data_type) shard via the…

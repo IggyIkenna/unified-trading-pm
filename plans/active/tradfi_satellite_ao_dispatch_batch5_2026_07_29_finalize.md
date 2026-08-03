@@ -103,15 +103,15 @@ context_scope:
       cited evidence and the stale 995 figure is corrected everywhere it appears in the signoff doc, or — if it cannot
       be resolved in this pass — it is filed as its own `plans/active/issues/` doc (a delete's candidate list mutating
       unexplained is a real data-correctness finding, not bookkeeping) and NOT closed as accepted. Then, for the 2
-      conflict-gated items (`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain sequencing; the
-      legacy-twin-bucket actual delete), the 4 too-large-or-risky items, and the operator-gated list: re-read the
-      specific gating ground to check whether it has since cleared — if the operator has ruled, one side has shipped, or
-      a dated section proves one claim stale, extract it as a new tracked todo in a follow-up `batch6` (do NOT draft it
-      directly here); if still genuinely unresolved, leave it explicitly deferred and do NOT re-ask an already-asked
-      operator question. **In particular**: check whether this batch's own todo 2 (MDPS re-measure) cleared the blocker
-      gating `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — if so, that doc becomes a strong,
-      ready-to-triage batch6 candidate, flag it explicitly rather than leaving it in generic "too-large" language. Also
-      verify the 2 process observations noted in batch5 (batch4-finalize still undispatched;
+      conflict-gated items (`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain
+      sequencing; the legacy-twin-bucket actual delete), the 4 too-large-or-risky items, and the operator-gated list:
+      re-read the specific gating ground to check whether it has since cleared — if the operator has ruled, one side has
+      shipped, or a dated section proves one claim stale, extract it as a new tracked todo in a follow-up `batch6` (do
+      NOT draft it directly here); if still genuinely unresolved, leave it explicitly deferred and do NOT re-ask an
+      already-asked operator question. **In particular**: check whether this batch's own todo 2 (MDPS re-measure)
+      cleared the blocker gating `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — if so, that doc becomes a
+      strong, ready-to-triage batch6 candidate, flag it explicitly rather than leaving it in generic "too-large"
+      language. Also verify the 2 process observations noted in batch5 (batch4-finalize still undispatched;
       registry_coverage_and_ao_readiness still draft) — if either has since been resolved, note it; if not, re-surface
       it once more (these are fresh observations from this pass, not a repeated ask). **Done when**: each
       Deferred/observation item has either (a) a note that it is ready for `batch6` extraction because its gate cleared,

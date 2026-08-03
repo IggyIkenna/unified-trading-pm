@@ -116,9 +116,9 @@ contracts (if ever wanted) would need a separate dataset.
 - Re-adding any of these requires an explicit ICE / OPRA subscription + adding the dataset to
   `ALLOWED_DATABENTO_DATASETS`.
 
-### KRX + ICE are YAHOO FINANCE, not Databento, and NOT operator-blocked (operator correction 2026-06-27)
+### KRX + ICE + FX are YAHOO FINANCE, not Databento, and NOT operator-blocked (operator correction 2026-06-27)
 
-Two venues are sourced from **Yahoo Finance**, gated by no subscription and blocked by no operator (UAC@5480f5d5,
+Three venues are sourced from **Yahoo Finance**, gated by no subscription and blocked by no operator (UAC@5480f5d5,
 IS@dc0d99a):
 
 - **KRX** = Yahoo KOSPI indices — `^KS11` (KOSPI) + `^KS200` (KOSPI200), stamped `KRX:INDEX:KOSPI-USD` /
@@ -128,10 +128,15 @@ IS@dc0d99a):
 - **ICE** = Yahoo **DXY** (US Dollar Index) — `venue_to_data_provider['ICE']='yahoo_finance'`. ICE was **REMOVED from
   `venue_to_databento`** (the IFUS.IMPACT routing raised `DatabentoDatasetNotAllowedError`); the DXY index remains,
   served by Yahoo.
+- **FX** = Yahoo KRW/USD spot pair — `venue_to_data_provider['FX']='yahoo_finance'`
+  (`unified_api_contracts/registry/venue_mapping.py`). Daily `ohlcv_24h`, dispatched via
+  `market_tick_data_service/adapters/_umi_yahoo.py::fetch_yahoo_fx` (venue-routed, bypasses `--source`); wave-launcher
+  wiring shipped `deployment-service@eab5aeb` (`tradfi_multisource_backfill_2026_06_22.md`, archived
+  `/plans/archive/2026_08/`).
 
-**HARD: neither KRX nor ICE is "operator-blocked", "Databento-sourced", "needs an adapter", or "off-allowlist".** Any
-codex/plan line framing KRX or ICE as Databento, operator-blocked, or requiring a new subscription/adapter is STALE —
-the data is freely available via Yahoo and the adapters exist. (This was an explicit operator correction; do not
+**HARD: none of KRX, ICE, or FX is "operator-blocked", "Databento-sourced", "needs an adapter", or "off-allowlist".**
+Any codex/plan line framing KRX, ICE, or FX as Databento, operator-blocked, or requiring a new subscription/adapter is
+STALE — the data is freely available via Yahoo and the adapters exist. (This was an explicit operator correction; do not
 re-introduce the "ICE → Databento" or "KRX blocked" framing.)
 
 ### Per-venue genesis / discovery-start floors — never backfill below them (expected-absent)
