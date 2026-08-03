@@ -24,8 +24,10 @@ related:
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
   ]
 created: 2026-07-26
+last_updated: 2026-08-03
 parent_epic: sports_master
 assigned_vm: planning
 assigned_role: data_engineering
@@ -198,7 +200,19 @@ Three candidate directions — genuinely a design decision, not something a sing
 - [ ] [ML] P2. **Run the literal 3-variant CLV model retrain** — produce and promote the actual new trained artifacts
       (`ml-service --operation pipeline --asset-group SPORTS --family pregame_clv_family --target-types clv     --target-type clv --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`);
       the underlying target-generation fix is real-data-verified but the retrain itself has not been run (per the
-      Deferred-work table below).
+      Deferred-work table below). **ATTEMPTED 2026-08-03, genuinely BLOCKED one layer deeper** (slot-11,
+      `data_engineering`): ran the exact command (via `python -m ml_service.training.cli.main` — the bare `ml-service`
+      console script no longer parses training args at all, its own separate finding below) against real prod GCS data.
+      Reproduced the SAME 100%-flat degenerate CLV target this whole doc's fix chain exists to eliminate, then crashed
+      on a separate NaN-handling bug before a model could even fit. Root cause: `PipelineHandler` (the `pipeline`
+      operation this exact command uses) has its OWN, separate CLV target-generation code path that was never wired to
+      the ratified `odds_targets`-merge fix — that fix lives only in `TrainingOrchestrator` (`train`/`grid-search`
+      operations). The "RATIFIED + VERIFIED" distribution cited above is real and correct for `train`/`grid-search`; it
+      does NOT hold for the literal `pipeline` command this todo specifies. Full diagnostic evidence + 4 actionable
+      todos (the wiring gap, the NaN crash, the broken bare `ml-service` console script, and a 758-vs-2383-fixtures
+      discrepancy worth re-checking) filed at
+      `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This todo
+      stays open, now blocked on that new doc.
 
 ## Progress Log (append-only)
 
@@ -273,6 +287,11 @@ Three candidate directions — genuinely a design decision, not something a sing
      Flipped `[ML] P2`'s repoint + target-verification portion to done. **Did NOT** run the literal 3-variant model
      retrain (would produce new trained artifacts via the full `ml-service --operation pipeline` command, a materially
      larger/longer operation) — left as an explicit, scoped follow-up in the todo text itself rather than claimed done.
+- 2026-08-03 (slot-11, `data_engineering`): attempted the literal retrain, genuinely blocked one layer deeper — see the
+  updated `[ML] P2` todo text above for the summary. Full evidence, root cause, and 4 actionable follow-up todos at
+  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This is a
+  big-finding-class result (contradicts this doc's own "RATIFIED + VERIFIED" claim for a specific code path) — operator
+  notified.
 
 ## Deferred work after 2026-07-26 (pre-compact checkpoint, slot-7)
 
@@ -283,8 +302,11 @@ Three candidate directions — genuinely a design decision, not something a sing
 | Watchdog `_sweep_unpushed_slots` gate-aware fix (`[BACKEND] P1`)   | Not done by me — tracked in main-agent's canonical doc `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`, open for anyone to pick up                            | Nobody — real work, unclaimed                                                                                        |
 | `CLVTargetBuilder` family-route PIT-gap verification (`[DATA] P3`) | New finding, not yet verified against real data                                                                                                                                          | Nobody — real work, unclaimed; see `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` |
 
-**Recommended next item**: run the literal 3-variant retrain command (specified in `[ML] P2`'s todo text) to produce and
-promote actual new model artifacts, now that the underlying target-generation fix is real-data-verified.
+**Recommended next item (superseded 2026-08-03)**: the retrain was attempted and is now blocked one layer deeper — see
+the 2026-08-03 Progress Log entry above and
+`/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` for the actual
+next actionable work (`PipelineHandler`'s CLV target generation needs the same `odds_targets`-merge wiring
+`TrainingOrchestrator` already has).
 
 **Lesson carried forward**: a session holding a commit behind an operator-only merge gate MUST self-heartbeat well under
 the ~25-min worker-staleness threshold (not the 30-min interval this session initially used) — the
