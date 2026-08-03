@@ -1,0 +1,180 @@
+---
+doc_type: issue
+title:
+  "reap-zombies.sh checks the WRONG GCS log path (logs/ instead of canonical vm-logs/) — reaps ANY healthy VM older than
+  10min fleet-wide; confirmed killing a healthy, zero-error defi backfill campaign mid-run"
+summary: >-
+  While monitoring a long-running defi dex_pool_swaps source-correction backfill VM
+  (backfill-defi-dex-swaps-20260803-092530), the VM was DELETED (not preempted) at 2026-08-03T10:30:56Z by service
+  account uts-prd-sa via the gcloud CLI from a non-interactive script, despite being demonstrably healthy (monotonic
+  day-progress advancing every check, zero errors, 60s heartbeats). Root-caused to
+  deployment-service/scripts/vm/reap-zombies.sh checking `gs://<bucket>/logs/<instance>/run.log` — a path that has NEVER
+  existed for any VM using the canonical convention (`vm-logs/<instance>/run.log`, the SSOT per
+  unified_trading_library::vm_log_stream_uri and launcher_common.sh's own documented canonical path). This makes
+  reap-zombies.sh always read "no run.log at all" for every correctly-functioning VM and fall through to a
+  creation-time-only staleness check with a 600s (10-minute) default threshold — meaning ANY healthy VM older than 10
+  minutes is a false-positive zombie candidate under this script, fleet-wide, not just this task's VM.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: [infra, vm-lifecycle, zombie-watchdog, false-positive, big-finding, data-pipeline, cross-cutting]
+related:
+  [
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
+  ]
+created: "2026-08-03"
+last_updated: "2026-08-03"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.24
+assigned_role: infra
+drift_direction: advance-code
+source: >-
+  Surfaced 2026-08-03 (slot 15, data_engineering) while monitoring
+  plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md's last open todo (defi dex_pool_swaps
+  source-correction campaign verification).
+resolved_by:
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
+  ]
+depends_on: []
+---
+
+# reap-zombies.sh checks the wrong GCS log path — reaps healthy VMs fleet-wide
+
+## What I found
+
+While monitoring `backfill-defi-dex-swaps-20260803-092530` (a Tier-2 SPOT VM running
+`backfill_defi_dex_pool_swaps_source_correction.py --apply`, launched to close the last open todo of
+`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`), the VM disappeared mid-campaign:
+
+- **Health immediately before deletion**: `last_completed_date` had advanced monotonically every ~2-7 minutes
+  (2023-01-01 → 2023-01-12) across ~40 polls over ~61 minutes, zero `errors=` in any completed-day log line, VM status
+  `RUNNING` throughout, 60s heartbeats visible in `run.log` (`PIPELINE_HEARTBEAT ... source=vm-life-emitter`).
+- **What happened**: `gcloud compute operations list` showed a `delete` operation (`operation-1785753056146-...`)
+  inserted at `2026-08-03T03:30:56-07:00` (`10:30:56Z`), NOT a `compute.instances.preempted` system event — this was an
+  explicit delete, not a SPOT preemption.
+- **Who/what did it**: `gcloud logging read` on the delete audit entry shows
+  `principalEmail: uts-prd-sa@central-element-323112.iam.gserviceaccount.com`, `callerIp: 136.110.126.79`, and
+  critically the `callerSuppliedUserAgent`:
+  `google-cloud-sdk gcloud/577.0.0 command/gcloud.compute.instances.delete ... interactive/False from-script/True`. This
+  is the **`gcloud` CLI binary**, invoked non-interactively from a script — NOT the Python `google-cloud-compute` client
+  that `deployment-service/scripts/vm/vm_zombie_watchdog.py` uses (`compute_v1.InstancesClient().delete(...)`, which
+  would carry a different, gRPC/python-client user-agent shape). This rules out `vm_zombie_watchdog.py` as the actor
+  (further confirmed: its own pre-kill log-backup step, which archives `run.log` to
+  `gs://deployment-scripts-{project}/log-archive/snapshot_{ts}/{vm}/` before any delete, left NO archive for this VM or
+  this timestamp — `gcloud storage ls .../log-archive/ | grep 20260803` returns nothing).
+- **Root cause**: `deployment-service/scripts/vm/reap-zombies.sh` builds its run.log path as:
+  ```bash
+  log_path="gs://${BUCKET}/logs/${instance}/run.log"
+  ```
+  but the CANONICAL (and universally actually-used) path, documented as the SSOT in THREE places
+  (`unified_trading_library/deployment_registry.py::vm_log_stream_uri` docstring, `launcher_common.sh` lines ~1155-1159
+  "Canonical run.log path", and `aws_ec2_launch_lib.sh`'s AWS-side mirror), is:
+  ```
+  gs://${BUCKET}/vm-logs/${instance}/run.log
+  ```
+  Confirmed empirically:
+  `gs://deployment-scripts-central-element-323112/logs/backfill-defi-dex-swaps-20260803-092530/run.log` and the same
+  path for a second, unrelated VM (`backfill-defi-dex-swaps-20260803-090659`) BOTH return "no objects matched" — the
+  `logs/` prefix (without the `vm-` segment) has never held real VM logs for either VM checked. Every VM using the
+  canonical launcher stack (`launcher_common.sh`, `setup-data-pipeline-vm.sh`, `aws_ec2_launch_lib.sh` — i.e.
+  essentially the entire fleet) writes to `vm-logs/`, so `reap-zombies.sh`'s `tail_text` read is UNCONDITIONALLY empty
+  for every real, healthy VM on this project.
+- **Consequence of the path bug**: with `tail_text` always empty, `reap-zombies.sh` falls into its "no run.log at all"
+  branch, which checks ONLY the VM's `creationTimestamp` against `--silence-threshold-sec` (default `600` = 10 minutes)
+  and reaps unconditionally past that age — `reason="no run.log + created ${SILENCE_SEC}s+ ago"`. My VM was created at
+  `09:29:57Z` and reaped at `10:30:56Z` (61 minutes old) — squarely past the 600s default. **This means reap-zombies.sh,
+  if run against ANY prefix, will delete every matching VM older than 10 minutes regardless of real health** — the "was
+  it actually silent" check it's designed to perform never engages because it can never find the log it's looking for.
+- **Who/what invoked reap-zombies.sh this time**: not conclusively identified — grepped `deployment-service` +
+  `agent-orchestrator` for any Terraform/GHA/systemd/crontab wiring of `reap-zombies.sh` and found none (it does not
+  appear to be scheduled via `terraform/gcp/*.tf` or `cloud_run_job_registry.py`). Given the gcloud-CLI +
+  non-interactive-script signature, the most likely explanation is an ad-hoc invocation by another agent/slot doing
+  fleet-cleanup or VM-audit work (e.g. a `/vm-preemption-billing-waste-audit` -style pass) rather than a hidden
+  recurring cron — but this was NOT independently confirmed and is worth a operator/main-agent check of recent agent
+  activity around `10:30:56Z` if a definitive attribution matters.
+- **Impact on the task this surfaced from**: the campaign lost real wall-clock time (VM relaunched immediately,
+  `backfill-defi-dex-swaps-20260803-103749`, verified running the correct fixed code —
+  `market-data-processing-service@ce64a98` confirmed an ancestor of the freshly-published tarball pin). No DATA was lost
+  or corrupted — the tool's `--apply` writes (copy-not-move + `record_captured`) are durable and idempotent, and its own
+  day-level checkpoint design means a resume only REDOES already-done days rather than causing incorrect output.
+  However: the checkpoint is only written every 20 completed days (see the second, smaller finding below), so fewer than
+  20 days in this run meant the checkpoint was never actually persisted, and the relaunch reprocesses from day 1
+  (safe/idempotent, just wasted ~15-20 min of the ~61 min of prior work).
+- **Second, smaller finding (same investigation, not blocking)**:
+  `market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py::run_remediate` only calls
+  `_write_checkpoint` every 20 days (`if i % 20 == 0`) plus once at the very end of a full, uninterrupted run — there is
+  no `finally`-block or per-day checkpoint write, so ANY kill (preemption, a zombie-watchdog false-positive like this
+  one, an OOM, an operator-initiated stop) within the first 19 days of a run loses all checkpoint progress, forcing a
+  full redo from day 1 on the next launch. This is safe (idempotent) but wasteful, and undermines the
+  "PROGRESS-checkpoint contract" intent the tool's own launcher-script docstring claims to satisfy ("resumes from
+  measured progress on a SPOT preemption relaunch rather than replaying from day one").
+
+## Why it matters
+
+This is NOT scoped to one VM or one campaign. `reap-zombies.sh`'s log-path bug means that **if this script runs against
+any VM prefix on this project, it will delete every matching VM older than 10 minutes, healthy or not** — the entire "is
+it actually silent" logic it exists to implement is structurally unreachable given the path mismatch. Any future
+invocation (scheduled, ad-hoc, or copy-pasted by an agent following stale documentation) against a broad prefix filter
+could mass-delete a large slice of the currently-running fleet, matching the exact "zombie watchdog false-positive reaps
+a live backfill" incident class already codified as a HARD RULE in `unified-trading-pm/agents/data_engineering.md` §
+VM-delete guardrail (which cites 3 prior same-day incidents from 2026-07-18,
+`zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`) — this is the SAME failure MODE recurring via a
+different, previously-unaudited script. Given `reap-zombies.sh` was NOT the actor implicated in that earlier incident
+doc (that one was an agent's manual `gcloud compute instances delete` copy-paste, not this script), this is a genuinely
+NEW root cause in the same incident family, not a duplicate.
+
+## Recommended decision
+
+- [ ] [INFRA] P0. **Fix the log path in `deployment-service/scripts/vm/reap-zombies.sh`** — change
+      `log_path="gs://${BUCKET}/logs/${instance}/run.log"` to `log_path="gs://${BUCKET}/vm-logs/${instance}/run.log"`
+      (matching the canonical SSOT — ideally source the path via the same `vm_log_stream_uri()` convention the Python
+      side uses, or at minimum hardcode the correct `vm-logs/` segment). Add a regression test/fixture (or a `--dry-run`
+      smoke invocation against a known-healthy running VM showing it now correctly finds `tail_text` non-empty and skips
+      it) so this exact mismatch cannot silently reappear. (repo: deployment-service)
+- [ ] [INFRA] P1. **Audit whether `reap-zombies.sh` has ever been invoked against prod in a way that could have silently
+      killed other healthy VMs** — check `gcloud logging read` for `v1.compute.instances.delete` events fleet-wide over
+      the last 30 days where `callerSuppliedUserAgent` matches the `gcloud` CLI (`from-script/True`, NOT the Python
+      compute client's signature) and cross-reference each deleted VM's run.log for a genuine terminal `rc=`/`VERDICT`
+      line vs. a healthy-but-young kill. If other false-positive reaps are found, file them as their own follow-up
+      (data-loss / wasted-compute) issue docs per the findings-triage HARD RULE. (repo: deployment-service)
+- [ ] [INFRA] P2. **Determine (or rule out) what actually invoked `reap-zombies.sh` at `2026-08-03T10:30:56Z`** — grep
+      is inconclusive (no Terraform/GHA/systemd wiring found in this repo checkout); check agent-orchestrator activity
+      logs / other slots' session history around that timestamp for an ad-hoc invocation, or confirm it's dispatched
+      from infrastructure not checked into this repo (an external cron on a VM, a different repo). If a recurring
+      schedule is found, ensure it uses `--silence-threshold-sec` sanely and the path fix from todo 1 lands before it
+      runs again. (repo: deployment-service, unified-trading-pm)
+- [ ] [DATA] P2. **Make `backfill_defi_dex_pool_swaps_source_correction.py`'s day-level checkpoint durable against an
+      early kill** — write `_write_checkpoint` after EVERY completed day (or wrap the loop body in a try/finally that
+      always persists `done_days` on any exit path, not just the `i % 20 == 0` cadence + a full-completion tail-call),
+      so a kill within the first 19 days doesn't force a full redo from day 1. Given per-day GCS writes are cheap
+      relative to the per-day copy/record work itself, the extra per-day checkpoint write is not a meaningful cost.
+      Add/update the existing unit test suite
+      (`tests/unit/scripts/test_backfill_defi_dex_pool_swaps_source_correction.py`) to cover a simulated
+      early-kill-then-resume scenario. (repo: market-data-processing-service)
+
+## Progress Log
+
+- **2026-08-03T10:38Z** (AO dispatch, slot 15, `data_engineering`) — Filed while monitoring
+  `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`'s last open todo. Root-caused via GCS path probes +
+  `gcloud logging read` audit-log inspection (principal, user-agent, caller IP) + source-code cross-reference across
+  `reap-zombies.sh`, `vm_zombie_watchdog.py`, and the canonical `vm_log_stream_uri()` SSOT. Mitigated the immediate
+  impact by relaunching the affected campaign VM (`backfill-defi-dex-swaps-20260803-103749`, verified running the
+  correct fixed tool code, `market-data-processing-service@ce64a98` confirmed an ancestor of the published tarball pin).
+  Did not fix `reap-zombies.sh` itself in this session — that's todo 1, filed for a worker with `infra` role/scope (this
+  session stayed in `data_engineering` craft per the craft-not-domain rule; `reap-zombies.sh` is infra-lifecycle
+  tooling, not data-pipeline code). No GCS deletes/mutations performed by this investigation — every action was
+  read-only (log/operation inspection, GCS listing, git history) plus the one legitimate VM relaunch.
