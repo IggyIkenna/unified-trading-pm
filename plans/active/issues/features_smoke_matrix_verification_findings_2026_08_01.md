@@ -325,12 +325,31 @@ not duplicated here.
       risk the exact concurrent-dispatch collision the prediction lane's own Progress Log documents happening 3x.
       Recommend: once tradfi's own Apply/Resume todos are dispatched (directly, or once the dispatch-order bug is
       fixed), this bucket self-heals — no separate action item needed in this doc.
-- [ ] [DATA] P2. **operator/infra** — determine why `features-sports-test-central-element-323112` has never had a
+- [x] ✅ [DATA] P2. **operator/infra** — determine why `features-sports-test-central-element-323112` has never had a
       consolidated `availability_index` written (while per-VM shards exist) — confirm whether the manifest
       consolidator's bucket registry includes `-test-` siblings at all, and if not, whether it should. **Done when**:
       either a consolidated index exists for this bucket, or a decision is documented that `-test-` buckets are
       intentionally out of consolidator scope (in which case smoke-harness reads against them should set
-      `MANIFEST_ALLOW_STALE_FALLBACK=true` or read per-VM shards directly, not fail-closed).
+      `MANIFEST_ALLOW_STALE_FALLBACK=true` or read per-VM shards directly, not fail-closed). — Confirmed live
+      (2026-08-03): `gcloud storage ls gs://features-sports-test-central-element-323112/_index/` shows 24 real per-VM
+      shards (CI runs 2026-07-27 through 2026-08-03) but `_index/availability_index.parquet` 404s — never written. Root
+      cause matches the ALREADY-documented general decision in `/codex/05-infrastructure/manifest-consolidator-ssot.md`
+      § "Coverage exemptions" (2026-07-10): `-test-` buckets are deliberately not wired to the consolidator scheduler on
+      either cloud (confirmed again via `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` —
+      `manifest_consolidator_buckets`/ `_extended` locals are keyed on `deployment_env_short` ∈ {dev,stg,prod}, zero
+      `-test-` entries). Took the documented mitigation branch: `e2e-testing@555ab37` sets
+      `MANIFEST_ALLOW_STALE_FALLBACK=true` before `sports/smoke_matrix.py`'s `_verify_test_manifest()` calls
+      `read_availability_index()`, so the read now transparently merges the per-VM shards instead of raising
+      `ManifestConsolidatorStaleError` (live-verified: merge returns 2339 real rows spanning 14 feature_groups). Along
+      the way found + fixed an ADDITIONAL, previously-undiscovered bug in the same file: `SMOKE_FEATURE_GROUP = "odds"`
+      has never been a real sports feature_group — confirmed via a full GCS `feature_group=` enumeration across the
+      whole bucket (only `odds_targets`/`odds_features`/etc. exist, never bare `odds`) and via the merged manifest's own
+      `feature_group` column values — so the smoke check's own 3-step contract was structurally unable to PASS
+      regardless of the fallback fix. Changed to `"odds_targets"` (real writes, some `captured`). Full live
+      re-verification of both fixes together: `_verify_gcs_parquet`/`_verify_test_manifest` for
+      date=2026-07-19/feature_group=odds_targets both return `True` (1 real parquet blob + a `capture_status=captured`
+      manifest row) — a genuine PASS is now achievable. Full `quality-gates.sh` green (30s, sentinel-verified at
+      HEAD=555ab37), confirmed landed on `live-defi-rollout` via `git merge-base --is-ancestor`.
 - [x] ✅ [DATA] P1. **features-service** — investigate why `perp_collapse` retained 0/215 CEFI instruments for
       `technical_indicators` on 2026-07-28 (`dropped ... no-rep=214` — no qualifying representative venue found for
       214/215 bases). Determine whether this is a `perp_collapse` logic regression or a genuine upstream
@@ -470,3 +489,22 @@ not duplicated here.
   `[SCRIPT]`-tagged recommended-decision todos in this doc; the only remaining open item is the `[DATA]` P2
   sports-`-test-` consolidator gap (separate operator/infra scope, not a code fix) — doc stays active until that
   resolves.
+- 2026-08-03 (slot-8, data_engineering, backlog task `features_smoke_matrix_verification_findings-006`): closed the last
+  remaining open item — the `[DATA]` P2 sports-`-test-` consolidator gap. Confirmed live (`gcloud storage ls`) that
+  `features-sports-test-central-element-323112` still has 24 real per-VM shards but no consolidated
+  `_index/availability_index.parquet` (404). Root cause is NOT a new/unwired case — it's the same general, already
+  -documented decision at `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage exemptions" (2026-07-10):
+  `-test-` buckets are deliberately excluded from the consolidator scheduler on both clouds (re-confirmed via the
+  terraform locals directly). Took the doc's own recommended mitigation branch: `e2e-testing@555ab37` sets
+  `MANIFEST_ALLOW_STALE_FALLBACK=true` in sports' `smoke_matrix.py` before the `read_availability_index()` call, so the
+  harness now merges per-VM shards instead of loud-failing with `ManifestConsolidatorStaleError`. Also found + fixed an
+  adjacent, previously-undiscovered bug in the SAME file while live-verifying the fix: `SMOKE_FEATURE_GROUP = "odds"`
+  has never been a real sports feature_group (confirmed via a full GCS `feature_group=` enumeration across the bucket
+  and the merged manifest's own column values) — the smoke check's own 3-step contract was structurally unable to PASS
+  regardless of the fallback fix. Corrected to `"odds_targets"` (real writes, some `captured`). Live end-to-end
+  re-verification of both fixes together (date=2026-07-19): `_verify_gcs_parquet` finds 1 real parquet blob,
+  `_verify_test_manifest` finds a `capture_status=captured` row — a genuine PASS is now achievable, which was never
+  possible before either fix. Full `quality-gates.sh` green (30s, sentinel-verified HEAD=555ab37), confirmed landed on
+  `live-defi-rollout` via `git merge-base --is-ancestor`. **All 6 findings in this doc are now closed** — per
+  `/codex/11-project-management/issue-doc-lifecycle.md` this doc is `ACKED-INTO-CODE` and archives immediately in this
+  same session (see the archival commit that follows this one).
