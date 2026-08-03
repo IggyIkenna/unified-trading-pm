@@ -226,3 +226,6 @@ production data.
 - **context-scout 2026-08-03**: populated context_scope (6 entries) — the two contradictory "resolved" migration threads
   this doc reconciles, the UAC enum that's the actual schema SSOT, the seeding function flagged as possibly-stale, the
   UTL canon function the casing-direction fix hinges on, and the script todo 3 would re-run.
+- **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (6 entries) — the
+  `enumerate_expected_universe.py` entry already listed is confirmed to be the exact file the
+  `_rollup_present_bundle_grain` fix landed in this session; `-001`/`-003` remain gated on the same operator decision.

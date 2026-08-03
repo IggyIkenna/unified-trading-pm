@@ -43,10 +43,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    agent-orchestrator/server/worktree_clean_check/_orphan_verify.py,
+    agent-orchestrator/server/worktree_clean_check/_branch_state.py,
+    scripts/quickmerge.sh,
     /plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md,
-    /plans/epics/orchestrator_master.md,
   ]
 ---
 
@@ -154,3 +155,6 @@ closing the "then what" gap:
   remaining `[SCRIPT] P3` items are unchanged since the 2026-07-30 verdict: a fleet-wide alert/runbook (too-high
   blast-radius class) and a "Consider" fork against the shared `quickmerge.sh` success path (never autonomous). No
   change.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the two named
+  `worktree_clean_check` source modules + `quickmerge.sh` (the remaining open todos' actual targets), dropped a
+  now-redundant epic pointer.

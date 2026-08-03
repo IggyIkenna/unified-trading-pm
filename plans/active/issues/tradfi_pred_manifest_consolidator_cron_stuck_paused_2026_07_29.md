@@ -42,10 +42,10 @@ last_updated: 2026-07-29
 context_scope:
   [
     /plans/epics/infrastructure_master.md,
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/archive/issues/dp_watcher_003_consolidator_scheduler_paused_maintenance_window_gap_2026_07_29.md,
     unified-trading-library/unified_trading_library/monitors/consolidator_liveness.py,
     deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf,
+    deployment-service/deployment_service/data_pipeline_monitors/scheduler_maintenance.py,
   ]
 ---
 
@@ -161,3 +161,5 @@ codebase).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a discovery-provenance-only plan link and
+  added `scheduler_maintenance.py`, the maintenance-window primitive the sole remaining P3 auto-resume todo would reuse.

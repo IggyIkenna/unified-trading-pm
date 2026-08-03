@@ -53,10 +53,10 @@ supersedes:
 superseded_by:
 context_scope:
   [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
-    /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
-    /plans/epics/infrastructure_master.md,
   ]
 ---
 
@@ -150,3 +150,6 @@ sweep here.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) -- swapped in the two named source files
+  (`launcher_common.sh`, `setup-data-pipeline-vm.sh`) the doc's own root-cause section cites, dropped two related-issue
+  entries to stay minimal.

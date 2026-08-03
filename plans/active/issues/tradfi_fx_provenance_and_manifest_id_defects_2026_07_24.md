@@ -345,6 +345,9 @@ broken out of it.
 - **context-scout 2026-08-03**: trimmed context_scope from 7 to 5 entries (dropped `reconciliation-finding-taxonomy.md`
   and `four-surface-reconciliation-procedure.md` — methodology docs for the original finding, not needed for executing
   the now operator-confirmed backfill).
+- **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (5 entries) — remaining open
+  todo is the operator-confirmed FX `SPOT_PAIR` manifest-only backfill; `_umi_yahoo.py` and the delete-safety codex
+  already listed cover both its Yahoo-mislabel and soft-delete-retention pre-check steps.
 
 ## Todos
 

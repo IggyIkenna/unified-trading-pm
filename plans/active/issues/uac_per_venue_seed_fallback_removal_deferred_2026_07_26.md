@@ -49,12 +49,12 @@ locked_since:
 assigned_role: backend_engineer
 context_scope:
   [
-    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    deployment-api/deployment_api/services/data_status/venue_resolution.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    /plans/epics/cefi_master.md,
   ]
 ---
 
@@ -137,3 +137,6 @@ dangling inside a closed plan todo.
   start executing it, whereas leaving it NA has no active consequence. **Operator/next-toucher: rule on the scope of the
   2026-07-26 DEFERRED ruling, then flip deliberately.**
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — prior list had grown to 6 plan/codex pointers with
+  zero source paths; swapped in the fallback function itself + its 2 real call sites (the sole open todo wires a live
+  provider into `venue_resolution.py`), kept the 3 revisit-trigger docs.

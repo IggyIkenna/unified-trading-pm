@@ -52,6 +52,7 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
   ]
 ---
 
@@ -339,3 +340,5 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
   `fix(tradfi): extend residue quarantine for confirmed phantom instrument_type batch`, already on origin — verified
   frozenset in current HEAD carries all 6 values with the dated comment citing this doc) — flipping the checkbox to
   reflect reality. Todo 4 (deployment-api wiring gap) remains open.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the confirmed root-cause write site
+  (`canonical_writer.py::write_candle_parquet`) found by the slot-8 root-cause pass above.

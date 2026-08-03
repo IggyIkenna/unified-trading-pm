@@ -36,9 +36,10 @@ depends_on: []
 resolved_by:
 context_scope:
   [
+    scripts/propagation/sync-archetype-capability-to-ui.sh,
+    unified-trading-system-ui/lib/architecture-v2/coverage.ts,
     /plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md,
     /codex/06-coding-standards/ui-testing-layers.md,
-    /plans/epics/strategy_master.md,
   ]
 ---
 
@@ -115,3 +116,5 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
   depends on whether the regen changes rendered UI behaviour or only generated constants, which is only knowable from
   the actual diff. **Operator/executing worker: pick the role from the real diff before dispatch.**
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — prior list was codex/plan-only; added the two real
+  source targets (the regen script + its generated `coverage.ts` output), dropped the generic epic pointer.

@@ -60,6 +60,7 @@ locked_since:
 depends_on: []
 context_scope:
   [
+    deployment-service/terraform/gcp/main.tf,
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
@@ -239,6 +240,8 @@ confirm no further self-grants happened in the interim.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the terraform root
+  (`deployment-service/terraform/gcp/main.tf`) all 3 todos actually edited; prior list was codex/plan-only.
 - **slot-8 2026-08-03**: applied operator ruling on P1 (KEEP both `projectIamAdmin` and `serviceAccountAdmin` —
   insufficient certainty to safely revoke given exhausted audit-log evidence; revisit only with stronger evidence
   later). Flipped P1 done, retagged `[OPERATOR]`→`[INFRA]`, and unblocked P2's terraform-import scope accordingly.

@@ -51,9 +51,9 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_lst_rates_write.py,
     /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
-    /plans/epics/infrastructure_master.md,
   ]
 ---
 
@@ -100,3 +100,6 @@ for this exact multi-instrument-per-group shape.
 - **2026-07-31 (slot-16, data_engineering craft)**: filed after discovering the gap while verifying/registering todo 3/4
   of `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`. Not fixed inline (see `source:` above for why).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped in the actual handler being fixed
+  (`vault_share_price_handler.py`) plus the sibling file with the already-proven fix pattern (`_lst_rates_write.py`),
+  dropped the archived origin plan (context now redundant with the body).

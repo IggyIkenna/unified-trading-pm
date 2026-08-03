@@ -49,8 +49,9 @@ context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/epics/manifest_master.md,
-    /plans/archive/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
+    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    unified-trading-library/unified_trading_library/manifest_writer,
   ]
 ---
 
@@ -989,3 +990,6 @@ follow-up: `plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type
 `uts-prod-manifest-consolidator-market-data- prediction-cron` resumed, maintenance window RELEASED. Prediction lane is
 now fully closed under the corrected scope; the `trades`/`book_snapshot_5` question is tracked separately in the new
 issue doc, not blocking this plan further.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the archived issue/epic pointer for the
+  live phantom-manifest-rows issue and the two source paths behind the still-open DeFi `available_at` shim.

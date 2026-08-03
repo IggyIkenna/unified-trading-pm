@@ -224,3 +224,5 @@ convention's scope).
   above are current as of the actual commit, not the initial read.)
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (codex
+  SSOT + PLAN_FORMAT + task_template + the standing checker script) — no changes.

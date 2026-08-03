@@ -44,10 +44,10 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/03-observability/monitoring-control-plane.md,
-    /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
-    /plans/epics/observability_master.md,
+    deployment-api/deployment_api/routes/repo_ci.py,
+    scripts/quality_gates/detect_template_drift.py,
   ]
 ---
 
@@ -705,3 +705,5 @@ an unresolved scoping/design call.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the AO-overview codex + epic pointer for
+  the two open P0 source targets (rollout-ratchet panel + template-drift script).

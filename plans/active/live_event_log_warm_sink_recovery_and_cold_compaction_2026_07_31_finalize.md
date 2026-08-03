@@ -40,6 +40,7 @@ source: >-
 context_scope:
   [
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/epics/batch_live_symmetry_master.md,
   ]
 ---
@@ -65,3 +66,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries) -- genuinely code-free finalize gate;
+  added the archival-discipline codex SSOT the todo's "standard 6-step archival ritual" phrase implies.

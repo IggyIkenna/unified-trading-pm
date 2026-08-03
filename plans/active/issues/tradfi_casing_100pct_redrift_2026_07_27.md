@@ -42,10 +42,10 @@ context_scope:
   [
     market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
     unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
+    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/epics/tradfi_master.md,
   ]
 ---
 
@@ -271,3 +271,6 @@ compare case-insensitively in the interim (`migration_pending`).
   `InstrumentType.COMBO = "COMBO"` enum. Filed `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md` with
   full evidence + an `[OPERATOR]` decision gate; did NOT force `--apply`. No code shipped this session — diagnosis +
   issue-doc only.
+- **context-scout 2026-08-03** (second pass, same day): the remaining open todo is now explicitly gated on
+  `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`'s operator ruling (filed by this doc's own
+  investigation above, after the prior context-scout pass) — swapped it in for the generic epic pointer (6 entries).

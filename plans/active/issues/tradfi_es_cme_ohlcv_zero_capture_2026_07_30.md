@@ -330,3 +330,6 @@ root-cause fix.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (5 entries) —
+  `databento_enrichment.py` already listed is confirmed the exact write site the remaining P2 blank-`instrument_id` todo
+  targets.

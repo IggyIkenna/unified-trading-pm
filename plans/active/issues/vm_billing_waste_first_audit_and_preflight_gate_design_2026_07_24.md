@@ -44,9 +44,10 @@ source: /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md §4
 depends_on: []
 context_scope:
   [
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
-    /plans/epics/agent_operating_framework_master.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 ---
 
@@ -422,6 +423,8 @@ context_scope:
   specific chunk before calling a re-fetch confirmed, since a genuinely-empty predecessor attempt looks identical to a
   genuinely-wasted one at the chunk-marker level alone.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — the sole remaining open todo (pre-flight gate
+  keyed on `classify_venue_error()`) had no source path; added the function's own file + the source plan (§4).
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

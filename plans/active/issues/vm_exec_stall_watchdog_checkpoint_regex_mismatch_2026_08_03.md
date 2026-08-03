@@ -49,11 +49,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
+    deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
     deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
   ]
 depends_on: []
 ---
@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                          todos 6 and 7 below.
+                                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                      todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -502,6 +502,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   background Explore agent and this doc edit; the actual relaunches were performed by the fleet's own automation, not by
   this agent.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03 (re-refresh)**: swapped in `launch-backfill-defi-dex-swaps-source-correction-vm.sh` — todo
+  1's actual fix target, previously missing despite being this doc's primary bug file; dropped `relaunch_backfill_vm.py`
+  to hold the cap at 5.
 - **2026-08-03T~14:00-14:40Z** (AO dispatch, slot 8, `infra`, task
   `vm_exec_stall_watchdog_checkpoint_regex_mismatch-005`, todo 5) — Completed the full per-category
   `STALL_PROGRESS_REGEX` sweep for every remaining `launch-canonical-migration-vm.sh` category. Fanned out 6 parallel

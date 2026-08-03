@@ -130,3 +130,5 @@ worse than just fixing the citation once the source is confirmed or the decision
   `plan_reconcile_parked_operator_decisions_2026_08_02.md` for E-1/order-routing content (zero substantive hits) — the
   fabricated-citation claim holds up. No indication the operator has responded yet.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (4 entries) — genuinely
+  code-free (evidence-integrity/findings-triage doc, both open todos operator-gated), no source path added.

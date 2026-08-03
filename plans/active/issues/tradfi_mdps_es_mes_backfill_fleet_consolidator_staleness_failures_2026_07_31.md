@@ -357,3 +357,5 @@ capture zero rows for its entire assigned range.
   `engine/orchestrator/manifest_finalize.py`, which is what got added instead. This resolves the parent issue doc's P2
   item 1 live-repro requirement: both confirmable source-path entries for the doc's still-open weekend-marker root-cause
   todo are now present.
+- **context-scout 2026-08-03** (third pass, refreshed methodology): re-verified, unchanged (5 entries) — both open todos
+  (weekend-marker root-cause, `011358`-wave provenance) already covered by the entries listed.

@@ -38,6 +38,7 @@ assigned_role: project_management
 drift_direction: none
 context_scope:
   [
+    cursor-configs/skills/plan-vintage-audit/SKILL.md,
     /plans/epics/plan_hygiene_master.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/12-agent-workflow/plan-hygiene.md,
@@ -114,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                              completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                              `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                              todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                              (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                              that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                              `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -929,3 +930,6 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   P1 audit-tracking doc; all 7 remaining items are genuinely gated on external, not-yet-resolved state (live SPOT VMs,
   unresolved merge conflicts, pending batch runs), not defaulted/never-assessed work.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) -- this is a genuinely code-free
+  process/meta-audit-of-docs doc (`/plan-vintage-audit`'s own durable handoff), added the operating SKILL.md itself as
+  the true "source" a worker executes.

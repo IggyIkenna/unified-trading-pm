@@ -52,13 +52,12 @@ drift_direction: correct-codex
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
     /codex/02-data/defi-canonical-naming-ssot.md,
-    /codex/02-data/partitioning.md,
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 ---
 
@@ -326,3 +325,6 @@ just belongs on a different layer than instrument_type does, and conflating the 
   this doc was written — the combinator redesign targets CEFI/DEFI/TRADFI only; Prediction's separate
   venue-map-completeness gap (finding 5) is tracked as its own smaller, independent todo. No files edited.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — prior list had drifted to 7 entries (over the 5-6
+  cap) and dropped the still-open finding-6 target (`_defi_v2_contracts.py`); swapped in the newest open-todo's file,
+  kept the finding-4 MTDS source paths, dropped the two least-central plan pointers.
