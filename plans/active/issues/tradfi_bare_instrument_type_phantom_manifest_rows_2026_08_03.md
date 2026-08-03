@@ -295,7 +295,7 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
 - [x] ✅ [SCRIPT] P2. **ROOT-CAUSED 2026-08-03 (slot 8) — writer SERVICE + code MECHANISM confirmed; exact upstream
       trigger not fully traced, see caveat below.** market-tick-data-service@(no code change — see § "Root-cause
       diagnosis" below).
-- [ ] [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
+- [x] ✅ [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
       `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
       `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"`,
       `"EQUITY"`, `"ETF"`, `"INDEX"` alongside the existing `"UD"` (all 6 confirmed same evidenced phantom signature —
@@ -303,7 +303,8 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       if by then the operator has ruled these should be deleted (delete-safety protocol, since they carry zero real data
       and a false `capture_status=captured` claim) rather than quarantined, do that instead. Do not delete manifest rows
       without a fresh delete-safety 5-part-proof pass regardless of how confident this doc's evidence looks. (repo:
-      unified-api-contracts)
+      unified-api-contracts) — ✅ 2026-08-03, slot 9: `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` extended to
+      all 6 values (quarantine, not delete) — unified-api-contracts@d1495b35
 - [ ] [CODE] P3. Fix the wiring gap — `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` should actually reach
       `_ACCEPTED_EXCEPTIONS[("instrument_types", "tradfi")]` in
       `deployment-api/deployment_api/routes/data_status/     _distinct_values.py`, or its own comment should stop
@@ -333,3 +334,8 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
   `live-defi-rollout`. Not investigated further — the audit's OWN findings (12,582 rows, the
   instrument_type/data_type/venue breakdown) are independently reproducible and were not relied upon blindly by this
   session's own live re-query (13,923 rows, larger population, consistent signature).
+- **2026-08-03 (slot 4, data_engineering)**: picked up todo 3 (`tradfi_bare_instrument_type_phantom_manifest_rows-003`)
+  and found the code change already shipped by slot 9 (`unified-api-contracts@d1495b35`,
+  `fix(tradfi): extend residue quarantine for confirmed phantom instrument_type batch`, already on origin — verified
+  frozenset in current HEAD carries all 6 values with the dated comment citing this doc) — flipping the checkbox to
+  reflect reality. Todo 4 (deployment-api wiring gap) remains open.
