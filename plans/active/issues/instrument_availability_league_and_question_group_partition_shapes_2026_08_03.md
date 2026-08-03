@@ -146,9 +146,17 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 
 ## Todos
 
-- [ ] 1. [OPERATOR] P1. Rule on the canonical target position for `league=` (sports) and `canonical_question_group=`
-      (prediction) — confirm or revise the "Recommended decision" above, write the ruling into
-      `cross-asset-canonical-target-ssot.md` §8 (mirrors the parent doc's todo 1 pattern). Blocks todos 3-5 below.
+- [ ] 1. [OPERATOR] P1. **Sports half RESOLVED 2026-08-03 — narrowed to prediction only.** This todo duplicated
+      `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`
+      todo 1 (same underlying decision, filed independently same day by a different slot): the operator ruled on that
+      doc's todo 1 — option (a), `league=` is a legitimate sports trailing key
+      (`day={D}/pipeline_mode={pm}/asset_group=sports/venue={V}/league={L}/instruments.parquet`,
+      `cross-asset-canonical-target-ssot.md` §8 "sports exception" banner + §11c decision log). **That ruling covers
+      ONLY sports's `league=` position — it does not mention `canonical_question_group=` (prediction) at all**, so this
+      todo's remaining open scope is narrowed to: rule on the canonical target position for prediction's
+      `canonical_question_group=` key alone (confirm or revise the "Recommended decision" above for prediction), write
+      that ruling into `cross-asset-canonical-target-ssot.md` §8. Still blocks todos 3-5 below for the prediction half;
+      todo 3's sports half can now proceed against the already-ruled shape without waiting further.
 - [ ] 2. [DATA] P1. Re-verify prediction's `canonical_question_group=` shape is genuinely historical-only (sample all 78
       top-level prefixes, not just 3 — bounded per-prefix listing, not a corpus walk; confirm zero objects on any day
       after ~2026-07-22) OR find it is still being written and escalate to the SAME urgency as sports below if so. Does
