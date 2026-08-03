@@ -41,6 +41,13 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    scripts/workspace/sync-gitignore-cursorignore.py,
+    scripts/templates/.gitignore.central,
+    scripts/workspace/untrack-ignored-files.py,
+    /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md,
+  ]
 resolved_by:
 ---
 
@@ -104,12 +111,12 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
 
 ## What still needs doing (not done — real work, needs a careful pass)
 
-- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-9) — `unified-trading-pm@78a3740bf`.** Fix `sync-gitignore-cursorignore.py`'s
-      `--dry-run` flag to actually gate all writes (the base sync AND the chained `untrack-ignored-files.py --untrack`
-      call), not just the separately-documented `--purge-history` path. Verified live 2026-08-02: `main()`'s write loop
-      (`gitignore_path.write_text`/`cursorignore_path.write_text`) is gated behind `if dry_run: ... continue`, and the
-      chained untrack call passes `--dry-run` (not `--untrack`) when `dry_run` is set — both paths confirmed gated in
-      the current file.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-9) — `unified-trading-pm@78a3740bf`.** Fix
+      `sync-gitignore-cursorignore.py`'s `--dry-run` flag to actually gate all writes (the base sync AND the chained
+      `untrack-ignored-files.py --untrack` call), not just the separately-documented `--purge-history` path. Verified
+      live 2026-08-02: `main()`'s write loop (`gitignore_path.write_text`/`cursorignore_path.write_text`) is gated
+      behind `if dry_run: ... continue`, and the chained untrack call passes `--dry-run` (not `--untrack`) when
+      `dry_run` is set — both paths confirmed gated in the current file.
 - [ ] [SCRIPT] P2. **Reconcile `scripts/templates/.gitignore.central` against PM's actual live `.gitignore`** (and
       ideally against a sample of the other 24 repos, since I only audited PM) before this sync script is safe to run
       for real again. This is real diffing/merging work, not mechanical — several of PM's exceptions are clearly

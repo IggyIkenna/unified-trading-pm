@@ -45,6 +45,14 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
+context_scope:
+  [
+    scripts/quality_gates/check_no_explicit_project_id_bucket.py,
+    scripts/quality_gates/check_no_explicit_project_id_bucket_baseline.json,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
+    /plans/epics/sports_master.md,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

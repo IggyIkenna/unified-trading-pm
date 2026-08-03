@@ -53,6 +53,15 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
+  ]
 depends_on: []
 source:
   [

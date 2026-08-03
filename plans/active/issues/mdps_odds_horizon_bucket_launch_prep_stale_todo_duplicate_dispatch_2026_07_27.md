@@ -38,6 +38,13 @@ estimate_class: refactor
 source: mdps_odds_horizon_bucket_reprocess_launch_prep-001 (slot 9, 2026-07-27) — discovered mid-task, after launch
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
+    /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---

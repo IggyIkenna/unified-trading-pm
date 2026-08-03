@@ -49,6 +49,14 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    agent-orchestrator/server/auto_park.py,
+    agent-orchestrator/server/routes/slots_ops.py,
+  ]
 depends_on: []
 ---
 

@@ -23,6 +23,14 @@ execution_scope: local-only
 priority: P1
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
+    deployment-service/scripts/vm/launch-mtds-live.sh,
+    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
+  ]
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
 drift_direction: advance-code
 depends_on: []

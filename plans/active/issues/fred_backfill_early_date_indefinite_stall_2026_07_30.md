@@ -47,6 +47,13 @@ estimate_calibrated_ai_days: 0.15
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

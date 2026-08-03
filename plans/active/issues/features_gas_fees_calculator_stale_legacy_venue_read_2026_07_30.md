@@ -42,6 +42,13 @@ depends_on: []
 last_updated: 2026-07-30
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/features_service/onchain/app/calculators/block_priority_gas_distribution_calculator.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py,
+    /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

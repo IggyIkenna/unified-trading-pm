@@ -31,6 +31,12 @@ estimate_class: research
 source: sports_satellite_ao_dispatch_batch5_2026_07_26.md, escalation todo
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---

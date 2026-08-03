@@ -38,6 +38,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/work-philosophy.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    agent-orchestrator/server/state_store/slots.py,
+  ]
 depends_on: []
 ---
 

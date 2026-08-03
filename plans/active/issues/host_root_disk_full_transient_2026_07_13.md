@@ -29,6 +29,12 @@ assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    scripts/dev/prune-uv-cache.sh,
+    scripts/dev/install-prune-uv-cache-cron.sh,
+  ]
 source: [unified_trading_api_pip_audit_stale_ignore_list-001 -- observed while shipping the dependency fix]
 related:
   [

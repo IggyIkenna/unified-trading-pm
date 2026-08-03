@@ -41,6 +41,13 @@ source:
 assigned_vm: NA
 execution_scope: local-only
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+  ]
 resolved_by:
 drift_direction: advance-code
 depends_on: []

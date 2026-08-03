@@ -34,6 +34,13 @@ assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/issues/ao_scheduled_job_observability_and_slack_alerting_2026_07_28.md,
+    agent-orchestrator/server/plan_health.py,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

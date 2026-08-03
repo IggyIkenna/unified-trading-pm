@@ -30,6 +30,14 @@ assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md,
+    deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh,
+    instruments-service/scripts/measure_honest_coverage.py,
+    deployment-service/scripts/vm/create-code-tarballs.sh,
+  ]
 source: discovered while executing data_status_page_ux_and_canonicalisation_2026_07_16 P1-remaining INFRA
 depends_on: []
 ---

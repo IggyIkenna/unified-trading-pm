@@ -57,6 +57,14 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
+    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/external-data-always-available-rule.md,
+  ]
 resolved_by:
 ---
 

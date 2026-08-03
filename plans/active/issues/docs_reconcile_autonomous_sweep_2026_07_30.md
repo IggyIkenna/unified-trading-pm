@@ -47,6 +47,13 @@ source:
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /cursor-configs/skills/docs-reconcile/SKILL.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+  ]
 supersedes:
 superseded_by:
 ---

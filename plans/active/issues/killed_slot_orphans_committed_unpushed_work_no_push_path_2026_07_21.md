@@ -38,6 +38,13 @@ estimate_class: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
+  ]
 depends_on: []
 ---
 

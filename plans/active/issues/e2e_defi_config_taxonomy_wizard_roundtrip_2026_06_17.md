@@ -31,6 +31,13 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    e2e-testing/scripts/defi,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

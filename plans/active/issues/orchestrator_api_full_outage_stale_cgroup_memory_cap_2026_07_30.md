@@ -47,6 +47,13 @@ source: >-
   backlog-specific bug.
 resolved_by:
 locked_by:
+context_scope:
+  [
+    agent-orchestrator/scripts/rescale-memory-cap.sh,
+    agent-orchestrator/scripts/bootstrap_vm.sh,
+    /plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 locked_since:
 ---
 

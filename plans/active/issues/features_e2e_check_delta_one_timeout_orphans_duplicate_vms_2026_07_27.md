@@ -43,6 +43,14 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/scripts/pipeline_e2e_check.py,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /cursor-configs/skills/data-pipeline-check-features/SKILL.md,
+  ]
 resolved_by:
 ---
 

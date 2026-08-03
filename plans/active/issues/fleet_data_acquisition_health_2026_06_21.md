@@ -24,6 +24,13 @@ source: ["GCS vm-logs sweep of ~75 running VMs (all lanes), 2026-06-21 ~16:10 UT
 assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    /plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

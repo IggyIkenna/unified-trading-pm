@@ -35,6 +35,14 @@ execution_scope: local-only
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    agent-orchestrator/server/orphan_reap.py,
+    agents/worker.md,
+    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+  ]
 depends_on: []
 ---
 

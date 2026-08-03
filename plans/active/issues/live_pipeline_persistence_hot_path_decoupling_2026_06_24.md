@@ -32,6 +32,14 @@ assigned_vm: NA
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md # ANNOTATION 2026-07-14 (verify-rerun-2 finding 21): doc-frontmatter-schema.md requires resolved_by only when status=resolved, but status here is `blocked` per the 2026-06-30 body banner (hot-path decoupling shipped; durable warm-tier still not built) — left populated as a forward-pointer to the plan that partially resolved this issue rather than cleared, because this doc is locked_by: live-defi-rollout (annotate-not-flip per HARD GATE, not a status/archival edit); re-evaluate resolved_by when unlocking for archival
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+context_scope:
+  [
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /plans/archive/2026_06/live_data_persistence_central_event_log_2026_06_25.md,
+    /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
+    deployment-service/deployment_service/jobs/live_event_log_compactor.py,
+    deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

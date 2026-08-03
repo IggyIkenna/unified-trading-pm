@@ -42,6 +42,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    scripts/dev/slot-git-status-report.sh,
+  ]
 depends_on: []
 ---
 

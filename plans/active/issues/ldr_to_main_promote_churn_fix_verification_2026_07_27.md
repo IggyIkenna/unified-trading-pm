@@ -41,6 +41,12 @@ assigned_role: infra
 drift_direction: advance-code
 last_updated: 2026-07-27
 locked_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/quickmerge.sh,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+  ]
 resolved_by:
 depends_on: []
 ---

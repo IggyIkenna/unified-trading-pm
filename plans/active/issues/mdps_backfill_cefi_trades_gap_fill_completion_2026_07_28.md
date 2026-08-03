@@ -47,6 +47,14 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
+    unified-trading-library/tests/unit/test_manifest_v4_migration.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 resolved_by:
 ---
 

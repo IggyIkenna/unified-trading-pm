@@ -60,6 +60,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    agent-orchestrator/server/worker_liveness/_respawn.py,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+    /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 depends_on: []
 ---
 

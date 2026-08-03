@@ -39,6 +39,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

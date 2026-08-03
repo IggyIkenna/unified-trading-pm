@@ -38,6 +38,14 @@ source: >-
 drift_direction: advance-code
 depends_on: []
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
+    execution-service/execution_service/trade_execution/factory.py,
+    execution-service/execution_service/trade_execution/adapters/bitfinex_native.py,
+  ]
 locked_since: 2026-05-21
 resolved_by:
 ---

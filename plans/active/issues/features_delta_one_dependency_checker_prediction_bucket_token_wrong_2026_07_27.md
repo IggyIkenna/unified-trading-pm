@@ -37,6 +37,14 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    features-service/features_service/delta_one/app/core/dependency_checker.py,
+    execution-service/execution_service/utils/dependency_checker.py,
+    features-service/features_service/volatility/core/dependency_checker.py,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 ---
 
 # delta_one dependency checker resolves the wrong PREDICTION bucket name

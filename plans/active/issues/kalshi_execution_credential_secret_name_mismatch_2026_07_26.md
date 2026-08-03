@@ -42,6 +42,13 @@ source:
   ]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    execution-service/execution_service/adapters/sports_factory.py,
+    execution-service/execution_service/sports_execution/routing.py,
+  ]
 locked_since:
 supersedes:
 superseded_by:

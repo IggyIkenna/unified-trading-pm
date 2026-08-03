@@ -53,6 +53,14 @@ source: >-
   same session.
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_state.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
+    market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py,
+  ]
 locked_since:
 ---
 

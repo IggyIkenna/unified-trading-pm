@@ -57,6 +57,14 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/orphan-object-detection.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    market-data-processing-service/scripts/candle_orphan_sweep.py,
+  ]
 depends_on: []
 ---
 

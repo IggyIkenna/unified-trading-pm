@@ -38,6 +38,14 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    deployment-api/scripts/census_manifest_data_type_2026_07_24.py,
+    instruments-service/scripts/restamp_fixtures_manifest_legacy_atom_2026_07_24.py,
+  ]
 resolved_by:
 source:
   found while shipping sports_closeout_batch1_ao_ready_2026_07_24.md todo 1 (fixtures manifest atom migration),

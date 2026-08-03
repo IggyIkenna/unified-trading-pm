@@ -25,6 +25,13 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by:
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py,
+    unified-trading-library/unified_trading_library/lifecycle/in_flight_registry.py,
+    unified-trading-library/unified_trading_library/streaming/event_facade.py,
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+  ]
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium

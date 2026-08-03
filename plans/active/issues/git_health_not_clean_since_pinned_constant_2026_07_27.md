@@ -47,6 +47,7 @@ source: >-
   `not_clean_since`, rather than a bug fix to the existing field.
 resolved_by:
 locked_by:
+context_scope: [agent-orchestrator/server/routes/git_health.py, scripts/dev/slot-git-status-report.sh, agents/review.md]
 drift_direction: advance-code
 depends_on: []
 ---

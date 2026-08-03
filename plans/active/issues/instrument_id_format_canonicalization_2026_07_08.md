@@ -50,6 +50,14 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by:
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
+    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
+  ]
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
