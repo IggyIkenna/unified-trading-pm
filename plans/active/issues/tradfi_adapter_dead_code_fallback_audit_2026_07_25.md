@@ -350,11 +350,18 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       or document as intentionally unused. Correct the stale credit at `docs/tradfi-venue-coverage-matrix.md:26`
       regardless of direction. Repo: market-tick-data-service.
 
-- [ ] [BACKEND] P3. **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
+- [x] [BACKEND] P3. ✅ **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
       `reference_data/adapters/tradfi/databento/adapter.py::_parse_tick_and_lot` (lines 715-729),
       `reference_data/adapters/tradfi/databento/sessions.py::_get_xcal` (lines 149-161) and `::_is_trading_holiday`
       (lines 164-179) — add logging (`logger.debug`/`warning`) consistent with the other catch blocks in the same files.
-      Repo: instruments-service.
+      Repo: instruments-service. — instruments-service@d0510269510e6c6b5428771decd6a1d454499ccf: `_parse_tick_and_lot`'s
+      two except blocks now `logger.warning("Failed to parse tick/lot size %r: %s", ...)` (matching this file's own
+      `data.to_df()` catch's warning-level "Failed to X: exc" style); `_get_xcal` now
+      `logger.warning("Failed to load     exchange calendar %s (%s): %s", ...)` (matching sibling `_compute_utc_hours`'s
+      warning-level broad-failure style); `_is_trading_holiday` now
+      `logger.debug("Holiday check failed for %s on %s: %s", ...)` (matching sibling `_apply_early_close`'s debug-level
+      narrow-per-date-check style). `bash scripts/quality-gates.sh` green (repo's own [0-6/6] gate stages passed, 5159
+      tests); shipped via `quickmerge.sh --agent`.
 
 - [x] [BACKEND] P3. ✅ **Narrow residual broad except in MTDS `tardis_bulk_download.py::_download_bulk`** (Finding M-5,
       lines 533-541) to the same explicit transport/HTTP error tuple used one block above (lines 520-532, the CF-11 fix)
