@@ -792,3 +792,6 @@ code.
   (`paper_run_passive.py`/`paper_run_attribution.py`), explicitly under this doc's own OPERATOR GATE — inherently
   judgment/correctness-sensitive engineering, not a bare bounded/deterministic worker task, consistent with every prior
   accrual-formula change on this doc requiring a 3-lens money-path review. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed independently, no content change since 2026-08-01.
+  The sole open checkbox (Option B) is still unstarted and still explicitly under this doc's own OPERATOR GATE. Doc
+  stays `assigned_vm: NA`.
