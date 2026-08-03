@@ -107,7 +107,20 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       note `full`, not `force`, so it resumes/skips already-captured days and only retries the 22 `attempted_failed` + 4
       `LOSS_GUARD_BLOCKED` dates) once the upstream odds_api source for 2026-06-21..24 has real data and/or enough time
       has passed for the loss-guard-thin dates to catch up; verify manifest afterward. (repo:
-      market-data-processing-service, deployment-service)
+      market-data-processing-service, deployment-service) — **Attempted 2026-08-03T09:45-10:00Z (slot 5, worker, craft:
+      worker).** (1) Re-verified the RAW_ODDS_SHAPE_UNRECOGNIZED gate live via `gcloud storage ls -r` on the 4 dates
+      (2026-06-21..24): still only `instrument_type=sport` meta-snapshot objects, zero real `instrument_type=odds` data
+      — the upstream gap from `odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` is NOT yet resolved. (2)
+      Proceeded anyway (bounded, idempotent SPOT VM, resume-friendly `full` mode) to test whether the 4
+      `LOSS_GUARD_BLOCKED` dates had caught up and to get a fresh manifest read. Launched
+      `mdps-sports-bucket-20260803-095112` (e2-standard-8, SPOT) — **OOM-killed at ~24/571 days** (exit_code=137,
+      confirmed via serial console `Out of memory: Killed process ... anon-rss:31673032kB`). Root-caused + filed as its
+      own finding: `issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md` — `full` mode's manifest
+      pre-flight (`writer.lookup()`, never exercised by the original all-`force`-mode 4-shard sweep) reloads the
+      full-schema whole-sports-manifest every 60s TTL-cache-expiry under 16-way concurrency, accumulating RSS past 32GB
+      over a multi-hour run. **Not completed this pass** — the new doc's own P2 todo (relaunch with
+      `MACHINE_TYPE=e2-highmem-8` and/or fewer workers) is the next concrete step; this todo stays open pending that
+      relaunch AND the still-unresolved upstream odds_api gap for the 4 RAW_ODDS_SHAPE_UNRECOGNIZED dates.
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
       `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (re-verified the gap live via a scoped
