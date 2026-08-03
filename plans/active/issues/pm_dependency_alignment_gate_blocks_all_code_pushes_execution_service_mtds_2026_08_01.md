@@ -22,7 +22,7 @@ summary: >-
   bypassing quickmerge.sh's gate chain entirely) is currently BLOCKED at STAGE 1.5, fleet-wide, until this is resolved.
   Discovered blocking an unrelated P3 task (cloud_build_unified_api_contracts_publish_ordering_race-004); confirmed
   pre-existing via a clean-HEAD stash test and by tracing the exact commit + comment that introduced the mismatch.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -35,7 +35,7 @@ related:
     /plans/archive/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md,
   ]
 created: 2026-08-01
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -48,6 +48,8 @@ context_scope: [/codex/08-workflows/ci-cd-flow.md]
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  pm_dependency_alignment_gate_blocks_all_code_pushes_execution_service_mtds-001--ruling (slot 9, 2026-08-03
+  investigation)
 locked_by:
 locked_since:
 ---
@@ -148,9 +150,24 @@ premature).
   `execution-service@050ed797`-author sanity check that nothing else silently relied on that manifest entry (the
   recommendation's own stated risk) — flip to `resolved` once that's confirmed, or if a downstream break surfaces,
   reopen with the specifics.
+- **2026-08-03, slot 9**: Investigated directly per operator ruling (investigate rather than ask around). Findings: (1)
+  `execution-service/pyproject.toml` still carries ONLY the intentional `basedpyright extraPaths` hint
+  (`"../market-tick-data-service"`, line 117) — no `[tool.uv.sources]` or `dependencies=[...]` entry exists or was ever
+  reintroduced; (2) `workspace-manifest.json`'s `repositories.execution-service.dependencies` confirmed to still NOT
+  contain `market-tick-data-service`; (3) `check-dependency-alignment.py --json` currently returns `"aligned": true`,
+  `"count": 0`; (4) reviewed the 3 `quality-gates-v2` CI failures on `unified-trading-pm`/`live-defi-rollout` since the
+  fix landed (runs on shas `2bfa2022bd`, `0db25e69be`, `b3c48c7d90`) — none mention dependency-alignment or
+  `internal_in_manifest_not_pyproject`; their actual causes are unrelated (NA-corpus ratchet, archive-candidate ratchet,
+  VERSION_SPLIT warnings); (5) no `qg_red`/dependency-alignment repo-blocker has been filed for `unified-trading-pm`
+  since the fix (checked `/api/repo-blockers` + orchestrator activity log); (6) 34+ real code-carrying quickmerge
+  commits landed to `unified-trading-pm/scripts/` since the fix (2026-08-01T15:00 onward) — direct proof STAGE 1.5 has
+  not blocked ordinary PM work. No evidence of reliance on the removed manifest entry and no downstream break surfaced.
+  Flipping `status` to `resolved`.
 
 ## Todos (follow-up)
 
-- [ ] [OPERATOR] P2. Confirm (with the operator or the `execution-service@050ed797` author) that nothing silently
-      relied on the removed `workspace-manifest.json` execution-service/market-tick-data-service dependency entry.
-      Flip this doc to `status: resolved` once confirmed, or reopen with specifics if a downstream break surfaces.
+- [x] ✅ P2. Confirm that nothing silently relied on the removed `workspace-manifest.json`
+      execution-service/market-tick-data-service dependency entry. Flip this doc to `status: resolved` once confirmed,
+      or reopen with specifics if a downstream break surfaces. — **DONE 2026-08-03, slot 9, via direct investigation**
+      (operator ruling: investigate rather than ask around). No evidence of reliance found — see Progress Log entry
+      below. `status` flipped to `resolved`.
