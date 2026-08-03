@@ -188,15 +188,15 @@ the candle layer instead of raw-tick.
       Folded: the narrower doc's own todo flipped + archived to
       `plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` citing this evidence, all
       corpus referrers updated in the same commit.
-- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-15, `data_engineering`).** cefi + prediction `processed_candles/` objects
-      mis-tagged `source=databento` — **RE-SCOPED + RESOLVED, no destructive action needed.** The original
-      characterization (10 `RECORD-ERROR`s per AG) was only a per-CELL sample count, not the real object count — a
-      fresh, targeted (prefix-scoped, NOT a corpus walk) GCS listing against each AG's exact mistagged
-      `pipeline_mode=batch_databento/` path found the real extent and, for both AGs, confirmed a correctly-tagged twin
-      already exists for every mistagged object. **cefi**: 1,639 objects (DERIBIT PERPETUAL derivative_ticker/1d only,
-      prior-session finding) all have a twin at `pipeline_mode=batch_tardis/` for the identical shard key.
-      **prediction**: real extent is 498 objects (not 10), spanning `day=2025-03-14` through at least `day=2025-07-01`
-      (not the originally-documented 10-day window), all
+- [x] ✅ [DATA] P2. **Remediate cefi + prediction `processed_candles/` objects mis-tagged with an unregistered
+      `source=databento`** — **DONE 2026-08-03 (slot-15, `data_engineering`): RE-SCOPED + RESOLVED, no destructive
+      action needed.** The original characterization (10 `RECORD-ERROR`s per AG) was only a per-CELL sample count, not
+      the real object count — a fresh, targeted (prefix-scoped, NOT a corpus walk) GCS listing against each AG's exact
+      mistagged `pipeline_mode=batch_databento/` path found the real extent and, for both AGs, confirmed a
+      correctly-tagged twin already exists for every mistagged object. **cefi**: 1,639 objects (DERIBIT PERPETUAL
+      derivative_ticker/1d only, prior-session finding) all have a twin at `pipeline_mode=batch_tardis/` for the
+      identical shard key. **prediction**: real extent is 498 objects (not 10), spanning `day=2025-03-14` through at
+      least `day=2025-07-01` (not the originally-documented 10-day window), all
       `venue=POLYMARKET data_type=trades timeframe=1d instrument_type=PREDICTION_MARKET` — spot-checked instrument-id
       overlap on 3 dates spanning the full range (`2025-03-14`: 6/6; `2025-05-01`: 1/1; `2025-07-01`: 1/1 — 8/8, 100%)
       against `pipeline_mode=batch_polymarket_clob/` for the SAME `(day, instrument_id)`; every mistagged object has a
