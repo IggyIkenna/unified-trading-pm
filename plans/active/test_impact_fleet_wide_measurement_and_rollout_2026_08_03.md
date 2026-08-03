@@ -224,11 +224,30 @@ to be per repo — not measured here, out of this todo's scope.
       files). This suite is wired into unified-trading-pm's own `quality-gates.sh` (same repo, same gate as every other
       code regression) — caught the 2 real bugs documented in todo 1's writeup. Full `quality-gates.sh` green (1687
       passed/11 skipped, 0 failed).
-- [ ] [REVIEW] P1. **Single-repo shadow-mode trial**, on the highest-eligibility repo from the Phase-1 measurement
-      (candidates per the 4-repo sample: `market-data-processing-service` or `features-service`, ~94-96% eligible) — run
-      the selector in parallel with the real full suite for 2 weeks, always actually executing the full suite, logging
-      any divergence. Done-when: zero observed divergences over the full 2-week window; a single divergence resets the
-      trial and is filed as its own issue doc (a design bug, not noise).
+- [ ] [REVIEW] P1. **Single-repo shadow-mode trial — INFRASTRUCTURE SHIPPED 2026-08-03, TRIAL CLOCK RUNNING, NOT YET
+      DONE.** `market-data-processing-service@1c8588c` — a new `[7.1] TEST-IMPACT SELECTOR — SHADOW MODE` section in
+      that repo's own `scripts/quality-gates.sh` (a per-repo customization point, same pattern as its existing
+      `[6.X]`/`[6.Y]` custom sections — NOT the shared `base-service.sh`, so this is genuinely single-repo-scoped, not
+      fleet-wide). Runs on every real CI invocation, AFTER the unchanged full suite already executed: computes the diff
+      (`git diff HEAD~1 HEAD`, a known limitation for multi-commit pushes — see code comment), calls
+      `test_impact_selector.py`, and prints a `TEST_IMPACT_SHADOW:` -prefixed verdict. Purely additive — never skips or
+      gates anything; verified via a real local run (2332 passed/2 skipped, exit 0, verdict logged correctly against the
+      actual current diff) before shipping. Dry-run-validated against 3 real historical commits first (a test-only
+      change narrowed to 1 file; a `base_adapter.py` change correctly narrowed to its ~100+ real transitive dependents;
+      an untested backfill script narrowed to zero). Divergence detection is deliberately NOT computed inline (would
+      require either a second pytest invocation — defeating the whole point during the trial — or coupling to
+      `base-service.sh`'s internal mktemp log path, which is fragile/unstable) — instead, a periodic/end-of-window
+      analysis pass over this repo's CI run logs (`TEST_IMPACT_SHADOW:` lines vs pytest's own `FAILED` lines, both
+      already in the same captured job log) checks for divergence; that analysis tool is NOT built yet — no point
+      building it before 2 weeks of real data exist. **Done-when (unchanged, NOT yet met): zero observed divergences
+      over a full 2-week window from 2026-08-03.** Re-visit ~2026-08-17.
+- [ ] [SCRIPT] P1. **Build the shadow-trial divergence-analysis tool** — reads `market-data-processing-service`'s CI run
+      logs (`gh run list`/`gh run view --log`) over the trial window, extracts both this run's `TEST_IMPACT_SHADOW:`
+      verdict (the narrowed set) and pytest's own `FAILED <nodeid>` lines from the SAME run, and reports any failure
+      that fell outside the narrowed set (a real divergence) — buildable and testable anytime (doesn't need to wait for
+      the 2-week window itself, only running it meaningfully does). Done-when: run against the CI history accumulated so
+      far and produces a clean per-run divergence table (even if the window isn't complete yet) — this is what the
+      single-repo trial todo's done-when actually reads to determine "zero observed divergences."
 - [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial**, only after the single-repo trial passes clean — same methodology, 2
       weeks, across every repo from the Phase-1 table with the current allowlists. Done-when: zero observed divergences
       fleet-wide over the full window.
@@ -268,3 +287,21 @@ to be per repo — not measured here, out of this todo's scope.
   semantics execute each one, so this under-narrowed; (2) `_is_test_file()`'s original heuristic flagged `conftest.py`
   as a test file merely for living under a `tests/` directory, when pytest never collects it as a test module — fixed to
   the actual `test_*.py` filename convention. Both fixed before ship, not after.
+- **2026-08-03 (same session) — Phase 2.4 shadow-mode trial STARTED (not complete)**:
+  `market-data-processing-service@ 1c8588c`. Investigated that repo's real CI first — its test execution runs through
+  the SHARED, fleet-wide `base-service.sh` (sourced from unified-trading-pm), so a naive addition there would have
+  silently gone fleet-wide before Phase 2.5 was supposed to happen. Instead added the shadow-mode block to that repo's
+  OWN per-repo `scripts/quality-gates.sh` wrapper (the file's documented per-repo customization point — same pattern its
+  existing `[6.X]`/`[6.Y]` custom sections already use), keeping this genuinely single-repo-scoped and zero-blast-radius
+  (purely additive logging, never gates or skips). Dry-run-validated against 3 real historical commits before touching
+  live CI, then verified with a full real local `quality-gates.sh` run (2332 passed/2 skipped, exit 0, correct verdict
+  against the actual diff) before shipping. Added a new todo for the divergence-analysis tool (buildable now, but reads
+  back CI history so has nothing meaningful to analyze until real runs accumulate). **The 2-week real-time clock starts
+  today, 2026-08-03** — the trial's own done-when (zero divergences) is a genuine physical-time requirement no amount of
+  engineering effort in this session can compress; re-check ~2026-08-17.
+- **2026-08-03 (session pause point)**: Phase 1 (all 3 todos) and Phase 2 todos 1-3 are fully shipped, tested, and
+  verified. Phase 2 todo 4 (single-repo shadow trial) has its infrastructure shipped and the real trial clock running,
+  per above — genuinely not completable sooner regardless of further effort. Todos 5 (fleet-wide trial) and 6 (promotion
+  decision, explicitly an operator call per its own text) are correctly blocked behind it via `sequential: true`.
+  Nothing else in this plan is actionable right now without either the 2-week window elapsing or the divergence-analysis
+  tool existing to read it.
