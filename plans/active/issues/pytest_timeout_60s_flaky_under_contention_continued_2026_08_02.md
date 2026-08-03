@@ -42,7 +42,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T14:19Z
+last_updated: 2026-08-03T14:33Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -807,3 +807,37 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   established practice, outcome left for a follow-up occurrence if either comes back red). `AUTHORING_SLOT=ci-reconcile`
   (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean (`execution-service` and
   `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc edit and the shipped fix).
+
+- **2026-08-03 ~14:26-14:33Z (`cicd` escalation `agt-d12ed0`, slot 4, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — a NEW occurrence for this repo (bare LDR push gate, no PR — distinct from the now-fully-resolved
+  #1064/#1065 entries above)**: run `30816252648` (`workflow_dispatch`, created 13:04:24Z, headSha `823f0878` = current
+  LDR HEAD) failed via the identical `QG slice (tests)` crash signature this doc tracks — two ~7min silent stalls
+  (`[76%]`→`[77%]` and `[80%]`→`[81%]`) then an xdist `worker_internal_error`
+  (`Failed: Timeout (>150.0s) from pytest-timeout` firing inside the SIGALRM handler mid-`execnet` flush, `assert False`
+  in `dsession.py`'s `worker_internal_error`). No individual test nodeid survives the non-verbose crash output; the
+  shape (dead time at random completion %, not a specific always-failing test) matches this doc's established signature.
+  Reproduced locally FIRST, backgrounded per the mandatory pattern: `bash scripts/quality-gates.sh` at the exact same
+  commit `823f0878` → **`✅ ALL QUALITY GATES PASSED (127s)`**, tests slice
+  `5179 passed, 6 skipped, 0 failed in 57.39s`, slowest test 3.02s — zero timeouts, zero xdist errors, decisive
+  confirmation of no code/test defect (this commit's diff is a `content_mismatch` resolver for the
+  instrument-availability-hive migration script — new `pandas`-based identity-set comparison logic + fully-mocked unit
+  tests, nothing plausibly slow or hang-prone). Host corroboration: `uptime` load average `25.99, 25.33, 25.10` on this
+  shared host, 14 concurrent `quality-gates.sh` processes — same fleet-wide contention signature as every other entry.
+
+  Checked this repo's own recent run history (`gh run list`, last 25 `quality-gates-v2` runs on `live-defi-rollout`):
+  mostly `cancelled` (superseded by newer pushes, harmless) and `success`, only 2 genuine `failure` conclusions
+  (00:33:18Z and this 13:04:24Z one) — does NOT meet todo 1's "sustained, non-self-clearing red" bar that justified the
+  repo-local `PYTEST_TIMEOUT=300` mitigation on `unified-trading-api`/`features-service`/`deployment-service`/
+  `execution-service` (each had 4-9+ consecutive same-day failures with no green run for 9-36+ hours); did NOT apply
+  that mitigation here — would only move the threshold for a repo that still self-clears fine on its own. No run was
+  in-flight for the current HEAD (`823f0878`) at investigation time — unlike most entries in this doc, dispatching a
+  fresh run here does NOT cancel any elapsed contention-survival progress. Triggered
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/instruments-service --ref live-defi-rollout` → run
+  `30823202578`, confirmed `queued` against the correct current head within seconds. `GET /api/repo-blockers` →
+  `open: []`. **Disposition: no code or workflow change made or needed** — confirmed infra flake, not a code/test gap;
+  left the fresh run's outcome for a follow-up occurrence per this doc's established practice.
+  `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) — per cicd.md, skipped the authoring-slot ping.
+  Slot left clean (`instruments-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin
+  beyond this doc edit; the unrelated stale `.git/rebase-merge` state found in this slot's `unified-trading-pm` worktree
+  at session start — leftover from an unconnected data-recovery task — was left untouched, out of scope for this
+  wall-clearing task).
