@@ -318,8 +318,8 @@ lets each one be built, validated, and run to real completion on its own timelin
       strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the ml_models/etc.
       manifest-WRITE design pass are each their own genuine judgment call — split to todo 3c below rather than guessed
       at in this dispatch, mirroring how todo 2 split unwired families to 2b/2c/2d.
-- [ ] 3c. [SCRIPT] P2. **Design + wire the remaining ml/strategy orphan-coverage gaps todo 3/3b explicitly deferred** —
-      each needs its own investigation pass, not a mechanical port: (a) design + wire
+- [x] 3c. ✅ [SCRIPT] P2. **Design + wire the remaining ml/strategy orphan-coverage gaps todo 3/3b explicitly deferred**
+      — each needs its own investigation pass, not a mechanical port: (a) design + wire
       `strategy_orders`/`strategy_positions`/`strategy_pnl` orphan sweeps — resolve each
       `get_data_sink(routing_key=     "strategy_orders"/"strategy_positions"/"strategy_pnl")` call's real
       deployment-injected bucket/prefix first
@@ -332,6 +332,26 @@ lets each one be built, validated, and run to real completion on its own timelin
       `ml_models`/`ml_model_metadata`/`ml_training_artifacts` need a manifest-WRITE design pass before orphan detection
       is even meaningful for them (zero manifest coverage today, confirmed again by todo 3b's real VM run) — scope that
       as its own operator-facing decision, not a mechanical sweep port. Repo: ml-service, strategy-service.
+      **Investigated 2026-08-03** (`unified-trading-pm`, this doc + new sibling doc): read every write call site for all
+      3 families rather than guessing. (a) is DEAD CODE — `store_positions`/`store_pnl` have zero callers anywhere in
+      strategy-service; `store_orders_batch`'s sole caller `OrderBatchStorage` is never instantiated outside its own
+      unit tests (which pass `cloud_storage=None`, never exercising the GCS path); strategy-service's Cloud Run
+      terraform (`deployment-service/.../strategy-service/gcp/main.tf`) sets no `PROTOCOL_DATA_SINK_BACKEND`/ `_BUCKET*`
+      env var at all, so even a real call would resolve to `LocalDataSink()`, not GCS; also found a THIRD PATH_REGISTRY
+      divergence (same class as todo 3/3b's) — `PATH_REGISTRY["strategy_orders"]` declares
+      `strategy_orders/by_date/day={date}/strategy_id={strategy_id}/` but the real writer call (no `prefix=` passed to
+      `get_data_sink`) would resolve to bucket-root `day={date}/strategy_id={strategy_id}/{uuid}.parquet`. (b) is
+      genuinely untracked — zero `ManifestWriter`/`record_captured` calls exist anywhere near `gcs_storage_service.py`'s
+      `backtest_results` write methods; the only backtest-adjacent manifest write (`batch_results.py`) is
+      `data_type="strategy_instructions"`-scoped with no `run_id` column, confirming the todo's own suspicion. (c)
+      reaffirmed via code (zero `ManifestWriter` calls anywhere in `ml-service/ml_service/training/`) — genuinely
+      different from (a): a LIVE writer (`training_orchestrator.py`), just never wired to the manifest. **Conclusion:
+      none of the 3 is buildable as a mechanical sweep-tool port right now** — each needs an operator-facing decision
+      first (wire-up-or-delete for (a); a manifest-WRITE design pass for (b)/(c)) — building tooling now would sweep
+      either a phantom corpus (a) or an undefined comparison (b/c). Filed as its own doc with `[OPERATOR]`-tagged
+      decision todos + a follow-on `[SCRIPT]` build todo gated on those decisions, rather than guess at a manifest
+      schema unilaterally:
+      [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
 - [ ] 4. [DOC] P2. Once todos 1-3c land real per-stage findings, write the combined cross-repo lineage report
       `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo.
 
@@ -455,3 +475,20 @@ lets each one be built, validated, and run to real completion on its own timelin
   caught, all done). Split (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the
   ml_models manifest-WRITE design pass to new todo 3c — each is its own genuine judgment call, mirroring todo 2's own
   incremental-wiring split (2b/2c/2d).
+- **2026-08-03** (AO dispatch, slot 14) — Picked up todo 3c. Investigated all 3 deferred families by reading every write
+  call site (not guessing at shape, per this doc's own established discipline). `strategy_orders`/
+  `strategy_positions`/`strategy_pnl`: confirmed DEAD CODE (zero live callers anywhere in strategy-service outside unit
+  tests that never exercise the GCS path), no `PROTOCOL_DATA_SINK_BACKEND`/`_BUCKET*` env var set in the service's only
+  Cloud Run terraform config (would resolve to `LocalDataSink()` even if called), plus a third PATH_REGISTRY divergence
+  (declared `strategy_orders/by_date/...` vs. the real writer's bucket-root shape). `backtest_results`: confirmed
+  genuinely untracked — zero manifest calls anywhere near its write methods, and the one adjacent manifest write
+  (`batch_results.py`) is scoped to `data_type="strategy_instructions"` with no `run_id` column at all.
+  `ml_models`/`ml_model_metadata`/`ml_training_artifacts`: reaffirmed zero manifest coverage via code (only
+  `ml_predictions` has any `ManifestWriter` call in ml-service), but unlike strategy_orders this IS a live writer
+  (`training_orchestrator.py`), just never wired to the manifest. All 3 converge on the same conclusion: no sweep is
+  buildable without an operator-facing decision first (wire-up-or-delete for strategy_orders/positions/pnl; a
+  manifest-WRITE design pass for backtest_results and ml_models/etc.) — filed as its own doc with `[OPERATOR]`-tagged
+  decision todos + a gated follow-on build todo rather than guess at an unverified manifest schema:
+  [`strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`](strategy_ml_orphan_coverage_design_gaps_2026_08_03.md).
+  Flipped todo 3c — the investigation/design-pass scope this todo asked for is genuinely complete; todo 4 (the combined
+  cross-repo report) remains open, gated on todos 1-3c's real findings, which now all exist.
