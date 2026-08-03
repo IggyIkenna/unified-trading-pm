@@ -16,7 +16,7 @@ summary: >-
   a non-destructive diagnostic and refused cleanly (another agent's uncommitted, ~94-hour-old modification to
   `deployment_api/routes/data_status/_distinct_values.py` would be overwritten by the incoming 157 commits) — left
   untouched per the multi-agent safety HARD RULE (never discard/overwrite another agent's WIP).
-status: open
+status: open # todo 1 (the blocking item) RESOLVED 2026-08-03; todo 3 (design-hardening follow-up) remains open, non-blocking
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -130,15 +130,19 @@ without knowing what it is). No further action was taken on `deployment-api` —
 
 ## Todos
 
-- [ ] 1. [INFRA] P1. Resolve the stale `deployment-api` checkout on this host: identify/contact the owner of the dead
-      WIP on `deployment_api/routes/data_status/_distinct_values.py` (or confirm it's safe to stash-by-name per the
-      liveness-gated inherited-dirty-WIP rule), then `git pull --ff-only` to bring the checkout current. Verify
-      afterward whether `mtds_meta.py` reappears (rename false-positive, self-resolves) or is genuinely gone upstream
-      (needs baseline regeneration).
-- [ ] 2. [INFRA] P2. If `mtds_meta.py` is confirmed genuinely renamed/split upstream (not a local-staleness artifact),
-      regenerate `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml` for the new path(s) via the
-      script's own `--regenerate-baseline` flag, citing the specific upstream commit that performed the rename as
-      justification (never regenerate blind to mask a real regression).
+- [x] ✅ 1. [INFRA] P1. Resolve the stale `deployment-api` checkout on this host — RESOLVED 2026-08-03: by the time
+      shipping was retried, the `deployment_api/routes/data_status/_distinct_values.py` dead WIP was gone (someone else
+      committed/cleared it) and `git status --branch` in `deployment-api` read
+      `## live-defi-rollout...origin/live-defi-rollout` (no longer behind). `find deployment-api -iname mtds_meta.py`
+      now finds `./deployment_api/services/data_status/mtds_meta.py` — confirms hypothesis (a): pure host-local checkout
+      staleness, not a genuine upstream rename. No baseline change was needed. Verified via a fresh full
+      `bash scripts/quality-gates.sh` run from `execution-service`:
+      `[5.83/6] ADAPTER CONTRACT-CALL REGRESSION     RATCHET` now reads
+      `[check_adapter_contract_regression] OK — 328 baselined file(s) at or above minimum.`, exit code 0. The deferred
+      `execution-service` fix (`execution_service/trade_execution/adapters/ibkr_tradfi.py::close()`) then shipped clean
+      via quickmerge — `execution-service@4485e0bd`.
+- [x] ✅ 2. [INFRA] P2. N/A — `mtds_meta.py` was never actually renamed/removed upstream (see todo 1); this conditional
+      baseline-regeneration step does not apply.
 - [ ] 3. [INFRA] P3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
       `git show     origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
@@ -167,3 +171,8 @@ without knowing what it is). No further action was taken on `deployment-api` —
   failure, not a lost race") — no commit/push happened, working tree left clean of any partial state. This confirms the
   block is host-wide and NOT specific to execution-service's diff or repo. instruments-service's own code change is
   complete/correct and shipping is deferred until this INFRA item (todo 1) resolves. Did not touch `deployment-api`.
+- **2026-08-03 (resolved)** — Retried shipping the deferred `execution-service` fix. `deployment-api`'s local checkout
+  had caught up to `origin/live-defi-rollout` (the dead WIP file was gone, `mtds_meta.py` present) — todo 1 done, no
+  baseline regeneration needed (todo 2 N/A). Full `quality-gates.sh` from `execution-service` passed clean (exit 0, STEP
+  5.83 `OK`) and `quickmerge.sh --agent` shipped `execution-service@4485e0bd`. Blocking scope of this issue is closed;
+  leaving `status: open` only for the still-outstanding, non-blocking todo 3 design-hardening suggestion.
