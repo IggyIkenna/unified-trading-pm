@@ -61,6 +61,7 @@ context_scope:
   ]
 depends_on: []
 gate_on_depends: false
+sequential: true
 ---
 
 # What I found
@@ -207,3 +208,13 @@ overhead.
   finalize doc is owed (not authored here).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **slot-3 dispatch-ordering fix 2026-08-03**: `-002` (the `[UI]` heatmap-filter todo) was dispatched to a ui_developer
+  craft worker BEFORE `-001` (the `[CODE]` deployment-api todo it depends on) had shipped — live-verified zero
+  `quote_asset`/`margin_type` hits in either `deployment-api` or `deployment-ui` repos. The 2026-08-03 reclassify pass
+  flipped `assigned_vm: planning` for both todos but never sequenced them (`depends_on`/`gate_on_depends` only gate a
+  whole PLAN against another plan, not one todo in a doc against a sibling todo in the same doc) — so nothing stopped
+  `-002` from dispatching before `-001`. Implementing the UI filter now would mean wiring controls to a contract the API
+  doesn't return yet, violating the ui_developer craft's "render exactly what the API returns" rule. Fix: added
+  `sequential: true` to this doc's frontmatter so `-001` must land before `-002` dispatches. Releasing `-002` back to
+  the queue via `/skip-current-task`; `-001` is genuinely data_engineering-craft work (manifest/data-status API) and
+  should dispatch next.
