@@ -232,9 +232,11 @@ terminology, not broken links.
       bulk-stamp cohort no longer exists, so the single-day cliff this todo was filed against cannot recur on
       2026-08-15. Simulated against the real gate (`check_codex_doc_freshness.py`, 90-day window) at 2026-08-16 (the day
       after the old cliff): 111 violations total but **zero in the re-reviewed shards**; the figure is unrelated
-      pre-existing corpus drift, not this cohort. Shipped: `unified-trading-pm@e65ace7de` (shard offset-0, 38 docs),
-      `@ff8b38f70` (shard offset-2, 37 docs), `@ab5bbcbf2` (shard-2 recovery, 38 docs), plus a 4th shard folded into the
-      same freshness-cliff pass — all confirmed ancestors of `origin/live-defi-rollout`. (repo: `unified-trading-pm`)
+      pre-existing corpus drift, not this cohort. Shipped: shard offset-0 (38 docs — the SHA originally recorded here
+      does not resolve in any local clone, most likely a transcription typo when this entry was written 2026-08-02;
+      flagged 2026-08-03 by `check_plan_commit_sha_evidence.py`, not re-derived further), `@ff8b38f70` (shard offset-2,
+      37 docs, confirmed ancestor of `origin/live-defi-rollout`), `@ab5bbcbf2` (shard-2 recovery, 38 docs, confirmed
+      ancestor), plus a 4th shard folded into the same freshness-cliff pass. (repo: `unified-trading-pm`)
 - [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
       C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
       the register reflects it.
