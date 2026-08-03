@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T16:35Z
+last_updated: 2026-08-03T17:10Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -420,3 +420,56 @@ repeated here.
   is now the **5th same-day escalation dispatch for this exact repo/wall** across the doc-chain (`agt-771546` implied by
   `agt-3fb529`'s reference, `agt-a46033` ×2, `agt-3fb529`, this one) — further corroborates todo 2's operator-flagged
   missing cooldown/dedup guard on `main_ci_red`/`ldr_qg_failure` re-dispatch for an unchanged in-flight state.
+
+- **2026-08-03 ~16:50-17:10Z (`cicd` escalation `agt-e718ef`, slot 4, `execution-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — SAME escalation ID re-dispatched a 4th time (the parent doc's `agt-956fe9`→`agt-bd0d27`→`agt-e718ef`
+  chain already covered 3 passes at ~15:05-15:35Z from slot 3; this is a fresh dispatch of the identical ID from slot 4,
+  ~75min later), re-verified from scratch, still no code action warranted, two new corroborating failure signatures
+  found**: classified per the `main_ci_red` boot brief's A/B split first — `gh pr list --base main` → 0 open PRs (rules
+  out (A) promotion-stuck); `main` HEAD (`9ad9265f`) unchanged since the prior pass, still the pre-fix commit (279
+  commits behind LDR at the time, now confirmed via `git log origin/main..origin/live-defi-rollout` — dozens of commits
+  ahead including the already-landed `7803a634` `PYTEST_TIMEOUT=300` fix); `ldr-to-main-promote-fleet`'s freshest tick
+  (`30834730331`, 17:00:03Z) confirms
+  `GATE BLOCK execution-service: ci_status=FAILING (cached='SIT_VALIDATED', live='FAILING')` — auto-promotion correctly
+  withheld pending a genuine LDR green, not stuck on anything actionable. Read the two most recent LDR runs directly
+  rather than trusting the cached diagnosis: (1) `30822100465` (the same run the prior `agt-e718ef` pass had left
+  `in_progress` — now `completed`/`failure`): `tests` slice this time crashed via the xdist
+  `INTERNALERROR`/`RuntimeError: Unexpectedly no active workers available` shape (NOT a plain timeout) after
+  `3306 passed, 4 skipped, 1 xfailed` in `1961.13s` — a pytest-timeout SIGALRM firing mid-flush of the xdist report
+  channel killed the whole session on an otherwise-clean run, the same channel-corruption variant already logged for
+  `instruments-service` above (2nd run, `30774745528`); `checks` slice on this same run ALSO failed independently via
+  `❌ Type check FAILED/timeout (exit=124)` even with `PYRIGHT_TIMEOUT=300` in effect — both failures on the SAME
+  commit, different random shapes, consistent with host contention not a code defect. (2) A fresh run dispatched by the
+  fleet/watcher machinery since the prior pass, `30833908386` (started `16:49:22Z`, same HEAD `7803a634`): `checks` leg
+  failed via the identical `[4/6] TYPE CHECK` → `❌ Type check FAILED/timeout (exit=124)` signature (`[4/6] TYPE CHECK`
+  header at `16:51:18.526Z`, verdict at `16:56:18.937Z` — ~5min hang before the 300s-class ceiling fired, confirmed via
+  the GHA-level `##[error]QG selector 'typecheck' FAILED (leg=checks, exit=1)` annotation, not a silent script bug —
+  traced the job's raw log line-by-line to rule out a false read of the "✅ ALL QUALITY GATES PASSED (104s)" banner
+  appearing to precede the failure: that banner belongs to the SAME loop's second selector, `lint-codex`, which ran and
+  passed cleanly AFTER `typecheck` had already failed — `QG_SLICE=typecheck ── ... FAILED` at `16:56:22Z` precedes
+  `QG_SLICE=lint-codex ── ... ALL QUALITY GATES PASSED` at `16:58:05Z` in the same job's log, an ordering easy to
+  misread if only the tail of the log is inspected); the sibling `tests` leg of this same run was cancelled (superseded
+  by a newer run, not a genuine failure). Confirmed both sanctioned mitigations still intact and unchanged on current
+  LDR HEAD (`7803a634`): `PYTEST_TIMEOUT="${PYTEST_TIMEOUT:-300}"` (`scripts/quality-gates.sh:161`),
+  `PYRIGHT_TIMEOUT="${PYRIGHT_TIMEOUT:-300}"` (`scripts/quality-gates.sh:153`) — did NOT raise either a further time,
+  per this doc-chain's established todo-1 practice (re-confirmed
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03` still `status: active`, Phases 2-3 `[ ]` open, unchanged).
+  `gh api .../actions/runners`: this repo actually has TWO online runners (`glue-ip-172-31-3-59-1`,
+  `glue-ip-172-31-5-118-1`), both `busy=true` at investigation time — the first repo in this doc-chain observed with 2
+  runners rather than the usual single-runner bottleneck, yet still showing the identical contention signature,
+  reinforcing that the bottleneck is host-level (shared physical capacity/load), not simply runner-count-per-repo; host
+  `uptime` load average **33.89, 28.55, 27.75** on this same shared host, consistent with (not worse than) the prior
+  pass's 36.21/35.14/39.94 reading. `GET /api/repo-blockers` → `open: []`. A THIRD LDR run was already dispatched by the
+  fleet/watcher machinery before this investigation concluded (`30835276766`, started `17:06:57Z`, same HEAD `7803a634`,
+  `in_progress` at investigation end) — left it running rather than cancel/redispatch (would lose real elapsed queue/run
+  position for zero benefit), consistent with this doc-chain's established practice. **Disposition: no code or workflow
+  change made or needed** — every sanctioned mitigation already exists and is intact on `live-defi-rollout`; the
+  remaining wall is pure runner-queue-depth/host- contention wait; outcome of `30835276766` left for the next
+  occurrence. `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot per `cicd.md`'s `^[0-9]+$` check) —
+  skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean
+  (`execution-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's
+  own commit; no branch changes in either repo). This is now the **4th same-day escalation dispatch for this exact
+  repo/wall's identical escalation ID** (`agt-956fe9`→ `agt-bd0d27`→`agt-e718ef` ×2) — the SAME escalation ID re-firing
+  (not just the same repo/wall) is new evidence for todo 2's operator-flagged missing cooldown/dedup guard: this is not
+  merely "no state-transition dedup on the trigger" but the identical `escalation_id` being re-dispatched to a fresh
+  slot without the prior pass's disposition ever being consulted by the dispatcher.
