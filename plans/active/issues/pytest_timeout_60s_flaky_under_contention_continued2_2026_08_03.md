@@ -51,7 +51,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T17:10Z
+last_updated: 2026-08-03T17:45Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -473,3 +473,23 @@ repeated here.
   (not just the same repo/wall) is new evidence for todo 2's operator-flagged missing cooldown/dedup guard: this is not
   merely "no state-transition dedup on the trigger" but the identical `escalation_id` being re-dispatched to a fresh
   slot without the prior pass's disposition ever being consulted by the dispatcher.
+
+- **2026-08-03 ~17:35-17:45Z (`cicd` escalation `agt-3fb529`, slot 2, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=676`) — SAME escalation ID re-dispatched a 2nd time (this doc's own `agt-3fb529` entry above,
+  ~15:20-16:00Z, already fully diagnosed + closed this exact escalation), re-verified from scratch, disposition
+  unchanged**: confirmed `gh pr list --state open` for `deployment-service` → still 0 open PRs; PR #676 still `MERGED`
+  at `2026-08-03T12:16:15Z` — nothing is actually blocked. `GET /api/repo-blockers` → `open: []`. The follow-up run the
+  prior pass dispatched (`30830046052`) is now `completed`/`cancelled` (NOT a genuine failure) — superseded by the
+  branch-scoped concurrency group as newer commits kept landing on LDR, exactly the "same-tree-different-outcome" churn
+  this doc-chain documents; same for the two runs after it (`30833902590`, `30816236026`, both `cancelled`). LDR HEAD
+  has advanced twice since (`bd47dd8`→`28c8d5f`) and a fresh run (`30837367180`) is already `queued` against the true
+  current head — did not cancel/redispatch (would forfeit queue position for zero benefit), per established practice.
+  Confirmed `PYTEST_TIMEOUT=300`/`PYRIGHT_TIMEOUT` mitigations still intact and unchanged in `scripts/quality-gates.sh`.
+  Did NOT raise `PYTEST_TIMEOUT` a third time (todo 1: capacity-side root cause,
+  `qg_governor_glue_runner_ledger_coordination_ 2026_08_03.md` still `status: active`, Phase 2-3 open — re-confirmed
+  unchanged). **Disposition: no code or workflow change made or needed** — identical to the prior pass's conclusion;
+  this is now the **2nd same-day dispatch of this exact escalation ID**, another direct data point for todo 2's
+  operator-flagged missing cooldown/dedup guard (the dispatcher re-fired the same ID without consulting the prior pass's
+  already-recorded disposition). `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) —
+  skipped the authoring-slot ping. Slot left clean (`deployment-service` and `unified-trading-pm` both on
+  `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either repo).
