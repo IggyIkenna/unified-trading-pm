@@ -137,7 +137,7 @@ being rediscovered + hand-fixed one commit at a time rather than root-caused onc
   `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` (unified-trading-pm@fd1b02c2c). Ran
   `scripts/plan-hygiene/check_prosewrap_padding.sh` against the file first to enumerate the exact 30 corrupted lines (10
   backtick-internal multi-space runs + 20 continuation lines padded to 382 leading spaces in the
-  `deployment-service@ a172915` DONE block, lines 458-476) rather than re-running prettier (its own idempotency bug —
+  `deployment-service@a172915` DONE block, lines 458-476) rather than re-running prettier (its own idempotency bug —
   confirmed by todo 1 — would have ADDED padding, not fixed it). Hand-repaired: collapsed every 3+-space run inside a
   backtick span to a single space (a Python pass scoping the regex to `` `[^`\n]*` `` spans only, so prose outside
   backticks was untouched), and reset the 382-space block to the doc's normal 6-space continuation indent. Verified: (1)
