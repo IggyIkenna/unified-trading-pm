@@ -110,3 +110,27 @@ problem with the fix that was never written down — which would be a genuine da
       linked worktree in this workspace) should be routinely swept for stray staged/uncommitted state, since it is not
       part of the normal `/boot`-per-task worktree-cleanliness checks (those check the slot's PRIMARY repo clones, not
       secondary linked worktrees like this one).
+
+# Progress Log
+
+- 2026-08-03 (slot-4, `data_pipeline_failure` DP-VM-001 escalation, `agt-dd3c9e`): **third independent corroboration
+  that `6b2282c5` is correct — found via a pre-fix failure, not a post-fix verification.** Dispatched to relaunch
+  `features-delta-one-defi-20260803-031632` (started 2026-08-03T03:16:32Z — over 2h before this doc's `055145`/`055219`
+  verification runs), which failed `exit_code=1`. Root-caused BEFORE considering any relaunch (run.log: "No pre-loaded
+  candles for HYPERLIQUID:perpetual:" at every timeframe, on EVERY one of the 173 requested days 2023-05-12..2023-10-31
+  — 100% reproducible, not transient) — this is `6b2282c5`'s exact pre-fix symptom: my VM ran BEFORE the fix landed on
+  `live-defi-rollout`, so it hit the unpatched code path (no CEFI-bucket passthrough for HYPERLIQUID
+  `derivative_ticker`/OI). Rather than blind-relaunch a deterministic failure, verified current state instead: (1)
+  `6b2282c5` is on `live-defi-rollout`, ancestor of my slot's current features-service HEAD (`c092df50`), and
+  `_DERIVATIVE_TICKER_CROSS_ASSET_GROUP_VENUES`/`_resolve_passthrough_source` are present in the checked-out tree (not
+  reverted — this stash has NOT leaked into the primary worktree); (2) live GCS check on
+  `gs://features-defi-prd-central-element-323112/delta_one/by_date/` confirms real, non-trivial funding_oi parquet
+  shards for `HYPERLIQUID:perpetual:` across the sampled range (2023-07-15 15m = 341.65 KiB, 2023-10-31 15m = 737.9 KiB,
+  written 05:57-05:59Z — matching the `055145` run's timing exactly). Conclusion: the scope my failed VM was dispatched
+  for has already been completed by the later successful run: **did not relaunch** (would be redundant — the work is
+  done, not missing) and did not file a new issue (this one already covers the exact root cause + risk). Net effect: my
+  VM's failure is fully explained as a timing artifact (ran before the fix), not a regression or a second bug — no code
+  changes needed on my end. This raises the corroboration count to three independent findings (`055145` exit 0,
+  slot-10's `055219` DP-VM escalation, now this pre-fix-failure trace) all consistent with `6b2282c5` being correct and
+  the dangling stash being safe to judge abandoned — still leaving that call to the `[OPERATOR]` todo above, not
+  deciding it here.
