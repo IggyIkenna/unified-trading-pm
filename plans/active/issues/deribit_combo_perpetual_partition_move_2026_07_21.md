@@ -390,12 +390,29 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       remaining" or "15,119 remaining" as the true count. Root cause of the manifest-row disappearance not investigated
       this session (out of scope for the implement+dry-run todo; flagging for whoever does the operator-review pass, or
       as a fresh finding if it recurs).
-- [ ] [DATA] P2. Operator review of §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any
-      `--apply` is scheduled. **Re-verify scope before this review**: see the sibling todo's 2026-08-03 finding above —
-      the manifest-measured candidate count has apparently dropped from 15,119 to 0 since this doc was written, but at
-      least one physically-orphaned wrong-content object was directly confirmed still present at its old path with no
-      manifest registration at all. The true remaining scope needs a GCS-level re-check, not just a manifest re-read,
-      before this review can proceed on trustworthy numbers.
+- [ ] [DATA] P2. **BLOCKED-OPERATOR — genuine sign-off decision, not worker-determinable, per §7.** Operator review of
+      §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any `--apply` is scheduled. **Scope
+      re-verified 2026-08-03 (task `deribit_combo_perpetual_partition_move-004`, slot 13)**: re-ran §2a's own
+      methodology (bounded, single-day-prefix-per-call GCS listing, no full corpus walk) against the same 13 sampled
+      days for both `perpetual`/`future` partitions. Result: **every object §2a originally found is still physically
+      present, unchanged, at its original wrong-partition path** — per-day counts are byte-identical to §2a's table
+      (e.g. `2023-06-01/perpetual`: 60 objects/6 combo-shaped then and now; `2025-01-15/perpetual`: 38/2 then and now;
+      1,106 objects scanned across the sample, 14 combo-shaped stems found, matching §2a's original 14/980 exactly).
+      **Conclusion: the manifest census's drop to 0 candidates (prior todo's 2026-08-03 finding) is NOT evidence the
+      defect was fixed or any data moved — no GCS object was touched.** The manifest lost visibility into rows it
+      previously tracked; treat the true remaining scope as still ~15,119 rows (§2b's count) for this review, not 0,
+      until the manifest-row-disappearance is root-caused (new todo below). **This todo cannot be completed by a
+      worker** — §7 explicitly requires operator sign-off on (a) the widened scope (now reconfirmed as real and current,
+      not stale), (b) sequencing against the live fleet touching the same manifest/GCS prefixes, and (c) landing the
+      code fix before any backfill move (already done — §9's `[WRITER] P1` todo, `2ddc6d4a`, both ingestion paths
+      confirmed covered). Filed as a `/blocked` question this session; awaiting operator answer.
+- [ ] [DATA] P1. Root-cause the manifest-row disappearance: `instrument_type=COMBO` dropped from 662 DERIBIT rows (§2b
+      baseline) to 0 rows manifest-wide (any venue) sometime between 2026-07-21 and 2026-08-03, while the underlying GCS
+      objects are confirmed unchanged (see todo above). This is either (a) an unrelated cefi-tranche migration that
+      intentionally pruned/rewrote the manifest's COMBO rows (the doc's own working theory, per heavy churn in this
+      period — verify against `cefi_consolidated_closeout_2026_07_18.md`'s recent history), or (b) a
+      manifest-write/consolidation correctness bug silently dropping rows — these have very different urgency. Not
+      investigated yet; repo: market-tick-data-service / possibly the manifest consolidator.
 
 ## Progress Log
 
@@ -407,3 +424,17 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
   citation to §7 pending the operator-review todo). Next session: confirm QG result, `quickmerge --agent` the script,
   flip todo 3 with the shipped SHA, and consider whether the manifest-drift finding warrants its own issue doc if the
   root cause turns out to be a live-data-correctness regression rather than an already-intentional cleanup.
+- **2026-08-03** (slot 13, data_engineering, task `deribit_combo_perpetual_partition_move-004`) — Task was the remaining
+  "operator review of §7" todo. This is a genuine operator-sign-off gate per §7 (production-data MOVE, widened scope,
+  live-fleet sequencing) — not worker-determinable, so no attempt was made to flip that checkbox unilaterally. Did the
+  doable prep the todo itself calls for: re-ran §2a's bounded GCS-listing methodology (same 13 days, both
+  `perpetual`/`future` partitions, read-only, no full corpus walk) to resolve whether the prior session's
+  manifest-census-drop-to-0 meant the defect was fixed. It was not — every originally-flagged object is still physically
+  present unchanged at its wrong-partition path; only the manifest's visibility into these rows changed. Updated the
+  operator-review todo with the reconfirmed ~15,119-row scope and filed a new P1 todo for the manifest-row-disappearance
+  root cause (untouched — genuinely separate work, flagged not fixed). Filed a `/blocked` question to the operator
+  carrying §7's three sign-off items plus this session's reconfirmed numbers. No GCS object written/moved/deleted; no
+  manifest row written; investigation script kept in scratchpad (one-off, not committed per script-homes). Next session
+  (whoever the operator's answer routes to): if approved, schedule the `--apply` per §5-6's canary-then-full-batch plan
+  using `market-tick-data-service@04d48b3c`'s script; either way, someone should pick up the new manifest-drift
+  root-cause todo independently since it doesn't block the operator decision itself.
