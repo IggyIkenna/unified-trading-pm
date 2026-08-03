@@ -381,3 +381,25 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   This is also the live tracking home for `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s duplicate
   checkbox (fixed via citation this run, not reclassified). `NEVER_SCOUTED`/`STALE`, and only flip the `FieldSpec` once
   genuinely at zero corpus-wide.
+- **2026-08-02/03 (interactive session, slot 1, another long-running independent contribution toward this same todo)** —
+  this session ran concurrently with (not instead of) further daily `/context-scout` cron passes and other workers'
+  edits, so its own before/after numbers are approximate snapshots of a corpus that never held still. Landed several
+  real commits: a corpus-wide backfill batch (`0e3029c63`), the completion of the `context_scout` skill/role-file
+  plumbing that a still-EARLIER session had also independently finished but never shipped (`26e0884a0`/`ed2d474b3`,
+  reconciled rather than duplicated), a strengthened `/context-scout` skill instruction (Phase 1 step 4 now explicitly
+  requires hunting for a doc's real source-code path — not just a codex citation — after a spot-check found ~half of
+  already-scouted docs were codex/plan-only when their own body text already named the exact file), and a new
+  `scripts/plan-hygiene/fix_conflict_markers.py` tool (pairs with the pre-existing `check_conflict_markers.sh` detector;
+  auto-resolves the whitespace-reflow / clean-insert conflict shapes this exact corpus-wide backfill work triggers
+  constantly on a shared checkout, leaving only genuine content conflicts for a human/agent to look at). **Real,
+  hard-won lesson**: on this checkout, most `UU` conflicts hit while backfilling `context_scope` were NOT genuine
+  content clashes — they were (a) `prek`'s stash-restore reflowing the exact same text at a different indent depth
+  (whitespace-identical after normalization — safe to auto-resolve), or (b) TWO independent sessions both adding
+  `context_scope:` to the same doc's frontmatter with a plain `git pull --autostash`, which git's own conflict machinery
+  does NOT flag (no conflict-marker lines at all — it's a duplicate-key structural defect, not a line-content clash) — a
+  corpus-wide sweep found ~275 docs with this exact defect in one batch alone; see the addendum on this same finding in
+  `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`'s lessons-learned section. **Not done,
+  deliberately**: did not flip `docspec.py`'s `context_scope` `FieldSpec` to `Req.R` — this plan's own todo above is the
+  correct place for that decision once a FRESH `generate_context_scope_inventory.py` run (not this entry's now-stale
+  snapshot) reports 0 `NEVER_SCOUTED`/`STALE`; re-measure before acting on any count in this Progress Log, including
+  this one.

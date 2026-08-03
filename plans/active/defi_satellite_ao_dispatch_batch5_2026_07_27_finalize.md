@@ -50,6 +50,7 @@ context_scope:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 

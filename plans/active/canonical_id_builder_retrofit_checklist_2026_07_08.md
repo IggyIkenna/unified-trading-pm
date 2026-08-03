@@ -54,9 +54,10 @@ source:
 context_scope:
   [
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
     unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
   ]
 ---

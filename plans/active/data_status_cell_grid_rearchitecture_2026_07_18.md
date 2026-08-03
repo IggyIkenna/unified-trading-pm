@@ -45,6 +45,7 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_07/mtds_data_status_page_parity_2026_07_21.md,
   ]
 ---
 

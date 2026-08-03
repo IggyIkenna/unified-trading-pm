@@ -58,13 +58,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-context_scope:
-  [
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-  ]
 depends_on: []
 source: >-
   /ag-closeout-audit skill run 2026-07-26 (interactive, operator-approved scope) — Phase 1 classified all 56 defi
@@ -74,6 +67,16 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+  ]
 ---
 
 # DeFi satellite AO batch 2 — fresh triage extraction

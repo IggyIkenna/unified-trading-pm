@@ -58,6 +58,8 @@ context_scope:
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     batch-live-reconciliation-service/batch_live_reconciliation_service/stages/stage4_agent_analysis.py,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md,
   ]
 ---
 

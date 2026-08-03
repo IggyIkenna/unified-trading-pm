@@ -61,6 +61,9 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
+    /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
+    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,

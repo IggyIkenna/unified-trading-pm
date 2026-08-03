@@ -53,9 +53,13 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/06-coding-standards/script-homes.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
+    /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 supersedes:

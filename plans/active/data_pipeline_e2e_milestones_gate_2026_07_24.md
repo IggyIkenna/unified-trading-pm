@@ -84,6 +84,8 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /plans/active/task_template.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 

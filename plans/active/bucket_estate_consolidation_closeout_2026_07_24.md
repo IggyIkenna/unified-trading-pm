@@ -57,8 +57,12 @@ last_updated: 2026-07-25
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/gcs-lifecycle-policies.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
   ]
 ---

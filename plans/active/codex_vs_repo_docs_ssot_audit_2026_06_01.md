@@ -50,8 +50,8 @@ context_scope:
     /codex/06-coding-standards/documentation-standards.md,
     /codex/00-SSOT-INDEX.md,
     /codex/06-coding-standards/model-tier-selection.md,
-    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
     /plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md,
+    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
   ]
 ---
 

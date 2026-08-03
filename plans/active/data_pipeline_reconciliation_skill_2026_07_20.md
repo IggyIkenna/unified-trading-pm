@@ -49,6 +49,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+source: operator request 2026-07-20 — "per-AG skill /data-pipeline-reconciliation, audit first then plan then execute"
 context_scope:
   [
     /cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
@@ -56,8 +57,9 @@ context_scope:
     /codex/02-data/reconciliation-finding-taxonomy.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/orphan-object-detection.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
   ]
-source: operator request 2026-07-20 — "per-AG skill /data-pipeline-reconciliation, audit first then plan then execute"
 ---
 
 # /data-pipeline-reconciliation — per-asset-group canonicalisation reconciliation skill

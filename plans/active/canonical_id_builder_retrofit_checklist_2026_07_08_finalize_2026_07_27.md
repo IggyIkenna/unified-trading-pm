@@ -47,6 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

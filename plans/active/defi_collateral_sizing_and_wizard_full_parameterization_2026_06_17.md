@@ -37,6 +37,8 @@ context_scope:
     /plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
     /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
     strategy-service/strategy_service/engine/strategies/v2/param_schema.py,
+    /codex/04-architecture/token-wrapping-and-collateral.md,
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
   ]
 ---
 

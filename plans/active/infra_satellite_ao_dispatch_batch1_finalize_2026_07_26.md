@@ -43,10 +43,12 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/11-project-management/,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/PLAN_FORMAT.md,
+    /plans/active/task_template.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/active/task_template.md,
   ]
 supersedes:
 superseded_by:

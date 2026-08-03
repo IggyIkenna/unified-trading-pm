@@ -50,6 +50,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 ---
 

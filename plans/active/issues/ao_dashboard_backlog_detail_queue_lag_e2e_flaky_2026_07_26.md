@@ -30,9 +30,10 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
     agent-orchestrator/dashboard/tests/e2e/backlog-detail.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
+    agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh,
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
   ]
 ---
 

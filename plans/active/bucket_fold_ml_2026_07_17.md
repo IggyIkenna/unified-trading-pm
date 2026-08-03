@@ -53,8 +53,8 @@ context_scope:
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/pipeline-mode-partition.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 

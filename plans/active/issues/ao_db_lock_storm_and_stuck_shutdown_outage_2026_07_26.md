@@ -47,8 +47,10 @@ context_scope:
   [
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
     agent-orchestrator/server/tmux_pruner.py,
+    agent-orchestrator/scripts/ao-self-pull.sh,
+    agent-orchestrator/scripts/install-orchestrator-service.sh,
+    /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
   ]
 ---
 

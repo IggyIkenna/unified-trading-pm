@@ -41,8 +41,10 @@ locked_since:
 context_scope:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
-    /plans/active/task_template.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /scripts/quality_gates/check_finalize_plan_coverage.py,
+    /plans/active/task_template.md,
     /plans/archive/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md,
   ]
 supersedes:

@@ -38,6 +38,7 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 supersedes:
 superseded_by:

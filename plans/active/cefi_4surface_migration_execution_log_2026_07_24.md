@@ -64,6 +64,9 @@ umbrella: true
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
+    /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
+    /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,

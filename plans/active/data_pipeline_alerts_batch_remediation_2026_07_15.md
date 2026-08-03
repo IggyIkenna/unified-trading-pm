@@ -56,6 +56,7 @@ context_scope:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md,
   ]
 ---
 

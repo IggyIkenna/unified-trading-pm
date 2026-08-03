@@ -52,7 +52,9 @@ source: >-
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /cursor-configs/AUTONOMOUS_AGENT_RULES.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /plans/active/task_template.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

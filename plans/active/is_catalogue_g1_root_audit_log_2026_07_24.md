@@ -54,6 +54,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
   ]

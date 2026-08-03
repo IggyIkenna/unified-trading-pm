@@ -45,10 +45,12 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     agent-orchestrator/server/worktree_clean_check/_ahead_push.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/tests/test_watchdog_unpushed_sweep.py,
     /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---
 

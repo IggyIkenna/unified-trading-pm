@@ -47,12 +47,13 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 context_scope:
   [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/epics/orchestrator_master.md,
     /plans/epics/agent_operating_framework_master.md,
-    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
 

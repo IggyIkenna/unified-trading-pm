@@ -56,6 +56,7 @@ context_scope:
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/v2_engine_venue_buildout_2026_06_15.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 ---
 

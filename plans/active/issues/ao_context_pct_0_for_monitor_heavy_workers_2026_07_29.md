@@ -59,6 +59,7 @@ context_scope:
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
     agent-orchestrator/server/worker_liveness/__init__.py,
     agent-orchestrator/server/orm.py,
+    agent-orchestrator/dashboard/src,
   ]
 ---
 

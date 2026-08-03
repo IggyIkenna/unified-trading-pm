@@ -46,8 +46,9 @@ source: >-
   moment) exited 0 both times, and `time` measured real=2m21.478s / user=0m12.093s — real, not inferred.
 context_scope:
   [
-    scripts/qg/no_adapter_contract_regression.sh,
     /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+    scripts/qg/no_adapter_contract_regression.sh,
+    features-service/scripts/quality-gates.sh,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
   ]
 ---

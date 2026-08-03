@@ -36,6 +36,7 @@ context_scope:
     /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/crypto_equity_link.py,
     instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py,
+    /plans/archive/issues/krx_equity_twin_no_source_2026_06_28.md,
   ]
 ---
 

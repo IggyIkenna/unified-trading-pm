@@ -66,10 +66,10 @@ source:
   operator-gated reader-cutover + delete)."
 context_scope:
   [
-    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
   ]
 ---

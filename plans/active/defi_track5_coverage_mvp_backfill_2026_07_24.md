@@ -52,6 +52,8 @@ context_scope:
     /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
+    /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    /plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
   ]
 ---
 

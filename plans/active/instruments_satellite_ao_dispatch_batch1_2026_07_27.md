@@ -54,6 +54,9 @@ source: >-
   is_daily_enum_capture_heal_2026_07_07.md) — zero overlap found.
 context_scope:
   [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /codex/02-data/honest-coverage-model.md,
     deployment-api/deployment_api/services/data_status/breakdowns_core.py,

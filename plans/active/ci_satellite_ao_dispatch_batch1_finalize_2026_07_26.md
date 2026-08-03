@@ -48,8 +48,8 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/task_template.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 

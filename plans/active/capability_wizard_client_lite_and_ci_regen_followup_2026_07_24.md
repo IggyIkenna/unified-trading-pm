@@ -46,6 +46,8 @@ context_scope:
   [
     /codex/09-strategy/architecture-v2/capability-wizard.md,
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    scripts/openapi/generate-unified-openapi.sh,
+    "unified-trading-system-ui/app/(public)/questionnaire/",
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
   ]

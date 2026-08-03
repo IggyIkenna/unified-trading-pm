@@ -46,6 +46,9 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+    /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
   ]
 supersedes:
 superseded_by:

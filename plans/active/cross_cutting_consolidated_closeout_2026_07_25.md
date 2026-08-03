@@ -88,6 +88,9 @@ superseded_by:
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/pipeline-mode-partition.md,

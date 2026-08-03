@@ -42,6 +42,9 @@ context_scope:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /codex/04-architecture/instruments-preflight-chain.md,
   ]
 ---
 

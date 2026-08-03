@@ -46,6 +46,8 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     agent-orchestrator/server/routes/agents.py,
+    unified-trading-pm/agents/main.md,
+    /plans/archive/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
     /agents/review.md,
   ]
 ---

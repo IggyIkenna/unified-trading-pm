@@ -81,9 +81,10 @@ locked_since:
 context_scope:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 supersedes:
 superseded_by:

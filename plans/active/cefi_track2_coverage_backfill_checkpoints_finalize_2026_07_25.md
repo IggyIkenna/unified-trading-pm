@@ -48,6 +48,7 @@ context_scope:
     /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 ---
 

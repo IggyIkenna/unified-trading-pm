@@ -67,6 +67,9 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/task_template.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
