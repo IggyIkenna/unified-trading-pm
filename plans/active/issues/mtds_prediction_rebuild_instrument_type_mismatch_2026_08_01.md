@@ -154,38 +154,40 @@ identically.
       remains right now, not the original full corpus. **Steps 3-6 (pause/apply/resume/verify) DONE 2026-08-03
       (interactive session, operator-authorized)** — see todo P3 below: the apply is NOT durable yet, a second, much
       larger straggler batch resurrected within ~20 minutes and needed a second full pause/apply/resume pass.
-- [ ] [DATA] P3. **NEW 2026-08-03 (interactive session) — the per-CID writer half of FINDING 2's checklist step 0 was**
-      **NEVER actually fixed, unlike what this doc's own P2 entry (and the parent backfill plan) claimed.** Confirmed by
-      code read, not inference: `market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
-      `_write_shard_counts_to_manifest()` (the per-CID/non-bundle writer) calls
-      `venue_writer.add(...,     instrument_type=itype_key, ...)` at line ~386 — `itype_key` passed through VERBATIM
-      from the shard key tuple, exactly the unfixed pattern FINDING 2 originally named ("stamps
-      instrument_type=itype_key verbatim from the shard key ... must canonicalize to PREDICTION_MARKET at write time").
-      Only the SIBLING bundle writer (`_finalize_prediction_bundles()`) got the canonical-stamp fix
-      (`market-tick-data-service@1ec415f8`, 2026-07-19) — this doc's own "What I found" section already flagged both
-      writers by name, but only the bundle one was ever actually patched. **Empirically confirmed this is live and
-      ongoing, not hypothetical**: after the P2 apply cleaned the canonical to 100% (0 non-canonical rows, verified via
-      a fresh read), a completely NORMAL incremental consolidator cycle (`_index/latest.json`: `incremental: true`, NOT
-      `force`) merged in 869,743 fresh null-`instrument_type` rows ~20 minutes later — `dedup_dropped: 874,492` in that
-      cycle's own report. Root cause: the prediction asset group's live capture runs on exactly 4 long-lived,
-      continuously-APPENDED per-VM shard files
-      (`_index/per_vm/prediction-live-{kalshi,polymarket}-{book-snapshot-5,trades}-20260727-*.parquet` — one file per VM
-      since launch, never rotated) whose `data_type` is `book_snapshot_5`/`trades` (the per-CID path, not the bundle
-      path) — every consolidator cycle sees these shards as "changed" (their mtime keeps advancing from ongoing appends)
-      and re-merges their content, including any still-null `instrument_type` rows the per-CID writer produced. A
-      canonical-index cleanup (`--remove-stragglers --apply`) can NEVER be durable against this source: it only rewrites
-      the canonical, never the per-VM shard bytes, so the same non-canonical rows re-enter on the very next cycle that
-      touches those 4 shards — confirmed by having to run the FULL pause/apply/resume/verify chain a second time this
-      session, seeing the identical 869,743-row shape reappear. **Fix**: add a prediction-specific canonicalization
-      branch to `_write_shard_counts_to_manifest`'s per-CID path (mirroring the sports
-      `itype_key == "odds" and data_type_key == "trades"` special-case already present a few lines above it) that stamps
-      `InstrumentType.PREDICTION_MARKET.value` instead of passing `itype_key` through verbatim, for prediction-venue
-      per-CID rows — this is a SHARED writer function across every asset group, so the fix must be scoped narrowly
-      (venue/asset-group-gated) to avoid touching CeFi/DeFi/TradFi/sports `instrument_type` stamping. **Until this
-      ships**: `--remove-stragglers --apply` needs periodic re-running (or a scheduled job) against the prediction
-      manifest — it is a real, recurring cleanup need, not a one-time task. Add a regression test pinning canonical
-      `instrument_type` on a per-CID prediction shard write (mirroring the existing bundle-writer regression test from
-      `b8a8fa7a`). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. **NEW 2026-08-03 (interactive session).** **CORRECTION to an intermediate claim made earlier the
+      same session** (recorded here for the record, not silently edited away): I first suspected the BATCH per-CID
+      writer (`engine/orchestrator/manifest_finalize.py::_write_shard_counts_to_manifest`) was the unfixed gap, since it
+      passes `instrument_type=itype_key` through verbatim. That is WRONG — `itype_key` reaches that function ALREADY
+      canonical for prediction venues, stamped upstream in
+      `engine/orchestrator/venue_fetch.py::_record_venue_shard_counts`
+      (`if _is_prediction_market_venue(venue):     manifest_itype = InstrumentType.PREDICTION_MARKET.value`,
+      `market-tick-data-service@71761d7f`, **2026-07-19** — predating the bad rows I'd found by over a week, which is
+      what made the "never fixed" claim implausible on a closer look). A test already locks this exact chain
+      (`tests/unit/engine/test_manifest_finalize_coverage.py::test_prediction_per_cid_manifest_row_stamps_canonical_prediction_market`).
+      **The REAL, empirically-traced root cause**: the LIVE websocket-streaming capture path uses a COMPLETELY SEPARATE
+      manifest-write mechanism (`live/websocket_runner.py`'s `LiveWebsocketRunner` + `live/_ws_window_helpers.py`'s
+      `record_flush_captured`/`record_flush_failed`, backed by `live/manifest_recorder.py::MTDSShardManifestRecorder`)
+      that the 2026-07-19 fix never touched — `instrument_type` there originates from
+      `WsInstrumentBuffer`/`ReceivedTick.instrument_type`, which real Kalshi/Polymarket ticks never populate (no such
+      field on the raw exchange message), so every live-captured prediction `book_snapshot_5`/`trades` row landed with a
+      null `instrument_type`. Confirmed exactly matching the empirical 869,743-row resurrection: the 4 shard files
+      causing it (`_index/per_vm/prediction-live-{kalshi,polymarket}-{book-snapshot-5,trades}-20260727-*.parquet`) are
+      this LIVE runner's own continuously-appended output, not batch shards. `live/backfill_runner.py`'s
+      `GapBackfillRunner` (a separate REST gap-fill scaffold, same manifest-recorder dependency) had the identical
+      hardcoded `instrument_type=None` gap, though its own docstring flags it as framework-only/no venue adapters
+      plugged in yet — fixed anyway for when one lands. **Shipped**: `market-tick-data-service@12992663` — added
+      `_is_prediction_market_venue`-gated canonical stamping at all 5 real call sites across the 3 files
+      (`_ws_window_helpers.py`'s 2 funnel functions, `websocket_runner.py`'s 3 direct `record_zero_rows`/`record_failed`
+      calls via a new `_canonical_instrument_type` helper, `backfill_runner.py`'s 2 calls), plus regression tests in
+      `tests/unit/test_websocket_runner.py` (3 new tests) and `tests/unit/live/test_backfill_runner.py` (1 new test) —
+      all pinning `instrument_type == "PREDICTION_MARKET"` for a prediction venue on every affected path.
+      `quality-gates.sh` green (9849 passed; 2 pre-existing unrelated failures — DEFI shard-count baseline drift + a
+      CLI-op-registry gap, neither touched by this change, confirmed by running the 5 directly-relevant test files in
+      isolation: 94/94 passed). **Durability note UNCHANGED from the original finding**: this closes the write-side gap
+      going forward, but does NOT retroactively fix bytes already sitting in those 4 live shard files from before this
+      fix — a `--remove-stragglers --apply` pass may still be needed once more to clean out whatever already-captured
+      null rows exist in those shards' current unmerged content, THEN this fix ensures no new ones land. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
@@ -223,3 +225,18 @@ identically.
   simply BST (UTC+1) vs UTC display, not drift; see `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` for the
   durable note on checking a cloud resource's own UTC timestamp rather than trusting a local script's
   `%(asctime)s`-formatted log line when reasoning about elapsed time.
+- **2026-08-03 (interactive session, continued) — fixed the real root cause (P3), operator-directed ("fix root**
+  **cause").** Traced the actual gap (see P3's DONE entry): my FIRST hypothesis (batch per-CID writer never fixed) was
+  wrong and self-corrected before shipping anything on it — `venue_fetch.py::_record_venue_shard_counts` already
+  canonicalizes prediction per-CID rows, landed `71761d7f` (2026-07-19), with its own regression test. The REAL gap was
+  the LIVE websocket-streaming path (`live/websocket_runner.py` + `live/_ws_window_helpers.py`, backed by
+  `live/manifest_recorder.py`), which the 2026-07-19 fix never touched — confirmed by matching the exact 4 shard files
+  causing the empirical resurrection to this runner's own continuously-appended output. Also fixed the same gap in
+  `live/backfill_runner.py`'s `GapBackfillRunner` (framework-only scaffold, no venue adapter plugged in yet, but same
+  bug). Shipped `market-tick-data-service@12992663` with 4 new regression tests. Hit + fixed a file-size ratchet
+  violation along the way (`websocket_runner.py` pushed to 916L against the 900L cap by my first attempt at this fix;
+  trimmed to exactly 900L by inlining the canonicalization check instead of adding a dedicated helper method+instance
+  attribute) and rode out one unrelated foreign ratchet failure (`scripts/pipeline_e2e_check.py`'s
+  `# type: ignore`-count ratchet, a false-positive matching a comment that merely MENTIONS the string in prose, not a
+  real suppression — resolved on retry once whatever concurrent session caused it also resolved it, never touched by
+  this change).
