@@ -187,8 +187,72 @@ discarding real data.
 - [ ] 3. [DATA] P2. Investigate whether prediction's `canonical_question_group=`-before-`day=` shape is still being
       written post-2026-07-21; extend the migration tool to recognize + migrate it (~25,745 objects) (repo:
       instruments-service).
-- [ ] 4. [OPERATOR] P1. Decide the authoritative-source resolution policy for the ~32,846 cross-AG content_mismatch
-      objects (sample real parquet content, not just metadata, before ruling) (repo: instruments-service /
-      unified-trading-pm decision).
+- [x] ✅ 4. [OPERATOR] P1. **RULED 2026-08-03 — per-pair "superset wins", NOT a blanket flat-always/hive-always rule.**
+      Sampled real parquet CONTENT (downloaded + parsed via pandas/pyarrow, not just crc32c/size metadata) for 10 pairs
+      spread across all 3 affected asset_groups and the full 2019–2026 date range (tradfi ×3, cefi ×3, defi ×4; PROD
+      buckets, read-only). Live evidence + methodology in
+      `instruments-service/scripts/{sample_content_mismatch,sample_content_mismatch_offsets,compare_content_v2}.py`
+      (scratchpad copies retained by the sampling worker; not committed — reproducible from the tool sequence described
+      below).
+
+      **Methodology gotcha caught mid-sample (material to the ruling): `instrument_key` is NOT a stable identity
+          column across writer generations** — e.g. `DERIBIT:FUTURE:BTC-27SEP19` (flat, older key format) vs
+          `DERIBIT:FUTURE:BTC@INV-20190927` (hive, newer key format) are the SAME instrument (`raw_symbol=BTC-27SEP19`
+          both sides). Comparing on `instrument_key` alone falsely reads as 100% disjoint; `raw_symbol` (+
+          `contract_symbol` for tradfi futures) is the stable cross-generation identity key and is what the table below
+          uses.
+
+          | asset_group | venue | day | flat rows | hive rows | relationship (by `raw_symbol`) |
+          |---|---|---|---:|---:|---|
+          | tradfi | CME | 2020-01-02 | 154 | 154 | tied (full overlap) |
+          | tradfi | CME | 2026-06-28 | 32 | 216 | **hive is a strict superset** — flat missing 184 real contracts |
+          | tradfi | NYSE | 2026-07-22 | 535 | 535 | tied (full overlap) |
+          | cefi | DERIBIT | 2019-03-31 | 6 | 312 | **hive is a strict superset** — flat missing 306 real DERIBIT options |
+          | cefi | BITFINEX-SPOT | 2023-12-16 | 284 | 284 | tied (full overlap) |
+          | cefi | DERIBIT-COMBO | 2026-06-04 | 568 | 31 | **flat is a strict superset** — hive missing 537 instruments |
+          | defi | UNISWAP_V2-ETHEREUM | 2020-05-20 | 11 | 9 | **flat is a strict superset** — hive missing 2 (root-cause sample from "What I found" §3 above) |
+          | defi | AAVE_V3-AVALANCHE | 2022-06-01 | 8 | 8 | tied (full overlap) |
+          | defi | AERODROME_V3-BASE | 2024-06-01 | 12 | 12 | tied (full overlap) |
+          | defi | AAVE_V3-ETHEREUM | 2026-06-27 | 36 | 36 | tied (full overlap) |
+
+          **Finding: in all 10/10 sampled pairs, the smaller side's instrument set is a clean SUBSET of the larger
+          side's — zero genuinely-irreconcilable (mutually-exclusive) divergence once compared on the stable identity
+          key.** 6/10 tied, 2/10 hive strictly more complete, 2/10 flat strictly more complete. This rules out BOTH
+          blanket options (a) and (b) from the original menu — either would silently discard real, verified-present
+          instrument rows in ~40% of sampled cases, which is exactly the risk the original finding warned about
+          ("force-overwriting either direction... risks silently discarding real data"). It also rules out a *naive*
+          "newest GCS write wins" reading of option (c): the tradfi CME 2026-06-28 pair shows flat's GCS write is ~1 day
+          NEWER than hive's yet flat has 184 FEWER contracts — a newer write was measurably worse there, so recency
+          alone is not a safe completeness proxy.
+
+          **RULED POLICY (refined option (c))**: per-object, resolve content_mismatch by **completeness** (superset by
+          `raw_symbol`/`contract_symbol` identity), not by side-label or timestamp:
+          - One side's instrument set ⊇ the other's → the superset side's content is authoritative; the migration
+            target ends up holding the superset side's bytes (whichever original path had them).
+          - Sets are equal-membership but bytes still differ (schema_version / column-order / float-precision drift,
+            the tied rows above) → no data-loss risk either way; default to the flat side's bytes for the hive target
+            (keeps single-writer provenance, matches the tool's existing copy direction, avoids a special case).
+          - (Not observed in this sample, but keep as a backstop) neither side is a superset of the other (genuinely
+            disjoint, non-overlapping instruments on both sides) → do NOT auto-resolve; flag for manual per-object
+            review/union. 0/10 sampled pairs hit this case, so it is expected to be rare, not the common path.
+
+          **Separate finding surfaced by this same sampling, NOT a migration-policy question — flagged as todo 7
+          below**: the cefi DERIBIT 2019-03-31 pair shows the CURRENT flat writer's own most recent rewrite of that
+          historical day (GCS write 2026-07-13) is missing all 306 options a same-day-but-earlier hive copy has — i.e.
+          the live backfill/reconciliation path that re-generates historical `instrument_availability` snapshots may
+          have a real option-coverage regression, independent of which side wins this migration's copy-up.
+
 - [ ] 5. [REVIEW] P2. Once todos 1-4 land, correct the writer-fix scope claim in `cross-asset-canonical-target-ssot.md`
       §8 (repo: unified-trading-pm). Depends on todos 1-4.
+- [ ] 6. [DATA] P2. Implement todo 4's ruled per-object "superset wins" resolver and run it across the ~32,846
+      content_mismatch objects (defi 31,315 / cefi 1,494 / tradfi 37): for each pair, download + parse both parquets,
+      compare by `raw_symbol` (+ `contract_symbol` for tradfi futures/futures_contracts) identity set, write the
+      superset side's bytes to the hive target (flat's bytes on a tie), and log any pair where neither side is a
+      superset of the other to a follow-up review list instead of auto-resolving it. Re-run the migration tool's dry-run
+      afterward to confirm `content_mismatch` drops to (ideally) 0, or to the size of that review list (repo:
+      instruments-service). Depends on todo 4.
+- [ ] 7. [DATA] P2. Investigate the cefi DERIBIT options-coverage gap surfaced by todo 4's sampling: the flat
+      `instrument_availability` object for day=2019-03-31/venue=DERIBIT was rewritten 2026-07-13 and contains 0 OPTION
+      rows, while a hive-shape copy from the same day has 306 — determine whether this is isolated to that one (day,
+      venue) or a systemic gap in the historical-backfill/reconciliation path for DERIBIT options, and fix the
+      writer/backfill if systemic (repo: instruments-service).
