@@ -22,7 +22,7 @@ related:
     /plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-03"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -168,7 +168,7 @@ on-chain-CLOB wire format.
       columns don't survive normalization, `_calculate_book_features` produces a valid non-NaN `mid_price`/ `spread_bps`
       from HL columns, and both the pre-existing bracket format and the already-standard `bid_price_N`/`ask_price_N`
       pass-through remain unaffected. `quality-gates.sh` green (94s, full run).
-- [ ] [DATA] P2. **Found while fixing bug 1 (2026-07-26) — same unscoped-listing bug class in a SEPARATE, un-fixed
+- [x] [DATA] P2. **Found while fixing bug 1 (2026-07-26) — same unscoped-listing bug class in a SEPARATE, un-fixed
       file.** `market_data_processing_service/app/core/orchestration_scheduling.py::_list_instrument_files` (a distinct
       implementation from `orchestration_scanner.py`'s, used by the live/scheduled candle-processing path rather than
       the CLI backfill path this session's fix targeted) has the IDENTICAL bug: a bare
@@ -178,7 +178,21 @@ on-chain-CLOB wire format.
       venue-derivation + scoped-prefix pattern shipped in `orchestration_scanner.py`
       (`market-data-processing-service@86a16239c3`) to this file's `_list_instrument_files`, with its own regression
       tests; confirm whether this path is actually exercised by any live/scheduled (non-CLI) candle-processing trigger
-      before assuming it's dead code.
+      before assuming it's dead code. — ✅ **DONE 2026-08-03** — `market-data-processing-service@e90e5be` (2 commits:
+      `5559312` deletes the module, `e90e5be` drops the stale referrers). This todo's own premise ("used by the
+      live/scheduled candle-processing path") was WRONG: confirmed via the full MRO chain (`CandleOrchestrationService`
+      → `CandleOrchestrationWriter` → `OrchestrationWorkersMixin`/`CandleOrchestrationScanner` →
+      `CandleOrchestrationBase`) that `OrchestrationSchedulingMixin` is never a base of the production service —
+      `app/core/__init__.py` exports only `CandleOrchestrationService`, and the only non-test references to
+      `orchestration_scheduling.py` were its own dedicated test file (`tests/unit/test_orchestration_scheduling.py`)
+      plus a "coverage boost merge" import-only test in `test_orchestration_base.py`. Its
+      `_should_process_instrument`/`_get_tradable_instruments`/ `list_available_dates` methods were also
+      already-duplicated logic living (and independently fixed) in `orchestration_scanner.py`/`orchestration_base.py`.
+      Given confirmed-dead status, duplicating the ~150-line venue/pipeline_mode-scoping fix into unreachable code would
+      only create a second copy to keep in sync forever for zero behavioral benefit — deleted the mixin + its dedicated
+      test instead, per the workspace's delete-deprecated-code rule, and cleaned the two stale referrers
+      (`path_parsing.py`'s module docstring, `test_orchestration_base.py`'s import-only test). `quality-gates.sh` green
+      (101s, full run, 2329 passed/2 skipped, no coverage regression). All 4 todos in this doc are now done.
 
 ## Progress Log
 
@@ -271,3 +285,25 @@ on-chain-CLOB wire format.
   `merge-base --is-ancestor`). Todo 3 flipped `[x]`. Todo 4 (the separate
   `orchestration_scheduling.py::_list_instrument_files` unscoped-listing bug) remains untouched — out of scope for this
   task.
+
+- 2026-08-03 (slot-10, `data_engineering`): **Resolved todo 4 — NOT by porting the fix, by deleting confirmed-dead
+  code.** Todo 4's own text asserted `orchestration_scheduling.py` was "used by the live/scheduled candle-processing
+  path" and asked to port the venue/pipeline_mode-scoped listing fix into it, while also flagging to confirm that
+  premise first. Traced the full MRO of the production `CandleOrchestrationService` (`CandleOrchestrationWriter` →
+  `OrchestrationWorkersMixin`/`CandleOrchestrationScanner` → `CandleOrchestrationBase`) and `app/core/__init__.py`'s
+  exports: `OrchestrationSchedulingMixin` is never composed into it. Grepped every reference to
+  `orchestration_scheduling`/`OrchestrationSchedulingMixin` repo-wide — the only non-dead hits were its own dedicated
+  test file and one import-only test literally labeled "from coverage boost merge" in `test_orchestration_base.py`. Its
+  `_should_process_instrument`/`_get_tradable_instruments`/`list_available_dates` methods are also already-duplicated
+  (and independently fixed) in `orchestration_scanner.py`/`orchestration_base.py`. Todo 4's premise was wrong — this
+  file was never the live/scheduled path; that path already runs through `orchestration_scanner.py`, which got the real
+  fix back on 2026-07-26. Given confirmed-dead status, ported the ~150-line venue/pipeline_mode-scoping logic into
+  unreachable code would only add a second copy to keep in sync forever for zero behavioral benefit, so deleted
+  `orchestration_scheduling.py` + its dedicated test instead (workspace delete-deprecated-code rule), and cleaned the 2
+  stale referrers (`path_parsing.py` docstring, `test_orchestration_base.py`'s coverage-boost import test).
+  `quality-gates.sh` green (101s, full run, 2329 passed/2 skipped, no coverage regression — deleting a
+  fully-tested-but-dead file is coverage-neutral). Shipped: `market-data-processing-service@5559312` (deletion) +
+  `@e90e5be` (stale-referrer cleanup), both verified reachable on `origin/live-defi-rollout` via
+  `merge-base --is-ancestor`. Todo 4 flipped `[x]`. **All 4 todos in this doc are now done, `locked_by` is empty —
+  archiving this doc per the plan-completion-and-archival-discipline HARD RULE
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) in the same turn.**
