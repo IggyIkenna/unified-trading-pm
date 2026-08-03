@@ -41,6 +41,7 @@ related:
     defi_track01_per_instrument_and_canon_id_2026_07_24,
     prediction_phase_ab_residuals_2026_07_24,
     sports_consolidated_closeout_2026_07_19,
+    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
   ]
 created: 2026-07-24
 parent_epic: infrastructure_master

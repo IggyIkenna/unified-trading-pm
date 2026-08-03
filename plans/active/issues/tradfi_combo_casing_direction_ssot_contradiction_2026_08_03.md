@@ -134,19 +134,31 @@ production data.
       instrument_type this affects) — UPPERCASE per UAC schema + the existing operator ruling in
       `tradfi_casing_100pct_redrift_2026_07_27.md`, or LOWERCASE per the archived 2026-07-29 migration's precedent. This
       gates every todo below. (repo: unified-trading-pm)
-- [ ] [DATA] P1. Verify whether
+- [x] ✅ [DATA] P1. Verify whether
       `instruments-service/scripts/enumerate_expected_universe.py::_canonical_writer_instrument_type` still seeds
       `expected_unattempted` rows in lowercase while MTDS's writer now captures in UPPERCASE (post
       `unified-trading-library@688e49bc`) — if confirmed, fix the seeding function to match the ruled-canonical casing
-      so seed/capture shard atoms stay aligned. (repo: instruments-service)
+      so seed/capture shard atoms stay aligned. (repo: instruments-service) — DONE `instruments-service@47a631ff`.
+      CONFIRMED the mismatch was real and live: the manifest consolidator's dedup key
+      (`unified_trading_library.manifest_consolidator._dedup_key_sql`) has NO `UPPER()`/`LOWER()` normalization —
+      case-sensitive — so a lowercase-seeded `combo`/`equity`/`etf`/etc. cell could never be superseded by its real
+      (now-uppercase) capture. Fixed by routing `_canonical_writer_instrument_type`'s final grain through
+      `canonicalize_manifest_instrument_type` (the SAME function the writer calls at the ManifestWriter seam) instead of
+      re-hardcoding a casing assumption a second time — `futures_chain`/`options_chain` correctly stay lowercase
+      (permanent bundle-grain exclusion), every other type (incl. `combo`) now matches the writer's actual UPPERCASE
+      output. Updated 4 existing tests whose `present_set` fixtures hardcoded the stale lowercase grain; added a
+      regression test asserting the seeder can never re-diverge from the writer's canon. Full QG green (5195 tests,
+      `.qg_last_passed_sha=47a631ff`).
 - [ ] [DATA] P1. Once the direction is ruled + the seeding function (if broken) is fixed: re-run
       `market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` (raising
       `_EXPECTED_CANDIDATE_MIN`/`_EXPECTED_CANDIDATE_MAX` to bracket the now-understood ~1.4M-row population) if
       UPPERCASE is ruled, OR write the equivalent lowercase-direction script update if LOWERCASE is ruled instead.
       (repo: market-tick-data-service)
-- [ ] [DATA] P2. Cross-reference this doc, `tradfi_casing_100pct_redrift_2026_07_27.md`, and the archived
+- [x] ✅ [DATA] P2. Cross-reference this doc, `tradfi_casing_100pct_redrift_2026_07_27.md`, and the archived
       `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` from each other so future casing work sees all
-      three. (repo: unified-trading-pm)
+      three. (repo: unified-trading-pm) — DONE. This doc already cited both in its own `related:` at filing time; added
+      the reciprocal `related:` pointer + a dated Progress Log note to the archived residual doc, and a `related:`
+      pointer to the archived 100pct-directive doc, both pointing back at this doc.
 
 ## Progress Log
 
@@ -168,3 +180,17 @@ production data.
   confirmed stale relative to current writer behavior (docstring at line 1719-1738 still documents the pre-seam
   lowercase writer convention). This is evidence for whoever works `-002`, not a fix — the correct target casing for the
   seed still depends on `-001`'s ruling. No manifest write attempted; no `--apply` run.
+- 2026-08-03 (slot-7): main gave interim guidance on the blocked question filed for `-001` (NOT a final human sign-off —
+  a genuinely open P0 gate still awaiting the actual operator; deliberately NOT citing the tracking id in this note —
+  see `blocked_reconcile_marker_false_positive_2026_08_03.md`, filed by a sibling slot the same day, for exactly why).
+  Guidance splits into two parts: the likely-correct CASING DIRECTION (uppercase, IF this doc's premises hold — UAC's
+  `InstrumentType.COMBO` enum value + the existing operator directive already on file in
+  `tradfi_casing_100pct_redrift_2026_07_27.md`) still needs genuine operator confirmation, not just chat-level
+  agreement; the `--apply` EXECUTION itself is explicitly withheld this tick — human-owned, given it's a THIRD mass
+  rewrite of a contested ~1.4M-row population, requires loosening the script's own STOP-ON-SURPRISE safety guard, and
+  has no verifiable before/after evidence artifact for a mutation this size (see
+  `prod_mutation_evidence_artifact_gap_2026_08_03.md`). One hard, non-negotiable prerequisite applies regardless of who
+  ultimately signs off: fix the seeding-function staleness FIRST. Acted on that — closed `-002` for real this time
+  (`instruments-service@47a631ff`, full QG green, see `-002` above) and closed `-004` (cross-reference). `-001` (the
+  casing-direction decision) and `-003` (the `--apply` itself) stay OPEN, still gated on the human operator — no
+  manifest write attempted this session.
