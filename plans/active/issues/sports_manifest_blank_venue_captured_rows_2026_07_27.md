@@ -10,7 +10,7 @@ summary: >-
   plus a handful of `ODDS_MOVEMENT`/`ODDS_SNAPSHOT`/`odds_movement`/`odds_snapshot` (2 each). This is a distinct axis
   from the Track C todo's own scope (LADBROKES_UK/SPORT888/footystats-ODDS_API/FOOTBALL/UNKNOWN) — not conflated with
   it, not fixed inline, filed separately per the Findings Closure hard rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -45,7 +45,7 @@ context_scope:
   ]
 assigned_vm: planning
 assigned_role: data_engineering
-resolved_by:
+resolved_by: unified-api-contracts@b27717b8, instruments-service@5573f817
 ---
 
 # Sports manifest rows with a blank `venue` string
