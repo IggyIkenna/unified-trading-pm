@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-01"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -440,3 +440,42 @@ not data-pipeline).
   (which covers `assigned_vm`, checkbox citations, archival and verdict markers), and picking between A/B/C is a process
   ruling. Recorded here rather than in a new parked doc so it does not add to the very NA corpus this skill's ratchet is
   meant to shrink.
+
+- **2026-08-03** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 12). Re-derived the
+  candidate set (13 covering docs, 45 members — up from 43 on 2026-08-02, 2 never-cited). Re-checked all 9
+  carried-forward 2026-07-31/08-01/08-02 findings live before fresh triage: 5 resolved since yesterday
+  (`delta_proxy_repricer.py` checkbox shipped; `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P0-A 2026-08-15 cliff
+  operator-ruled; `qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md` retagged `[ao]`;
+  `git_health_not_clean_since_pinned_constant_2026_07_27.md` retagged `[ao, meta]` by the cross-cutting tranche's own
+  run, resolving both its dual-tag AND its underlying mistag in one move;
+  `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s todo 1 found already-resolved-elsewhere and fixed in-line this
+  run since the batch is still `status: draft`), 1 still open unchanged
+  (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s mistag, still parked as
+  `BLOCKED-OPERATOR-DECISION` above). Ran a fresh 45-agent Phase 1 Workflow over the full candidate set (0 errors).
+  **Found a serious regression on finding 7's own fix**: `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s 2026-08-02
+  operator-approved `assigned_vm: NA` → `planning` flip landed BLANK instead of `planning` (verified via direct raw-file
+  read + `git log -p`, not the doc's own banner text, which falsely claims the flip succeeded and fooled today's own
+  Phase-1 audit agent into reporting it as done) — the `[BACKEND] P3` todo is still not AO-dispatchable, one day after
+  the "fix." Also found (real-host `find` sweep, confirming this is the genuine long-running shared host, not a
+  sandbox): `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`'s previously-verified
+  stash-backup bundle is now genuinely absent anywhere under `/home/ubuntu`, alongside the scratch directory itself —
+  contradicts that todo's own done-when (the bundle was meant to survive as the sole remaining trace) and needs operator
+  investigation (relocated durably vs. an unrecovered loss). Both, plus a methodology caveat (15 of today's 42
+  orphaned-verdict docs are already self-dispatched and do not need batch7 treatment — corroborated unprompted by 7 of
+  the 45 Phase-1 agents) and 2 unscoped batch7 candidates, are recorded in full in
+  [issues/ag_closeout_audit_infra_parked_2026_08_03.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md).
+  Did not draft `infra_satellite_ao_dispatch_batch7` — of 42 orphaned docs, 15 are self-dispatched and the remaining 27
+  are each operator/time/design/conflict-gated or this skill's own prior-run parked-findings docs; the 2 "maybe"
+  candidates need dedicated scoping first, per the skill's own "report the residual, don't force a batch" allowance.
+  **Linkage discoverability fix**: `check_ag_closeout_linkage.py` shows 64 orphans corpus-wide (baseline 69, still
+  improving) — exactly 1 carried `asset_group: [infrastructure]` at the time of the first check:
+  `issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md` (conflict-gated against the active
+  `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P0 plan per its own 2026-08-02
+  na-eligibility-audit entry — not batchable this round, named here per the established discoverability remedy). Re-ran
+  the linkage check after adding this mention: that one resolved (63/69), but
+  `issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md` (also `asset_group: [infrastructure]`,
+  this run's OTHER never-cited candidate) newly appeared as an orphan on the re-check — most likely a concurrent edit
+  elsewhere in this actively multi-agent-edited corpus changed its indirect path between the two checks, not this run's
+  own doing. Naming it here too (same conflict-gated status as its sibling — see this run's parked-findings doc finding
+  context): it is a real, live data-pipeline-correctness gap (the honest-coverage data-status panel has been silently
+  stale since ~2026-08-01) but conflict-gated against the same active P0 plan, not batchable this round either.
