@@ -227,3 +227,8 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
       (masking writer is `uts-prod-instruments-service-sports-fixtures`, a different job) is tracked separately as the
       `[CODE] P1` "extend the guard" todo above, dispatched via
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

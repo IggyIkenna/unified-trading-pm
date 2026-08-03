@@ -434,3 +434,5 @@ point, per this data_type/day/league key."
   self-verifying, so it needs no `[OPERATOR]` delete-safety gate. Conflict-check CLEAR: the
   `sports_satellite_ao_dispatch_batch2_2026_07_24.md` grep hit was an unrelated curated-universe todo, not this
   migrate-forward.
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

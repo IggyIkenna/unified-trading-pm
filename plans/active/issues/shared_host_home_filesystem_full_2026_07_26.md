@@ -345,3 +345,5 @@ specific to any one task.
   touched the file; `git show` confirms no other diff in that commit. `grep -cE '^- \[ \]'` = **2**, matching this
   verdict — same 2 open-ended investigation items, same `block_destructive_commands.py` autonomous-cleanup block. No
   action needed.
+
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).

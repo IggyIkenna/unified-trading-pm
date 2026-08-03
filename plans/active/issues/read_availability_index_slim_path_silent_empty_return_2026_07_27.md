@@ -116,3 +116,8 @@ that verification is this todo's job.
       path returns nothing IS a genuine failure, not honest absence) or fix the underlying read defect directly; add a
       regression test pinning "columns= fast path returns the same row count as the unprojected full path against a
       real/fixture manifest" so this can't silently regress again. (repo: unified-trading-library)
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries, unchanged — reviewed against current doc
+  content and still accurate).

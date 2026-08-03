@@ -50,6 +50,7 @@ context_scope:
     /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     features-service/features_service/sports/exporters/odds_features_exporter.py,
+    features-service/features_service/sports/exporters/odds_targets_exporter.py,
     ml-service/ml_service/training/app/core/sports_target_generator.py,
   ]
 ---
@@ -299,3 +300,5 @@ will auto-push a held commit the moment it reclaims a session it considers dead 
   mechanical execution against an already-ruled decision. Conflict-check CLEAR: the sibling
   `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (planning) claims the FAMILY-route column
   check, a different, adjacent claim.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added `odds_targets_exporter.py`, the actual new
+  export artifact this doc's ratified fix built (the file the remaining `[ML] P2` retrain depends on being backfilled).

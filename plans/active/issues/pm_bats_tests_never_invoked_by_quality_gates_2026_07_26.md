@@ -46,7 +46,7 @@ locked_by:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     scripts/quality-gates-base/base-service.sh,
     .github/workflows/python-quality-gates-v2.yml,
   ]
@@ -130,3 +130,10 @@ independently re-derived: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (still
 as D4-10 and escalated the TRUE blocker to the operator as an authority/scope question ("should adding a BATS phase to
 the shared, fleet-wide `base-service.sh` be its own AO-dispatched or human plan?") — still unanswered anywhere in the
 corpus. Both todos stay KEEP-NA on that unresolved escalation, not the stale E1 citation.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) — swapped the stale archived
+  `ci_satellite_ao_dispatch_batch2_2026_07_29.md` citation for
+  `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (the current active doc that re-examines this issue as
+  D4-10 and carries the still-unanswered operator escalation).

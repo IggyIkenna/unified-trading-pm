@@ -617,3 +617,5 @@ Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) a
   durable guarantee beyond what a one-off confirmation run would give. No evidence found of an actual prod `--apply`
   regen run producing a literal 0-diff artifact; that step is instruments-service-repo scope and a prod mutation, both
   outside this task's bounds, so `[DATA] P2` is left open (non-blocking) with this status noted rather than checked off.
+
+- **context-scout 2026-08-03**: reviewed context_scope (4 entries), no change needed — still accurate.

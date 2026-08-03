@@ -61,6 +61,7 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+    features-service/features_service/volatility/core/orchestration_service.py,
   ]
 locked_since:
 ---
@@ -433,3 +434,9 @@ not a mechanical column-list copy.
       class itself may be a leftover the same cleanup missed). **Done when**: confirmed genuinely dead (no dynamic
       import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
       caller and this todo is closed as not-applicable.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
+  `features-service/features_service/volatility/core/orchestration_service.py`, the target of the sole remaining P3
+  dead-code-investigation todo.

@@ -37,6 +37,7 @@ context_scope:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data_other.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
@@ -474,3 +475,8 @@ inherited from the first shipped batch:
 No new durable contract — this executes Directive A/B from
 `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`, already the SSOT for the selection rules
 themselves.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the archived freshness-preflight issue doc,
+  which holds the actual next-dispatch relaunch instructions for step 2's incomplete backfill VM.

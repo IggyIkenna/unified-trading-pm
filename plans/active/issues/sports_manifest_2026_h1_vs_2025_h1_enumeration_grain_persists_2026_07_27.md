@@ -202,3 +202,8 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       determine whether it is genuine coverage expansion (more leagues legitimately tracked in 2026) or a
       duplicate/near-duplicate league_id seeding artifact isolated to those 3 data_types. Read-only classification; no
       manifest write. (repo: instruments-service)
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

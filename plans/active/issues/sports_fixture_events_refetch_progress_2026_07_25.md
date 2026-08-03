@@ -35,10 +35,10 @@ context_scope:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     instruments-service/scripts/census_fixture_events_schema_variants_2026_07_25.py,
+    instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
-    instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py,
   ]
 supersedes:
 superseded_by:
@@ -895,3 +895,11 @@ per `issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`, st
 123 req/min (live daily quota check). This pass should genuinely fix the 2,383 `af_prefixed_10col` objects (never
 targeted before); the 1,943 `degenerate_5col_stub` objects are also in this recovery-ids set again but are expected to
 remain unchanged (honest-absence — see above). Monitoring to completion.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-stable `api_football.py` adapter
+  and the `sports-2020-06-data-floor.md` codex note (date bound already baked into every copy-paste command in this doc)
+  for `instruments_service/engine/orchestrator/sports_fixtures.py` (root-caused as the writer/recovery-merge file in the
+  2026-08-03T04:35Z entry) and `prod_vm_launch_missing_service_account_user_grant_2026_08_02.md` (the current VM-launch
+  workaround a future dispatch needs).

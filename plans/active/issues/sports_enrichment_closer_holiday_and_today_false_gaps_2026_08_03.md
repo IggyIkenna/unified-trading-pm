@@ -38,7 +38,11 @@ last_updated: "2026-08-03"
 context_scope:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    instruments-service/scripts/close_stale_enrichment_expected_unattempted_cells_2026_07_19.py,
+    deployment-service/scripts/vm/launch-sports-is-gap-fill.sh,
   ]
 ---
 
@@ -123,3 +127,7 @@ launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HAR
 - [ ] [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
       `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`, matching the pattern other backfill launchers use,
       to close the SPOT-default gap. (repo: deployment-service)
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (6 entries).

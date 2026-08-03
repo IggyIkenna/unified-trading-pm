@@ -43,6 +43,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/orphan_reap.py,
     scripts/quality_gates/check_evidence_backed_completion.py,
+    /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
   ]
 depends_on: []
 ---
@@ -144,3 +145,6 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   "the blocking critical path fully landed and archived" rather than a direct commit citation — worth a 5-minute direct
   check (does `features-service` have BOTH commits from slots 9 and 8 on origin, or did only one supersede the other)
   before formally closing this item, but not treated as still-live work.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added
+  `/plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`, the archived doc whose
+  shipped gate-aware sweep (`agent-orchestrator@49c919d`) unblocked the still-open `/done`-on-origin-gate todo.

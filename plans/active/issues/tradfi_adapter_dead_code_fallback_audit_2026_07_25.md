@@ -59,7 +59,9 @@ context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_cme_converter.py,
+    execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py,
   ]
 ---
 
@@ -422,3 +424,4 @@ that plan's own stated reconciliation pattern.
   `# TradFi (9 venues)` comment to the actual registered count (7). No behavior change — documentation only.
   `market-tick-data-service@7db75b1a` (`quality-gates.sh` full green, shipped via `quickmerge.sh --agent`, verified
   ancestor of origin). Checkbox flipped above.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries).

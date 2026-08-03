@@ -26,7 +26,8 @@ context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py,
+    market-data-processing-service/scripts/reprocess_sports_odds.py,
+    market-tick-data-service/scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py,
     market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
     deployment-service/scripts/rebuild_sports_manifest.py,
   ]
@@ -826,3 +827,8 @@ offered to the queue once these are the only real blockers.
   Track H's registry-aware honest-coverage denominator ONCE its 2 remaining blockers land' — and the doc's own
   2026-07-28 re-dispatch checks (slot-7, then slot-10) confirm both blockers still unshipped. It also carries an
   unanswered 'OPERATOR DECISION NEEDED — China Super League + Russia Premier League' section
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-shipped
+  `migrate_sports_league_id_casing_2026_07_21.py` executor for the two files the sole remaining open todo actually
+  targets: `market-data-processing-service/scripts/reprocess_sports_odds.py` (Step-7 re-run) and
+  `census_footystats_orphan_content_2026_07_25.py` (the existing census; its apply/swap counterpart still doesn't
+  exist).

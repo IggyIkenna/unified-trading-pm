@@ -51,7 +51,7 @@ context_scope:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
     agent-orchestrator/scripts/hooks/block_destructive_commands.py,
-    scripts/quality_gates/check_repo_docs_ssot.py,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/epics/infrastructure_master.md,
   ]
 ---
@@ -155,3 +155,4 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   knowledge no worker session has, exactly the operator-gated judgment call this doc's own `[OPERATOR]` tag already
   anticipated, just not the specific gap it originally named. Verdict stays KEEP-NA (if anything, more clearly
   operator-gated now, not less) — this is a content-accuracy update, not a reclassification.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries).

@@ -181,3 +181,5 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   archived, `plans/archive/issues/`) independently confirmed the underlying gap is real (not a live-trading-gated no-op)
   — recommend the operator/main-agent promote this into a real wrapper plan per CLAUDE.md's findings-triage rule
   (`audit-scope -> wrapper plan -> epic VM`), splitting the bundled todo into its constituent AO-eligible pieces.
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

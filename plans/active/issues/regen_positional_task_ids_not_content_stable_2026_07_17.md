@@ -280,3 +280,5 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   explicitly name a redirect-to-another-doc banner and an inline `assigned_vm: NA #`-comment citing a prior
   RECLASSIFY-then-revert as hard KEEP-NA triggers (same commit as this marker), so a future run's Phase 1 does not need
   to rediscover this citation by luck.
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

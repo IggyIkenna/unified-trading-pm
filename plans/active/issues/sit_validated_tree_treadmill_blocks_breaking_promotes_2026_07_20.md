@@ -48,6 +48,8 @@ context_scope:
     /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
     .github/workflows/ldr-to-main-promote-fleet.yml,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    system-integration-tests/.github/workflows/full-workspace-sit.yml,
   ]
 resolved_by:
 ---
@@ -226,3 +228,10 @@ ruling is still genuinely undecided (grepped every active plan for a recorded ru
 gap the 2026-07-30 pass missed: the SIT-overlap status-clobber sub-finding shipped 2026-07-29 (one day before that audit
 ran) — closed with commit citations. Annotated the stuck-gate-monitor duplicate (still open in both docs, no false-done
 risk). Doc stays NA overall — 2 genuinely open items remain (the direction ruling and its conditional follow-on).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — added
+  `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (where the stuck-gate monitor actually shipped) and
+  `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the second file touched by the status-clobber
+  fix)).

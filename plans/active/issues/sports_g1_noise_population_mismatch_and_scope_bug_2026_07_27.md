@@ -211,3 +211,5 @@ script was run; no snapshots, no writes, no GCS deletes.
   writes). Fresh baseline: 11,403 non-canonical rows / 755 league_ids (football-only, full-registry). Added this as the
   authoritative row in the census table and flipped item-1's checkbox. Items 2 ([DIAG] §U reconciliation) and 4
   ([OPERATOR] mechanical park) remain open; item-3 stays PARKED (still behind item-2).
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

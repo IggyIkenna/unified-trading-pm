@@ -222,3 +222,5 @@ convention's scope).
   a concurrent session landed `unified-trading-pm@ca9551fbc`-adjacent work on this exact file between this audit's
   initial read and its commit — re-verified against the post-pull state before writing this marker, so the item counts
   above are current as of the actual commit, not the initial read.)
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

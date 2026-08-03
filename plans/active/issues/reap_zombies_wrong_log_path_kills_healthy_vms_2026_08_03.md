@@ -49,6 +49,9 @@ context_scope:
   [
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
+    /plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
+    deployment-service/scripts/vm/reap-zombies.sh,
+    market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
   ]
 depends_on: []
 ---
@@ -248,3 +251,7 @@ NEW root cause in the same incident family, not a duplicate.
   `vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`'s finding that this specific VM self-killed via its
   own stall watchdog. No new investigation needed beyond cross-referencing the two already-completed audits. No code
   shipped (doc-only closure); no GCS/VM mutations performed.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the buggy script itself
+  (`reap-zombies.sh`), the sibling doc that turned out to be this incident's real root cause
+  (`vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`), and the still-open checkpoint-durability todo's
+  target script.
