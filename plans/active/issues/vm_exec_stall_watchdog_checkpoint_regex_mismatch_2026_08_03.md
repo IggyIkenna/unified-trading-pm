@@ -221,18 +221,33 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                      todos 6 and 7 below.
+                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                          todos 6 and 7 below.
 
-- [ ] [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
+- [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
       verify via `gcloud compute instances describe ... --format='value(status)'` or its absence (self-delete removes
       the instance entirely), confirm the terminal state was `WORKER_STALLED` (not a genuine failure) via its
       `run.log`/`WATCHDOG_TRACE.log`, then relaunch via `launch-backfill-defi-dex-swaps-source-correction-vm.sh` (now
       carrying the `STALL_PROGRESS_REGEX=day=` fix from todo 1) to resume the
       `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` campaign without a third false-kill. (repo:
-      deployment-service, market-data-processing-service)
+      deployment-service, market-data-processing-service) — **the feared `WORKER_STALLED` self-kill never actually
+      recurred on this VM**; instead `backfill-defi-dex-swaps-20260803-103749` hit a genuine
+      `compute.instances.preempted` event at 13:30:41Z (confirmed via `gcloud compute operations list`), and the
+      standing fleet auto-recovery mechanism (caller `github-actions-deploy@...` from the orchestrator EIP
+      `13.113.200.22`, i.e. NOT a manually-triggered relaunch) auto-relaunched a replacement VM within ~70-90s each
+      time, TWICE in a row (`-133142` preempted again ~2min after its own launch, `-133550` then held) — both confirmed
+      carrying the already-fixed `STALL_PROGRESS_REGEX=day=`/`STALL_TIMEOUT_SEC=3600` metadata (the launcher script
+      bakes this in on every invocation, automated or manual) and both genuinely RESUMING from the day-level GCS
+      checkpoint (`RESUMING: 360 days already checkpointed as done`, started at `day=2023-12-28` — the small ≤8-day
+      re-verify overlap past the last 20-day checkpoint write, not a restart from day one). No manual relaunch was
+      needed from this dispatch — automation won the race — but this dispatch independently verified correctness
+      end-to-end (terminal-state cause, checkpoint-resume integrity, fix propagation) rather than taking the "still
+      running" state at face value. See Progress Log entry below for the full evidence chain. Filed a follow-up (todo 8)
+      for the one real gap this surfaced: a genuine future `WORKER_STALLED` self-delete (as opposed to preemption) is
+      NOT covered by this same auto-recovery path — it pages an operator instead, per `exit_code_fleet_monitor.py`'s
+      `EscalationTier.PAGE_OPERATOR` routing for any non-137 non-preempted exit.
 - [ ] [DATA] P2. **Cross-link this doc's finding into `reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`'s
       remaining open todos (2-4)** — todo 2 there ("audit whether reap-zombies.sh has silently killed other healthy
       VMs") is effectively answered NO by this doc's audit (see "What I found" above); its todo 4 ("make the day-level
@@ -276,6 +291,25 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       per-item/per-day/per-shard log line that recurs well within the timeout, matching the standard this doc's todo 2
       used). Not filed as its own issue doc — same underlying gap as todo 6, just larger/multi-script, so it stays as a
       follow-up here. (repo: deployment-service)
+- [ ] [INFRA] P2. **A genuine `WORKER_STALLED` in-guest self-delete is NOT covered by the same auto-recovery path that
+      already handles SPOT preemption for this launcher — confirmed during todo 3's monitoring dispatch.**
+      `exit_code_fleet_monitor.py`'s `classify_terminated_vm()` routes `TerminationVerdict.PREEMPTED` (a durable
+      `compute.instances.preempted` marker) to `EscalationTier.AUTO_RECOVER` → `RelaunchPreemptedVm` — empirically
+      proven today (two back-to-back auto-relaunches within ~70-90s of `backfill-defi-dex-swaps-*` preemptions, see
+      Progress Log). But any OTHER non-zero exit (including a `WORKER_STALLED` self-delete — exit code from the in-guest
+      watchdog's own kill, not `137`) routes to `EscalationTier.PAGE_OPERATOR`, never `RelaunchStalledVm`/
+      `RelaunchPreemptedVm` — a human/agent has to notice the page and manually relaunch, exactly the gap this whole
+      issue doc exists to close for one specific VM instance. `RelaunchStalledVm` exists in principle for a stall, but
+      it is fed by `heartbeat_stall_watcher.py`'s RUNNING-VM detection — a race this launcher's self-delete (VM gone by
+      the next sweep) typically wins, so in practice a stall on this launcher still pages rather than auto-recovers.
+      Scope: for launchers with a PROVEN idempotent, checkpoint-resumable target script (this one; also
+      `launch-backfill-candle-manifest-vm.sh`, `launch-cefi-sharded-backfill.sh`, others already vetted in todo 2
+      above), evaluate extending `exit_code_fleet_monitor`'s routing so a non-oom `EXIT_NONZERO` verdict on a
+      known-safe-to-relaunch launcher also triggers ONE bounded auto-relaunch attempt (budget-capped, same pattern as
+      `RelaunchPreemptedVm`'s `_MAX_PREEMPTION_RELAUNCHES_PER_DAY`) before falling back to paging — instead of always
+      paging first. This is a real design decision (which launchers qualify, what the relaunch budget should be), not a
+      mechanical fix, so it stays a follow-up here rather than being implemented ad hoc under this doc's narrow
+      per-instance monitoring scope. (repo: deployment-service)
 
 ## Progress Log
 
@@ -321,3 +355,38 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   same `process_handler.py` per-date loop the sports invariant was already proven against).
   `deployment-service@84bd8a0`, `quality-gates.sh` green (253s), quickmerge landed on `live-defi-rollout`, SHA verified
   ancestor of origin.
+- **2026-08-03T~13:20-13:40Z** (AO dispatch, slot 8, `infra`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-002`, todo 3) — Picked up monitoring on
+  `backfill-defi-dex-swaps-20260803-103749`: confirmed `RUNNING` and healthy at 13:21-13:29Z (day=2024-01-02→2024-01-04,
+  `[[VM_PROGRESS]]` monotonic, last `STALL_PROGRESS_REGEX=checkpoint` match at 12:58Z — only 1374s of the 3600s stall
+  window elapsed, not close to a false-kill). Before arming a fresh watchdog, dispatched a background Explore agent to
+  check whether a fleet-wide auto-recovery mechanism already covers this VM — confirmed `RelaunchPreemptedVm`
+  (`deployment-service/scripts/recovery/relaunch_backfill_vm.py:363`) covers genuine SPOT preemption but NOT a
+  self-inflicted `WORKER_STALLED` kill (routes to `PAGE_OPERATOR` instead, and `RelaunchStalledVm` is raced by the
+  self-delete in practice) — so a dedicated watchdog for THIS specific failure mode was genuinely still warranted. While
+  preparing one, the VM's status flipped to `TERMINATED` at ~13:29:48Z — direct check via
+  `gcloud compute operations list` showed `compute.instances.preempted` at 13:30:41Z, i.e. genuine SPOT reclaim, NOT the
+  feared regex-mismatch stall (log had no `WORKER_STALLED`/`DEPLOYMENT_FAILED` line — it just stopped cleanly
+  mid-heartbeat, consistent with an abrupt STOP). Before I could manually relaunch, a replacement VM
+  (`backfill-defi-dex-swaps-20260803-133142`) was already `RUNNING`, created at 13:31:48-13:32:05Z by
+  `github-actions-deploy@...iam.gserviceaccount.com` from caller IP `13.113.200.22` (the orchestrator VM's own EIP) — a
+  standing automated mechanism, not a manual action, confirmed by the ~70-90s reaction latency. That VM was ALSO
+  preempted ~2min later (13:33:54Z), and a THIRD VM (`backfill-defi-dex-swaps-20260803-133550`) auto-relaunched again
+  within seconds, this time holding. Verified end-to-end rather than trusting "still running": both replacement VMs'
+  metadata carry the already-fixed `STALL_PROGRESS_REGEX=day=`/`STALL_TIMEOUT_SEC=3600` (the launcher script bakes this
+  in on every invocation regardless of trigger), and the third VM's `run.log` shows genuine checkpoint-resume —
+  `RESUMING: 360 days already checkpointed as done`, starting at `day=2023-12-28` (an ≤8-day re-verify overlap past the
+  last 20-day checkpoint write, not a restart from day one) — confirmed via the day-level checkpoint JSON in GCS
+  (`_dex_swaps_source_correction_checkpoint.json`, last entry `2023-12-27`). Net result: the SPECIFIC failure this doc
+  was filed for (the regex-mismatch stall self-kill) never recurred on this VM lineage and cannot recur on any of its
+  descendants (all inherit the fix); the actual event (SPOT preemption, twice) was already auto-recovered by a fleet
+  mechanism faster than a manual response could act, so no relaunch action was needed from this dispatch. Flipped todo 3
+  to done on that basis and filed todo 8 (a genuine, now-confirmed gap: a real future `WORKER_STALLED` self-delete — as
+  opposed to preemption — would still page rather than auto-recover, since `exit_code_fleet_monitor.py` only
+  auto-recovers the `PREEMPTED` verdict). Also found and stashed (not committed — out of this task's scope, unrelated
+  content) ~100min-old inherited dirty WIP in this slot's `features-service-clean-check` worktree
+  (`scripts/backfill_feature_orphan_class_e.py` + one test file) that predated this dispatch, tagged
+  `orchestrator-slot-8-vm_exec_stall_watchdog_checkpoint_regex_mismatch-002-unrelated-inherited-wip`. No GCS/VM
+  mutations performed by this dispatch — read-only investigation (gcloud describe/operations/storage cat) plus one
+  background Explore agent and this doc edit; the actual relaunches were performed by the fleet's own automation, not by
+  this agent.
