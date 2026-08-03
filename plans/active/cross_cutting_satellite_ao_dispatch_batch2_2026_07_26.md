@@ -569,13 +569,12 @@ context_scope:
 
 ## Deferred — conflict-gated (a competing claim is genuinely unresolved; do not draft against these)
 
-- **`issues/phantom_captures_tradfi_2026_06_28.md`** (1 open `[CODE] P2`, tradfi phantom root-cause diagnosis).
-  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s own "Deferred — still genuinely conflict-gated" section names
-  this exact doc: its `data_completion_tradfi_2026_07_15.md` ⑫ `reconcile_phantom_manifest_rows_all.py --dry-run` re-run
-  "conflicts with the closeout's own still-open Phase C Denominator/catalogue-completeness todo, which cites the SAME
-  `phantom_captures_tradfi_2026_06_28.md` ground via a different mechanism". Two tranches reaching the same ground by
-  different mechanisms is precisely the case the skill says not to guess at — leave it to the tradfi finalize's own
-  re-check.
+- ~~`issues/phantom_captures_tradfi_2026_06_28.md` (1 open `[CODE] P2`, tradfi phantom root-cause diagnosis).~~
+  **CLEARED 2026-08-03** — iterative-drain re-check (`/ag-closeout-audit cross-cutting`, dispatch `agt-52b2e3`, slot 12)
+  found the doc is now `status: resolved` and archived to `plans/archive/issues/phantom_captures_tradfi_2026_06_28.md`,
+  both todos `[x]` (the `[CODE] P2` root-cause diagnosis this entry named is done — its own todo text confirms it was
+  covered by this doc + `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, whichever ran first). No remaining work to
+  move into this batch — the conflict is moot, not resolved-in-favor-of-either-side.
 - **`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`** (4 open; the `[TEST] P3`
   `test_batch_harness.py::test_position_state_survives_across_ticks` isolation failure is genuinely bounded and would
   otherwise be batchable). Blocked on a ROUTING conflict, not on the work:
