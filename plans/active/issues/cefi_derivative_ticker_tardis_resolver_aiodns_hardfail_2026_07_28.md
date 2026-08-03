@@ -64,7 +64,7 @@ resolved_by:
 source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -327,6 +327,46 @@ and the residual-KeyError defense-in-depth path.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
+- [ ] [OPERATOR] P1. **New finding (agt-829d55, 2026-08-03, slot-9): the numerator IS genuinely moving again — NOT the
+      static backlog every prior dispatch found — and traces to a specific, currently-RUNNING live VM stuck on pre-fix
+      code, not a new code bug.** A fresh, bounded, column-projected `read_availability_index` read
+      (`data_type=derivative_ticker`, `capture_status=attempted_failed`) found 158,815 total rows (vs the 158,475-static
+      reading every dispatch since agt-40f31f on 2026-07-30 confirmed) — the FIRST numerator movement in 4 days.
+      Filtering to `written_at` within the last 24h found 1,821 fresh rows, 1,730 of them `venue=HYPERLIQUID`
+      (`pipeline_mode=batch_hyperliquid`) with `error_reason` EXACTLY matching the two signatures this doc's
+      `market-tick-data-service@6c6fab03` fix already root-caused and fixed: 1,696 rows
+      `"(429, None, 'null', None, {'Content-Type'..."` (Root cause #2) + 28 rows `'KBONK'`/`'KLUNC'`/`'KSHIB'`/
+      `'KNEIRO'`/`'KFLOKI'`/`'KPEPE'` bare `KeyError` (Root cause #3), plus 31 `Tardis HTTP 403 code=274` (BYBIT,
+      unrelated pre-existing 403-family) and 10 `UNCLASSIFIED:404`. Verified `6c6fab03` IS an ancestor of
+      `origin/live-defi-rollout` (`git merge-base --is-ancestor` = true) and re-read the current `hyperliquid_s3.py`
+      source — `_fetch_funding_via_rest`, `_reraise_hyperliquid_sdk_error`, and `_resolve_hyperliquid_coin_case` are
+      present and correct exactly as documented, so **this is NOT a regression in the fix, and NOT a new code bug** —
+      the shipped fix is genuinely correct and would prevent these exact rows if the code producing them ran it.
+      `attempted_at`≈`written_at` (lag ~0.2s) confirms these are REAL-TIME writes, not delayed consolidation of old
+      shards. Traced the source: `gcloud compute instances list` shows `mtds-live-cefi-consolidated-20260802-142543`
+      (RUNNING, `VM_OPERATION=live_websocket`, `VM_ASSET_GROUP=CEFI`) created 2026-08-02T14:25:51Z — its serial console
+      log shows `Extracted mtds-code` at boot (2026-08-02T14:27:29Z), i.e. a ONE-TIME code install at launch (per the
+      documented VM-tarball-deployment model —
+      `market-tick-data-service/scripts/vm/launch-mtds-live-cefi-     consolidated.sh` does have a
+      `lc_verify_tarball_freshness` pre-launch guard, but whatever it let through at that boot did not include the fix,
+      going by this VM's own output). This VM has been running continuously for ~34h at investigation time and its own
+      writes exactly explain the fresh slice (first fresh row 2026-08-02 16:58:46Z, ~2.5h after this VM's boot —
+      consistent with it being the sole active writer of these rows). **NOT executed this session** (no SSH access from
+      this identity — `whoami`=`github-actions-deploy@central-element-323112.iam.gserviceaccount.com`, a genuinely
+      different identity from the self-service `unified-trading-sa`/`uts-orchestrator-epic-role` per
+      `SUB_AGENT_MANDATORY_RULES.md` §"When escalating", so not self-granted; also this doc's own launcher script
+      carries an explicit historical warning — `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` — against
+      reflexively deleting a live VM off a copy-pasteable suggestion, which this exact refusal-path shape is): **cycle
+      `mtds-live-cefi-consolidated-20260802-142543`** — launch a fresh `mtds-live-cefi-consolidated-<newtimestamp>` via
+      the existing launcher (`--force`, since the singleton lock will refuse otherwise), verify it boots healthy
+      (`ps aux | grep websocket` shows all MVP shards running, `run.log` STARTED), THEN (only after confirming the new
+      one is genuinely healthy) delete the old `-20260802-142543` instance. This is additive-then-subtractive (new VM
+      first), and `MANIFEST_PER_VM_SHARDS=true` makes both VMs' writes shard-isolated so no risk of corruption if both
+      are briefly up — the risk is solely "did the new launch actually pick up the fix" (verify: fresh HYPERLIQUID
+      derivative_ticker `attempted_failed` rows post-cycle should show ZERO recurrences of the
+      429-raw-tuple/K\*-KeyError signatures) and "brief live-data gap for other shards on that VM during the cycle"
+      (recoverable per Live=batch architecture, not data loss). Tagged `[OPERATOR]` per the live-service risk + the
+      doc's own documented incident precedent about VM deletion, not because the diagnosis is ambiguous.
 - [ ] [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched for
       this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the ratio
       11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all 3
@@ -486,3 +526,21 @@ and the residual-KeyError defense-in-depth path.
   clone. **No code change, no new todo** — same redundant-dispatch waste
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still `status: open`, P2, awaiting
   an operator/design decision on Option A/B/C that this 12th+ dispatch further corroborates the need for).
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-829d55, slot-9) — 13th+ dispatch, but the FIRST since
+  2026-07-30 where the numerator actually moved (158,475 → 158,815), and the first to trace the fresh slice to a root
+  cause distinct from "static backlog."** DID re-run the live bounded manifest read (numerator moved, so the established
+  skip rule did not apply) and found the fresh 24h slice (1,821 rows) is 95% HYPERLIQUID rows carrying the EXACT
+  `error_reason` signatures this doc's own `market-tick-data-service@6c6fab03` fix (Root causes #2/#3) already
+  root-caused and fixed — re-verified the fix is still correctly present in source and still an ancestor of
+  `origin/live-defi-rollout`, so this is NOT a regression or a new bug. Traced it instead to a currently-RUNNING live VM
+  (`mtds-live-cefi-consolidated-20260802-142543`, launched 2026-08-02, i.e. 5 days AFTER the fix shipped) whose serial
+  console confirms a one-time `mtds-code` tarball extraction at boot — consistent with this VM having been launched from
+  a tarball that, despite the launcher's own `lc_verify_tarball_freshness` guard, did not carry the fix, and which
+  (being long-running, `VM_SHUTDOWN_ON_COMPLETION=false`) has been continuously reproducing the already-fixed bugs in
+  real time ever since (`attempted_at`≈`written_at` lag ~0.2s rules out delayed-consolidation of old shards). No SSH
+  access from this session's identity (`github-actions-deploy`, a genuinely different identity from the self-service
+  `unified-trading-sa`) to directly confirm the VM's installed source, so this is the strongest available evidence, not
+  a certainty — filed as a new `[OPERATOR]` P1 todo (cycle the VM via the existing launcher) rather than executed, both
+  because of the identity gap and because this doc's own launcher script carries an explicit historical warning against
+  reflexively deleting a live VM (`zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`). No code change (none
+  needed — the fix is already correct and shipped), no GCS/manifest write, no VM launched/deleted this session.
