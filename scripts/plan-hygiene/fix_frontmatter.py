@@ -573,12 +573,27 @@ def remove_deprecated_fields(fm_lines: list[str], deprecated_set: set[str]) -> l
 
 
 def is_field_empty(fm_lines: list[str], field: str) -> bool:
-    """Check if a field exists but has an empty or blank value (not a meaningful value)."""
-    for ln in fm_lines:
+    """Check if a field exists but has an empty or blank value (not a meaningful value).
+
+    A field whose own line is bare (`field:` with nothing after the colon) is NOT
+    automatically empty — its value may live on a preserved continuation line instead
+    (a quoted multiline scalar, or a value+trailing-`#`-comment block that
+    `_clear_field_continuations()` already decided to keep). Callers run this AFTER
+    `_clear_field_continuations()`, so by construction any continuation line still present
+    survived that guard and carries a deliberate value — treating the field as "empty" here
+    would overwrite the bare own-line with a default while leaving the real value dangling
+    underneath as orphaned YAML-fold garbage on the very next parse (the exact runaway-string
+    bug class `_clear_field_continuations()` exists to prevent), silently re-corrupting a
+    just-repaired field on this same fixer run.
+    """
+    for i, ln in enumerate(fm_lines):
         m = re.match(rf"^{re.escape(field)}:\s*(.*)", ln)
         if m:
             val = m.group(1).strip()
-            return val == "" or val is None
+            if val:
+                return False
+            next_ln = fm_lines[i + 1] if i + 1 < len(fm_lines) else ""
+            return not is_continuation_line(next_ln)
     return False
 
 

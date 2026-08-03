@@ -108,11 +108,11 @@ intentionally-changed files won't surface it either.
       the existing garbage-strip to continuation lines that carry neither a leading quote nor a leading `#`. Add a
       regression test using the exact `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` shape as
       a fixture. Repo: unified-trading-pm. — unified-trading-pm@458ba0180
-- [ ] [DATA] P2. Audit `plans/active/**/*.md` for any OTHER `execution_scope`/`last_updated` field carrying this same
+- [x] ✅ [DATA] P2. Audit `plans/active/**/*.md` for any OTHER `execution_scope`/`last_updated` field carrying this same
       "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior fixer run
       before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an indented
       non-quote-non-comment line, and cross-check each hit's git blame for a fixer commit that removed an adjacent
-      operator-ruling comment. Repo: unified-trading-pm.
+      operator-ruling comment. Repo: unified-trading-pm. — unified-trading-pm@PENDING_SHA
 
 ## Progress Log
 
@@ -132,3 +132,47 @@ intentionally-changed files won't surface it either.
   confirming the quoted-scalar guard and the accidental-fold-garbage strip both still work unchanged.
   `unified-trading-pm@458ba0180`, full quality-gates.sh green (1663 passed/11 skipped, coverage 69.99%). Todo 2 ([DATA]
   P2 corpus audit) remains open for a data_engineering worker.
+- **2026-08-03 (slot 15, data_engineering)**: shipped todo 2 — the corpus audit — and found + fixed a SECOND,
+  independent regression the todo-1 fix left open.
+  - **Corpus audit result**: scanned every `execution_scope`/`last_updated` continuation-bearing field in
+    `plans/active/**/*.md` (683 files) two ways — (a) a frontmatter-aware line-parser classifying every currently-live
+    continuation block against the three-way guard (quoted / value+comment / plain-unguarded), and (b)
+    `git log -G'^execution_scope:$'` / `-G'^last_updated:$'` pickaxe over the vulnerable window (`e37b7ab47`, when the
+    buggy quote-only guard was introduced, `2026-07-30`, .. `458ba0180`, the todo-1 fix, `2026-08-03`) to catch
+    corruption that had already flattened a continuation back to a single line (invisible to method (a) once corrupted).
+    Found exactly **one** genuine live corruption:
+    `plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s `execution_scope`
+    field — the doc's OWN cited bug example. Commit `d4f7fab9d` (2026-08-02 23:27:33 UTC) applied the operator ruling
+    correctly (`execution_scope: orchestrator-agent` → the `local-only # corrected 2026-08-02 ...` continuation block);
+    commit `21a96df33` (2026-08-03 00:55:01 UTC, "context_scope backfill batch 4/5", unrelated intent) then hit this
+    exact bug and silently reverted it back to `execution_scope: orchestrator-agent`, re-introducing the
+    `assigned_vm: NA` + `execution_scope: orchestrator-agent` contradiction the ruling had fixed — and this reverted
+    state was still live in HEAD when this audit started (the earlier incident described in this doc's own `source`
+    field was a DIFFERENT, caught-and-reverted-before-shipping occurrence on 2026-08-03; this was a THIRD, actually
+    shipped, occurrence, one commit before todo 1's fix landed). **Fixed**: restored the exact
+    `local-only # corrected 2026-08-02 (operator ruling on ...)` continuation block. Confirmed via
+    `git blame`/`git show` that the 2 other `execution_scope:`-bare pickaxe hits and the 2 `last_updated:`-bare hits in
+    this window were false positives / unrelated (issue-doc self-creation quoting the bug shape in prose; the OTHER
+    known prek-patch-cache bug's cleanup commits) — see method (b) query above for the exact commit list checked.
+  - **Second regression found + fixed (not part of the original recipe, discovered while verifying the audit couldn't be
+    fooled by a stale snapshot)**: dry-running the ALREADY-SHIPPED todo-1 fix against the just-repaired file showed it
+    would immediately re-corrupt it. Root cause: `is_field_empty()` (called right after `_clear_field_continuations()`
+    at both call sites, `execution_scope` unconditionally + `last_updated` gated on `status: active`) only inspects the
+    field's OWN line for a value — it has no knowledge that `_clear_field_continuations()` just decided to preserve a
+    continuation line carrying the real value. So even after the todo-1 fix stopped deleting the continuation, the very
+    next check still saw a bare `field:` line and called it "empty," overwriting it with the derived default
+    (`execution_scope: orchestrator-agent`) while leaving the real continuation dangling underneath — producing a WORSE
+    state than the original bug: a garbled two-value YAML-fold runaway string (`orchestrator-agent` on the field's own
+    line immediately followed by `local-only # corrected ...` as an orphaned continuation), which then stabilizes
+    permanently since the field's own line no longer reads empty on the next pass. This gap is NOT limited to
+    `execution_scope` — a synthetic `status: active` doc with a `last_updated:` value+comment continuation reproduced
+    the identical corruption before the fix and was clean after. **Fixed**: `is_field_empty()` now also checks whether
+    the field's bare own-line is immediately followed by a continuation line — if so, it is not empty (any continuation
+    line still present at this point in the pipeline survived `_clear_field_continuations()`'s guard by construction, so
+    it is, by definition, a deliberate preserved value, never accidental-fold garbage). Verified both the original
+    accidental-fold-garbage-strip path and the truly-empty-field-gets-defaulted path still work unchanged.
+  - **Tests**: extended `tests/unit/test_fix_frontmatter_clear_field_continuations.py` with `is_field_empty()`-specific
+    coverage (continuation-carries-value → not empty, for both the value+comment and quoted-scalar shapes; genuinely
+    bare field with no continuation → still correctly empty) plus an end-to-end `fix_active_plan()` test reproducing the
+    exact live-corpus shape and asserting the full fixer pass is a byte-for- byte no-op.
+  - Repo: unified-trading-pm@<PENDING_SHA>, full `quality-gates.sh` green (1668 passed/11 skipped, coverage 70.61%+).
