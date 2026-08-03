@@ -133,12 +133,27 @@ minute once actually applied.
 
 ## Recommended next steps
 
-- [ ] [DATA] P2. **Re-scope 2026-07-30 (see Progress Log below) — real cycle times are now much faster, lowering urgency
-      but not eliminating the value of an explicit measured horizon.** Add
+- [x] ✅ [DATA] P2. **Re-scope 2026-07-30 (see Progress Log below) — real cycle times are now much faster, lowering
+      urgency but not eliminating the value of an explicit measured horizon.** Add
       `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"] = <measured-cadence>` to
       `unified_trading_library/manifest_writer/_staleness_budget.py`, sized the same way `defi`/`sports` were (measure
       TRADFI's real consolidation cadence from Cloud Logging/consolidator run history first, then set the horizon with
-      margin — do NOT guess a number). Repo: unified-trading-library.
+      margin — do NOT guess a number). Repo: unified-trading-library. — **unified-trading-library@a1f6524a**: measured
+      the live `uts-prod-manifest-consolidator-market-data-tradfi` Cloud Run job directly
+      (`gcloud run jobs executions     list`/`describe`, 2026-08-03, ~590 executions/~10h window, filtered to
+      genuinely-successful single-cycle completions — excluding retried/failed executions whose wall-clock spans
+      multiple attempts): typical merges ~30-45s, but under real concurrent-backfill write pressure (several tradfi
+      backfill VMs live at measurement time: `mdps-backfill-tradfi`, `tradfi-bf-cme-ohlcv-1m`, `features-e2e-tradfi`)
+      the confirmed worst case was **53m59s** (execution `uts-prod-manifest-consolidator-market-data-tradfi-lksnb`,
+      verified via GCP's own "Execution completed successfully" condition message — within ~10% of the inherited 3600s
+      default, i.e. the generic default was already close to false-tripping under normal heavy load). Added
+      `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"] =     7200` (~2.2x margin over the observed 3239s/54min ceiling —
+      same margin philosophy as defi/sports, and matches the existing `AG_STALENESS_BUDGET_SEC["tradfi"]` value since
+      both derive from the same underlying job/cadence). Updated the existing boundary-assertion test
+      (`test_consolidator_inflight_horizon_per_asset_group`, `tests/unit/test_manifest_writer_per_vm.py`) that
+      previously asserted tradfi fell through to the generic 3600s default, plus added a new regression assertion that
+      the horizon must exceed the measured 3239s ceiling. `quality-gates.sh` green (sentinel a1f6524a), verified on
+      origin.
 - [x] [BACKEND] P3. Add a `logger.info` (or `.warning`, given it can legitimately run for minutes) immediately on entry
       to `_wait_for_in_flight_cycle_then_reread` stating the lock age and horizon, so this state is visible in
       `run.log`/Cloud Logging without needing SSH+py-spy to distinguish "legitimate wait" from "actually stuck." Repo:
