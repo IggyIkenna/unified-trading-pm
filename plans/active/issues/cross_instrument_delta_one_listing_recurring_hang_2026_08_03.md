@@ -109,16 +109,41 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
 
 ## Todos
 
-- [ ] [DIAG] P2. **Root-cause the hang.** Reproduce deliberately (relaunch CEFI:cross_instrument against a day with a
-      similarly large delta-one tree) with closer monitoring — SSH in early (before it can wedge) and capture a stack
-      trace / `py-spy dump` of the stuck process, or add verbose logging around `list_blobs()`'s pagination to see
-      whether it's making progress internally that just never logs. Repo: features-service
-      (`features_service/cross_instrument/cli/handlers/batch_handler.py::_ingest_delta_one`). Done when: the actual
-      stuck call is identified (not just re-confirmed to hang) and a fix or a bounded-timeout/retry wrapper is proposed.
+- [x] ✅ [DIAG] P2. **Root-cause the hang.** — unified-trading-library@680bbafb. Root cause identified via static
+      analysis + git-history cross-reference (no VM relaunch needed — the mechanism is deterministic, not
+      environmental): `GCSStorageClient.list_blobs()` (which `_ingest_delta_one` calls) resolves each listed blob's
+      `size` via `_resolve_list_blobs_size()`; when GCS's `objects.list` returns `size=None` for a just-written object
+      (an eventual-consistency propagation race, added 2026-07-30 commit `8bce325a` to fix a manifest-cost accounting
+      hole), that helper calls `blob.reload()` — the SOLE native GCS call in `gcp.py` with **no `retry=`/`timeout=`
+      bound**, unlike every other call in the file. `_ingest_delta_one` never even uses `.size` (it only reads `.name`),
+      so this reload() tax is pure overhead for this caller, but it's synchronous and serial: on a `day=2026-07-05/`
+      prefix repeatedly rewritten by the same session's back-to-back re-check runs (dense, very-recently-written objects
+      — precisely when the size-propagation race is most likely to hit), a large fraction of listed blobs can require
+      this unbounded reload(), turning an O(1) listing into a serial, silently-unbounded per-blob stall — with zero log
+      output (the only log line inside the helper fires ONLY if size is STILL `None` after reload(), so a run of
+      successful-but-slow reloads produces no visible symptom at all, matching "run.log froze mid-run" and the flat
+      ~19-20% CPU signature (network I/O + retry backoff, not idle, not fluctuating compute)) — for as long as 44
+      minutes. Fix shipped: `blob.reload(timeout=30, retry=_GCS_RETRY)`, bounding the reload to the same 600s retry
+      deadline used by every other call in the file, so a wedge now resolves or fails loudly within a bounded envelope
+      instead of hanging indefinitely. Also widened the `_GCSBlob` Protocol's `reload()` signature to accept the kwargs
+      (previously `reload(self) -> None`, the sole reason this call couldn't already pass them) and added/updated unit
+      test coverage (`tests/cloud_interface/unit/test_gcp_providers.py::test_list_blobs_size_none_reload_is_bounded` +
+      updated `test_list_blobs_reloads_when_size_none`'s side-effect stub, which previously only tolerated a zero-arg
+      `reload()` call). QG green, SHA verified on `origin/live-defi-rollout`.
 - [ ] [DIAG] P3. Check whether this is `-test-`-bucket-specific (a smaller bucket that's grown unusually dense from
       repeated same-day re-check runs across a short interval) or would also reproduce against a PROD-scale bucket with
       a naturally large `day=` tree. If `-test-`-specific, consider whether cross_instrument's e2e check driver should
       periodically prune old `-test-` runs' partial trees, or the finding is a false alarm.
+- [ ] [BACKEND] P3. **Follow-up optimization (deferred, not required for the P2 fix above):** eliminate the reload() tax
+      at its root for callers that never use blob size — add an opt-in `resolve_size: bool = True` parameter to
+      `StorageClient.list_blobs()` (default `True` preserves existing behavior for size-sensitive callers like
+      `_apply_per_vm_merge_budget`), thread it through `GCSStorageClient.list_blobs()` to skip
+      `_resolve_list_blobs_size()`'s reload() entirely when `False`, and pass `resolve_size=False` from
+      `features-service`'s `_ingest_delta_one`/`_list_polymarket_parquets` (both discard `.size`, only using `.name`).
+      Deferred from this task because it touches the abstract `StorageClient` interface + `StorageClientProtocol`
+      (unified-api-contracts) + all 4 provider implementations (GCS/AWS/local/async) for what the P2 fix above already
+      makes safe (bounded) rather than fast — a real latency win, not a correctness fix, so lower urgency than the
+      hang-elimination shipped above. Repos: unified-trading-library, unified-api-contracts, features-service.
 
 ## Progress Log
 
@@ -126,3 +151,13 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
   `features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`'s P2 todo. Not investigated further this
   session (verification-only todo scope) — a third relaunch attempt for the parent todo's own purposes is tracked there,
   not here.
+- 2026-08-03 (slot-10, worker): root-caused + fixed the P2 todo — see checkbox above for full mechanism. Confirmed via
+  static analysis (read `_ingest_delta_one` → `list_blobs()` → `_resolve_list_blobs_size()` → the unbounded
+  `blob.reload()`) and git-history cross-reference (the reload() call was added 2026-07-30, well before these 2026-08-03
+  hangs, and is the ONLY native GCS call in `gcp.py` missing a `retry=`/`timeout=` bound — every sibling call in the
+  same file passes `retry=_GCS_RETRY`). Did not relaunch a VM to reproduce live: the mechanism is deterministic given
+  the `size=None` propagation race (not flaky/environmental), the two prior hangs already provide strong live evidence
+  (identical log line, identical CPU flatline signature, twice), and a live repro would itself need to wedge a VM for up
+  to 44 minutes to observe — not a good use of a bounded diagnostic task once the static evidence chain was conclusive.
+  Shipped the bounding fix + regression test; filed the root-elimination optimization as a separate P3 follow-up todo
+  (not required for this task's done-when, which only asked for "a fix or a bounded-timeout/retry wrapper").
