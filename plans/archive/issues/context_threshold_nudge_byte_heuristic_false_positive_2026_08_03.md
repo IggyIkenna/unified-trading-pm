@@ -19,7 +19,7 @@ summary: >-
   system-reminder dumps) whose raw transcript bytes grew well beyond what the harness's own internal context management
   (which prunes/summarizes old large tool results without necessarily emitting a formal `compact_boundary` event) was
   actually still holding live.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -36,6 +36,9 @@ priority: P3
 drift_direction: advance-code
 source: [interactive-session-2026-08-03]
 resolved_by:
+  "unified-trading-pm@070d679f1 (fix) + unified-trading-pm@97c3cfcc4 (todo flip). Verified via 3 direct bash -x traces
+  against the hook script: this session's real transcript, a synthetic high-usage transcript, and a synthetic
+  no-usage-data transcript."
 locked_by:
 locked_since:
 depends_on: []
