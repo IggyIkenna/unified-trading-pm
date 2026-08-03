@@ -547,3 +547,36 @@ not just noting.
   broken) condition faster than a single `K=1` runner can clear its FIFO queue; worth checking whether
   `main_ci_red`/`ldr_qg_failure` dispatch should dedupe against an already-active escalation for the same repo+wall_type
   instead of spawning a fresh worker each retrigger cycle.
+
+- **2026-08-02 ~23:34-23:50Z (cicd escalation `agt-d89fed`, slot 6, `strategy-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0` — direct LDR push, no PR)** — fourth same-day `strategy-service` corroboration of the identical
+  signature this doc-pair has tracked since 2026-07-27. **Reproduced locally FIRST** (backgrounded, heartbeated):
+  `bash scripts/quality-gates.sh` at `live-defi-rollout` HEAD `a6689ca0` → **`✅ ALL QUALITY GATES PASSED (112s)`**,
+  sentinel written matching HEAD — decisive confirmation the code is clean (the peripheral-dir
+  `e2e-testing/scripts/defi` basedpyright/ruff findings surfaced in the same run are pre-existing `log_warn`-only
+  checks, non-blocking, unrelated to this wall). Checked 3 recent `quality-gates-v2` runs on `live-defi-rollout`:
+  `30750125692` (`13:31:51Z`, 6h31m wall — job-level timestamps show `content sentinel` succeeded at `13:31:55Z` but
+  `QG slice (checks)` didn't START until `17:36:47Z`, a 4h+ queue wait, not a stuck run), `30765248540` (`20:16:33Z`,
+  2h30m wall, `checks` job: `❌ Type check FAILED/timeout (exit=124)` on the first typecheck attempt, retry fell back to
+  `⚠️ Type check SKIPPED (--skip-typecheck flag)`, then `lint-codex` itself breached the wall-clock budget —
+  `❌ Quality gates must complete in <300s (took 491s work...)`, with a `Resource drift: wall 491s > 2× baseline 131.2s`
+  warning immediately above it — a runner-throughput signature, not a lint finding), and the then-`in_progress`
+  `30772057438` (`workflow_dispatch`, started `23:20:38Z`) whose `checks` job (`91560807683`) had ALREADY failed by
+  investigation time on the same `❌ Type check FAILED/timeout (exit=124)` signature (basedpyright timing out under
+  `run_timeout`, not a real type error — no error listing follows it) while its `tests` leg was still `in_progress`,
+  genuinely progressing FIFO (not a stuck wedge). Confirmed `strategy-service`'s runner pool is `K=1`
+  (`glue-ip-172-31-5-118-1`, `online`, `busy=true` at check time) — same structural single-runner exposure this doc's
+  other protected-6 entries document. `gh pr list --state open` → `[]` (no promotion PR to unblock);
+  `GET /api/repo-blockers` → only one open entry, for `market-tick-data-service` (unrelated repo/root-cause) — nothing
+  for `strategy-service` to fast-path. **Disposition: no code or workflow change made or needed.** Did not add a
+  redundant retrigger — a `workflow_dispatch` run (`30772057438`) was already actively progressing on this exact HEAD at
+  investigation start, and per this doc's established posture a duplicate dispatch onto an already-contended `K=1`
+  runner doesn't help. Did not force-resolve, lower a coverage floor, pragma-skip, or touch `self_hosted_runner_labels`
+  — `strategy-service` is one of the protected-6 repos the 2026-07-28 operator ruling says to leave on self-hosted /
+  accept recurring reds / resolve via retrigger (not applicable here since a retrigger was already in flight). Pinged
+  `AUTHORING_SLOT=ci-reconcile` per the standard completion step. Slot left clean on `live-defi-rollout` (only this doc
+  touched; `strategy-service` working tree already clean, nothing to leave dirty). Fourth repo-specific corroboration of
+  the `Type check FAILED/timeout (exit=124)` signature class in this doc-pair, third specific to `strategy-service`
+  (after `agt-e3d260` ~21:40-21:50Z and `agt-ca1c32` ~23:20-23:32Z) — all three same-day `strategy-service` escalations
+  independently landed on the identical non-code diagnosis, reinforcing the dispatcher-dedupe observation the entry
+  immediately above already flagged.
