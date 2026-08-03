@@ -269,6 +269,20 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T20:22Z** (AO dispatch, slot 15, `data_engineering`) — Sixth campaign VM
+  (`backfill-defi-dex-swaps-20260803-201901`) was preempted after only **~67 seconds** (launched 20:19:08Z, preempted
+  20:20:15Z — never even produced a run.log), the **5th genuine SPOT preemption** in this session, all confirmed
+  `compute.instances.preempted` events (never the reap-zombies.sh bug — that fix is holding). Checkpoint unaffected
+  (still 420 days). This near-instant re-preemption pattern indicates a real, severe SPOT capacity shortage in
+  `asia-northeast1-c` right now, not routine churn — continuing to retry SPOT would likely just repeat this cycle.
+  **Escalated to the CLAUDE.md-sanctioned `ON_DEMAND=true` opt-out** (backfill VMs default to SPOT, but the on-demand
+  override is an explicit, no-operator-gate escape hatch for exactly this situation): relaunched
+  `backfill-defi-dex-swaps-20260803-202140` with `ON_DEMAND=true --force`, confirmed non-preemptible (`PREEMPTIBLE`
+  field empty in `gcloud compute instances list`). This is more expensive per-hour but removes the preemption risk
+  entirely for the remainder of this campaign — appropriate given 5 preemptions have already cost meaningful wall-clock
+  time and the remaining corpus is finite (~680 days left). Once this campaign fully completes, consider whether the
+  on-demand instance should be manually stopped promptly (it will self-shutdown on completion per
+  `VM_SHUTDOWN_ON_COMPLETION=true`, so no separate cleanup should be needed).
 - **2026-08-03T20:19Z** (AO dispatch, slot 15, `data_engineering`) — Fifth campaign VM
   (`backfill-defi-dex-swaps-20260803-141041`) ran healthy for ~2h36m total (through 473/1155 days, 2023-01-01 through
   2024-03-13, all `errors=0`) before a **4th genuine SPOT preemption** at `20:17:22Z` (confirmed via
