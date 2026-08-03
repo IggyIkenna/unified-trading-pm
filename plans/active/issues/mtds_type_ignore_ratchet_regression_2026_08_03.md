@@ -84,4 +84,4 @@ retrying, per `unified-trading-pm/agents/RULES.md` § 4b.
 
 - 2026-08-03 (slot-8): filed after `tradfi_combo_casing_direction_ssot_contradiction-003`'s prep-work Pass-1 QG hit this
   red on an otherwise-unrelated 2-file diff; verified pre-existing via stash+clean-tree re-check. Declared repo-blocker
-  `RB-<see progress>` for market-tick-data-service. No code changed this entry — doc only.
+  `RB-9732d071` for market-tick-data-service. No code changed this entry — doc only.
