@@ -709,3 +709,41 @@ not just noting.
   `cancel-in-progress` concurrency group per the established posture in this doc. Did not touch `main`, the promotion
   pipeline, or the `[OPERATOR]` P1 decision item — those remain this doc's existing P1 thread. Slot left clean (only
   this doc touched; `deployment-api`/`unified-trading-pm` worktrees already clean, no other commit needed).
+
+- **2026-08-03 ~02:55-03:25Z (cicd escalation `agt-c82335`, slot 5, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`)** — dispatched on the premise "the code fix already exists on `live-defi-rollout` — do not re-fix code
+  that is green there" (classify: promotion-stuck vs main-only-stale-workflow). **That premise is false**: `LDR` is ALSO
+  genuinely red, same root cause as every entry above, not a promotion-lag artifact. `main` HEAD (`4bbc25eb`) and
+  `live-defi-rollout` HEAD-at-time (`fd290224`) both failed `quality-gates-v2` with the identical signature —
+  `❌ Type check FAILED/timeout (exit=124)`, `ERROR_COUNT=0`/`WARN_COUNT=0` (genuine 120s wall-clock timeout, not a real
+  type error: `base-service.sh` only hits `log_fail "Type check FAILED/timeout"` when basedpyright produced NO
+  error/warning output at all). Last confirmed-real `success` for this repo was `2026-08-02T09:16Z` (basedpyright
+  completed in ~34s that run); every completed run since has been `cancelled` (superseded by the next push before
+  finishing) or `failure` (same timeout signature) — ~18h with zero durable green. Fleet-promote gate confirms the same
+  block already documented above:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  (`ldr-to-main-promote-fleet` run `30780650615`, 03:00Z). **Went one step further than prior entries: this session's
+  OWN worktree (`.tabs/5`) is colocated on the exact host running the stuck runner** — `hostname`/`hostname -I` =
+  `ip-172-31-5-118` / `172.31.5.118`, an EXACT match to the registered runner name `glue-ip-172-31-5-118-1`. Live host
+  corroboration from inside the box itself (not inferred from CI logs): `uptime` load average **37.80/46.20/41.10** on a
+  16-vCPU box (>2x oversubscribed), swap **16Gi/47Gi** in use.
+  `glue_pool_starvation_monitor.py --repo IggyIkenna/features-service --threshold-min 20` → **starved, rc=1**: 3
+  `glue`-labelled jobs queued 22.5-23.0min with the repo's single registered runner showing `busy:true` but
+  `GET .../actions/runs?status=in_progress` returning **zero** rows (the runner's busy-flag and GitHub's own in-progress
+  accounting disagree — the classic "dead/stuck-but-not-crashed runner" signature the starvation monitor exists to
+  catch). Direct process inspection on the shared host resolved the discrepancy: PID 4105351 (`check_env_canon.py`, part
+  of the QG `checks` leg, started 03:06Z) IS alive and IS the repo's job — it had actually been claimed by the runner
+  (contradicting the naive "queued" API read) but was sitting in **D-state (uninterruptible disk-I/O wait)** ~14min into
+  a step that normally takes seconds, consistent with the host's own documented disk-I/O contention pattern
+  (`orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`), not a runner crash and not anything wrong with
+  `features-service`'s code. **Disposition: no code/test/workflow change made or needed** — same root cause and same
+  "accept recurring reds on the protected-6, resolve via retrigger/self-heal" posture as every entry above; did not kill
+  the live `check_env_canon.py` process (legitimate in-progress work, not a zombie — killing it would just force a retry
+  under the same contention) and did not retrigger `quality-gates-v2` (a run is already claimed and progressing, however
+  slowly; a duplicate dispatch adds load without helping, per this doc's established reasoning). Corrected the
+  originating escalation's premise via the authoring-slot ping rather than silently "resolving" a wall that isn't
+  code-fixable. Slot left clean (only this doc touched; `features-service`/`e2e-testing` worktrees read-only, already
+  clean, on `live-defi-rollout`; a PRE-EXISTING unrelated unpushed `agent-orchestrator` commit from a prior session in
+  this same slot — `786e1ca`, todo-5 of
+  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — was left untouched as
+  out-of-scope for this one-shot escalation, not silently dropped).
