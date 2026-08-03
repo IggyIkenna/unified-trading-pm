@@ -614,3 +614,42 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `features-service`) — further corroborates todo 3's operator-flagged dedup/cooldown gap; not re-litigating the same
   finding at length here per the parent doc's own guidance against burning a full session re-confirming unchanged state.
   `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean.
+
+- **2026-08-03 ~13:15-13:25Z (`cicd` escalation `agt-876d77`, slot 6, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`) — 4th escalation for this repo's wall, and the first real state change since
+  `agt-7784b3`'s original diagnosis: the repo-local `PYTEST_TIMEOUT=300` mitigation landed but did NOT clear the wall**.
+  Re-verified from scratch: `gh pr list --state open` → 0 open PRs (unchanged, business outcome — promote → backmerge →
+  semver-tag — was already complete before `agt-7784b3`'s first entry). `main`'s failing run is still the identical
+  `30790880111` (unchanged, `06:38:51Z`, the pre-mitigation
+  `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` xdist-teardown-under-contention shape — no
+  dots-progress before a 95%-mark hang, ~1h6m wall for the tests slice). **New finding**: between `agt-57172b`'s 13:00Z
+  check and this session, LDR HEAD gained one commit — `8fa00db1d5970b`
+  (`fix(ci): raise pytest wall-clock timeout to absorb host-contention scheduling variance`, landed 12:47:40Z by a
+  different slot, mirroring this doc's own `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` template for
+  unified-trading-api/features-service/deployment-service) — and the in-flight run `agt-57172b` was watching
+  (`30815224742`) completed by this session: it tested `8fa00db` itself (confirmed via `headSha`) and **still FAILED**,
+  this time hanging at `[77%]` (last progress `13:03:54Z`) for ~12min before an internal SIGINT fired (`13:16:04Z`),
+  cascading into the same `BrokenPipeError`/`OSError: cannot send (already closed?)` xdist-teardown crash, exit=1 at
+  `13:20:17Z` — total slice wall 24m43s. This is the live confirmation, for `market-data-processing-service`
+  specifically, of todo 1's anticipated "if RED again with the same timeout signature even at 300s: this repo's host
+  contention severity now exceeds what a 2x budget raise absorbs — escalate to the parent capacity-crisis doc rather
+  than raising the timeout further in isolation" branch (previously only confirmed for `features-service`'s
+  `PYRIGHT_TIMEOUT` ceiling, `agt-3bc731`'s 10:07-10:48Z entry) — the failure signature here is pure xdist-worker
+  scheduler-starvation-during-teardown, not a slow-but-progressing individual test, so no further per-test/per-repo
+  timeout raise would plausibly fix it; the actual fix is cross-repo QG-governor coordination, already forked and
+  in-flight at `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (confirmed still
+  `status: active`, Phase 2-3 open) — did not duplicate that effort here (out of scope for a one-shot wall-clearing
+  task). Host corroboration at investigation time: `uptime` load average `22.32, 24.46, 27.71` (16 vCPUs), `13Gi/47Gi`
+  swap in active use, 19 concurrent `quality-gates.sh` processes — same fleet-wide-contention signature as every other
+  entry in this doc-pair, one notch lower than several priors but still ~1.5x oversubscribed.
+
+  Since HEAD (`8fa00db`) was unchanged and no run was in-flight against it (the only run that ever tested it,
+  `30815224742`, had already completed-and-failed by this session, unlike every recent entry's "cancel elapsed progress"
+  concern), dispatched a fresh run against the confirmed current head:
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/market-data-processing-service --ref live-defi-rollout` → run
+  `30817783411`, confirmed `in_progress` against `8fa00db` within 8s of dispatch (not queue-stuck at request time).
+  **Disposition: no code or workflow change made** — the sanctioned mitigation is already shipped and tested; a further
+  timeout raise would only move the threshold per this doc's own established conclusion. Outcome of `30817783411` left
+  for a follow-up occurrence. `GET /api/repo-blockers` → `open: []`. `AUTHORING_SLOT=ci-reconcile` (sentinel) — per
+  cicd.md, skipped the authoring-slot ping. Slot left clean (`market-data-processing-service` on `live-defi-rollout`, 0
+  commits ahead of origin, working tree clean throughout).
