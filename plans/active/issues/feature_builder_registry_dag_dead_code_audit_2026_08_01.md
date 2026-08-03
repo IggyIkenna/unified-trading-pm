@@ -134,7 +134,7 @@ deleted, not left as misleading documentation.
       than left as misleading unwired documentation. (repo: features-service) — scoped out of THIS audit todo
       (classification only) given the larger surface (6 groups × dispatch wiring + per-group data-threading design +
       tests), mirroring how `onchain_regime`'s fix was scoped as its own separate unit of work.
-- [ ] [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
+- [x] ✅ [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
       feature group in features-service's onchain engine. `compute_onchain_regime_features()`
       (`features_service/onchain/app/calculators/onchain_regime_calculator.py`) is never registered via
       `@FeatureCalculatorRegistry.register`, never appears in `OnChainOrchestrationService._dispatch_feature_group`'s
@@ -276,3 +276,40 @@ deleted, not left as misleading documentation.
     `__init__` accept an injectable upstream DataFrame" method; the compounding unwired-groups gap gets its own separate
     tracked `[BACKEND] P1` todo per CLAUDE.md's "every follow-up is a tracked todo, never prose" rule). Checkbox flipped
     above.
+
+- **2026-08-03 (onchain_regime wiring fix, slot 8)**: Wired option (a) — registered + dispatched, not deleted. Added
+  `OnchainRegimeCalculator` (`features_service/onchain/app/calculators/onchain_regime_calculator.py`), registered via
+  `@FeatureCalculatorRegistry.register("onchain_regime")`. Its `fetch_data()` concurrently fetches + merges the 3
+  declared upstream frames — `AaveUtilizationCalculator` + `AaveLendingCalculator` (both per-pool, DefiLlama Yields,
+  keyed by `symbol`, outer-merged) and `DefiLlamaTVLCalculator` (a single global TVL time series, broadcast onto every
+  pool row as a constant `tvl` column) — into the shape `compute_onchain_regime_features(df)` already expected
+  (`tvl`/`aave_utilization`/`aave_supply_apy` columns resolve via that function's existing `_resolve_column` fallback
+  chain, so the pure bucketing function itself needed no changes). `calculate_features()` delegates to it and appends
+  `timestamp_out`/`source="derived"`.
+  - Dispatch: added `_process_onchain_regime` to `OnChainOrchestrationService`
+    (`features_service/onchain/engine/orchestrator.py`) + a new `elif feature_group == "onchain_regime":` branch in
+    `_dispatch_feature_group`. Mirrors the `rate_impact` BATCH SKIP pattern (not a new pattern): `aave_utilization` and
+    `aave_lending_rates` both read DefiLlama Yields' CURRENT pool snapshot only (no historical API, same as
+    `AaveRateImpactCalculator`), so backfilling a historical date would tag a live wall-clock observation into a
+    historical partition (`LookaheadBiasError`) — historical dates batch-skip to
+    `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)`, honest-absence per the data-pipeline-correctness rule,
+    not silently fabricated. Live-mode dates compute + write for real.
+  - Registry cleanup: `features_service/onchain/schemas/feature_builder_registry.py`'s special-cased "Phase 2: Regime
+    calculator" manual `BuilderEntry` append (the thing the audit flagged as decorative dead scaffolding) is now
+    unnecessary and removed — `onchain_regime` flows through the SAME generic `_calc_registry.items()` loop every other
+    onchain calculator uses, picking up its `depends_on`/`feature_names` from the registered class itself instead of a
+    hand-maintained duplicate.
+  - Tests: new `tests/onchain/unit/test_onchain_regime_calculator_wiring.py` (8 tests — registration, `fetch_data()`
+    merge-by-symbol + TVL broadcast, end-to-end `fetch_data()` → `calculate_features()` producing real regime buckets,
+    all mocking only the network boundary `fetch_all_pools`/`filter_pools`/`DefiLlamaTVLCalculator.fetch_data`). Added 2
+    tests to `tests/onchain/integration/test_onchain_integration.py`
+    (`test_process_onchain_regime_batch_skip_for_historical_date`,
+    `test_process_onchain_regime_live_date_computes_and_writes`) proving
+    `OnChainOrchestrationService.process_feature_group("onchain_regime", ...)` runs end-to-end for a live date and
+    writes real `tvl_regime_bucket`/`utilization_regime_bucket` columns via the feature writer — the exact proof the
+    todo's done_definition (a) asked for. Extended `tests/onchain/unit/test_feature_group_source.py`'s dispatch
+    regression list. Full suite: 1334 onchain unit tests + 14/15 onchain integration tests pass (the 1 deselected,
+    `test_get_output_bucket_resolves_features_onchain_kind`, is a pre-existing env-config failure confirmed unrelated
+    via `git stash` — fails identically on a clean tree at the pre-change HEAD).
+  - `quality-gates.sh` green (full run, exit 0) on the committed SHA. Shipped: features-service@8b602744 (quickmerge
+    --agent, verified on origin/live-defi-rollout via `merge-base --is-ancestor`). Checkbox flipped above.
