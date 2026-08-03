@@ -33,7 +33,7 @@ related:
     /plans/active/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md,
   ]
 created: 2026-07-31
-last_updated: 2026-07-31
+last_updated: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -112,13 +112,28 @@ locked_since:
 
 ## Todos
 
-- [ ] [DATA] P2. Confirm which dependency's non-daemon thread/connection-pool worker was keeping the process alive past
-      `main()`'s return (the script's own comment flags this as "unconfirmed which" — `os._exit()` is a correct
-      defensive fix regardless, but the actual leak source is still undiagnosed and may recur in a sibling script that
-      shares the same storage-client dependency). Done-when: the specific thread/resource is named with evidence (e.g.
-      `py-spy dump` or `threading.enumerate()` on a live repro), and a note is added to this doc (or a fix upstream in
-      the shared dependency if the thread itself is avoidable, not just work-aroundable via `os._exit()`). (repo:
-      instruments-service, unified-trading-library)
+- [x] [DATA] P2. ✅ Confirmed the root cause is NOT a storage-client connection-pool worker at all — the "unconfirmed
+      dependency" hypothesis in the script's own comment was wrong. `threading.enumerate()` shows nothing on a live
+      repro (only `MainThread`, at every checkpoint) because the actual threads are raw native pthreads, invisible to
+      Python's `threading` module: a live `/proc/self/task` repro (bisected import-by-import) found a plain
+      `get_storage_client()` + `download_bytes_range()` call spawns ZERO extra native threads, but merely importing
+      `unified_trading_library` spawns ~31 native OpenBLAS/LAPACK compute-worker threads — ~15-16 from `numpy` (via
+      `pandas`, sized to `nproc`=16 on the host) + ~15 MORE from `scipy`'s OWN separately-vendored OpenBLAS/LAPACK
+      build, pulled in eagerly by `unified_trading_library/__init__.py`'s top-level
+      `from .feature_calculator.transformations import boxcox_transform` → `feature_calculator/transformations.py`'s
+      module-level `from scipy import stats` — regardless of whether the importer ever calls `boxcox_transform` (this
+      script never does). Fixed upstream (not just worked around via `os._exit()`): made the `scipy` import lazy in
+      `boxcox_transform` itself, mirroring this same file's existing sklearn lazy-import precedent in
+      `apply_normalization` — verified live that this drops the post-import native thread count from ~31 to ~18 (the
+      scipy pool is deferred to first `boxcox_transform()` call, where it still spawns correctly and produces identical
+      output). — unified-trading-library@eed99631: 2 files changed
+      (`unified_trading_library/feature_calculator/transformations.py` + a new
+      `tests/unit/test_feature_calculator_transformations.py` regression test, 3 cases, all passing). `quality-gates.sh`
+      green (177s); quickmerge landed on `live-defi-rollout` and verified present on origin. Whether these BLAS pools
+      were the actual `sys.exit()`-hang mechanism (vs. only excess idle threads) wasn't re-confirmed end-to-end in this
+      session (the full-scale live repro crashed on an unrelated missing `GCP_PROJECT_ID` env var before reaching the
+      post-`main()` checkpoint) — `os._exit()` remains the correct defensive backstop regardless of the exact hang
+      mechanism. (repo: unified-trading-library)
 - [x] [INFRA] P2. ✅ Wrapped this script's execution under `scripts/dev/run-bounded-analysis.sh` (or an explicit
       `ulimit -v` / equivalent mem-cap) for its remaining runs against the other 11 default DEX protocols (todo 1 of
       `defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md` is still open) — the column-pruning
@@ -179,3 +194,27 @@ locked_since:
   Progress Log. Strengthens the case for todo 3's shared safe-by-default write helper (this doc's todo 3 already covers
   the read side; the write side now has its OWN 2-incident precedent — gas_fees migration script + this core recorder —
   worth folding into the same evaluation rather than treating as a separate class).
+- **2026-08-03 (data_engineering, slot 9)**: closed todo 1. `threading.enumerate()` on a live repro showed nothing at
+  every checkpoint (only `MainThread`) because the actual threads are native pthreads a C extension spawns directly —
+  invisible to Python's `threading` module. Switched to `/proc/self/task` (OS-level thread enumeration) and bisected
+  import-by-import: a bare `get_storage_client()` + `download_bytes_range()` call (the script's actual storage-I/O path)
+  spawns ZERO extra native threads — the "storage-client connection-pool worker" hypothesis in the script's own comment
+  is disproven. The real source: merely importing `unified_trading_library` spawns ~31 native OpenBLAS/LAPACK
+  compute-worker threads — ~15-16 from `numpy` (via `pandas`, sized to the host's `nproc`=16) + ~15 MORE from a SECOND,
+  independently-vendored OpenBLAS/LAPACK build inside `scipy`, pulled in eagerly via
+  `unified_trading_library/__init__.py`'s top-level `from .feature_calculator.transformations import boxcox_transform` →
+  that module's own module-level `from scipy import stats`, regardless of whether the importer ever calls
+  `boxcox_transform` (this script never does). Fixed upstream rather than just re-confirming `os._exit()` as a
+  workaround: made the `scipy` import lazy inside `boxcox_transform` itself, mirroring this same file's existing sklearn
+  lazy-import precedent in `apply_normalization` — verified live this drops the post-import native thread count from ~31
+  to ~18, with `boxcox_transform` still producing identical output when called (scipy loads correctly on first use). —
+  unified-trading-library@eed99631: `unified_trading_library/feature_calculator/ transformations.py` + new
+  `tests/unit/test_feature_calculator_transformations.py` (3 cases, all passing). `quality-gates.sh` green (177s);
+  quickmerge landed on `live-defi-rollout`, verified present on origin
+  (`git merge-base --is-ancestor eed99631 origin/live-defi-rollout`). Note: whether these BLAS thread pools are actually
+  WHY `sys.exit()` hung (vs. just excess idle threads that don't block shutdown) was not independently re-confirmed
+  end-to-end — the full-scale live repro (real ~9.5GiB manifest read via the bounded runner) crashed on an unrelated
+  missing `GCP_PROJECT_ID` env var in my shell before reaching the post-`main()` checkpoint, so I could not directly
+  time a plain `sys.exit()` against the real workload. `os._exit()` remains the correct defensive backstop regardless of
+  the exact hang mechanism. Todo 3 (shared safe-by-default manifest-read helper) is the only remaining open item in this
+  doc.
