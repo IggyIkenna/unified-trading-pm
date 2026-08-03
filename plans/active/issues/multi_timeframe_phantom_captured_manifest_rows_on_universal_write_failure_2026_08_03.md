@@ -185,16 +185,22 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       (`TestSourceSpecGroupNames::test_every_source_spec_group_is_a_registered_delta_one_calculator`) asserting every
       `SourceSpec.group` in `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` resolves to a real `CALCULATOR_REGISTRY` entry, so
       a future typo of this shape fails loudly here instead of silently loading nothing. Also added
-      `test_market_structure_1h_passes_through_raw_ohlcv` covering the (a) fix. - **Genuine design decision — still
-      open, NOT resolved by this todo**: `tf_structure_context` needs
-      `market_structure_bias_4h`/`market_structure_bias_1d` from `market_structure_sequence`, and
-      `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group is in delta-one's
-      `DEFAULT_FEATURE_GROUPS` (confirmed: only 18 of the 33 `CALCULATOR_REGISTRY` groups are default-enabled;
-      `market_structure_sequence`, `supply_demand_zones`, `fibonacci`, `level_confluence`, `polynomial_trendlines`,
-      `risk_reward`, `wedge_quality`, and others are not). Needs an operator/design decision: expand delta-one's default
-      feature-group set to cover everything `multi_timeframe` depends on (real compute-cost/backfill implications), or
-      trim `multi_timeframe`'s calculator set / `SourceSpec` list to only what delta-one actually produces by default.
-      Not resolved here.
+      `test_market_structure_1h_passes_through_raw_ohlcv` covering the (a) fix. The remaining root-cause factor —
+      `market_structure_sequence`/`polynomial_trendlines` not being in delta-one's `DEFAULT_FEATURE_GROUPS` — is a
+      genuine design decision, not a mechanical fix; tracked as its own todo below rather than left as prose here.
+- [ ] [OPERATOR] P2. **Decide: expand delta-one's default feature-group set, or trim multi_timeframe's calculator set?**
+      `tf_structure_context` needs `market_structure_bias_4h`/`market_structure_bias_1d` from
+      `market_structure_sequence`, and `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group
+      is in delta-one's `DEFAULT_FEATURE_GROUPS` (confirmed 2026-08-03: only 18 of the 33 `CALCULATOR_REGISTRY` groups
+      are default-enabled; `market_structure_sequence`, `supply_demand_zones`, `fibonacci`, `level_confluence`,
+      `polynomial_trendlines`, `risk_reward`, `wedge_quality`, and others are not), so these three multi_timeframe
+      calculators can never produce real output until this is decided. Options: (a) expand delta-one's
+      `DEFAULT_FEATURE_GROUPS` to cover everything `multi_timeframe` depends on — real compute-cost/ backfill
+      implications for CEFI (and any other asset_group running delta_one's default set); or (b) trim `multi_timeframe`'s
+      `enabled_feature_groups`/`DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` to only what delta-one produces by default,
+      dropping `tf_structure_context`/`wedge_confluence`/`tf_risk_reward` (or accepting their permanent `record_empty`
+      manifest state) until/unless those upstream groups are separately enabled. Repo: features-service. Not resolved
+      here — genuinely needs an operator call given the compute-cost tradeoff.
 
 ## Progress Log
 
@@ -221,3 +227,7 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
   — full `quality-gates.sh` green, verified on `origin/live-defi-rollout`. Left the genuine design decision (expand
   delta-one's default group set vs. trim multi_timeframe's calculator set) for the operator, per the todo's own framing
   — did not resolve it unilaterally.
+- 2026-08-03 (slot-8, self-correction): initially left the design-decision deferral as prose inside the completed P2
+  todo — a violation of `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2 ("every follow-up is a
+  canonical `- [ ]` todo — never prose"). Fixed by extracting it into a standalone `[OPERATOR]` P2 todo above before
+  considering archival — this issue doc correctly stays `active` (one open todo remains), not archived.
