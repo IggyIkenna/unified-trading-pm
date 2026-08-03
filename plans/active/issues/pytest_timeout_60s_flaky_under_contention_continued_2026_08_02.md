@@ -31,6 +31,7 @@ repos:
     deployment-service,
     instruments-service,
     ml-service,
+    alerting-service,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
@@ -756,3 +757,23 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   beyond this doc edit). Todo 3's operator-flagged dedup/cooldown gap remains open and unaddressed — this entry is
   further evidence for it (now ~14 same-day fires for this one repo+wall pairing, several within a 10-15min window of
   each other).
+
+- **2026-08-03 ~13:52-14:12Z (`cicd` escalation `agt-7cd4ea`, slot 7, `alerting-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — RESOLVED, first entry for this repo in this doc**: `main`'s `quality-gates-v2` was red from the
+  `chore(promote): LDR → main` push run (`30787090348`, 2026-08-03T05:24:42Z) — `1 failed, 909 passed` with
+  `test_twilio_keys_absent_when_sm_not_provisioned` hitting `Failed: Timeout (>150.0s) from pytest-timeout` — same
+  signature confirmed on LDR's own most-recent run (`30808107879`, 11:05:12Z: 2 different tests timed out, `908 passed`)
+  — a different random subset each time is this doc's established flake fingerprint, not a code defect; the single
+  shared `glue-ip-172-31-5-118-1` runner was `busy=true` throughout. Found a `workflow_dispatch` re-trigger
+  (`30813349842`) already in-flight against main HEAD, dispatched ~12:23:01Z by an earlier process — per this doc's
+  established precedent, did NOT redispatch (would cancel elapsed contention-survival progress); instead waited on it
+  via bounded polling with progress heartbeats. Unlike most entries in this doc, **this one converged**: the `tests`
+  slice completed `success` at ~60min elapsed, `checks` slice followed at ~14:11Z, and the aggregate `quality-gates-v2`
+  reported `conclusion=success` — confirmed via `ci_status` helper (`qg_v2_state=success`, `blocked=false`) and
+  `GET /api/repo-blockers` (`open: []`, none registered for this repo). **Disposition: no code or workflow change made
+  or needed — pure-wait resolved the wall**, reinforcing this doc's "don't redispatch an in-flight run" guidance with a
+  positive (not just still-waiting) data point. Root cause remains fleet-wide `glue`-runner contention,
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (Phase 2-3, still the correct out-of-scope
+  root-cause fix). `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left
+  clean (`alerting-service`/`agent-orchestrator`/`unified-trading-pm` all on `live-defi-rollout`, 0 commits ahead of
+  origin beyond this doc edit).
