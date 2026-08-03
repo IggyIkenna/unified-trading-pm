@@ -203,6 +203,14 @@ not just noting.
       starve `plan_health`'s (or vice versa) dispatch attempts. Done when: either a deliberate "leave as-is, here's why"
       ruling is recorded, or a scaled/partitioned retry budget ships + is verified to cut tail dispatch latency on the
       next comparable burst.
+- [ ] [BACKEND] P2. **New 2026-08-03 (main agt-1756f6, via review agt-07ff49 msg #3566).** Ship the stranded,
+      diagnosed-good features-service fix `030c8b95` (`fix(ci): raise PYRIGHT_TIMEOUT 300s→600s` — 300s still timing out
+      under fleet QG contention; slot-4 authored 2026-08-03 16:48Z, then went diverged; the unpushed-commits watchdog
+      preserved it to `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z`). Slots 2/4/9
+      independently re-diagnosed this SAME PYRIGHT_TIMEOUT contention today — ship it forward rather than let a 6th slot
+      re-diagnose from scratch: rebase the wip-preserve ref onto current `origin/live-defi-rollout`, run
+      features-service QG green, ship via quickmerge. Same root wall_type as this doc's capacity crisis. Repo:
+      features-service. Done when: `030c8b95`'s timeout bump is an ancestor of `origin/live-defi-rollout` (QG-verified).
 - [x] ✅ [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template
       SSOT (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
       `agent-orchestrator@d43bbde`) are fixed, but `detect_template_drift.py --workflows` shows this template has 28

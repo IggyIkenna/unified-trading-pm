@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                          chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                          pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                          `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                          the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                          chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                          2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                          6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                          timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                          `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                          **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                          `returns`/onchain reconfirmed). Evidence:
-                          `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                              `returns`/onchain reconfirmed). Evidence:
+                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -240,13 +240,14 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       todo (now also flipped). No code shipped, batch2's `paper_universe.py` MEV-DOCS prerequisite confirmed already
       landed (`strategy-service@8d7c6549`).
 
-- [ ] [DATA] P2. C6 Pyth `oracle_prices` historical backfill — launch a SPOT backfill VM running MTDS Pyth Hermes-API
-      collection for the 2026-04-15→present gap window, writing ONLY into the canonical
-      env-split/`pipeline_mode=`/`asset_group=defi` layout (never the legacy layout; C0 canonical structure is live).
-      Safe-idempotent justification: SPOT + idempotent re-fetch, no GCS delete. Repo: market-tick-data-service. Done
-      when: the consolidated `market-data-tick-defi` `_index` shows Pyth `oracle_prices` rows `captured` (or legit
-      `empty_confirmed`) across the full 2026-04-15→present window with zero remaining gap days. Source:
-      `data_completion_defi_2026_07_15.md`
+- [ ] [BACKEND] P1. C6 Pyth `oracle_prices` — land the CODE fix (NOT a backfill VM: the 3 SPOT VMs already ran to
+      `exit_code=0`; the gap is a code-level IS-catalogue filter). Per ruling (Evidence: activity event id=277382,
+      `blocked_answered disposition=final` 2026-08-03T14:30:50Z, direction B "extend"): (a) DO-FIRST — restore
+      BTC/ETH/INF to IS's `PYTH-SOLANA` enumerated set (instruments-service) to stop the live 15+day regression; (b)
+      extend `_PYTH_FEEDS` w/ live-verified Hermes ids for JTO/RAY/WIF/JUP/USDC + reconcile `_write_oracle_rows`
+      instrument_id (market-tick-data-service). Full scope:
+      `/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`. Done when: BTC/ETH/INF
+      captures resume in `market-data-tick-defi` `_index` AND family-3 rows reconcile (re-verify, no new backfill).
 
 - [ ] [VERIFY] P2. Grep-then-READ whether DeFi arb/carry net-of-gas cost (gas_price × gas_units — execution
       `estimate_gas` gas_units × the captured per-chain `gas_fees` price) is actually wired in any consumer: search

@@ -164,13 +164,12 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 
 - [x] [OPERATOR] P2 → RESOLVED 2026-08-03. **RULED: direction 1 (EXTEND, not prune)** — extend `_PYTH_FEEDS` with real
       Hermes feed-ids for JTO/RAY/WIF/JUP/USDC AND restore BTC/ETH/INF to the IS `PYTH-SOLANA` enumerated set (support
-      the full universe; do NOT prune the seeder scope). **Provenance**: main's final ruling on `BLK-7318d847`
-      (disposition=final, reported 2026-08-03T14:30:50Z) as relayed by review → main msg #3561 (2026-08-03T17:13Z). The
-      ruling never reached this doc because the filer (slot-9) pivoted to an unrelated one-shot CI dispatch and was
-      recycled 3× before consuming its own blocked-answer. The primary blocked-answer payload was NOT re-fetchable from
-      the live API (item is final→pruned; persisted state shows it only in the operator-gated dedup list + review's
-      concern-verdict ledger entry) — so this is encoded as **review-relayed, pending review's pointer to the source
-      record**. (repo: unified-trading-pm, decision only)
+      the full universe; do NOT prune the seeder scope). **Evidence**: activity event id=277382 (`blocked_answered`,
+      `disposition=final`, `from=main`, slot_id=9, task_id `defi_satellite_ao_dispatch_batch3-006`,
+      2026-08-03T14:30:50.291283Z) — the durable system-of-record (survives blocked-queue pruning; verified verbatim via
+      `GET /api/activity?type=blocked_answered`). The ruling never reached this doc because the filer (slot-9) pivoted
+      to an unrelated one-shot CI dispatch and was recycled 3× before consuming its own blocked-answer; surfaced by
+      review (agt-07ff49, msg #3565) and propagated by main. (repo: unified-trading-pm, decision only)
 - [ ] [BACKEND] P2. Per the ruling (EXTEND): add real, LIVE-VERIFIED Hermes feed-ids for JTO/RAY/WIF/JUP/USDC to
       `market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py` (`_PYTH_FEEDS`) —
       verify each id resolves against `hermes.pyth.network/v2/price_feeds?query=<SYM>` FIRST (this file documents 2
