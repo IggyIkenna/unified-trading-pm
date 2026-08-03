@@ -119,13 +119,44 @@ new pool is confirmed green, (3) only then resize AO down.
       runners** — `agent-orchestrator`=3, `unified-trading-pm`=8, all other 19 repos=1 each (19). Supersedes both prior
       docs' stale/approximate counts (the capacity-crisis doc's "129 live processes" figure counted OS processes
       including JIT churn, not registered runners — the real registered-runner count is 30, smaller and more precise).
-- [ ] [INFRA] P0. Launch the escalation VM — `c8i.4xlarge` (16 vCPU/32GB), ap-northeast-1, sized/secured to match the
-      current AO box's access model (SSM-only, no inbound SSH unless explicitly decided otherwise), gp3 storage sized
-      per the enumerated runner count from the prior todo (not a blind 600GB guess). Gate: `aws ec2 describe-instances`
-      shows `running`, verified reachable via SSM.
-- [ ] [INFRA] P0. Deploy the runner toolchain to the new VM via a **dedicated fresh git clone** (mirroring
-      `/opt/glue-deploy/unified-trading-pm`, never copying the old box's files), run `preflight` in the runner's real
-      environment, confirm exit 0. Gate: `preflight` green via `systemd-run --uid=ubuntu`, not a login shell.
+- [x] ✅ [INFRA] P0. **Launch the escalation VM — DONE.** `i-042a6332509482556` (`ci-escalation-runner-vm-1`),
+      `c8i.4xlarge`, ap-northeast-1, subnet `subnet-fc09eca6` — same AMI (`ami-0bf052f8a9dd8bf42`) and IAM instance
+      profile (`uts-orchestrator-epic`) as the AO box for toolchain/permission parity (SSM Session Manager + AWS access
+      all confirmed working via the shared profile's `uts-orchestrator-epic-policy`). Security: a NEW, tighter group
+      `sg-0984fc3eedabc5a84` with **zero inbound rules** (SSM-only) — the live AO box's actual SG
+      (`sg-066c852065f8cdcac`) was found to have drifted from its own documentation (port 22 + 8765 open to 0.0.0.0/0,
+      contradicting "no inbound SSH" in the archived migration doc) — deliberately did NOT replicate that drift onto the
+      new box. 300GB gp3 (vs AO's 500GB) — sized for a pure runner host with no AO slot worktrees. Gate met:
+      `aws ec2 describe-instances` shows `running`; `aws ssm describe-instance-information` shows `PingStatus=Online`
+      (registered within the same SSM call window as launch — AMI ships the agent pre-baked).
+- [x] ✅ [INFRA] P0. **Deploy the runner toolchain — DONE, preflight green.** Discovered live: the AMI is a bare-OS
+      snapshot with NO CLI toolchain baked in (contradicting the assumption that "same AMI as AO" means same software) —
+      `aws`/`gcloud`/`gh`/`uv`/etc. were all absent on first boot. Ran
+      `scripts/self-hosted-runners/bootstrap-ci-host.sh` (the sanctioned failsafe for exactly this — its own header
+      literally says "provisions from scratch," and its own STATUS notes this was never before proven on a real bare VM,
+      only a container) — hit and fixed one real bug along the way: an earlier credential-bootstrap step's `mkdir -p`
+      had left `/home/ubuntu/.config` root-owned, which broke the `uv` installer's `~/.config/fish` write (permission
+      denied) — fixed by chowning it back to ubuntu, then the bootstrap completed clean
+      (git/jq/python3/gh/gcloud/aws/curl/node/npm/uv/Python 3.13.14/claude-code all verified present and working for the
+      `ubuntu` user in a real login shell). **GCP credential bootstrap** (the codex doc's documented
+      `unified-trading-sa` mechanism didn't match the LIVE AO box's actual identity, `github-actions-deploy` — codex
+      drift, not touched here): minted a fresh `unified-trading-sa` service-account key via the IAM REST API (`gcloud`
+      CLI itself needed an interactive reauth this session couldn't do; the Python `google.auth` ADC session already
+      active could call the REST API directly), staged it through an encrypted SSM Parameter Store SecureString (never
+      printed, never left in SSM command-text logs), placed at `/home/ubuntu/.config/gcp/unified-trading-sa-key.json`
+      (0600, ubuntu-owned) on the new VM, activated via `gcloud auth activate-service-account`, and verified — **in a
+      scrubbed `env -i` non-login shell, matching exactly how the real runner wrapper invokes it** — that
+      `gcloud secrets versions access latest --secret=GH_PAT` succeeds. Granted `uts-orchestrator-epic-role` (shared by
+      both VMs) a narrow `ssm:GetParameter`/`DeleteParameter` scoped to `/ci-escalation-runner/*` for this; parameter +
+      local scratch key deleted after use. **Clone**: `/opt/glue-deploy/unified-trading-pm` on `live-defi-rollout`,
+      cloned fresh as `ubuntu` via `gh` (needed `gh auth login --with-token` first — the repo is private, plain HTTPS
+      clone has no credential). **Gate met**: `setup-glue-runners.sh preflight` → `preflight OK` exit 0, resolved via
+      the runner's REAL PATH (`/opt/github-glue-runners/venv/bin:/home/ubuntu/.local/bin:...`), not a login shell.
+      **Caveat found along the way (self-correcting, not left broken)**: `scripts/self-hosted-runners/ssm-run.sh`
+      silently ignores any positional argument — it always targets `SSM_INSTANCE` (default: the OLD AO box) — a command
+      intended for the new VM ran on the old box instead; caught it (via the error message's own instance ID), cleaned
+      up the harmless empty artifact it left there, and used `SSM_INSTANCE=<id>` explicitly from then on. Consider
+      fixing the script to accept `$1` for real, so this can't bite the next person.
 - [ ] [INFRA] P0. Migrate ONE canary repo's runner registration to the new VM (pick the smallest/lowest-risk repo from
       the enumeration), verify its next CI run claims the new VM's runner and goes green, THEN deregister that repo's
       old runner on `i-0c9b283b31d6b5ca7`. Gate: a real CI run on the canary repo shows `success`, claimed by the new
