@@ -64,11 +64,10 @@ assigned_role: infra
 drift_direction: advance-code
 context_scope:
   [
-    /codex/04-architecture/batch-live-architecture.md,
-    /codex/04-architecture/sports-batch-live.md,
     /codex/04-architecture/promote-workflow-architecture.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
   ]
 ---
 
@@ -324,3 +323,6 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   trading activation is the human-plan class by construction' — reinforced by a 2026-07-29 operator banner (continue to
   hold the live go-ahead) and a permanent `[OPERATOR]` hard-stop todo reviewed + reaffirmed 2026-07-28
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped generic architecture docs + the epic for
+  the actual remaining blocker doc (MDPS/features live-launcher exec-dispatch) + its target script + the sibling
+  live-availability plan, since 2 of the 3 remaining open todos trace back to those.

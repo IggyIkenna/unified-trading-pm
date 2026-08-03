@@ -61,9 +61,10 @@ source: >-
   `prediction_phase_ab_residuals_2026_07_24.md`.
 context_scope:
   [
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
-    /plans/epics/predictions_master.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/base_prediction_adapter.py,
   ]
 ---
 
@@ -191,3 +192,6 @@ context_scope:
   position — checkpoints feed the gate). Net: open-todo count 3 → 6. No engineering work executed in this pass — pure
   relocation + reconciliation of pre-existing tracked items.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the real gating dependency
+  (phase_ab_residuals) + the AO extract that duplicates 3 of 6 open todos + the MTDS adapter source (still-open `-test-`
+  catalogue-gating follow-up location).

@@ -50,7 +50,12 @@ source: >-
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these were the last genuinely-open items in its sports thread
   and are tracked here going forward.
-context_scope: [/plans/archive/migration_verification_orphan_safety_2026_06_10.md, /plans/epics/manifest_master.md]
+context_scope:
+  [
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_sports_manifest_v9.py,
+    instruments-service/scripts/backfill_orphan_class_e_sports.py,
+  ]
 ---
 
 # Sports pre-launch-window + CF-5 relabel residual
@@ -112,3 +117,5 @@ context_scope: [/plans/archive/migration_verification_orphan_safety_2026_06_10.m
   permanently outside-window) — flipping the doc dispatches both, so it stays NA. Extraction of todo 1 into a batch doc
   is the right next move and is a plan-authoring call, parked
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added the 2 source files the plan's 2 remaining
+  todos target directly (`rebuild_sports_manifest_v9.py` for CF-5, `backfill_orphan_class_e_sports.py` for C3).

@@ -204,3 +204,5 @@ the review doesn't silently drop them into either bucket without a look):**
   re-tiered to `assigned_vm: planning` … is explicitly left OPEN as a genuine operator routing call — do not
   self-promote it'.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- all resolve, list already minimal/accurate, no
+  change needed.

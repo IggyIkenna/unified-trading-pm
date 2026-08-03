@@ -59,9 +59,10 @@ source: >-
   sibling's already-correct pattern — Phase B is now carried by `prediction_phase_ab_residuals_2026_07_24.md`.
 context_scope:
   [
-    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
-    /plans/epics/predictions_master.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    deployment-api/deployment_api/routes/data_status/_catalogue.py,
+    instruments-service/scripts/measure_honest_coverage.py,
   ]
 ---
 
@@ -126,3 +127,6 @@ context_scope:
   for the full session-by-session history of the prediction close-out overall; none of those ticks closed a Phase C
   item, so there is no Phase-C-specific history to carry forward yet. Future work on this plan logs new entries below.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the real gating dependency
+  (phase_ab_residuals), todo 3's target doc, and 2 source paths (the existing catalogue-filter query + the honest-
+  coverage script).

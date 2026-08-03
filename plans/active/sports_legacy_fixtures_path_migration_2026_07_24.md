@@ -352,3 +352,6 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   reading list) and the writer/reader source file
   (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py`) that every todo in this plan
   (census, fallback removal, delete) actually touches.
+- **context-scout 2026-08-03 (re-run)**: re-verified all 6 entries resolve on disk — unchanged. Both remaining open
+  todos (P2 GCS delete, P2 doc update) are covered by the existing delete-safety codex + parent-doc entries; no further
+  source path warranted since the code work (`sports_fixtures.py` fallback removal) already shipped.

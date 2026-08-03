@@ -748,3 +748,5 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) -- coordination-hub doc (0 native todos,
+  archive_exempt), codex-only list is correct/minimal; child-phase plans already machine-linked via depends_on.

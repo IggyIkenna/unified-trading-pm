@@ -46,7 +46,8 @@ context_scope:
   [
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -86,3 +87,6 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `sports_satellite_ao_dispatch_batch2` (todo
+  2's INJURIES-enrichment re-check target) and the archival-ritual codex SSOT in place of the parent epic; code-free
+  finalize gate, no source path applicable.

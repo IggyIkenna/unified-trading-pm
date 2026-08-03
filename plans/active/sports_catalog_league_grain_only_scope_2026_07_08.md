@@ -54,6 +54,8 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    instruments-service/docs/SPORTS_INSTRUMENTS.md,
   ]
 ---
 
@@ -195,3 +197,6 @@ honest-coverage denominator math, not a same-file fix.
   this plan remains assigned_vm: NA (not auto-dispatched) until the operator explicitly routes it' — plus a 🟡 SCOPE
   OVERLAP banner telling readers not to resolve the closeout collision unilaterally
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `build_instrument_catalogue.py` (the
+  root-cause builder every open fixture-grain todo extends) and `SPORTS_INSTRUMENTS.md` (the doc the codex-alignment
+  todo would update).

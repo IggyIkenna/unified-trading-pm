@@ -47,7 +47,7 @@ context_scope:
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/epics/predictions_master.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -92,3 +92,5 @@ context_scope:
   `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. Inert (`status: draft`, gated on batch4) until the operator
   approves + dispatches batch4.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the generic epic ref for the
+  archival-ritual codex SSOT (todo 3's target, finalize gate has no source-code target).

@@ -32,11 +32,10 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    [/plans/epics/batch_live_symmetry_master.md, /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md],
-    ? context_scope,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/epics/batch_live_symmetry_master.md,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
   ]
 ---
@@ -130,3 +129,6 @@ partition walk anywhere (single-walk discipline):
   complete only inside another plan's whole-corpus walk (single-walk discipline) and need window coordination with the
   IS migration owner.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: fixed context_scope -- the 2026-08-01 edit had left malformed YAML (a nested list + a
+  stray `? context_scope` complex-mapping-key token) despite the marker claiming "2 entries"; rebuilt clean (5 entries),
+  all verified on disk.

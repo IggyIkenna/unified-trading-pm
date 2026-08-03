@@ -45,9 +45,11 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/epics/predictions_master.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
-    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction,
   ]
 ---
 
@@ -749,6 +751,8 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
   architecture question about the live sink's rolling-window overwrite model (not a bounded verification), and the other
   is a cross-repo deferred cross-dependency.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added batch4 (owns the extracted depth-retention
+  item) + 2 source paths (websocket_runner.py's overwrite behavior, the prediction adapters dir).
 
 ## Deferred work — migrated to:
 

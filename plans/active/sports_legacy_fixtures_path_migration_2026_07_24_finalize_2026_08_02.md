@@ -53,9 +53,9 @@ source: >-
 context_scope:
   [
     /plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md,
-    /codex/02-data/sports-gcs-path-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
   ]
 ---
 
@@ -128,3 +128,5 @@ reclassification landed 2026-08-02 with `sequential: true` in the same edit.
   (`[REVIEW] P0` vs `[DOC] P1`) so the AO done-gate's tag disambiguator cannot find two same-tag-priority checked lines
   and fail closed.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-03 (re-run)**: swapped `sports-gcs-path-ssot.md` for `sports_fixtures.py` — todo 1 needs the
+  worker to grep this file directly (verify the 4 fallback call sites are genuinely gone).

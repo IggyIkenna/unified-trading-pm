@@ -38,7 +38,13 @@ source:
   ]
 drift_direction: advance-code
 context_scope:
-  [/plans/epics/instruments_master.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
+  [
+    /codex/02-data/mvp-scope-canonical.md,
+    /plans/epics/instruments_master.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py,
+    deployment-api/deployment_api/routes/data_status/_coverage_scope.py,
+    ml-service/ml_service/training/ml/config_schema.py,
+  ]
 ---
 
 # MVP scope tagging — the third denominator (all ⊇ could-exist ⊇ MVP)
@@ -291,3 +297,5 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
   explicit operator policy call and the P2b-2 todo self-documents its own AO-ineligibility ('an open design call is not
   an AO-dispatchable todo').
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the MVP-scope codex SSOT + the UAC/
+  deployment-api/ml-service source paths behind the two still-open P2b-2/verify todos.

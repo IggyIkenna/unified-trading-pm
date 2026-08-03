@@ -38,6 +38,7 @@ source:
 context_scope:
   [
     agent-orchestrator/scripts/orchestrator/omniroute-eval/README.md,
+    /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
     /plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /codex/06-coding-standards/model-tier-selection.md,
@@ -213,3 +214,7 @@ decommission todo — revoking the keys at source is the part that cannot be und
   the doc says silently produce wrong results if skipped (mandatory before the P0 provider-matrix.sh build), the two
   upstream audit plans are the "why this plan exists" chain, and the codex/source pair are the doc's own in-body "Codex
   SSOTs" picks most relevant to the eventual go/no-go decision.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added
+  `omniroute_llm_gateway_pilot_design_2026_07_30.md`, a sibling OmniRoute investigation (worker-fleet routing guardrail
+  design) neither this doc nor that one cross-links in `related:` despite overlapping scope; flagging so the Phase-3
+  go/no-go weighs its model-tier-risk guardrail too.

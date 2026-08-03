@@ -86,12 +86,10 @@ source: >-
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/data_completion_sports_2026_07_24.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/epics/sports_master.md,
   ]
 ---
@@ -978,6 +976,8 @@ context_scope:
   insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
   `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: trimmed context_scope to 5 (was 7, over the 2-6 guidance) — no source path added, this
+  is a dispatch-batch coordinator whose real content lives in its 15 named source docs (each has its own).
 
 ## Reconciliation
 

@@ -47,9 +47,11 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/epics/predictions_master.md,
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
   ]
 ---
 
@@ -938,3 +940,5 @@ themselves required manual VM backfill triggers.
   cross-venue arb-pairing and politics/geo canonicalization calls the doc says would create FALSE arb pairs if
   blanket-mapped.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in batch4/batch6 (sole executing owners
+  of this doc's extracted cqg/fixture-pairing residuals) + rebuild_prediction_manifest.py (active `--apply` script).

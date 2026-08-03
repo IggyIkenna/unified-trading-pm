@@ -47,9 +47,9 @@ source: >-
 context_scope:
   [
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
-    /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
+    deployment-api/deployment_api/services/fixtures_browser.py,
+    deployment-ui/src/components/FixturesBrowser.tsx,
     /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 ---
 
@@ -106,3 +106,5 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   either/or design call ('confirm the regen cadence and EITHER accept + label it, OR keep a live-day overlay for today's
   fixtures') — a judgment call wearing a todo's clothes, per the dispatch-scope eligibility bar
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped in the 2 shipped source files
+  (`fixtures_browser.py`, `FixturesBrowser.tsx`) this plan's todos actually touch.

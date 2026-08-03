@@ -53,6 +53,7 @@ context_scope:
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
     /codex/02-data/sports-gcs-path-ssot.md,
+    market-tick-data-service/scripts/sports/league_id_relocation/,
   ]
 ---
 
@@ -139,3 +140,7 @@ review-blocking.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the `league_id_relocation` scripts dir (the
+  "relocation executor" the ship-parked-changes todo's shard-filter targets); the launcher script named in that same
+  todo (`launch-sports-league-id-relocation-vm.sh`) does not resolve on disk yet (unshipped, sitting in a worktree) so
+  was not added.

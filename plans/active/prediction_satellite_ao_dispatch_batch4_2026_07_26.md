@@ -64,10 +64,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/epics/predictions_master.md,
+    /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/reconciliation-census-and-compute-tiers.md,
+    /codex/02-data/canonical-cutover-register.md,
+    market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py,
   ]
 ---
 
@@ -613,6 +614,8 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
   data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in the source issue doc for the 4a-4c
+  rollup + the in-progress migration script (4b-i) + the Tier-2 SPOT VM codex SSOT (4b-ii).
 - **2026-08-01T09:2xZ (slot 7, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
   after `already_in_progress: true`)**: re-verified both blocker legs fresh, no change. Cron
   `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,

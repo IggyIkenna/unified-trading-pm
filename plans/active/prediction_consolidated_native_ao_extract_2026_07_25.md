@@ -58,7 +58,8 @@ context_scope:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
@@ -228,3 +229,5 @@ to every classification in this doc + the Deferred section above).
   `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`), 0 silent-fallback or duplicate-implementation
   violations found.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in phase_d (now owns 3 of the 4 remaining
+  open todos) + reconciliation-finding-taxonomy.md (todo 4's codex); dropped the now-done todo 1's codex ref.

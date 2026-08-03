@@ -34,7 +34,8 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/sports-data-source-coverage-matrix.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/epics/sports_master.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    market-tick-data-service/market_tick_data_service/scripts/_migrate_drop_stale.py,
   ]
 ---
 
@@ -530,6 +531,9 @@ materialized.
   wrote out-of-universe/numeric rows (the over-capture) + burned the 6M API-Football budget on the full ~2,400-league
   provider universe. They stay paused until the write-gate ships (see Temporary states).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the parent epic for the write-gate source
+  (`sports_reference_core.py`) and the open E8 legacy-delete stub source (`_migrate_drop_stale.py`), the two remaining
+  open-todo targets.
 
 ## Temporary states + their canonical follow-up
 
