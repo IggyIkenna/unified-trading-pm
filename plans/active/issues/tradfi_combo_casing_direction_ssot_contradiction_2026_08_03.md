@@ -41,12 +41,13 @@ execution_scope: orchestrator-agent
 drift_direction: investigate
 depends_on: []
 # 2026-08-03 (slot-8): the 4 todos below are a REAL dependency chain, not
-# independent parallel work — -002/-003 both read on the [OPERATOR] ruling in
-# -001, and -004 (cross-reference) only makes sense once -001..-003 are
-# resolved. sequential=true wires prereqs.completed_tasks in plan_order so the
-# dispatcher stops offering -002/-003 while -001 is still open (it already did
-# once: -002 was dispatched and -003 was dispatched to slot-8, both while -001
-# sat status=blocked awaiting the operator — see BLK-17ef2351).
+# independent parallel work -- -002/-003 both depend on the still-open P0
+# casing-direction decision in -001, and -004 (cross-reference) only makes
+# sense after -001..-003 close out. sequential=true wires
+# prereqs.completed_tasks in plan_order so the dispatcher stops offering
+# -002/-003 while -001 is still open (it already did once: -002 was
+# dispatched and -003 was dispatched to slot-8, both while -001 sat
+# status=blocked awaiting a human decision).
 sequential: true
 ---
 
