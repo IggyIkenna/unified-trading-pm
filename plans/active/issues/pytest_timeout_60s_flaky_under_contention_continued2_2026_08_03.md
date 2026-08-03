@@ -531,3 +531,22 @@ repeated here.
   skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`ml-service`
   and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no
   branch changes in either repo).
+
+- **2026-08-03 ~17:50Z (`cicd` escalation `agt-684220`, slot 10, `deployment-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 6th same-day dispatch for this exact repo/wall in this doc alone, unchanged state, no code action**:
+  re-verified from scratch per the A/B classification: `gh pr list --base main` → 0 open PRs (rules out A,
+  promotion-stuck). `main` HEAD (`ce1239d`) and its latest `quality-gates-v2` run (`30824452052`, workflow_dispatch
+  14:48:17Z, failed `tests` on
+  `test_turbo_data_validation.py::TestDataTypeValidation::test_expected_instrument_types_cefi_deribit`,
+  `Failed: Timeout (>300.0s)`) are byte-identical to what `agt-7bcb7c` already diagnosed above — no newer main run
+  exists, ruling out B too (the check DID run and report; not a stale-workflow/missing-check shape).
+  `PYTEST_TIMEOUT=300` confirmed intact on LDR HEAD (`28c8d5f4`). `gh api .../actions/runners`: still exactly ONE online
+  runner (`glue-ip-172-31-5-118-1`), `busy=true`. `ldr-to-main-promote-fleet`'s freshest tick (`30838152842`, 17:47:27Z)
+  unchanged: `GATE BLOCK deployment-service: ci_status=FAILING` — the only in-flight LDR run (`30837367180`, queued
+  against the true current HEAD `28c8d5f4`) is the correct state to leave for the next occurrence; did not
+  cancel/redispatch. `GET /api/repo-blockers` → `open: []`. **Disposition: no code or workflow change made or needed** —
+  identical to every prior pass for this repo today; pure runner-queue-depth wait. `AUTHORING_SLOT=ci-reconcile`
+  (sentinel) — skipped the authoring-slot ping per established carve-out. Slot left clean (`deployment-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit). Adding no
+  new todo — todo 2 (missing cooldown/dedup guard) already fully covers this; this is simply another same-day data point
+  for it.
