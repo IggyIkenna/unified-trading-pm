@@ -121,6 +121,25 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       are upstream-gated (not this script's or this todo's problem to fix) and can be picked up by a future re-run
       once/if the upstream odds_api gap resolves — left untracked-but-documented here rather than spawning a perpetual
       re-check todo. (repo: market-data-processing-service, deployment-service — verification only, no new code.)
+
+      **Correction (slot-16, 2026-08-03T~14:35Z): the resolved-date list above does not match a direct manifest read —
+          superseding it.** Ran a direct post-completion `ManifestWriter.lookup()` query (the same fixed, bounded
+          filtered path from `unified-trading-library@4dc12dbe`, one call per date, memory-bounded via
+          `run-bounded-analysis.sh`) against all 26 dates on the SAME completed run
+          (`mdps-sports-bucket-20260803-134154`). Result: **4 dates now read `captured`** — 2025-07-31, 2025-08-26,
+          2025-10-07, 2025-10-14 — not 2025-09-04/10-07/11-13 as stated above (only 10-07 overlaps). **22 dates remain
+          `attempted_failed`**: 14 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-08-05, 08-12, 08-13, 08-21, 09-02, 09-03, 09-04,
+          09-09, 09-10, 11-11, 11-13, 12-18, 12-24, 12-31), 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24, unchanged), 4
+          `LOSS_GUARD_BLOCKED` (2025-02-16, 08-14, 09-18, 10-23, unchanged). Root cause of the discrepancy: at least one
+          date (2025-10-14, directly confirmed via `run.log`) logs an interim `WARNING ... recording attempted_failed`
+          partway through the day's own processing, then the coarse per-day manifest row is later overwritten to
+          `captured` once other data for that date lands — the manifest's last-write-wins semantics mean a mid-run log
+          line is not a reliable proxy for the final row; only a post-completion manifest read is authoritative. The
+          aggregate run tally above (571 total/48 success/19 failed/500 skipped/4 blocked) is unaffected and still correct
+          — only the specific resolved-vs-still-failed date attribution changes. (repo: market-data-processing-service,
+          unified-trading-library — verification-only correction, no new code; verification script deleted per its own
+          `Delete-when:` marker after use.)
+
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
       `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (re-verified the gap live via a scoped
