@@ -16,7 +16,7 @@ summary: >-
   `pytest.raises( SystemExit)` alone can't distinguish a working `--help` from a broken one). This todo ports that
   better test onto the landed fix. The source commit b0a58bb9 is dangling in slot-5's local clone only (never pushed)
   and GCs in ~2 weeks — so the full test body is embedded below, making this todo self-contained and GC-proof.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -33,7 +33,7 @@ assigned_role: backend_engineer
 priority: P3
 drift_direction: advance-code
 source: [review-role-finding-agt-35d7d3, main-orchestrator-triage-agt-26fe12]
-resolved_by:
+resolved_by: features-service@0f894013
 locked_by:
 locked_since:
 depends_on: []
