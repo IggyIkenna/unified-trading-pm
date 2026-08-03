@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T22:45Z
+last_updated: 2026-08-03T22:55Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -131,3 +131,35 @@ here.
   `^[0-9]+$` check) — skipped the authoring-slot ping. Slot left clean (`instruments-service` on `live-defi-rollout`, 0
   commits ahead; no code changes made in that repo this session — only this doc + `continued2`'s conflict-resolution
   commit in `unified-trading-pm`).
+
+- **2026-08-03 ~22:34-22:57Z (`cicd` escalation `agt-9c7994`, slot 4, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1068`) — THIRD occurrence for this same repo+file within the same day; disposition: already resolved, no
+  code action needed**: failing run `30839360878` (`QG slice (tests)` job `91772398050`) hit the identical signature yet
+  again — `pytest-timeout` fired `Failed: Timeout (>150.0s)` on
+  `tests/unit/test_sports_comprehensive.py::TestCompetitionPhaseAdditional::test_whitespace_handling` (a synchronous,
+  fixture-free, one-line call into `classify_competition_phase` — pure string logic, no I/O, no sleep, no regex; read
+  the function directly, `instruments_service/reference_data/adapters/sports/competition_phase.py`, to rule out a
+  catastrophic-backtracking or similar code-level mechanism — none exists), which pytest-xdist's worker-crash detector
+  reported as `INTERNALERROR> AssertionError: (..., <WorkerController gw1>)`. Ran a full local reproduction BEFORE
+  touching any code: the entire 110-test file under CI's exact `PARGS`
+  (`-n auto --timeout=150 -q -r a --tb=short --no-header --durations=25`,
+  `--allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket`) passed 110/110 in 13.9s flat — no hang, no failure.
+  Checked the PR directly: `gh pr view 1068` → **already `MERGED`**, `mergedAt=2026-08-03T18:01:13Z`, 2 seconds _after_
+  the escalating run was created (`createdAt=18:01:11Z`) — same "run started right as/after the PR that would have
+  satisfied it already merged" pattern as this doc-chain's prior two `instruments-service` entries. LDR's own most
+  recent completed `quality-gates-v2` (run `30854606507`, `headSha=d79b9d74`, `21:26:01Z`) = `success`, and a fresh run
+  (`30858477952`) was already in progress for LDR's current HEAD (`df83fdcd`) at investigation time — not blocked on
+  waiting for it given the local reproduction already independently confirms no defect. Checked `GET /api/repo-blockers`
+  — none open for `instruments-service` to fast-path. **Disposition: no code or workflow change made or needed.** Noted,
+  out of scope for this escalation (a separate `main`-branch symptom, not `live-defi-rollout`): `main`'s own post-merge
+  `quality-gates-v2` (run `30846147595`, `headSha=0ac1b64b`) remains `failure` as of this session too (same run already
+  logged in this doc-chain's immediately-prior entry above, on a different test/site — `main`-push failures correctly do
+  not dispatch to `cicd` per the workflow's own escalation gating, so left for whoever next triages
+  `instruments-service` `main` health). This is now a **3rd same-day, same-repo, same-file** occurrence
+  (`test_sports_comprehensive.py`, escalations `agt-f90886`→PR#1069 above and now `agt-9c7994`→PR#1068) — worth flagging
+  to whoever picks up todo 1/3 above that `instruments-service`'s sports-adapter test file specifically may be
+  disproportionately represented in this bug class (large xdist worker-group, or simply this repo's heaviest-hit file)
+  even though the mechanism remains generic host contention, not anything specific to the file's own content. Slot left
+  clean (`instruments-service` on `live-defi-rollout`, 0 commits ahead; no code changes made in that repo this session —
+  only this doc in `unified-trading-pm`). `AUTHORING_SLOT=ci` (sentinel) — skipped the authoring-slot ping per
+  `cicd.md`'s `^[0-9]+$` check.
