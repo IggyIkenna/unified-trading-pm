@@ -191,13 +191,13 @@ production data.
   seed still depends on `-001`'s ruling. No manifest write attempted; no `--apply` run.
 - 2026-08-03 (slot-7): main gave interim guidance on the blocked question filed for `-001` (NOT a final human sign-off —
   a genuinely open P0 gate still awaiting the actual operator; deliberately NOT citing the tracking id in this note —
-  see `blocked_reconcile_marker_false_positive_2026_08_03.md`, filed by a sibling slot the same day, for exactly why).
-  Guidance splits into two parts: the likely-correct CASING DIRECTION (uppercase, IF this doc's premises hold — UAC's
-  `InstrumentType.COMBO` enum value + the existing operator directive already on file in
-  `tradfi_casing_100pct_redrift_2026_07_27.md`) still needs genuine operator confirmation, not just chat-level
-  agreement; the `--apply` EXECUTION itself is explicitly withheld this tick — human-owned, given it's a THIRD mass
-  rewrite of a contested ~1.4M-row population, requires loosening the script's own STOP-ON-SURPRISE safety guard, and
-  has no verifiable before/after evidence artifact for a mutation this size (see
+  see `/plans/archive/issues/blocked_reconcile_marker_false_positive_2026_08_03.md`, filed by a sibling slot the same
+  day, for exactly why — since fixed and archived, `agent-orchestrator@209cd00`). Guidance splits into two parts: the
+  likely-correct CASING DIRECTION (uppercase, IF this doc's premises hold — UAC's `InstrumentType.COMBO` enum value +
+  the existing operator directive already on file in `tradfi_casing_100pct_redrift_2026_07_27.md`) still needs genuine
+  operator confirmation, not just chat-level agreement; the `--apply` EXECUTION itself is explicitly withheld this tick
+  — human-owned, given it's a THIRD mass rewrite of a contested ~1.4M-row population, requires loosening the script's
+  own STOP-ON-SURPRISE safety guard, and has no verifiable before/after evidence artifact for a mutation this size (see
   `prod_mutation_evidence_artifact_gap_2026_08_03.md`). One hard, non-negotiable prerequisite applies regardless of who
   ultimately signs off: fix the seeding-function staleness FIRST. Acted on that — closed `-002` for real this time
   (`instruments-service@47a631ff`, full QG green, see `-002` above) and closed `-004` (cross-reference). `-001` (the

@@ -10,7 +10,7 @@ summary: >-
   mass-manifest-mutation todo, even though no actual operator decision existed anywhere in the plans corpus. The
   reconciler nudged the worker to "resume" based on this false positive. Caught before any migration ran; not a
   data-correctness incident, but a real gap in a safety-relevant auto-resolution path.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -23,13 +23,20 @@ priority: P2
 parent_epic: infrastructure_master
 assigned_vm: planning
 source: [tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
-resolved_by:
+resolved_by: agent-orchestrator@209cd00
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_role: backend_engineer
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved`, zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> ACKED-INTO-CODE trigger. Fix: `find_resolution_in_plans()` (`agent-orchestrator/server/blocked_reconcile.py`) now
+> requires the resolution marker on the SAME line as the `BLK-xxxxxxxx` mention (option 1 of the recommended decision
+> below) — `agent-orchestrator@209cd00`, verified on `origin/live-defi-rollout`, 16/16 tests passing, full repo
+> `quality-gates.sh` green.
 
 ## What I found
 
