@@ -984,3 +984,10 @@ section above, which conflated answered and open items):
   twin-existence for 1,492 sole-surviving-copy rows. All 28 open todos read this pass; no newly-stale item found beyond
   what that same-day run already corrected. RECLASSIFY would be actively unsafe here — naive concurrent dispatch is
   exactly what the ⛔ note and the prose-only sequencing warnings guard against
+- **na-eligibility-audit 2026-08-03**: re-read (in scope again — 2 more referrer-path fixes landed since the 08-02
+  marker, pointing to docs archived since; no todo-content change). **KEEP-NA, valid — verdict UNCHANGED, citation-
+  locked a third time.** Re-confirmed the ⛔ 2026-07-23 operator-ruling citation against a direct `assigned_vm` flip is
+  still present in the frontmatter, plus `gate_on_depends: true` on 3 forked children. Also noted in passing (not this
+  audit's to resolve): the new `sports_reference_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` issue directly
+  bears on this doc's own `sports_reference_v2/by_date/` cull-todo framing — see that doc for the live SSOT-conflict
+  finding.

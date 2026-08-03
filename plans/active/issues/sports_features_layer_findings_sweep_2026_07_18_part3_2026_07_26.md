@@ -903,3 +903,10 @@ overwrite.
   ... Left open here intentionally; do not flip it from this doc'. The 4th (`[PROCESS] P1`, codify an
   entity-rename/split consumer-migration rule) needs a codex authoring ruling. NOTE: the two `[DIAG] P0`s at ~line 387
   and ~line 440 are literal duplicates of each other within this same doc
+- **na-eligibility-audit 2026-08-03**: re-read (a 2026-07-30 addendum added detail to the line-782 `[CODE] P2` todo
+  since the marker; context_scope backfill otherwise, not verdict-relevant). **KEEP-NA stands, verdict unchanged from
+  07-30** — same 4 open todos: 2 `[DIAG] P0` duplicates intentionally left open (owned by
+  `sports_consolidated_closeout_2026_07_19.md` Track E), 1 `[CODE] P2` owned by
+  `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3 (now slightly more complex per the addendum — also needs a
+  `merge_manifest_from_canonical_paths()` swap, not just the bucket-name string fix; still owned elsewhere, not flipped
+  here), 1 `[PROCESS] P1` still needing a codex-authoring ruling.

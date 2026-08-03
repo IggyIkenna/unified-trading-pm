@@ -159,3 +159,8 @@ rather than executing the copy.
 - **2026-08-03** (slot 15, backend/data_engineering, task `sports_reference_v2_1492_row_canonical_copy-002`) — Filed
   before executing the copy. Did not implement any code change; no GCS object read or written for this task.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03**: KEEP-NA, valid (sports tranche) — first verdict on this doc (created today, never
+  audited). Genuine SSOT-level conflict between two of the operator's own rulings (2026-07-21 pre-floor-wipe policy vs.
+  the 2026-08-03 confirmed § 1b option B) — todo 1 is an explicit `[REVIEW] P0` operator/main reconciliation ask and
+  todo 2 is gated on its outcome; neither is worker-determinable. Already correctly filed as a big finding (SSOT
+  contradiction, `tags: big-finding`) by its author; no further escalation needed from this pass.

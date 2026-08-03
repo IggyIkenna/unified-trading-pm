@@ -195,3 +195,11 @@ same CLI path would hit the identical wall.
   as 'a genuine design decision, not a mechanical fix' (wire `--family` to actually scope SPORTS training vs drop the
   vestigial required-arg), and todo 2 (the CLV retrain) is blocked one layer deeper on
   `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, which this pass reclassified instead
+- **na-eligibility-audit 2026-08-03**: re-read (no `last_updated` field, so always in scope; the only change since 07-30
+  was a referrer-path fix pointing to the now-archived
+  `ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`, applied by that doc's own
+  archival ritual, not verdict-relevant). **KEEP-NA stands, verdict unchanged.** Todo 1 (`[CODE] P3`, wire vs. drop
+  `--family`) remains an explicit design decision. Todo 2 (`[ML] P2`, CLV retrain) is now code-unblocked (the archived
+  doc fixed the dtype crash) but its value is still contingent on an unresolved judgment call — that same archived doc
+  found the CLV target resolves 100% flat for the 2026-04 window, so a bounded "just retrain" todo would first need a
+  human call on window selection before it is genuinely worker-determinable.

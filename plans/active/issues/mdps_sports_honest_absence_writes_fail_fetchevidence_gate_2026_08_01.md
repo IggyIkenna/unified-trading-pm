@@ -392,3 +392,14 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   never asset-group-correcting `venue` for SPORTS when `input_venue` is truthy. Filed here rather than a new doc since
   it lands in the exact function this doc's findings 3/4 already implicate. Did not fix inline (outside this task's
   scope; findings-closure HARD RULE).
+
+- **na-eligibility-audit 2026-08-03**: re-read (in scope again — the A-vs-B `[OPERATOR]` item was RULED 2026-08-02
+  (option A), and Finding 5 + its 2 new todos landed 2026-08-03). **KEEP-NA stands, 6→7 open** (the ruling closed 1
+  item; Finding 5 added 2; net +1). The now-unblocked `[DATA] P2` implementation todo (route the `SOURCE_RETURNED_ZERO`
+  fallback to `record_failed_for_shard`) has a clear done-when and is arguably bounded, but the doc as a whole stays NA:
+  it is an ACTIVE incident-tracking surface for a live DP-VM-001 escalation chain (4 escalations so far, an
+  authoring-slot ping already sent per the `data_pipeline_failure` role contract) still accumulating new findings daily
+  — not stable backlog work, and the existing direct-escalation channel already covers dispatch faster than an
+  AO-backlog round-trip would. Flagging the now-clear `[DATA] P2` blocker here as an actionable note for the
+  operator/main agent rather than leaving it silently unremarked. The 3 `[DIAG]` crash-hunt todos and Finding 5's own 2
+  todos remain live-investigation work with stated done-whens, consistent with the prior pass's reasoning.
