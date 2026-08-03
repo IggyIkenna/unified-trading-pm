@@ -221,9 +221,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                          todos 6 and 7 below.
+                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                  todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
