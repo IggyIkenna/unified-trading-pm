@@ -216,7 +216,7 @@ mock parity — the drift is historical, not systemic.
       regardless of real mock-server correctness (hit on `/api/data-status/turbo/stats`). Shelved rather than shipped
       flaky; needs AsyncMock-compatible service doubles first. New follow-up todo below captures that scoped-correctly.
       `quality-gates.sh` green (sentinel `6027b54`), shipped via `quickmerge --agent`, verified on origin.
-- [ ] [SERVICE] P3. **Build an exhaustive mock-endpoint crash-smoke QG gate** (`tests/unit/`, auto-discovering every
+- [x] ✅ [SERVICE] P3. **Build an exhaustive mock-endpoint crash-smoke QG gate** (`tests/unit/`, auto-discovering every
       parameterless GET path from `deployment_api.main.app.openapi()`, asserting none 500 under `CLOUD_MOCK_MODE=true`)
       — prototyped 2026-08-03 and shown to genuinely catch real bugs (see the todo above), but blocked on
       `tests/unit/conftest.py`'s global `DataAnalyticsService`/`DataQueryService`/`DataStatusService`/
@@ -226,7 +226,25 @@ mock parity — the drift is historical, not systemic.
       verify full-lifespan `TestClient(app)` (needed so `app.state.config_dir` etc. are set) is safe under the actual
       CI/QG sandbox (no local Redis) before relying on it — it degrades gracefully in `deployment_api/utils/cache.py`
       when unreachable, but no other `tests/unit` file currently exercises full lifespan, so this would be the first.
-      (repo: deployment-api)
+      (repo: deployment-api) — **DONE 2026-08-03 (slot-5, backend_engineer), `deployment-api@b8e609c`.** Took the second
+      option (scope the sweep to skip, not an AsyncMock upgrade): measured the actual blast radius first (in-process
+      sweep of all 125 parameterless GET paths under `CLOUD_MOCK_MODE=true`) and found only ONE real false-positive —
+      `/api/data-status/turbo/stats` (its `data_analytics_service` singleton is constructed at route-module import time
+      from the mocked `DataAnalyticsService` class, so `await .get_cache_stats()` raises
+      `TypeError: object MagicMock can't be used in 'await' expression`) — not the many-route problem the todo
+      anticipated, so a full AsyncMock upgrade of the 5 stubbed submodules would have been disproportionate. Excluded
+      that one path with a documented reason (already covered live by `test_route_data_status_live.py`'s own
+      AsyncMock-patched tests). New file `tests/unit/test_mock_endpoint_smoke.py`: module-scoped full-lifespan
+      `TestClient(app)`, `pytest.mark.parametrize` over the OpenAPI-discovered paths, plus a floor-count guard test
+      against the discovery silently degrading. Confirmed full lifespan is safe with no local Redis (graceful degrade in
+      `deployment_api/utils/cache.py`, confirmed via a clean local run with no Redis process). Running the new file
+      alongside the FULL `tests/unit` suite under `pytest -n 4` (the QG-matching xdist config) surfaced a PRE-EXISTING,
+      unrelated test-isolation bug this was the first file to trip: `test_health_routes.py`'s
+      `test_clear_cache_handles_error` replaced `sys.modules["deployment_api.utils.cache"]` with a raw
+      (non-context-managed) assignment that never restores, permanently poisoning the real cache module for the rest of
+      that pytest-xdist worker process — any later full-lifespan test in the same worker then crashed on
+      `await cache.initialize()`. Fixed by switching it to `patch.dict`, matching every other test in the same class.
+      Full `quality-gates.sh` green (sentinel `b8e609c`), shipped via `quickmerge --agent`, verified on origin.
 
 ## Lessons
 
@@ -307,3 +325,19 @@ mock parity — the drift is historical, not systemic.
   (`--project=chromium tests/smoke/`, 428 passed). `quality-gates.sh` green (sentinel `7f5f850`), shipped via
   `quickmerge --agent`, verified on origin. One todo remains open in this doc (the exhaustive mock-endpoint crash-smoke
   QG gate), so the doc stays active.
+- **slot-5 2026-08-03**: Closed the last todo — `deployment-api@b8e609c`. Measured the actual false-positive blast
+  radius before choosing an approach: an in-process sweep of all 125 parameterless GET paths under
+  `CLOUD_MOCK_MODE=true` found only ONE route crashes under `conftest.py`'s global bare-`MagicMock` service stubs
+  (`/api/data-status/turbo/stats`), not the many-route problem the todo anticipated — so took the "scope the sweep to
+  skip" option over an AsyncMock upgrade of the 5 globally-stubbed submodules (a much larger, riskier change touching
+  every other test file relying on the current mocking). New `tests/unit/test_mock_endpoint_smoke.py`: module-scoped
+  full-lifespan `TestClient(app)` + `pytest.mark.parametrize` over the OpenAPI-discovered paths, with the one known
+  artifact excluded and documented (already covered live by `test_route_data_status_live.py`'s AsyncMock-patched tests).
+  Confirmed full lifespan is safe with no local Redis. Running the new file alongside the full `tests/unit` suite under
+  `pytest -n 4` (QG's own xdist config) surfaced a pre-existing, unrelated test-isolation bug this was the first file to
+  trip: `test_health_routes.py::test_clear_cache_handles_error` used a raw (non-context-managed) `sys.modules[...]`
+  assignment that never restored, permanently poisoning the real cache module for the rest of that pytest-xdist worker
+  and crashing any later full-lifespan test sharing the worker; fixed by switching it to `patch.dict`, matching every
+  other test in the same class. Full `quality-gates.sh` green (sentinel `b8e609c`), shipped via `quickmerge --agent`,
+  verified on origin. **Every todo in this doc is now done — archival-eligible** (no `locked_by`); left for a follow-up
+  archival pass rather than bundled into this commit per the never-combine-flip-with-git-mv rule.
