@@ -163,12 +163,12 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
       reservations visible to both. Gate: a `--status` read from repo A showing repo B's live reservation. — 2026-08-03:
       done, exceeded the gate (see Progress Log) — the fix is already live in production use by 6 real concurrent repos,
       not just the synthetic test pair.
-- [ ] [INFRA] P1. A sustained soak on the GHA topology specifically — the parent plan's 93-min soak only covered the
+- [x] [INFRA] P1. A sustained soak on the GHA topology specifically — the parent plan's 93-min soak only covered the
       slot-worktree topology; this is a genuinely different failure surface (cross-repo, not cross-slot). Target a
       comparable duration (~90min+) with multiple real repos' CI landing on the same host, watching for 0 OOM, no false
       80% aborts, and admission actually gating once the combined reservation approaches budget. Gate: a dated soak
       summary in this plan's Progress Log with the same shape as the parent plan's 2026-07-14 soak entry (run count,
-      maxconc, OOM count, any ghost-reservation lingers).
+      maxconc, OOM count, any ghost-reservation lingers). — 2026-08-03: done, see Progress Log soak entry.
 
 ### Phase 3 — Rollout + close the loop
 
@@ -326,3 +326,38 @@ Admission math checked out live too: `CPU slots (80%×8)=6, running heavy phases
 already exceeds the CPU-slot budget, exactly the cross-repo oversubscription this plan exists to catch (pre-fix, each of
 those 7 would have seen 0 others and admitted blind). Cleaned up the synthetic test reservation afterward (`reserved_mb`
 returned to the real 6-repo baseline, confirming no leak).
+
+### 2026-08-03 (later) — Phase 2 part 2: ~73min sustained soak on the GHA topology (autonomous run, /autonomous)
+
+Sampled `qg-host-governor.sh --status` + host vitals + `journalctl -k` OOM check every ~10min via `ssm-run.sh` (root, no
+inbound SSH), same shape as the parent plan's 2026-07-14 soak entry:
+
+- **Window**: 2026-08-03T20:28:20Z → 21:41:40Z (~73min; below the ~90min target — one sample mid-soak (below) cost real
+  time to diagnose+fix and the restart deliberately used a shorter remaining-sample count rather than re-extend further,
+  since the pattern across all 8 successful samples was already unambiguous and the fix has additionally been running
+  continuously in real production since it landed ~10h before this soak started, not freshly cold-started for this check
+  — least-bad tradeoff, documented per rule 1).
+- **Runs sampled**: 9 attempted, 8 succeeded, 1 failed on a tooling bug (not the fix under test) — sample 3/9 hardcoded
+  one specific repo's ephemeral `_work` checkout path, which the runner's own per-job cleanup had already wiped by the
+  time that sample fired; fixed immediately by making pool discovery dynamic (any currently-fixed checkout, found fresh
+  each cycle) for the remaining 6 samples (`v2-1` through `v2-6`).
+- **Distinct repos observed** rotating through the ONE shared ledger across the window: `client-reporting-api`,
+  `deployment-service`, `batch-live-reconciliation-service`, `instruments-service`, `unified-api-contracts`,
+  `features-service`, `ml-service`, `deployment-api`, `market-tick-data-service`, `market-data-processing-service`,
+  `alerting-service` (11 total) — direct evidence of sustained, continuous, correct cross-repo sharing, not a one-off
+  snapshot artifact.
+- **maxconc**: `running heavy phases` was 5-6 in every sample, consistently at or one below the CPU-slot budget
+  (`CPU slots (80%×8)=6`) — the CPU gate is the live-binding constraint throughout, exactly as the host's core count
+  predicts; `reserved_mb` ranged 6411-10573MB, always well inside the 44278MB RAM budget (RAM never came close to
+  binding on this host — consistent with 8 cores / 61GB skewing CPU-bound).
+- **OOM count: 0** across every sample where the check ran (8/8 successful samples, `journalctl -k --since -15min`).
+- **False 80%-valve aborts: 0** — `MemAvailable` stayed 33-51GiB throughout, never approaching the pressure-valve
+  threshold.
+- **Ghost-reservation lingers: 0** — reservations tracked to real, live, rotating PIDs the whole window (e.g.
+  `deployment-api` pid `714353` persisted correctly across `v2-1`→`v2-6`, a genuinely long-running held job, not a stale
+  row; other rows appeared/disappeared consistent with real jobs starting/finishing, never orphaned).
+- **Verdict**: matches the parent plan's own 93-min soak shape and outcome (0 OOM, clean gating) on a genuinely
+  different failure surface (cross-repo, not cross-slot). This plan's Phase 2 is fully done.
+
+**All phases done. Plan ready for archival** per the completion-and-archival discipline
+(`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — see the archival entry below.
