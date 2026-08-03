@@ -91,20 +91,118 @@ by MTDS's own pipeline-check tooling. If this is a genuine capture-path defect (
 it would mean an ODDS_API backfill/redo for these data_types is currently non-functional for SPORTS — worth confirming
 before relying on force-refetch for this venue in any future SPORTS backfill.
 
+## Diagnosis (slot-3, 2026-08-03)
+
+**1. The observability gap is resolved — run.log/EXIT_STATUS NEVER land under the `-test-` bucket, for ANY MTDS
+pipeline-check VM, regardless of `IS_TEST_RUN`.** Live-traced `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`:
+lines 1089-1090 hardcode `GCS_LOG_DIR="gs://deployment-scripts-central-element-323112/vm-logs/${VM_NAME_SELF}"` — the
+CODE bucket, not the per-asset-group `-test-`/PROD data bucket. `IS_TEST_RUN` only ever redirects the MTDS _data write_
+target (`raw_tick_data/...`); the VM's own run.log/EXIT_STATUS/vm-setup.log always go to `deployment-scripts-{project}`.
+Confirmed both cited VM names' logs exist there:
+
+- `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-sports-pipelinecheck-20260801-141034-a9a662/{run.log,EXIT_STATUS}`
+  (the `odds_horizon_bucket` force-leg VM) — `EXIT_STATUS=0`.
+- The `trades` cell's force-leg VMs are the `2da87c`-suffixed runs on the same day (e.g.
+  `mtds-backfill-sports-pipelinecheck-20260801-131404-2da87c`) — also `EXIT_STATUS=0`.
+
+This was not chased further by the checker because the wrong bucket was searched — not an MTDS or observability code
+defect, just an incorrect assumption in the original diagnosis. No code change needed for this half; worth a one-line
+note in the `data-pipeline-check-mtds` skill so the next diagnosis doesn't repeat the same wrong-bucket search.
+
+**2. Real root cause, BOTH cells: an upstream 401 Unauthorized from `api.the-odds-api.com`'s historical endpoint, with a
+clean, one-way cutover — not a transient blip.** Read the actual run.log content for the `odds_horizon_bucket` VM and
+~14 sibling force-leg VMs sharing the same ODDS_API key across the same day (2026-08-01, all using
+`apiKey=5634d6f1***REDACTED***2c46c`):
+
+- 10:25-12:27 UTC: several runs (`…-101533-a9a662`, `…-121313/121544/121827-a9a662`) **succeeded** — real
+  `StreamingParquetWriter: uploaded .../data_type=trades/...` writes landed (558-1116 rows per bookmaker-venue:
+  UNIBET_UK, FANDUEL, PADDYPOWER, SMARKETS).
+- From 12:40:24 UTC onward (`…-123720-a9a662` through at least `…-145458-fc4131`, i.e. every run for the rest of the
+  observed window, ~2.5 hours, across BOTH the `odds_horizon_bucket` day=2025-12-20 pin and the `trades`
+  auto-day=2026-06-24 substitution) — **every single run fails identically**:
+  `Discovery call for soccer_epl ... FAILED (re-raising): 401, message='Unauthorized', url='https://api.the-odds-api.com/v4/historical/sports/soccer_epl/odds?apiKey=5634d6f1***REDACTED***2c46c&...'`.
+  MTDS correctly isolates this as a shard failure (`ERROR Venue ODDS_API: unexpected error (shard isolated)`), correctly
+  reports `SHARD_INCOMPLETE`/`FAILED SHARDS`, and correctly writes a partial manifest rather than a silent placeholder —
+  the shard-level-failure-isolation + honest-absence contracts are both working as designed. The absence of parquet is
+  an honest, correctly-reported consequence of the vendor call failing, not a silent MTDS bug.
+
+A clean one-way success→failure transition at a fixed timestamp (not intermittent, not recovering on retry across 2.5h
+and ~14 subsequent attempts) is the signature of the `the-odds-api.com` account's request-credit/quota balance being
+exhausted mid-day, not a code defect or a flaky network blip. This is **not** a `-test-`-bucket-specific issue: the API
+key + credential path is identical regardless of `IS_TEST_RUN` (only the GCS _write_ target changes), so **this
+reproduces against real PROD backfill machinery too** — any live/PROD ODDS_API capture running after ~12:40 UTC on
+2026-08-01 would hit the identical 401. Per the data-pipeline-correctness HARD RULE and the
+external-data-always-available rule, exhausting a paid vendor's request quota is a credential/billing ask, not a code
+defect to "fix" — filed as todo 2 below.
+
+**3. `odds_horizon_bucket`'s ownership-split hypothesis is CONFIRMED — it is MDPS-derived, not an MTDS-native raw
+capture.** Traced `unified-api-contracts`:
+
+- `unified_api_contracts/canonical/crosscutting/pipeline_mode.py:184` —
+  `BATCH_MDPS_ODDS_HORIZON_BUCKET = "batch_mdps_odds_horizon_bucket"` (the `mdps` is baked into the canonical enum name,
+  not incidental).
+- `unified_api_contracts/canonical/crosscutting/_source_priority_data.py:97` —
+  `SOURCE_PRIORITY[("sports", "ODDS_HORIZON_BUCKET")] = ["mdps_odds_horizon_bucket"]` — the ONLY registered source for
+  this data_type is the MDPS derivation, there is no raw-vendor source registered for it at all.
+- `unified_api_contracts/canonical/domain/sports/league_data.py:261` —
+  `"ODDS_HORIZON_BUCKET": "mdps_odds_horizon_bucket"`.
+
+So `odds_horizon_bucket` is a derived candle/feature MDPS computes downstream from raw `odds_movement`/`odds_snapshot`
+ticks — it was never meant to be fetched directly from `the-odds-api.com` via a live Discovery call. The
+`pipeline_e2e_check.py` SPORTS/ODDS_API enumeration incorrectly includes it as one of MTDS's own force-fetchable raw
+data_types; that's a real enumeration bug in the checker (separate from, and compounding, the 401 above — even once the
+vendor quota is restored, force-fetching `odds_horizon_bucket` directly from MTDS/ODDS_API would still be conceptually
+wrong, since MDPS is supposed to derive it, not MTDS capture it raw). Filed as todo 3 below.
+
+**4. A related, smaller naming-mismatch surfaced along the way (not part of this issue's original scope, noting for
+completeness):** one of the `trades`-cell pre-flight runs (`…-103116-2da87c`, before the 401s started) logged
+`Pre-flight: venue=ODDS_API date=2026-06-24 — dropping data_types not supported per UAC: ['trades']` —
+`unified-api-contracts`' `DataTypeCapability` registry
+(`unified_api_contracts/registry/data_type_capability.py:1090-1104`) only registers `data_type="ODDS"` for
+`venue=ODDS_API` under SPORTS, not `"trades"` (the generic wire-writer's universal tick-record label). Real PROD parquet
+nonetheless exists at `data_type=trades` for this venue (confirmed by the original diagnosis's own PROD-listing sample),
+so this is a UAC registry completeness gap, not evidence the capture itself is wrong. Not actioned as a separate todo
+here — worth folding into whichever future pass touches `DataTypeCapability` for SPORTS.
+
 ## Recommended decision
 
-- [ ] [DATA] P2. Diagnose why `market-tick-data-service`'s launcher (`launch-mtds-backfill-vm.sh`) reports exit 0 /
+- [x] [DATA] P2. Diagnose why `market-tick-data-service`'s launcher (`launch-mtds-backfill-vm.sh`) reports exit 0 /
       VM-confirmed-present for `SPORTS/ODDS_API/odds_horizon_bucket` and `SPORTS/ODDS_API/trades` force-fetches but no
       parquet lands at the expected test-bucket path for either cell — start by finding where the VM's
       run.log/EXIT_STATUS actually landed (it is not under the standard `vm-logs/<vm-name>/` prefix in the target test
-      bucket) since that is the fastest path to ground truth. (repo: market-tick-data-service)
-  - [ ] [DATA] P3. If genuinely a capture-path bug (not just an observability gap): confirm whether the same failure
+      bucket) since that is the fastest path to ground truth. (repo: market-tick-data-service) — ✅ DIAGNOSED, no code
+      change to this todo itself: logs land under `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/`
+      (hardcoded in `setup-data-pipeline-vm.sh:1089-1090`, unaffected by `IS_TEST_RUN`) — see Diagnosis §1-3 above for
+      the full root-cause trace.
+  - [x] [DATA] P3. If genuinely a capture-path bug (not just an observability gap): confirm whether the same failure
         reproduces against real (non-test) PROD backfill machinery, and if so, escalate per the data-pipeline
-        correctness HARD RULE (this would mean ODDS_API's `odds_horizon_bucket`/`trades` capture is silently broken).
-  - [ ] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
+        correctness HARD RULE (this would mean ODDS_API's `odds_horizon_bucket`/`trades` capture is silently broken). —
+        ✅ CONFIRMED reproduces against PROD (same credential regardless of `IS_TEST_RUN`; see Diagnosis §2). Not an
+        MTDS code defect — shard-isolation + honest-absence both worked correctly. This is a vendor quota/billing gap:
+  - [ ] [OPERATOR] P2. `the-odds-api.com` historical-endpoint API key (`apiKey=5634d6f1***REDACTED***2c46c`, `odds_api`
+        credential) hit a clean, non-recovering 401 Unauthorized cutover at 2026-08-01 12:40:24 UTC after succeeding for
+        the prior ~2h15m of the same day (14+ subsequent attempts through 14:58 UTC all failed identically) — the
+        signature of an exhausted request-credit/quota balance, not a transient outage. Needs an operator credential
+        check (account dashboard/billing at the-odds-api.com) + quota top-up or key rotation before SPORTS/ODDS_API
+        capture (test OR prod) can resume. Per the external-data-always-available rule this is a credential ask, not a
+        descope — SPORTS/ODDS_API force-refetch is currently blocked pending this action.
+  - [x] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
         ownership split (MDPS writes this data_type, not MTDS) that the pipeline-check's SPORTS enumeration should
-        exclude, rather than a real MTDS capture defect.
+        exclude, rather than a real MTDS capture defect. — ✅ CONFIRMED via UAC trace (Diagnosis §3): `SOURCE_PRIORITY`
+        registers the ONLY source for `("sports", "ODDS_HORIZON_BUCKET")` as `mdps_odds_horizon_bucket` — no raw-vendor
+        source is registered at all. Follow-up code fix:
+  - [ ] [DATA] P3. Exclude `odds_horizon_bucket` from `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
+        SPORTS/ODDS_API raw-data_type enumeration (it is MDPS-derived per UAC `SOURCE_PRIORITY`, never an MTDS-native
+        raw capture — MTDS force-fetching it directly against `the-odds-api.com` is conceptually wrong regardless of the
+        vendor-quota state above). (repo: market-tick-data-service)
 
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **slot-3 diagnosis 2026-08-03**: root-caused both force-fetch failures — see "Diagnosis" section above. Not an MTDS
+  capture-path bug: (1) the original run.log search targeted the wrong bucket (logs always land under
+  `deployment-scripts-{project}`, never the `-test-` bucket, regardless of `IS_TEST_RUN`); (2) the actual failure is an
+  upstream `the-odds-api.com` 401 with a clean one-way cutover at 12:40:24 UTC on 2026-08-01 (quota-exhaustion
+  signature), confirmed to affect PROD identically (same credential); (3) `odds_horizon_bucket`'s MDPS ownership is
+  confirmed via UAC `SOURCE_PRIORITY` — it should be excluded from MTDS's own force-fetch enumeration. Filed the
+  vendor-credential ask as `[OPERATOR]` P2 and the enumeration-exclusion as a new `[DATA]` P3 code-fix todo.
