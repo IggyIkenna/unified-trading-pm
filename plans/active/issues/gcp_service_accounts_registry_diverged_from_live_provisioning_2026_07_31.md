@@ -34,6 +34,14 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    deployment-service/configs/gcp_service_accounts.yaml,
+    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+  ]
 ---
 
 ## What I found (read-only audit, 2026-07-31 — no IAM binding added/removed/modified)
@@ -126,3 +134,4 @@ Two directions are both plausible and this is an architecture decision, not a bo
   own body explicitly frames the core decision as an architecture/operator judgment call ('needs operator/main judgment
   — not a worker call'), and item 1 (the [OPERATOR] decision between migrate-to-per-service-SAs vs
   rewrite-registry-to-match-reality) is stated...
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

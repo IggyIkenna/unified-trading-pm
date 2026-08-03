@@ -79,7 +79,7 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     deployment-api/deployment_api/routes/deployments_inventory/_aggregation.py,
     deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
-    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-api/deployment_api/routes/deployments_inventory/,
   ]
 locked_since:
 resolved_by:
@@ -169,3 +169,4 @@ automatic fleet-wide safety net that investigation's stated intent was.
   unresolved architecture trade-off (reuse existing endpoint vs. build a narrower alert-check-only path) citing a
   specific OOM-regression-risk code comment — genuine judgment call.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

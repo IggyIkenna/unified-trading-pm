@@ -268,3 +268,5 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   STATUS-CORRECTION banner still says '5 genuinely open checkboxes' and 'the count is still exactly 5' — a live grep now
   returns 3 (items 1 and 3 shipped `features-service@4f365d23`, already flagged SUPERSEDED in the RE-TRIAGE section);
   the banner's count is stale prose, not a stale checkbox, so it was left for the owning doc's next edit
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

@@ -62,12 +62,10 @@ context_scope:
   [
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /codex/02-data/reconciliation-finding-taxonomy.md,
-    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
-    cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
-    cursor-configs/CLAUDE.md,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
+    unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
+    /plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
   ]
 ---
 
@@ -383,3 +381,7 @@ own tests pass (178 passed across the four canonical-path test modules).
   `BLOCKED-UPSTREAM-DESIGN`-tagged todo corpus-wide, not just this one. Checkbox stays `[ ]` — same as slot-12's
   determination, the quarantine disposition itself is still not wired and still gated on
   `fail_hard_canonical_enforcement_design_2026_07_20.md`'s open `[DESIGN] P1` todo.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, was 8) — dropped the now-fixed
+  `tardis_shared.py`/skill-doc/CLAUDE.md pointers (the writer fix already shipped) in favor of `quarantine.py` (the
+  standalone module both §7 BLOCKED-UPSTREAM-DESIGN dispatches center on), keeping the design-gate doc + the oracle
+  itself as the load-bearing reads.

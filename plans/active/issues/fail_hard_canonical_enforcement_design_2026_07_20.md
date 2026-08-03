@@ -175,3 +175,5 @@ of a venue-day outage.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - `nature: design`,
   APPROVED-IN-PRINCIPLE only; the open `[DESIGN]` todo is closing 3 adversarially-confirmed architecture gaps before
   write-enforce.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

@@ -51,6 +51,13 @@ source:
   "Autonomous /plan-reconcile whole-corpus (unscoped) run, 2026-08-02, slot-3. 714 docs inventoried (253 plans + 433
   issue docs + 28 epics); 13 read-only epic-cluster/topic hunters over 18.3 MB. Parked here because the run had no
   interactively-present operator."
+context_scope:
+  [
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md,
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+  ]
 ---
 
 # Parked operator decisions — `/plan-reconcile` whole-corpus run, 2026-08-02
@@ -336,3 +343,5 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
   docs / 18.3 MB, partitioned by `parent_epic`. Every item above carries two line-cited verbatim quotes from its source
   docs and survived independent refutation before being parked. Items the run could prove from code/git/filesystem were
   auto-resolved instead and are listed in § 5, not here.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

@@ -43,7 +43,7 @@ context_scope:
     /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
+    market-tick-data-service/market_tick_data_service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
   ]
 resolved_by:
@@ -922,3 +922,6 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
   still false), requires a scheduled maintenance window, and its own text says the correct fix is 'new, unreviewed
   engineering — a design + review step, not a batch-size judgment call' (group target rows by their OWN `service_name`).
   Its dated RE-TRIAGE (2026-07-23) re-confirmed all of this unchanged
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the old, superseded full-rebuild script
+  (`_rebuild_sports_write.py`) for the actual per-service_name targeted-backfill artifact
+  (`sports_captured_available_at_targeted_backfill_2026_07_14.py`) a future maintenance-window run would execute.

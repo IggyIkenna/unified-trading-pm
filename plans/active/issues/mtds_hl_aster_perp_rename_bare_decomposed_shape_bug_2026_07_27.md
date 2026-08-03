@@ -169,6 +169,55 @@ sibling todo reads `[x]`.
       line under severe host-wide swap pressure (9-13GB swap in use, unrelated to this script) once cleanup of its large
       in-memory DataFrames was the only remaining work — both GCS and manifest result stats were already fully logged
       before termination, so no evidence was lost.
-- [ ] [SCRIPT] P2. Once confirmed fixed + no double-suffix + cross-checked against the sibling closure, execute
-      `--apply --stamp <stamp>` for the 1,496 real renames (small, bounded scale — a direct execution, not a VM launch)
-      with the standard idempotent copy→verify→delete safety this script already implements.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-3)** — re-confirmed via a fresh dry-run first (0 double-suffix anywhere,
+      fix intact on disk), then executed
+      `CLOUD_PROVIDER=gcp GCP_PROJECT_ID=central-element-323112 python scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py --apply --stamp 20260803T1457Z`
+      against real prod GCS (`market-data-tick-cefi-prd-central-element-323112`). **Count drift noted**: 1,970 in-scope
+      renames this run, not the 1,496 from 2026-07-27 — corpus grew over the intervening week AND now includes
+      HYPERLIQUID objects (e.g. `ADA-USD@LIN.parquet`) alongside ASTER, not just ASTER as originally reported; this is
+      NOT a regression — the fix's own design + unit tests explicitly cover the already-decomposed shape for BOTH venues
+      (see todo 1's test list), the earlier 1,496 was simply a snapshot of a smaller in-scope set at the time. **GCS
+      result**: `{'deleted_dup_source': 1048, 'renamed': 922}` = 1,970 total, 0 errors, 0 `source_missing`. The 1,048
+      `deleted_dup_source` outcomes mean the CANONICAL target already existed for those objects (likely written fresh by
+      live/batch capture under the correct name) while the stale bare-shape duplicate lingered — safely deleted per the
+      script's existing idempotent logic, no data lost. **Manifest result**: loaded 9,979,440 rows (42 cols); 2,073,538
+      in-scope HL/ASTER batch rows; 0 `_from_venue_perp_shape` (confirms, independently and again, zero overlap with the
+      sibling Script-2/3 closure); 56 `_from_bare_legacy_shape` rows transformed; 645,743 duplicate rows collapsed on
+      merge; 1,462 `attempted_failed` rows correctly flipped to `captured` via a real captured-duplicate at the same
+      canonical key; 6,003 `attempted_failed` remain (legitimate); final index 9,333,697 rows. Backup written to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_perpetual_canonical_20260803T1457Z.parquet`
+      before the overwrite. **Host-safety note**: the manifest-rewrite phase (full in-memory pandas load + sort/groupby/
+      dedup over ~10M rows) transiently used 14-16GB RSS on the shared host — watched closely given this exact shape
+      caused 2 prior OOM outages on this host (`RULES.md` § 1), but it plateaued/oscillated rather than climbing
+      unboundedly and the host retained double-digit GB "available" throughout; did not require killing. Evidence:
+      `unified-trading-pm@25cdf1b1f` (plan flip only — no code changed in market-tick-data-service for this todo, pure
+      runtime execution against already-shipped code from todo 1).
+- [ ] [SCRIPT] P3. **Follow-up (not this task's scope)**: investigate whether HL/ASTER batch capture is still actively
+      WRITING new objects in the bare (no `VENUE:` prefix) filename shape this migration just cleaned up — the 1,048
+      `deleted_dup_source` outcomes above show canonical-named counterparts already existed for most of the 1,970
+      objects, meaning something recently wrote the CORRECT name while the stale bare-named duplicate never got cleaned
+      up until now; if the underlying writer is still emitting the bare shape for NEW captures, this class of bug will
+      recur after this one-off script's cleanup. Check the batch_hyperliquid/batch_aster capture path for any remaining
+      bare-filename write site (repo: market-tick-data-service). If confirmed still active, file a proper fix todo; if
+      it was a one-time historical artifact (e.g. from the original 2026-06-22 migration's own incomplete pass), this
+      todo resolves as `no-issue-found`.
+
+- [ ] [SCRIPT] P3. **Harden `do_rename()`'s `deleted_dup_source` branch with a content-equality check before it deletes
+      the old object** (flagged 2026-08-03 by review agt-de20d5 after the slot-3 `--apply` run). That branch currently
+      real-deletes the OLD (stale-duplicate) object based solely on the NEW canonical name's EXISTENCE — it does NOT
+      compare content (crc32c / size / row-count) between old and new before the delete, so a genuinely-different object
+      that happened to collide on the canonical name would be silently destroyed. The 2026-08-03 slot-3 run deleted
+      1,048 objects via this path against prod bucket `market-data-tick-cefi-prd-central-element-323112`; review
+      confirmed live that bucket carries a 604800s (7-day) GCS soft-delete policy, so those specific deletes are
+      RECOVERABLE through 2026-08-10 if ever found wrong — this is a hardening follow-up, NOT an active-loss incident.
+      Process-gap note for the audit trail: that `--apply` todo was not `[OPERATOR]`-tagged and did not cite a fresh
+      soft-delete-retention check (task_template.md finding T's bar); adding the content-equality guard removes the
+      reliance on that missing gate. Repo: market-tick-data-service. Real-but-P3 because the same code path WILL run
+      again soon (the sibling `lending_indices` launcher shares the identical `do_rename()`-adjacent metadata-delimiter
+      bug class). **Done when**: `do_rename()`'s dedup-delete path performs a crc32c/size (or row-count) equality
+      assertion between the old object and the pre-existing canonical object and only deletes the old one when they
+      match, refusing + logging the delete on mismatch; add a unit test covering the mismatch-refusal case.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope, still accurate (3 entries) — no changes.

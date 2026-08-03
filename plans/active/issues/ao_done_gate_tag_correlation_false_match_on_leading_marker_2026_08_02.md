@@ -44,6 +44,12 @@ source: [worker-session]
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/verify.py,
+    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # AO `/done` M3 tag-correlation fallback: false-match + leading-marker blind spot
@@ -140,3 +146,4 @@ false-positive surface). Recommend, in order:
 - **slot-6 2026-08-02**: dispatched todo 2 (`ao_done_gate_tag_correlation_false_match_on_leading_marker-001`). Shipped
   `agent-orchestrator@3511af4` — see the flipped checkbox above for the fix summary. Todo 1 (widen
   `_TODO_TAG_PRIORITY_RE` for a leading marker) remains open, unassigned to this task.
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

@@ -379,3 +379,8 @@ investigated further here, out of scope for this doc.
 
 - None directly own host-resource-panel metrics. No new contract established here — an existing pattern (the 2026-07-28
   iowait addition) extended with one more metric.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the 2
+  sibling capacity/contention docs plus the `host_resources.py` module the swap-tile fix lives in).

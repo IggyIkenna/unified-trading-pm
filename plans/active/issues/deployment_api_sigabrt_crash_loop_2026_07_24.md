@@ -43,7 +43,6 @@ context_scope:
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
     deployment-api/gunicorn.conf.py,
     deployment-api/deployment_api/lifespan.py,
-    deployment-api/cloudbuild.yaml,
     deployment-api/deployment_api/services/data_status/manifest.py,
   ]
 locked_since:
@@ -825,3 +824,4 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   fallback (the precondition itself isn't met), documented so the next investigator doesn't re-derive it. No code
   shipped — pure verification, cites the companion doc as the actual blocker to watch.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

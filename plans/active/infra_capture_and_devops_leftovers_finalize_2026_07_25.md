@@ -207,4 +207,5 @@ source: >-
   and ASTER live-data-landing verification (also logged a new finding there re: 3 days of zero rows + an unexplained VM
   replacement). Archival ritual NOT run; both docs stay `active`. Full detail on this todo's own checkbox above and the
   parent's matching Progress Log entry.
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

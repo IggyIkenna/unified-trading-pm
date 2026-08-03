@@ -200,3 +200,22 @@ still in flight.
   established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
   prior reporter hit).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **2026-08-03 (ag_closeout_auditor, slot 2, dispatch agt-330130, tranche=`ao`):** sixth corroboration, a NEW role
+  hitting the same gap, and a new sub-variant of the mid-session-loss shape. Booted normally, ran the full
+  `/ag-closeout-audit ao` procedure end-to-end (a long-running task: Phase 0 discovery + a backgrounded 41-agent
+  `Workflow` fan-out that ran for several minutes), shipped real work (`unified-trading-pm@2b2cbdb11`/`@7ad70d1a4`, both
+  confirmed ancestors of `origin/live-defi-rollout` via `git merge-base --is-ancestor`), then called
+  `POST /api/slots/2/done {task_id: "", sha: "", one_shot_complete: true}` — 400'd with the exact tracked message.
+  Retried with a real `sha`, then with `task_id: "agt-330130"` — same 400 both times. A follow-up `/heartbeat` succeeded
+  (confirming the slot itself stays reachable, matching every prior report) but returned a **fresh Class-A backlog
+  dispatch** (`deployment_service_root_state_orphaned_pubsub_publisher_iam_member-001`, unrelated repo/role) — i.e. the
+  server had already re-registered this slot as a plain backlog worker sometime during the long audit, exactly the
+  2026-08-01 `na_eligibility_auditor` report's variant (no matching AgentRow to begin with, not a post-hoc status
+  change). Released the erroneously-assigned backlog task via `POST /api/slots/2/skip-current-task` (reason_code=OTHER,
+  explaining it was never picked up) rather than either force-completing it or silently absorbing it, then retried
+  `/done` for the actual one-shot work once more — same 400. Ending session without a clean `/done` per the established
+  precedent (all 5 prior reports); this session's actual assigned work is independently git-verified complete
+  regardless. **New data point for whoever root-causes this**: the long-running-background-Workflow shape may be a
+  contributing trigger — every prior report's session was a single continuous tool-call sequence, while this one had a
+  multi-minute gap where the acting session had no tool calls in flight (waiting on a backgrounded `Workflow` task),
+  which is exactly the kind of gap an idle/liveness-based AgentRow reclaim would key on.

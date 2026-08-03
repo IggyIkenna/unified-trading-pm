@@ -100,3 +100,5 @@ EXEMPT reasons accordingly.
   (operator, 2026-07-02):** not needed right now. … Revive by scheduling these todos') and is additionally
   `locked_by: live-defi-rollout`, which blocks autonomous archival/reclassification without an `[unlock-plan]`. Same
   ruling in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

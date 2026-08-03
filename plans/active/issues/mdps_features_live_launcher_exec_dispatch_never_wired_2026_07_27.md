@@ -51,7 +51,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
+    /plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     features-service/features_service/common/live_runner.py,
     market-data-processing-service/market_data_processing_service/cli/parser.py,
@@ -67,10 +67,12 @@ resolved_by:
 
 # launch-mdps-features-live.sh exec-dispatch was never actually wired up
 
-> **Machine-gated on `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
-> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) will not dispatch
-> until that doc's UAC enumerator extension is done. Ruled 2026-07-30, BLK-fd70b57c: see the second `[SCRIPT]` todo
-> below for the full reasoning.
+> **Machine-gated on `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
+> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) waited on that doc's
+> UAC enumerator extension. **RESOLVED 2026-08-03**: the extension shipped (`unified-api-contracts@724b6633` +
+> `market-data-processing-service@4a5985b`), the gated doc's 5 todos are all done, and it has been archived — the gate
+> is satisfied and this issue's remaining `[SCRIPT]` todos below are unblocked. Ruled 2026-07-30, BLK-fd70b57c: see the
+> second `[SCRIPT]` todo below for the full reasoning.
 
 ## Evidence
 
@@ -183,18 +185,36 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       both ruled out on standards grounds, not preference. **RESOLVED VIA SPLIT, not via shipped code** — this todo's
       own ask (decide the shard-discovery mechanism, or determine why it can't be decided yet) is genuinely done as of
       this ruling; the exec-dispatch branch itself has NOT been written. Forked the UAC extension out to
-      `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
+      `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
       edit), gated this doc on it (`depends_on` + `gate_on_depends: true`, see frontmatter + banner above), and
       re-opened the actual code-writing work below as its own gated todo so it isn't lost — unified-trading-pm, this
       commit.
-- [ ] [SCRIPT] P2. Once `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` lands (this doc is
-      `gate_on_depends`-blocked on it, so it will not dispatch until then): add the `VM_TASK == "mdps-features-live"`
+- [x] ✅ [SCRIPT] P2. `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` has landed (shipped +
+      archived 2026-08-03 — this doc's gate is satisfied, dispatchable now): add the `VM_TASK == "mdps-features-live"`
       (or generic "+"-split) branch to `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing
       tarball-resolution split + the multi-worker sharding pattern at ~line 2031 for backgrounding N python processes
       under one `_launch_with_tee` wrapper) that invokes MDPS and features-service with the CLI flags their actual
       parsers require, per the ruled topology (per-shard MDPS + per-family features-service, per-family↔asset_group
       mapping in `features-service@ebd43939`), using the extended UAC `mdps_mvp_universe()` to discover its
-      `(venue, data_type)` shard set at boot.
+      `(venue, data_type)` shard set at boot. **Shipped 2026-08-03 (slot-6)** — `deployment-service@e7d17f2`: a new
+      `VM_TASK == "mdps-features-live"` branch discovers MDPS's `(venue,     data_type)` shards at boot via
+      `mdps_mvp_universe(asset_group)` (projected from the 3-tuple, deduped across `instrument_type`, since MDPS's
+      `--shard-spec` grain is `ASSET_GROUP:VENUE:DATA_TYPE`) and the applicable `--feature-family` set via
+      `FEATURE_FAMILY_ASSET_GROUPS`, then generates a self-contained fan-out supervisor script (mirrors the existing
+      cefi-backfill fan-out pattern) that backgrounds one
+      `market-data-processing process --mode live --operation streaming-aggregation --shard-spec ...` per MDPS shard and
+      one `features_service --feature-family <name> --operation compute --mode live ...` per applicable family (CLI-flag
+      construction mirrors `launch-features-vm.sh`: calendar omits `--asset-group`; delta_one/volatility/ onchain add
+      `--feature-group ALL`; delta_one/volatility add `--timeframe 1m` for tradfi), waits every worker, and ORs their
+      real exit codes — all under one `_launch_with_tee` wrapper. `performance_features` is deliberately excluded: its
+      `run(argv)` CLI shim (`features_service/performance_features/__init__.py`) always calls `run_batch()` regardless
+      of `--mode` (an architecture-only scaffold with no live wiring yet, per its own docstring) — spawning it would
+      exit immediately and read as a crashed worker to the fan-out supervisor. Verified: `bash -n` clean, `shellcheck`
+      clean (no new warnings), dry-parsed the generated MDPS shard-spec and several features-service family CLI
+      invocations directly against each service's real argparse (no crash), `deployment-service` quality-gates.sh green.
+      Real live-VM confirmation (an actual `mdps-features-live` launch) is still pending — out of scope for this todo,
+      which was specifically about the exec-dispatch wiring; the two `[SCRIPT]` P3 todos below (VM_OPERATION metadata
+      fix, vm-exec-with-gcs-tee.sh failure-signaling gap) remain open and unblocked by this change.
 - [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
       it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
       `build-continuous`); once the dispatch branch above ships, set the metadata this launcher passes to match whatever
@@ -215,6 +235,17 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   remaining [SCRIPT] todos are now unblocked bounded implementation.
 - **2026-07-30 (slot-6, BLK-fd70b57c)**: 2026-07-30's own investigation note (above) correctly flagged the
   shard-discovery mechanism as still undecided. Escalated; operator ruled extend UAC `mdps_mvp_universe()` (option A),
-  executed as a SPLIT — forked `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
+  executed as a SPLIT — forked `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
   prerequisite and gated this doc on it (`depends_on` + `gate_on_depends: true`). The exec-dispatch wiring todo and its
   two P3 followers stay open, now correctly machine-gated rather than falsely dispatchable.
+- **2026-08-03 (slot-5)**: The gating prerequisite shipped + archived
+  (`/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — all 5 todos done, UAC `data_type` axis
+  extension in `unified-api-contracts@724b6633` + the cross-repo caller fix in
+  `market-data-processing-service@4a5985b`). Gate satisfied; repointed this doc's banner/context_scope/body path
+  citations at the archive location (`depends_on`/`gate_on_depends: true` left untouched — bare slug, still correctly
+  resolves against `plans/archive/` per `check_depends_on_graph.py`). The exec-dispatch wiring todo below is now
+  genuinely dispatchable.
+- **2026-08-03 (slot-6)**: Shipped the exec-dispatch wiring todo — `deployment-service@e7d17f2` (see the flipped
+  checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
+  scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

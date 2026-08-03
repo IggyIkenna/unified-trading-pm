@@ -68,6 +68,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
     market-tick-data-service/scripts/rebuild_mtds_manifest.py,
+    deployment-service/scripts/vm/launch-features-sharded-backfill.sh,
   ]
 locked_since:
 depends_on: []
@@ -316,3 +317,8 @@ since a plan/issue doc recommending it is a leading indicator that catches the m
   `timeframe`, per the sibling 2026-07-26 root-cause fix) as part of the same session's audit: 7,913 real
   `market-data-processing-service` candle rows exist in the live DEFI index today — a live, populated index that a naive
   prefix-scoped rebuild would have destroyed had it been run.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
+  `deployment-service/scripts/vm/launch-features-sharded-backfill.sh`, the target of the sole remaining open todo (5).

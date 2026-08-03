@@ -114,7 +114,7 @@ depends_on: []
       below, not this regression) — `existence_count` now 956 (< prior baseline 1257, a net IMPROVEMENT since the fix
       touched every occurrence of each stale target, not just the new ones), baseline ratcheted down via
       `--update-baseline`. `pm@<commit-pending>`.
-- [ ] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
+- [x] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
       terminal-status archival sweep (`ad4b1952c`) not updating referrers — `/plans/active/issues/<slug>.md` targets
       moved to `/plans/archive/issues/<slug>.md`. Fixed 2 of 3
       (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` → `cefi_tardis_throughput_collapse_350x_2026_07_17.md`;
@@ -125,7 +125,9 @@ depends_on: []
       (now archived) — that file is itself 1216L, over the 1000L hard cap (RULE-11), so staging it for even a 1-line
       reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
       when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap
-      cleanup below or its own pass), then fix the reference.
+      cleanup below or its own pass), then fix the reference. — CLOSED (na-eligibility-audit 2026-08-03): the 3rd
+      reference was repointed to the archive path without a split, `unified-trading-pm@ca9551fbc` (2026-07-29);
+      confirmed live in the file today.
 - [ ] [DOC] P3. Same class of gap as the todo above, second instance (found 2026-07-25, slot-8):
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (exactly 1000 lines, at the hard cap) carries a
       body-prose reference `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` that needs
@@ -189,3 +191,36 @@ convention's scope).
   already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
   `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
   still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.
+- [ ] [DOC] P3. **2026-08-03 baseline drift, root cause not yet investigated**: `check_reference_paths.py` live-run
+      showed `existence_count` 88 vs. baseline 87 (format_count 81, unchanged/passing) — confirmed via `git stash`
+      round-trip that this +1 already existed at HEAD before that session's own edits, so it landed via someone else's
+      commit in the interim (this doc's own baseline had dropped to ~87-901 range across 2026-08-02, so a lot of cleanup
+      landed that day too — exact commit that introduced the +1 not identified). **Done when**: run
+      `python3 scripts/plan-hygiene/check_reference_paths.py` fresh, diff against this doc's last-known-good baseline
+      number, find + fix the specific new dangling ref, `--update-baseline`.
+
+- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, but this is a REVISED read,
+  not a re-stamp.** In scope because the doc was edited since the 2026-08-02 marker. The P2 REVIEW item (line 85,
+  archival physical-move-vs-banner policy) is real, unresolved, and VALID_JUDGMENT — confirmed fresh, doc must stay NA
+  on this alone. **This run found direct counter-evidence against the prior 3 audit passes' "the mechanical items depend
+  on the policy answer, so the whole doc waits" framing**: the 2 large reference-hygiene backlogs (line 92: 109 format
+  violations; line 98: 1,286 existence violations) and the remaining 2 specific bounded fixes (line 131: the
+  sports_satellite_batch2 body-prose fix, easier now since that file sits at 996L, under its own former 1000L-cap
+  blocker; line 194: the 2026-08-03 baseline-drift item directly above) do NOT structurally depend on the
+  archival-policy answer — this doc's own history already closed materially similar dangling-ref regressions (items 7
+  and 9, plus the sports_shard_enumeration fix a concurrent session just closed today, line ~106 above, without waiting
+  on the policy ruling) and `/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (an active
+  `assigned_vm: planning` doc) independently assessed this exact backlog as real, appropriately-scoped corpus-cleanup
+  work — parking it only for collision-timing against concurrently-running tranche audits, not for being unbounded. So 4
+  of 5 open items are bounded work sitting idle, but the doc cannot cleanly roll up to RECLASSIFY as a whole (line 85 is
+  real, unresolved, human-only) and per this skill's MIXED rubric a doc with both survivor classes stays NA in full —
+  flipping would dispatch the still-unresolved policy item too. **Flagging for a human to decide whether to split lines
+  92/98/131/194 into a dedicated reference-cleanup plan** (line 98's own text already calls its 1,286-item backlog "a
+  candidate for a Workflow fan-out") while line 85 remains a standalone NA policy-decision doc — this audit does not
+  draft that split itself (outside this skill's Phase 3 action set for MIXED). Not contradicting the 3 prior KEEP-NA
+  verdicts' doc-level disposition (stays NA, unchanged) — refining the REASON with a more granular per-item read. (Note:
+  a concurrent session landed `unified-trading-pm@ca9551fbc`-adjacent work on this exact file between this audit's
+  initial read and its commit — re-verified against the post-pull state before writing this marker, so the item counts
+  above are current as of the actual commit, not the initial read.)
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

@@ -97,10 +97,14 @@ context_scope:
       catch-all `OTHER` canonical-question-group bucket end-to-end + the deployment-ui 3-level drilldown
       (`venue → canonical_question_group → day`). `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` (3 open).
       (repos: deployment-api, deployment-ui)
-- [ ] [BACKEND] P2. **DP_CATALOG stale alert (shared w/ sports)** — the `DP_CATALOG_NOT_RUNNING` alert fired for both
+- [x] [BACKEND] P2. ✅ **DP_CATALOG stale alert (shared w/ sports)** — the `DP_CATALOG_NOT_RUNNING` alert fired for both
       sports + prediction `prod/catalog.parquet` (~25h stale); confirm the prediction catalogue writer runs on schedule.
       Cross-link `/plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` (owned jointly with
-      sports_master; archived 2026-07-30 — doc reached 0 open todos).
+      sports_master; archived 2026-07-30 — doc reached 0 open todos). **DONE (na-eligibility-audit 2026-08-03)** — the
+      cited doc's own RE-TRIAGE (2026-07-23) entry directly confirms this: `lifecycle-catalogue-regen-prediction` fixed
+      via the 2026-07-15 Cloud Run memory bump (deployment-service@6bfa284) and live-verified promoting daily without
+      incident (`prod/catalog.parquet` update time 2026-07-23 01:03:17Z, ~7.8h old, well under the 24h threshold) — "no
+      further staleness alerts implied by these fresh timestamps."
 
 ## Progress Log
 

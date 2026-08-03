@@ -41,6 +41,12 @@ model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
+context_scope:
+  [
+    unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py,
+    deployment-api/deployment_api/routes/health_consolidator/,
+    instruments-service/scripts/backfill/,
+  ]
 ---
 
 ## What I found
@@ -134,3 +140,4 @@ gate, unaffected by any of those. No conflicting doc found.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

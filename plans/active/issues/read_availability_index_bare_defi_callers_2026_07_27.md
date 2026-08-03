@@ -60,7 +60,8 @@ context_scope:
     deployment-api/deployment_api/services/manifest_source.py,
     /codex/02-data/honest-coverage-model.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+    /plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+    features-service/features_service/volatility/core/orchestration_service.py,
   ]
 locked_since:
 ---
@@ -433,3 +434,38 @@ not a mechanical column-list copy.
       class itself may be a leftover the same cleanup missed). **Done when**: confirmed genuinely dead (no dynamic
       import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
       caller and this todo is closed as not-applicable.
+
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-03 (slot-6)** — `instruments-service@a325da86`. **instruments-service** — 3 NEW
+      bare `read_availability_index(bucket)` call sites in `instruments_service/cli/main.py` (lines 82
+      `_run_coverage_status()`, 154 `_run_refresh_league_entity_coverage()`, 294 `_run_reprocess_shards()`), introduced
+      by CLI subcommand additions landed 2026-08-03. Confirmed by direct read of each function's own downstream column
+      usage (not a guessed/copied list): `_run_coverage_status` only ever reads `data_type` (the unique-value scan
+      feeding per-data_type coverage rows) → `columns=["data_type"]`; `_run_refresh_league_entity_coverage` reads
+      `data_type`/`capture_status`/`league_id` (the entity/league coverage scan) →
+      `columns=["data_type", "capture_status", "league_id"]`. `_run_reprocess_shards` stays deliberately BARE with a
+      `# QG-allow: bare-read-availability-index` marker + in-code comment — its `reprocess_shards()` callee writes the
+      SAME DataFrame back to GCS VERBATIM (`df.to_parquet(...)`) on `--apply`, so projecting columns here would silently
+      truncate the production manifest's full schema on write-back, a correctness regression, not a memory win (same
+      class as this doc's unified-trading-library P2 finding for `reconcile_manifest()`/`rebuild_manifest()`). Added 3
+      regression tests (`tests/unit/cli/test_read_availability_index_column_projection.py`) pinning the exact `columns=`
+      call signatures for the two projected sites, confirmed the existing `test_reprocess_shards_cli.py` suite (6 tests)
+      still passes unchanged for the deliberately-bare third site.
+      `check_bare_read_availability_index.py --scope     instruments-service` — 0 baselined, 0 new occurrences. Full
+      `quality-gates.sh` green (117s), shipped via quickmerge --agent; clears the repo-blocker declared in this doc's
+      Progress Log below.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
+  `features-service/features_service/volatility/core/orchestration_service.py`, the target of the sole remaining P3
+  dead-code-investigation todo.
+- **2026-08-03 (slot-8)**: hit this gate's STEP 5.106 failure while shipping an unrelated Pyth oracle_prices fix
+  (`defi_satellite_ao_dispatch_batch3-013`) — verified pre-existing via a clean re-run of
+  `check_bare_read_availability_index.py --scope instruments-service` (no diff of mine touches `cli/main.py`; my commit
+  `8a5fcdce` only touches `reference_data/adapters/defi/pyth.py` + its test). Added the 3-site todo above (new since the
+  2026-07-31 zero-new-occurrences re-verify — these came from CLI subcommands added 2026-08-03) and declared a
+  repo-blocker (`qg_red`) rather than fixing this out-of-scope regression inline.
+- **2026-08-03 (slot-6)**: fixed the 3-site todo above — `instruments-service@a325da86`. Full detail in the todo itself;
+  this closes the repo-blocker slot-8 declared. Re-verified
+  `check_bare_read_availability_index.py --scope instruments-service` clean-tree post-fix: 0 baselined, 0 new
+  occurrences.

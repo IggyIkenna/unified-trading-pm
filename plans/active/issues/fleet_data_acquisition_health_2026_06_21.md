@@ -30,6 +30,7 @@ context_scope:
     /codex/05-infrastructure/live-pipeline-architecture.md,
     /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -265,3 +266,7 @@ verified piecemeal); this is purely the version-surface gate. Repo: market-tick-
       ("written only opportunistically ... read only as a display fallback ... NOT required"), distinct from the
       `VERSION_SPLIT` class this todo was actually about, and already self-reported by the same read-only checker on
       every future run (no separate tracking needed). No code change required.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

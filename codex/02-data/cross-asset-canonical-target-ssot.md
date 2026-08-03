@@ -357,7 +357,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 > `instrument_availability` / `market_lifecycle` / `futures_contracts` are the standing violations (`day=`/`venue=`
 > only) → RULED HIVE, `migration_pending`. Build the ordered keys via the sink PREFIX, not the partition dict (the sink
 > sorts dict keys alphabetically). See §11b R2 +
-> [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+> [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
 
 - **cefi/tradfi flat**:
   `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instrument_type={it}/data_type={dt}/{instrument_id}.parquet`
@@ -405,9 +405,48 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   dict — the sink sorts dict keys alphabetically, `protocol_impls.py:26`). `market_lifecycle` and `futures_contracts`
   ride the identical shape (`market_lifecycle.parquet` / `futures_contracts.parquet` leaf). Shipped:
   `unified-trading-library@43fa6f3f` (registry template + layout-tolerant readers), `instruments-service@a9be6ce9`
-  (writer sink-prefix + reader lockstep). `migration_pending` — the historical flat objects are not yet migrated; see
-  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
-  todos 7-8.
+  (writer sink-prefix + reader lockstep). **Historical migration EXECUTED 2026-08-03** for the recognized flat
+  `day=/venue=` population (cefi/defi/tradfi/prediction/sports): 84,320 of 117,166 candidates copied-to-hive-and-purged,
+  32,846 `content_mismatch` correctly preserved pending an operator authoritative-source decision (NOT a migration gap —
+  see the residual issue doc below), 0 failed. Full figures + dated post-migration probe:
+  [`canonical-cutover-register.md`](canonical-cutover-register.md) §6b. See
+  [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  (todos 1-8, all closed) for the full cutover history.
+
+  > **sports exception — `league=` is a legitimate trailing key (RULED 2026-08-03, operator ruling on todo 1 of
+  > [`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)).**
+  > Sports's `instrument_availability` grain is per (day, pipeline_mode, asset_group, venue, **league**), not just (day,
+  > pipeline_mode, asset_group, venue) — the operator ruled option (a) of that doc's todo 1: keep the per-league split
+  > (no writer grain rollup) and add `league=` to the canonical key set as an additional TRAILING key, appended
+  > **after** `venue=` and before the leaf file, preserving the base template's existing key ORDER:
+  > `instrument_availability/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group=sports/venue={V}/league={L}/instruments.parquet`.
+  > **CODE SHIPPED 2026-08-03, `instruments-service@ba87cc32` (todo 2 of the same doc) — NOT YET LIVE IN PRODUCTION.**
+  > `_write_sports_fixture_venue` now writes via `_instrument_availability_sink_for` (full-hive prefix) with `league=`
+  > as a trailing partition key after `venue=`, and the migration tool recognizes + migrates the legacy flat shape
+  > (`day={D}/league={L}/venue={V}/instruments.parquet`, no `pipeline_mode=`/`asset_group=`, `league=` positioned BEFORE
+  > `venue=`). **The code merged to `live-defi-rollout` at 08:48:16Z, but a live GCS check the same day (09:11:53Z, 23
+  > min later) still shows the OLD flat shape** — `ba87cc32` had not yet reached `main` at check time (the sports
+  > `instrument_availability` writer runs as the `uts-prod-instruments-service-sports-fixtures` Cloud Run Job, which
+  > pins an image digest built from `main`, not `live-defi-rollout` — a merge alone does not redeploy it). **Do not read
+  > this note as "sports's writer is now emitting canonical data" without re-verifying `main` has since caught up**
+  > (`git merge-base --is-ancestor ba87cc32 origin/main`) and a fresh write actually lands in the hive shape. **Scope
+  > correction (this note, 2026-08-03): the base "Shipped... instruments-service@a9be6ce9" line above covers
+  > cefi/defi/tradfi/prediction only — `a9be6ce9` never touched sports's write path** (`_write_sports_fixture_venue` is
+  > a separate function); sports needed this dedicated later fix. `market_lifecycle` / `futures_contracts` are not
+  > sports-scoped (sports has no analogous surfaces in those trees today) and are unaffected by this exception.
+
+  > **prediction — two additional legacy flat shapes, recognized + migrated (2026-08-03, `instruments-service@aaa0866c`,
+  > todo 3 of the same issue doc).** Unlike sports, prediction's WRITER itself was correctly fixed by the base
+  > `a9be6ce9` commit above (confirmed via live GCS: both shapes below stopped being written at 2026-07-22T00:37:29Z,
+  > the batch run immediately before the `a9be6ce9` deploy) — this is purely historical-backlog recognition, not a
+  > writer scope gap. The migration tool's `hive_target_for()` now also recognizes: (1)
+  > `instrument_availability/by_date/canonical_question_group={G}/day={D}/venue={V}/...` (group BEFORE day — the
+  > pre-`a9be6ce9` writer's 3-key alphabetically-sorted partition dict), and (2)
+  > `market_lifecycle/by_canonical_group/day={D}/group={G}/venue={V}/...` (venue third, never matched the base flat
+  > regex). Live dry-run: prediction `unrecognized` dropped from 25,745 to 12,463 — the residual is a THIRD, even older
+  > `day={D}/market={M}/venue={V}/...` shape (predates the `canonical_question_group` bundling scheme entirely, no
+  > `canonical_question_group` column in its content) pending an operator ruling (todo 8 of the same issue doc, not yet
+  > resolved).
 
 ## 9. empty_confirmed vs out-of-scope (the denominator basis)
 
@@ -488,7 +527,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   (you would get `asset_group=/day=/pipeline_mode=/venue=` — wrong order, `day` not first). The fix MUST bake the
   ordered canonical keys into the sink **PREFIX** (as the sports lane does), and the registry template is the SSOT and
   must be updated too. Fix + migration:
-  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+  [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
 
 - **R3 — cefi chain-tail v6 canonical everywhere; migrate ALL v5.** The v6 tail
   `underlying={ROOT}/quote={Q}/margin={M}/ticks.parquet` is canonical everywhere; the v5 bare tail
@@ -500,6 +539,15 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   is tradfi-only. This resolves the "cefi chain-tail v5 vs v6 — two live-written shapes" contested axis → **RULED v6**.
   Fix + migration:
   [`../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+
+### 11c. Operator decisions log — 2026-08-03
+
+- **`league=` is a legitimate trailing key in sports's `instrument_availability` hive template.** Ruled on todo 1 of
+  [`../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)
+  — operator chose option (a) (add `league=` to the canonical key set) over option (b) (roll the sports writer up to
+  drop the per-league split). Full statement + rationale: §8's sports-exception banner above. `migration_pending` — the
+  sports writer still needs the shape fix + the migration tool needs a `league=`-aware shape extension (todo 2 of the
+  same issue doc).
 
 ## 12. Where the work lives
 

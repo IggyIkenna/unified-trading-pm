@@ -55,6 +55,7 @@ context_scope:
   [
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
     scripts/plan-hygiene/check_na_corpus_ratchet.py,
+    scripts/plan-hygiene/check_todo_format.sh,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 ---
@@ -180,3 +181,5 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
   corrected `execution_scope: local-only -> orchestrator-agent` (was stale for a now-dispatchable doc). No finalize-plan
   companion authored: `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule
   (`check_finalize_plan_coverage.py` only globs `plans/active/*.md` plan docs).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `check_todo_format.sh`, confirmed affected
+  by the same fence-blindness bug per the doc's own "Recommended fix" evidence and todo 2.

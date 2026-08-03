@@ -232,9 +232,11 @@ terminology, not broken links.
       bulk-stamp cohort no longer exists, so the single-day cliff this todo was filed against cannot recur on
       2026-08-15. Simulated against the real gate (`check_codex_doc_freshness.py`, 90-day window) at 2026-08-16 (the day
       after the old cliff): 111 violations total but **zero in the re-reviewed shards**; the figure is unrelated
-      pre-existing corpus drift, not this cohort. Shipped: `unified-trading-pm@e65ace7de` (shard offset-0, 38 docs),
-      `@ff8b38f70` (shard offset-2, 37 docs), `@ab5bbcbf2` (shard-2 recovery, 38 docs), plus a 4th shard folded into the
-      same freshness-cliff pass — all confirmed ancestors of `origin/live-defi-rollout`. (repo: `unified-trading-pm`)
+      pre-existing corpus drift, not this cohort. Shipped: shard offset-0 (38 docs — the SHA originally recorded here
+      does not resolve in any local clone, most likely a transcription typo when this entry was written 2026-08-02;
+      flagged 2026-08-03 by `check_plan_commit_sha_evidence.py`, not re-derived further), `@ff8b38f70` (shard offset-2,
+      37 docs, confirmed ancestor of `origin/live-defi-rollout`), `@ab5bbcbf2` (shard-2 recovery, 38 docs, confirmed
+      ancestor), plus a 4th shard folded into the same freshness-cliff pass. (repo: `unified-trading-pm`)
 - [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
       C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
       the register reflects it.
@@ -243,11 +245,16 @@ terminology, not broken links.
       reference. **Do NOT blanket-rewrite the `provider-api-version-manifest` row**: it is a body link held in
       `scripts/quality_gates/doc_body_link_baseline.yaml`, so rewriting the string without a real target converts a
       baselined broken link into a NEW one and fails `check_doc_body_links.py`. (repo: `unified-trading-pm`)
-- [ ] [DOC] P1. **Fix the unterminated bold span (P1-D)** at
+- [x] ✅ [DOC] P1. **Fix the unterminated bold span (P1-D)** at
       `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes before
       the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
       botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely closed (a
-      content call — do not guess). (repo: `unified-trading-pm`)
+      content call — do not guess). (repo: `unified-trading-pm`) **RESOLVED — `unified-trading-pm@7509ec538`
+      (2026-07-31, slot-3), "fix unterminated bold span + duplicated clause in perp_funding_data_semantics_and_cadence".
+      Verified 2026-08-03 (na-eligibility-audit): target doc now shows one correctly-closed bold span at line 466-467
+      with no duplicate clause (grep confirms only one "and STOPPED" occurrence in the 883-line file). This item was
+      already fixed 2 days before the 2026-08-02 na-eligibility-audit pass, which re-verified it as still open without
+      checking the target file's actual content — flagged here so a future incremental-diff run doesn't re-surface it.
 - [x] ✅ [DOC] P2. **Retire the 5 bare-name `unified-trading-codex` mentions (P2-E)** in the rules trees — stale
       terminology, not broken links, so this is a wording pass: `.cursor/rules/ci-cd/act-secrets-setup.mdc:14` and
       `.cursor/rules/testing/test-coverage-targets.mdc:80` were the two remaining genuinely stale ones (the
@@ -352,3 +359,11 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   bulk-stamped `last_reviewed: 2026-05-17` cross the 90-day limit together; it is a HARD PM QG gate and a shrinking
   ratchet cannot absorb it. Re-verified still `- [ ]` this run and re-surfaced in this run's report rather than left to
   live only inside a parking register. Options A-D with a worker recommendation are already in §P0-A.
+- **na-eligibility-audit 2026-08-03** (ao tranche): **KEEP-NA, stale item closed.** In scope because the doc was edited
+  since the 2026-08-02 marker (`context_scope` backfill, commit 9cfc2d4d5-adjacent). Read end-to-end;
+  `grep -cE '^- \[ \]'` = **2** now (was 4 at the last marker). Found the P1-D bold-span item (line 248) was already
+  fixed by `unified-trading-pm@7509ec538` (2026-07-31) — 2 days before the 2026-08-02 pass re-verified it as open
+  without checking the target file's content — closed it above with evidence. The 2 survivors (P0-A codex-freshness
+  cliff, P1-C dead-doctrine-refs) remain genuine authority calls, matching every prior pass; doc stays NA.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

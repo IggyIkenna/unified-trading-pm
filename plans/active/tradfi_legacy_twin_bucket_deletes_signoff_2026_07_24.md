@@ -239,3 +239,4 @@ restated here.
   moved verbatim; no new work performed. The parent plan's remaining task (Folded-in-scope Layer-1 certify) moved to
   `tradfi_consolidated_closeout_2026_07_18.md` in the same pass, leaving the parent with 0 open todos — it was archived
   to `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.

@@ -126,7 +126,7 @@ context_scope:
 
 ### New follow-up todo from this run
 
-- [ ] [BACKEND] P2. **`canonical-migration-defi-rebuild`'s launcher (`launch-canonical-migration-vm.sh` via
+- [x] ✅ [BACKEND] P2. **`canonical-migration-defi-rebuild`'s launcher (`launch-canonical-migration-vm.sh` via
       `RESUME_MODE=full`) does not write a `PROGRESS.json` checkpoint** — it relies only on the cumulative per-VM
       manifest shard, and `RESUME_START_DATE` is a fixed launch param, not derived from measured progress. Bounded risk
       today (not a `--force` run, presence-skip limits the cost of a blind restart to re-scan time, not re-fetch), but
@@ -136,8 +136,11 @@ context_scope:
       that exception in the codex SSOT. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit,
       infra tranche, dispatch agt-30721a)**: already extracted as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s
       "Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap" todo (Source:
-      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`). Not checked off here — tracked
-      there going forward.
+      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`). **DONE (na-eligibility-audit
+      2026-08-03)** — that batch1 todo (lines 282-304) is now itself checked off: `deployment-service@1e8af34a` wired an
+      N-day sub-chunk loop for `defi-pi-range` + `--chunk-days` for `defi-rebuild`, paired with
+      `market-tick-data-service@a2839705`'s `_run_chunked()` loop, both emitting `[[VM_PROGRESS]]` markers per chunk;
+      verified by simulation per the todo's own requirement.
 
 - **2026-07-25 (second session) — remaining 16 GCP launcher families traced; AWS re-confirmed blocked; Step 3 done.**
   Re-ran
@@ -304,26 +307,33 @@ context_scope:
 
 ### New follow-up todos from this session
 
-- [ ] [BACKEND] P2. **`tradfi-bf-*` (and the shared `mtds_chunk_loop.sh` family: `mtds-backfill-tradfi-pipelinecheck`,
-      `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`, `cefi-queue-heavy-binancefutu-x17`, `af-backfill`)
-      write no `PROGRESS.json`/`LAUNCH_PARAMS.json` checkpoint** — confirmed architectural gap (3/3 independent
-      adversarial re-verification agreed), same class as `canonical-migration-defi-rebuild` below. **CORRECTED
-      2026-07-25** (see the adversarial-verification note above): the two sampled shards' "restart at Chunk 1/53" was
-      NOT a confirmed double-fetch of already-captured data — the predecessor VMs never actually captured any real rows
-      for that chunk (an unrelated Databento combo-symbol quarantine issue, see new P3 todo below), so the atom-aware
-      presence-skip layer (`_apply_preflight_skip_filter`) correctly retried genuinely- missing data. Downgraded from
-      P1/"confirmed" back to P2/"bounded, theoretical" — the architecture gap is real and worth closing, but there is no
-      direct evidence of actual billing waste from it yet. Wire `record_vm_progress`/`PROGRESS.json` emission into
-      `_tradfi-ohlcv-launcher-lib.sh`'s `mtds_chunk_loop.sh` path (or the equivalent shared chunk-loop used by the
-      sibling families above) so `relaunch_backfill_vm.py`'s existing monotonic-checkpoint resume logic (already
-      implemented and working for the conformant launchers, e.g. `canonical-migration-defi-relabel`) actually engages
-      instead of falling through to a blind START_DATE replay — still worth doing for defense-in-depth even though this
-      run found no confirmed instance of it actually costing money. Repo: deployment-service, market-tick-data-service.
-      **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted as
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "wire `record_vm_progress`/`PROGRESS.json` emission into the
-      shared `mtds_chunk_loop.sh` family" todo (verified by local bash simulation per that todo). Not checked off here —
-      tracked there going forward.
-- [ ] [BACKEND] P2. **`af-backfill`'s `LAUNCH_PARAMS.json` was absent from `vm-logs/af-backfill-20260718-141638/`**
+- [x] ✅ [BACKEND] P2. **`tradfi-bf-*` (and the shared `mtds_chunk_loop.sh` family:
+      `mtds-backfill-tradfi-pipelinecheck`, `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`,
+      `cefi-queue-heavy-binancefutu-x17`, `af-backfill`) write no `PROGRESS.json`/`LAUNCH_PARAMS.json` checkpoint** —
+      confirmed architectural gap (3/3 independent adversarial re-verification agreed), same class as
+      `canonical-migration-defi-rebuild` below. **CORRECTED 2026-07-25** (see the adversarial-verification note above):
+      the two sampled shards' "restart at Chunk 1/53" was NOT a confirmed double-fetch of already-captured data — the
+      predecessor VMs never actually captured any real rows for that chunk (an unrelated Databento combo-symbol
+      quarantine issue, see new P3 todo below), so the atom-aware presence-skip layer (`_apply_preflight_skip_filter`)
+      correctly retried genuinely- missing data. Downgraded from P1/"confirmed" back to P2/"bounded, theoretical" — the
+      architecture gap is real and worth closing, but there is no direct evidence of actual billing waste from it yet.
+      Wire `record_vm_progress`/`PROGRESS.json` emission into `_tradfi-ohlcv-launcher-lib.sh`'s `mtds_chunk_loop.sh`
+      path (or the equivalent shared chunk-loop used by the sibling families above) so `relaunch_backfill_vm.py`'s
+      existing monotonic-checkpoint resume logic (already implemented and working for the conformant launchers, e.g.
+      `canonical-migration-defi-relabel`) actually engages instead of falling through to a blind START_DATE replay —
+      still worth doing for defense-in-depth even though this run found no confirmed instance of it actually costing
+      money. Repo: deployment-service, market-tick-data-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit,
+      infra tranche, dispatch agt-30721a)**: already extracted as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      "wire `record_vm_progress`/`PROGRESS.json` emission into the shared `mtds_chunk_loop.sh` family" todo (verified by
+      local bash simulation per that todo). **DONE (na-eligibility-audit 2026-08-03)** — that batch1 todo (line ~254) is
+      checked off: `deployment-service@e191d58` wired `[[VM_PROGRESS]]` emission into
+      `mtds_chunk_loop.sh`/`cefi_hl_aster_loop.sh`, covering `tradfi-bf-*`, `mtds-backfill-tradfi-pipelinecheck`,
+      `cefi-queue-heavy-binancefutu-x17`, `cefi-aster`, `cefi-hyperliquid`. The two families that commit explicitly left
+      unconformant (`mtds-dex-swaps-backfill`, `af-backfill`, which route through the generic single-shot fallback, not
+      the chunk loop) are separately closed by batch1's next todo (line ~306), **DONE** via `deployment-service@0c5fa5b`
+      (end-of-run `[[VM_PROGRESS]]` marker on the generic fallback path) — so all families named in this item's
+      parenthetical are now covered.
+- [x] ✅ [BACKEND] P2. **`af-backfill`'s `LAUNCH_PARAMS.json` was absent from `vm-logs/af-backfill-20260718-141638/`**
       despite `launch-api-football-backfill-vm.sh` calling `lc_write_launch_params` at create time and
       `exit_code_fleet_monitor.py` sourcing the SPOT-preemption relaunch actuator's `launch_env` from exactly that file
       (`_gcs.read_launch_params`). This launcher's `--force` full-history mode (`--start-date 2019-01-01 ... --force`)
@@ -335,9 +345,13 @@ context_scope:
       advance was coincidental (e.g. an operator-adjusted manual relaunch, not the automated actuator). Repo:
       deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**:
       already extracted as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Make the launcher's two best-effort GCS
-      writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at shutdown" todo. Not checked
-      off here — tracked there going forward.
-- [ ] [BACKEND] P3. **Verify `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` recognizes
+      writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at shutdown" todo. **DONE
+      (na-eligibility-audit 2026-08-03)** — that batch1 todo is checked off (DONE 2026-07-31, slot 8,
+      `deployment-service@b4503ef`): live-swept 50 `af-backfill-*` VMs, confirmed `LAUNCH_PARAMS.json` was silently
+      failing under the WIF-token-expiry bug (0/29 present before 2026-07-25, 21/21 present after the unrelated
+      `gsutil`→`gcloud storage` fix landed) — a genuine bug, not a hidden entity-level resume path; also hardened the
+      `PREEMPTED` marker write.
+- [x] ✅ [BACKEND] P3. **Verify `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` recognizes
       `canonical-migration-cefi-cdlap`'s non-standard checkpoint filename** (`MIGRATION_PROGRESS-shard{N}.json`, not
       literally `PROGRESS.json`) — the launcher writes a real, functionally-conformant checkpoint
       (`last_processed_line_index`/`shard_index`/`shard_of`), but if the generic actuator only globs for the standard
@@ -346,8 +360,12 @@ context_scope:
       `/codex/05-infrastructure/spot-vms-for-backfill.md`. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30
       (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted (part a) as
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Close the two fleet-monitor blind spots on checkpoint
-      reading and preemption alert severity" todo. Not checked off here — tracked there going forward.
-- [ ] [BACKEND] P3. **Harden the preemption-relaunch alert to distinguish "resumed correctly" from "wastefully
+      reading and preemption alert severity" todo. **DONE (na-eligibility-audit 2026-08-03)** — that batch1 todo is
+      checked off (`deployment-service@b501a5e`): confirmed the reader does NOT recognize the cdlap filename, documented
+      it as an accepted per-launcher naming exception (the two checkpoint schemas are structurally incompatible, and
+      resume already works without this reader's help via `VM_NAME_OVERRIDE`) in `spot-vms-for-backfill.md`'s
+      conformance table, with a regression test proving the intentional `None` return.
+- [x] ✅ [BACKEND] P3. **Harden the preemption-relaunch alert to distinguish "resumed correctly" from "wastefully
       replayed"** — `relaunch_backfill_vm.py` emits the same quiet `DP_VM_PREEMPTED` (INFO, no page) for both a
       genuinely-successful checkpoint-resumed relaunch and a blind START_DATE replay that re-does already-captured work
       (the `tradfi-bf-*`-shaped case above — note its "confirmed" label was RETRACTED by this doc's own 2026-07-25
@@ -358,15 +376,21 @@ context_scope:
       to WARN-and-flag whenever `launch_env` had no usable checkpoint AND the run was not `--force` (the exact
       silent-gap condition). Repo: deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra
       tranche, dispatch agt-30721a)**: already extracted (part b) as the SAME
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` "Close the two fleet-monitor blind spots" todo above. Not
-      checked off here — tracked there going forward.
-- [ ] [BACKEND] P3. **`canonical-migration-defi-pi-range` and `canonical-migration-defi-per-instrument` write no
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` "Close the two fleet-monitor blind spots" todo above. **DONE
+      (na-eligibility-audit 2026-08-03)** — same `deployment-service@b501a5e` commit: hardened
+      `DP_VM_PREEMPTED_RECOVERED` to emit INFO + `checkpoint_resumed=true` on a real checkpoint resume vs. WARN +
+      `checkpoint_resumed=false` on a no-checkpoint verbatim replay (the exact silent-gap condition named above), with
+      new regression tests for both classifications.
+- [x] ✅ [BACKEND] P3. **`canonical-migration-defi-pi-range` and `canonical-migration-defi-per-instrument` write no
       checkpoint at all** (not even the manifest-shard-only pattern `canonical-migration-defi-rebuild` uses) and
       produced this audit's largest observed `run.log`s (731 MB / 79 MB) — fold into the P2 `PROGRESS.json` rollout
       above rather than treating as a separate design. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30
       (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted as the SAME
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` "Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap"
-      todo cited above. Not checked off here — tracked there going forward.
+      todo cited above. **DONE (na-eligibility-audit 2026-08-03)** — same evidence as this doc's line-129 item above:
+      that batch1 todo is checked off via `deployment-service@1e8af34a` (defi-pi-range N-day sub-chunking) +
+      `market-tick-data-service@a2839705` (`_run_chunked()` for defi-rebuild), both emitting per-chunk `[[VM_PROGRESS]]`
+      markers.
 - [x] ✅ [SCRIPT] P3. **Check whether CME BTC/ETH options (OPT atom) coverage is intentionally excluded or a silent
       gap** — surfaced by the 2026-07-25 adversarial verification of the `tradfi-bf-*` finding above: the
       `cme-ohlcv-1m-btc-2020`/`eth-2022` predecessor VMs' launches expected 2 atoms (FUT+OPT) and hit

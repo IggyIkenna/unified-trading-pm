@@ -141,3 +141,7 @@ human-ownership-routing question — it converts to a normal, bounded engineerin
 dates via the existing backfill path (the vendor's historical endpoint may still serve real data even though the
 internal logs are gone), and only mark this a genuine permanent absence once that concrete check comes back empty too.
 See the retagged `[DATA] P3` todo for the full task.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (3 entries, unchanged — still accurate).

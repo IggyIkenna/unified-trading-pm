@@ -72,7 +72,7 @@ locked_by:
 context_scope:
   [
     instruments-service/docs/,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
   ]
@@ -646,3 +646,5 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   dozens of prose bullets across sections B-F and 5 asset groups, and section E is literally titled 'Operator decisions
   required (not engineer fixes)' — converting that corpus to checkboxes requires per-item triage including those
   operator calls, so the outcome is not determinable by a worker alone
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.

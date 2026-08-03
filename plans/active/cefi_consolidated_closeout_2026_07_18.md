@@ -40,7 +40,7 @@ related:
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
@@ -315,8 +315,8 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   gated on `cefi-recapture-sweep-complete` (still false).
 - `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — `lighter` Tardis entitlement
   (BLOCKED-CREDENTIALS, scaffold correct).
-- `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` — ✅ DONE (`deployment-service@9b13679`, launcher entries
-  removed).
+- `/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` — ✅ DONE (`deployment-service@9b13679`,
+  launcher entries removed).
 - `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` — spot-check GCS/manifest/UI
   consistency (dispatched as a bounded slice via `cefi_misc_audits_and_hygiene_2026_07_25.md`) + decide the
   reconciliation cadence (stays human).
@@ -373,8 +373,9 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (unified-trading-pm@2a6a7db62).
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7` (DERIBIT
       futures_chain negative check, DERIBIT/BINANCE-FUTURES content spot-checks).
-- [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (`deployment-service@9b13679`
-      removed the DRIFT/PACIFICA launcher entries; `instruments-service@ee19f6f3` hardens against re-mint).
+- [x] ✅ [INFRA] P1. **`/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE
+      (`deployment-service@9b13679` removed the DRIFT/PACIFICA launcher entries; `instruments-service@ee19f6f3` hardens
+      against re-mint).
 - [x] ✅ [BACKEND] P2. **`_L5_VENUES` RESOLVED-BY-DELETION** (2026-07-18) — the hardcoded tuple no longer exists
       (`market-tick-data-service@a4fb3d13` retired `order_flow_imbalance` entirely). The 2 onchain sub-audits stay open
       in the issue doc (DeFi, not cefi — outside this close-out).

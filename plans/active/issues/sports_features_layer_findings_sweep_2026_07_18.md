@@ -78,8 +78,8 @@ context_scope:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
     features-service/features_service/sports/data/gcs_normalizers.py,
-    features-service/scripts/sports/honest_coverage_report.py,
   ]
 ---
 
@@ -740,3 +740,7 @@ have moved; use the section index above to locate it.
   named. No RECLASSIFY: the doc's own remaining work is a gated item plus a design call, and every bounded piece has
   already been extracted to `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (`assigned_vm: planning`) — flipping
   this doc would dispatch duplicates of that batch
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `honest_coverage_report.py` (§C tooling
+  gaps, already resolved/tracked in `sports_consolidated_closeout_2026_07_19.md`) for
+  `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, which now holds the gating todo for this doc's one genuinely open
+  item (§E's `[CONFIG] P1`).

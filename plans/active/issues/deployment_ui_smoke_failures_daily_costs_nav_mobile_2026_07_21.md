@@ -110,3 +110,5 @@ or their MTDS-related constants).
   deployment-ui HEAD, then froze-verified live rather than trusting the citation: ran
   `npx playwright test --project=chromium tests/smoke/nav-menu-dedup.spec.ts` fresh — 19/19 passed. Flipped item 3
   citing this evidence; no code change needed (all 3 items in this doc are now done).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — all 3 todos are now done; entries still
+  resolve and remain accurate for anyone verifying/closing this doc.

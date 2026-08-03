@@ -61,6 +61,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+  ]
 ---
 
 # na-eligibility-audit / ag-closeout-audit population overlap
@@ -154,3 +162,4 @@ duplicate-dispatch risk this run.
   item 2 is explicitly and self-declaredly a design/judgment call the author refused to resolve unilaterally ('a genuine
   design call, not a bug I should silently fix'; 'I don't have enough context on the original design intent to rule
   this'), so it must stay KEE...
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

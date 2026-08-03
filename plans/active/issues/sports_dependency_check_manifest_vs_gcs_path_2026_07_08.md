@@ -56,9 +56,9 @@ locked_since:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
     instruments-service/instruments_service/reference_data/sports_dependency.py,
   ]
 resolved_by:
@@ -305,3 +305,6 @@ it's titled after never consults the manifest) is unchanged today.
   Prediction+Features+Reference set or whether `fixture_ids_override`'s real callers only ever pass fixture_ids that
   already have a working non-GCS league source' — and its dated RE-TRIAGE (2026-07-23) re-confirmed the finding
   unchanged
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `manifest-consolidator-ssot.md` for
+  `sports_fixtures.py` (the actual file holding the sole remaining `_build_fixture_league_map_from_gcs` open todo); the
+  original `sports_dependency.py` finding this doc is titled after is fully shipped.

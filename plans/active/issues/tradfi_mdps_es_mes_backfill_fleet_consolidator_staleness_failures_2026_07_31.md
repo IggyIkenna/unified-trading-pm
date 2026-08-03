@@ -26,7 +26,11 @@ stage: [data]
 repos: [unified-trading-library, deployment-api, deployment-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [manifest, consolidator, staleness, tradfi, data-correctness, false-stale, vm-fleet, dp-vm-001]
-related: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md]
+related:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
+  ]
 created: 2026-07-31
 parent_epic: infrastructure_master
 source:
@@ -47,6 +51,8 @@ context_scope:
     /plans/epics/infrastructure_master.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/archive/issues/mdps_tradfi_chain_bundle_aggregate_write_malformed_row_key_2026_07_31.md,
+    market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
   ]
 ---
 
@@ -338,3 +344,16 @@ capture zero rows for its entire assigned range.
   `mdps-backfill-tradfi-` relaunch found for this exact shard today; well under the ≤2/(vm-prefix,day) cap counting
   distinct shards).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03** (manual Phase-1 re-run, `context_scout_source_hunting_gap_2026_08_03.md` P2 item 1 — the
+  2026-08-01 pass wrote zero source paths despite this doc's remaining-open P2 item naming a specific module
+  (`market_data_processing_service.app.core.dependency_checker`) and error string (`DEPENDENCY CHECK FAILED`) in its own
+  root-cause prose): added 2 source-path entries (5 total). Added `dependency_checker.py` (named explicitly in the doc's
+  own prose, verified to exist). For the MTDS weekend-marker side, the doc names concepts only
+  (`venue_trading_calendar`/`EXPECTED_WEEKEND`), not a literal filename, so per SKILL.md step 4's grep-the-repo
+  fallback: `rg -il 'weekend|holiday|trading_calendar|EXPECTED_WEEKEND'` against market-tick-data-service surfaces
+  `scripts/reclass_per_instrument_weekend_holiday_eu.py` as a candidate, but tracing the actual write path
+  (`non_trading_day_reason(...)` → `record_expected_empty(...)`) shows that script is a post-hoc backfill reclassifier,
+  not the live per-day marker writer — the real writer is `_emit_nontrade_venue_sentinels()` in
+  `engine/orchestrator/manifest_finalize.py`, which is what got added instead. This resolves the parent issue doc's P2
+  item 1 live-repro requirement: both confirmable source-path entries for the doc's still-open weekend-marker root-cause
+  todo are now present.

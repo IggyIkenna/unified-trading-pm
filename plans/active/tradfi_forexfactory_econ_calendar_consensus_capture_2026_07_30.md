@@ -11,7 +11,7 @@ summary:
   pre-dates this workspace's repo consolidation).
 status: draft
 nature: design
-asset_group: [cross-cutting]
+asset_group: [tradfi] # corrected 2026-08-02 ag-closeout-audit tradfi tranche -- was [cross-cutting], a genuine mistag (content is 100% tradfi-specific: ForexFactory economic-calendar scraper for tradfi macro data, tags already say tradfi)
 stage: [data]
 repos: [features-service, unified-api-contracts, deployment-service]
 scope: [engineer]

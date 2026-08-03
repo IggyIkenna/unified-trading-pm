@@ -42,6 +42,14 @@ source:
   - "observed twice during the 25-unit staging-shutdown rollout 2026-07-23 (unified-trading-library,
     market-tick-data-service)"
   - "reproduced deterministically: ENVIRONMENT unset => pass, ENVIRONMENT=development => fail, same tree/machine"
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md,
+    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    unified-trading-pm/scripts/quickmerge.sh,
+    unified-trading-pm/scripts/quality-gates-base/base-service.sh,
+  ]
 ---
 
 # The QG sentinel cannot tell which environment verified the tree
@@ -232,3 +240,16 @@ CLEAN 2026-07-31 (no fix needed, inline-documented) but the box stays open, corr
 unresolved, still sequenced behind Deferred **E7** (unchanged: "NOT bounded as currently framed" after 5 independent
 investigation sessions). 1 open item remains, verdict on it is **KEEP-NA, valid** (genuine unbounded investigation, not
 duplicated/stale) — not an archive candidate.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS the verdict above, unchanged.**
+Re-read end-to-end; only change since the last marker is the 2026-08-03 context-scout `context_scope` backfill (12
+insertions, metadata-only, verified via diff — zero content movement). The residual open item (MTDS half of
+Resolution-checklist item 3) is deliberately sequenced behind the shared blocker documented in
+`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` /
+`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (both re-confirmed KEEP-NA this same run), per the
+explicit 2026-07-26 operator sequencing ruling cited above. Still KEEP-NA, valid — not KEEP-NA-STALE (the citation gap
+was already closed 2026-07-31). No RECLASSIFY, no ARCHIVE.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

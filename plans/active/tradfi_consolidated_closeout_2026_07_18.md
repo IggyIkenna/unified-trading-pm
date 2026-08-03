@@ -68,10 +68,10 @@ related:
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
-    /plans/active/tradfi_multisource_backfill_2026_06_22.md,
+    /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
@@ -359,6 +359,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active`/`assigned_vm: planning` with its own
   copy still unchecked. Nothing here is RECLASSIFY-eligible — the sole native todo is correctly NA because the real
   dispatchable copy already lives on an active planning doc. `assigned_vm` stays unchanged.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
 
 ---
 
@@ -470,7 +471,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
     - **[SCRIPT] P3.** Extend UAC's `build_leg()` with an opt-in venue-omission mode
-  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols)
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)
   - [`plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md`](/plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md)
@@ -549,9 +550,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[OPERATOR-DECISION] P1.** `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
       cross-asset axis
     - +9 more (P2/P3) — see file for the rest
-  - [`plans/active/tradfi_multisource_backfill_2026_06_22.md`](/plans/active/tradfi_multisource_backfill_2026_06_22.md)
-    - **[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)
-    - **[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname
+  - [`plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`](/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md)
+    (**ARCHIVED 2026-08-03** — both items below since resolved, digest stale, left for history)
+    - ~~**[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)~~ — done, dry-run verified,
+      `deployment-service@eab5aeb`
+    - ~~**[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname~~ — done,
+      `deployment-service@077a063`
   - [`plans/archive/tradfi_massive_dual_source_2026_05_28.md`](/plans/archive/tradfi_massive_dual_source_2026_05_28.md)
     (`status: superseded`; 10 open — capped; most items below tagged OBSOLETE/WONTFIX in-doc but checkbox not yet
     flipped)
@@ -814,7 +818,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **Newly discovered (2026-07-24 completeness sweep — `grep -l '^asset_group:.*tradfi'` hits not previously named in
   this section; several were already mentioned inline in the Phase A2 prose above but never carried a real entry
   here)**:
-  - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  - [`plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
     - **[DATA] P1.** PROVE the fixed writers green on one real day, then migrate the historical flat objects UP into
       full hive
     - **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date in the

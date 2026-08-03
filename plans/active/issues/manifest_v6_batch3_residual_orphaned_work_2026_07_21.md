@@ -44,8 +44,9 @@ related:
 created: "2026-07-21"
 parent_epic: infrastructure_master
 priority: P3
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
+assigned_role: data_engineering
 drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-006]
 resolved_by:
@@ -58,8 +59,9 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
     unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
   ]
-depends_on: [plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md]
-gate_on_depends: true
+depends_on: []
+gate_on_depends: false
+sequential: true
 ---
 
 # What I found
@@ -159,6 +161,16 @@ overhead.
   migration's remaining todos actually land. No feature code implemented (correctly still blocked) — escalating via
   `/blocked` rather than fabricating progress or silently sitting idle.
 
+  **na-eligibility-audit 2026-08-03**: the depended-on doc has since resolved —
+  `plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md` is now `status: resolved` (`resolved_by`:
+  "all 8 todos shipped with commit SHAs, test names, and a real GCS `-test-` bucket end-to-end proof dated 2026-07-27"),
+  including todos 5-8 this block cited as open. The gate's stated reason ("surfacing pre-migration data would be
+  misleading") is now moot too: todo 6 there enumerated **0** real v5 cefi chain objects to migrate (307 manifest rows,
+  all `attempted_failed`/`empty_confirmed`, zero `captured`), so there is no inconsistent pre-migration data to surface.
+  **Not closing this todo** — the gate is cleared but the actual API work (adding `quote_asset`/`margin_type` to the
+  deployment-api response) has not been implemented; this is still genuinely open, just no longer blocked. Same applies
+  to the UI todo below (transitively gated on this one).
+
 - [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
       them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
       (transitively blocked on the API todo, which is blocked on the v6 migration).
@@ -183,3 +195,26 @@ overhead.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — both remaining todos carry `depends_on` +
   `gate_on_depends: true` on `cefi_chain_tail_v6_canonicalisation_2026_07_21`, whose todos 5-8 are still open — never
   re-litigate a live gate.
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning. The gating prerequisite
+  (`cefi_chain_tail_v6_canonicalisation_2026_07_21.md`) resolved 2026-08-03 (see the `[CODE] P3` todo's own inline note
+  above) — 0 real v5 cefi chain objects needed migrating, so the "surfacing pre-migration data would be misleading"
+  reason for the gate is moot. Both remaining todos are now bounded, worker-determinable engineering (add
+  `quote_asset`/`margin_type` to a deployment-api response + a deployment-ui heatmap filter on those fields, pw:L2 spec
+  required) with no judgment/design call left. Conflict-check clear: grepped `plans/active/*.md` +
+  `plans/active/issues/*.md` for `quote_asset`/`margin_type`; no other `assigned_vm: planning` doc claims this exact
+  work — corroborated by `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s own prior conflict-check on this
+  same doc ("No genuine conflict found, and nothing is stealthily duplicating this doc's ground"). `locked_by` empty.
+  `execution_scope` was already `orchestrator-agent` (no change needed); only `assigned_vm` flipped. A companion
+  finalize doc is owed (not authored here).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
+  accurate (unchanged).
+- **slot-3 dispatch-ordering fix 2026-08-03**: `-002` (the `[UI]` heatmap-filter todo) was dispatched to a ui_developer
+  craft worker BEFORE `-001` (the `[CODE]` deployment-api todo it depends on) had shipped — live-verified zero
+  `quote_asset`/`margin_type` hits in either `deployment-api` or `deployment-ui` repos. The 2026-08-03 reclassify pass
+  flipped `assigned_vm: planning` for both todos but never sequenced them (`depends_on`/`gate_on_depends` only gate a
+  whole PLAN against another plan, not one todo in a doc against a sibling todo in the same doc) — so nothing stopped
+  `-002` from dispatching before `-001`. Implementing the UI filter now would mean wiring controls to a contract the API
+  doesn't return yet, violating the ui_developer craft's "render exactly what the API returns" rule. Fix: added
+  `sequential: true` to this doc's frontmatter so `-001` must land before `-002` dispatches. Releasing `-002` back to
+  the queue via `/skip-current-task`; `-001` is genuinely data_engineering-craft work (manifest/data-status API) and
+  should dispatch next.

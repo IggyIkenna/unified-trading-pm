@@ -326,3 +326,6 @@ still an unresolved root-cause investigation with no bounded fix identified; gre
 "dormant"+"cascade" — the only hit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md:142`) explicitly states this
 investigation "remains open and out of this todo's scope," corroborating it is un-owned, not duplicated. Not
 RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change).
+
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

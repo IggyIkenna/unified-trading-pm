@@ -45,6 +45,8 @@ context_scope:
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     scripts/plan-hygiene/check_line_caps.sh,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
 ---
 
@@ -112,3 +114,10 @@ operator-approved wider edit.
 All shas, VM log tails, and doc cross-references above were verified directly (not inferred) during the 2026-08-03
 na-eligibility-audit defi-tranche run. See `lst_rate_honest_coverage_2026_07_21.md`'s own 2026-08-03 Progress Log marker
 for the compact pointer back to this doc.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries) — added the two sibling evidence docs Todo 2 cites
+  by name (`defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`,
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`) alongside the source plan, the line-cap script, and the
+  STAKING-leg evidence doc.

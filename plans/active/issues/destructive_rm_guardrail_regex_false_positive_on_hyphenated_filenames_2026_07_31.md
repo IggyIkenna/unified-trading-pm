@@ -56,6 +56,12 @@ last_updated: 2026-07-31
 locked_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+    agent-orchestrator/tests/test_block_destructive_commands.py,
+    agent-orchestrator/scripts/install-worker-guardrails.sh,
+  ]
 ---
 
 # `block_destructive_commands.py`'s rm-detector matches inside hyphenated words, not just real flags
@@ -121,3 +127,7 @@ substrings inside a path or an unrelated flag's spelling can no longer match, wh
       (`git clean -f/-d/-x` at line 80 uses the same unanchored shape) for the identical false-positive class; tighten
       or confirm each is already narrow enough (the `chmod -R`/`chown -R` patterns at lines 87-88 use a stricter `-R\b`
       and are lower priority to re-check first). Repo: agent-orchestrator.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

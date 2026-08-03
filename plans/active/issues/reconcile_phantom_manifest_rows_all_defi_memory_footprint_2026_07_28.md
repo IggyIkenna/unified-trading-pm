@@ -137,3 +137,5 @@ because it is currently blocking anything urgent.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - both todos retagged from [OPERATOR] with direction 1
   adopted; bounded machine-type/Cloud-Run sizing + a column-pruned read path
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).

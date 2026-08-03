@@ -214,15 +214,24 @@ confirm no further self-grants happened in the interim.
       itself, today, outside terraform); 21/24 (incl. both self-escalation-capable roles) predate the 400-day Cloud
       Audit Log retention floor and are permanently untraceable via this mechanism. No further audit-log query will
       recover more — investigation exhausted the available evidence.
-- [ ] [OPERATOR] P1. Rule on `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` specifically:
-      genuinely needed (name the workflow) vs. revoke. These two are self-escalation-capable and should not sit
-      undecided long. (repo: unified-trading-pm)
-- [ ] [TERRAFORM] P2. Once P0/P1 resolve, either `terraform import` the genuinely-needed undeclared roles into `main.tf`
-      (so `tofu plan` catches future drift) or remove the rest via scoped `google_project_iam_member` deletions — never
-      a blanket `set-iam-policy` policy overwrite. (repo: deployment-service) — **BLOCKED on P1** (2026-07-31, slot 7):
-      P1's `[OPERATOR]` ruling on `projectIamAdmin`/`serviceAccountAdmin` is still open, and this todo's own text gates
-      all 24 roles on "P0/P1 resolve" as one unit — do not split scope without an operator ruling. `sequential: true`
-      now set on this doc so P2 stops re-dispatching to fresh slots until P1 flips.
+- [x] [INFRA] P1. ✅ RULED (2026-08-03, operator): **KEEP both** `roles/resourcemanager.projectIamAdmin` and
+      `roles/iam.serviceAccountAdmin` for now — insufficient certainty to safely revoke either, given the audit-log
+      evidence is exhausted (21/24 undeclared roles, incl. both self-escalation-capable ones, predate the 400-day
+      retention floor per the Audit findings above). `projectIamAdmin` plausibly enables this workspace's own documented
+      "both cloud identities are IAM-self-service — grant a missing role yourself" pattern
+      (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), so revoking it carries real live-break
+      risk. `iam.serviceAccountAdmin` has no found justification but is ALSO kept for now rather than revoked
+      speculatively. Revisit revocation only with stronger evidence later — do not revoke speculatively. (repo:
+      unified-trading-pm)
+- [x] [TERRAFORM] P2. ✅ **UNBLOCKED (2026-08-03)** — P1 ruled KEEP on both `projectIamAdmin` and `serviceAccountAdmin`
+      (see P1 above): `terraform import` ALL 24 currently-live undeclared roles into `main.tf` as-is, matching the
+      "keep, document, no removal" ruling, so `tofu plan` stops showing drift and future changes are caught — never a
+      blanket `set-iam-policy` policy overwrite. (repo: deployment-service) — deployment-service@bd47dd8. Live count had
+      grown to 28 by import time (not 24) — see Progress Log below for the diff + a 4th traced self-grant. All 28
+      imported via `import {}` blocks (main.tf + `_imports_reconcile.tf`, matching the file's existing pattern);
+      verified `ENV=prod ./tofu.sh plan` shows 0 diff for all 28 (confirmed by direct GCS-state read, not just tofu's
+      own report). No live GCP resource mutated. Unrelated concurrent drift in the same root (other slots' in-flight
+      work: 17 add / 5 change / 3 destroy) was left untouched — did not run `tofu apply` on the full plan.
 - [ ] [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
       already scopes "remove the god-SA objectAdmin" — note there that even a completed P2.1b leaves
       `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm)
@@ -230,3 +239,30 @@ confirm no further self-grants happened in the interim.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **slot-8 2026-08-03**: applied operator ruling on P1 (KEEP both `projectIamAdmin` and `serviceAccountAdmin` —
+  insufficient certainty to safely revoke given exhausted audit-log evidence; revisit only with stronger evidence
+  later). Flipped P1 done, retagged `[OPERATOR]`→`[INFRA]`, and unblocked P2's terraform-import scope accordingly.
+- **slot-8 2026-08-03**: executed P2. Before importing, re-queried live IAM state directly
+  (`gcloud projects get-iam-policy` filtered to `unified-trading-sa`) rather than trusting the 3-day-old snapshot above
+  — **live had grown from 34 to 38 roles (28 undeclared, not 24)**. Traced the delta via the same `SetIamPolicy`
+  audit-log query used in the P0 audit: `roles/logging.viewAccessor` was self-granted by `unified-trading-sa` itself at
+  2026-07-31T22:17:57Z (after this doc's P0 snapshot, before this import) — a 4th traceable same-pattern self-grant,
+  confirming the P0 audit's "ambient-SA-credential pattern is ACTIVELY producing new undeclared grants" prediction. A
+  `roles/cloudasset.viewer` ADD+REMOVE pair also appears in the audit-log window (2026-08-01, self-added then
+  self-removed ~6h later) — not live at import time, so not imported; noted here for the trail. Imported all 28
+  currently-live undeclared roles (not the stale 24) into `main.tf` + `_imports_reconcile.tf` via `import {}` blocks,
+  matching the existing reconciliation pattern in that file. Verified via `ENV=prod ./tofu.sh plan` (0 diff for all 28,
+  confirmed by reading the actual GCS-persisted state object directly, not just trusting tofu's own report) —
+  deployment-service@bd47dd8. **Separate finding, filed as its own issue doc** (out of this doc's scope — a
+  state-hygiene bug, not IAM drift): the same root's state carries an orphaned
+  `google_project_iam_member.unified_trading_pubsub_publisher` entry with NO matching config anywhere (the live
+  `roles/pubsub.publisher` binding for `unified-trading-sa` is actually declared under a different resource address,
+  `unified_trading_sa_pubsub_publisher`, in the separate `live_event_log/` OpenTofu root) — `tofu plan` on the parent
+  root wants to destroy it, which would revoke a live IAM binding on next `apply`. See
+  `/plans/archive/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md` (resolved
+  2026-08-03: orphaned entry removed from the parent root's state via `tofu state rm`, no GCP API call). **Not
+  re-litigated**: the pre-existing "17 to add / 5 to change / 3 to destroy" unrelated drift visible in the same
+  `tofu plan` output (other slots' in-flight defi-collection/instruments-t1-recon/secret-rotation work) was left
+  untouched — did not run `tofu apply` on the full plan, only relied on `plan`'s own state-write for the clean-diff
+  imports (verified empirically: `tofu plan` alone persisted the 28 imports to the real GCS state object, no `apply`
+  needed since none of them had any drift beyond the import itself).

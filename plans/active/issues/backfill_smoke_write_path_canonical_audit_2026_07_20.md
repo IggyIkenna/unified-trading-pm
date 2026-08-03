@@ -272,7 +272,7 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
 ## Follow-up todos
 
 - [x] 1. [DATA] P1. **[already covered by
-      plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, see that doc for execution]**
+      plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, see that doc for execution]**
       instruments-service: canonicalise the `instrument_availability` write to
       `…/day={D}/pipeline_mode={m}/asset_group={ag}/venue={V}/instruments.parquet` using the sink **PREFIX** mechanism
       (`sports_fixtures.py:99-113` is the working reference), NOT the partition dict — the UTL sink sorts keys

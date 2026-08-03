@@ -149,3 +149,7 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 
 - `/codex/08-workflows/ci-cd-flow.md` §"The MVP gate set" / §"sit-gate/fleet-green" — the promoter's documented
   re-dispatch behavior this finding says didn't fire.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

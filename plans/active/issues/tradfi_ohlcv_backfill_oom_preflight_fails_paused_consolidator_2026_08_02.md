@@ -78,6 +78,7 @@ last_updated: 2026-08-02
 context_scope:
   [
     /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
@@ -192,3 +193,4 @@ call — not a default.
   sequencing-breaking cron resume), not a checkable fact. Independently sufficient: `depends_on` names that plan's
   still- open prerequisite todos, and an already-filed + already-answered `/blocked` (`BLK-058d5928`) exists. Nothing to
   reclassify.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

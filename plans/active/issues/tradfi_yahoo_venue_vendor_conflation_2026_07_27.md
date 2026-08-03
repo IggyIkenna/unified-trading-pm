@@ -50,7 +50,9 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/yahoo_finance_adapter.py,
     /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/venue-availability.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -165,3 +167,5 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   investigation and is sequenced first among 3 entangled Yahoo/venue todos. Found batch5's `status` field has since
   flipped `draft` → `active` (last touched 2026-08-01) — updated the NOTE block above to correct the stale "NOT
   ingested, NOT dispatched today" wording; disposition unchanged (KEEP-NA-STALE, `assigned_vm` stays NA).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added the doc's own named target file
+  (`yahoo_finance_adapter.py`, previously missing) and `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`.

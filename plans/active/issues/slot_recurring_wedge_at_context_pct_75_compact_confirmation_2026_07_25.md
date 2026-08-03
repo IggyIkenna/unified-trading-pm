@@ -71,6 +71,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
+    agent-orchestrator/server/worker_liveness/_respawn.py,
   ]
 depends_on: []
 ---
@@ -160,3 +161,7 @@ recurrence-prone and episode 1 needed manual intervention.
   (`server/worker_liveness/_respawn.py::maybe_auto_respawn_stuck_slot`); still unresolved pending a live trace/test as
   that entry states. Items 1 and 3 are independently actionable but neither prior pass reclassified them — concur with
   that caution, this stays a judgment-gated live-dispatch-critical-path change, not a clean AO todo.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries — added
+  `agent-orchestrator/server/worker_liveness/_respawn.py`, the module the doc's own unresolved item-2 investigation
+  targets directly).

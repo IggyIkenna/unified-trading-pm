@@ -54,7 +54,6 @@ context_scope:
     market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
     /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
-    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -254,3 +253,8 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
   reclassification. Closed by citation. The remaining `[PM] P2` item stays KEEP-NA valid and was narrowed to the
   delete-the-legacy-copies phase only (prod-bucket delete = human-only unless reversibility-qualified; plan-destination
   is still an operator ask). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — dropped
+  `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (a sibling defect class, not directly relevant to the
+  doc's sole remaining scope, the delete-the-legacy-copies decision); the fold script that executed the work
+  (`fold_legacy_composite_venue_objects_2026_07_31.py`) was a one-off, already deleted post-run per the script-homes
+  lifecycle convention, so not addable.

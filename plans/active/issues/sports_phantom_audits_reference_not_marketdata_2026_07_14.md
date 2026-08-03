@@ -325,3 +325,4 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
   treat the `assigned_vm: planning` reclassification as license to dispatch this checkbox independently of batch7's
   decision-16 investigation.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).

@@ -282,3 +282,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   supersedes the resize direction'; only the git-status write batching/serialisation leg still stands. Doc stays NA
   because the `[BACKEND] P2` readiness-probe todo embeds a `/codex/04-architecture/autonomous-recovery-matrix.md` edit,
   which is never autonomous.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).

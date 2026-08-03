@@ -25,11 +25,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-mtds-live.sh,
-    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
   ]
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
 drift_direction: advance-code
@@ -136,7 +136,10 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 - [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk and
       recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is confirmed
       running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
-      **Scope-fenced 2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
+      **na-eligibility-audit 2026-08-03**: already tracked (still open, `- [ ]`) as todo 2 `[DOC] P3` in
+      `plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md:149` (Source-cites this exact item as "P3 of 3");
+      not closing here — that batch's own done-when includes flipping this checkbox once it ships. **Scope-fenced
+      2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
       `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
       which is already **done** — read what it wrote and cross-link it rather than restating or editing it.
 
@@ -169,3 +172,7 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`. **P3 (the
   skill Phase-2 doc note) is untouched — out of scope for this todo, tracked separately as this batch's todo 2** (its
   premise may also need revisiting given this finding, but that is not this todo's call to make).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in the P1/P2 NOT-A-BUG resolution doc and
+  the batch5 dispatch plan that now owns the only remaining open item (P3), reflecting the 2026-08-02 outcome; dropped
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` and `tardis-concurrency-guard.sh` (relevant to the original
+  finding, less so now that P1/P2 resolved not-a-bug).

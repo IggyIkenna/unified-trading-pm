@@ -90,3 +90,7 @@ they would silently inherit the same architecture gap this whole chain exists to
       `resolved` as moot. If populated: close this doc, no gap exists. Repo: ml-service. Done when: the
       populated-vs-null verdict is recorded with real-data evidence, and either a follow-up fix chain is filed or the
       doc is closed as moot/non-issue.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: reviewed context_scope (3 entries), no change needed — still accurate.

@@ -51,6 +51,13 @@ source:
   "Found during data_pipeline_failure escalation agt-c271de (dp-fleet-monitor -> agent-orchestrator, slot-10,
   2026-07-30) while investigating a fresh tail on the DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) cefi/book_snapshot_5 alert."
 last_updated: 2026-07-30
+context_scope:
+  [
+    market-tick-data-service/cloudbuild.yaml,
+    market-tick-data-service/Dockerfile,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
+  ]
 ---
 
 # MTDS CeFi Cloud Run jobs' `market-data-tick-handler:latest` image is 5.5 months stale
@@ -141,3 +148,4 @@ an image for something that should not run again.
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly gated
   on an unresolved scoping/judgment call ("still-relevant vs dead/superseded... a scoping/judgment call, not
   determinable by this investigation alone"); the second todo is conditional on that decision. Not worker-determinable.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

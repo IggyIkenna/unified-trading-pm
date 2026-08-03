@@ -43,9 +43,10 @@ assigned_role: infra
 drift_direction: correct-codex
 context_scope:
   [
-    /plans/epics/infrastructure_master.md,
     /codex/06-coding-standards/script-homes.md,
     /codex/06-coding-standards/quality-gates.md,
+    scripts/quality-gates-base/base-service.sh,
+    plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]
 ---
 
@@ -394,3 +395,4 @@ narrowest literal precondition passed.
   `scripts/` files, so wiring the lifecycle-marker checker today reds the whole fleet). Flipping the doc would expose
   the gated items to blind dispatch. The standing recommendation is unchanged and still un-actioned: a targeted split of
   just the bounded items into a future infra batch — `/ag-closeout-audit`'s Phase-3 job, not an `assigned_vm` flip.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

@@ -46,10 +46,10 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    deployment-ui/src/data/capability-manifest.json,
-    deployment-ui/src/components/CapabilityTab.tsx,
-    /codex/04-architecture/solana-defi-coverage.md,
-    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    scripts/openapi/generate_strategy_prospectus.py,
+    unified-api-contracts/openapi/prospectus,
+    /codex/06-coding-standards/script-homes.md,
+    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -313,3 +313,6 @@ prospectus-generator/committed-copy resync.
   "regenerating/reconciling the 57 `unified-api-contracts/openapi/prospectus/*.md` generator outputs spans many axes
   unrelated to DRIFT removal — needs a human design decision on how to reconcile generator vs committed copies before
   any worker todo is determinable." No stale/reclassify-eligible content found. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — instances 1-3 are now resolved, so retargeted the
+  list at the sole remaining open item (the 4th instance, the drifted `openapi/prospectus/*.md` generator), replacing
+  the stale first-instance-era entries.

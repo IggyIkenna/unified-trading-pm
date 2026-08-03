@@ -35,8 +35,6 @@ context_scope:
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 source:
@@ -55,7 +53,14 @@ source:
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24`,
       `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24`,
       `ao_recovery_audit_layer1_deleted_2026_07_15` — nothing else is needed to unblock them. **Done when**:
-      `status: active` + AO has picked it up (`/check-agent-orchestrator`).
+      `status: active` + AO has picked it up (`/check-agent-orchestrator`). **na-eligibility-audit 2026-08-03
+      (blocker-currency check): the first half is done — `ao_satellite_ao_dispatch_batch2_2026_07_30.md` now reads
+      `status: active`** (flipped from `draft`), and shows real, substantive progress (4 of 8 todos already `[x]`,
+      including a root-caused-and-fixed `agent-orchestrator@77769ab` item and a confirmed-moot item) — i.e. it has been
+      worked, not merely approved-on-paper. Did not independently re-verify the second half (AO backlog pickup via
+      `/check-agent-orchestrator`) this pass. Checkbox stays open since 4 of batch2's own todos remain `[ ]`, but the
+      "approve/dispatch" ask itself is satisfied; a future toucher should check batch2's own remaining todos rather than
+      re-approving anything here.
 - [ ] [OPERATOR] P1. **Rule on the 12 operator-gated docs from the orphan sweep**, one at a time — each is a genuine
       design/judgment fork with no evidence-based tiebreaker, per Phase 1 of the audit:
       `escalation_backlog_repo_collision_blind_spot_2026_07_25`,
@@ -69,7 +74,7 @@ source:
       `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`,
       `wip_preserve_refs_silently_unrecovered_2026_07_29`. **Done when**: each doc has a recorded ruling (fold into a
       batch, park explicitly, or close as moot).
-- [ ] [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
+- [x] ✅ [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
       skill's own iterative-drain methodology, check whether the competing claim each collided with (in
       `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `## Deferred` section) has since shipped or superseded:
       `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24`,
@@ -80,7 +85,15 @@ source:
       `utl_shared_clone_commits_repeatedly_reset_2026_07_22`,
       `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24`,
       `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25`. **Done when**: each is re-classified
-      cleared/still-gated with evidence.
+      cleared/still-gated with evidence. **DONE (na-eligibility-audit 2026-08-03)** —
+      `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (now archived) records exactly this re-triage as completed
+      2026-07-31 (interactive session): its own `## Deferred` banner gives a verdict for all 8 named docs —
+      `ahead_push_sentinel_...`/`reaper_kills_inflight_...` re-triaged (verdicts recorded in their own Progress Logs),
+      `orchestrator_failover_double_dispatch_...` still gated (different reason, root cause unidentified),
+      `killed_slot_orphans_...` checkbox fixed, `one_shot_worker_completes_...`/
+      `host_saturation_false_worker_kicks_...`/`utl_shared_clone_commits_repeatedly_reset_...` reclassified,
+      `slot_recurring_wedge_...` needed one more live check. All 8 accounted for with evidence, matching this todo's
+      done-when exactly.
 - [ ] [REVIEW] P2. **Read + properly bucket the remaining 7 "unclear" docs** the Phase-1 audit agent couldn't cleanly
       classify (was 8 — `unified_trading_system_ui_e2e_specs_hardcode_ports_bypass_per_slot_derivation_2026_07_28`
       bucketed **archivable/ACKED-INTO-CODE 2026-08-01**: its last open todo shipped unified-trading-system-ui@741d0a6b,
@@ -102,3 +115,11 @@ source:
   other 2 `[REVIEW]`-tagged items require open-ended audit judgment (classify 8 conflict-gated docs, bucket 7 unclear
   docs) — the same shape as this skill's own work, not a deterministic check. No stale/superseded items found.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — deduped 2 accidental repeated entries (a duplicate
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` and a leading-slash-vs-not duplicate of `ag-closeout-audit/SKILL.md`)
+  that had crept in since the last scout pass; content otherwise unchanged.
+- **na-eligibility-audit 2026-08-03** (reclassify pass): KEEP-NA, valid (blocker-currency only) — annotated todo 1 in
+  place: `ao_satellite_ao_dispatch_batch2_2026_07_30.md` is now `status: active` with 4/8 todos done, so the
+  approve/dispatch ask is satisfied even though the checkbox stays open pending batch2's own remainder. The other 3 open
+  todos (rule on 12 operator-gated docs, bucket 7 unclear docs — todo 3 already closed) are unchanged judgment-heavy
+  work per the 2026-08-01 verdict. Not a RECLASSIFY case. `assigned_vm` untouched.

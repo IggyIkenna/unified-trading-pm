@@ -212,17 +212,23 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       in code, and a real VM is running it (`mtds-live-sports-odds-api-trades`, launched via
       `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades` —
       `/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`). No follow-up scoping plan is needed. The
-      genuinely remaining work is tracked in 2 other docs, not here: **(a)** the P0 todo in
+      genuinely remaining work is tracked in 2 other docs, not here: ~~**(a)** the P0 todo in
       `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — "Fix MTDS's
       live-mode sports odds writer shape mismatch BEFORE the live connector runs" (`live/websocket_runner.py`'s non-CeFi
       `live_tick_blob_path` + `live/connectors/odds_api_ws.py::_parse_fixture_response` must write one shard per
       (bookmaker, league, fixture) matching the batch `venue_fetch.py::_build_sports_shard_path` shape, instead of one
       nested-JSON-bundled file per sport — bumped P2→P0 now that the rotated `odds-api-key` lets the connector actually
-      authenticate and write); **(b)** the open P2 todo in
+      authenticate and write)~~; **STALE (na-eligibility-audit 2026-08-03)** — part (a) is done: the cited doc's own
+      resolved summary confirms "the P0 live-mode sports odds writer shape fix shipped
+      (market-tick-data-service@d6d539a8)" before it archived. **(b)** the open P2 todo in
       `/plans/active/sports_live_availability_and_source_latency_2026_07_24.md` — "Live ODDS quota decision + cheap
       second source" — done when the api_football `/odds` in-play second source is wired as a fallback/supplement AND
       the live sports-odds ingestion is confirmed resumed (a fresh poll cycle succeeding against the live key in
-      production, not just a direct-API-call verification). (repo: market-tick-data-service, unified-api-contracts)
+      production, not just a direct-API-call verification) — **remains genuinely open** (checked live 2026-08-03: that
+      doc's own item now additionally reports the api_football second-source half STRUCK/superseded 2026-08-02
+      (BLK-b969f5f0, not pursued) and a NEW blocker — the `odds-api-key` quota went exhausted 2026-08-02, 4 days after
+      provisioning, root cause untracked as its own P1 finding). Checkbox stays open on (b) alone. (repo:
+      market-tick-data-service, unified-api-contracts)
 - [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`
       already works for sports today: it's the SAME generic (not per-asset-group) launcher used across every asset

@@ -50,10 +50,9 @@ context_scope:
     scripts/propagation/rollout-cloudbuild.py,
     configs/cloudbuild-service-template.yaml,
     scripts/quality_gates/check_cloudbuild_template_drift.py,
-    /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
-    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    scripts/quality_gates/cloudbuild_template_drift_baseline.yaml,
+    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 
@@ -221,3 +220,15 @@ the re-scoped guard rollout. This doc's sole open checkbox already cites the ext
 AO-dispatchable copy of this todo lives in … — this doc stays `assigned_vm: NA`; flip this checkbox from there"), so the
 citation is correct and no hygiene fix is needed. Flipping `assigned_vm` here now would open a SECOND dispatch path to
 the identical fleet-wide rollout — Phase-1 citation class (a), a body sentence redirecting work to a different doc.
+
+**na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS the verdict above, unchanged.**
+Re-read end-to-end; re-verified the redirect citation to `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 is still
+accurate (that plan still carries the re-scoped guard rollout as its todo 1). Note: batch5 is `status: draft` — not yet
+dispatched — a detail the prior 08-02 verdict didn't explicitly flag; doesn't change this doc's own correct-redirect
+verdict (the citation is right regardless of whether the target is live yet), but the underlying fleet-wide rollout
+isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the superseded
+  `ci_satellite_ao_dispatch_batch1_2026_07_26.md` reference for the current AO-dispatchable copy
+  `ci_satellite_ao_dispatch_batch5_2026_08_02.md`, added the drift-checker's ratchet baseline file, dropped two older
+  historical-context docs to stay within the 2-6 entry budget.

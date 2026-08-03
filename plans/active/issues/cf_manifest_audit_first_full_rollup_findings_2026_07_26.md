@@ -49,7 +49,9 @@ context_scope:
   [
     /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
+    /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
   ]
 ---
@@ -312,3 +314,4 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   prior production regressions on this same surface, gating the sibling CF-8 sports todo above for the identical reason.
   Filed a new P3 follow-up todo to bundle this cleanup into that same future maintenance-window pass rather than a
   separate production touch now. No code shipped this touch — read-only diagnostic + this doc edit only.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries).

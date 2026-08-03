@@ -45,10 +45,11 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
-    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
   ]
 execution_scope: orchestrator-agent
 estimate_class: infra
@@ -278,3 +279,7 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
   green, shipped via `quickmerge --agent`, verified reachable from `origin/live-defi-rollout` before flipping the
   checkbox above. Filed the `[DIAG] P3` production-holds-over-2-days follow-up todo above rather than blocking this flip
   on calendar time this session doesn't have.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries — added the two 2026-08-03 CODE-fix source paths,
+  `provider_league_ids.py` and `enumerate_expected_universe.py`, since the remaining `[DIAG] P3` follow-up re-verifies
+  that exact fix in production; dropped the now-superseded `sports_satellite_ao_dispatch_batch4` archived dispatch doc).

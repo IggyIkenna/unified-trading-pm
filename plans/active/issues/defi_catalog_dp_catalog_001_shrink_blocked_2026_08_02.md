@@ -289,3 +289,4 @@ slow:
   time; flagging again that paging alone has not produced an operator decision across 6 cycles — worth a more direct
   nudge (not a worker-decidable action; noted for main/operator visibility only). Pinging `dp-fleet-monitor` (authoring
   slot) with the outcome and completing this one-shot escalation.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

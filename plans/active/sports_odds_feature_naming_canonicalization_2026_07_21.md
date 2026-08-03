@@ -129,9 +129,14 @@ evidence. Summary of what each site currently uses:
       drift since the 2026-07-25T14:20Z checkpoint this todo's source doc flagged): `b03a6de4` confirmed an ancestor of
       current HEAD via `git merge-base --is-ancestor`, and the exact `odds_decimal_{outcome}_{venue}` f-string is
       present in the current file. (repo: features-service)
-- [ ] [DATA] P1. Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names chosen
-      in todo 1 (rename in place — UAC being SSOT doesn't make its current names sacrosanct). Add/update the UAC unit
-      tests covering the schema's field set. (repo: unified-api-contracts)
+- [x] ✅ [DATA] P1. Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names
+      chosen in todo 1 (rename in place — UAC being SSOT doesn't make its current names sacrosanct). Add/update the UAC
+      unit tests covering the schema's field set. (repo: unified-api-contracts) **DONE (na-eligibility-audit
+      2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md:416`: `unified-api-contracts@689efa54` +
+      `ml-service@91f031a`, all 49 fields renamed to the decided scheme, grounded in features-service's actual
+      calculator output (not a blind find-replace — same-named-but-unrelated columns in other layers correctly left
+      untouched). New UAC test file asserts the exact field set. Known transitional gap noted there: some FSS-side
+      renames still pending (this doc's own todo above, already tracked, separately closed).
 - [x] ✅ [DATA] P2. Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS` + the odds-features
       exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
       the exporter's own tests + any downstream fixture files that assert the old column names. (repo: features-service)
@@ -158,18 +163,22 @@ evidence. Summary of what each site currently uses:
       these were touched by the earlier ml-service migration commits
       (`unified-api-contracts@689efa54`/`ml-service@91f031a` covered the schema/loader only, not mock-data generation or
       target generation).
-- [ ] [BACKEND] P2. Close the silent-agnostic gap in `SportsFeatureLoaderMixin`
+- [x] [BACKEND] P2. Close the silent-agnostic gap in `SportsFeatureLoaderMixin`
       (`ml_service/training/app/core/sports_feature_loader.py`): add real schema validation against
       `OddsFeaturesMixin`'s field set at the point the odds `feature_group` parquet is read, so a producer/consumer
       naming mismatch fails LOUD (raises) instead of silently defaulting via `.get()` — this closes the honest-absence /
       no-silent-placeholders gap the parent issue identified as the actual bug-enabler, independent of which naming
-      wins. (repo: ml-service)
-- [ ] [BACKEND] P2. Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine` (`on_tick`'s
+      wins. (repo: ml-service) — CLOSED (na-eligibility-audit 2026-08-03): done via
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md:448` (`ml-service@07976ae`, `_validate_odds_schema`).
+- [x] [BACKEND] P2. Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine` (`on_tick`'s
       `features: dict[str, float]` reads) to the UAC-chosen field names — update the archetype engines' unit tests and
-      any recorded fixture feature dicts. (repo: strategy-service)
-- [ ] [BACKEND] P2. Migrate the legacy `strategy_service/adapters/sports_feature_subscriber.py` (currently
+      any recorded fixture feature dicts. (repo: strategy-service) — CLOSED (na-eligibility-audit 2026-08-03): done via
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md:454` (`strategy-service@4c55438c`).
+- [x] [BACKEND] P2. Migrate the legacy `strategy_service/adapters/sports_feature_subscriber.py` (currently
       `ht_odds_home_implied` etc.) to the same UAC-chosen names — this is a third, separate convention from the v2
-      engines and must not be left behind as a 5th orphaned dialect. (repo: strategy-service)
+      engines and must not be left behind as a 5th orphaned dialect. (repo: strategy-service) — CLOSED
+      (na-eligibility-audit 2026-08-03): done via `sports_satellite_ao_dispatch_batch2_2026_07_24.md:454` (same commit,
+      combined).
 - [x] ✅ [DATA] P2. **SHIPPED — `ml-service@10e219f`** (2026-07-26, slot-10, `data_engineering`, via
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo; checkbox-drift fix
       2026-07-28). Migrated 4 ml-service files still using the pre-migration odds-feature names, missed by the earlier

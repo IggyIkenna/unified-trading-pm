@@ -28,7 +28,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-08-03
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -168,12 +168,20 @@ mock parity — the drift is historical, not systemic.
       `data_status_drilldown/_instruments.py`). Updated `tests/unit/test_route_deployments_mock.py`'s two pagination
       assertions to match. `quality-gates.sh` green (sentinel `e1e100e`), shipped via `quickmerge --agent`, verified on
       origin. Adjacent finding filed as a new todo below (deployment-ui's own frontend mock still returns `total`).
-- [ ] [UI] P3. **Update deployment-ui's own dev-mode/Playwright mock** (`deployment-ui/src/lib/mock-api.ts:4528-4534`,
-      the `VITE_MOCK_API`-gated frontend fixture, distinct from deployment-api's backend `CLOUD_MOCK_MODE`) to emit
-      `total_count`+`has_more` for `/api/deployments`, matching the backend contract fixed by the todo above. No live
-      consumer reads either field today, so this is stale-fixture hygiene, not a functional bug — but leaving it
-      diverged means deployment-ui's dev/Playwright surface no longer matches deployment-api's real (both live and
-      now-fixed-mock) response shape. (repo: deployment-ui)
+- [x] ✅ [UI] P3. **Update deployment-ui's own dev-mode/Playwright mock**
+      (`deployment-ui/src/lib/mock-api.ts:4528-4534`, the `VITE_MOCK_API`-gated frontend fixture, distinct from
+      deployment-api's backend `CLOUD_MOCK_MODE`) to emit `total_count`+`has_more` for `/api/deployments`, matching the
+      backend contract fixed by the todo above. No live consumer reads either field today, so this is stale-fixture
+      hygiene, not a functional bug — but leaving it diverged means deployment-ui's dev/Playwright surface no longer
+      matches deployment-api's real (both live and now-fixed-mock) response shape. (repo: deployment-ui) — **DONE
+      2026-08-03 (slot-14, ui_developer), `deployment-ui@7f5f850`.** Replaced the `total: deps.length` field with
+      `total_count: deps.length` + `has_more: false` (the endpoint returns the full mock list un-paginated, so there is
+      never a next page) — matches deployment-api's live/mock shape exactly (`_crud.py`'s `total_count`/`has_more`
+      pair). Strengthened the existing `mock-api.ph3.test.ts` regression test with real assertions on the new fields (it
+      previously only type-annotated `total: number` without ever reading it). `tsc --noEmit` clean, `eslint` clean,
+      full `vitest run` green (1096 passed), `pw:L2 ✓` (`npx playwright test --project=chromium tests/smoke/` — 428
+      passed) | regression: `src/lib/mock-api.ph3.test.ts`. `quality-gates.sh` green (sentinel `7f5f850`), shipped via
+      `quickmerge --agent`, verified on origin.
 - [x] ✅ [SERVICE] P3. **Refresh the frozen mock fixtures** (cloud-builds 2026-03-29 · fleet-git-health/gh-rate-limit
       2026-06-10 · inventory 2026-06-22 · escalations 2026-06-27) — a fixture that never moves silently trains the UI on
       stale shapes. — **DONE 2026-08-03 (slot-6, backend_engineer), `deployment-api@c0aabe0`.** Rather than a one-time
@@ -185,10 +193,58 @@ mock parity — the drift is historical, not systemic.
       its caller but never used it — a latent dead-parameter bug; now wired through). Every fixture's original relative
       spacing between events is preserved, just re-anchored to the present. `quality-gates.sh` green (sentinel
       `c0aabe0`), shipped via `quickmerge --agent`, verified on origin.
-- [ ] [SERVICE] P3. **Decide whether parity should be a gate, not a script** — if `compare_live_mock_parity.py` were
+- [x] ✅ [SERVICE] P3. **Decide whether parity should be a gate, not a script** — if `compare_live_mock_parity.py` were
       wired into a QG/contract test, none of the above could have rotted for four months. That is the durable fix; the
       script is the stopgap. (Cross-ref: deployment-ui@0c817d2 fixed the same rot class on the FRONTEND mock the same
-      week — two mocks, same disease.)
+      week — two mocks, same disease.) — **DONE 2026-08-03 (slot-14, backend_engineer), `deployment-api@6027b54`.**
+      DECISION: the cross-server SHAPE diff stays a script — it needs a real live process (`CLOUD_MOCK_MODE=false`, real
+      GCP) and `quality-gates.sh` has no live credentials (every existing integration test in this repo only ever
+      exercises `CLOUD_MOCK_MODE=true`, confirmed via `tests/integration/test_api_workflow.py`; `tests/integration/`
+      itself isn't even run by QG here — `RUN_INTEGRATION=false`). What DID get gated, permanently, mock-mode-only, zero
+      live infra: investigating this question surfaced two real bugs, both fixed in the same commit — (1)
+      `GET /api/deployments/diff` was permanently unreachable (route-shadowed by the parametric
+      `/api/deployments/{deployment_id}`, registered first in `main.py`; reordered + guarded with a new regression test
+      in `tests/unit/test_route_ordering_inventory.py`, extending the existing `find_matching_route` pattern rather than
+      inventing a new mechanism), and (2) `GET /api/user-management/users` always 500'd, live and mock alike
+      (`UnifiedCloudConfig().workspace_root` — an attribute that has never existed on that class; switched to
+      `deployment_api.settings.WORKSPACE_ROOT`). An exhaustive "every mock endpoint must not 500" sweep was also
+      prototyped (auto-discovering every parameterless GET from the app's own OpenAPI spec, matching the script's own
+      Trap 4) and DID immediately catch both bugs above when run as a standalone script — but wiring it into
+      `tests/unit` (the only tier QG runs) hit a real architecture conflict: `conftest.py` globally stubs
+      `DataAnalyticsService`/`DataQueryService`/`DataStatusService` etc. as bare `MagicMock()` to dodge circular
+      imports, and `await <MagicMock>.method()` is not awaitable — so any route touching those false-positives 500
+      regardless of real mock-server correctness (hit on `/api/data-status/turbo/stats`). Shelved rather than shipped
+      flaky; needs AsyncMock-compatible service doubles first. New follow-up todo below captures that scoped-correctly.
+      `quality-gates.sh` green (sentinel `6027b54`), shipped via `quickmerge --agent`, verified on origin.
+- [x] ✅ [SERVICE] P3. **Build an exhaustive mock-endpoint crash-smoke QG gate** (`tests/unit/`, auto-discovering every
+      parameterless GET path from `deployment_api.main.app.openapi()`, asserting none 500 under `CLOUD_MOCK_MODE=true`)
+      — prototyped 2026-08-03 and shown to genuinely catch real bugs (see the todo above), but blocked on
+      `tests/unit/conftest.py`'s global `DataAnalyticsService`/`DataQueryService`/`DataStatusService`/
+      `deployment_manager`/`deployment_state` mocking (bare `MagicMock()`, not `AsyncMock`) producing false-positive
+      500s on any route that awaits one of those. Needs: either upgrade those 5 stubs to `AsyncMock`-compatible doubles
+      with plausible return shapes, or scope the sweep to skip routes that import from those specific submodules. Also
+      verify full-lifespan `TestClient(app)` (needed so `app.state.config_dir` etc. are set) is safe under the actual
+      CI/QG sandbox (no local Redis) before relying on it — it degrades gracefully in `deployment_api/utils/cache.py`
+      when unreachable, but no other `tests/unit` file currently exercises full lifespan, so this would be the first.
+      (repo: deployment-api) — **DONE 2026-08-03 (slot-5, backend_engineer), `deployment-api@b8e609c`.** Took the second
+      option (scope the sweep to skip, not an AsyncMock upgrade): measured the actual blast radius first (in-process
+      sweep of all 125 parameterless GET paths under `CLOUD_MOCK_MODE=true`) and found only ONE real false-positive —
+      `/api/data-status/turbo/stats` (its `data_analytics_service` singleton is constructed at route-module import time
+      from the mocked `DataAnalyticsService` class, so `await .get_cache_stats()` raises
+      `TypeError: object MagicMock can't be used in 'await' expression`) — not the many-route problem the todo
+      anticipated, so a full AsyncMock upgrade of the 5 stubbed submodules would have been disproportionate. Excluded
+      that one path with a documented reason (already covered live by `test_route_data_status_live.py`'s own
+      AsyncMock-patched tests). New file `tests/unit/test_mock_endpoint_smoke.py`: module-scoped full-lifespan
+      `TestClient(app)`, `pytest.mark.parametrize` over the OpenAPI-discovered paths, plus a floor-count guard test
+      against the discovery silently degrading. Confirmed full lifespan is safe with no local Redis (graceful degrade in
+      `deployment_api/utils/cache.py`, confirmed via a clean local run with no Redis process). Running the new file
+      alongside the FULL `tests/unit` suite under `pytest -n 4` (the QG-matching xdist config) surfaced a PRE-EXISTING,
+      unrelated test-isolation bug this was the first file to trip: `test_health_routes.py`'s
+      `test_clear_cache_handles_error` replaced `sys.modules["deployment_api.utils.cache"]` with a raw
+      (non-context-managed) assignment that never restores, permanently poisoning the real cache module for the rest of
+      that pytest-xdist worker process — any later full-lifespan test in the same worker then crashed on
+      `await cache.initialize()`. Fixed by switching it to `patch.dict`, matching every other test in the same class.
+      Full `quality-gates.sh` green (sentinel `b8e609c`), shipped via `quickmerge --agent`, verified on origin.
 
 ## Lessons
 
@@ -245,3 +301,45 @@ mock parity — the drift is historical, not systemic.
   non-frozen output via direct import + a full local `quality-gates.sh` pass (targeted tests +
   `test_repo_ci_routes.py`/`test_repo_ci_alerts.py`/`test_route_deployments_inventory*.py`/`test_route_builds.py`, 505
   passed). `quality-gates.sh` green (sentinel `c0aabe0`), shipped via `quickmerge --agent`, verified on origin.
+- **slot-14 2026-08-03**: Resolved the last todo — `deployment-api@6027b54`. Decided the cross-server SHAPE diff stays a
+  script (needs live GCP creds `quality-gates.sh` doesn't have; `tests/integration/` isn't even run by this repo's QG,
+  `RUN_INTEGRATION=false`). Investigating the question surfaced + fixed two real bugs: `GET /api/deployments/diff` was
+  permanently route-shadowed by `/api/deployments/{deployment_id}` (main.py include_router ordering; same class as the
+  2026-06-24 `inventory` incident, new regression test added to `test_route_ordering_inventory.py` via the existing
+  `find_matching_route` pattern), and `GET /api/user-management/users` always 500'd
+  (`UnifiedCloudConfig().workspace_root` never existed on that class; switched to
+  `deployment_api.settings.WORKSPACE_ROOT`). Prototyped an exhaustive mock-endpoint crash-smoke test (auto-discovers
+  every parameterless GET from the app's own OpenAPI spec) as a standalone script and confirmed it catches both bugs
+  above — but wiring it into `tests/unit` hit a real conflict with `conftest.py`'s global `DataAnalyticsService`/etc.
+  `MagicMock()` stubs (not awaitable, so any route touching them false-positives 500 regardless of real correctness).
+  Shelved rather than shipped flaky; filed as a new, properly-scoped follow-up todo above rather than bundled into this
+  one. `quality-gates.sh` green (sentinel `6027b54`), shipped via `quickmerge --agent`, verified on origin.
+- **slot-14 2026-08-03**: Closed the adjacent `[UI]` finding slot-7 filed — `deployment-ui@7f5f850`. deployment-ui's own
+  frontend dev-mode/Playwright mock (`src/lib/mock-api.ts`, `VITE_MOCK_API`-gated — separate from deployment-api's
+  `CLOUD_MOCK_MODE`) still returned `total` for `GET /api/deployments` after the backend standardized on
+  `total_count`+`has_more` (`deployment-api@e1e100e`). Replaced `total: deps.length` with `total_count: deps.length` +
+  `has_more: false` (the fixture returns the full un-paginated list, so there's never a next page). Confirmed via
+  `getDeployments()` in `src/api/client.ts` that no live consumer reads either field, matching the original finding.
+  Strengthened `mock-api.ph3.test.ts`'s existing coverage of this endpoint with real assertions on the new fields
+  (previously only type-annotated, never read). `tsc`/`eslint` clean, full `vitest run` green (1096 passed), `pw:L2 ✓`
+  (`--project=chromium tests/smoke/`, 428 passed). `quality-gates.sh` green (sentinel `7f5f850`), shipped via
+  `quickmerge --agent`, verified on origin. One todo remains open in this doc (the exhaustive mock-endpoint crash-smoke
+  QG gate), so the doc stays active.
+- **slot-5 2026-08-03**: Closed the last todo — `deployment-api@b8e609c`. Measured the actual false-positive blast
+  radius before choosing an approach: an in-process sweep of all 125 parameterless GET paths under
+  `CLOUD_MOCK_MODE=true` found only ONE route crashes under `conftest.py`'s global bare-`MagicMock` service stubs
+  (`/api/data-status/turbo/stats`), not the many-route problem the todo anticipated — so took the "scope the sweep to
+  skip" option over an AsyncMock upgrade of the 5 globally-stubbed submodules (a much larger, riskier change touching
+  every other test file relying on the current mocking). New `tests/unit/test_mock_endpoint_smoke.py`: module-scoped
+  full-lifespan `TestClient(app)` + `pytest.mark.parametrize` over the OpenAPI-discovered paths, with the one known
+  artifact excluded and documented (already covered live by `test_route_data_status_live.py`'s AsyncMock-patched tests).
+  Confirmed full lifespan is safe with no local Redis. Running the new file alongside the full `tests/unit` suite under
+  `pytest -n 4` (QG's own xdist config) surfaced a pre-existing, unrelated test-isolation bug this was the first file to
+  trip: `test_health_routes.py::test_clear_cache_handles_error` used a raw (non-context-managed) `sys.modules[...]`
+  assignment that never restored, permanently poisoning the real cache module for the rest of that pytest-xdist worker
+  and crashing any later full-lifespan test sharing the worker; fixed by switching it to `patch.dict`, matching every
+  other test in the same class. Full `quality-gates.sh` green (sentinel `b8e609c`), shipped via `quickmerge --agent`,
+  verified on origin. **Every todo in this doc is now done — archival-eligible** (no `locked_by`); left for a follow-up
+  archival pass rather than bundled into this commit per the never-combine-flip-with-git-mv rule.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — still the right minimal set; note the
+  doc is now archival-eligible per the entry above (all todos closed).

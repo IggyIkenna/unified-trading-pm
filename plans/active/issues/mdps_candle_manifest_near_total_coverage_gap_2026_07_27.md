@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [data-correctness, mdps, candle, manifest-completeness, orphan-real, honest-absence, big-finding]
 related:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/orphan-object-detection.md,
@@ -46,11 +46,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/archive/issues/mdps_candle_orphan_sweep_design_brief_2026_07_27.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
+    deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
-    /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
   ]
 depends_on: []
 ---
@@ -188,53 +188,219 @@ the candle layer instead of raw-tick.
       Folded: the narrower doc's own todo flipped + archived to
       `plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` citing this evidence, all
       corpus referrers updated in the same commit.
-- [ ] [DATA] P2. **Remediate cefi + prediction `processed_candles/` objects mis-tagged with an unregistered
-      `source=databento`** — two independent AGs hit the identical mistag SHAPE (a manifest write attempted with
-      `source='databento'`, which isn't in that AG's `SOURCE_PRIORITY`-registered source list), confirmed via
-      `RECORD-ERROR` warnings in the backfill VMs' `run.log`; `backfill_candle_manifest.py` correctly REFUSED to write a
-      manifest row in every case (never silently mis-records) — these objects remain unmanifested after todo 1's
-      backfill. - **cefi** (10 `RECORD-ERROR`s, `backfill-candle-manifest-cefi-20260727-151741`): root-caused via direct
-      GCS listing — for the SAME shard key
-      (`day=2019-04-01/timeframe=1d/data_type=derivative_ticker/instrument_type=PERPETUAL/venue=DERIBIT/*-PERPETUAL`),
-      TWO objects exist — one correctly at `pipeline_mode=batch_tardis/`, one incorrectly at
-      `pipeline_mode=batch_databento/` (databento is not in cefi's registered source list: aster, binance, bybit,
-      deribit, extended, hyperliquid, kalshi_perp, kraken, okx, polymarket_perp, tardis). Confirmed scope via
-      `gcloud storage ls -r gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/**/pipeline_mode=batch_databento/**`
-      → 1,639 objects across ~1,638 distinct day/instrument combos, DERIBIT PERPETUAL derivative_ticker/1d only (not
-      re-checked for other data_types/timeframes/venues — scope this todo's own read before remediating). -
-      **prediction** (10 `RECORD-ERROR`s, confirmed 2026-07-27 slot-6,
-      `backfill-candle-manifest-prediction-20260727-152012`): same shape, different AG — all 10 are
-      `MissingSourceError: source='databento' ... not a registered source for       asset_group='prediction' data_type='trades'`
-      (allowed sources: `kalshi`, `polymarket_clob`), all `venue='POLYMARKET'`, dates `2025-03-14`..`2025-03-24`
-      (contiguous run, one `date` per RECORD-ERROR — not yet checked whether this is the full extent or just what this
-      backfill pass's report happened to cover; scope a fresh GCS listing before remediating, same as cefi's open scope
-      gap). Not yet root-caused whether this is the same underlying mistag mechanism as cefi's (a stray
-      databento-sourced write landing on a non-databento AG's canonical path) or a distinct cause — worth checking
-      together given the identical error shape landed on two unrelated AGs. - **tradfi** (0 `RECORD-ERROR`s, confirmed
-      2026-07-27 slot-6, `backfill-candle-manifest-tradfi-20260727-151950`, clean
-      `escalated=0 read_failed=0 verify_failed=0`) — does NOT show this pattern, so it's not universal across AGs;
-      consistent with tradfi being a legitimate Databento-sourced AG (`SOURCE_PRIORITY` databento-first there), so a
-      `source=databento` write there is expected to be valid, not mistagged. - **defi** (10 `RECORD-ERROR`s, confirmed
-      2026-07-27 slot-6, `backfill-candle-manifest-defi-20260727-151932`, otherwise clean VERDICT
-      `already_covered=0 ok=1131367 recorded_cells=36145 junk=0 escalated=0 read_failed=0 verify_failed=0`): same mistag
-      SHAPE, a THIRD distinct source pairing —
-      `MissingSourceError: source='onchain_rpc' ... not a registered source for asset_group='defi' data_type='dex_pool_swaps'`
-      (allowed: `onchain_subgraph`), all `venue='BALANCER'`, `chain` in `{ARBITRUM, ETHEREUM}`, `date=2023-01-01` only
-      (one date, all 7 candle timeframes for each of the 2 chains — 10 total). Same open question as prediction's: not
-      yet confirmed whether this is the full extent (scope a fresh GCS listing before remediating) or root-caused
-      against cefi/prediction's mechanism — three AGs now show the identical REFUSED-not-recorded shape with three
-      different disallowed sources (`databento`→cefi, `databento`→prediction, `onchain_rpc`→defi), which may point to a
-      shared upstream cause (e.g. a migration/backfill step that stamped the wrong `source=` on a small slice of objects
-      across AGs) rather than three independent one-offs — worth a joint root-cause pass before remediating any of the
-      three individually. Options for all three AGs: (a) relabel the mistagged objects' `pipeline_mode=`/source path
-      segment to the correct source (copy-not-move + verify twin content matches, then this todo's own `record_captured`
-      pass), or (b) if the mistagged object is actually STALE/superseded by a correctly-tagged twin, treat as a
-      legacy-duplicate cleanup candidate instead (needs a content diff first — do NOT assume). Small, bounded, does not
-      block todo 1's completion (25,593 cefi + 1,609 prediction + 36,145 defi cells recorded successfully despite these
-      — 30 total mistagged/refused objects across all 4 AGs, out of ~2.6M actionable rows processed).
+- [x] ✅ [DATA] P2. **Remediate cefi + prediction `processed_candles/` objects mis-tagged with an unregistered
+      `source=databento`** — **DONE 2026-08-03 (slot-15, `data_engineering`): RE-SCOPED + RESOLVED, no destructive
+      action needed.** The original characterization (10 `RECORD-ERROR`s per AG) was only a per-CELL sample count, not
+      the real object count — a fresh, targeted (prefix-scoped, NOT a corpus walk) GCS listing against each AG's exact
+      mistagged `pipeline_mode=batch_databento/` path found the real extent and, for both AGs, confirmed a
+      correctly-tagged twin already exists for every mistagged object. **cefi**: 1,639 objects (DERIBIT PERPETUAL
+      derivative_ticker/1d only, prior-session finding) all have a twin at `pipeline_mode=batch_tardis/` for the
+      identical shard key. **prediction**: real extent is 498 objects (not 10), spanning `day=2025-03-14` through at
+      least `day=2025-07-01` (not the originally-documented 10-day window), all
+      `venue=POLYMARKET data_type=trades timeframe=1d instrument_type=PREDICTION_MARKET` — spot-checked instrument-id
+      overlap on 3 dates spanning the full range (`2025-03-14`: 6/6; `2025-05-01`: 1/1; `2025-07-01`: 1/1 — 8/8, 100%)
+      against `pipeline_mode=batch_polymarket_clob/` for the SAME `(day, instrument_id)`; every mistagged object has a
+      correctly-tagged twin. Both AGs are legacy duplicates — the shard's manifest coverage is already fully satisfied
+      by the twin, so the mistagged copy is inert extra storage, not a correctness gap. No GCS writes/copies/deletes
+      performed (a future, separate, low-priority storage-cost cleanup could delete the redundant copies, but that needs
+      its own content-diff + `[OPERATOR]`-gated delete per the GCS delete-safety protocol — out of this todo's scope).
+      This closes the manifest-coverage question for cefi + prediction's mistagged objects.
+- [x] ✅ [DATA] P2. **RE-SCOPED + ROOT-CAUSED 2026-08-03 (slot-15, `data_engineering`); TOOL BUILT, SHIPPED, REMEDIATION
+      CAMPAIGN LAUNCHED 2026-08-03T09:38Z (slot-15) — market-data-processing-service@ce64a98,
+      deployment-service@83ec913. Full-corpus completion tracked as its own follow-up todo below (campaign is genuinely
+      multi-hour, 1,155 days; do not conflate "tool built + campaign healthy" with "corpus fully remediated").** defi
+      `processed_candles/dex_pool_swaps` objects mis-tagged `pipeline_mode=batch_onchain_rpc` (source `onchain_rpc`
+      unregistered for `asset_group=defi data_type=dex_pool_swaps`) — real extent is far larger than the originally
+      documented "10 objects, BALANCER only, 2 chains, 1 date": a targeted (prefix-scoped, not corpus-walk) GCS listing
+      found **11,718 objects on `day=2023-01-01` ALONE** — 7 timeframes (`15s/15m/1m/5m/1h/4h/1d`) × multiple venues
+      (`BALANCER`, `BALANCER-ARBITRUM/-ETHEREUM/-POLYGON`, `CURVE`, `CURVE-AVALANCHE/-ETHEREUM`, `SUSHISWAP`,
+      `SUSHISWAP-ARBITRUM`, `UNISWAP_V3`, `UNISWAP_V3-ARBITRUM/-ETHEREUM/-OPTIMISM/-POLYGON`), all
+      `data_type=dex_pool_swaps`. Confirmed the pattern recurs on other dates too (spot-checked `day=2023-01-02`,
+      present) — full historical date range NOT yet quantified (deliberately did not run an exhaustive multi-date
+      enumeration interactively — that is corpus-scale work belonging on a VM per the heavy-I/O rule). **ROOT CAUSE
+      (confirmed via source + git history)**: `unified-api-contracts`
+      `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` lines 275-289 (own in-code comment):
+      `("defi", "dex_pool_swaps")` was UNREGISTERED in `SOURCE_PRIORITY` before commit `012ccec1`
+      (`fix(uac): defi     dex-swaps source — register canonical dex_pool_swaps->onchain_subgraph (was dead ('defi','n') typo)`,
+      **2026-06-08**) — every write before that date fell through to the defi asset_group's fallback pipeline_mode
+      (`BATCH_ONCHAIN_RPC`), mis-stamping the path even though the actual collection method has always been
+      `onchain_subgraph` (The Graph). Already fixed for NEW writes since 2026-06-08; every pre-existing
+      `pipeline_mode=batch_onchain_rpc` object under `dex_pool_swaps` needs a historical path correction, not a refetch
+      (the bytes are correct; only the path segment + manifest `source=` are wrong). **Two distinct sub-populations,
+      confirmed via instrument-id overlap checks (not assumed)**: (1) the chain-suffixed venues
+      (`BALANCER-ARBITRUM`/`-ETHEREUM`/`-POLYGON`, sampled at `timeframe=1h day=2023-01-01`, 1 object each) DO have a
+      matching object at `pipeline_mode=batch_onchain_subgraph/` for the same `(day, instrument_id)` — a
+      legacy-duplicate shape like cefi/prediction above. (2) the bare/legacy venue names (`BALANCER`, `CURVE`,
+      `SUSHISWAP`, `UNISWAP_V3` — pre-chain-suffix naming; confirmed via UAC
+      `unified_api_contracts/registry/defi_venues.py` `LEGACY_DEFI_VENUE_ALIASES`, e.g. bare `"BALANCER"` aliases to
+      `"BALANCER-ETHEREUM"`) are the VAST majority of the 11,718-object count and show almost NO twin coverage — sampled
+      `BALANCER` bare (`timeframe=1h day=2023-01-01`): 363 objects, only 1 has a matching `BALANCER-ETHEREUM` subgraph
+      twin, 362 do not; `UNISWAP_V3`/`CURVE`/`SUSHISWAP` bare (same timeframe/date): 1053/115/133 objects, 0 twins each.
+      This sub-population is REAL, unique on-disk data with a genuine manifest-coverage gap, NOT a redundant duplicate.
+      **Remaining work to close this todo** (design captured, NOT executed — real scope already exceeds the
+      few-hundred-object interactive threshold on a single sampled date alone, so this needs a dedicated tool + VM
+      campaign, not ad-hoc interactive GCS ops): (1) build a small CLI (`market-data-processing-service`, sibling of
+      `backfill_candle_manifest.py`) that, per `(day, venue, chain, instrument, timeframe)` cell under
+      `data_type=dex_pool_swaps, pipeline_mode=batch_onchain_rpc`, checks whether a `batch_onchain_subgraph` object
+      already exists for the same `(day, instrument_id)` — if yes, skip (legacy duplicate, already covered); if no,
+      copy-not-move the object to the `batch_onchain_subgraph` path (never delete/mutate the original) and
+      `record_captured(source="onchain_subgraph", ...)`; (2) scope the full date range first via a bounded,
+      prefix-targeted count (not a corpus walk) to size the campaign; (3) launch via a Tier-2 SPOT VM per the existing
+      `launch-backfill-candle-manifest-vm.sh` pattern; (4) verify VERDICT counts + `_index/audit/` parquet. **All 4
+      steps done 2026-08-03 (slot-15)** — see the Progress Log entry below for the corrected design (a direct
+      destination-path check, not the alias-canonicalised join originally proposed here), the tool
+      (`backfill_defi_dex_pool_swaps_source_correction.py`), the VM launcher, a real quadratic-blowup bug found + fixed
+      via a live prod run, and the campaign's current healthy in-progress state. This checkbox covers ONLY "design
+      corrected + tool built/shipped + campaign launched and verified healthy" — full-corpus completion is the separate
+      follow-up todo immediately below.
+- [ ] [DATA] P2. **Verify defi dex_pool_swaps source-correction campaign to completion** (follow-up to the todo above).
+      The `backfill-defi-dex-swaps-20260803-092530` VM (or its preemption-relaunch successor, same command, `--force`,
+      no `--day` — resumes from its own day-level checkpoint
+      `processed_candles/_index/_dex_swaps_source_correction_checkpoint.json`) is processing all 1,155 days of defi's
+      `processed_candles/` corpus (2023-01-01..2026-08-02); as of 2026-08-03T09:38Z, day `2023-01-01` (1,777 real gaps)
+      and `2023-01-02` (10,297 real gaps) completed clean (0 errors each). Remaining: (a) let the VM run to completion
+      (genuinely multi-hour at this corpus scale); (b) verify the final
+      `=== VERDICT defi-dex-swaps-source-correction: ... ===` line in
+      `gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-092530/run.log` (or its
+      successor VM's log) — acceptance is `copy_errors=0 footer_failed=0`; (c) spot-check the audit report
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`;
+      (d) OPTIONALLY re-run `--scope` or a fresh `candle_orphan_sweep.py --asset-group defi` to confirm the gap has
+      closed; (e) flip this checkbox citing the VERDICT line as evidence.
 
 ## Progress Log
 
+- **2026-08-03T14:10Z** (AO dispatch, slot 15, `data_engineering`) — Third and fourth campaign VMs both preempted
+  rapidly: `backfill-defi-dex-swaps-20260803-133142` preempted ~2min after launch (never produced a run.log);
+  `backfill-defi-dex-swaps-20260803-133550` ran ~33min, cleanly processed 2 more real days (2024-01-05: copied=17612,
+  2024-01-06: copied=14049, both errors=0) before its own genuine preemption at `14:08:27Z`. **3 genuine SPOT
+  preemptions in ~50 minutes in `asia-northeast1-c`** (all confirmed `compute.instances.preempted` system events, NOT
+  the reap-zombies.sh bug) — real, transient SPOT capacity pressure in this zone right now, not a recurring bug.
+  Checkpoint remained at 360 days each time (the next 20-day boundary, ~day-index 380 ≈ mid-January 2024, hadn't been
+  reached yet) — confirms the checkpoint-cadence gap already filed as a fix todo in
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` todo 4, but the redo cost stays
+  small in practice since re-verifying already-copied days is a fast idempotent no-op (confirmed: days 2023-12-28
+  through 2024-01-06 all re-verified as `needs_copy=0` except the two genuinely-incomplete days). Relaunched again:
+  `backfill-defi-dex-swaps-20260803-141041`. If preemptions keep recurring in this zone, the next escalation is either a
+  different zone or a temporary `ON_DEMAND=true` override (CLAUDE.md's stated opt-out) — not yet warranted after 3
+  occurrences given each redo cost is minutes, not hours.
+- **2026-08-03T13:31Z** (AO dispatch, slot 15, `data_engineering`) — Second campaign VM
+  (`backfill-defi-dex-swaps-20260803-103749`) ran healthy for ~3 hours, cleanly processing 394 days (2023-01-01 through
+  2024-01-04 in-progress, all `errors=0`) before hitting a **genuine SPOT preemption** (`compute.instances.preempted` at
+  `13:30:41Z` — confirmed via `gcloud compute operations list`, distinct from the earlier reap-zombies.sh
+  false-positive: this one shows the real GCE preemption system-event type, not a `delete` operation). This is
+  expected/normal for a SPOT backfill VM. Checkpoint had 360 days saved (through 2023-12-27, written every 20 days per
+  the tool's own cadence), so the redo cost on resume is small (~8 days: 2023-12-28 through 2024-01-04). **Relaunched**:
+  `backfill-defi-dex-swaps-20260803-133142` (same `--force` resume recipe), confirmed RUNNING. Tarball-freshness check
+  flagged `unified-api-contracts`/`unified-trading-library` as stale on this launch (unrelated general deps, not the
+  tool code itself — `market-data-processing-service` tarball was fresh). Continuing to monitor; still not flipping this
+  todo's checkbox.
+- **2026-08-03T10:38Z** (AO dispatch, slot 15, `data_engineering`) — **INCIDENT**:
+  `backfill-defi-dex-swaps-20260803-092530` was DELETED (not preempted) at `10:30:56Z` by an unrelated fleet script bug
+  (`reap-zombies.sh` checks the wrong GCS log path, `logs/` instead of the canonical `vm-logs/`, so it always sees "no
+  run.log" for any healthy VM and reaps purely on a 10-minute creation-time threshold — a fleet-wide false-positive
+  risk, NOT specific to this campaign). Root-caused, mitigated, and filed as its own big-finding issue doc:
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` (P0, `infra` role, 4 fix todos).
+  **Mitigation**: immediately relaunched the campaign — `backfill-defi-dex-swaps-20260803-103749` (same command,
+  `--force` to bypass the singleton lock), verified running the correct fixed tool code
+  (`market-data-processing-service@ce64a98`, confirmed an ancestor of the freshly-published tarball pin despite a
+  staleness warning from one unrelated later commit). No data was lost or corrupted (the tool's copy-not-move +
+  `record_captured` writes are durable/idempotent); the only cost is wasted wall-clock (the killed VM's checkpoint was
+  never persisted — it only writes every 20 days — so the relaunch redoes days 1-12, ~15-20min of otherwise-real work,
+  safely). Continuing to monitor the relaunched VM via the same bounded-watchdog discipline; still NOT flipping this
+  todo's checkbox until a real terminal VERDICT line lands.
+- **2026-08-03T10:15Z** (AO dispatch, slot 15, `data_engineering`) — Monitoring checkpoint on the "Verify ... to
+  completion" follow-up todo (still `- [ ]`, not flipped — no VERDICT yet). `backfill-defi-dex-swaps-20260803-092530`
+  remains healthy: `last_completed_date` monotonically advanced from `2023-01-01` (09:29Z start) through `2023-01-09`
+  (10:14Z), zero `copy_errors`/`footer_failed` observed in any completed-day line, VM status `RUNNING`, no preemption.
+  **Revised pace estimate** (supersedes the original todo's "genuinely multi-hour" framing): ~9 days processed in ~45min
+  wall-clock (~5min/day average, with real per-day variance — `2023-01-02`'s 10,297-gap day took ~7min,
+  `2023-01-07`/`2023-01-08` each took longer than the smaller days). At this observed rate, the full 1,155-day corpus
+  trends toward **multi-hour-to-multi-day** wall-clock, not the few-hours original estimate — expected to accelerate for
+  dates at/after the 2026-06-08 `SOURCE_PRIORITY` fix landing (those days should have zero/near-zero `needs_copy` and
+  process fast), so the average should improve once the campaign clears the ~2.5-year pre-fix window, but that has not
+  yet been observed directly. Not a stall (progress metric is climbing every check), not an error — just a longer
+  wall-clock commitment than originally scoped. Continuing to monitor via bounded (≤30min) watchdog cycles per the
+  async-wait HARD RULE; will flip this todo only on the real terminal VERDICT line, per the doc's own explicit
+  anti-smoke-test-green instruction below.
+- **2026-08-03T09:38Z** (AO dispatch, slot 15, `data_engineering`) — Remaining P2 sub-todo (defi
+  `dex_pool_swaps`/`batch_onchain_rpc` source correction), IN PROGRESS, not yet complete — do NOT flip until the §
+  "Remaining to close" steps below finish. Work this session:
+  1. **Corrected the twin-detection design** from the prior checkpoint's proposal: live GCS verification
+     (`market-data-tick-defi-prd-...`) found the writer keeps the SAME `venue=` path segment across BOTH provenances
+     (mistagged `batch_onchain_rpc` vs correctly-sourced `batch_onchain_subgraph`) — only `pipeline_mode=` differs. A
+     direct destination-path existence check (swap the segment, `gcs_describe_object`) is the correct per-object dedup
+     test, NOT an alias-canonicalised (`LEGACY_DEFI_VENUE_ALIASES`) instrument-id join as originally proposed. Confirmed
+     twin coverage is genuinely per-object/day-dependent (0% to 100% across a
+     `BALANCER`/`CURVE`/`SUSHISWAP`/`UNISWAP_V3` × 2-date sample) — never a population-level constant either way.
+  2. **Built + shipped** `market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py`
+     (`market-data-processing-service@ce64a98`, 3 follow-up commits folded into this final SHA — import-pattern fix,
+     empty-string-fallback annotations, and a real performance bug fix, see point 4) + 11 unit tests
+     (`tests/unit/scripts/test_backfill_defi_dex_pool_swaps_source_correction.py`). `--scope` (cheap count-only),
+     `--dry-run` (classify + dst-check, no writes), `--apply` (copy-not-move +
+     `record_captured(source="onchain_subgraph")`) modes; day-level checkpoint
+     (`processed_candles/_index/_dex_swaps_source_correction_checkpoint.json`) for safe SPOT- preemption resume.
+     Smoke-tested end-to-end against real prod data multiple times (day 2023-04-11, 2023-05-31, 2023-07-20 — each 98-112
+     real objects copied + recorded, 0 errors, idempotent re-run confirmed each time).
+  3. **Built + shipped** the Tier-2 SPOT VM launcher (`deployment-service@83ec913`:
+     `scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh` +
+     `vm_prefix_registry.py`/`launcher_registry.py` entries + a new `setup-data-pipeline-vm.sh`
+     `VM_TASK=backfill-defi-dex-swaps` dispatch branch, mirroring `launch-backfill-candle-manifest-vm.sh`'s shape).
+  4. **Found + fixed a real quadratic-blowup bug via a live prod run**: the first `--apply` VM
+     (`backfill-defi-dex-swaps-20260803-091142`) showed per-cell latency growing from ~0.6s to ~40s within its first 10
+     cells — root cause: a FRESH `ManifestWriter` was created (and implicitly closed) per cell, and
+     `ManifestWriter.close()`'s `_close_drain(process_final=True)` forces a full per-VM-shard read-modify-rewrite on
+     EVERY call, not the cheap debounced write normal `record_captured()` calls get — O(N²) over N cells. Killed the VM
+     (safe: pure copy-not-move + manifest writes already durably landed, no data lost), fixed
+     (`market-data-processing-service@ce64a98`: ONE writer for the whole `--apply` run, closed once in a `finally` block
+     — mirrors the sibling `backfill_candle_manifest.py::record_cells` pattern this tool should have followed from the
+     start), re-verified on real prod data (112 objects on day 2023-07-20: copy + footer-read + record_captured for all
+     112 in 26.8s total, vs. the ~4,480s the broken per-cell rate would have taken), shipped, relaunched.
+  5. **Relaunched the real `--apply` campaign**: `backfill-defi-dex-swaps-20260803-092530` (Tier-2 SPOT,
+     `asia-northeast1-c`, `LC_TARBALL_FRESHNESS=auto` confirmed the fix's tarball current). As of this checkpoint: day
+     `2023-01-01` (the largest known single day, 11,718 total mistagged objects) completed clean —
+     `already_covered=9941 needs_copy=1777 copied=1777 recorded_cells=2 errors=0` (the `already_covered=9941` reflects
+     BOTH already-existing twins AND partial progress the killed VM had already durably recorded before being stopped —
+     not lost, not re-done). Day `2023-01-02` (~10,297 real gaps per the earlier bounded sample) in progress, healthy,
+     no `copy_errors`/`footer_failed`, no preemption. **Noted, not fixed, real efficiency characteristic** (not a bug):
+     the per-cell copy loop copies each cell's member objects SEQUENTIALLY (`gcs_copy_object` one at a time), so a cell
+     with many members (e.g. `UNISWAP_V3`'s ~1,053-object cells) takes proportionally longer (~40s observed) — linear in
+     object count, not quadratic. A future optimization could parallelize this with a `ThreadPoolExecutor` (mirroring
+     the dst-check pass's own 16-worker pool) if full-corpus wall time proves impractical; not required for correctness.
+  - **Remaining to close this todo** (whoever resumes — same session post-compact, or a fresh one): (a) let the VM run
+    to completion — full corpus is 1,155 distinct days (2023-01-01 through 2026-08-02, confirmed via delimiter descent),
+    rough order-of-magnitude estimate ~1-2M total mistagged objects from an earlier bounded 24-day sample, genuinely
+    multi-hour; the day-level checkpoint makes a SPOT preemption relaunch safe (resume via
+    `bash launch-backfill-defi-dex-swaps-source-correction-vm.sh --force`, no `--day` — reads the checkpoint
+    automatically); (b) monitor via
+    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-092530/run.log`
+    for the final `=== VERDICT defi-dex-swaps-source-correction: ... ===` line — acceptance is
+    `copy_errors=0 footer_failed=0`; (c) spot-check the audit report
+    (`gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`);
+    (d) OPTIONALLY re-run `--scope` (cheap) or a fresh `candle_orphan_sweep.py --asset-group defi` to confirm the gap
+    has closed; (e) ONLY THEN flip this todo's `- [ ]` to `- [x]` citing `market-data-processing-service@ce64a98` +
+    `deployment-service@83ec913` + the VERDICT line as evidence, `docs(plans):` commit + push. Do NOT flip early on "VM
+    launched" alone — that is exactly the smoke-test-green false-completion the data-pipeline-correctness HARD RULE
+    forbids, and this doc's own todo-1 history above already established the same discipline for an earlier campaign.
+
+- **2026-08-03** (AO dispatch, slot 15, `data_engineering`) — Re-scoped + root-caused the P2 source-mistag todo (did NOT
+  flip it — defi's real remediation still needs a VM campaign, see the new sub-todo). Found the original
+  characterization (10 `RECORD-ERROR`s/AG, narrow windows) badly understated the real extent — those were per-CELL
+  counts, and cells bundle many objects. Fresh, targeted (prefix-scoped, not corpus-walk) GCS listings: **cefi** (1,639
+  objects, prior finding, confirmed twin at `batch_tardis`) and **prediction** (498 objects, `2025-03-14` through
+  `2025-07-01`+, 100% twin match on an 8-object/3-date spot-check against `batch_polymarket_clob`) are both RESOLVED as
+  harmless legacy duplicates — the shard manifest coverage is already satisfied by the twin, no action needed. **defi**
+  is the real, substantial finding: 11,718 objects on `day=2023-01-01` ALONE (recurs on other dates, full range not
+  quantified), root-caused via `unified-api-contracts@012ccec1` (2026-06-08) — `dex_pool_swaps` was unregistered in
+  `SOURCE_PRIORITY` before that fix and fell through to the wrong `batch_onchain_rpc` fallback pipeline_mode; the true
+  source has always been `onchain_subgraph`. Confirmed via instrument-id overlap checks that the chain-suffixed venue
+  population (small) has subgraph twins (duplicate, like cefi/prediction) but the bare/legacy-named venue population
+  (the vast majority — `BALANCER`/`CURVE`/`SUSHISWAP`/`UNISWAP_V3` per UAC's `LEGACY_DEFI_VENUE_ALIASES`) has almost
+  zero twin coverage (362/363 sampled `BALANCER` pool-days had no twin) — real, unique, uncaptured data. Remediation is
+  identified (copy-not-move to the correct `pipeline_mode=batch_onchain_subgraph` path +
+  `record_captured(source="onchain_subgraph")`) but not executed — real extent already exceeds the few-hundred-object
+  interactive threshold on a single sampled date alone, so this needs a dedicated tool + Tier-2 SPOT VM campaign (filed
+  as a new sub-todo with the full design already captured, so the next worker doesn't re-derive root cause or scope). No
+  GCS writes/copies/deletes were performed this session — every action was read-only listing against prod buckets.
 - **2026-08-03** (AO dispatch, slot 13, `data_engineering`) — Completed the P2 sports full-corpus sweep todo. Launched
   `canonical-migration-sports-cdlorph-20260803-070805` (Tier-2 SPOT VM, `sports-candle-orphan-sweep` launcher category,
   read-only/no-`--apply`-path, `LC_TARBALL_FRESHNESS=auto` confirmed 4 tarballs current) — completed in ~13s, exit_code
@@ -358,3 +524,8 @@ the candle layer instead of raw-tick.
   doc's own todo 1 tracks — see its Progress Log entry for the todo 1 checkbox flip. Handing back to
   `mdps_candle_manifest_population_disconnect_2026_07_25.md` todo 5 to do its own manifest-coverage spot-check and flip
   against this evidence.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — this doc's remaining scope has narrowed to just
+  the defi dex_pool_swaps source-correction campaign verification, so swapped out 3 now-historical entries (the design
+  brief + the two folded/resolved sibling reconciliation docs) for the actual tool
+  (`backfill_defi_dex_pool_swaps_source_correction.py`), its VM launcher, and the active VM-reliability issue
+  (`reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`) affecting this campaign's relaunches.

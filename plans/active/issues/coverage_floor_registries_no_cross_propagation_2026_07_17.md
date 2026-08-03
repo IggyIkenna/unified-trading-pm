@@ -276,3 +276,4 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).

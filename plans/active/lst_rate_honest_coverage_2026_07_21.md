@@ -47,6 +47,14 @@ depends_on: []
 source: ["operator dispatch 2026-07-21: build honest LST-rate coverage then wire interest PnL"]
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/lst-exchange-rate-surfaces.md,
+    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/,
+    instruments-service/instruments_service/reference_data/adapters/defi/,
+    features-service/features_service/onchain/engine/lst_features.py,
+  ]
 supersedes:
 superseded_by:
 ---
@@ -694,6 +702,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   repos (do not trust a stale background run), fix anything red, then `quickmerge --agent --files` each repo's changed
   files, then flip the Sanctum-reconciliation todo above with the shipped shas. Do not re-do the on-chain verification —
   it's captured here with full evidence.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).
 
 ## RESUME POINT (pre-compact 2026-07-23) — a fresh session starts HERE
 

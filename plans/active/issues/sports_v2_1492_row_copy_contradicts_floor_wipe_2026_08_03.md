@@ -17,7 +17,7 @@ summary: >-
   into the pre-floor-wipe scope — i.e. DELETE — not preserve them). Executing the copy task as literally worded would
   write 1,492 rows of fabrication-by-construction data into live canonical storage, reversing the intent of an
   already-executed operator-authorised wipe campaign. NOT executed pending operator reconfirmation.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,7 +27,7 @@ tags: [sports, data-floor, delete-safety, ssot-contradiction, canonical-copy, bi
 related:
   [
     /codex/02-data/sports-2020-06-data-floor.md,
-    /plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
+    /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
@@ -47,7 +47,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: "Operator ruling 2026-08-03: 'agreed' (with option (a), the recommended disposition — wipe, not copy)."
 locked_by:
 locked_since:
 supersedes:
@@ -55,6 +55,13 @@ superseded_by:
 source:
   "Worker slot 15, task sports_reference_v2_1492_row_canonical_copy-002 (backend/data_engineering), 2026-08-03 —
   surfaced before executing the copy."
+context_scope:
+  [
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
+    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py,
+  ]
 ---
 
 # sports_reference_v2 1,492-row copy contradicts the ratified pre-floor wipe policy
@@ -62,8 +69,8 @@ source:
 ## What I found
 
 Task `sports_reference_v2_1492_row_canonical_copy-002` (todo 2 of
-`/plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`) instructs: "Copy the confirmed rows to
-canonical storage (the same target path/schema the rest of the sports corpus already uses)." That doc's own `source:`
+`/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`) instructs: "Copy the confirmed rows
+to canonical storage (the same target path/schema the rest of the sports corpus already uses)." That doc's own `source:`
 field traces it to `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 1b, option B — **operator- confirmed
 2026-08-03** ("resolve the 1,492 rows (copy to canonical) first, then the two todos revert to self-justified").
 
@@ -135,19 +142,29 @@ rather than executing the copy.
 
 ## Todos
 
-- [ ] [REVIEW] P0. Operator/main: reconcile the 2026-07-21 floor ruling against the 2026-08-03 § 1b option-B
-      confirmation for these 1,492 rows — confirm whether the correct disposition is (a) extend the pre-floor wipe to
-      `sports_reference_v2/by_date/` and delete them (recommended, matches the floor SSOT + the original 2026-07-22
-      triage), or (b) explicitly carve out a floor exception for this population and reconcile it against the already
-      -executed `sports_reference/fixtures` wipe of the same-shaped data.
-- [ ] [DATA] P1. Once ruled: either (a) extend `deployment-service`'s `wipe_pre_floor_sports_2026_07_21.py`-style tool
-      to cover `sports_reference_v2/by_date/` and execute the delete (human-only per delete-safety protocol unless
-      reversibility-qualified), retiring `sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`'s copy todos as
-      superseded; or (b) proceed with the original copy-to-canonical task, now with an explicit, documented floor
-      exception cited inline so future readers don't re-discover this same contradiction. (repo:
-      `market-tick-data-service`, `instruments-service`, `deployment-service`)
+- [x] ✅ [REVIEW] P0. **RULED 2026-08-03: operator "agreed"** — option (a), extend the pre-floor wipe rather than carve
+      out a floor exception. Matches the floor SSOT + the original 2026-07-22 triage recommendation.
+- [x] ✅ [DATA] P1. **Executed (a)**: ran
+      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --bucket     instruments-store-sports-prd-central-element-323112 --root-prefix sports_reference_v2/by_date --apply`
+      — no code change needed, the tool was already fully generic (day-prefix-based, works on any sports GCS subtree
+      as-is, no extension required despite the original recommendation assuming one would be). Census-first (mandatory,
+      soft-delete=0 on this bucket): 1,528 pre-floor objects (764 cells × 2 physical copies) matched the corrected
+      764-row census exactly. Applied: `{'DELETED': 1528, 'ERROR': 0}`. Post-delete verification: 0 pre-floor day dirs
+      remain. `sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`'s copy todos retired as superseded (see that
+      doc). **Not verified**: whether these 1,528 objects had corresponding `capture_status` manifest rows requiring a
+      separate prune pass (the floor doc's own wipe explicitly separated "delete GCS objects" from "manifest prune,
+      separate rebuild pass") — filed as todo 3 below rather than assumed either way.
+- [ ] [DATA] P2. Check whether the 1,528 deleted `sports_reference_v2/by_date/` objects had corresponding
+      `capture_status` manifest rows; if so, prune them (same pattern as the original 2020-06-06 floor wipe's separate
+      manifest-rebuild pass). If the v2-staging tree was never manifest-tracked, confirm that and close as N/A.
 
 ## Progress Log
 
 - **2026-08-03** (slot 15, backend/data_engineering, task `sports_reference_v2_1492_row_canonical_copy-002`) — Filed
   before executing the copy. Did not implement any code change; no GCS object read or written for this task.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03**: KEEP-NA, valid (sports tranche) — first verdict on this doc (created today, never
+  audited). Genuine SSOT-level conflict between two of the operator's own rulings (2026-07-21 pre-floor-wipe policy vs.
+  the 2026-08-03 confirmed § 1b option B) — todo 1 is an explicit `[REVIEW] P0` operator/main reconciliation ask and
+  todo 2 is gated on its outcome; neither is worker-determinable. Already correctly filed as a big finding (SSOT
+  contradiction, `tags: big-finding`) by its author; no further escalation needed from this pass.

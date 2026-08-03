@@ -57,7 +57,8 @@ resolved_by:
 context_scope:
   [
     /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
@@ -143,12 +144,14 @@ watchdog. The real fix here is either (a) migrating these 8 launchers off `lc_lo
       byte-growth watchdog). Done when: a deliberately-wedged workload under one of the 8 launchers is killed within a
       configured timeout instead of running indefinitely.
 - [ ] [HUMAN] P2. **Extend the naming heuristic (or add an explicit allowlist) so the 6 doubly-unprotected launcher
-      VM_NAMEs** (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `gcs-migration-bundle-*`,
-      `prediction-features-*`, `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) **route through
-      `heartbeat_stall_watcher.py`'s run-log-freshness liveness path**, once the whole-fleet naming-collision review the
-      parent issue doc's blast-radius rule requires has been done (this doc intentionally does NOT ship that change — it
-      was out of scope for the narrowly-verified Gap-3 fix). Done when: `_is_backfill_vm()` returns `True` for all 6
-      without any newly-introduced false positive against a legitimately-continuous live/paper VM name.
+      VM_NAMEs** (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `prediction-features-*`,
+      `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) **route through `heartbeat_stall_watcher.py`'s
+      run-log-freshness liveness path**, once the whole-fleet naming-collision review the parent issue doc's
+      blast-radius rule requires has been done (this doc intentionally does NOT ship that change — it was out of scope
+      for the narrowly-verified Gap-3 fix). Done when: `_is_backfill_vm()` returns `True` for all 6 without any
+      newly-introduced false positive against a legitimately-continuous live/paper VM name. **NOTE 2026-08-03 (slot-7,
+      `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i)**: `gcs-migration-bundle-*` removed from this list —
+      `launch-gcs-migration-bundle-vm.sh` was confirmed-dead code and deleted, so it no longer needs a stall-kill fix.
 - [ ] [HUMAN] P3. **Re-prioritize `cefi-fwd-daily-cron-*` / `tradfi-fwd-daily-cron-*`** — lower priority than the other
       4 since they're short daily cron polls with a much smaller wedge-exposure window, but still genuinely unprotected.
 
@@ -195,3 +198,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
   a false positive against a legitimately-continuous live/paper VM name. Independently corroborated:
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own non-batchable table classifies this doc
   **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

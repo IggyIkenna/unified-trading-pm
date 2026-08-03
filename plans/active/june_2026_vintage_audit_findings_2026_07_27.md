@@ -101,17 +101,26 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       agent this wave). Now at `plans/archive/issues/`. Also annotated
       `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own pending archive-todo for this doc so it isn't
       redone.
-- [ ] [PLAN] P2. `plans/archive/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED — citation partially WRONG,
-      corrected in place, unified-trading-pm@(this commit).** The "apply reconciliation" todo IS genuinely done
-      (verified real: `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` APPLY COMPLETE, corroborated
-      by `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and was flipped citing that evidence. **But** the doc's
-      OTHER todo (root-cause diagnosis, already `[x]` before this pass) was **falsely checked** — its own "already
-      covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`" claim contradicts that doc's own Progress Log
-      ("Todos 1+2 above... remain open") and `batch1`'s (status: active) identical todo is still genuinely unchecked
-      with zero completion evidence. Reverted that checkbox to `[ ]`, added a Progress Log correction. Doc stays open in
-      `plans/active/issues/` — 1 genuine open item remains, already homed at `batch1`'s own todo. **Flagging per
-      findings-triage HARD RULE**: this is exactly the "checked-done-but-actually-not" trap, the inverse of the one this
-      §2 item's own dispatch text described.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/phantom_captures_defi_2026_06_28.md` — **NOT ARCHIVED (at time of writing) —
+      citation partially WRONG, corrected in place, unified-trading-pm@(this commit).** The "apply reconciliation" todo
+      IS genuinely done (verified real: `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` APPLY
+      COMPLETE, corroborated by `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and was flipped citing that
+      evidence. **But** the doc's OTHER todo (root-cause diagnosis, already `[x]` before this pass) was **falsely
+      checked** — its own "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`" claim contradicts that
+      doc's own Progress Log ("Todos 1+2 above... remain open") and `batch1`'s (status: active) identical todo is still
+      genuinely unchecked with zero completion evidence. Reverted that checkbox to `[ ]`, added a Progress Log
+      correction. Doc stays open in `plans/active/issues/` — 1 genuine open item remains, already homed at `batch1`'s
+      own todo. **Flagging per findings-triage HARD RULE**: this is exactly the "checked-done-but-actually-not" trap,
+      the inverse of the one this §2 item's own dispatch text described.
+
+      **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
+                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
       `gcs_paths.py`) + the archived `sports_p1_golden_window_mtds_odds_2026_06_27.md` Todo 1+2 (whose own evidence

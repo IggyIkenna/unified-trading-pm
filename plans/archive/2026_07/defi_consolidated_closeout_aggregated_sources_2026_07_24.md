@@ -565,7 +565,7 @@ picture.
     - +6 more (P2: VERIFY morpho.py's current code against finding 6, ship each retrofit batch via quickmerge, resolve
       the FI_-vs-FF_ Kraken-Futures collision; P3: cross-reference the TradFi combo-leg fix, refactor `ccxt_adapter.py`,
       upgrade MTDS's already-correct callers) — see file for the rest.
-  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     (2 open)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols) — code is already correct, only the
       catalog rows predate it; re-run instrument discovery and rewrite in place.

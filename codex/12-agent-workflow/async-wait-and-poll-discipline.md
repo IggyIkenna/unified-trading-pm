@@ -510,3 +510,36 @@ a tool call, a wait, a dispatch — even if that gap is only seconds.
 This is the same class of bug as trusting a cached "task done" status instead of re-verifying at the moment you rely on
 it (see the resumed-sub-agent section above) — the fix is identical: re-verify at the point of action, not at the point
 of the earlier observation.
+
+## A local script's log timestamp is LOCAL TIME, not UTC — compare cloud-resource elapsed time in UTC, never against a `%(asctime)s` line (codified 2026-08-03)
+
+Hit while diagnosing a manifest-consolidator lock during
+`mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`'s apply chain: a lock blob showed "fresh lock present"
+across 12+ consecutive polls spanning what LOOKED like 8+ minutes of local script log timestamps (`2026-08-03 15:13:...`
+through `15:21:...`) — well past the consolidator's 300s default staleness TTL, reading as a genuine stall. The initial
+(wrong) diagnosis was "the local machine's clock is drifting ~37-40 minutes ahead of UTC." The actual, verified cause
+was much simpler and had nothing to do with clock drift: the machine's system clock was completely accurate (`date -u`
+matched Google's own HTTP `Date:` response header exactly) — the local **timezone is BST (UTC+1)**, and Python's
+`logging.basicConfig(format="%(asctime)s ...")` defaults to `time.localtime()`, so every script log line was silently 1
+hour ahead of the true UTC timestamp the lock blob itself carried (`{"started_at": "...+00:00"}`, GCS `updated` field,
+etc.). Comparing a local-time log line against a UTC-stamped cloud object's age is comparing two different clocks
+without knowing it — the discrepancy scales with whatever the local TZ offset happens to be (1 hour here; it will differ
+across machines/sessions and is NOT always a round number for every zone).
+
+**The rule**: when judging whether a lock/heartbeat/cloud-timestamped resource is stale, fresh, or stalled, never
+eyeball a script's own printed `%(asctime)s`-style log timestamp against your sense of elapsed time. Instead:
+
+1. Read the resource's OWN timestamp directly (the GCS object's `updated`/`timeCreated` field, a lock blob's embedded
+   `started_at`, a Cloud Scheduler/Run API response) — these are authoritative UTC.
+2. Compute elapsed time against a real current-UTC reference (`datetime.now(timezone.utc)` in Python, or `date -u` / an
+   HTTP response `Date:` header from any cloud endpoint as an independent cross-check) — never against a local process's
+   own local-time log output.
+3. If a script's logs must be read for elapsed-time reasoning, first check whether its logger is UTC-configured
+   (`logging.Formatter.converter = time.gmtime`) or left at the local-time default — most ad-hoc scripts in this
+   workspace use the unconfigured default, which is local time.
+
+A relative interval measured entirely within the SAME script run (e.g. `sleep 30` between polls, or two `time.time()`
+calls) is unaffected by this — TZ offset only corrupts ABSOLUTE timestamp comparisons across a local-vs-UTC boundary,
+never relative durations measured by the same clock. The failure mode this prevents is treating a perfectly healthy,
+recently-acquired lock as a stalled one purely from a timezone-display artifact — and either escalating a non-incident
+or (worse) forcibly reclaiming a lock a live process still legitimately holds.

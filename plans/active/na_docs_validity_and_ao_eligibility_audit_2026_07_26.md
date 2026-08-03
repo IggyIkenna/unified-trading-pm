@@ -173,10 +173,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `_finalize` pair — canonical `task_template.md` AO frontmatter (`assigned_vm: planning`,
       `execution_scope: orchestrator-agent`, `parent_epic`, `assigned_role`, 10-100 todos, `[TAG] P#.` format),
       `status: draft` until explicitly flipped (same ask-before-creating discipline as tonight).
-- [ ] [REVIEW] P2. **Fold in the standing debt from tonight's own work**: the 30 docs
+- [x] [REVIEW] P2. ✅ **Fold in the standing debt from tonight's own work**: the 30 docs
       `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` flipped to `assigned_vm: planning` still need this
       same conflict-check before their content is trusted for dispatch — do not re-audit them from scratch, just run the
-      conflict-check step against them here.
+      conflict-check step against them here. **DONE (na-eligibility-audit 2026-08-03)** — the cited doc's own 4th todo
+      did exactly this before it archived: population re-derived live (30→13 docs/46 open todos after 4 days of
+      independent drain), conflict-check run on all 13 (5 parallel investigation sub-agents), verdict tally 32 CLEAR /
+      11 CONFLICT / 2 STALE-DONE / 1 CLEAR-with-flag, all 14 non-CLEAR todos annotated in place across their 6 source
+      docs — see `plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`'s Progress Log
+      "slot-15 2026-07-30" entry for the full per-doc breakdown.
 
 ## Phase 3 — Re-run the orphan-detector to verify total coverage
 
@@ -236,15 +241,24 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       pre-filter itself over-includes for this one tranche pairing). Fix: for `cross-cutting`, additionally require the
       doc is NOT already cited in `ci`/`infra`/`ao`'s own covering docs before counting it as a cross-cutting candidate
       (mirrors the `peer_cited` exclusion already correct in `generate_na_doc_tranche_inventory.py`).
-- [ ] [REVIEW] P2. **Convert 43 confirmed prose-trap docs to real checkboxes, then re-judge AO-eligibility per item** —
-      the zero-open-todo classification pass (99 docs, 7 agents) found 8 genuine `PERMANENT_REFERENCE` docs (correct
-      as-is, no action) and 16 genuine `KEEP_NA_VALID` (correct as-is), but also 24 `RECLASSIFY_CANDIDATE` (real,
-      bounded, worker-determinable remaining work stated only as numbered prose, never given a checkbox — a stronger
-      signal than plain conversion) and 19 `NEEDS_CHECKBOX_CONVERSION` (real remaining work in prose, AO-eligibility not
-      yet assessed). Neither bucket was executed this pass — converting prose to checkboxes is real editorial judgment
-      per doc (exact wording, `[TAG] P#.`, done-when clause), the same care applied to the 6 orphan candidates above,
-      not a mechanical batch op. RECLASSIFY_CANDIDATE (24):
-      `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26`,
+- [ ] [SCRIPT] P2. **Wire `scripts/plan-hygiene/check_na_duplicate_staleness.py` (new, 2026-08-03) into this skill's own
+      scheduled cadence** — it currently exists only as a standalone script, invoked by hand. It mechanically flags
+      `assigned_vm: NA` docs whose open checkbox is duplicate-tracked by an active `planning` doc (via `Source:`
+      citations) where the AO-side copy already shipped `[x]` but the NA-side original was never reconciled — exactly
+      the "KEEP-NA-STALE (already-duplicated)" verdict class this skill's own rubric already names, just without a
+      mechanical pre-filter. First run found 65 such candidates + 56 more via a looser any-doc-reference check; a
+      129-candidate hand-verification pass the same session found roughly a third were genuine closes, the rest false
+      positives (citation existed but didn't cover the specific blocked checkbox) — confirming the tool is a candidate
+      filter for Phase 1, not an auto-closer. **Done when**: this script's candidate list is read as part of Phase 0 (or
+      a new Phase 0.5) on the `na-eligibility-auditor.timer` cadence, so this class of staleness gets caught by the
+      existing 2-hourly cron instead of requiring another one-off manual session. the zero-open-todo classification pass
+      (99 docs, 7 agents) found 8 genuine `PERMANENT_REFERENCE` docs (correct as-is, no action) and 16 genuine
+      `KEEP_NA_VALID` (correct as-is), but also 24 `RECLASSIFY_CANDIDATE` (real, bounded, worker-determinable remaining
+      work stated only as numbered prose, never given a checkbox — a stronger signal than plain conversion) and 19
+      `NEEDS_CHECKBOX_CONVERSION` (real remaining work in prose, AO-eligibility not yet assessed). Neither bucket was
+      executed this pass — converting prose to checkboxes is real editorial judgment per doc (exact wording,
+      `[TAG] P#.`, done-when clause), the same care applied to the 6 orphan candidates above, not a mechanical batch op.
+      RECLASSIFY_CANDIDATE (24): `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26`,
       `ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26`,
       `blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18`,
       `cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24`,
@@ -281,6 +295,30 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (all `plans/active/issues/` unless
       noted). Full per-doc reasoning in the workflow journal (`wf_f263f118-37a`, `whqfflv82.output`) — do not re-derive
       verdicts, re-read each doc against its own cited evidence before converting.
+- [x] [SCRIPT] P2. **DONE (2026-08-03) — re-ran `check_na_duplicate_staleness.py`'s candidate list (65 dup-stale + 57
+      plain-stale = 122 unique docs) and hand-verified every item with 10 parallel agents (one crashed mid-run on a
+      transient API error, retried clean).** Result: 8 checkboxes closed across 6 docs
+      (`sports_odds_feature_naming_canonicalization_2026_07_21` ×3, `lst_rate_honest_coverage_2026_07_21` [see the
+      line-cap blocker below — closed in-session but reverted before commit],
+      `ao_orphan_audit_followup_triage_2026_07_30`, `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30`,
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24`, `reference_path_convention_2026_07_23`), the rest (114
+      of 122) confirmed false positives on full-context reading — reaffirms the prior finding that citation-presence
+      alone is a weak signal; every close required reading both the flagged checkbox's own surrounding text AND the
+      citing task's actual scope, not just checking a `Source:` line exists. Several docs already carried same-dated
+      `na-eligibility-audit 2026-08-03` verdict markers from a concurrent process when opened — confirms this class of
+      audit is now also running on another schedule/slot in parallel; no conflicting edits resulted since agents
+      verified content directly rather than trusting pre-existing markers.
+- [ ] [DOC] P2. **`lst_rate_honest_coverage_2026_07_21.md` line 381 (A2 staking leg, `[STRATEGY] P2`) verified DONE**
+      (`strategy-service@e93902d8`, cited at `defi_satellite_ao_dispatch_batch3_2026_07_26.md:191`) but the checkbox
+      flip could not be committed: the doc is 1017L, over the 1000L hard cap, and the SCOPED-mode small-marker-append
+      exception (operator ruling 2026-08-02) requires zero deletions in the staged diff — a same-line `[ ]`→`[x]`
+      replace is 1 insertion + 1 deletion, so it does not qualify even though total line count doesn't change. This is
+      one of the 4 docs the exception's own docstring already names as chronically stuck
+      (`lst_rate_honest_coverage_2026_07_21.md`, `data_completion_to_100_all_ag_2026_06_21.md`,
+      `instruments_completion_tracker_2026_07_06.md`, `master_data_canonicalisation_migration_catalogue_2026_06_07.md`)
+      — a checkbox flip on any of them hits the same wall. **Done when**: the doc is split/condensed under 1000L (or a
+      future operator ruling extends the append-only exception to cover a single same-line checkbox flip specifically),
+      then this A2 staking-leg checkbox gets flipped with the evidence above.
 
 ## Phase 4 — Final QA on everything this plan touched
 
@@ -354,8 +392,9 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
      `instruments_tradfi_g1_g5_gate_execution_2026_07_24` (partial) /
      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08` / `tradfi_phase_d_terminal_gate_2026_07_24`
      (partial) / `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24` (partial) /
-     `tradfi_multisource_backfill_2026_06_22` / `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` /
-     `tradfi_backfill_throughput_followups_2026_07_24` / `data_completion_tradfi_2026_07_15` → tradfi batch1/2/4;
+     `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md` (archived 2026-08-03) /
+     `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` / `tradfi_backfill_throughput_followups_2026_07_24` /
+     `data_completion_tradfi_2026_07_15` → tradfi batch1/2/4;
      `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24` /
      `data_completion_defi_2026_07_15` (partial) / `defi_migration_audit_log_2026_07_24` (partial) /
      `defi_track01_per_instrument_and_canon_id_2026_07_24` (partial) /
@@ -632,3 +671,48 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   done-when is "every `assigned_vm: NA` doc in that tranche", and the inventory this run consumed enumerates only docs
   with >=1 open todo, so a flip would overclaim against zero-open-todo members — exactly the overclaim this doc's own
   honest "would overclaim" note warns about. That note is a standing self-ruling and is not re-litigated here.
+- **na-eligibility-audit 2026-08-03 (RECLASSIFY + blocker-currency pass, 10 parallel agents over the 122-doc set from
+  this same date's staleness-audit rerun)**: full doc-level re-read (not line-level) of every doc, applying the
+  RECLASSIFY rubric + the shared conflict-check protocol before any flip. **4 docs RECLASSIFIED `NA` → `planning`** (all
+  `plans/active/issues/*.md`, so no `_finalize` companion owed):
+  `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` (gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md`
+  cleared 2026-08-03 — archived, 0 real objects needed migrating; also backfilled a missing
+  `assigned_role: data_engineering` and cleared the now-stale `depends_on`/ `gate_on_depends`),
+  `defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`,
+  `fixtures_manifest_legacy_backfill_2026_07_24.md` (delete-vs-leave decision already settled+archived; remaining work
+  is a bounded census re-run), `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`. **11 docs
+  got a blocker-currency note** (stale blocker cleared, item itself still open, `assigned_vm` unchanged) —
+  `bucket_fold_features_2026_07_17.md`, `candle_feature_canonical_path_divergence_2026_07_20.md`,
+  `github_actions_operator_gated_followups_2026_07_17.md`, `data_pipeline_reconciliation_skill_2026_07_20.md`,
+  `infra_ops_residual_migration_verification_2026_07_24.md`, `ao_orphan_audit_followup_triage_2026_07_30.md`,
+  `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`,
+  `prediction_phase_ab_residuals_2026_07_24.md`, `data_completion_sports_2026_07_24.md`,
+  `backlog_regen_reverted_p1_2_park_2026_08_01.md` (corrected a stale conflict citation, not a blocker per se). One
+  bonus stale-checkbox close found in passing: `defi_strategy_pnl_axis_index_2026_07_24.md` (already shipped via
+  `strategy-service@a90e85eb`, checkbox just never flipped). Every other doc in the 122-set stayed `KEEP-NA-VALID`,
+  `MIXED` (genuine judgment items mixed with bounded ones — never whole-doc-flipped, per this doc's own rubric), a
+  `CONFLICT` (work already claimed verbatim by an active `planning` doc — 4 caught, correctly not flipped), or
+  `LOCKED-skipped` (`locked_by` set — frontmatter untouched). **Confirmed same-day evidence of a CONCURRENT
+  `na-eligibility-audit` process independently working this exact population** (several docs already carried same-dated
+  2026-08-03 verdict markers when read) — no conflicting edits resulted since every agent re-verified content directly
+  rather than trusting a pre-existing marker, but it means this manual pass and the standing
+  `na-eligibility-auditor.timer` cron overlapped in real time tonight.
+- **Archived (dedicated follow-up pass, 2026-08-03)**:
+  `batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md` — the 6-step ritual run in full: no deferred
+  items to migrate (fix work already tracked in `recon_bucket_missing_nightly_recon_failing_2026_07_13.md`); archived
+  banner + `resolved_by` added; the one durable fact (Cloud Run Job is the real live path, not the VM launcher) migrated
+  to `/codex/04-architecture/runtime-deployment-topology.md` § 18; 4 corpus referrers fixed (1 prose citation annotated
+  archived, 3 path references repointed to `plans/archive/issues/`); moved to `plans/archive/issues/`.
+- **na-eligibility-audit 2026-08-03 (reconcile-65 pass — null result)**: measured 65 NA docs with >=1 open checkbox
+  cited by an ALREADY-DONE `assigned_vm: planning` todo — the "should just need reconciliation" bucket. 7 already
+  carried a disclaimer from the earlier same-day pass and were skipped; the remaining 58 (240 open lines) got a full
+  fresh line-by-line hand-verification via 6 parallel agents. **Result: 0 checkboxes closed.** Every single citation was
+  confirmed to reference a DIFFERENT, already-closed item in the same target doc, or an explicitly-excluded/
+  time-gated/redirect-banner item — not the specific flagged checkbox. One real, mechanically-blocked exception found:
+  `lst_rate_honest_coverage_2026_07_21.md` has 3 genuinely-done items (verified independently against
+  `strategy-service@e93902d8`/`@23bd8b76`) that cannot be flipped because the doc is still over its 1000L hard cap (same
+  known blocker already tracked above). This confirms the "cited by done AO work" signal, even restricted to its
+  strongest sub-case, is currently fully saturated by the earlier 122-candidate pass — no further exploitable matches
+  remain in this specific population at this corpus snapshot. Also flagged (not fixed):
+  `cefi_consolidated_native_ao_extract_2026_07_25.md` has `status: active` in frontmatter but its own body text says
+  "Status: draft... never auto-shipped to active" — a self-contradiction worth a maintainer's look.

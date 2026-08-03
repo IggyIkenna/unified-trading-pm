@@ -40,10 +40,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
+    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/worktree_clean_check/_branch_state.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
   ]
 depends_on: []
 ---
@@ -191,3 +192,18 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   same single open `[INFRA] P2` reclaim-and-push item, still a genuine architectural fork (no new evidence favoring
   either design). The only file change since the 2026-08-01 verdict was an unrelated corpus-wide reference-path fix
   (`unified-trading-pm@17b53df1e`) — no content drift.
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — but the doc's own framing is now stale/narrower,
+  worth a rewrite by whoever next touches it. Verified directly against the agent-orchestrator codebase (not just this
+  doc's text): the "two unbuilt competing designs" framing is inaccurate —
+  `WorkerLivenessWatchdog._sweep_unpushed_ slots` (`8aaf928`/`06c5f8e`, 2026-07-24) now calls
+  `push_or_preserve_ahead_commits` unconditionally on every tick for every dead-session slot, fully closing the gap for
+  the non-diverged sub-case. Only the DIVERGED sub-case (the original incident's actual scenario) remains genuinely
+  open: a preserve+realign mechanism exists (`_branch_state.py::heal_dead_slot_branch_quarantine`) but its only call
+  site is `autospawn.py::_do_spawn`, which requires a dispatchable task — so during a gate-dominated, zero-dispatchable
+  backlog (exactly this doc's own incident shape) it never fires. Whether/how to extend the diverged-heal path into the
+  same unconditional sweep is a real design/safety call given that code's own incident history (2 cited prior data-loss
+  near-misses in its own comments) — genuinely narrower in scope than before, but still judgment-gated, not mechanical.
+  Stays NA.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — narrowed from the 2 now-archived/superseded plan
+  refs to the concrete source files the 2026-08-03 marker points at (`autospawn.py`, `_branch_state.py`,
+  `worker_liveness_watchdog.py`), matching the doc's narrowed remaining scope (the diverged sub-case only).

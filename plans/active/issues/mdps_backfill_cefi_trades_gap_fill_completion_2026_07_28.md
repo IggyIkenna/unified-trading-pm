@@ -126,3 +126,5 @@ safe; only the manifest's registration of it is what the reconciliation todo abo
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a full-corpus GCS
   walk requiring a VM launch, with no `[OPERATOR]` tag and no stated safe-idempotent justification; near-miss for
   reclassification, needs the gating line added first.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

@@ -126,3 +126,4 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole todo is 'author a dedicated implementation plan when this
   becomes a priority' — plan-authoring + prioritisation, both operator calls
+- **context-scout 2026-08-03**: reviewed context_scope (4 entries), no change needed — still accurate.

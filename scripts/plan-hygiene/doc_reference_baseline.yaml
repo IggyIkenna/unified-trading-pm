@@ -19,4 +19,3 @@
 # PRE-EXISTING debt found at seed time, not a way to launder new breakage.
 note: Seeded 2026-07-22 (ldr-docs-gate referenced-doc-path existence check, operator-suggested 2026-07-22).
 known_broken:
-  - "plans/epics/agent_operating_framework_master.md::related::../active/orchestrator_v07_multi_vm_topology_2026_05_21.md"

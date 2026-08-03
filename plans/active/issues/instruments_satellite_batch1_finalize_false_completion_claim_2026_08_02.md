@@ -30,9 +30,9 @@ related:
   ]
 created: "2026-08-02"
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -147,13 +147,15 @@ No design call needed — every piece here is independently checkable, not a jud
 > them — plan_reconciler's own daily corpus read (STEP 3 mechanical-adjudicator / missed-flip hunters) picks these up
 > directly from this doc's text, not via backlog dispatch.
 
-- [ ] [DATA] P1. **Reconcile the source doc's todo-4 item for real** — in
-      `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (currently line 464's
-      "NOT closed here — genuinely contested" item), replace the contested-and-stale framing with the actual verdict now
-      on record (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md`'s flipped todo 4, 2026-08-02) and flip its
-      checkbox. Repo: unified-trading-pm. Done when: the item reads `- [x]` citing the real evidence, and the doc's
-      total open-item count is re-verified (it may now be archival-eligible itself if this was its last genuinely-open
-      item — check, don't assume).
+- [x] ✅ [DATA] P1. **DONE 2026-08-03 — unified-trading-pm@65f653fd9.** **Reconcile the source doc's todo-4 item for
+      real** — in `plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (line 472,
+      formerly the "NOT closed here — genuinely contested" item), the checkbox is now `- [x]` with a "DONE
+      (na-eligibility-audit 2026-08-03)" note citing the real verdict on record
+      (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md`'s flipped todo 4, 2026-08-02): (1)
+      `market_data_categories.py`'s `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fixed (`unified-api-contracts@e34afc1d`,
+      removed as stale dead code); (2) `FRED` confirmed correctly placed, not a conflation instance. Re-verified the
+      doc's total open-item count post-flip: **8** remaining `- [ ]` items (not its last genuinely-open item), so it is
+      NOT archival-eligible from this flip alone.
 - **[PLAN_RECONCILER] P2.** ROUTED, not general-backlog-dispatchable. **Append a correction note to the archived
   finalize doc** — `plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`'s todo text
   currently states 3 false/premature claims (see "What I found" above). Add a dated `**CORRECTION 2026-08-02:**` block
@@ -169,16 +171,53 @@ No design call needed — every piece here is independently checkable, not a jud
   target path updated once the source doc's own status is re-checked). Repo: unified-trading-pm. Done when: the plan is
   at its archive path with a correct banner and zero broken referrers. Requires plan_reconciler's designated archival
   authority — do not dispatch to a general worker.
-- [ ] [DATA] P2. **Bounded sweep for the same false-claim pattern in other archived finalize twins** — grep
-      `plans/archive/**/*_finalize_*.md` for a "DONE" claim citing a specific parent-todo verdict, then spot-check (5-10
-      docs, not exhaustive) whether the parent plan's real checkbox / the source doc's real checkbox actually matches
-      the claim. Repo: unified-trading-pm. Done when: a pass/fail count is recorded for the sampled set; if any other
-      false claim is found, file it the same way this doc was filed (don't fix inline).
+- [x] ✅ [DATA] P2. **DONE 2026-08-03 (slot-16) — 8/8 PASS, no other false claim found.** Inventoried all 40
+      `plans/archive/**/*_finalize_*.md` docs (this doc's own known-false one excluded), then spot-checked the 8 most
+      structurally similar to the confirmed incident — the `*_satellite_ao_dispatch_batch*_finalize_*.md` docs, each
+      claiming a specific "reconciled N source docs' checkboxes" verdict, the same claim SHAPE that was false here:
+      `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`,
+      `cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md`,
+      `defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+      `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`,
+      `sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md`,
+      `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`. For each: verified the referenced parent plan is
+      genuinely archived (physically at its archive path, `status: complete`, 0 open `- [ ]` checkboxes, absent from
+      `plans/active/`) AND spot-checked one named source-doc reconciliation claim per doc against the source doc's real
+      on-disk state (exact cited SHA/checkbox/line). **Result: 8/8 PASS** — every parent-archival claim held up and
+      every spot-checked source-doc citation matched. Two docs (cefi batch1, sports batch4) showed the SAME kind of
+      mid-reconciliation discrepancy this incident's root-cause session hit, but in both cases it was caught and
+      honestly recorded (migrated to a tracked follow-up todo / left genuinely open) rather than papered over with a
+      false "done" claim — the healthy version of the pattern this doc's incident lacked. **No new false-claim issue doc
+      filed** — nothing in this sample warrants one. This is a bounded, non-exhaustive spot-check (8/40 finalize docs);
+      the remaining 32 are unaudited and could still harbor an instance, but the sampled evidence does not suggest the
+      confirmed incident is part of a wider pattern. Repo: unified-trading-pm — audit only, no code shipped.
 
 ## Progress Log
 
 - **2026-08-02**: Filed while working `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4. Full evidence
   trail above; root cause traced via `git log --follow --name-status`.
+- **2026-08-03 (todo 1 closed, `instruments_satellite_batch1_finalize_false_completion_claim-001`)**: verified the
+  source-doc reconciliation was already carried out by a concurrent `na-eligibility-audit` pass
+  (`unified-trading-pm@65f653fd9`, 2026-08-03 12:09:36+0100) —
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` line 472's item now reads `- [x]` with a "DONE
+  (na-eligibility-audit 2026-08-03)" note citing the real verdict from
+  `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4. Re-verified the source doc's total open-item count
+  post-flip: 8 remaining `- [ ]` items, so it is NOT archival-eligible from this flip alone. Flipped this doc's own todo
+  1 checkbox to reflect the already-shipped fix (no new code needed — reconciliation was substance-complete on ground
+  truth already). 1 real `- [ ]` checkbox remains open in this doc (todo 4, the bounded sweep), plus 2
+  `[PLAN_RECONCILER]`-routed digest bullets not yet closed — not archival-eligible.
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, both real `- [ ]` checkboxes ([DATA] P1
+  "reconcile the source doc's todo-4 item for real"; [DATA] P2 "bounded sweep for the same false-claim pattern in other
+  archived finalize twins") are bounded, worker-determinable (a checkable fact + a scoped grep/spot-check audit with a
+  stated done-when), no open judgment/design/operator call in either. The 2 `[PLAN_RECONCILER]`-routed digest bullets
+  are NOT standard `- [ ]` checkboxes and stay outside `regen_backlog_from_plan.py`'s ingestion per the doc's own
+  convention — this flip does not newly dispatch them; the operator ruling `BLK-9fadbbb8` (2026-08-02) only decided
+  ad-hoc-in-session-fix vs tracked-follow-up (chose tracked-follow-up), it did not forbid AO dispatch of the tracked
+  items. Conflict-check: grepped `plans/active/*.md` for claims on this exact work (reconciling
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`'s todo-4 item, or a sweep of archived
+  `*_finalize_*.md` docs for the same false-claim pattern) — no other `assigned_vm: planning` doc claims either; CLEAR.
 - **2026-08-02 (operator ruling, `BLK-9fadbbb8`)**: escalated whether to fix the 2 archival-touching items in-session or
   leave all 4 as tracked follow-up. Operator ruled leave-all-4 (option A), with a routing refinement: the 2
   archival-touching todos are now formatted as non-ingestable digest bullets explicitly ROUTED to plan_reconciler's
@@ -195,3 +234,5 @@ No design call needed — every piece here is independently checkable, not a jud
   tranche, but its bare `asset_group: [meta]` default-folds it into `infra` — the same membership-vs-ownership mismatch
   recorded as a tranche-level finding in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker. Classified and
   marked here because infra is the machine-assigned owning tranche; the retag itself is outside this skill's apply set.
+
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — still accurate against current content.

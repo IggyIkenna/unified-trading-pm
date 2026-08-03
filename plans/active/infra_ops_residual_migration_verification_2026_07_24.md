@@ -106,7 +106,19 @@ source: >-
       on the "consolidated" precondition either (no fresh audit found either way beyond tradfi's), so treat fleet-wide
       readiness as unconfirmed, not just tradfi-gated. Owning todo tracked in `tradfi_v9_stage1_finish_2026_07_06.md`
       (added this edit, plan-reconciliation finding 128). Fleet drained + `pre_migration` snapshot in place; AG-by-AG,
-      operator OK between each.
+      operator OK between each. **na-eligibility-audit 2026-08-03 (blocker-currency check): the named gate has cleared
+      and the runbook has already been EXECUTED.** `tradfi_v9_stage1_finish_2026_07_06.md` is now archived
+      (`plans/archive/2026_07/`); its own Progress Log records task 10 (v9 schema_version tail re-stamp) + task 4 (E5
+      rebuild gate) both CLOSED 2026-07-16 (tradfi corpus-wide 100% `schema_version=9`, independently verified), and a
+      separate 2026-07-16 entry: "Task -003 (RESUME runbook) EXECUTED — operator-authorized... Net: the resume runbook
+      is DONE — driven for real, every item verified or correctly flagged." Caveats recorded there, not re-derived here:
+      the 3 `defi-fwd-*` live-poll crons resumed clean; 11 `uts-prod-mtds-collect-*` daily-batch crons hit an unrelated
+      shared-UTL date-default bug and were re-paused (tracked in
+      `defi_scheduled_collection_outage_paused_crons_2026_07_16.md`); all 26 AWS EventBridge rules failed instantly on a
+      shared IAM `logs:CreateLogStream` gap and were disabled again
+      (`aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`). This todo's own text still frames the runbook as
+      not-yet-run — it should be re-verified against current cron/rule state (not re-executed blind) rather than treated
+      as still pending from scratch.
 - [x] ✅ [INFRA] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
       `deployment-service@c04d4562` (2026-06-15) already added the `gcloud run jobs update --image` + async `execute`
       sync step to `deploy-shared.sh` ("[3/3] Sync data-status rollup Job to the new image") — landed 3 days after this
@@ -224,3 +236,11 @@ source: >-
   actively-progressing owner of this scope (most recent update 2026-07-28, `unified-api-contracts@0fb9821b`), so this
   item is a citation-fix duplicate, not new dispatchable content. Since it is a genuine mix (4 KEEP_JUDGMENT + 1
   duplicate), this is NOT a RECLASSIFY case.
+
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid (blocker-currency only) — the RESUME-runbook
+  todo's cited blocker (`tradfi_v9_stage1_finish_2026_07_06.md`'s fleet-drain + re-stamp) is now archived-DONE
+  (2026-07-16) and that doc's own Progress Log records the runbook itself as already EXECUTED the same day, with named
+  caveats (some crons re-paused for an unrelated bug, all 26 AWS rules disabled again on an IAM gap) — annotated in
+  place. Remaining open items (FULL AUDIT confirm-judgment call; RESUME-runbook still needs per-AG operator OK even
+  post-execution for any re-run; schema_version re-stamp irreversible-`--apply` sign-off; 2 pointer-only items) are
+  unchanged judgment/operator-gated work. Not a RECLASSIFY case. `assigned_vm` untouched.

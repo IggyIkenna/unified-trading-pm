@@ -20,7 +20,7 @@ execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 drift_direction: worsening-slowly
-source: [/plans/active/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md]
+source: [/plans/archive/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md]
 resolved_by:
   "both todos fixed 2026-08-03 (slot 5, cicd, escalation agt-2dce75) — market-tick-data-service@1e52c66e,
   quality-gates.sh green (9847 passed, 0 failed)"

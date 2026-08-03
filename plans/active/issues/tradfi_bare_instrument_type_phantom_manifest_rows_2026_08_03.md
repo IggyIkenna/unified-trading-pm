@@ -45,6 +45,14 @@ superseded_by:
 source:
   "Found while working mtds_available_at_cross_asset_backfill_2026_07_13.md's tradfi Apply todo (task
   mtds_available_at_cross_asset_backfill-008), 2026-08-03, slot 14."
+context_scope:
+  [
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+  ]
 ---
 
 # TradFi bare instrument_type phantom manifest rows (UD/OPTION/FUTURE/COMBO)
@@ -166,3 +174,4 @@ this one slice), manifest-correctness problem independent of the `available_at` 
 
 - **2026-08-03** — Filed while working `mtds_available_at_cross_asset_backfill_2026_07_13.md` task
   `mtds_available_at_cross_asset_backfill-008` (data_engineering, slot 14). Full evidence above.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

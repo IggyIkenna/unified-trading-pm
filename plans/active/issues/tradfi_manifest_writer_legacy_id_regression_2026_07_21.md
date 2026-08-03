@@ -449,3 +449,4 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   registration/recovery script identification step remains open-ended investigation, and the remediation is a
   live-manifest CAS-write lacking a stated safe-idempotent justification or `[OPERATOR]` tag. No content drift. Nothing
   to reclassify.
+- **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries).

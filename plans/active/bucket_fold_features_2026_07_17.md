@@ -366,3 +366,16 @@ design's counts are 2026-07-13).
   UTL+deployment-service item whose UTL half is verified done and whose terraform/yaml half is another agent's in-flight
   work.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-03 (reclassify-batch blocker-currency check)**: the "Alias sunset" P3 todo's stated
+  blocker (2026-07-28 entry above: "the deployment-service terraform/yaml-key half... being handled by a separate agent
+  this same tick") is STALE — verified directly in a live `deployment-service` checkout (`live-defi-rollout` HEAD
+  `e72fe30a`): `configs/cloud-providers.yaml` carries ZERO live
+  `features-{delta-one,volatility,onchain,xinstrument,mtf}:` keys (only comment mentions remain), and the removal
+  actually landed via `deployment-service@a91e520f` ("Wave-3 fold drift reconciliation ... retired-key strip",
+  2026-07-19T11:45+01:00) — i.e. it predates the 2026-07-28 note claiming it was still pending, so that note was itself
+  stale/unverified at the time it was written. NOT independently confirmed this pass: a live
+  `tofu plan`/`terraform plan` against real GCP state (no terraform executed — read-only doc audit), and whether the
+  sibling Group-B IAM/lifecycle join (the P2 todo above) is fully `tofu apply`'d. Whoever next picks up this P3 todo
+  should re-verify a clean `tofu plan` before flipping it, but the specific "waiting on deployment-service" blocker no
+  longer holds. Doc stays `assigned_vm: NA` (HUMAN plan per the 2026-07-17 operator ruling; the residual is a small
+  verification+flip step, not a fresh dispatch-eligible unit on its own).

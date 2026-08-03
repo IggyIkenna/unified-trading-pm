@@ -32,6 +32,7 @@ context_scope:
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     scripts/quality-gates-base/base-service.sh,
     pyproject.toml,
+    scripts/manifest/check-pyrightconfig-extrapaths.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -166,3 +167,9 @@ shipping):
       the findings-closure rule:
       `plans/archive/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (all 14 todos done,
       archived). Evidence: `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
+  `scripts/manifest/check-pyrightconfig-extrapaths.py`, the tool whose fleet-wide-dead-audit finding and fix are this
+  doc's most recent (2026-08-01) content.

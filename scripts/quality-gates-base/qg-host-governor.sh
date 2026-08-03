@@ -151,14 +151,30 @@ qg_host_capacity() {
 # setup-tab-worktrees.sh), which would make the ledger per-slot and defeat
 # cross-slot coordination. On a single-clone host the strip is a no-op.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+#
+# GLUE-RUNNER topology (plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md):
+# on the GHA self-hosted glue-runner host, each repo's CI job runs from its own
+# POOL_TAG-suffixed runner dir (/opt/github-glue-runners[-<repo>]/glue-N/_work/<repo>),
+# so quality-gates.sh's own `WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`
+# resolves to that per-repo-job path — the same defeat-cross-coordination problem as
+# .tabs, one topology layer up (confirmed live 2026-08-02: ~10 repos' independently-empty
+# ledgers on one host). Collapse ANY such path to one host-shared dir — NOT the
+# per-pool `/opt/github-glue-runners[-<repo>]` parent itself (verified 2026-08-03 via SSM:
+# every pool's top-level dir is root:root 0755, so the glue-runner user `ubuntu` cannot
+# mkdir under it — the same class of failure setup-glue-runners.sh's own 2026-07-16
+# incident comment describes for SLOT_VENV/SLOT_REPO). setup-glue-runners.sh's `install`
+# pre-provisions this dir ubuntu-owned so new hosts self-provision; already applied to the
+# one live host via a one-time root SSM step (2026-08-03).
+_QG_GLUE_RUNNER_SHARED_ROOT="/opt/.qg-governor-glue-shared"
 _QG_LEDGER_FD=220
 
 _qg_shared_root() {
     local ws="${WORKSPACE_ROOT:-}"
     case "$ws" in
-        "")        echo "${TMPDIR:-/tmp}" ;;
-        */.tabs/*) echo "${ws%/.tabs/*}" ;;
-        *)         echo "$ws" ;;
+        "")                        echo "${TMPDIR:-/tmp}" ;;
+        */.tabs/*)                 echo "${ws%/.tabs/*}" ;;
+        /opt/github-glue-runners*) echo "$_QG_GLUE_RUNNER_SHARED_ROOT" ;;
+        *)                         echo "$ws" ;;
     esac
 }
 _qg_ledger_dir()  { echo "${QG_LEDGER_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor}"; }

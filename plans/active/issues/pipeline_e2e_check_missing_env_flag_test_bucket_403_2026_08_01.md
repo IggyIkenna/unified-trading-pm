@@ -37,7 +37,14 @@ drift_direction: advance-code
 source: [sports_consolidated_native_ao_extract-032]
 resolved_by:
 locked_by:
-context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md]
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
+  ]
 depends_on: []
 ---
 
@@ -304,3 +311,11 @@ Both QG-green + quickmerge-landed + verified on `origin/live-defi-rollout`.
 
 `/codex/05-infrastructure/vm-launcher-runbook.md`,
 `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries) — expanded from a single codex-only entry to also
+  cite the `bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md` issue doc every one of the 4
+  repo todos routes its remaining 403s through, the self-service-identity codex SSOT the IAM grant relied on, the shared
+  `launcher_common.sh` tier-SA resolver at the root of the bug, and the shared `pipeline_e2e_check/launcher.py` VM-poll
+  module traced while closing the retry-logic finding.

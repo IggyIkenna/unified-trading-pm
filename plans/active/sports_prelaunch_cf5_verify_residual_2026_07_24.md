@@ -65,20 +65,24 @@ context_scope: [/plans/archive/migration_verification_orphan_safety_2026_06_10.m
 
 ## Todos
 
-- [ ] [DATA] P1. **Sports CF-5 oracle relabel = ZERO — ROOT-CAUSED + FIXED (code), preserved to a wip branch awaiting a
-      clean-dep window (2026-06-16).** The finding's "61.8% league match-rate / league-resolution" hypothesis was WRONG
-      for the bulk: on the real prod MDPS sports index (`market-data-tick-sports-prd`, 584,257 empty_confirmed),
-      **583,185 are data_type=`trades` whose league_id resolves 100%**. **Real root cause:**
-      `_PER_FIXTURE_DERIVED_DATA_TYPES` listed the MDPS odds tick as lowercase `"trades"`, but membership is tested as
-      `data_type.upper() in set` (step 6.5 truthset gate + `is_derived_captured`) → `"TRADES"` never matched → step 6.5
-      silently skipped EVERY `trades` empty → all kept SOURCE_RETURNED_ZERO instead of the truthset-derived
-      EXPECTED_NO_FIXTURE. **Fix:** `"trades"`→`"TRADES"` in `mtds/scripts/rebuild_sports_manifest_v9.py` (kept at the
-      900-line cap) + a regression test. MTDS QG-green; verified by direct `_step6_5_truthset_gate` call (not-in-truth →
-      EXPECTED_NO_FIXTURE; in-truth → stays SOURCE_RETURNED_ZERO, since `trades` is correctly excluded from the
-      guaranteed set). **NOT YET LANDED:** quickmerge's pre-flight dep-audit refused across 3 retries because a LIVE
-      sibling was continuously running fleet manifest-regen / version-alignment (UTL→UAC dirty, version bumps 0.14→0.15)
-      — must not stomp foreign WIP. **The verified fix is PRESERVED on `origin/wip-preserve/mtds-346-cf5-trades`
-      (mtds@d0a15a3)** — land it with
+- [x] ✅ [DATA] P1. **Sports CF-5 oracle relabel = ZERO — ROOT-CAUSED + FIXED (code), preserved to a wip branch awaiting
+      a clean-dep window (2026-06-16).** **DONE (na-eligibility-audit 2026-08-03)** —
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md:521`: landed `market-tick-data-service@7f1262a0`. The stale
+      `origin/wip-preserve/mtds-346-cf5-trades` branch had NOT landed and was too old to cherry-pick wholesale (would
+      have regressed later fixes on the same file) — applied the isolated one-line fix (`"trades"`→`"TRADES"` in
+      `_PER_FIXTURE_DERIVED_DATA_TYPES`) directly on current HEAD + adapted the regression test, TDD-verified.
+      `quality-gates.sh` green. The finding's "61.8% league match-rate / league-resolution" hypothesis was WRONG for the
+      bulk: on the real prod MDPS sports index (`market-data-tick-sports-prd`, 584,257 empty_confirmed), **583,185 are
+      data_type=`trades` whose league_id resolves 100%**. **Real root cause:** `_PER_FIXTURE_DERIVED_DATA_TYPES` listed
+      the MDPS odds tick as lowercase `"trades"`, but membership is tested as `data_type.upper() in set` (step 6.5
+      truthset gate + `is_derived_captured`) → `"TRADES"` never matched → step 6.5 silently skipped EVERY `trades` empty
+      → all kept SOURCE_RETURNED_ZERO instead of the truthset-derived EXPECTED_NO_FIXTURE. **Fix:**
+      `"trades"`→`"TRADES"` in `mtds/scripts/rebuild_sports_manifest_v9.py` (kept at the 900-line cap) + a regression
+      test. MTDS QG-green; verified by direct `_step6_5_truthset_gate` call (not-in-truth → EXPECTED_NO_FIXTURE;
+      in-truth → stays SOURCE_RETURNED_ZERO, since `trades` is correctly excluded from the guaranteed set). **NOT YET
+      LANDED:** quickmerge's pre-flight dep-audit refused across 3 retries because a LIVE sibling was continuously
+      running fleet manifest-regen / version-alignment (UTL→UAC dirty, version bumps 0.14→0.15) — must not stomp foreign
+      WIP. **The verified fix is PRESERVED on `origin/wip-preserve/mtds-346-cf5-trades` (mtds@d0a15a3)** — land it with
       `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py     tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`
       (cherry-pick the wip commit onto a clean MTDS tree) the moment all MTDS deps are clean. Reason-level only
       (status-diff GREEN — does NOT block the G4 apply). Repo: market-tick-data-service. Provenance: 2026-06-16 prod

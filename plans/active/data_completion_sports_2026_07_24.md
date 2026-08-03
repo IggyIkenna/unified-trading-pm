@@ -731,7 +731,7 @@ point, all 4 enrichment shards COMPLETED (chunk 25/25×3 + 18/18 — covered Feb
 machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progressive code bug fixed
 (features-service@06c44c02, feature_family="sports" ×5 sites).
 
-- [ ] [SCRIPT] P2. RELAUNCH features-sfi-progressive — code fix shipped (features-service@06c44c02) but the SPORTS
+- [x] ✅ [SCRIPT] P2. RELAUNCH features-sfi-progressive — code fix shipped (features-service@06c44c02) but the SPORTS
       tarball rebuild is BLOCKED: `create-code-tarballs.sh --asset-group SPORTS` refuses while market-tick-data-service
       has a DIFFERENT agent's uncommitted WIP (10 modified handlers + 2 untracked scripts — not ours, not stomped). Once
       MTDS is clean: rebuild SPORTS tarball →
@@ -747,7 +747,13 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       deployment-service@<sha>): moved the script INTO the package
       `features_service/sports/scripts/compute_sfi_progressive_only.py` (top-level `scripts/` is NOT in the hatch
       wheel) + repointed the launcher to `VM_SERVICE=features_service` +
-      `python -m features_service.sports.scripts.compute_sfi_progressive_only`.
+      `python -m features_service.sports.scripts.compute_sfi_progressive_only`. **DONE (na-eligibility-audit
+      2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s corresponding todo: launcher confirmed
+      re-pointed at `features_service.sports.scripts.compute_sfi_progressive_only`; SPORTS tarball rebuilt (all 5
+      fresh); relaunched via
+      `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force 2020-01-01     2026-07-25` on
+      `features-sfi-progressive-20260725-163937` — run.log shows zero `MissingFeatureFamilyError`/ERROR lines,
+      `captured_days=2087 failed_days=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`.
 
 - [x] ✅ [SCRIPT] P1. **DEFERRED — same stale-`features_sports_service`-tarball class bug in TWO OTHER launchers**
       (found 2026-06-22 while fixing SFI-progressive): (1)
@@ -771,12 +777,20 @@ won't have most data_types, AND the unattempted dates ALREADY have weather parqu
 the recent months across all 789 leagues → phantom unattempted inflating EVERY entity's denominator → honest-cov
 understated fleet-wide (weather "17%" really ~done; same drag on FIXTURE_STATS/ODDS/etc).
 
-- [ ] [DATA] P1. Post-backfill (after the 6 running backfill VMs finish — relabel races a live manifest, migration C
+- [x] ✅ [DATA] P1. Post-backfill (after the 6 running backfill VMs finish — relabel races a live manifest, migration C
       needed a drain): extend the entity-coverage relabel (refresh_sports_league_entity_coverage / migration C logic)
       over the 120 recent dates (2026-02-20→06-19) × 789 leagues — no-coverage (league,data_type) pairs → expected_empty
       (EXPECTED_NO_PROVIDER_COVERAGE), and reconcile cells whose data already exists in GCS (weather + any drained by
       the running backfills) → captured. Then re-measure honest-cov (expect large jump across all sports entities).
-      Drain consolidator + stop VMs first. Repo: instruments-service + mtds (manifest migration).
+      Drain consolidator + stop VMs first. Repo: instruments-service + mtds (manifest migration). **DONE
+      (na-eligibility-audit 2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s corresponding todo:
+      PREMISE RESOLVED, not executed as a literal relabel. The 6 named backfill VMs are confirmed terminal; a direct
+      manifest measurement found the diagnosed 789-league/1,027,396-row phantom `expected_unattempted` set is now 33,905
+      rows across 96 league_ids — ALL in the current in-universe set (a ~30x reduction, resolved as a side effect of the
+      intervening write-gate + dereg + canonicalize program) — running the prescribed script blind would now risk
+      mislabeling genuine post-cutover pending-fetch gaps. Filed
+      `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
+      correctly-scoped follow-up todos instead of forcing a stale-premise migration against a live-changing manifest.
 
 ### 2026-06-22 06:05 — wake-fix codified; 300k/day in use; TM/SFI/FootyStats OOM ROOT-CAUSED + fixed
 
@@ -836,6 +850,13 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
       NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
       (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
+      **Blocker-currency note (na-eligibility-audit 2026-08-03, reclassify pass)**: the branch decision itself is no
+      longer open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s "Deferred — operator decision needed" section
+      records **RULED 2026-07-28: proceed with the quota bump** (applying the general "cost under $100 is not a concern,
+      full backfills get done" theme). What remains is the vendor account-tier upgrade action itself (a spend/credential
+      action, not a branch choice) — per that ruling, "only the operator (or AO's self-service ambient identity, if it
+      can provision this per finding W) can complete" it; the code/launcher side is already prepped and ready to fire
+      once the account tier lands. Item stays open (credential/spend-gated), not flipped.
 
 > **History extracted 2026-07-24** (line-cap remediation) → `data_completion_sports_history_2026_07_24.md`: the earliest
 > dated Progress Log entries (2026-06-24 DIAGNOSIS through 2026-06-21 RATE-LIMIT root-cause) — the campaign-opening
@@ -868,3 +889,12 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   next move and is a plan-authoring call, parked** for the operator (same disposition as
   `sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s marker) — this skill's Phase 3 flips `assigned_vm` in place, it
   does not author carve-out batches, and an in-place flip here would dispatch the two genuinely-NA todos alongside them
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: MIXED, left NA — re-verified the 4 currently-open todos (ramp-
+  to-429 probe line ~414; Transfermarkt PLAYER_VALUES relaunch + ODDS/PREDICTIONS re-measure line ~477/487, both already
+  operator-cleared per the 2026-08-02 entry above; enrichment-ceiling line ~851). Found the enrichment-ceiling item's
+  blocker (which spend branch to take) is no longer genuinely open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`
+  recorded **RULED 2026-07-28: proceed with the quota bump** — but the item itself stays open (the vendor account-tier
+  action is still a credential/spend ask); updated the item's own text in place with this citation (see the todo above),
+  did not flip `assigned_vm`. No conflict found for the 3 already-cleared candidates beyond what the 2026-08-02 entry
+  already recorded. Doc stays NA; extraction of the 3 cleared candidates into a `planning` batch remains a
+  plan-authoring call for the operator, not this pass's to execute.

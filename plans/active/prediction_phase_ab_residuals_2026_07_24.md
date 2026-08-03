@@ -130,7 +130,16 @@ context_scope:
       NOT implemented) and todo 3 shipped the Phase 5 write-time `*-PERP` guardrail (`instruments-service@a4137022`, now
       flipped there). Phase 6's CQG-bucketing fix + its backfill-assessment follow-up are the only genuinely open work
       remaining; this checkbox stays open until Phase 6 ships. (repos: market-tick-data-service,
-      unified-trading-library, deployment-service)
+      unified-trading-library, deployment-service) **na-eligibility-audit 2026-08-03 (blocker-currency check): Phase 6's
+      CODE fix has now SHIPPED** — `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1 (`status: active`,
+      `assigned_vm: planning`) landed it `instruments-service@e0f7aaad` (2026-07-30, verified: 3/3
+      `test_prediction_canonical_group_shard.py -k kalshi` pass at HEAD) and that same todo confirms Phase 6's checkbox
+      in the source doc (`prediction_capture_incident_remediation_2026_07_06.md`) is flipped too. This checkbox stays
+      open here nonetheless — the remaining scope is exactly Phase 6's OWN backfill-assessment follow-up, which that
+      source doc labels **"operator/architect call, not a mechanical todo"** (assess whether the historical
+      `OTHER`-bucketed Kalshi rows are worth a backfill/reclassify pass, per the data-pipeline-correctness "fix in FULL"
+      bar vs. practical cost) — a genuine judgment call, not something a worker can close alone. `assigned_vm`
+      untouched.
 - [x] ✅ [BACKEND] P0. **DONE 2026-07-30 (reconciling `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1).**
       Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix + add the regression check
       that the elections-subdomain plan Phase 4 never added; fix the `raw_tick_data/by_date/` drift.
@@ -267,15 +276,15 @@ context_scope:
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                                                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                                                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                                                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                                                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                                                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                                                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                                                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                                                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                                                      see its own Progress Log.
+                                                                                                                                                                                                                              `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                                                                              **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                                                                              `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                                                                              2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                                                                              either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                                                                              launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                                                                              operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                                                                              availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                                                                              see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -466,6 +475,14 @@ context_scope:
       2026-07-24 pass alongside the 2026-07-20 baseline.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid (blocker-currency only) — A1's own "stays open
+  until Phase 6 ships" condition is now MET (`instruments-service@e0f7aaad`, shipped via
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1, 2026-07-30); annotated in place with the SHA + the
+  reason A1 nonetheless stays open (Phase 6's own backfill-assessment follow-up is explicitly an "operator/architect
+  call, not a mechanical todo"). No other open item's cited blocker/reference was found stale on a fresh read. Not a
+  RECLASSIFY case — every remaining item ends in a writer-drain + race-sensitive `_index` CAS `--apply`, an infra
+  window, or a genuine per-item/design escalation. `assigned_vm` untouched.
 
 - **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, stale item closed — 7 open (was 9 at the 2026-07-30
   marker: A5 adapter dead-code audit resolved same-day by a sibling dispatch, -1; A1c closed this pass as stale, -1).

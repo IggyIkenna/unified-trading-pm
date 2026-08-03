@@ -45,6 +45,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py,
+  ]
 ---
 
 # MTDS prediction adapters: dead live-REST-polling interface
@@ -123,3 +129,4 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
 - **na-eligibility-audit 2026-07-31 (prediction tranche)**: KEEP-NA, valid — 1 open. Same shape as the sibling
   Polymarket dead-fixture finding filed the same day: the doc's own "Recommended decision" section explicitly frames (A)
   delete vs (B) keep-and-document as a genuine judgment call, not auto-resolved. Doc stays NA.
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

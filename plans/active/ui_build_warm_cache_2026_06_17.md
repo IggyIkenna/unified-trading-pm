@@ -65,7 +65,7 @@ context_scope:
       change needed. `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s D28 entry was flagging this (+ item 2 below) as
       fresh dispatch pending `[UI]`/`pw:L2` — corrected there to reflect this half is already shipped (unified-trading-
       pm this commit).
-- [ ] [CODE] P2. Pre-warm in `setup.sh`: run one `npm run build` at clone-setup time so the QG gate never pays the
+- [x] ✅ [CODE] P2. Pre-warm in `setup.sh`: run one `npm run build` at clone-setup time so the QG gate never pays the
       cold-cache cost (the cold build moves to where there is no timeout). Repo: unified-trading-pm
       (`scripts/quality-gates-base` setup template) + the two UI repos. — **CONFIRMED STILL OPEN (verified
       2026-07-27)**: `unified-trading-pm/scripts/setup.sh` runs `npm install` for UI repos (lines 73/187/229) but no
@@ -90,7 +90,12 @@ context_scope:
       archived) for the full writeup. `deployment-ui`'s gate is unblocked; the deployment-ui copy of `setup.sh` is STILL
       not in sync with the template's pre-warm-cache step —
       `cp unified-trading-pm/scripts/setup.sh deployment-ui/scripts/setup.sh` + commit + ship is the remaining open work
-      on this todo.
+      on this todo. — **SHIPPED 2026-08-03 (`deployment-ui@7086565`)**: synced `deployment-ui/scripts/setup.sh` from the
+      unified-trading-pm template (`cp` — files now identical), live-verified both branches of the `[UI.5]` step
+      (`--force` runs a real cold `pnpm run build` and regenerates `node_modules/.tmp/tsconfig.tsbuildinfo`; a plain run
+      correctly detects the already-warm cache and skips). `quality-gates.sh --no-fix` green (42s, 101 tests, coverage
+      73.53%), shipped via `quickmerge.sh --agent`, landed `live-defi-rollout`. Both UI repos' `setup.sh` are now in
+      sync with the template — todo fully closed.
 - [ ] [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
       identical inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies
       per-clone: N× disk + N× cold reads). **Operator decision 2026-07-27

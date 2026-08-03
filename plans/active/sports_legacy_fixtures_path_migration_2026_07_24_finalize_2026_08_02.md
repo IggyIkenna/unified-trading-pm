@@ -127,3 +127,4 @@ reclassification landed 2026-08-02 with `sequential: true` in the same edit.
   2026-07-31 finding, the reconciliation todo and the archival todo deliberately carry DIFFERENT tag+priority prefixes
   (`[REVIEW] P0` vs `[DOC] P1`) so the AO done-gate's tag disambiguator cannot find two same-tag-priority checked lines
   and fail closed.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.

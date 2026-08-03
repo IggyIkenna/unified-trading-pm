@@ -48,6 +48,14 @@ depends_on: []
 locked_by:
 assigned_vm: planning
 resolved_by:
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
+    unified-trading-library/unified_trading_library/manifest_consolidator.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_queries.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
+  ]
 ---
 
 # Sports manifest consolidator: zero row growth despite active backfill writes
@@ -437,3 +445,7 @@ cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) th
 `/codex/05-infrastructure/manifest-consolidator-ssot.md` (merge engine, UNION-ALL invariants, pause-first discipline for
 any direct canonical intervention — § "Diagnostic caveats" now carries the static-`rows_out` lesson from this issue),
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/sports-2020-06-data-floor.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

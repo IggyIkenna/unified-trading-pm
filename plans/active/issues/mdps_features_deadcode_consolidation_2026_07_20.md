@@ -83,9 +83,12 @@ launcher deletions. Other: operator free-text.
       no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket `_TICK_SPORTS`,
       EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a launcher→emitted-name
       test.
-- [ ] 4. [SCRIPT] P3. S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable dead
-      body; duplicate `lc_verify_tarball_freshness` 274-278/280-284; pre-consolidation module names in
-      `_python_module_for`).
+- [x] ✅ 4. [SCRIPT] P3. S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable
+      dead body; duplicate `lc_verify_tarball_freshness` 274-278/280-284; pre-consolidation module names in
+      `_python_module_for`). **DONE (na-eligibility-audit 2026-08-03)** — closed via
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md:93`: `deployment-service@77c0206`, deleted the
+      entire unreachable post-redirect body + fixed `_python_module_for`/`lc_verify_tarball_freshness`,
+      `quality-gates.sh` green.
 - [ ] 5. [SCRIPT] P3. S2-b — delete the 8 stale `features_*_service` keys in `setup-data-pipeline-vm.sh`
       SERVICE_TARBALLS (post-2026-05-08 consolidation; only `features_service` is built). Adjacently fix the stale
       `ml_*_service` keys.
@@ -123,3 +126,4 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   operator keep/delete decision (options) A/B/C' block; todos 1, 2 and 8 each say 'pending operator' / 'operator-design
   adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
   launcher-deletion blast radius is exactly what the A/B/C ask covers
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).

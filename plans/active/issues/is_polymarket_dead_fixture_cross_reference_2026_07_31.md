@@ -46,6 +46,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/adapter.py,
+    instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/parsing.py,
+    instruments-service/instruments_service/reference_data/factory.py,
+  ]
 ---
 
 # instruments-service: dead Polymarket fixture cross-reference capability
@@ -129,3 +136,4 @@ Not adjudicated here:
   decision" section explicitly frames this as "Not adjudicated here" — a genuine (A) delete vs (B) keep-and-document
   architecture call needing operator/plan-owner input, not a fact a worker can determine by reading code alone. Doc
   stays NA.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

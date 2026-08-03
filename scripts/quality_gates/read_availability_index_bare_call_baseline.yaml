@@ -149,19 +149,19 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: instruments-service
     file: instruments_service/cli/main.py
-    line: 79
+    line: 82
     function: _run_coverage_status
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: instruments-service
     file: instruments_service/cli/main.py
-    line: 151
+    line: 154
     function: _run_refresh_league_entity_coverage
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: instruments-service
     file: instruments_service/cli/main.py
-    line: 291
+    line: 294
     function: _run_reprocess_shards
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27

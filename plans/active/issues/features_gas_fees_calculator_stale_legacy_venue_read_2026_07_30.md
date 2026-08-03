@@ -142,3 +142,4 @@ green.
   unnoticed. No test hardcoded the list contents, so no test changes were needed
   (`tests/onchain/unit/test_defi_pipeline_extension_calculators.py` only exercises `calculate_features`/`source_name`,
   confirmed by reading it, same as the original 2026-07-30 fix's note).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

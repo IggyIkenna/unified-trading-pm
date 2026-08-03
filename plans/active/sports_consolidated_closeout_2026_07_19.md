@@ -563,24 +563,18 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       2026-07-27 — this checkbox was stale (real work done, never flipped here).
 - [ ] [CODE] P2. Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path still
       active today alongside the canonical split writer (5-league subset).
-- [ ] [OPERATOR] [CLEANUP] P2. Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout (frozen
-      2026-04-20, no entities). Confirm no reader consumes it first. <br>⛔ **STOP — THE READER-CHECK GATE IS NOT
-      SUFFICIENT HERE, and this amendment was already RULED 2026-07-28.**
-      [`/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md:184-197`](/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md)
-      proved **1,492 of these rows are the SOLE surviving copy** of that data (no canonical twin exists) and ruled that
-      they fold explicitly into the pre-floor-wipe scope per
-      [`/codex/02-data/sports-2020-06-data-floor.md`](/codex/02-data/sports-2020-06-data-floor.md) — precisely because
-      this todo's reader-check-only gate "does not actually cover twin-existence". That same ruling directed a follow-up
-      pass to "amend the two colliding cull todos... so neither silently deletes these 1,492 rows via the wrong
-      (reader-check-only) mechanism first"; its own finalize doc
-      (`sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md:141-145`, 2026-07-28) records the amendment as
-      **STILL UNDONE**, and batches 6/7/8 never picked it up. Retagged `[OPERATOR]` and bannered 2026-08-02 by the
-      `/plan-reconcile` whole-corpus run, executing the already-ratified 2026-07-28 amendment — this is not a new
-      decision. Prod-bucket deletes are human-only unless reversibility-qualified per
+- [ ] [DATA] [CLEANUP] P2. **RETAGGED self-justified 2026-08-03** (operator ruling on
+      `sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md`, "agreed" — the sole-surviving-copy carve-out that
+      forced this to `[OPERATOR]` on 2026-08-02 is resolved: the 764 pre-floor cells / 1,528 physical objects were
+      WIPED, not preserved, via
+      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --root-prefix     sports_reference_v2/by_date --apply`
+      — `{'DELETED': 1528, 'ERROR': 0}`, verified 0 pre-floor day dirs remain). **Remaining scope, still needs the
+      original reader-check before proceeding**: 16 post-floor day dirs (2024-12-24..2026-04-20) remain in
+      `sports_reference_v2/by_date/` — snapshot-then-cull THESE once confirmed no reader consumes the path (the original
+      self-justified gate this todo had before 2026-08-02, now restored). Prod-bucket deletes on the remaining objects
+      are still human-only unless reversibility-qualified per
       [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
-      § 3a. Tracked at
-      [`/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`](/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md)
-      § 1b.
+      § 3a.
 - [ ] [DOC] P2. **Finding C correction (2026-07-23): this was mis-scoped, downgraded from the original P1/HIGH.**
       `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is `status: resolved` (corpus-destroying
       risk already remediated, byte-exact GCS soft-delete restore verified) — only its 1 remaining open todo needs
@@ -984,3 +978,10 @@ section above, which conflated answered and open items):
   twin-existence for 1,492 sole-surviving-copy rows. All 28 open todos read this pass; no newly-stale item found beyond
   what that same-day run already corrected. RECLASSIFY would be actively unsafe here — naive concurrent dispatch is
   exactly what the ⛔ note and the prose-only sequencing warnings guard against
+- **na-eligibility-audit 2026-08-03**: re-read (in scope again — 2 more referrer-path fixes landed since the 08-02
+  marker, pointing to docs archived since; no todo-content change). **KEEP-NA, valid — verdict UNCHANGED, citation-
+  locked a third time.** Re-confirmed the ⛔ 2026-07-23 operator-ruling citation against a direct `assigned_vm` flip is
+  still present in the frontmatter, plus `gate_on_depends: true` on 3 forked children. Also noted in passing (not this
+  audit's to resolve): the new `sports_reference_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` issue directly
+  bears on this doc's own `sports_reference_v2/by_date/` cull-todo framing — see that doc for the live SSOT-conflict
+  finding.

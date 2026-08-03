@@ -149,3 +149,5 @@ scratch. That's why this was kept out of the binance/bybit/okx todo's scope rath
   being done — it carries `locked_by: live-defi-rollout` and unlock/archival per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` requires an explicit `[unlock-plan]` ask, not
   autonomous action.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

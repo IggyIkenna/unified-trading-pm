@@ -139,3 +139,8 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
   day-partitions for 2024-01-01/02/03 now present alongside the original 15 (2026-04-03..19).
 - features-service full test suite: 17964 passed, 209 skipped (pre-existing, unrelated skips).
 - `features-service@<commit-sha-of-this-fix>` (see companion plan-flip commit).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
+  accurate (unchanged).

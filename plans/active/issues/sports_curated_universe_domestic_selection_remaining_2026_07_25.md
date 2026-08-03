@@ -22,6 +22,7 @@ related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
   ]
 created: 2026-07-25
 priority: P1
@@ -37,6 +38,7 @@ context_scope:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data_other.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
@@ -451,7 +453,102 @@ inherited from the first shipped batch:
       but unconfirmed OOM (e2-standard-8; VM self-deleted before deeper memory metrics could be pulled). Full evidence +
       next-dispatch relaunch instructions (skip-if-fresh resumes from ~2026-06-02, escalate to a memory-tier bump if it
       repeats) in the freshness-preflight issue doc's own P1 todo — not duplicated here to keep this doc lean. Step 2
-      (backfill) remains **incomplete**; step 3 (residual drop) still untouched pending step 2's actual completion.
+      (backfill) remains **incomplete**; step 3 (residual drop) still untouched pending step 2's actual completion. —
+      **Re-verified 2026-08-03 (slot 16, data_engineering): step 2 IS actually complete (confirmed via the batch2 plan's
+      own tracker, not re-derived here) — `af-backfill-20260727-064958` finished chunk=25/25
+      (range=2026-05-06→2026-07-25), `DEPLOYMENT_COMPLETED exit_code=0`, 2026-07-28T05:34:06Z. No sports
+      curated-universe backfill VM is currently running**
+      (`gcloud compute instances list --filter='name~"^af-backfill-"'` shows only `af-backfill-20260803-070016`, RUNNING
+      — confirmed via its own `run.log` launch line this is an UNRELATED task,
+      `--sports-entity FIXTURE_EVENTS --recovery-fixture-ids .../recovery_fixture_ids_2026_08_03.parquet`, i.e.
+      `sports_fixture_events_refetch_progress_2026_07_25.md`'s recovery job, not this todo's backfill). The AO
+      prerequisite `sports-curated-universe-backfill-walk-complete` (gates the batch2 plan's mirror of this todo) is
+      still `false` — correctly so, since step 3 below is still not done; **not flipping it here**. **Ran the
+      completeness/residual measurement (a) this check-in** — memory-bounded dry-run of
+      `instruments-service/scripts/canonicalize_sports_league_id_schema_2026_06_24.py`
+      (`run-bounded-analysis.sh     --mem-cap 22G`, single manifest read, no new whole-corpus GCS walk) against the
+      CURRENT `LEAGUE_REGISTRY` (**390 leagues** — confirms all 11 domestic batches + continental majors are live in the
+      registry this script reads). Sports `_index` is now **11,853,072 rows** (up from the 2026-06-24 baseline of ~4.6M,
+      consistent with the curated-universe FIXTURES walk having run). Findings: **1,075,234** numeric/suffixed rows
+      still resolve in-universe (need re-keying — the June P0a canonicalize pass's "0 residual" guarantee has eroded for
+      rows written since, most likely from this very backfill; a plain `--apply` [no `--drop-out-of-universe`] re-closes
+      this, it is idempotent and non-destructive — safe to run any time). The real out-of-curated residual (the actual
+      `--drop-out-of-universe` mask, i.e. every row — canonical-string or numeric — whose canonical league is NOT one of
+      the 390) is **1,165,348 rows, 9.83% of the manifest**. **NOT executed**: this script only rewrites the MANIFEST
+      `_index`, never touches the underlying GCS parquet OBJECTS for those out-of-curated leagues — so even a full
+      `--apply --drop-out-of-universe` run leaves this todo's "objects" half of "residual out-of-curated rows/objects"
+      completely unaddressed; no script for that half currently exists and would need its own five-part-proof-style
+      scoping (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) before any object delete. Given the real
+      scale (1.16M rows, ~9.8% of a production manifest) and that "drop the truly-junk leagues" is an explicit judgment
+      call in the source plan's own words (not a mechanical fact), **did not run `--apply`** — raising the drop decision
+      to the operator via a structured `/blocked` question rather than guessing; if the AO server is unreachable when
+      this lands (it was mid-session, connection refused on :8765 — see this doc's own Progress Log), the question is
+      filed here instead. **Next dispatch**: (1) run `--apply` alone (no `--drop-out-of-universe`) to close the
+      1.075M-row re-key gap — safe, idempotent, non-destructive, no operator gate needed; (2) get the operator's ruling
+      on the 1.165M-row drop (keep as extra reference data vs. drop manifest rows only vs. drop manifest rows +
+      scope+execute the separate GCS-object cleanup); (3) only then re-verify + flip this checkbox. — **Re-key APPLIED
+      2026-08-03 (slot 16, data_engineering), per main's interim BLK-aa587dbf ruling** (split the two operations by risk
+      class: the safe re-key is main-cleared to run now regardless of the drop decision; the destructive drop itself
+      stays operator-owned, this todo stays OPEN). Ran `canonicalize_sports_league_id_schema_2026_06_24.py --apply`
+      (memory-bounded, `run-bounded-analysis.sh --mem-cap     40G`, no `--drop-out-of-universe`). Snapshot written
+      FIRST:
+      `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/pre_league_id_canonicalize_20260803T183639Z.parquet`.
+      Result: `_index` rewritten `11,853,072 → 6,550,528` rows; **in-universe numeric residual = 0** (verified, the
+      script's own must-be-0 assertion held); out-of-universe numeric residual = 8,914 (expected nonzero, untouched —
+      `--drop-out-of-universe` was NOT passed). **Notable, larger-than-expected side effect**: the dedup pass alone
+      collapsed **5,302,544 rows (45% of the pre-run total)** — far above the June baseline run's ~11% dedup rate
+      (509,227/4,599,952) — i.e. the manifest has accumulated a large volume of true duplicate rows (same
+      `service_name/date/data_type/league_id/timeframe/pipeline_mode/source` key, different `written_at`) since June,
+      most likely from the many concurrent VM relaunches across this curated-universe backfill campaign each writing
+      overlapping shards that the consolidator never fully collapsed. Flagging as a finding worth a follow-up look (why
+      is per-VM-shard consolidation leaving this many true duplicates), not blocking — the dedup itself is the script's
+      documented, intended behavior (keeps the BEST status per key) and is what it has always done; only the SCALE this
+      run is new. **Still NOT run**: `--drop-out-of-universe --apply` (originally reported as a 1.165M-row / 9.83% drop)
+      — this remains genuinely `[OPERATOR]`-gated per main's BLK-aa587dbf ruling (destructive prod-data mutation on the
+      sole copy + a real retention-scope judgment call, not main's or a worker's to authorize).
+
+      > **⛔ URGENT CORRECTION 2026-08-03 (slot 16, data_engineering), same check-in — the 1.165M/9.83% figure and the
+                  > "junk leagues" framing were WRONG for a large chunk of this residual; DO NOT approve/execute the drop as
+                  > originally scoped.** A read-only per-league breakdown of the CURRENT (post-rekey) residual — now 74,058 rows
+                  > out of 6,550,528 (1.13%; the dedup pass above already collapsed most of the original 1.165M figure's
+                  > duplicate-of-out-of-universe rows) — shows the top offenders are `PRIMERA_DIVISION` (10,564 rows),
+                  > `PREMIER_LEAGUE` (8,483), `CHAMPIONSHIP` (8,477), `FIRST_DIVISION_A` (8,420), `2._BUNDESLIGA` (7,127),
+                  > `SUPER_LEAGUE` (6,813), `SUPERLIGA` (6,570), `PREMIERSHIP` (5,248), `A-LEAGUE` (1,126) — 487 distinct
+                  > `league_id`s, but these 8 account for the vast majority of rows, and their `data_type` breakdown is
+                  > `odds_horizon_bucket` (51,055) + `trades` (13,519) + `MATCHES`/`FIXTURES*` (~9,000) — **real captured
+                  > trading-relevant odds/trades data, not reference-only junk.**
+                  >
+                  > These are NOT genuinely out-of-curated leagues — they are the EXACT raw MTDS display-name `league_id`s
+                  > (`league_cls.name.upper().replace(" ", "_")`) already tracked as a P0 OPEN issue:
+                  > `plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md`. That doc's own 2026-07-20 measurement
+                  > found 214,842 such rows (this residual is the same population, reduced by the dedup above); its operator
+                  > ruling was **canonicalise-at-write** (shipped `market-tick-data-service@ad4f1872`) with **history migration
+                  > still explicitly open** (2 of 3 blockers unshipped as of that doc's 2026-07-28 re-verify: the
+                  > `odds_horizon_bucket` MDPS reprocess Step 7, and the `batch_footystats` copy+swap script, which doesn't exist
+                  > yet). Several of the raw names are **genuinely ambiguous between two real leagues** per that doc's own
+                  > measurement (`CHAMPIONSHIP` = England-or-Scotland, `PRIMERA_DIVISION` = Argentina-or-Chile,
+                  > `SUPER_LEAGUE` = Greek-or-Swiss, `BUNDESLIGA`/`SERIE_A`/`SERIE_B` similarly) — resolvable via the underlying
+                  > parquet's `home_team`/`away_team`, per that doc's own worked analysis, never by a name-keyed alias map (would
+                  > silently MERGE distinct leagues). **Running `--drop-out-of-universe --apply` today would delete real,
+                  > awaiting-migration trading data for major/ambiguous-but-real leagues, not remove junk** — this is a direct
+                  > contradiction with the already-operator-ruled P0 migration plan, not a fresh judgment call for THIS todo to
+                  > make. Sent an urgent `/progress` correction the moment this was found (before any answer to BLK-aa587dbf
+                  > landed). **Revised recommendation for the operator's BLK-aa587dbf ruling**: exclude every raw MTDS
+                  > display-name `league_id` (the population `sports_league_id_namespace_migration_2026_07_20.md` already
+                  > enumerates) from any drop candidate list entirely — that doc, not this one, owns their disposition (migrate,
+                  > once its 2 remaining blockers land). Only the GENUINE residual beyond that population (scattered numeric ids
+                  > like `15746`/`256`/`15066` etc., each ~100-180 rows, `UNKNOWN`=270 rows) is a plausible drop candidate, and
+                  > even that has not been individually verified against every other known-tracked migration in this corpus — do
+                  > not treat the smaller number as automatically safe either, just smaller and less examined so far. Cross-linked
+                  > both issue docs' `related:` frontmatter.
+
+                  **Todo stays OPEN** (per main's explicit instruction not to pre-decide the drop by closing this) — next
+                  dispatch: wait for the operator's actual ruling on BLK-aa587dbf, now informed by the correction above (the
+                  likely real options are: exclude-the-namespace-migration-population-and-reconsider-the-rest vs.
+                  defer-the-whole-drop-until-that-migration-completes), execute per whichever they choose (citing
+                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` if they choose any drop), THEN re-verify + flip this
+                  checkbox.
+
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
@@ -468,9 +565,64 @@ inherited from the first shipped batch:
       `launch-tradfi-backfill-vm.sh`/`launch-cefi-sharded-backfill.sh`). Verified live via `--dry-run`: `2019-01-01`
       refused with the new error + exit 1; the exact boundary `2020-06-06` and a post-floor `2020-07-01` both pass
       through unchanged to VM-launch planning. `quality-gates.sh` green (98s, deployment-service).
+- [ ] [DATA] P3. **Investigate why the sports `_index` dedup rate jumped from ~11% (June baseline, 509,227/4,599,952) to
+      45% (2026-08-03, 5,302,544/11,853,072)** — found while running the safe re-key
+      (`canonicalize_sports_league_id_schema_2026_06_24.py --apply`, no `--drop-out-of-universe`) on 2026-08-03.
+      Suspected cause (not confirmed): the many concurrent VM relaunches across this curated-universe backfill campaign
+      (`af-backfill-2026072*`/`-2026080*`, tracked in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
+      curated-universe-backfill todo) each wrote per-VM shards that the consolidator never fully collapsed — i.e. a real
+      true-duplicate accumulation, not a bug in the canonicalize/dedup script itself (its dedup logic is unchanged from
+      June, only the input's duplicate rate grew). Not blocking anything today (the dedup is intentional, correct, and
+      already ran) — but a per-VM-shard consolidation gap that leaves this many duplicates uncollapsed is worth
+      understanding before the next large-scale sports backfill campaign repeats it at similar or larger scale. **Done
+      when**: root cause identified (or ruled out as a one-time artifact of this specific campaign) and, if a real
+      consolidator gap, a follow-up todo filed against it. (repo: instruments-service or unified-trading-library, exact
+      owner TBD by the investigation).
 
 ## Codex SSOTs
 
 No new durable contract — this executes Directive A/B from
 `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`, already the SSOT for the selection rules
 themselves.
+
+## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the archived freshness-preflight issue doc,
+  which holds the actual next-dispatch relaunch instructions for step 2's incomplete backfill VM.
+- **2026-08-03 (slot 16, data_engineering)**: confirmed step 2 (curated-universe backfill WALK) genuinely complete since
+  2026-07-28; measured the real step-3 residual via a memory-bounded dry-run (1,165,348/11,853,072 manifest rows, 9.83%,
+  out-of-the-390-league registry) — full detail in the todo above. Did not execute the destructive
+  `--drop-out-of-universe --apply` (real production-data judgment call, not a mechanical fact); the AO server was
+  unreachable (connection refused, :8765) when attempting to file a structured `/blocked` question — retrying per
+  RULES.md's network-error backoff before end of session. Not flipping this todo's checkbox — step 3 is genuinely not
+  done yet.
+- **2026-08-03 (slot 16, data_engineering) — resumed after main's BLK-aa587dbf interim ruling**: main split the decision
+  by risk class — cleared the safe numeric/suffixed re-key to run now (main-owned, non-destructive, idempotent), kept
+  the 1.165M-row destructive drop operator-owned and this todo OPEN. Ran the re-key
+  (`canonicalize_sports_league_id_schema_2026_06_24.py --apply`, no `--drop-out-of-universe`): snapshot taken first,
+  `_index` rewritten 11,853,072 → 6,550,528 rows, in-universe numeric residual verified 0. Notable finding: the dedup
+  pass alone collapsed 45% of pre-run rows (5,302,544) — far above June's ~11% baseline rate, worth a follow-up look at
+  why per-VM-shard consolidation is leaving this many true duplicates (not blocking, script behavior is intended and
+  unchanged, only the scale is new). The destructive drop remains un-run, `[OPERATOR]`-gated per main's ruling — todo
+  stays open pending the operator's actual answer to BLK-aa587dbf.
+- **2026-08-03 (slot 16, data_engineering) — URGENT CORRECTION, same check-in**: a read-only per-league breakdown of the
+  post-rekey residual (74,058 rows, not the pre-dedup 1.165M figure) found the top 8 offenders by row count
+  (`PRIMERA_DIVISION`/`PREMIER_LEAGUE`/`CHAMPIONSHIP`/`FIRST_DIVISION_A`/`2._BUNDESLIGA`/`SUPER_LEAGUE`/`SUPERLIGA`/
+  `PREMIERSHIP`) carry real `odds_horizon_bucket`/`trades` data and are the EXACT raw MTDS display-name population
+  already tracked as P0 open in `sports_league_id_namespace_migration_2026_07_20.md` (canonicalise-at-write shipped,
+  history migration still blocked on 2 unshipped prerequisites; several names genuinely ambiguous between two real
+  leagues, resolvable via `home_team`/`away_team`, per that doc). **Running `--drop-out-of-universe --apply` as
+  originally scoped would have destroyed real trading data pending migration, not removed junk.** Sent an urgent
+  `/progress` correction before any answer to BLK-aa587dbf landed; corrected this todo's own text above; cross-linked
+  both issue docs. Revised recommendation for the operator: exclude the namespace-migration population from any drop
+  entirely (that doc owns its disposition); only the genuine small-scattered-numeric-id remainder is a plausible drop
+  candidate, and even that hasn't been individually cross-checked against every other tracked migration. Todo stays
+  OPEN.
+- **2026-08-03 (slot 16, data_engineering) — root cause fixed in code, not just documented**: shipped
+  `instruments-service@0877f849` narrowing `canonicalize_sports_league_id_schema_2026_06_24.py`'s
+  `--drop-out-of-universe` to its own numeric/suffixed rekey candidates only (`compute_drop_out_of_universe_mask()`,
+  extracted + smoke-verified) — it can no longer match an already-canonical-STRING-form `league_id` regardless of
+  registry membership, so this exact near-miss (matching the MTDS raw-display-name / namespace-migration population)
+  cannot recur on a future run of this script, by anyone, even without reading this doc first. `quality-gates.sh` green
+  (161s, full run), quickmerge landed + verified on origin. This closes the code-level half of today's finding; the
+  data-level half (the operator's actual ruling on what remains) is still open.

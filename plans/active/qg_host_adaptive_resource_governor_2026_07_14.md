@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-14"
-last_updated: 2026-07-16
+last_updated: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,8 +43,9 @@ source:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/epics/infrastructure_master.md,
-    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+    scripts/quality-gates-base/base-service.sh,
+    /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 ---
 
@@ -580,6 +581,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   restart — NOT force-restarted (9 worker-agents active, no OOM urgency). This is the primary lever for todo 307; the
   runtime abort-monitor (258) remains the QG-side complement.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
 ## Deferred / open decisions
 
@@ -681,12 +683,15 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   Distinct failure mode from the 2026-07-27 fleet-soak's "false 80% abort" check (that soak ran single-repo, single
   ledger — this is cross-repo ledger fragmentation, only reachable on the GHA glue-runner topology, not the slot
   worktree topology the soak covered).
-- [ ] [INFRA] P1. Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA glue-runner jobs across DIFFERENT repos on
-      the SAME physical host share one ledger — e.g. derive the shared root from the stable `/opt/github-glue-runners-*`
-      parent (or a host-identity env var set once per VM at runner-install time) instead of `WORKSPACE_ROOT`, which is
-      per-repo-job on this topology. Until fixed, the governor provides NO cross-repo admission control on glue-runner
-      hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also per-repo) RAM-pressure watchdog apply, which
-      is why 10 repos could pile up here.
+- [ ] [INFRA] P1. **FORKED 2026-08-03 — see `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`**
+      (dedicated scoped plan, per this doc's own note below that a one-shot task is the wrong place to redesign ledger
+      scoping across the whole glue-runner fleet). Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA
+      glue-runner jobs across DIFFERENT repos on the SAME physical host share one ledger — e.g. derive the shared root
+      from the stable `/opt/github-glue-runners-*` parent (or a host-identity env var set once per VM at runner-install
+      time) instead of `WORKSPACE_ROOT`, which is per-repo-job on this topology. Until fixed, the governor provides NO
+      cross-repo admission control on glue-runner hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also
+      per-repo) RAM-pressure watchdog apply, which is why 10 repos could pile up here. Leave this checkbox `[ ]` until
+      the forked plan ships and closes it back here.
 - **Not fixed in this session** — flagged via `cicd` `/blocked` (`BLK-7eedce54`) rather than fixed in-scope: a one-shot
   wall-clearing task is the wrong place to redesign ledger scoping across the whole glue-runner fleet: real blast radius
   (every repo's CI), needs its own scoped plan/PR + a fleet soak on the GHA topology specifically (the existing 93-min
@@ -701,3 +706,13 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   human-driven...") governs the whole remaining scope; the other 8 open items are either explicitly
   DEFERRED-with-stated-reactivation-condition or real unimplemented-but-well-specified engineering follow-ons under the
   same human-driven ruling, not defaulted-and-never-assessed work.
+- **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS KEEP-NA, valid — unchanged**
+  (9/9 open items re-verified). 8 items (baseline-schema consolidation, cpu_weight unpinned re-measure, baseline-
+  freshness loop, FIFO/aging, Slack alerting, small-host sizing, PYRIGHT_TIMEOUT default raise, pytest-xdist worker-
+  death fix) re-confirmed under the standing 2026-07-14 operator ruling — citation verified real and still governing;
+  none duplicated into any active `assigned_vm: planning` sibling (checked `ao_open_issues_consolidated_close_out`,
+  `cross_cutting_satellite_ao_dispatch_batch1b`, `orchestrator_vm_e2e_hardening`,
+  `sports_consolidated_native_ao_extract` — all incidental context mentions, not systemic fixes). Item 9 (line 684,
+  "FORKED 2026-08-03") is the redirect to `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (also re-
+  confirmed KEEP-NA this same run, 5 items, no double-count with this doc's other 8) — correctly open until that fork
+  ships and closes it back here. No RECLASSIFY, no ARCHIVE.

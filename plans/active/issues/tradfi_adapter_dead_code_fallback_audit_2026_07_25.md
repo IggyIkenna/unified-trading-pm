@@ -59,7 +59,9 @@ context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_cme_converter.py,
+    execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py,
   ]
 ---
 
@@ -309,12 +311,19 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       through past a silent miss). Updated `test_cancel_order_real_not_found` (previously asserted the buggy
       fabricated-success behavior) to assert the raise instead. Repo: execution-service — execution-service@2514bd6b.
 
-- [ ] [OPERATOR] P1. **DECISION — execution-service tradfi order-routing is entirely unreachable** (Finding E-1): all 6
-      venue adapters (`cme_adapter.py`, `cboe_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`,
-      `fx_adapter.py`) + shared `ibkr_tradfi.py` base are registered+tested but excluded by both the
-      `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the UAC-capability-declarations manual-HTTP gate. Cross-refs this
-      plan family's open todo 1 (backfill=paper=live wiring proof). Decide: bridge the two vocabulary gates, or document
-      as intentional not-yet-activated scaffolding. Repos: execution-service, unified-api-contracts.
+- [x] ✅ [BACKEND] P1. **DECIDED 2026-08-03 (operator ruling) — keep it gated; documented as intentional
+      not-yet-activated scaffolding** (Finding E-1): all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`,
+      `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain
+      registered+tested but excluded by both the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the
+      UAC-capability-declarations manual-HTTP gate — ruling was NOT to bridge the two vocabulary gates. Added STATUS
+      documentation at both gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s
+      `NAUTILUS_UNSUPPORTED_VENUES`,
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/     _tradfi.py`'s module docstring)
+      plus the `TRADFI_VENUES` registration site (`execution-service/execution_service/trade_execution/factory.py`) and
+      the shared base's own module docstring (`ibkr_tradfi.py`), each cross-referencing this finding and this same plan
+      family's still-open todo 1 (backfill=paper=live wiring proof,
+      `tradfi_consolidated_native_ao_extract_2026_07_25.md`) as the condition for future activation. Repos:
+      execution-service@d87002da, unified-api-contracts@e39170d5.
 
 - [x] ✅ [BACKEND] P2. **instruments-service `ibkr.py` dead-code candidate** (Finding I-3): registered twice
       (`factory.py:168`, `router.py:236,329`), tested, but zero entries for adapter key `"ibkr"` in UAC's
@@ -330,12 +339,13 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       pointer comments at both registration sites. `instruments-service@1bf5467c`, `quality-gates.sh` PASSED (122s),
       verified on origin.
 
-- [ ] [OPERATOR] P2. **DECISION — 4 unregistered MTDS macro adapters** (Finding M-2): `baker_hughes_adapter.py`,
-      `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py` are complete + tested but never registered in
-      `factory.py`'s `VENUE_REGISTRY`/`PLANNED_VENUES`, no CLI/orchestrator path. Decide: register + wire a CLI
-      operation, delete, or (minimum) document scaffold status matching `databento_equity.py`'s precedent. Correct
-      `factory.py:149`'s stale `# TradFi (9 venues)` comment (only 7 registered) once decided. Repo:
-      market-tick-data-service.
+- [x] ✅ [BACKEND] P2. **DECIDED 2026-08-03 (operator ruling) — document, don't register or delete** (Finding M-2):
+      `baker_hughes_adapter.py`, `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py` remain complete +
+      tested but unregistered in `factory.py`'s `VENUE_REGISTRY`/`PLANNED_VENUES`, no CLI/orchestrator path. Added a
+      STATUS note to each module's docstring matching `databento_equity.py`'s existing scaffold-status precedent
+      (intentional not-yet-activated scaffolding, cross-referencing this finding + the operator ruling). Also corrected
+      `factory.py:149`'s stale `# TradFi (9 venues)` comment to the actual registered count of 7. Repo:
+      market-tick-data-service@7db75b1a.
 
 - [ ] [OPERATOR] P2. **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
       `DatabentoCmeConverter` and `databento_opra_converter.py`'s `DatabentoOpraConverter` produce an orphaned
@@ -343,15 +353,26 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       or document as intentionally unused. Correct the stale credit at `docs/tradfi-venue-coverage-matrix.md:26`
       regardless of direction. Repo: market-tick-data-service.
 
-- [ ] [BACKEND] P3. **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
+- [x] [BACKEND] P3. ✅ **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
       `reference_data/adapters/tradfi/databento/adapter.py::_parse_tick_and_lot` (lines 715-729),
       `reference_data/adapters/tradfi/databento/sessions.py::_get_xcal` (lines 149-161) and `::_is_trading_holiday`
       (lines 164-179) — add logging (`logger.debug`/`warning`) consistent with the other catch blocks in the same files.
-      Repo: instruments-service.
+      Repo: instruments-service. — instruments-service@d0510269510e6c6b5428771decd6a1d454499ccf: `_parse_tick_and_lot`'s
+      two except blocks now `logger.warning("Failed to parse tick/lot size %r: %s", ...)` (matching this file's own
+      `data.to_df()` catch's warning-level "Failed to X: exc" style); `_get_xcal` now
+      `logger.warning("Failed to load     exchange calendar %s (%s): %s", ...)` (matching sibling `_compute_utc_hours`'s
+      warning-level broad-failure style); `_is_trading_holiday` now
+      `logger.debug("Holiday check failed for %s on %s: %s", ...)` (matching sibling `_apply_early_close`'s debug-level
+      narrow-per-date-check style). `bash scripts/quality-gates.sh` green (repo's own [0-6/6] gate stages passed, 5159
+      tests); shipped via `quickmerge.sh --agent`.
 
-- [ ] [BACKEND] P3. **Narrow residual broad except in MTDS `tardis_bulk_download.py::_download_bulk`** (Finding M-5,
+- [x] [BACKEND] P3. ✅ **Narrow residual broad except in MTDS `tardis_bulk_download.py::_download_bulk`** (Finding M-5,
       lines 533-541) to the same explicit transport/HTTP error tuple used one block above (lines 520-532, the CF-11 fix)
-      instead of a bare `except Exception`. Repo: market-tick-data-service.
+      instead of a bare `except Exception`. Repo: market-tick-data-service. — market-tick-data-service@4dc7bf9f:
+      `except Exception as exc:` at line 533 narrowed to
+      `except (TardisHTTPError, CanonicalError, ConnectionError, TimeoutError, OSError) as exc:`, the exact tuple used
+      by the sibling CF-11-fixed block at line 520. `bash scripts/quality-gates.sh` green (all 6 gate stages passed);
+      shipped via `quickmerge.sh --agent`.
 
 - [ ] [BACKEND] P3. **Narrow `ibkr_tradfi.py::close()`'s bare `except BaseException`** (Finding E-3, lines 638-643) to a
       specific exception type and bump the log level from `debug` to `warning`. Repo: execution-service.
@@ -360,10 +381,14 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       mention all 10 exported adapter/converter classes (currently narrates only 6 of 10) once todos for M-2/M-3 above
       are resolved — the stale docstring is corroborating evidence for those findings. Repo: market-tick-data-service.
 
-- [ ] [BACKEND] P3. **Add a one-line clarifying comment in MTDS `market_interface/factory.py`** near line 151's
+- [x] [BACKEND] P3. ✅ **Add a one-line clarifying comment in MTDS `market_interface/factory.py`** near line 151's
       `"tardis": ("tradfi", TardisAdapter)` registration, noting `tradfi/` groups by data-vendor/transport (Tardis is a
       market-data vendor) rather than by asset-category (Tardis's write path lands under `category=cefi`) — see the
-      directory-naming observation in Finding-B. Repo: market-tick-data-service.
+      directory-naming observation in Finding-B. Repo: market-tick-data-service. — market-tick-data-service@4dc7bf9f:
+      added
+      `# "tradfi" groups by data-vendor/transport (Tardis=vendor), not     asset-category — writes land under category=cefi.`
+      immediately above the `"tardis": ("tradfi", TardisAdapter)` line. Shipped via `quickmerge.sh --agent` in the same
+      commit as the M-5 fix.
 
 ## Reconciliation
 
@@ -380,3 +405,23 @@ that plan's own stated reconciliation pattern.
   ancestor of origin and re-checked codex `tradfi-databento-sourcing-ssot.md` + workspace CLAUDE.md's "removed... 2026
   -07-19" language against the now-actually-removed code — both already read true as written, no further doc edits
   needed. Flipped the checkbox citing the landed commit; no new code shipped by this slot.
+- **2026-08-03 (slot 9, backend_engineer)**: applied the operator ruling for Finding E-1 (keep tradfi order-routing
+  gated, document as intentional scaffolding rather than bridging the gates). Added STATUS notes at both gate sites
+  (`nautilus_compatibility.py::NAUTILUS_UNSUPPORTED_VENUES`, UAC `_tradfi.py` module docstring) plus
+  `factory.py::TRADFI_VENUES` and `ibkr_tradfi.py`'s module docstring, each cross-referencing this finding + the
+  still-open backfill=paper=live wiring-proof todo. No behavior change — documentation only, gates stay closed.
+  `execution-service@d87002da`, `unified-api-contracts@e39170d5`.
+- **2026-08-03 (backend_engineer)**: shipped Findings M-5 + B (both P3, mechanical). `_download_bulk`'s residual
+  `except Exception` (line 533) narrowed to the same
+  `(TardisHTTPError, CanonicalError, ConnectionError, TimeoutError, OSError)` tuple as the CF-11-fixed sibling block one
+  block above; added the one-line `tradfi/`-groups-by-vendor clarifying comment above `factory.py`'s `"tardis": (...)`
+  registration. `market-tick-data-service@4dc7bf9f` (`quality-gates.sh` full green, shipped via
+  `quickmerge.sh --agent`). Both checkboxes flipped above.
+- **2026-08-03 (slot 14, backend_engineer)**: applied the operator ruling for Finding M-2 (document the 4 unregistered
+  MTDS macro adapters, don't register or delete). Added a STATUS note to each of `baker_hughes_adapter.py`,
+  `cftc_cot_adapter.py`, `eia_adapter.py`, `fear_greed_adapter.py`'s module docstring, matching `databento_equity.py`'s
+  scaffold-status precedent and cross-referencing this finding + the ruling; corrected `factory.py:149`'s stale
+  `# TradFi (9 venues)` comment to the actual registered count (7). No behavior change — documentation only.
+  `market-tick-data-service@7db75b1a` (`quality-gates.sh` full green, shipped via `quickmerge.sh --agent`, verified
+  ancestor of origin). Checkbox flipped above.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries).

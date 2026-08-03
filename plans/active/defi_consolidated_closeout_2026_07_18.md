@@ -139,11 +139,8 @@ context_scope:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md,
-    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
   ]
 ---
 
@@ -445,11 +442,13 @@ Discriminator = **does a manifest row exist**.
       shows catalogue SPOT_ASSET=1,390 (well-populated, 17 venues, 0 DRIFT) and catalogue SPOT_PAIR=56
       (CHAINLINK/PYTH/EIGENLAYER only, 0 DRIFT) with 0 `spot_pair` rows in the live consolidated manifest index — the
       143K figure is stale/never-applied, not a live target. (repos: market-tick-data-service)
-- [ ] [BACKEND] P1. **Add the `EXPECTED_SUBGRAPH_DEINDEXED` reason** to reclassify the 952 false Curve/Optimism
+- [x] ✅ [BACKEND] P1. **Add the `EXPECTED_SUBGRAPH_DEINDEXED` reason** to reclassify the 952 false Curve/Optimism
       `attempted_failed` → honest-empty; reconcile `spot_asset` absence from the enumerated catalogue (the v2 corpus
-      predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). **Parent stays open — the
-      `--apply` sub-item below is genuinely pending; the other 3 are DONE.** (repos: unified-api-contracts,
-      instruments-service)
+      predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). **All 4 sub-items now
+      DONE** (repos: unified-api-contracts, instruments-service) — **DONE (na-eligibility-audit 2026-08-03)**: the
+      `--apply` sub-item below (previously the sole pending piece) shipped via
+      `defi_consolidated_native_ao_extract_2026_07_25.md`'s Todo 1 (DONE 2026-07-28, slot-13) — see that todo + this
+      doc's own nested `--apply` checkbox below for the evidence.
   - [x] Reason SHIPPED `unified-api-contracts@e893e5c9`.
   - [x] Reclassification script SHIPPED `instruments-service@73100d4e`
         (`scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`), dry-run verified against live prod
@@ -457,21 +456,31 @@ Discriminator = **does a manifest row exist**.
         bug in the first script version (matching the full 45-char subgraph id) initially found 0 because the manifest's
         `error_reason` column truncates at 80 chars; fixed to match the untruncated message prefix, then confirmed
         against an independent raw pandas count of the same 144 rows.
-  - [ ] `--apply` NOT YET RUN — 2 VM-launch attempts 2026-07-24 both FAILED differently; stopped (stall-safety) rather
-        than blind-retry a 3rd time. **Attempt 1** rc=2 file-not-found — root cause: `setup-data-pipeline-vm.sh`'s
-        `canonical-migration` branch (`:1187`) hardcodes `cd "$WORKSPACE/mtds"` regardless of `VM_SERVICE`, so this
-        instruments-service script can't be found; a real launcher bug (new follow-up below), not user error. **Attempt
-        2** (workaround: `bash -c 'cd .../instruments && python ...'`): `run.log` never got created at all — likely the
-        nested quoting breaking the startup script's own `python`→venv-python substitution. Population still tiny (144
-        rows) and low-growth — safe to leave open. Full detail:
+  - [x] ✅ `--apply` **DONE (na-eligibility-audit 2026-08-03)** — `defi_consolidated_native_ao_extract_2026_07_25.md`'s
+        Todo 1 (DONE 2026-07-28, slot-13): fixed the `cd` bug (see the follow-up item below, also closed by the same
+        evidence), then ran the `--apply` on a fresh `e2-highmem-16` VM
+        (`canonical-migration-defi-curve-optm-reclass-20260728-061053`, exit_code=0): reclassified **420** rows total
+        (346 in `_index/availability_index.parquet` + 74 in a per-VM shard), backups preserved. Post-run manifest
+        spot-check confirmed `EXPECTED_SUBGRAPH_DEINDEXED` CURVE/OPTIMISM rows = 346 (matches the log) and rows still
+        `attempted_failed` matching the dead-subgraph cascade signature = 0. **Was**: NOT YET RUN — 2 VM-launch attempts
+        2026-07-24 both FAILED differently; stopped (stall-safety) rather than blind-retry a 3rd time. **Attempt 1**
+        rc=2 file-not-found — root cause: `setup-data-pipeline-vm.sh`'s `canonical-migration` branch (`:1187`) hardcodes
+        `cd "$WORKSPACE/mtds"` regardless of `VM_SERVICE`, so this instruments-service script can't be found; a real
+        launcher bug (new follow-up below), not user error. **Attempt 2** (workaround:
+        `bash -c     'cd .../instruments && python ...'`): `run.log` never got created at all — likely the nested
+        quoting breaking the startup script's own `python`→venv-python substitution. Full detail:
         `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
-- [ ] [INFRA] P2. **NEW 2026-07-24 — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above (the
-      canonical-migration `VM_TASK` case branch's hardcoded `cd` path in `setup-data-pipeline-vm.sh`) — mirror the
+- [x] ✅ [INFRA] P2. **NEW 2026-07-24 — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above
+      (the canonical-migration `VM_TASK` case branch's hardcoded `cd` path in `setup-data-pipeline-vm.sh`) — mirror the
       `VM_SERVICE`-keyed instruments branch other cases already use. (repo: deployment-service) **na-eligibility-audit
       2026-08-01: already claimed elsewhere — this exact fix is IN PROGRESS in
       `defi_consolidated_native_ao_extract_2026_07_25.md`'s Track-1 Progress Log (2026-07-26/27, slot-4): code-complete,
       blocked on shipping by a shared-host `pytest` I/O stall, not abandoned. Not re-drafted; stays here pending that
-      plan's own completion — check there first before starting fresh work on this item.**
+      plan's own completion — check there first before starting fresh work on this item.** **DONE (na-eligibility-audit
+      2026-08-03)** — `defi_consolidated_native_ao_extract_2026_07_25.md`'s Progress Log (2026-07-28, slot-13):
+      confirmed ALREADY SHIPPED on `live-defi-rollout` (`deployment-service@0ed2ca6`, "derive canonical-migration
+      workspace dir from VM_SERVICE") — a different slot landed it after the shared-host stall above; independently
+      re-verified rather than assumed.
   - [x] `spot_asset`/`spot_pair` reconciliation investigated + resolved via live re-measurement (see the P0 item's
         footnote above) — both were stale/non-issues, not a coding task.
 
@@ -560,7 +569,13 @@ file, not here.
       the correction above, this is every one EXCEPT the dex-pools-scoped collect + forward-poll pair split into the
       next todo) AFTER Track-1/2 land so they write the canonical shape; fix the consolidator duplicate-race + SIGKILL
       (**both already CLOSED, see correction above** — only the honest-coverage nightly right-size + codex-drift-doc
-      sub-clauses remain). **Because live=batch, no live-only DeFi data_type needs separate reconciliation** — the
+      sub-clauses remain). **UPDATE 2026-08-03 (finalize task, slot-2 review craft): the honest-coverage-nightly
+      right-size sub-clause is now DONE**, closed by `defi_consolidated_native_ao_extract_2026_07_25.md`'s todos 2-3 —
+      the `_compute_coverage` per-asset_group streaming refactor (`instruments-service@12825e81`) plus the machine-type
+      downsize verified holding on `e2-standard-4` (16GB) with zero OOM across a live control-vs-test comparison
+      (`deployment-service@fec7946`/`d880de3`). This todo itself (the cron-resume action) stays OPEN — still gated on
+      Track-1/2 + the migration-VM finishing, as below; only the right-size sub-clause is closed. The codex-drift-doc
+      sub-clause remains open. **Because live=batch, no live-only DeFi data_type needs separate reconciliation** — the
       forward writer is already canonical (Half-A done); the open work is Half-B (migrate the historical corpus) then
       resume forward. Do not resume before the currently-running per-instrument migration VM finishes (it is actively
       migrating exactly the 4 paused collectors' data types — resuming now races live writes against it).
@@ -703,20 +718,20 @@ file, not here.
       re-run it to confirm these clusters clear per the two plans' own done-when criteria, before any `--apply`.
 
       **UPDATE 2026-08-02 (finalize task `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
-                                                                                                                                                                                                                                                          review craft): all 5 todos of `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
-                                                                                                                                                                                                                                                          re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
-                                                                                                                                                                                                                                                          of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
-                                                                                                                                                                                                                                                          `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
-                                                                                                                                                                                                                                                          DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
-                                                                                                                                                                                                                                                          RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
-                                                                                                                                                                                                                                                          confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
-                                                                                                                                                                                                                                                          each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
-                                                                                                                                                                                                                                                          address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
-                                                                                                                                                                                                                                                          FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
-                                                                                                                                                                                                                                                          match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
-                                                                                                                                                                                                                                                          log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
-                                                                                                                                                                                                                                                          `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
-                                                                                                                                                                                                                                                          resolved` accordingly in this same commit.
+                                                                                                                                                                                                                                                                                  review craft): all 5 todos of `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
+                                                                                                                                                                                                                                                                                  re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
+                                                                                                                                                                                                                                                                                  of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
+                                                                                                                                                                                                                                                                                  `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
+                                                                                                                                                                                                                                                                                  DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
+                                                                                                                                                                                                                                                                                  RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
+                                                                                                                                                                                                                                                                                  confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
+                                                                                                                                                                                                                                                                                  each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
+                                                                                                                                                                                                                                                                                  address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
+                                                                                                                                                                                                                                                                                  FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
+                                                                                                                                                                                                                                                                                  match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
+                                                                                                                                                                                                                                                                                  log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
+                                                                                                                                                                                                                                                                                  `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
+                                                                                                                                                                                                                                                                                  resolved` accordingly in this same commit.
 
 - [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
       fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
@@ -914,6 +929,11 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   during an editing session; if any of it describes work not otherwise reflected above, re-verify and fold it into the
   relevant Track section.
 
+- **context-scout 2026-08-03**: trimmed context_scope from 9 to 6 entries (dropped 3 narrower/archived pointers —
+  `defi_track5_coverage_mvp_backfill_2026_07_24.md`, the archived
+  `defi_consolidated_closeout_aggregated_sources_ 2026_07_24.md` digest, and the archived
+  `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` — to stay within the intended 2-6 MVI range; kept the
+  canonical-naming/delete-safety/coverage-model codex SSOTs + the gating Track0-1 child plan).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 
 ## Progress Log

@@ -67,9 +67,11 @@ source: >-
   correctly — this doc is about the STUB TEXT that caused the wrong call in the first place, not the recovery path).
 context_scope:
   [
-    /home/ubuntu/unified-trading-system-repos/.tabs/12/agent-orchestrator/server/prompts.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/12/agent-orchestrator/server/routes/slots_worker.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/12/agent-orchestrator/server/models/worker_api.py,
+    agent-orchestrator/server/prompts.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/models/worker_api.py,
+    agent-orchestrator/server/plan_health.py,
+    agents/worker.md,
     /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
   ]
 ---
@@ -169,3 +171,7 @@ Two independent, complementary fixes — either alone helps, both together close
   routed to `execution_scope: local-only`. Todo 3 is explicitly a judgment call ("verify no caller depends on that
   tolerance first" before adding `extra="forbid"` to a shared request model). Bounded-per-todo is not the same test as
   safe-to-dispatch here.
+- **context-scout 2026-08-03**: re-scouted; fixed a real bug in the existing context_scope — 3 of 4 entries were
+  session-specific absolute paths (`/home/ubuntu/.../.tabs/12/agent-orchestrator/...`) that don't resolve for any other
+  worker/host. Replaced with repo-relative paths, added `server/plan_health.py` (todo 2's other named call site) and
+  `agents/worker.md` (the STEP 2 example todo 1 says to mirror) — now 6 entries.

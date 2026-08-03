@@ -41,8 +41,8 @@ depends_on: []
 locked_by:
 context_scope:
   [
+    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md,
     instruments-service/instruments_service/reference_data/adapters/defi/_dex_factory_registry.py,
     instruments-service/scripts/canonicalize_defi_manifest_venue_2026_06_14.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
@@ -200,3 +200,7 @@ original audit and this measurement, not a discrepancy in method; both counts de
   Confirmed: Option A (subgraph query augmentation, needs a live-schema probe per fork or a wrong field name hard-errors
   the query) vs Option B (on-chain RPC `factory()` lookup, needs an RPC provider + pool_address enumeration) remains an
   undecided design call, plus a cross-repo UAC `ALL_DEFI_VENUES` registration prerequisite.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the archived
+  `canonical_closeout_open_questions_2026_07_18.md` for
+  `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`, the doc's own 2026-08-02 correction naming it
+  as the actual executable-todo location.

@@ -40,6 +40,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
+    unified-trading-pm/scripts/quality_gates/check_runbook_execution_owner.py,
+  ]
 ---
 
 # What was observed
@@ -188,3 +195,13 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
   **Standing note for the next run**: the conflict-check is done and clear, so if the operator picks B this is a
   one-line frontmatter change plus `execution_scope: local-only → orchestrator-agent` and an `assigned_role` fill — do
   not re-derive it.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — close call, preserving caution rather than
+  loosening the verdict. The ownership blocker from the 2026-08-02 pass is now moot (retag `asset_group: [meta] -> [ao]`
+  executed 2026-08-02, confirmed live — that's why this run sees the doc at all), but the independent blast-radius
+  concern is not: the todo's own "byte-identical verdict semantics" claim is asserted, not proven, against a gate that
+  runs inside every `quality-gates.sh`/quickmerge in every repo and already caused one real fleet-wide 13+min hang
+  incident. No new resolving evidence since the 2026-08-02 hold (no diff-proof run, no operator pick of option A/B/C).
+  Staying skeptical of a "fully-scoped, AO-dispatchable" self-framing on live-dispatch-critical -path machinery per this
+  skill's own guidance, rather than re-deriving a looser verdict on unchanged evidence.

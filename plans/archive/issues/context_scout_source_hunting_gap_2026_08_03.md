@@ -1,0 +1,230 @@
+---
+doc_type: issue
+title:
+  "`/context-scout` Phase 1's own spec-mandated source-hunting (root-cause sections + error messages are its stated
+  'highest-yield spots') did not fire on a doc whose P2 todo names exactly that kind of content -- confirmed on a live
+  repro, not measured on a corpus sample"
+summary:
+  "Investigating why session context blows past 200k despite `context_scope` being populated, I traced a concrete repro:
+  `/plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md`'s P2 todo
+  (added 2026-07-31, commit ce22ca1d0) is a root-cause investigation naming specific concepts in prose --
+  `weekend`/`holiday`, `venue_trading_calendar`/`EXPECTED_WEEKEND` marker, `DEPENDENCY CHECK FAILED` -- across two named
+  repos (market-tick-data-service, market-data-processing-service). `cursor-configs/skills/context-scout/ SKILL.md`
+  Phase 1 step 4 states root-cause sections and error messages are the highest-yield spots for source-path hunting, and
+  that a codex-only `context_scope` on a doc with real code substance 'should be treated as an unfinished Phase-1 pass,
+  not an acceptable minimal result.' The actual context-scout pass on this doc ran 2026-08-01 (commit cd4b6bc9e,
+  'context-scout backfill batch 7') -- AFTER the P2 todo already existed -- and wrote exactly 3 entries, all codex/plan
+  docs, zero source paths. Cold-grepping the same two repos for the todo's own named symbols
+  (`weekend|holiday|trading_calendar|EXPECTED_WEEKEND` in MTDS, `dependency_checker` in MDPS) surfaces 25 candidate
+  files (579,376 chars / ~145k tokens if read blind); even a disciplined top-4-by-name triage is ~92k chars / ~23k
+  tokens -- a cost the P2 todo's own picker-up now pays cold, which `context_scope` exists specifically to avoid. This
+  is not a novel failure mode -- SKILL.md's own Phase-1 write-up cites a 2026-07-30 corpus spot-check finding only 51%
+  of already-scouted docs carried a real source path -- but this is a fresh, reproducible instance from AFTER that
+  measurement/spec tightening, on a doc whose content is a textbook match for the stated hunting criteria. Separately
+  (unconfirmed, flagged for the audit todo below, not asserted): this doc's git-last-commit date moved to 2026-08-02 via
+  a same-day mechanical hygiene commit (17b53df1e, 'fix(plan-hygiene): resolve plan_health gate... fix reference-path
+  drift') that likely did not touch doc substance -- worth checking whether `generate_context_scope_inventory.py`'s
+  STALE/UP_TO_DATE heuristic (marker date vs. `last_updated`-or-git-commit-date) can be fooled into UP_TO_DATE by a
+  content-irrelevant mechanical commit bumping the fallback date, independent of the Phase-1 miss confirmed above."
+status: resolved
+nature: process
+asset_group: [ao]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [context-scope, context-scout, plan-hygiene, tooling, agent-context-cost, mvi, source-path-hunting]
+related:
+  [
+    /plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
+    /plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+  ]
+created: 2026-08-03
+parent_epic: agent_operating_framework_master
+source:
+  "Surfaced in an interactive session on 2026-08-03 explaining to the operator why session context exceeds 200k despite
+  a doc's context_scope being populated; traced to a concrete Phase-1 source-hunting miss rather than a structural
+  limitation of the context_scope field (which does carry source paths correctly elsewhere in the corpus -- confirmed
+  via corpus grep, dozens of other docs have `.py` entries)."
+locked_by:
+resolved_by:
+  "all 4 todos DONE 2026-08-03: item 1 live Phase-1 re-run confirmed the 2 named source paths surfaced
+  (unified-trading-pm@c4ab47371); item 2 corpus spot-check measured 62.1% source-path rate excluding carve-outs, up from
+  the 51% 2026-07-30 baseline (unified-trading-pm@b0422e033); item 3 shipped the deterministic post-hoc source-hunting
+  lint, wired into SKILL.md Phase 3 (unified-trading-pm@1c5d7553d); item 4 confirmed the STALE/UP_TO_DATE false-positive
+  risk was real (commit 17b53df1e3 was a live occurrence) and replaced the line/bracket-scan heuristic with a structured
+  frontmatter+body diff, re-verified 0 mismatches across 1007 pairs (unified-trading-pm@8470b3a70)"
+execution_scope: orchestrator-agent
+assigned_role: docs_reconciler
+model_tier: sonnet-doable
+drift_direction: advance-code
+assigned_vm: planning
+depends_on: []
+context_scope:
+  [
+    /plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
+    cursor-configs/skills/context-scout/SKILL.md,
+    scripts/plan-hygiene/generate_context_scope_inventory.py,
+  ]
+priority: P2
+---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. No content was rewritten. Reconciled +
+> archived by `context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md`'s own gated todo.
+
+## What I found
+
+`generate_context_scope_inventory.py` is a pure eligibility classifier -- it parses frontmatter, compares a
+`context-scout YYYY-MM-DD` Progress Log marker date against the doc's last-touched date, and buckets NEVER_SCOUTED /
+STALE / UP_TO_DATE. It does zero content grepping and never reads todo text; it cannot be the thing that decides _what_
+goes into `context_scope`. That decision is entirely inside the Phase 1 sub-agent process SKILL.md describes: read the
+doc's body, extract cited codex/plan paths (free), then "actively hunt" named filenames/scripts/classes/modules in prose
+-- explicitly calling out root-cause sections and error messages as the highest-yield spots -- and grep the named repo
+if nothing is named explicitly.
+
+The `tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` P2 todo is exactly that shape: it
+names a marker concept (`venue_trading_calendar`/`EXPECTED_WEEKEND`), an error string (`DEPENDENCY CHECK FAILED`), a
+specific check module (`market_data_processing_service.app.core.dependency_checker`), and two repos by name. Per
+SKILL.md's own bar, this should have been a "near-automatic include" once verified to exist. It wasn't included -- the
+doc's `context_scope` has 3 entries, all codex/plan docs (`infrastructure_master.md`, `honest-coverage-model.md`, one
+archived issue), zero source paths -- despite the 2026-08-01 scout pass running after the P2 todo already existed in the
+doc body.
+
+I confirmed the candidates ARE cheaply discoverable: `rg -il 'weekend|holiday|trading_calendar|EXPECTED_WEEKEND'`
+against market-tick-data-service surfaces 15 files; `rg -il 'dependency_checker'` against market-data-processing-service
+surfaces 10. Among them, `market_data_processing_service/app/core/ dependency_checker.py` and
+`market_tick_data_service/scripts/reclass_per_instrument_weekend_holiday_eu.py` are exactly the kind of "obvious entry
+point" SKILL.md Phase 1 step 4 asks a hunter to grep for when nothing is named literally -- and here something WAS named
+literally (`dependency_checker`), which should have made this even more automatic than the fallback case.
+
+This confirms `context_scope` is not structurally code-blind (dozens of other corpus docs carry `.py` entries fine) --
+this is a Phase-1 execution miss on a doc that should have been a clean hit, consistent with SKILL.md's own
+self-reported 51% source-path-coverage baseline (2026-07-30) not having meaningfully improved by the very next scouting
+pass on this doc (2026-08-01).
+
+## Why it matters
+
+`context_scope` exists to cut a worker's cold-start cost. When Phase 1 misses on a doc whose todo requires reading two
+services' source to root-cause, the worker who picks up that todo pays the full cold-grep cost anyway -- measured here
+at ~145k tokens if the 25 grep-surfaced candidates are read blind, ~23k tokens even with disciplined triage to the 4
+most name-plausible files -- stacked on top of ~72k tokens already spent on this doc's doc-level `context_scope` +
+CLAUDE.md + directly-relevant-but-unlisted codex docs. That's most of a 200k context budget spent before the actual fix
+is attempted, for exactly the class of todo (open investigation, root-cause unknown) where `context_scope` is supposed
+to matter most.
+
+## Todos
+
+- [x] ✅ [SCRIPT] P2. Manually run `/context-scout` Phase 1 against
+      `/plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` and confirm
+      it now surfaces `market_data_processing_service/app/core/dependency_checker.py` and/or
+      `market_tick_data_service/scripts/reclass_per_instrument_weekend_holiday_eu.py` (or the actual correct
+      weekend-marker-write module, once identified) as source-path entries. This is a live demonstration the fix works
+      on the exact repro case, not a theoretical claim. — unified-trading-pm (this commit). Manually ran Phase 1 against
+      the target doc: extracted 2 explicitly-named-in-prose source paths verified to exist
+      (`market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`, already-named in
+      the doc's root-cause section) and, per SKILL.md step 4's grep-fallback for the MTDS side (doc names only concepts
+      — `venue_trading_calendar`/`EXPECTED_WEEKEND` — not a literal filename), grepped market-tick-data-service and
+      traced the actual live write path (`non_trading_day_reason()` → `record_expected_empty()`) to
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+      `_emit_nontrade_venue_sentinels()` — the suggested `reclass_per_instrument_weekend_holiday_eu.py` turned out to be
+      a post-hoc backfill reclassifier, not the live per-day marker writer, so `manifest_finalize.py` is the "actual
+      correct weekend-marker-write module" this todo asked to identify. Both entries added to the target doc's
+      `context_scope` (3 → 5 entries) + a dated `context-scout 2026-08-03` Progress Log marker, committed to the target
+      doc.
+- [x] ✅ [SCRIPT] P2. Spot-check a fresh sample (20-30 docs scouted since 2026-08-01, after the SKILL.md spec revision
+      that added the "near-automatic include" / "unfinished Phase-1 pass" language) for real source-path presence, the
+      same way the 2026-07-30 342-doc baseline was measured. Report whether the rate improved from 51% or is still flat
+      -- this determines whether the SKILL.md spec tightening actually changed sub-agent behavior or the miss found here
+      is representative of an ongoing gap. — measured, not a theoretical claim. Reused `scripts/docs/docspec.py`'s
+      frontmatter parser (same pattern `generate_context_scope_inventory.py` uses) in a one-off scratchpad script to
+      find every `plans/active/*.md` + `plans/active/issues/*.md` doc whose most recent `context-scout YYYY-MM-DD`
+      Progress Log marker is >= 2026-08-01, then checked whether each doc's `context_scope` carries >=1 entry that isn't
+      a `/plans/` or `/codex/` reference (a real source path). **Population: 447 docs** (far larger than the requested
+      20-30 -- the whole corpus got touched by that day's backfill batches, not a small slice), of which 67 are
+      legitimate zero-source carve-outs per SKILL.md's own bar (dispatch-batch coordinators / `*_finalize` gates).
+      **Rate excluding legitimate carve-outs: 236/380 = 62.1%** (raw across all 447: 63.5%) -- **up from the 2026-07-30
+      baseline of 51%**, a genuine ~11-point improvement, not flat. Also drew a 25-doc seeded-random sample from the
+      same non-carveout population (matching the task's requested sample size/methodology): 21/25 = 84.0% -- higher than
+      the full-population rate, illustrating real sampling variance at n=25 (this is why the full 380-doc denominator is
+      the more reliable number, not the small sample). Did not further prune the "zero-source, non-carveout" list for
+      other legitimate-but-unflagged coordinator shapes (e.g. `*_consolidated_closeout` docs, which read similarly to
+      dispatch-batch coordinators but weren't in the exclusion regex) -- so 62.1% is a conservative floor, the true rate
+      is likely somewhat higher. **Verdict: the SKILL.md spec tightening measurably changed sub-agent behavior** (51% ->
+      62-64%); the miss found in item 1 above was a real individual-doc failure, not evidence the tightening had zero
+      effect corpus-wide. Script: `scratchpad/spotcheck_source_path_rate.py` (session-scoped, not committed -- one-off
+      analysis, not a standing tool; the P3 item below (item 3, the deterministic post-hoc lint) is the tracked
+      follow-up if a repeatable version is wanted).
+- [x] ✅ [SCRIPT] P3. Add a cheap deterministic post-hoc lint to Phase 3's report (not a blocker, a surfaced warning):
+      for each doc scouted with zero source-path entries, check whether the doc body contains any token matching a known
+      filename/module pattern (e.g. `\w+_service\b`, `\.py\b`, a `repos:` frontmatter repo name followed by a path-like
+      token) that doesn't appear anywhere in the written `context_scope`. Flag those in the Phase 3 report for human
+      spot-check, since Phase 1's hunting is pure agent judgment with no other check that it actually ran as specified.
+      — unified-trading-pm (this commit). Added `scripts/plan-hygiene/generate_context_scope_source_lint.py`: a
+      regex-only, deterministic, advisory-only pass (no baseline, not wired into `run_hygiene_sweep.sh`) over every
+      already-scouted doc whose `context_scope` has zero source-path entries (an entry not starting `/codex/` or
+      `/plans/`), flagging any `*_service` token, `.py` filename, or `repos:`-frontmatter-name+path-token found in the
+      doc body but not covered by `context_scope`. Exempts the doc shapes SKILL.md's own Phase 1 already treats as
+      legitimately code-free (`*_satellite_ao_dispatch_batchN_*` coordinators, `*_finalize_YYYY_MM_DD.md` gates).
+      Verified on the live repro: run against the corpus, 176 scanned / 152 flagged after the exemption filter;
+      confirmed the P2 todo's own fixed target doc
+      (`tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md`, now carrying 2 source-path
+      entries) is correctly NOT flagged. `ruff check`/`ruff format --check`/`basedpyright` all clean. Wired into
+      `cursor-configs/skills/context-scout/SKILL.md` Phase 3 as a new "Post-hoc source-hunting lint" subsection so
+      future scheduled/interactive runs fold its output into the report.
+- [x] ✅ [SCRIPT] P3. Verify whether `generate_context_scope_inventory.py`'s STALE/UP_TO_DATE fallback (git last-commit
+      date, when frontmatter `last_updated` is absent) can produce a false UP_TO_DATE when a content-irrelevant
+      mechanical commit (e.g. a corpus-wide hygiene/reference-path-fix sweep) bumps a doc's git last-commit date past
+      its last real context-scout marker. If confirmed, the fix is comparing against the latest commit that touched doc
+      BODY content (via `git log -p` diff classification, or excluding known hygiene-sweep commit patterns) rather than
+      any commit touching the file at all. — CONFIRMED via an adversarial cross-check (parse-based ground truth: old vs
+      new frontmatter dict + body compared directly, over all 214 fallback-eligible docs' bounded 5-commit walk, 1006
+      (doc, commit) pairs): the prior `_commit_touches_only_ref_fields` line/bracket-scan heuristic had 5 real
+      mismatches vs ground truth, 2 in the dangerous direction (misclassified as ref-only when real content changed —
+      exactly the false-UP_TO_DATE risk this todo asked about). Root cause: a single-line ref-field with its bracket
+      closed inline (e.g. `depends_on: []`) made the scanner hunt forward for "the next bare `]` line" past its own
+      (nonexistent) closing bracket, landing on an UNRELATED later field's closing bracket several fields down and
+      silently absorbing everything in between into the "block". Live repro: commit `17b53df1e3` (the exact commit
+      already flagged as suspicious in this doc's "What I found" section) added a genuinely new field,
+      `archive_exempt: true`, between `resolved_by:`/`locked_by:` on
+      `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` — that line fell inside the
+      over-extended span rooted at `depends_on: []` and was misclassified as ref-only-confined. Fix shipped: replaced
+      the line/bracket-scan with a structured old-vs-new comparison (parse both versions' frontmatter + body via the
+      existing `docspec.parse_frontmatter` PyYAML loader; ref-only iff body is byte-identical AND every non-ref
+      frontmatter key is unchanged) — same 2-subprocess-call cost per commit walked, no line-position heuristic left to
+      get wrong. Re-ran the adversarial cross-check against the fixed code: 0 mismatches across all 1007 pairs / 214
+      docs. — unified-trading-pm (this commit).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-03** (ao tranche): RECLASSIFY, conflict-check CLEAR — flipped
+  `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. All 4 open items are bounded,
+  mechanically-checkable audit/tooling tasks against plan-hygiene scripts (`generate_context_scope_inventory.py`) or a
+  scripted live-demo verification run against one named repro doc — no undecided design/judgment call, no
+  live-dispatch-critical orchestrator code touched, no BLOCKED-OPERATOR banner or `depends_on` gate anywhere in the doc.
+  Conflict-check (3 surfaces): (a) no open todo in any active `assigned_vm: planning` doc in
+  `parent_epic: agent_operating_framework_master` claims this same ground (checked all 9 —
+  `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` is the closest topical neighbor but covers
+  line-cap/locked-doc mechanics, not Phase-1 source-hunting accuracy; two topically-adjacent NA docs,
+  `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s backfill-coverage todo and
+  `context_scope_consumption_enforcement_2026_07_30.md`'s consumption-enforcement todo, are both different claims — "is
+  it scouted at all" / "is it read once scouted" vs. this doc's "did scouting find the right paths"); (b) no sibling
+  batch/finalize doc drafted earlier in this run; (c) the ao consolidated-closeout doc
+  (`ao_open_issues_consolidated_close_out_2026_07_17.md`) does not touch this topic. Frontmatter already carried
+  `assigned_role: docs_reconciler` + `model_tier: sonnet-doable`, no correction needed. Companion finalize plan:
+  `context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md`.
+- **2026-08-03 (slot 2, docs_reconciler)**: closed item 1 (live-repro Phase-1 re-run on the tradfi MDPS staleness doc —
+  see that doc's own Progress Log for the 2 source paths added) and item 2 (corpus-wide source-path-rate spot-check:
+  62.1% excluding legitimate carve-outs / 63.5% raw across 447 docs scouted since 2026-08-01, vs. the 2026-07-30 51%
+  baseline — a genuine improvement, not flat; full detail + the 25-doc sample in item 2's own checkbox above). Items 3
+  and 4 (the deterministic post-hoc lint, and the STALE/UP_TO_DATE false-positive check) remain open.
+- **2026-08-03 (slot 10, docs_reconciler)**: closed item 4, the last open item — CONFIRMED the false-UP_TO_DATE risk
+  (not a false alarm): the git-fallback's ref-only-commit heuristic had a real line/bracket-scan bug that could
+  misclassify a commit touching real frontmatter content as ref-only-confined, letting `_last_touched` return an
+  earlier-than-true date. Found 2 live occurrences in the corpus (1006 pairs checked), one of them the EXACT commit
+  (`17b53df1e3`) this doc's own "What I found" section had already flagged as suspicious — so the suspicion recorded
+  there was correct. Replaced the heuristic with a structured parse-based old-vs-new comparison (see the checkbox above
+  for the full root-cause + fix writeup); re-verified 0 mismatches across the full 214-doc / 1007-pair adversarial
+  cross-check post-fix. This issue doc's 4 todos are now all closed — eligible for archival next hygiene sweep (not
+  archived in this commit, per the never-combine-flip-with-archival rule).

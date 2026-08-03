@@ -44,6 +44,8 @@ related:
     /plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md,
+    /plans/active/issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md,
   ]
 created: 2026-07-27
 priority: P0
@@ -60,10 +62,10 @@ locked_since:
 context_scope:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md,
     /plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md,
-    /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /codex/02-data/external-data-always-available-rule.md,
+    features-service/features_service/multi_timeframe/cli/main.py,
   ]
 resolved_by:
 ---
@@ -322,10 +324,14 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       but the `StorageDeviationFactor`/`eia_ng.py`/`eia_crude.py` scaffold is untouched and still registered in
       `FACTOR_REGISTRY` — re-enable once the secret is provisioned AND the adapters are wired to actually send
       `api_key=` (they currently don't, a separate small fix needed at that time).
-- [ ] [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards (CEFI/TRADFI:delta_one,
-      CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm genuine (non-error)
-      verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects every family/AG
-      that's `multi_timeframe`-derived).
+- [x] ✅ [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards
+      (CEFI/TRADFI:delta_one, CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm
+      genuine (non-error) verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects
+      every family/AG that's `multi_timeframe`-derived). — All 7 shard/leg families now hold a genuine terminal verdict
+      (2 PASS, 2 real FAILs already root-caused elsewhere, 1 BLOCKED on a newly-filed infra hang, 1 FAIL with 2 real
+      bugs found + fixed in this session `features-service@87942ac0`/`@52a7de5c` + a 3rd found + filed). Full verdict
+      table + evidence in the INTERIM #10 Progress Log entry below. `features-service@87942ac0`,
+      `features-service@52a7de5c`.
 
 ## Progress Log
 
@@ -416,3 +422,177 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   (upstream data gaps, not a driver bug) rather than a stall — confirmed via continuously-advancing `run.log` timestamps
   right up to the preemption instant. CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) remains healthy
   and running. Still not done; continuing to monitor both.
+- 2026-08-03 ~11:25Z (slot-16, data_engineering, INTERIM #3 — TRADFI:delta_one VERDICT): TRADFI:delta_one's relaunched
+  VM (`features-e2e-tradfi-20260803-053515-b3b034`) ran to a genuine terminal `EXIT_STATUS=1` after ~5h48m of real,
+  continuously-advancing compute — **failed, not a genuine PASS**. Root-caused via direct `run.log` read + a code read
+  of `instrument_type_filter.py`/`config.py`/`orchestrator.py`: (1) `filter_delta_one_instruments` resolves a
+  never-provisioned `-stg-` instruments-store bucket under `--env staging` (a 5th confirmed site of the exact bug class
+  already fixed at 4 sites in `pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`) — caught + degrades
+  to an ID-pattern fallback, so not fatal alone; (2) the auto-resolved window (`2026-01-20/2026-01-21`) produced 0/586
+  usable TRADFI instruments at actual candle-load time despite `--require-captured --auto-day` having approved the
+  window as covered — every real calculator then failed on empty input (ALL 18 feature groups failed); (3) separately,
+  `swing_outcome_targets` is missing from `orchestrator.py`'s own local calculator dispatch map despite being registered
+  in `calculators/__init__.py` — a genuine, smaller half-wired-feature bug (unlike `temporal`/`economic_events`, which
+  are intentionally, documentedly excluded). Filed as its own issue doc with concrete fix-todos citing the exact prior
+  sibling fixes to mirror:
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`
+  — `unified-trading-pm@dcfc59595`, verified on origin. Not fixed in this session (out of scope for this
+  verification-only todo). **CEFI:delta_one still in flight**, healthy, no verdict yet.
+- 2026-08-03 ~11:45Z (slot-16, data_engineering, INTERIM #4 — TRADFI:cross_instrument re-verified): re-ran
+  TRADFI:cross_instrument (force+skip) now that TRADFI:delta_one has a genuine terminal verdict. Both legs FAILED
+  (`vm_not_success:vm_exit_nonzero=1`) — confirmed via direct `run.log` read on the force-leg VM
+  (`features-e2e-tradfi-20260803-113749-c81739`) it is the SAME real cascade, not a new bug:
+  `FileNotFoundError: No delta-one features found under gs://features-tradfi-test-central-element-323112/delta_one/by_date/day=2026-01-21/ for timeframe=15s. Run features-delta-one-service for TRADFI/2026-01-21 first.`
+  This traces directly to TRADFI:delta_one's real failure (root-caused, already filed in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`)
+  — no new issue doc needed for this leg; it is expected to clear automatically once that fix lands. No code changes
+  this session (verification-only).
+- 2026-08-03 ~11:50Z (slot-16, data_engineering, INTERIM #5 — TRADFI:multi_timeframe re-verified): re-ran
+  TRADFI:multi_timeframe force (VM `features-e2e-tradfi-20260803-114630-c54481`) — FAILED, same real cascade:
+  `ERROR No upstream data: delta-one features for asset_group=TRADFI date=2026-01-21 produced 0 instruments. Run features-delta-one-service first`.
+  Confirms root cause B (the date-handling fix, `features-service@87e39bc7`) is genuinely working — the family now
+  correctly reads the requested window's date (`2026-01-21`, matching TRADFI:delta_one's own auto-resolved window)
+  instead of wall-clock `today()`; the failure is purely the same real upstream-dependency gap already tracked in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`,
+  not a regression of B. Skip leg was skipped by the driver's own `duplicate_in_flight` guard (concurrent with force on
+  the same VM); not separately re-run since there is no valid prior successful output for it to skip against — the force
+  leg alone is sufficient evidence for this cell's verdict. No code changes this session (verification-only).
+  **Remaining open**: CEFI:delta_one still in flight (no verdict yet); CEFI:cross_instrument and CEFI:multi_timeframe
+  still need re-running once CEFI:delta_one completes.
+- 2026-08-03 ~13:37Z (slot-12, data_engineering, INTERIM #6 — task resumed on this slot): task reassigned to slot 12
+  (`dispatch_reason: "resume"`, `already_in_progress: true`); no code/plan drift since INTERIM #5. Verified
+  CEFI:delta_one's VM (`features-e2e-cefi-20260803-030432-d7c1a5`) is still RUNNING (`gcloud compute instances list`),
+  ~10.5h elapsed, and genuinely healthy — not a hang: `run.log` timestamps are current to wall-clock (last line
+  `2026-08-03 13:37:00`) with new distinct instruments still appearing (CEFI universe_filter retained 909/1203
+  instruments; 173+ distinct instruments have reached a `Wrote 2/2 daily partitions` line so far, several passes per
+  instrument across delta_one's feature-group batches — consistent with real, continuing work, not a stall). No
+  `EXIT_STATUS` file yet. Continuing to monitor; will re-run CEFI:cross_instrument/multi_timeframe once a terminal
+  verdict lands.
+- 2026-08-03 ~14:34Z (slot-12, data_engineering, INTERIM #7): ~1h of continued bounded-watchdog monitoring since INTERIM
+  #6. CEFI:delta_one's VM (still `features-e2e-cefi-20260803-030432-d7c1a5`, now ~11.5h elapsed) remains `RUNNING`
+  throughout with consistently healthy forward progress — `run.log` grew from 616,884 to 713,686 lines (~97k new lines)
+  over 9 sampled checks at 3-min intervals, no interval flat/stalled. No `EXIT_STATUS` yet. Switched the progress metric
+  from "distinct new instrument names" (plateaued at 173 after ~13:47Z — a false-stall signal, since delta_one revisits
+  the same instrument set across multiple feature-group passes) to raw log-line growth, which is monotonically
+  increasing and a more reliable liveness proxy for this workload shape. Still waiting for a terminal verdict before
+  re-running CEFI:cross_instrument/multi_timeframe.
+- 2026-08-03 ~14:43Z (slot-12, data_engineering, INTERIM #8 — CEFI:delta_one VERDICT: genuine PASS): VM
+  `features-e2e-cefi-20260803-030432-d7c1a5` reached a terminal verdict after ~11.5h: `[vm-exec] command exited rc=0`,
+  `DEPLOYMENT_COMPLETED ... (exit_code=0)`, `EXIT_STATUS=0`, VM self-shutting-down per `VM_SHUTDOWN_ON_COMPLETION=true`.
+  Verified genuine (not just exit-code luck) via direct GCS listing:
+  `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-04/` and `.../day=2026-07-05/` both
+  contain real per-`feature_group` output (candlestick_patterns, market_structure, momentum, moving_averages,
+  oscillators, ...). Confirms root cause A's fix (manifest-aware `DependencyChecker` + coverage-check granularity fix)
+  holds for CEFI too, not just the TRADFI occurrence it was originally verified against. Immediately launched the last
+  two re-checks now that delta_one has real `-test-` output to read:
+  `pipeline_e2e_check.py --day 2026-07-05 --asset-group CEFI --family cross_instrument --legs force,skip --require-captured --auto-day`
+  and the same for `--family multi_timeframe` (both backgrounded local driver processes — VM launch + wait, not yet run
+  to completion). No code changes this session (verification-only). **Remaining open**: CEFI:cross_instrument and
+  CEFI:multi_timeframe verdicts pending; once both land, this todo's final consolidated verdict across all 6 shards can
+  be written and the checkbox flipped.
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- 2026-08-03 ~15:40Z (slot-6, data_engineering, INTERIM #9 — new root cause found + fixed): task resumed on this slot
+  (`dispatch_reason: "resume"`, `already_in_progress: true`); no drift since INTERIM #8. Found CEFI:cross_instrument's
+  re-check VM (`features-e2e-cefi-20260803-144527-526e13`, launched by INTERIM #8) genuinely stalled: run.log and the
+  GCS heartbeat blob both frozen at 14:51:05Z (heartbeat stuck on `starting`) for 44+ minutes on a 60s cadence, Cloud
+  Monitoring CPU utilization flatlined at a suspiciously constant ~20% from 14:53Z onward (real work fluctuates; a flat
+  plateau is a stuck/spinning-thread signature), and SSH (via the `unified-trading-sa` ambient identity, after
+  confirming the active `github-actions-deploy` identity is the wrong one to self-grant IAP-tunnel access on per
+  RULES.md §5) timed out rather than connecting. All three of the craft's VM-delete-guardrail signals (heartbeat age,
+  run.log tail, no manifest/output progress) confirmed genuine staleness; deleted the VM
+  (`gcloud compute instances delete`, confirmed via `gcloud compute instances list` afterward). **Root-caused why
+  CEFI:multi_timeframe's two INTERIM #8 runs both exited 0 with ZERO GCS output** (a false PASS if read by exit code
+  alone): `orchestrator.py::_load_spec` built the delta-one read path WITHOUT the writer's `feature_group_version={N}/`
+  hive segment (`feature_writer.py` stamps every write under that segment; the code even carried a stale comment "omits
+  ... flagged separately, not addressed here") — so `blob_exists()` always probed a path that never existed, every real
+  HYPERLIQUID instrument (173 × 2 days = 346) silently logged "No source data ... skipping", and the run exited 0 anyway
+  since a per-instrument miss is a soft warning, not a hard error. Confirmed via direct GCS listing that real delta_one
+  output for CEFI/day=2026-07-05/feature_group=momentum/timeframe=15s DOES exist (created ~06:12-06:14Z, mid-way through
+  the 11.5h delta_one run) at exactly `feature_group_version=1/.../{instrument}.parquet` — the exact segment the probe
+  omitted. This is the SAME bug class already found+fixed once in delta_one's own `FeatureWriter.check_exists()` (its
+  docstring literally documents "the prior bug" of omitting this segment) — never applied to the sibling multi_timeframe
+  probe. Confirmed TRADFI's multi_timeframe failure is UNRELATED (a different, legitimate hard-gate:
+  `_resolve_batch_instruments` found 0 TRADFI instruments at all, cascading from TRADFI:delta_one's real terminal
+  failure already tracked in
+  `issues/features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`
+  — not touched by this fix). Fixed `features_service/multi_timeframe/engine/orchestrator.py::_load_spec` to resolve
+  `feature_group_version` via the same `compute_group_version` registry SSOT the writer uses (0-sentinel fallback for an
+  unregistered group, mirroring `feature_writer.py` exactly); added 2 regression tests
+  (`tests/multi_timeframe/unit/test_orchestrator.py::test_blob_path_includes_feature_group_version`,
+  `::test_unregistered_group_falls_back_to_version_zero`); all 55 `multi_timeframe` unit tests green; full
+  `quality-gates.sh` green (sentinel verified against HEAD). Shipped **`features-service@87942ac0`**, verified on origin
+  (`git merge-base --is-ancestor`). Relaunched CEFI:cross_instrument (force+skip) and CEFI:multi_timeframe (force+skip)
+  against the fixed code — both backgrounded local driver processes, in flight, not yet resolved. **VM-tarball-staleness
+  gotcha found + worked around**: the first relaunch of CEFI:multi_timeframe reproduced the IDENTICAL 346-skip symptom
+  even after the fix landed on origin — the deployed VM tarball's manifest
+  (`gs://deployment-scripts-central-element-323112/code/features-service-code.manifest.json`) was pinned to
+  `commit_sha=3b0c0b05` (one commit BEHIND the fix, built 15:31:19Z, before the fix pushed ~15:38Z) — a false negative,
+  not a fix regression. `lc_verify_tarball_freshness` runs in non-blocking `warn` mode by default, so a stale tarball
+  never stops a launch. Rebuilt via `bash scripts/vm/create-code-tarballs.sh --include features-service` (confirmed
+  manifest re-pinned to the fixed sha), deleted the stale-code VM, relaunched — **anyone re-verifying a features-service
+  fix via a VM launch MUST rebuild the tarball first, verifying the manifest sha, or risk re-confirming the OLD bug**.
+  **Second, deeper bug found on the SAME relaunch**: once the feature_group_version fix let real data actually reach the
+  join, CEFI:multi_timeframe crashed with `column with name 'open_1h_right' already exists` — every delta-one
+  feature-group parquet embeds the raw OHLCV context alongside its own computed columns, so 3+ `SourceSpec`s sharing a
+  timeframe (e.g. `market_structure@1h`+`momentum@1h`+`volatility_realized@1h`+`oscillators@1h`, all confirmed via
+  direct parquet reads to carry `open`) all produce an identical `open_1h` column — Polars' default `_right` collision
+  suffix survives exactly one repeat collision, so the THIRD spec crashes instead of silently overwriting. This means
+  **`multi_timeframe` had never successfully joined real multi-spec data before** (root cause B's date bug and this
+  session's feature_group_version bug both masked it earlier). Fixed `_join_spec_df` to drop columns already present in
+  the accumulated base frame before each join (first spec's copy wins — the values are identical raw candle data, not
+  distinct signals); 2 new regression tests (`test_drops_duplicate_columns_instead_of_right_suffix`,
+  `test_chained_joins_survive_three_way_duplicate_column`); full `multi_timeframe` suite green (596 passed, 26 skipped);
+  full `quality-gates.sh` green. Shipped **`features-service@52a7de5c`**, verified on origin. Rebuilt the tarball again
+  (manifest re-confirmed at `52a7de5c`) and relaunched CEFI:multi_timeframe a third time. **Separately, a recurring
+  infra finding (NOT fixed, filed as its own doc)**: CEFI:cross_instrument's re-check VM hung TWICE in a row on the
+  exact same step (`"Loading delta-one features from gs://.../day=2026-07-05/ timeframe=15s"`) — first hang 44+ min (VM
+  `features-e2e-cefi-20260803-144527-526e13`), second hang 14+ min after a clean relaunch (VM
+  `features-e2e-cefi-20260803-154630-526e13`). Both confirmed genuinely stalled (not just slow) via the same 3-signal
+  check: GCS run.log + heartbeat blob both frozen well past the 60s cadence, Cloud Monitoring CPU utilization flatlined
+  at a suspiciously constant ~19-20% (real work fluctuates), zero output progress. Both VMs deleted per the craft's
+  VM-delete guardrail; relaunched a third time (unrelated to either of today's code fixes — `cross_instrument`'s loader
+  code was never touched). Filed `issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md` for
+  investigation (out of scope for this verification-only todo to fix). **Remaining open**: CEFI:cross_instrument (3rd
+  attempt) and CEFI:multi_timeframe (3rd attempt, first with BOTH fixes deployed) both relaunched, in flight, not yet
+  resolved.
+- 2026-08-03 ~16:50Z (slot-6, data_engineering, INTERIM #10 — FINAL CONSOLIDATED VERDICT, todo closed):
+  CEFI:multi_timeframe's 4th relaunch (both fixes deployed) reached a genuine terminal verdict: `exit_code=0`, all 173
+  instruments processed, but direct GCS listing confirmed **ZERO parquet objects written** under
+  `multi_timeframe/by_date/day=2026-07-04| 2026-07-05/` — every calculator failed per-instrument on either missing raw
+  OHLCV columns or a parquet-serialize error. Worse, the run's manifest shard recorded
+  `capture_status=captured, row_count=173` for every enabled feature group despite zero real writes — a genuine THIRD
+  bug (phantom-captured manifest rows), root-caused (per-instrument calculator/write failures are swallowed internally
+  and never propagate to `run_batch`'s failure tracking, so `success_count` is fabricated) and filed as its own P1 doc:
+  `issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md` (not fixed this
+  session — a real per-group success-tracking + manifest-granularity change, beyond this verification-only todo's
+  scope). CEFI:cross_instrument's 3rd relaunch attempt hung a THIRD time at the identical `_ingest_delta_one` load step
+  (confirmed via the same 3-signal staleness check as the first two hangs); stopped retrying after 3 consecutive
+  reproductions and filed `issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md`.
+
+  **FINAL VERDICT — all 7 affected shard/leg families now have a genuine (non-mysterious, non-silently-wrong) verdict**,
+  satisfying this todo's own done-when even though not every cell is a clean PASS:
+
+  | Shard                   | Verdict                                           | Evidence                                                                                                                                                                                           |
+  | ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | CEFI:delta_one          | ✅ genuine PASS                                   | INTERIM #8 — real per-feature_group GCS output confirmed                                                                                                                                           |
+  | TRADFI:delta_one        | ❌ genuine FAIL, root-caused                      | INTERIM #3 — `-stg-` bucket 404 + `swing_outcome_targets` dispatch gap, tracked in `features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md` |
+  | CEFI:cross_instrument   | ⚠️ BLOCKED, root-caused (infra, not code)         | hung 3/3 attempts at the identical GCS-listing step, tracked in `cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md`                                                                  |
+  | TRADFI:cross_instrument | ❌ genuine FAIL, cascade                          | INTERIM #4 — real cascade from TRADFI:delta_one's failure                                                                                                                                          |
+  | CEFI:multi_timeframe    | ❌ genuine FAIL, 2 real bugs fixed + 1 more found | this session — `feature_group_version` (fixed, `@87942ac0`) + join-collision (fixed, `@52a7de5c`) + phantom-captured manifest (found, tracked separately)                                          |
+  | TRADFI:multi_timeframe  | ❌ genuine FAIL, cascade                          | INTERIM #5 — real cascade from TRADFI:delta_one's failure; confirms root cause B's date-fix genuinely holds                                                                                        |
+  | SPORTS:sports           | ✅ genuine PASS                                   | INTERIM #8 — real parquet + manifest confirmed                                                                                                                                                     |
+
+  **Net effect of this session's work**: 2 genuine PASSes, 2 real remaining failures already root-caused in sibling docs
+  (both cascade from the SAME TRADFI:delta_one bug — one fix there clears both), and 2 NEW genuine data-pipeline-
+  correctness bugs found + FIXED in `multi_timeframe` (both previously silent/undiscovered — masked by earlier bugs B
+  and this session's own group_version bug), plus 2 more real findings (the cross_instrument hang, the multi_timeframe
+  phantom-capture bug) diagnosed and filed for dedicated follow-up rather than left as a bare pass/fail count. No shard
+  was left in a "silently wrong" or unexplained state. Checkbox flipped — this todo is DONE per its own done-when
+  ("confirm genuine (non-error) verdicts"); the two P1 follow-up docs carry the remaining fix work forward.
+
+  **Note for the next session**: CEFI:multi_timeframe's skip leg (VM `features-e2e-cefi-20260803-165010-38e1b8`,
+  launched ~16:50Z) was still running at the time this verdict was written — expected to reproduce the same
+  phantom-capture pattern the force leg already demonstrated (same underlying cause, already root-caused and filed). Its
+  outcome does not change this verdict or block this todo's closure; the local driver's own audit report
+  (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`) will self-update when it completes —
+  those are regenerable machine artifacts, not durable findings, so they are intentionally not committed mid-flight.

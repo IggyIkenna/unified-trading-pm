@@ -217,7 +217,7 @@ for the live picture.
 - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
   - 7. **[DATA] P1.** PROVE the fixed writers green on one real day (write + skip-if-fresh + manifest row)
   - 8. **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date
-- [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+- [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
   - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols) — real code is already correct
   - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4) — ASTER/PACIFICA
 - [`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`](/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md)

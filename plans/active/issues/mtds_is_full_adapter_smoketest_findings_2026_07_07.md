@@ -57,8 +57,8 @@ context_scope:
   [
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/fluid_adapter.py,
   ]
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -661,3 +661,6 @@ the todos already promised.
   pre-resolver coverage gap, which the doc itself says 'needs research into an alternate historical read path ... NOT a
   <=30-min fix', (b) an untraced root-cause on 273 mistagged DERIBIT/COMBO rows, and (c) 'update both drilldown mockups'
   with no done-when. Research + an under-specified deliverable, not bounded work
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the archived lending-split doc for
+  `fluid_adapter.py`, the actual target file of the largest remaining open todo (FLUID's ~18-month pre-resolver coverage
+  gap).

@@ -350,6 +350,12 @@ cmd_install() {
   # venv and git clone both accept an existing EMPTY dir, so pre-creating is the tight fix (rather
   # than handing the runner user ownership of ${RUNNER_BASE}).
   install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${SLOT_VENV}" "${SLOT_REPO}"
+  # qg-host-governor.sh's shared reservation-ledger dir for the glue-runner topology — same
+  # root-owned-parent problem as above, one level up (RUNNER_BASE is per-POOL_TAG; this path is
+  # NOT), so it needs its own pre-create. Idempotent: every repo's `install` calls this on the
+  # SAME absolute path, first call creates it, the rest are no-ops.
+  # SSOT: scripts/quality-gates-base/qg-host-governor.sh's _QG_GLUE_RUNNER_SHARED_ROOT.
+  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "/opt/.qg-governor-glue-shared"
   # PER-RUNNER tool cache (see glue-runner-run.sh for the measured race that killed the shared one).
   for inst in $(all_instances); do
     install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_BASE}/${inst}/toolcache"

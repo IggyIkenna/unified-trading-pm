@@ -15,8 +15,7 @@ tags: [orchestrator, role-registry, frontmatter, rag, plan-hygiene, docspec, esc
 related:
   [
     ../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md,
-    ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md,
-    ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+    ../archive/2026_06/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
   ]
 created: 2026-06-24
 name: agent_operating_framework_master

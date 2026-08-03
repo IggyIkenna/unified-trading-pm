@@ -270,3 +270,4 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
   planning docs; no open todo elsewhere duplicates this claim) - precondition (S6.1 scheduler wiring) shipped
   2026-07-26; both residual todos are bounded leaf-name verification + a named-target capability scoping pass
 - **context-scout 2026-08-01**: populated context_scope (6 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (8 entries).

@@ -134,11 +134,16 @@ independently-startable item any session can pick up without waiting on the phas
 
 ## Todos
 
-- [ ] [BACKEND] P2. **`LENDING_INTEREST` mismodeling correction for `carry_staked_basis` not implemented** — E4 already
-      ruled the row-set should drop it entirely, but per this doc's own text implementation has not started; separately,
-      `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`'s rewrite-vs-delete-vs-gate-hardening choice
-      was **RULED 2026-07-29 (operator direct answer): Option A, rewrite against the current v2 mechanism** — that half
-      is no longer pending (citation corrected 2026-07-30, /na-eligibility-audit defi).
+- [x] [BACKEND] P2. ✅ **`LENDING_INTEREST` mismodeling correction for `carry_staked_basis`** — E4 already ruled the
+      row-set should drop it entirely; **SHIPPED `strategy-service@a90e85eb`** (per
+      `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`'s own `[x]` todo, quickmerge landed,
+      `quality-gates.sh --no-fix` green, 5407 tests) — `emit_lending_leg=False` wired for `CARRY_STAKED_BASIS`, dropping
+      LENDING_INTEREST/BASIS rows entirely (not left on the old formula) from both the passive and attribution
+      producers; every other archetype's default row-shape confirmed unchanged. This doc's own text was stale — it
+      claimed "implementation has not started" (citation corrected 2026-08-03, /na-eligibility-audit reclassify-pass).
+      Separately, `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`'s rewrite-vs-delete-vs-gate-
+      hardening choice was **RULED 2026-07-29 (operator direct answer): Option A, rewrite against the current v2
+      mechanism** — that half is no longer pending (citation corrected 2026-07-30, /na-eligibility-audit defi).
 
 ## Progress Log
 
@@ -146,3 +151,8 @@ independently-startable item any session can pick up without waiting on the phas
   rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
   corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA-STALE -> checkbox closed. The sole open todo
+  (`LENDING_INTEREST` mismodeling correction for `carry_staked_basis`) was already shipped in the linked sibling doc
+  (`issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `strategy-service@a90e85eb`) — this
+  doc's own text had not been updated to reflect it. Flipped `[x]` with citation; doc has zero remaining open scope
+  (index/entry-point doc, `assigned_vm` unchanged).

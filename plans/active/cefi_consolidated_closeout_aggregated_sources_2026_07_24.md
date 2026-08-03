@@ -292,7 +292,7 @@ context_scope:
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument, ~2.3-year gap).
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + decide the AAVE_V3 chain-axis question.
     - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys.
-  - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  - [`plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
     - 7. **[DATA] P1.** PROVE the fixed writers green on one real day, then migrate historical flat
       `instrument_availability`/`market_lifecycle`/`futures_contracts` objects into full hive.
     - 8. **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date in the
@@ -650,7 +650,7 @@ context_scope:
     - **[OPS] P1.** Close issue when DERIBIT options_chain af=0 in prd manifest.
     - **[DATA] P0.** `futures_chain` retry path must STOP attempting a structurally-absent channel — gate at the WRITER
       (SUPERSEDED note: it's our bundle, not a source absence).
-  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols) — re-run instrument discovery and
       rewrite the 6,180 stale catalog rows.
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (ASTER/PACIFICA/LIGHTER-ZKSYNC).
@@ -675,9 +675,8 @@ context_scope:
       `RUN_INTEGRATION=false`.
     - **[QG] P2.** Fleet sweep — a PM quality-gate check comparing each repo's `tests/*/unit/` dirs against its
       `PYTEST_UNIT_DIR`.
-  - [`plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`](/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md)
-    - **[DATA] P2.** Re-run `build_instrument_catalogue.py --asset-group defi` (+cefi) as a confirmation pass — no
-      evidence yet of an actual prod `--apply` run.
+  - [`plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`](/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md)
+    — ✅ CLOSED 2026-08-03, all todos done, archived.
   - [`plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`](/plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md)
     - **[CODE] P0.** Gate the Tardis request universe on the vendor catalog (symbol x data_type x date-range); cache +
       refresh daily.
@@ -767,9 +766,12 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
 
 - [`crypto_alpha_research_2026_07_24.md`](/plans/active/crypto_alpha_research_2026_07_24.md) — book construction /
   signal research / paper-trading POC, overwhelmingly Binance-perp/CeFi content.
-- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) (+ its
-  gated [`_finalize_2026_07_30.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)) —
-  DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading.
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md) (+
+  its gated
+  [`_finalize_2026_07_30.md`](/plans/archive/2026_08/vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)) —
+  DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading. **ARCHIVED
+  2026-08-03 to `plans/archive/2026_08/`** — both engines' backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE),
+  stay `not_available`.
 
 ## Self-dispatched docs with no digest linkage (added 2026-08-02, ag-closeout-audit linkage-gap fix)
 
@@ -781,9 +783,6 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - [`cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`](/plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md)
   — split-out child of `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`; one open `[OPERATOR] P1` todo
   (relaunch-strategy ruling for 10 repeat-failing shards).
-- [`mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md`](/plans/active/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md)
-  — 3 of 4 todos open (HYPERLIQUID `derivative_ticker`/`book_snapshot_5` MDPS candle-building bugs); no activity since
-  2026-07-26 despite 3 subsequent batches — worth a dispatch-priority check if it stays stalled.
 - [`tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`](/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md)
   — 8 of 9 todos done as of 2026-08-02 (ASTER book_snapshot_5/liquidations fixes shipped); one open `[DATA] P3` to file
   a follow-up issue for 2 incidentally-found unrelated chronic findings (OKX-FUTURES trades gaps, POLYMARKET-PERP
@@ -803,4 +802,7 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — re-verified after the file's last
   commit (5fb83f4ea) touched only a corpus-referrer link (archived-doc path fix from an unrelated ag-closeout-audit
   run), not this doc's own todo/scope. Verdict unchanged from 2026-07-30.
+- **context-scout 2026-08-03**: re-confirmed context_scope (2 entries) unchanged — this doc is itself a pointer/index of
+  dozens of other docs (its own body IS the reading list), so the parent plan + the line-cap-remediation source doc
+  remain the right minimal set; no source-code paths added (genuinely code-free discoverability-index doc).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).

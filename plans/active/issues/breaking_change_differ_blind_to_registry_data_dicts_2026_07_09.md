@@ -193,7 +193,11 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       `unified-api-contracts@e34afc1d` (invariant test) + `system-integration-tests@67db4da` (wiring + xfail fix).
 - [ ] [DESIGN] P2. Decide whether provider (UAC) registry-change promotes should fan out consumer QG (≥ IS) as a gate;
       spec it or explicitly defer with rationale. (repo: unified-trading-pm) — OUT OF SCOPE for this closure; parked as
-      Deferred **E8** / operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md`.
+      Deferred **E8** / operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md`. **na-eligibility-audit
+      2026-08-03**: `ci_satellite_ao_dispatch_batch2_2026_07_29.md` is now archived (2026-07-31, all 14 todos + all 15
+      Deferred items verified before archival) — but its own ARCHIVED banner explicitly confirms E8 (this exact item)
+      remains a LIVE OPEN item/operator question in its own source doc (i.e., here), not resolved by that plan's
+      archival. Still genuinely open — not closing.
 - [x] ✅ [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
       unified-trading-pm) — shipped `unified-trading-pm@5607023a2`. **Citation corrected 2026-07-31** — see note above.

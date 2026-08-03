@@ -34,6 +34,11 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/cli.py,
+  ]
 ---
 
 # What
@@ -94,3 +99,4 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   **No companion finalize plan authored** — this is a `doc_type: issue` under `plans/active/issues/`, and
   `check_finalize_plan_coverage.py` globs only `plans/active/*.md` (verified by direct code read, lines 117/141), so
   issue docs are structurally exempt from that gate.
+- **context-scout 2026-08-03**: populated context_scope (2 entries).

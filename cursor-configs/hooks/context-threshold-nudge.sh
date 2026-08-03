@@ -22,6 +22,25 @@
 # file if the session hasn't compacted yet). Still an approximation, not a
 # real token count -- large tool outputs / repeated system-reminder content
 # can inflate transcript bytes beyond what actually occupies live context.
+#
+# REAL USAGE PREFERRED OVER THE BYTE HEURISTIC (2026-08-03): the byte/4
+# estimate has no visibility into the harness's own internal context
+# management, which can prune/summarize old large tool outputs out of the
+# LIVE model context without emitting a compact_boundary event -- so raw
+# transcript bytes can run well above real usage on any session with heavy
+# tool-output volume. Confirmed live: a session with 8 parallel sub-agent
+# reports + repeated large system-reminder dumps false-triggered this nudge
+# (byte heuristic read >=65%) when the transcript's OWN recorded
+# message.usage fields put real usage at ~29% -- matching the operator's
+# independent reading almost exactly. Every assistant-turn transcript line
+# already carries message.usage.{input_tokens,cache_creation_input_tokens,
+# cache_read_input_tokens} -- the exact token count the API reports for that
+# turn's input, ground truth with no estimation needed (sub-agent/Task-tool
+# transcripts are NOT a factor -- confirmed they live in entirely separate
+# files, never merged into the main transcript: zero "isSidechain":true
+# lines on the reproducing session). Use the LAST such value in the
+# transcript as EST_TOKENS; fall back to the byte/4 heuristic only when no
+# assistant-turn usage data exists yet (e.g. a freshly-started session).
 set -euo pipefail
 
 INPUT="$(cat)"
@@ -54,14 +73,38 @@ else
   WINDOW_BYTES=$TOTAL_BYTES
 fi
 
+# Last assistant-turn's real usage, if any turn has completed yet. `grep`
+# exits 1 (no match, not an error) on a session with no assistant turn yet --
+# `|| true` makes that the expected outcome, same reasoning as the
+# compact_boundary grep above.
+LAST_USAGE_LINENO=$(grep -n '"cache_read_input_tokens"' "$TRANSCRIPT_PATH" 2>/dev/null | tail -1 | cut -d: -f1 || true)
+REAL_TOKENS=""
+if [ -n "$LAST_USAGE_LINENO" ]; then
+  REAL_TOKENS=$(sed -n "${LAST_USAGE_LINENO}p" "$TRANSCRIPT_PATH" | jq -r '
+    (.message.usage // empty) as $u
+    | if $u then (($u.input_tokens // 0) + ($u.cache_creation_input_tokens // 0) + ($u.cache_read_input_tokens // 0)) else empty end
+  ' 2>/dev/null || true)
+fi
+
 BUDGET_TOKENS=1000000
-EST_TOKENS=$(( WINDOW_BYTES / 4 ))
 THRESHOLD_TOKENS=$(( BUDGET_TOKENS * 65 / 100 ))
+
+if [ -n "$REAL_TOKENS" ] && [ "$REAL_TOKENS" -gt 0 ] 2>/dev/null; then
+  EST_TOKENS="$REAL_TOKENS"
+  SOURCE="measured"
+else
+  EST_TOKENS=$(( WINDOW_BYTES / 4 ))
+  SOURCE="estimated"
+fi
 
 if [ "$EST_TOKENS" -ge "$THRESHOLD_TOKENS" ]; then
   touch "$SENTINEL"
   PCT=$(( EST_TOKENS * 100 / BUDGET_TOKENS ))
-  MSG="Context usage is an ESTIMATE of ~${PCT}% (heuristic: transcript bytes since the last compaction boundary / 4 chars-per-token vs a ${BUDGET_TOKENS}-token budget -- not a real token count, no /context call was made). Before continuing with anything else: stop the current task, run the /pre-compact skill now to checkpoint in-flight work (commit/push, convert deferred discoveries into plan todos, write the Deferred work table), then STOP and tell the user to run /compact manually."
+  if [ "$SOURCE" = "measured" ]; then
+    MSG="Context usage is MEASURED at ~${PCT}% (real usage.input_tokens+cache_creation_input_tokens+cache_read_input_tokens from the last transcript turn vs a ${BUDGET_TOKENS}-token budget). Before continuing with anything else: stop the current task, run the /pre-compact skill now to checkpoint in-flight work (commit/push, convert deferred discoveries into plan todos, write the Deferred work table), then STOP and tell the user to run /compact manually."
+  else
+    MSG="Context usage is an ESTIMATE of ~${PCT}% (heuristic: transcript bytes since the last compaction boundary / 4 chars-per-token vs a ${BUDGET_TOKENS}-token budget -- no assistant-turn usage data found yet, so no real token count was available). Before continuing with anything else: stop the current task, run the /pre-compact skill now to checkpoint in-flight work (commit/push, convert deferred discoveries into plan todos, write the Deferred work table), then STOP and tell the user to run /compact manually."
+  fi
   jq -n --arg msg "$MSG" '{hookSpecificOutput: {hookEventName: "UserPromptSubmit", additionalContext: $msg}}'
 fi
 

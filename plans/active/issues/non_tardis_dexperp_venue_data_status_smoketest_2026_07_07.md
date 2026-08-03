@@ -529,3 +529,5 @@ Two secondary findings:
     code — there is no code fix available here (the endpoint itself has no historical surface to call). This closes the
     § 3 "plausible but not confirmed" hedge with a definitive "confirmed cannot." Flips the corresponding todo in
     `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).

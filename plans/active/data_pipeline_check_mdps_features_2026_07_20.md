@@ -309,9 +309,13 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       independently-dispatchable build/run/report todos rather than risk a rushed, unsafe attempt at the full scope in
       one dispatch. Full scoping + the 4 todos:
       `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`.
-- **[DATA] P0. 11b.** The actual cross-repo orphan/lineage report — remains open, tracked via the 4 todos in
-  `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (build+run MDPS/features/ml-strategy sweeps,
-  then write the combined report). Non-checkbox pointer per the scoping above.
+- [x] 11b. ✅ [DATA] P0. **The actual cross-repo orphan/lineage report. DONE 2026-08-03** (`unified-trading-pm`) — all 4
+      todos in `mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (now archived, resolved) landed real
+      per-stage findings (MDPS candle, features, ml/strategy sweeps built + validated on real prod data); the combined
+      report is
+      [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
+      is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
 - [ ] 11c. [DATA] P0. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
       (safe additive `merge_manifest_from_canonical_paths()` from 11a, never destructive
       `rebuild_manifest_from_canonical_paths`). **Not `[OPERATOR]`-pre-gated** (corrected 2026-07-27 — the additive path
@@ -454,8 +458,9 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       false-positive-free on live data; promoting either to authoritative is natural follow-up work, not done here.
       While verifying via a real `--dry-enumerate` smoke run, slot-8 also discovered + filed (did NOT fix — out of this
       todo's scope) a pre-existing, unrelated MDPS enumeration break:
-      `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` gained a new todo for `_candle_data_types_for_market_ag`'s
-      stale 2-tuple unpack against `mdps_mvp_universe()`'s now-3-tuple return.
+      `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` gained a new todo for
+      `_candle_data_types_for_market_ag`'s stale 2-tuple unpack against `mdps_mvp_universe()`'s now-3-tuple return (that
+      todo, and the doc's other 3, are now all done — archived 2026-08-03).
 
 ## Progress Log
 
@@ -526,8 +531,8 @@ While QG-verifying the MDPS driver via a real `--dry-enumerate` smoke run (`qual
 DRIVER SMOKE"), surfaced a genuine, PRE-EXISTING, unrelated break (confirmed via diff against the parent commit before
 my change touched this file): `_candle_data_types_for_market_ag` still unpacks `mdps_mvp_universe()`'s return as a
 2-tuple, but the function was extended to a 3-tuple `(venue, instrument_type, data_type)` in
-`unified-api-contracts@724b6633` (see `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`, whose own caller-update
-sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
+`unified-api-contracts@724b6633` (see `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`, whose
+own caller-update sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
 `ValueError: too many values to unpack`. `quality-gates.sh`'s own exit code is 0 (this smoke step is non-blocking), so
 it did not block shipping, but it is a real correctness gap. Per findings triage (not small/clear enough to fix inline —
 needs redesigning the function's data_type derivation, not a 1-line unpack fix) filed as a new todo on the existing,

@@ -224,3 +224,8 @@ ALL, not even for the success path.
       own follow-up P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit
       continued under that doc (that doc's own P2 is now also done, 2026-07-30, `features-service@710c1a72` — the doc is
       archived).
+
+## Progress Log
+
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

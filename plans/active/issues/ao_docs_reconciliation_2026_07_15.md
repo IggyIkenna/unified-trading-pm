@@ -498,11 +498,13 @@ post-pivot re-sweep.
       carries 2 live `tab/<operator>/<N>` references (the RETIRED tab-branch model) with no banner. Same class as the
       `canonical-plan-flow.md` fix above and flagged by this doc's own C-cluster. **Gate**: no unbannered `tab/<...>`
       branch instruction remains in the file.
-- [ ] [REVIEW] P2. **The Tier-6 remainder is now its own issue doc — track it there, not here.** Tier-6's per-file
+- [x] ✅ [REVIEW] P2. **The Tier-6 remainder is now its own issue doc — track it there, not here.** Tier-6's per-file
       dispositions were executed as a blanket delete, leaving 5 dead doc-references in shipped code and a tracker
       Progress Log claiming "0 dead links" that never covered that batch. Filed 2026-07-23 as
       [`ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md`](ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md).
-      **Gate**: that doc reaches 0 open todos; this line closes with it.
+      **Gate**: that doc reaches 0 open todos; this line closes with it. **DONE (na-eligibility-audit 2026-08-03)** —
+      gate met: that doc is `status: resolved` with all 4 of its own todos `[x]` (5 dead doc-refs repointed/removed,
+      `README.md` + `REPO_PROVENANCE.md` fixed, the tracker's stale "0 dead links" Progress Log claim corrected).
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's

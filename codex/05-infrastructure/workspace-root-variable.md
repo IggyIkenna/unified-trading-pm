@@ -12,7 +12,12 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, scripts, setup]
-related: [/codex/05-infrastructure/new-repo-setup.md, /codex/05-infrastructure/workspace-setup.md, ci-cd.md]
+related:
+  [
+    /codex/05-infrastructure/new-repo-setup.md,
+    /codex/05-infrastructure/workspace-setup.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-03-27
 authoritative_for: [UNIFIED_TRADING_WORKSPACE_ROOT variable pattern]
 referenced_by: [/codex/05-infrastructure/README.md, /codex/05-infrastructure/workspace-setup.md]
@@ -345,8 +350,8 @@ bash unified-trading-pm/scripts/sync-workspace.sh
 
 ## Related Documents
 
-| Document                                 | Description                            |
-| ---------------------------------------- | -------------------------------------- |
-| [new-repo-setup.md](new-repo-setup.md)   | Complete repo setup workflow           |
-| [workspace-setup.md](workspace-setup.md) | Initial workspace configuration        |
-| [ci-cd.md](ci-cd.md)                     | CI/CD setup (uses repo-relative paths) |
+| Document                                       | Description                            |
+| ---------------------------------------------- | -------------------------------------- |
+| [new-repo-setup.md](new-repo-setup.md)         | Complete repo setup workflow           |
+| [workspace-setup.md](workspace-setup.md)       | Initial workspace configuration        |
+| [ci-cd-flow.md](../08-workflows/ci-cd-flow.md) | CI/CD setup (uses repo-relative paths) |

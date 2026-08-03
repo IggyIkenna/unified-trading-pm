@@ -424,3 +424,5 @@ other files it touched without a similar per-item live-fact check, not just a te
   live-verified) before changing the text. Updated the top banner and this checkbox to reflect both gates (launch
   decision + credential) now agreeing. Did not launch the backfill VM as part of this edit — that remains the actual
   next action, tracked by the now-unblocked checkbox above.
+
+- **context-scout 2026-08-03**: reviewed context_scope (4 entries), no change needed — still accurate.

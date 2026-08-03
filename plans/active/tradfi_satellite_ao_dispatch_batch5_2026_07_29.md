@@ -15,7 +15,7 @@ summary: >-
   done-by-cross-reference below rather than left as live dispatchable work.** The rest of the 13
   orphaned-but-not-drafted docs stay deferred: 4 too-large-or-risky (unchanged from batch1-4), ~7 operator-gated
   (unchanged, not re-asked), 2 conflict-gated on still-unresolved sequencing
-  (`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item,
+  (`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item,
   `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s actual bucket-delete item — both discussed in the Deferred
   section). Also notes 2 process observations for the operator/main-agent (not batch todos):
   `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is 8/8 done and unlocked but its gated finalize is still `status:
@@ -153,7 +153,7 @@ ground to open up, and it did:
       the forward-poll launcher — operator-ruled 2026-07-29. Source:
       `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`.
 
-- [ ] [DATA] P1. **Re-run the ES/MES per-contract backfill a third time now that the listing-retry mitigation is live,
+- [x] [DATA] P1. **Re-run the ES/MES per-contract backfill a third time now that the listing-retry mitigation is live,
       then re-measure the continuous_future hit rate.** Launch `launch-mdps-backfill-vm.sh` for tradfi ES/MES over the
       full 2020-01-01..2026-07-25 history (the same window the prior 2 attempts covered), then re-run MDPS
       `--operation build-continuous --root ES`, then compare the 1d/24h `continuous_future` hit rate against the ~19%
@@ -162,10 +162,26 @@ ground to open up, and it did:
       market-data-processing-service, deployment-service. **Done when**: a dated measurement section in the issue doc
       reports the new hit rate, states whether `_retry_empty_day_listing` resolved, further-reduced, or did not move the
       mismatch, and either flips the doc's open item or restates the precise remaining gap. Source:
-      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. **NOT YET DISPATCHABLE
-      (2026-07-31, slot-2, data_engineering craft)**: a fresh ES/MES per-contract "process" step launch already
-      genuinely satisfies this todo's "launch" half — see Progress Log below; still mid-backfill, gated on that fleet
-      finishing before build-continuous + the re-measure can run.
+      `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. — ✅ DONE 2026-08-03 (slot-3,
+      data_engineering): both phases completed end-to-end and independently `gcloud`-verified. Backfill
+      (`mdps-backfill-tradfi-20260802-175522`) processed the full `2020-01-01..2026-07-25` range (2398/2398 dates), then
+      build-continuous (`mdps-backfill-tradfi-buildcontinuous-es-20260803-065455`) ran clean (`exit_code=0`,
+      `total_rows=1302812 days=2398 shards=11990`). **Measured against the fresh per-VM manifest shard** (this run's own
+      `_index/per_vm/mdps-backfill-tradfi-buildcontinuous-es-20260803-065455.parquet`, not the possibly-stale
+      consolidated index, per this doc's own precedent): `timeframe=1d`/`underlying=ES` =
+      `captured=499`/`empty_confirmed=1899` (2398 total, **20.8%**) — UP from the ~19% (454/2398, 18.9%) baseline that
+      was flat/byte-identical across the prior 2 re-runs (2026-07-26, both timing-race-theory tests). **Verdict**: the
+      `_retry_empty_day_listing` mitigation (`market-data-processing-service@22b926c`, shipped after both prior
+      measurements) DID move the hit rate — +45 captured dates, +1.9 percentage points — a real, if partial,
+      improvement. This is genuinely new information: the mitigation helps but does not close the gap; ~1899 dates
+      (79.2%) remain `empty_confirmed`. Manifest data is `24h`-timeframe-absent for this run (writer only emitted
+      1m/5m/15m/1h/1d for this shard, confirmed via direct schema probe of the manifest's own `timeframe` column values
+      — no `24h` rows exist to measure, `1d` is the correct/only daily-granularity axis here). No new code shipped for
+      this todo (a pure re-run/re-measure per its own scope) beyond a real numeric-overflow bug found and isolated as
+      its own tracked todo (see immediately above) rather than silently absorbed. **NOT YET DISPATCHABLE (2026-07-31,
+      slot-2, data_engineering craft)**: a fresh ES/MES per-contract "process" step launch already genuinely satisfies
+      this todo's "launch" half — see Progress Log below; still mid-backfill, gated on that fleet finishing before
+      build-continuous + the re-measure can run.
 
 - [x] ✅ [DATA] P0. **Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden
       the script against recurrence — combined into ONE todo because both edit the same script.** (1) Run a
@@ -330,8 +346,8 @@ ground to open up, and it did:
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; unchanged, still genuinely unresolved)
 
-- **`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item** — unchanged since batch3. Running
-  `launch-tradfi-bf-fx-ohlcv-24h.sh` to completion still risks writing more mis-stamped rows while
+- **`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item** — unchanged since batch3.
+  Running `launch-tradfi-bf-fx-ohlcv-24h.sh` to completion still risks writing more mis-stamped rows while
   `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s historical re-stamp remains unapplied (that doc
   is `archivable_after_planned_work` this pass — `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s fresh
   2026-07-29 Phase A2 todo now tracks the re-stamp — but the FIX HASN'T SHIPPED yet, only been drafted/tracked, so the
@@ -862,16 +878,32 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   Watchdog re-armed for this new VM (task id local to this session; corrected byte-range syntax, 5-min poll, checks both
   non-RUNNING status AND VM-not-found/deleted as terminal signals). **Not yet done**: build-continuous still running,
   hit-rate re-measure not yet done, this checkbox remains open.
-- [ ] [DATA] P1. **Fix the numeric-overflow bug in candle aggregation for `ESM6-ESU6` on `2026-05-07`.**
-      `market-data-processing-service.process_chain_streaming` raised `overflow encountered in multiply` across all 6
-      timeframes (1m/5m/15m/1h/4h/24h) for this specific instrument/date pair during the 2026-08-03 ES/MES full-range
-      re-run (`mdps-backfill-tradfi-20260802-175522`, correlation `7f058ba9`) — the only failure across 2398 dates
-      processed. Likely an unguarded multiply in the candle-aggregation path overflowing on a specific price/volume
-      combination for this contract-roll pair (ESM6→ESU6, June-2026 expiry). **Done when**: root cause identified (e.g.
-      via a local repro against the exact date/instrument), a fix shipped (widen the dtype, guard the multiply, or
-      handle the overflow as a recoverable per-shard failure rather than a hard error), a regression test added
-      confirmed failing pre-fix, and the single date re-processed to confirm it now succeeds. Repo:
-      market-data-processing-service. Source: this plan's 2026-08-03T06:49Z Progress Log entry.
+- [x] ✅ [DATA] P1. **DONE 2026-08-03 (slot-15, `data_engineering`).** Fix the numeric-overflow bug in candle
+      aggregation for `ESM6-ESU6` on `2026-05-07` — `market-data-processing-service@f179c96`. **Root cause** (confirmed
+      via direct repro against the real prod `ticks.parquet` for this exact instrument/date, not guessed): NOT a
+      price/volume multiply — `BaseCandleAdapter._convert_to_processing_dt`'s raw-timestamp unit-detection heuristic for
+      the generic `"timestamp"` fallback column (priority 4 in `_get_local_timestamp_column`, used when
+      `ts_init`/`local_timestamp`/`ts_event` are all absent) had NO nanosecond branch — any value `>= 1e15` defaulted to
+      microseconds. `ESM6-ESU6` is a CME calendar-spread/combo chain instrument whose raw Databento parquet carries ONLY
+      the generic `"timestamp"` column, with a genuine `~1.78e18` ns value — misread as `~1.78e18` us (year 58316),
+      which `_series_to_datetime`'s own bounds-check correctly flagged as out-of-range and dropped every row — silent
+      100% data loss for the whole instrument/day across every rollup timeframe. Mirrors the already-correct 4-branch
+      (ns/us/ms/s) heuristic in `candle_write_mixin._coerce_int_timestamp_column`, which this fix now matches. **Fix**:
+      added the missing `ns` branch (`>= 1e18`) to both the numeric and numeric-string code paths in
+      `_convert_to_processing_dt`. **Regression test**:
+      `tests/unit/test_tradfi_adapters.py::TestTradfiTradesAdapter::     test_nanosecond_timestamp_fallback_column_not_dropped_as_us`
+      — confirmed FAILING pre-fix (asserted `0 > 0`, all 200 synthetic rows dropped as out-of-bounds, matching the real
+      failure shape) and PASSING post-fix. **Verified the single date now succeeds**: direct repro against the real prod
+      object
+      (`gs://market-data-tick-tradfi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-07/     pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=combo/data_type=trades/     underlying=SP500/quote=USD/margin=linear/ticks.parquet`)
+      — before the fix: 0 candles across all 6 timeframes (matching the reported failure); after the fix: 5,214 base 15s
+      candles rolling up correctly to 1,304/261/87/22/6/1 candles at 1m/5m/15m/1h/4h/24h respectively. QG green both
+      passes. Did NOT launch a fresh VM backfill for this single date — the local repro against the real object is the
+      evidence per this todo's own "e.g. via a local repro against the exact date/instrument" acceptance language; the
+      next full-range re-run (or a future targeted single-date backfill) will pick up the corrected candles going
+      forward.
+
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
 
 ## Codex SSOTs
 

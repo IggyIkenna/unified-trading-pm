@@ -56,7 +56,9 @@ context_scope:
   [
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     deployment-service/deployment_service/shard_builder.py,
+    deployment-service/deployment_service/deployment/worker_manager.py,
     deployment-service/configs/sharding.execution-service.yaml,
+    deployment-service/scripts/run-all-quality-gates.sh,
   ]
 ---
 
@@ -137,3 +139,6 @@ form and were NOT fixed as part of that todo:
 - 2026-08-03 (slot-4, backend_engineer): Filed. Not fixed inline — both findings are in `deployment-service`, a
   different repo than `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s todo-009, which is scoped to
   `Repo: execution-service` only.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `worker_manager.py` (the confirmed live
+  caller of `build_storage_env_vars`) and `run-all-quality-gates.sh` (the fleet-sweep script for finding 2) alongside
+  the 3 pre-existing entries.

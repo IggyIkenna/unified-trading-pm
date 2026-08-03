@@ -45,6 +45,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     scripts/quickmerge.sh,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
   ]
 resolved_by:
@@ -119,3 +120,5 @@ there as operator question 3. Todo 2 (the before/after churn re-measurement) is 
 the E6 citation is real (grepped the archived batch2 doc directly) and found a further independent re-confirmation at
 `ci_satellite_ao_dispatch_batch4_2026_07_31.md` D4-11, still unruled as of today. Both open todos remain genuinely
 operator-gated; no RECLASSIFY candidate here.
+
+**context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).

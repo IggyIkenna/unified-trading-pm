@@ -39,7 +39,7 @@ tags:
 related:
   [
     /plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
-    /plans/active/issues/features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md,
+    /plans/archive/issues/features_service_catalogue_completeness_smoke_masking_findings_2026_08_01.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]

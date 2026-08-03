@@ -36,6 +36,13 @@ sequential: true
 locked_by:
 locked_since:
 context_scope:
+  [
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
+    deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
+  ]
 supersedes:
 superseded_by:
 source:
@@ -309,3 +316,4 @@ determinism needs.
   not worker-satisfiable) and P2 (not due for another ~5 days — needs a full week of traffic to mean anything).** The
   `[SCRIPT] P3` doc-cleanup todo stays open too, since it's explicitly gated on every todo above being done, which isn't
   true yet.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

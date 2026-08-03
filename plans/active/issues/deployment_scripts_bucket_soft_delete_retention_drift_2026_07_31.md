@@ -38,6 +38,12 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    deployment-service/terraform/gcp/main.tf,
+  ]
 ---
 
 ## What I found
@@ -118,3 +124,4 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   cites for AO delete-eligible todos, so getting the direction wrong weakens a safety gate the rest of the corpus
   depends on. Independently corroborated by the 2026-08-01 `/ag-closeout-audit infra` run, which classified it
   `orphaned_never_touched` but correctly non-batchable on the same grounds.
+- **context-scout 2026-08-03**: populated context_scope (3 entries).

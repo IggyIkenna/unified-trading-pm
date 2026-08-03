@@ -46,7 +46,7 @@ related:
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     ../instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../layer1_remeasure_and_certify_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
@@ -65,7 +65,7 @@ context_scope:
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
@@ -995,3 +995,6 @@ Script:
   remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
   independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
   operator-gated (e.g. the HUOBI/BITSTAMP SSOT contradiction)
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all 6 cited source docs still
+  exist at their given (post-archival-correction) paths; this is a pure synthesis/index doc over other plans/issues,
+  genuinely code-free by design.

@@ -48,6 +48,14 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
+    agent-orchestrator/server/config.py,
+  ]
 ---
 
 ## What I found
@@ -185,3 +193,4 @@ solution.
   all three todos are design decisions ("decide where the shared task-id-keyed checkpoint state lives", "pick the
   heartbeat-staleness threshold and the stale-claim takeover rule"), which the dispatch-scope eligibility bar keeps
   human-resolved before any AO todo is cut against their outcome. Verdict agrees with the ruling; no change.
+- **context-scout 2026-08-03**: populated context_scope (5 entries).

@@ -434,3 +434,47 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   consistent with this corpus's churn rate outpacing a single session's scouting throughput; still correctly far from
   the 0/0 threshold this plan's own todo above requires before flipping `docspec.py`'s `FieldSpec` to `Req.R`. **Not
   done, deliberately**: same as the prior entry — the `FieldSpec` flip stays untouched.
+
+- **2026-08-03 (same interactive session, slot 1, continued after a second context-compaction boundary)**: re-ran
+  `generate_context_scope_inventory.py --json` fresh (646 in-scope docs, 276 `UP_TO_DATE`, 292 `STALE`, 78
+  `NEVER_SCOUTED`) and dispatched 8 parallel `general-purpose` sub-agents (per this doc's own SUB_AGENT_MANDATORY_RULES
+  injection) over all 78 `NEVER_SCOUTED` docs, split into batches of ~11 (7 batches) + 1 single-doc batch. 77/78 wrote
+  successfully (2 correctly refused — see below); 1 batch's agent silently omitted an 11th assigned doc from both its
+  edits and its own final report with no SKIPPED note
+  (`deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md` — caught only by the post-ship inventory diff
+  showing it still `NEVER_SCOUTED`, fixed by scouting it directly in this same session; **lesson: an agent's own
+  completion report is not sufficient evidence — cross-check the actual before/after inventory diff against the assigned
+  batch list, not just the agent's stated count**). Before staging, audited the whole diff against
+  `scripts/plan-hygiene/check_line_caps.sh` in SCOPED mode (the exact mode quickmerge's prek hook runs) and found **9
+  docs** where the mechanical addition (context_scope YAML block + one Progress Log marker, 6-12 lines) pushed a doc
+  that was already at or within a few lines of the 1000L hard cap over it — 8 were genuinely NEW crossings (doc sat at
+  exactly 999-1000L pre-commit, so the small-marker-append exception's "already over cap before this commit" condition
+  correctly does not fire) and 1 (`lst_rate_honest_coverage_2026_07_21.md`, at 1008L pre-commit) genuinely qualified for
+  that exception and shipped normally. **Verified one scouting agent's own pre-edit line-count claim was simply wrong**
+  (it reported `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` as "already at 1007L" before its edit; an
+  independent `git show HEAD:<path> | wc -l` check found it was actually 999L — treat a sub-agent's self-reported line
+  count as unverified until checked directly, same class as this workspace's general measured-not-claimed discipline).
+  Reverted the 9 over-cap docs' working-tree edits (their computed, disk-verified `context_scope` entries were not lost
+  — captured into a new follow-up issue doc,
+  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`, ready to re-apply once each
+  doc gets a real trim/split). Also 2 docs were correctly left `NEVER_SCOUTED` by their scouting agent because they
+  carry `locked_by:` — editing a locked doc's frontmatter needs operator sign-off; also logged in the same follow-up
+  issue doc rather than silently dropped. Before shipping the remaining 66, ran a **word-level (whitespace-normalized)
+  diff audit across all 66 files** comparing pre- and post-commit content via `difflib.SequenceMatcher` — necessary
+  because prettier's prosewrap reflow made several raw line-diffs look alarming (one file showed `383` changed lines for
+  what should have been a ~5-line addition); the word-level audit confirmed **zero removed content across all 66
+  files**, only the intended `context_scope` block + Progress Log marker, before trusting the ship. Hit one genuine `UU`
+  conflict during the ship (`pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` — a peer's new Progress
+  Log entry landed upstream between my stage and quickmerge's internal autostash-pull; resolved by keeping the peer's
+  entry and appending mine after it, no logical overlap). **New environment lesson this session**: this shell is `zsh`,
+  not `bash` — `zsh` does NOT word-split an unquoted `$VAR` expansion by default the way `bash` does, which silently
+  broke an early `git add -- $FILES`/`check_line_caps.sh $FILES` attempt (the whole newline-joined file list collapsed
+  into one pathspec/arg, producing a false-clean result with zero files actually checked); fixed by using
+  `git add --pathspec-from-file=<file>` and `cat <file> | xargs <script>` instead of unquoted-var expansion for any
+  multi-file argument list on this checkout. Shipped in 3 commits: `unified-trading-pm@00037ae0c` (66-file context_scope
+  backfill), `@91db20917` (the line-cap/locked-doc follow-up issue doc), `@4327f26fd` (the 1 missed doc, scouted
+  directly). **Final inventory snapshot this session** (2026-08-03, re-measure before trusting): 646 in-scope docs, 339
+  `UP_TO_DATE`, 294 `STALE`, 13 `NEVER_SCOUTED` (the 11 from the new follow-up issue doc + 1 new doc created elsewhere
+  mid-session, `test_impact_selective_execution_design_2026_08_03.md`, not yet scouted). `NEVER_SCOUTED` dropped 78→13
+  net of the 1 newly-created doc. **Not done, deliberately**: the `FieldSpec` flip stays untouched — still far from 0/0,
+  and the 9 line-cap docs need real trim/split work (tracked, not done here) before they can even be re-scouted.

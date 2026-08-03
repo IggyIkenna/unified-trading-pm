@@ -78,16 +78,17 @@ context_scope:
       `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,
       `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`,
       `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`,
-      `tradfi_multisource_backfill_2026_06_22.md`. For each: after flipping, re-check whether it now has 0 open todos
-      remaining. Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos (checkbox AND
-      prose-form). **Done when**: all 11 source docs' corresponding checkboxes/sections are flipped with verified
-      evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
+      `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`. For each: after flipping, re-check whether it
+      now has 0 open todos remaining. Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos
+      (checkbox AND prose-form). **Done when**: all 11 source docs' corresponding checkboxes/sections are flipped with
+      verified evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
 - [ ] [REVIEW] P1. **Re-check the 8 still-genuinely-conflicted Deferred items + the 1 operator-gated item from batch2's
       own Deferred section**, now that time has passed and the operator may have ruled on the queued decisions in
       `autonomous_session_operator_decisions_2026_07_25.md`. For each of the 5 docs listed there
       (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
-      `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`, `tradfi_multisource_backfill_2026_06_22.md`, plus
+      `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,
+      `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`, plus
       `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (**RULED 2026-07-29: wire via forward-poll opt-in
       flag, see the issue doc — this one of the 6 is now pre-resolved, the other 5 still need the live re-check
       below**): re-read the specific conflicting todo in `tradfi_consolidated_closeout_2026_07_18.md` to check if it has

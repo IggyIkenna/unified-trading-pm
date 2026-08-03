@@ -17,7 +17,12 @@ stage: [data]
 repos: [market-tick-data-service, instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [sports, canonical, league-id, namespace, manifest, coverage, migration]
-related: [../sports_consolidated_closeout_2026_07_19.md, /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md]
+related:
+  [
+    ../sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
+    /plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
+  ]
 created: "2026-07-20"
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:
@@ -26,7 +31,8 @@ context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py,
+    market-data-processing-service/scripts/reprocess_sports_odds.py,
+    market-tick-data-service/scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py,
     market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
     deployment-service/scripts/rebuild_sports_manifest.py,
   ]
@@ -826,3 +832,21 @@ offered to the queue once these are the only real blockers.
   Track H's registry-aware honest-coverage denominator ONCE its 2 remaining blockers land' — and the doc's own
   2026-07-28 re-dispatch checks (slot-7, then slot-10) confirm both blockers still unshipped. It also carries an
   unanswered 'OPERATOR DECISION NEEDED — China Super League + Russia Premier League' section
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-shipped
+  `migrate_sports_league_id_casing_2026_07_21.py` executor for the two files the sole remaining open todo actually
+  targets: `market-data-processing-service/scripts/reprocess_sports_odds.py` (Step-7 re-run) and
+  `census_footystats_orphan_content_2026_07_25.py` (the existing census; its apply/swap counterpart still doesn't
+  exist).
+- **2026-08-03 (slot 16, data_engineering) — near-miss caught, flagging here for cross-reference**: while working
+  `sports_curated_universe_domestic_selection_remaining_2026_07_25.md`'s residual out-of-curated-universe drop decision
+  (BLK-aa587dbf), found the SAME raw-name population this doc tracks (`PRIMERA_DIVISION`/`PREMIER_LEAGUE`/
+  `CHAMPIONSHIP`/`2._BUNDESLIGA`/`SUPER_LEAGUE`/etc., still 74,058 rows post-dedup) was about to be miscategorized as
+  "out-of-universe junk" eligible for `--drop-out-of-universe --apply` by that todo's own script
+  (`instruments-service/scripts/canonicalize_sports_league_id_schema_2026_06_24.py`) — that script has no awareness of
+  THIS doc's already-ruled canonicalise-at-write decision or its still-open history-migration blockers, so it would have
+  destroyed real `odds_horizon_bucket`/`trades` rows for major/ambiguous-but-real leagues awaiting migration, not
+  removed junk. Corrected before any drop executed (urgent `/progress` sent + the other doc updated with a full
+  correction); no code/data changed here. Cross-linked both docs' `related:`. No change to this doc's own open todo or
+  status — flagging purely so a future reconciliation sweep sees the connection and so
+  `canonicalize_sports_league_id_ schema_2026_06_24.py`'s `--drop-out-of-universe` gains an exclusion for this doc's
+  tracked raw-name population before anyone runs it again.

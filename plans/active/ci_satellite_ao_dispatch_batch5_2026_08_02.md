@@ -165,15 +165,21 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
      BigQuery `resource_samples` pipeline (NOT a point-in-time SSM check) and report it against the operator's
      pre-stated 50-70% band. The doc's own text makes this a fact-check, not a judgment call — **only re-escalate if the
      measured number falls outside the band**, and then quote the number.
-  2. **Scope a DESIGN (design only, no implementation) for test-impact / selective test execution** (`[REVIEW] P2`,
-     ~line 776; batch4 Deferred **D4-2**; operator-approved 2026-07-28). The design must specify, before any code: the
-     safety guarantee that makes a missed regression structurally impossible rather than merely unlikely; the
-     change→affected-tests mapping mechanism and its blind spots (dynamic imports, fixture coupling, config/data-driven
-     tests); the fallback rule (any mapping ambiguity runs the FULL suite); and how the selector itself is regression-
-     tested. **Do not implement from this todo** — a later todo authorises implementation citing the design.
-  - **Done when**: both are recorded in one dated Progress Log entry in the source doc — the utilization number with its
-    measurement window (or `BLOCKED-CREDENTIALS` if the BigQuery pipeline is unreachable; do not estimate), and the
-    design captured as a real document with all four required elements, its path cited from the todo.
+  2. **MOOT — SUPERSEDED, do not execute as written (found by `/ag-closeout-audit ci` 2026-08-03).** Originally: "Scope
+     a DESIGN (design only, no implementation) for test-impact / selective test execution" (`[REVIEW] P2`, ~line 776;
+     batch4 Deferred **D4-2**; operator-approved 2026-07-28). The cited line has since moved: the source doc's own
+     checkbox there now reads "EXTRACTED 2026-08-03 to its own issue doc" —
+     `plans/active/issues/test_impact_selective_execution_design_2026_08_03.md`. By the time this batch-5 todo is
+     actually dispatched, that design was not only written but operator-reviewed-and-approved, followed by a full
+     implementation (`test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`, `assigned_vm: NA` active local
+     plan): Phase 1 fleet-wide eligibility measurement done, Phase 2 walker/selector/golden-set tests shipped
+     (`unified-trading-pm@1452d5da1`), a single-repo shadow trial live on `market-data-processing-service` (`@1c8588c`,
+     2-week clock to 2026-08-17), and a historical backtest executed. **Skip sub-item 2 entirely when this todo is
+     worked** — record a one-line pointer to the rollout plan instead of scoping a design that already shipped code; do
+     not re-scope or re-design.
+  - **Done when**: sub-item 1's utilization number is recorded in the source doc (measurement window, or
+    `BLOCKED-CREDENTIALS` if unreachable), and sub-item 2 is recorded as a pointer to
+    `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` rather than a fresh design.
   - Source: `github_actions_operator_gated_followups_2026_07_17.md` (`[VERIFY] P2` + `[REVIEW] P2`). Batch4 **D4-2** /
     **D4-3**, both recorded there as "held for a cleaner batch-5 extraction".
 
@@ -258,10 +264,10 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
 
 ### Operator-gated (needs a ruling, not a re-triage)
 
-| id   | Item                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D5-4 | `github_actions_billing_wall_recurrence_2026_07_29.md`'s `[BACKEND] P2` — spend telemetry / 50-80-95% budget alerting. This is the 3rd+ recurrence of the class, and the remediation is explicitly a fork in the road only the operator can take: mint a billing-scoped `Plan: read` token so the workspace can self-detect the wall before it walls CI, **or** accept recurring manual operator intervention as the standing posture. |
-| D5-5 | Batch4's operator-gated set **D4-5 through D4-18** — re-verified 2026-08-02 as still unruled and still correctly parked there. Not re-listed item-by-item here; batch4 remains their home, and batch4-finalize's todo 3 owns their re-check.                                                                                                                                                                                           |
+| id   | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D5-4 | **RESOLVED 2026-08-03, no longer operator-gated (found by `/ag-closeout-audit ci`).** `github_actions_billing_wall_recurrence_2026_07_29.md`'s `[BACKEND] P2` — spend telemetry / 50-80-95% budget alerting. **RULED 2026-08-03T06:28:59Z** (operator, via main, `blocked_id: BLK-c099ebe5`, `disposition: final`, captured in `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s own migrated todo): recurring manual operator intervention IS the accepted standing posture — no `Plan: read` token will be minted. Closed wont-fix at the source; nothing left for batch 6 to extract here. |
+| D5-5 | Batch4's operator-gated set **D4-5 through D4-18** — re-verified 2026-08-02 as still unruled and still correctly parked there. Not re-listed item-by-item here; batch4 remains their home, and batch4-finalize's todo 3 owns their re-check.                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Live incident (too risky to batch while hot)
 
@@ -305,3 +311,27 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   into todo 2) plus cross-plan with batch4's todo 9 (caution recorded, not silently ignored). 6 todos drafted, 7 items
   deferred (D5-1 through D5-7), nothing escalated that batch4 has not already escalated. Nothing shipped, nothing
   flipped to `active`.
+- **2026-08-03 — `/ag-closeout-audit ci` (autonomous, daily scheduled run).** Re-checked this batch's own Deferred
+  section per the skill's iterative-drain step before any fresh triage. D5-1/D5-2/D5-3 unchanged (batch4's todos 1/2/4
+  still un-landed, 0/9 — the contended files are still contended). D5-5/D5-6/D5-7 unchanged (batch4's D4-5..D4-18 still
+  unruled; `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` still `status: open`; pnpm migration still has
+  no dedicated plan). **Two corrections applied in place, both evidence-backed, neither a fresh judgment call**: D5-4
+  marked RESOLVED (operator ruling `BLK-c099ebe5`, captured in batch1); todo 2 sub-item 2 marked MOOT/superseded (the
+  design it asks to scope already shipped as a full implementation — see the inline notes above). Fresh-candidate sweep
+  via `generate_ag_closeout_audit_candidates.py --tranche ci`: 40 total members, 7
+  never-cited-in-an-active-covering-doc. All 7 investigated end-to-end; **zero produced a genuine new batch-6
+  candidate**: 2 are already cited in batch1's own Deferred (D21/D3(5)) under a truncated basename the mechanical
+  citation-regex doesn't match, both `na-eligibility-audit`-confirmed KEEP-NA (operator-gated, do-not-dispatch-blind); 1
+  (`workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`) is `na-eligibility-audit`-confirmed KEEP-NA
+  (open-ended design questions, no decided mechanism); 1
+  (`deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md`) had its blocking scope resolved
+  same-day, leaving only a P3 "consider whether…" design suggestion, not yet bounded enough to batch; 1
+  (`pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`) is a live, actively-multi-session-worked
+  incident continuation of the same capacity crisis D5-6 already tracks — too hot to batch, matches precedent; 2
+  (`qg_governor_glue_runner_ledger_coordination_2026_08_03.md`,
+  `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) are themselves already-active LOCAL plans with real
+  shipped progress today — self-covering, nothing for a batch to extract. **Verdict: no batch 6 drafted this round** —
+  batch1 (42/43 done)/batch4 (0/9, drafted)/batch5 (this doc, 0/6, drafted) already comprehensively cover the tranche's
+  currently-extractable work; today's fresh sweep found nothing new to add. 0 parked/BLOCKED-OPERATOR-DECISION findings
+  this run (both corrections above were auto-resolvable on evidence, not judgment calls) — no separate
+  `ag_closeout_audit_ci_parked_2026_08_03.md` issue doc needed.

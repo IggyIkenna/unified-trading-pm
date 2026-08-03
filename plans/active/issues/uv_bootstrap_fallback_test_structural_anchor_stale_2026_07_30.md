@@ -37,7 +37,12 @@ source:
     scripts/quality-gates-base/base-service.sh/quickmerge.sh changes for ci_satellite_ao_dispatch_batch2 todo 1
     (2026-07-30) — confirmed identical failure on the unmodified tree, root-caused, not fixed inline (unrelated to that
     todo's scope)"
-context_scope: [/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md, /plans/epics/infrastructure_master.md]
+context_scope:
+  [
+    scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh,
+    scripts/setup.sh,
+    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+  ]
 ---
 
 # uv-bootstrap-fallback test's structural anchor drifted from setup.sh's current text
@@ -105,3 +110,4 @@ open checkbox above this run.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).

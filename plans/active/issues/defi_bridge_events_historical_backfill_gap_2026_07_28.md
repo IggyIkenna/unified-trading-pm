@@ -154,3 +154,4 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   2022-03-17) multi-year production capture backfill against live GCS — the doc itself says the code precondition
   shipped (`market-tick-data-service@c38e1b3f`) and what remains is "a real data-capture operation, not a code check",
   left for whoever schedules the run.
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).

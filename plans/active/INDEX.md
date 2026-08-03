@@ -21,7 +21,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans a
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (38)
+### cefi (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -153,9 +153,6 @@ by hand._
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
   UTL…
-- [`vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30`](./vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)
-  — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
-  na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
 ### defi (35)
 
@@ -329,6 +326,10 @@ by hand._
   — Gated closeout for `tradfi_consolidated_native_ao_extract_2026_07_25.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 10 of that plan's todos are done. Unlike the batch1/batch2 satellite extractions
   (whose "source…
+- [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
+  **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
+  timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics
+  archive. ForexFactory…
 - [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](./tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md) —
   Small follow-up forked out of tradfi_v9_stage1_finish_2026_07_06.md (now archived, all its other tasks closed) during
   the 2026-07-24 plan-hygiene line-cap remediation. Carries the single remaining legacy-twin bucket delete todo — after
@@ -340,8 +341,6 @@ by hand._
   — Gated closeout for tradfi_manifest_content_recovery_completion_2026_07_24.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
-- [`tradfi_multisource_backfill_2026_06_22`](./tradfi_multisource_backfill_2026_06_22.md) — Extend the TradFi OHLCV
-  backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask).
 - [`tradfi_phase_d_terminal_gate_2026_07_24`](./tradfi_phase_d_terminal_gate_2026_07_24.md) — Forked from
   tradfi_consolidated_closeout_2026_07_18.md's 2026-07-24 line-cap remediation split. Carries Phase D — the parent's
   terminal completion gate — post-migration re-smoke-test of every tradfi (venue, data_type) shard via the…
@@ -616,7 +615,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (61)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -823,10 +822,6 @@ by hand._
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
   UTL's…
-- [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
-  **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
-  timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics
-  archive. ForexFactory…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
@@ -872,12 +867,16 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (11)
+### ci (14)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
   archived (65/67 todos done, plan-line-cap remediation 2026-07-24): (1) the CI-runner-blocked full
   `generate-unified-openapi.sh`…
+- [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
+  The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
+  Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
+  runner…
 - [`ci_satellite_ao_dispatch_batch1_2026_07_26`](./ci_satellite_ao_dispatch_batch1_2026_07_26.md) — First AO-dispatch
   batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-26) after
   `/plan-reconcile ci` had just cleaned the same corpus. Phase 0 found the tranche has NO dispatch vehicle at all —…
@@ -904,14 +903,26 @@ by hand._
 - [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) — Master coordinator
   for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a
   single-pane view of repo pipeline state and slot health.
+- [`qg_governor_glue_runner_ledger_coordination_2026_08_03`](./qg_governor_glue_runner_ledger_coordination_2026_08_03.md)
+  — The reservation-ledger admission governor (qg_host_adaptive_resource_governor_2026_07_14.md) is shipped and
+  validated on the interactive slot-worktree topology, but does NOT coordinate across different repos' CI jobs on a
+  GitHub Actions…
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…
+- [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](./test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
+  — Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
+  market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
+  estimate from a…
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (16)
+### infrastructure (17)
 
+- [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
+  The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
+  Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
+  runner…
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
   8k).

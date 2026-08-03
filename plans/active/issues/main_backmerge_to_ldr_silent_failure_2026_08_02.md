@@ -59,6 +59,13 @@ last_updated: 2026-08-02
 locked_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    .github/workflows/main-backmerge-to-ldr.yml,
+    scripts/workflow-templates/main-backmerge-to-ldr.yml,
+    agent-orchestrator/server/routes/ops.py,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # `main-backmerge-to-ldr.yml` down since 2026-07-29 — the fleet's `main`→LDR sync bridge is silently broken
@@ -239,3 +246,4 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
   app-token) that never reaches "bm" at all. Validated via `python3 -c "yaml.safe_load(...)"` (parses clean) and
   `bash -n` on the extracted step script (no syntax errors). Filed a new P3 follow-up todo above for the fleet-wide
   template rollout (out of this todo's stated PM-only scope) rather than doing a 20+-repo rollout inline here.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

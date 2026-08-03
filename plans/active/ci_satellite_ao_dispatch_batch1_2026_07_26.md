@@ -462,15 +462,29 @@ concurrent workers do not collide on this file.
       docs/ping logs). unified-trading-pm@bd0e44dd3. Source:
       `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
       (2026-07-31)".
-- [ ] [INFRA] P3. **`check_sdk_version_alignment.py`'s `_get_api_contracts_version()` is D13-blind.** Found via the same
-      re-sweep. `unified-api-contracts` is `version_source: git-tag` (dynamic pyproject), so
-      `_get_api_contracts_version()` always returns `""`; `_version_satisfies_spec()` treats an empty version as "always
-      satisfies", so the "interface uses api-contracts but version range does not include api-contracts version" check
-      silently no-ops for every caller. NOT currently wired to any workflow (grep-confirmed) — inert today. Make it
-      git-tag-aware (read the current version from `workspace-manifest.json`'s `versions{}` cache, or the published git
-      tag, rather than the source pyproject) or delete it if superseded — state which and why. **Done when**: the
-      api-contracts-version-overlap check either correctly resolves the git-tag version or the script is gone with zero
-      dangling referrers. Repo: unified-api-contracts.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-03 (slot-7, infra)** — **`check_sdk_version_alignment.py`'s
+      `_get_api_contracts_version()` was D13-blind — REMOVED, not fixed, superseded.** Confirmed doubly-broken, not just
+      D13-blind: even ignoring the always-`""` git-tag version, the check's dependency lookup
+      (`"api-contracts" in iface_deps`) could never match anyway, since every real consumer's pyproject.toml declares
+      the dependency as `"unified-api-contracts"`, not `"api-contracts"` — so it never fired for any caller, ever. Its
+      function (does a consumer's declared api-contracts version range admit api-contracts' current version) is already
+      correctly performed, git-tag-aware, by `assert_version_coherence.py`'s `_check_dep_floors()` (wired into PM's
+      `quality-gates.sh:979`, resolves from `workspace-manifest.json`'s `versions{}` cache). Removed
+      `_get_api_contracts_version()`, `_version_satisfies_spec()`, and the api-contracts-overlap block in `main()`; also
+      deleted `_heuristic_overlap()` (dead code, never called). **Kept** the still-functional SDK-schema-alignment check
+      (databento/tardis/ccxt/ib_insync vs. api-contracts schema modules + `[schema-validation]` pins) since it's
+      unrelated to the D13 bug and not covered by `assert_version_coherence.py` — fixed an adjacent bug found while
+      verifying it still works: `_schema_module_exists()` looked for a fallback dir `api_contracts_external`, which
+      doesn't exist (real dir is `external/`), causing false-positive "no schemas" errors for databento/ccxt/ibkr, which
+      genuinely exist there. Verified via a live `uv run python scripts/check_sdk_version_alignment.py` run before/after
+      (identical output pre-edit whether stashed or not, confirming zero behavior change to the overlap check; false
+      positives gone post schema-dir fix, replaced by genuine signal). Full `quality-gates.sh` green (310s). —
+      unified-api-contracts@44ba64b3. Two further, genuinely out-of-scope findings surfaced once the false positives
+      cleared (stale `INTERFACES` list, 11/16 dead; api-contracts' own `[schema-validation]` extras missing 3 SDK pins
+      that `SCHEMA_VERSIONS.md` already documents) filed as follow-up todos rather than absorbed:
+      `issues/check_sdk_version_alignment_stale_interfaces_and_missing_pins_2026_08_03.md`. Source:
+      `plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` § "Census addendum
+      (2026-07-31)".
 - [x] ✅ [INFRA] P2. **Fleet version/tag-state census (read-only, NO tag minting).** Three docs each ask for a slice of
       the same measurement; do it once. (a) Re-derive manifest `versions{}` vs the highest real `vX.Y.Z` tag across all
       24 repos (last measured 2026-07-17: 13 in sync / 9 LAGGING / 1 AHEAD — worst `e2e-testing` 0.6.0 vs v0.40.0). (b)
@@ -676,20 +690,39 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       billing-wall detection heuristic (e.g. correlating the GH `timing` API's `run_duration_ms`/`billable` fields with
       the run, or the 0-recorded-steps + expired-log-blob signature) is a real code change outside this confirm-scoped
       P3's 1h estimate.
-- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md` investigation, 2026-08-03)** Teach
+- [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md` investigation, 2026-08-03)** Teach
       `agent-orchestrator/server/ci_reconcile.py`'s `repo_ldr_qg_conclusion()`/escalation path to distinguish a
       billing-wall-induced run `conclusion: "failure"` (the "partial" signature: sibling jobs succeed, only the
       `quality-gates-v2` aggregation job fails in ~11-12s with 0 recorded steps + an expired log blob) from a genuine QG
       break, and skip the `ldr_qg_failure` escalation dispatch for the former (a worker cannot fix an account-level
       billing block). Candidate signal: the GH `timing` API's `run_duration_ms`/`billable` fields for the failing run,
       or a direct check for the 0-recorded-steps pattern via the jobs list. See the confirmed root-cause analysis in the
-      todo immediately above this one for full evidence + code citations.
-- [ ] [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
+      todo immediately above this one for full evidence + code citations. **DONE 2026-08-03 —
+      `agent-orchestrator@1f2fcc648fb5b2aba7ea7aab2badd5948606cc89`** (slot-4, independently dispatched on the same todo
+      — a parallel-dispatch race; confirmed the shipped implementation covers this todo in full: `_run_jobs` fetches the
+      failing run's job list, `_is_billing_wall_partial_signature` matches the aggregation job by name suffix + requires
+      0 recorded steps + a short duration + no sibling job also failing, and
+      `is_genuine_qg_failure`/`CIReconcileLoop._billing_wall_gate` wire it into the dispatch path — QG green, 2277
+      passed). This worker (slot-14) independently authored an equivalent implementation but discovered the collision
+      via `check-branch-drift` on commit; verified slot-4's shipped code is complete and correct, discarded the
+      duplicate work, and is flipping this checkbox instead of re-shipping.
+- [x] ✅ [BACKEND] P3. **(from `github_actions_billing_wall_recurrence_2026_07_29.md`)** Every bare-LDR (`pr_number=0`)
       `ldr_qg_failure` escalation passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a real numbered slot, so a dispatched `cicd` worker's
       mandated "ping the authoring slot" step always 400s (confirmed `agt-69e9e4`/slot 14, 2026-07-29). Either have
       `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, advisory-only) or fix
-      `_notify_authoring_slot` to treat it as a real target.
+      `_notify_authoring_slot` to treat it as a real target. Evidence: took the special-case-`cicd.md` fork —
+      `_notify_authoring_slot` (`escalation.py:271`) is the SEPARATE server-side dispatch-time Slack notify (never
+      raises, handles any string fine, not the broken call); the actual 400 is the WORKER's own completion-time curl
+      (`cicd.md`'s "PING THE AUTHORING SLOT" step) hitting `POST /api/slots/{slot_id}/message`
+      (`server/routes/slots_ops.py:64-65`, `slot_id: int` path param — FastAPI rejects a non-numeric value before the
+      handler runs). Found a SECOND non-numeric source beyond the literal `"ci-reconcile"` sentinel:
+      `server/routes/repo_blockers.py:100`'s `authoring_slot=str(req.slot_id if req.slot_id is not None else "")`
+      produces an empty string when a repo-blocker is declared with no `slot_id`. Fixed generally (not just the one
+      literal) — `unified-trading-pm@41f193405`: `cicd.md`'s ping step now guards on
+      `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`, skipping when non-numeric (both known sentinels, and any future one) since
+      there is no real originator slot to notify in that case — the dispatch-time Slack alert already covers the FYI, so
+      nothing is silently lost by skipping.
 - [x] ✅ [BACKEND] P1. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Re-verify that
       session's shipped-but-CI-unconfirmed commits actually went green on GitHub's own `quality-gates-v2` (local QG
       passing alone doesn't satisfy the workspace's real-CI-signal rule): `instruments-service@76eba912` + `@4c05f2d3`,
@@ -711,10 +744,27 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       confirmation that the current codebase state, including these commits' content, is CI-clean. No residual defect
       traced to these specific commits; verification closed, no follow-up fix required. Evidence: gh API run IDs cited
       above, all queryable via `gh api repos/IggyIkenna/<repo>/actions/runs/<id>`.
-- [ ] [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
+- [x] ✅ [DATA] P2. **(from `github_actions_total_fleet_outage_startup_failure_2026_07_30.md`)** Revisit whether the
       elevated `ldr_qg_failure`/plan_health escalation counts seen 2026-07-29 evening into 2026-07-30 were partly caused
       by this outage rather than (or in addition to) the host-contention root cause tracked elsewhere — worth separating
-      in the record for future triage.
+      in the record for future triage. — **DONE 2026-08-03 (slot 13, data_engineering).** Answer: **both, additively,
+      and in OPPOSITE directions per wall_type** — so "elevated ldr_qg_failure/plan_health" needed splitting, not just
+      confirming. Queried AO `escalation_queue`+append-only `activity_log` directly
+      (`agent-orchestrator/data/state/state.db`; `activity_log` is the reliable source — `resolved_at` gets overwritten
+      on re-escalation). Outage onset ≈18:22-19:44Z 07-29 (`github_actions_billing_wall_recurrence_2026_07_29.md`). 6h
+      buckets straddling onset (pre 12-18Z → outage-evening 18-24Z): `ldr_qg_failure` resolved-`qg_v2_green` **26→1**
+      (~26x collapse) while dispatch/re-attempts stayed flat-or-higher (29→36) — attempts decoupled from resolutions is
+      the zero-job-outage signature (workers reproduce clean locally per ~10 corroborating entries that evening, CI
+      never confirms), layered ON TOP of the separately-tracked host-contention baseline
+      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`/`..._continues_day2_2026_07_29.md`) that was
+      already producing real if slow resolutions hours earlier the same day (26 in 12-18Z, pre-wall). `plan_health` went
+      the OPPOSITE way: new-escalation creation dropped 9→1 (fewer real PR-check transitions once GHA stopped returning
+      results) while its backlog kept draining fine (17→11 resolved) — the outage suppressed `plan_health` creation, it
+      did not elevate it. Corroborating: `github_actions_billing_wall_recurrence_2026_07_29.md` L194-201 already
+      self-flags escalation `agt-dfdd5b` (billing-wall signature) as misfiled into the sibling host-contention doc's
+      Progress Log, unresolved until now — not editing either archived/resolved doc (archival authority is
+      plan_reconciler/main's, not a worker's); recording the separation here instead. No code change — pure
+      historical-record analysis, evidence = the cited SQL against `state.db` + existing doc citations above.
 - [x] ✅ [SCRIPT] P2. **(from `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`)** Add a
       lightweight standing monitor (or extend `scripts/cicd/promotion_lag_monitor.py`) that alerts when
       `ldr-to-main-promote-fleet.yml`/`ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this
@@ -763,11 +813,30 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       `plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after discovering it was
       blocking the corpus-wide `check_finalize_plan_coverage.py` gate — unrelated to this todo, shipped as its own
       commit.
-- [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
+- [x] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only
       this bounded item extracted — its main P0/P1 chain stays there, operator-gated). Fix the invalid `sit_retry_cap`
       wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
       background worker rather than Issue + Slack only. **MIGRATED FROM**:
-      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`.
+      `/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`. ✅ **Already shipped
+      pre-extraction — DUPLICATE of this same plan's own item at line ~240 ("The `sit_retry_cap` escalation can never
+      succeed")**, which cites the SAME source ([DEVOPS] P0 in the same issue doc) and closes the `sit_retry_cap`
+      bounded-fix half end-to-end: `unified-trading-pm@2e5a42479` + `agent-orchestrator@dbdccb6`, live-proven via a real
+      `workflow_dispatch` → `POST /api/escalate` → `HTTP 200 escalation_id=agt-d37ed9` → dispatched to a live `cicd`
+      worker (slot 1) → confirmed fixed in code (`server/models/escalation.py` carries `sit_retry_cap` in
+      `EscalateRequest.wall_type`, `escalation.WALL_TYPES`, and `escalate-to-orchestrator.yml`'s case-statement +
+      `workflow_dispatch` choice list) → `/done`. Verified independently this session: `sit-debounce-trigger.yml:321`
+      still emits `wall_type:"sit_retry_cap"`; `escalation.py` `WALL_TYPES` (line 73) and `server/models/escalation.py`
+      (line 44) both carry it; `escalate-to-orchestrator.yml`'s case-statement (line 150) and `workflow_dispatch` choice
+      list (line 81) both accept it; `tests/test_escalation.py` asserts
+      `_prompt_template_for("sit_retry_cap") == "cicd"` and cross-checks the `EscalateRequest` Literal against
+      `WALL_TYPES` so the two sets can't drift apart again. **The second clause (design call: should a red SIT escalate
+      to a background worker rather than Issue + Slack only) stays UNRESOLVED BY DESIGN** — the source issue doc's
+      na-eligibility-audit verdict (2026-08-02) explicitly flags this as "a genuine design call and should stay NA
+      regardless of which option is picked"; a worker deciding it autonomously would be exactly the
+      judgment-wearing-a-todo's-clothes anti-pattern CLAUDE.md's dispatch-scope-eligibility rule forbids. Note the
+      _bounded_ half is not purely academic either: the retry-cap escalation (3 consecutive SIT failures) now DOES reach
+      a background worker (proven above) — only the broader "every single red SIT run" policy question remains open,
+      tracked at its source doc, not here.
 - [x] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (same doc, same
       extraction). Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
       cross-repo combination was executed" — it is a surface check. **MIGRATED FROM**:
@@ -808,8 +877,11 @@ option 1 (`autonomous_session_operator_decisions_2026_07_25.md` entry #33) and t
 (3) instrument STAGE 0's cascade step for the MTDS `DEPLOYMENT_ENV` leak
 (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` — also parked, see the reproducer question); (4)
 broaden the branch check to recognise `live-defi-rollout` (`quickmerge_environment_autodetect_…` step 3, itself gated on
-its step 2); (5) the content-hash green-tree fast-path (`quickmerge_sentinel_race_retry_storm_…` fix 1 — explicitly "do
-NOT dispatch blind", operator sign-off).
+its step 2); (5) the content-hash green-tree fast-path
+(`quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` fix 1 — explicitly "do NOT dispatch
+blind", operator sign-off; full basename spelled out 2026-08-03, `/ag-closeout-audit ci` — the prior truncated form
+defeated `generate_ag_closeout_audit_candidates.py`'s basename-citation regex, showing this doc as mechanically "never
+cited" despite being tracked here since 2026-07-26).
 
 ### Operator-gated (needs a ruling, not a re-triage)
 

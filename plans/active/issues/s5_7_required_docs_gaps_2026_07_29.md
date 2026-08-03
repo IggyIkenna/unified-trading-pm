@@ -113,3 +113,5 @@ the dispatch-scope-eligibility ruling):
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
   self-classifies as a scoping judgment ('should S5.1 tier its required set by repo type?'), not a bounded worker todo,
   per the doc's own text citing the dispatch-scope-eligibility ruling.
+
+- **context-scout 2026-08-03**: refreshed context_scope (2 entries, unchanged — still accurate).

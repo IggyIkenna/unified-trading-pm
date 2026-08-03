@@ -54,6 +54,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md,
     agent-orchestrator/server/auto_park.py,
     agent-orchestrator/server/routes/slots_ops.py,
   ]
@@ -117,6 +118,12 @@ condition fires.
       than guessing. **Done when**: BOTH halves land — the priority_override-vs-prereq difference is documented, AND a
       promote-gated verification task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh
       worker every tick, resuming only when the gate clears, with a test simulating "ref not yet on main".
+      **na-eligibility-audit 2026-08-03**: the stated GATE (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      `/skip-current-task` `reason_code` audit) is now CLEARED — that plan (archived 2026-08-01, 11/11 todos done)
+      records its own todo 8 executed fresh 2026-08-01 (read-only, found zero uncovered codes), and its Progress Log
+      explicitly states it "cleared the gate on
+      `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`." The GATED prefix no longer blocks
+      dispatch; the two-part implementation itself remains open/undone.
 
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
@@ -175,3 +182,6 @@ is about routing external-gate tasks through it instead of through the churn pat
   reaches durable-park), so this doc's implementation todo is not folding in a newly-discovered code — it proceeds
   exactly as scoped above. This doc is now unblocked to dispatch; not implemented in this pass (out of scope for the
   audit-only batch todo that was gating it).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added
+  `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`, the archived audit doc whose per-`reason_code`
+  table this doc's own Progress Log names as the input the implementation todo proceeds against.

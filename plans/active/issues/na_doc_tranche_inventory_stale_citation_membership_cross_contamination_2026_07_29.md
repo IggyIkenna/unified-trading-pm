@@ -67,6 +67,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 depends_on: []
 source: >-
@@ -188,10 +189,12 @@ class in a third script.
       `test_ag_tranche_membership_unaffected_by_the_fix`,
       `test_cross_cutting_solo_tag_is_assigned_without_data_epic_or_citation`,
       `test_ag_tagged_doc_with_cross_cutting_is_not_double_counted_unless_data_epic`. All 7 pass.
-- [ ] [SCRIPT] P3. Evaluate bundling this fix with the sibling script's fix
-      (`generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`) given
-      the near-verbatim shared helper shapes — consider extracting one shared membership-test module both scripts
-      import, to prevent a third recurrence of this bug class.
+- [ ] [SCRIPT] P3. Evaluate ~~bundling this fix with the sibling script's fix~~ **STALE (na-eligibility-audit
+      2026-08-03)** — the sibling script's own fix already shipped independently, same day, in a separate commit
+      (`plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`,
+      `unified-trading-pm@e88c41727`, 2026-07-30 — vs. this doc's own fix at `@6228cff7e`, also 2026-07-30); the two
+      were never bundled and that opportunity has passed. What remains genuinely open is the underlying idea: consider
+      extracting one shared membership-test module both scripts import, to prevent a third recurrence of this bug class.
 
 ## Progress Log
 
@@ -222,6 +225,9 @@ class in a third script.
   total (5 original FP + 1 original FN + 3 new FP), materially more than the issue doc's original estimate — strengthens
   the case for the shared-helper extraction in the remaining P3 todo (a single well-tested membership module is less
   likely to leak silently a third time than two independently-maintained near-duplicates).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the sibling script
+  `generate_ag_closeout_audit_candidates.py`, the near-duplicate the doc's own "Fix direction" and remaining P3 todo
+  (shared-helper extraction) name directly.
 
 ## Codex SSOTs
 

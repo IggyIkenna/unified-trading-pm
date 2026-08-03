@@ -139,3 +139,4 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
   flipping the doc exposes (a) to blind dispatch. Splitting one todo into two is editorial authoring, outside this
   skill's apply set (and would grow the NA todo count against the ratchet) — recorded instead as a targeted-extraction
   candidate for a future infra batch.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — verified all still resolve).

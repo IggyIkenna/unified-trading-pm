@@ -233,10 +233,10 @@ from its own package's `__all__`. Kalshi's LIVE execution adapter
 `adapters/sports_factory.py:39-44`'s `_LIVE_VENUE_CONFIGS`) was fully built and live well before this stub was deleted,
 and authenticates via RSA request signing against **two** separate secrets — `kalshi-api-key-id` +
 `kalshi-private-key-pem` — NOT the single `kalshi-api-credentials` blob the deleted stub referenced. Found + deleted per
-`unified-trading-pm/plans/active/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` Finding 13.
-`kalshi-api-credentials` (verified live in GCP 2026-07-23, see § 1 above) is now referenced by NO code in the workspace
-— an orphaned secret, not a naming bug; deleting it from GCP is a separate, not-yet-decided cleanup, out of this doc's
-scope.
+`unified-trading-pm/plans/archive/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` Finding 13
+(archived 2026-08-03, all todos done). `kalshi-api-credentials` (verified live in GCP 2026-07-23, see § 1 above) is now
+referenced by NO code in the workspace — an orphaned secret, not a naming bug; deleting it from GCP is a separate,
+not-yet-decided cleanup, out of this doc's scope.
 
 `PolymarketAdapterConfig.secret_name_api_secret` / `secret_name_api_passphrase` defaulted to `polymarket-api-secret` /
 `polymarket-api-passphrase` (neither exists, the "-api-" infix doesn't apply to these two fields even though it does for

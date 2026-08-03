@@ -127,7 +127,12 @@ candidate for that tranche's next pass, not just a retag-only finding.
       `[BACKEND] P2` regression test asserting each role file's declared list is a superset of that oracle. Three live
       `boot_read_unconfirmed` incidents across three role files in one week are the evidence hand-sync does not hold.
       Cross-cutting wrote nothing to that file (primary-owner rule); whichever tranche actions this should do the retag
-      and the `assigned_vm` flip in the SAME edit rather than leaving a second pass to discover it.
+      and the `assigned_vm` flip in the SAME edit rather than leaving a second pass to discover it. **STALE-PART
+      (na-eligibility-audit 2026-08-03)**: ~~Retag ... [ci, cross-cutting] → [ao]~~ — the retag itself is now DONE: the
+      target doc's `asset_group` is `[ao]` (comment: "retagged 2026-08-02 (/ag-closeout-audit cross-cutting finding 1,
+      corroborated by /na-eligibility-audit cross-cutting)"). Still open: `assigned_vm` on that doc is still `NA` (the
+      RECLASSIFY → `planning` this same checkbox called for has not happened), so the "folded into membership +
+      considered for next batch" part of Done-when is not met. Not flipping.
 
 ## Progress Log
 
@@ -144,3 +149,4 @@ candidate for that tranche's next pass, not just a retag-only finding.
   parked finding this run, 1 entry written above — balanced. No Phase 3 batch draft (zero genuine orphans found;
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
   to dispatch — not flipped by this run per the "ASK BEFORE CREATING"/never-auto-flip HARD RULE).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -307,5 +307,34 @@ regression) is worse.**
   manifest read to be genuine decaying noise (day-bucketed: 75/07-30 → 35/07-31 → 1/08-01), not a resurgence — pipeline
   is healthy (13,775 captured book_snapshot_5 rows in the last 24h). All 5 fix commits still ancestors of
   `origin/live-defi-rollout`. Combined across both tracked conditions, this backlog has now consumed 29+ full
-  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C. Full writeup in the
-  book_snapshot_5 doc's own Progress Log.
+  orchestrator-agent dispatches — still awaiting the operator/design decision on Option A/B/C.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 4) — `(cefi, book_snapshot_5)` now at its
+  19th+ dispatch, trickle ticked UP (1→215/24h) but confirmed to be a DIFFERENT already-tracked mechanism, not a
+  regression.** All 5 fix commits still ancestors of `origin/live-defi-rollout`. Fresh bounded manifest read: zero new
+  `"schema contract violated"` rows past the established 2026-07-31T04:18:05Z checkpoint; the growing 215/24h trickle is
+  100% Tardis 403/404 rate-limit-family `error_reason`s — the OTHER already-open backlog
+  (`cefi_high_attempted_failed_batch_cluster_2026_07_23.md`), not this doc's schema-contract mechanism resurfacing.
+  Pipeline healthy (11,848 captured rows/24h vs 215 attempted_failed). Combined across both tracked conditions, this
+  backlog has now consumed 30+ full orchestrator-agent dispatches — still awaiting the operator/design decision on
+  Option A/B/C. Full writeup in the book_snapshot_5 doc's own Progress Log. Full writeup in the book_snapshot_5 doc's
+  own Progress Log.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — `(cefi, book_snapshot_5)`'s 20th+
+  dispatch, and this time the SAME escalation_id (`agt-e11908`) as the entry directly above, not just the same
+  condition.** Fifth confirmed exact-duplicate-escalation_id case overall (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3`
+  2026-07-31, `agt-406c1f` 2026-07-31 — all `(cefi, book_snapshot_5)`) — the literal same escalation event dispatched to
+  two different slots (slot 4, then slot 9) with byte-identical alert numbers (300,744/1,121,420 attempted_failed). Not
+  addressed by the materiality fix (that changes classification/paging severity for a condition, it cannot deduplicate
+  two dispatches of the identical event) — squarely Option A/B/C's territory. Session cost: two file reads
+  - a git-ancestor batch check (5 commits, all still in place) + a Progress Log append in the book_snapshot_5 doc, no
+    GCS read (the slot-4 twin had just pulled a fresh live read moments earlier), no code change. Combined across both
+    tracked conditions, this backlog has now consumed 31+ full orchestrator-agent dispatches — still awaiting the
+    operator/design decision on Option A/B/C.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-52c156, slot 5) — another `(cefi, book_snapshot_5)`
+  dispatch (300,674/1,123,966, ratio 26.8% — ratio has fallen from the 34.4% originally logged in the book_snapshot_5
+  doc, no regression).** Alert already carried the STATIC BACKLOG / decaying-trickle label (210 rows/24h, below the
+  500-row materiality floor). No fresh manifest read, no code change — full writeup in the book_snapshot_5 doc's own
+  Progress Log. Further corroborates Option A: the materiality/severity fix (`alerting-service@bb76cae`) only touches
+  Slack/PagerDuty routing, not the separate escalation fast path that spawned this session — still the open gap this doc
+  tracks.

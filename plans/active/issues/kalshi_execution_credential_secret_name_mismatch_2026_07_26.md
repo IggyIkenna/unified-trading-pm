@@ -45,6 +45,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     execution-service/execution_service/adapters/sports_factory.py,
     execution-service/execution_service/sports_execution/routing.py,
@@ -158,3 +159,5 @@ Two directions, both viable, not adjudicated by this doc:
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 claims both the Secret Manager reshape (RULED
   2026-07-28 as not wallet-key-class) and the gated live paper-order verify. Flipping this doc would dispatch a
   duplicate against real credential material.
+
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).

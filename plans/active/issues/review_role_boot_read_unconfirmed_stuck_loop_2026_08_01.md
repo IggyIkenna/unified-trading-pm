@@ -48,6 +48,15 @@ source: >-
   `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own `[DOCS] P3` todo (opened
   2026-07-31, citing this exact `boot_read_unconfirmed` rejection as its trigger). Independently re-verified via a live
   `GET /api/activity?slot=1` query (not just the source doc's self-report) before acting.
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
+    unified-trading-pm/agents/review.md,
+    unified-trading-pm/agents/worker.md,
+    agent-orchestrator/server/prompts.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+  ]
 ---
 
 # Review-role boot stuck in a 225+-rejection `boot_read_unconfirmed` loop since 2026-07-27
@@ -153,3 +162,13 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   `/plans/archive/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md` — a
   different bug, not a duplicate of this one) — added the 2 todos above and bumped this doc's priority P1→P1 (unchanged
   numeric value, but re-affirmed active given the live multi-file recurrence rather than letting it read as closed).
+- **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **na-eligibility-audit 2026-08-03** (ao tranche): KEEP-NA, valid — re-affirmed. Both open items already passed a full
+  Phase-2 conflict-check (ci tranche, 2026-08-02) that found them bounded-eligible on the merits but explicitly parked
+  the flip pending 2 named conflicts. Of those, only the tranche-ownership retag has since resolved (`asset_group` ->
+  `ao`, 2026-08-02, confirmed live) — confirming this run is the correct one to hold the decision per that verdict's own
+  Option A. The second conflict (sequencing behind
+  `boot_composer_misroutes_lifecycle_roles_ into_worker_boot_branch_2026_07_31.md`'s composer-guard fix) remains open —
+  verified live: all 3 of that doc's `[SCRIPT]` todos are still unchecked, and it is itself held KEEP-NA on a standing
+  corpus ruling that AO/orchestrator dispatch-and-state machinery stays human-reviewed even when a fix looks mechanical.
+  No operator has answered this doc's own A/B/C options yet, so the hold continues.

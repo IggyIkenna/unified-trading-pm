@@ -144,6 +144,8 @@ not the dispatch-tooling gap). Suggested next steps:
   `quality-gates.sh` green — 2037 passed, 1 skipped; ruff/basedpyright clean).
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — verified all still accurate and
+  resolve.
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. Sole open
   item is
   `[BACKEND] P3. **Consider whether** the park mechanism should emit a warning/alert when a parked task's id changes across a regen tick`

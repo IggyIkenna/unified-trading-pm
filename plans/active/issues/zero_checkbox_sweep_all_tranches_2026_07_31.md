@@ -50,6 +50,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    /plans/active/task_template.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    cursor-configs/skills/plan-reconcile/SKILL.md,
+  ]
 ---
 
 # Zero-checkbox sweep — all 9 tranches
@@ -179,3 +186,4 @@ them as a finding; the population definition is deliberately left unchanged.
   Predecessor `issue_docs_zero_checkbox_sweep_2026_07_24.md` confirmed ARCHIVED (`plans/archive/issues/`), and its
   narrow population definition confirmed as the reason the 5 non-AG tranches were never swept. Standing owner/cadence
   table added above so the class no longer dies with its sweep doc.
+- **context-scout 2026-08-03**: populated context_scope (4 entries).

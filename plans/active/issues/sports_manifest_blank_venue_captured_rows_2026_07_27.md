@@ -116,3 +116,5 @@ the MDPS-side hypothesis is more plausible for that data_type specifically.
   one sampled shard atom) is bounded and touches no delete/VM-launch. Conflict-check CLEAR: the doc itself states this
   is a distinct axis from `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track C venue re-stamp, and no active
   planning doc claims the blank-`venue` root cause.
+- **context-scout 2026-08-03**: re-read in full; existing context_scope (4 entries) still accurate — no new source
+  target or SSOT surfaced beyond what's already listed. Refreshed marker only.

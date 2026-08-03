@@ -927,7 +927,13 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
 - [ ] [DATA] P1. **Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)** — per the "Deferred work after
       2026-07-21" table above, this is still "Not done" (real data-correctness work; the audit parquets are already in
       GCS); pick up `estate_orphan_assessment_2026_07_21` todos 1-2. (The table above lists 7 more still-"Not done"
-      items from the same deferral — this is the recommended-next one, not the only one.)
+      items from the same deferral — this is the recommended-next one, not the only one.) **na-eligibility-audit
+      2026-08-03 (blocker-currency check): the named dependency is now STALE — `estate_orphan_assessment_2026_07_21.md`
+      todos 1 and 2 are both `[x]` DONE 2026-07-22** (odds: 4 cells recorded via `record_captured`; reference: 97,606
+      cells recorded, 0 errors; legacy-dup triage: 5-part-proof run, 0 of 34,385 rows passed for delete). This todo's
+      own text was never updated to reflect that — the "pick up ... todos 1-2" instruction now points at already-closed
+      work. Leaving the checkbox open here since this doc's own item is a distinct citation, not itself flipped, but the
+      next reader should re-verify against the source doc rather than re-running the backfill.
 - [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
       `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
       code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
@@ -960,3 +966,10 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   option A) — standing reference surface; the single residual todo is a prod sports orphan back-fill + legacy-dup
   triage.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid (blocker-currency only) — the "Sports orphan
+  back-fill" todo's named dependency (`estate_orphan_assessment_2026_07_21.md` todos 1-2) is stale-resolved (both `[x]`
+  DONE 2026-07-22); annotated in place. The sibling todo (measure historical per-venue non-canonical row count for 8
+  CeFi live-spot venues) is a bounded, worker-determinable measurement, but this doc remains the operator-designated
+  standing reference surface (entry #10 option A) with a long, sensitive execution history — not flipping `assigned_vm`
+  on it in this pass; a future dedicated pass could reclassify that one item on its own if desired. `assigned_vm`
+  untouched.

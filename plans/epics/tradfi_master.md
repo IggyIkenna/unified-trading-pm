@@ -38,7 +38,7 @@ related_plans:
   - ../active/tradfi_backfill_throughput_followups_2026_07_24.md
   - ../active/tradfi_consolidated_closeout_2026_07_18.md
   - ../active/tradfi_manifest_content_recovery_completion_2026_07_24.md
-  - ../active/tradfi_multisource_backfill_2026_06_22.md
+  - /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md
   - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
@@ -785,11 +785,11 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 - **VIX tracked via VX futures only** (CLAUDE.md, current): `VIX=VX-futures via XCBF.PITCH, Barchart RETIRED`.
   **[2026-07-12 correction]** was: "VIX 15m source layering (CLAUDE.md): Barchart preload + Yahoo rolling + honest gap.
   MTDS routing in `umi_tick_provider.py` MUST short-circuit Barchart-window dates without calling Yahoo." — stale.
-  Operator decision 2026-06-23 (`active/tradfi_multisource_backfill_2026_06_22.md`) DELETED the VIX cash index entirely
-  (not tradable, derivable from VX futures: corr 0.95-0.98 vs the retired Barchart/Yahoo VIX-15m layering) — 1,621 GCS
-  objects deleted (instruments-service@814b14a), enumerator floor-clipped to drop VIX cash-index instruments. There is
-  no more Barchart-vs-Yahoo layering rule to enforce; VIX exposure is VX-futures-only via Databento XCBF.PITCH.
-  Corrected per plan-reconciliation finding 303,
+  Operator decision 2026-06-23 (`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`) DELETED the VIX cash
+  index entirely (not tradable, derivable from VX futures: corr 0.95-0.98 vs the retired Barchart/Yahoo VIX-15m
+  layering) — 1,621 GCS objects deleted (instruments-service@814b14a), enumerator floor-clipped to drop VIX cash-index
+  instruments. There is no more Barchart-vs-Yahoo layering rule to enforce; VIX exposure is VX-futures-only via
+  Databento XCBF.PITCH. Corrected per plan-reconciliation finding 303,
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
 - **TradFi futures shard-key matrix**: bundled by root; non-trading days pre-skipped via `venue_trading_calendar` +
   recorded as `empty_confirmed`.
@@ -824,10 +824,10 @@ code→migrations→coverage→smoke-test to MVP-backfill-ready
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`tradfi_multisource_backfill_2026_06_22`](../active/tradfi_multisource_backfill_2026_06_22.md)
+### [`tradfi_multisource_backfill_2026_06_22`](/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi backfill multi-source — FX→yahoo,
-CBOE cash-index no-provider, ICE source-ask
+**status**: archived 2026-08-03 · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi backfill multi-source —
+FX→yahoo, CBOE cash-index no-provider, ICE source-ask
 
 ### [`tradfi_phase_d_terminal_gate_2026_07_24`](../active/tradfi_phase_d_terminal_gate_2026_07_24.md)
 

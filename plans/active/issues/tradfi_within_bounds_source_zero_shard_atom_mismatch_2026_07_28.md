@@ -340,3 +340,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `[x]` DONE (still no live `--apply` run) — updated the NOTE block above to correct the stale wording. Todo 1's
   independently-sufficient operator-gate ground (81,454-row measured drop still awaiting go-ahead) is unaffected; todos
   3/4 unchanged (conditional / sequenced-after). Nothing to reclassify.
+- **context-scout 2026-08-03**: re-verified context_scope, unchanged (5 entries).

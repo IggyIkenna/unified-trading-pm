@@ -31,6 +31,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md,
+    unified-trading-pm/scripts/quickmerge.sh,
+  ]
 ---
 
 # What was observed
@@ -127,3 +134,13 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
   quickmerge is high-blast-radius shared ship infra", and the Notes section restates that operator sign-off is required
   on the fast-path predicate because an over-eager "unchanged tree" skip could bypass a genuinely-needed gate. That is a
   standing in-doc gate, confirmed present verbatim, not re-derived.
+
+- **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-03**: **CONFIRMS KEEP-NA, valid — unchanged** (tranche `ci`, autonomous, `agt-4acc10`).
+  Re-read end-to-end; the explicit in-doc dispatch prohibition ("for operator / careful review — do NOT dispatch blind:
+  quickmerge is high-blast-radius shared ship infra") is still present verbatim. Cross-checked against
+  `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, which independently tracks this same item as Deferred D3(5)/D21 under
+  "Operator-gated (needs a ruling, not a re-triage)" — consistent, not extracted as a dispatchable todo. A separate
+  active plan (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`) shipped a
+  related-but-distinct fix (`scripts/dev/safe-doc-push.sh`) that does not touch this doc's actual fix 1 (content-hash QG
+  cache) or fix 3 (serialized PM-doc-push queue) — no duplication. No RECLASSIFY, no ARCHIVE.

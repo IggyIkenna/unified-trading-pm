@@ -525,12 +525,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       (`path_to_100pct_backfill_mtds_is`); the CME EC\* event-contract slice is the tradfi-domain plan-of-record
       `tradfi_cme_event_contract_backfill_2026_06_20` (tradfi_master) — coordinate, don't duplicate. (MIGRATED FROM:
       `tradfi_databento_subscription_universe_lockdown_2026_06_18`.)
-- [ ] [SCRIPT] P1. **(→ M-1) MTDS tradfi market-data backfill across all 3 datasets** (GLBX.MDP3 + DBEQ.BASIC + CFE) ×
-      the L0 16y window, sharded; verify per-dataset manifest coverage (captured + honest-absence); confirm equity cells
-      re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1** (`path_to_100pct_backfill_mtds_is`, which
-      owns MTDS market-data backfill-to-100% and already ran the Databento OHLCV pass 2026-06-19) — gated on the IS CME
-      catalog backfill above. Listed here only as the cross-link. (MIGRATED FROM: same.) **CITATION
-      (na-eligibility-audit 2026-08-02, tradfi tranche)**: confirmed live —
+- [x] ✅ [SCRIPT] P1. **CLOSED (na-eligibility-audit 2026-08-03)** — the doc's own inline citation just below (added
+      2026-08-02) already confirmed this identical tradfi 3-dataset batch checked `[x]` DONE in
+      `data_completion_to_100_all_ag_2026_06_21.md:121-124` (`deployment-service@f243eb4`, 17 VMs RUNNING); this
+      checkbox itself was simply never flipped. **(→ M-1) MTDS tradfi market-data backfill across all 3 datasets**
+      (GLBX.MDP3 + DBEQ.BASIC + CFE) × the L0 16y window, sharded; verify per-dataset manifest coverage (captured +
+      honest-absence); confirm equity cells re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1**
+      (`path_to_100pct_backfill_mtds_is`, which owns MTDS market-data backfill-to-100% and already ran the Databento
+      OHLCV pass 2026-06-19) — gated on the IS CME catalog backfill above. Listed here only as the cross-link. (MIGRATED
+      FROM: same.) **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche)**: confirmed live —
       `data_completion_to_100_all_ag_2026_06_21.md` lines 112-116 show this identical tradfi 3-dataset batch (GLBX via
       CME-b + DBEQ.BASIC + CFE/XCBF) checked `[x]` DONE (`deployment-service@f243eb4`, 17 VMs RUNNING,
       `VM_TASK=mtds-backfill` confirmed on all) — no independent action owned by this doc; this checkbox is a stale

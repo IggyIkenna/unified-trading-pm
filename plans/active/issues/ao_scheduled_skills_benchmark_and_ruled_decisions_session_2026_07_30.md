@@ -37,19 +37,18 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.5
 assigned_role: NA
 drift_direction: flat
-last_updated: 2026-07-30
+last_updated: 2026-08-03
 source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution session"]
 resolved_by:
 locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
-    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /agents/na_eligibility_auditor.md,
+    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
   ]
 ---
 
@@ -208,15 +207,41 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
       today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
       numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.
-- [ ] [SCRIPT] P1. **Verify/install the `context-scout.timer` on the orchestrator VM** — confirmed 2026-08-02: zero docs
-      anywhere in the corpus carry a `context_scope:` frontmatter field, despite `install-context-scout-timer.sh`
-      existing in `agent-orchestrator/scripts/` since 2026-07-30 (this session's own timer-family install). Either the
-      timer was never actually installed on the orchestrator VM, or it's installed but silently failing every fire.
-      Operator ruling 2026-08-02 (`plan_reconcile_parked_operator_decisions_2026_08_02.md`, "separately — the scheduling
-      gap"): yes, `/context-scout` should join the other four in the scheduled rotation. Done-when:
-      `systemctl status context-scout.timer` on the orchestrator VM shows `active (waiting)` with a real next-trigger
-      time, AND a subsequent corpus grep for `^context_scope:` returns a non-zero, growing count after its next fire.
-      (repo: agent-orchestrator, needs orchestrator-VM access — not executable from a dev checkout)
+- [x] [SCRIPT] P1. **Verify/install the `context-scout.timer` on the orchestrator VM** — RESOLVED 2026-08-03 (this item
+      was independently worked by two concurrent sessions within the same ~15min window — this entry merges both; no
+      duplicate remains). Root cause, confirmed via read-only AWS SSM directly against the orchestrator VM
+      (`i-0c9b283b31d6b5ca7`, ap-northeast-1 — reachable both from a dev checkout and from the human-planning VM
+      `i-0dd9812a96cdda5dc`, no dev-checkout blocker): `systemctl status context-scout.timer` returned "Unit
+      context-scout.timer could not be found" — the timer was **never installed at all** (not installed-and-failing),
+      unlike its 4 sibling timers (`plan-reconciler`/`docs-reconciler` [unit has the `-er` suffix, not
+      `docs-reconcile.timer`]/`na-eligibility-auditor`/`ag-closeout-auditor.timer`), all confirmed present and `active`
+      on the same VM via `systemctl list-timers --all`. Fix: ran `sudo bash scripts/install-context-scout-timer.sh` on
+      the VM (prerequisites checked first — PM repo present at the script's default path, `ORCHESTRATOR_INTERNAL_SECRET`
+      present in `.env.local`) — installed clean at 2026-08-03 08:37:30 UTC, `systemctl status context-scout.timer` now
+      shows `active (waiting)`, next trigger `08:52:09 UTC` (hourly at :52 thereafter per
+      `OnCalendar=*-*-* *:52:00 UTC`, staggered after the other 4). End-to-end verified without waiting for the natural
+      fire: manually ran `sudo systemctl start context-scout.service`; `journalctl -u context-scout.service` shows
+      `{"ok":true,"dispatch_id":"agt-434d0a","slot_id":4,...}|HTTP:200` / `DISPATCHED`; `/api/agents` confirmed
+      `agt-434d0a` (`context_scout_auditor:context_scout`) genuinely active on `orch-slot-4`, doing real work
+      (investigating why 57% of the corpus needed rescouting — not stalled/looping). Both done-when conditions are now
+      met: timer `active (waiting)` with a real next-trigger, AND a fresh corpus
+      `grep -rl '^context_scope:'     plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
+      (plan-reconciler, docs-reconciler, ag-closeout-auditor, na-eligibility-auditor, context-scout) are now confirmed
+      installed + active on the orchestrator VM. Note: the "zero docs carry `context_scope`" premise in this todo's
+      original text was already stale by fix time — ad-hoc/manual `/context-scout` runs on 2026-07-31/08-01 (see
+      `git log --oneline --all --grep='context_scope backfill'`) had already brought coverage to 681/3389 `plans/` docs
+      before this fix, so corpus coverage was never truly zero; the real defect was narrower — the **scheduled
+      automation** for that coverage never existed, so it depended entirely on manual invocations. That defect is now
+      fixed.
+- [ ] [SCRIPT] P2. **New finding from the context-scout fix above**: the orchestrator VM's shared PM checkout
+      (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`, the exact path passed as `pm_repo_path` to every
+      scheduled dispatch) was found **404 commits behind `origin/live-defi-rollout`** at fix time
+      (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0  404`), with uncommitted changes already
+      present (`M plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`, one untracked new
+      issue doc) from other concurrently-dispatched workers. Unclear whether each scheduled skill's own SKILL.md does a
+      `git pull --ff-only` before reading/writing this checkout (in which case this is transient and self-healing) or
+      whether dispatched workers can silently operate against/commit on top of a badly stale tree. Worth a quick read of
+      one scheduled skill's SKILL.md STEP 0 to confirm, and if there's no pre-work pull, add one.
 - [ ] [DOC] P2. Update the published benchmark artifact
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /
@@ -294,3 +319,26 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   (today 2026-08-01), direct verification shows the great majority of its 12 open items are already resolved via other
   docs/commits that po...
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout-timer-fix 2026-08-03**: `context-scout.timer` was never installed on the orchestrator VM (confirmed
+  via `systemctl status`); installed via `install-context-scout-timer.sh`, now `active (waiting)`, next fire `08:52 UTC`
+  and hourly thereafter; manually triggered once to prove the dispatch wiring end-to-end (HTTP 200, `agt-434d0a`
+  genuinely active on `orch-slot-4`). Todo flipped `[x]` above with full evidence; a new follow-up todo filed for a
+  separately-discovered anomaly (VM's shared PM checkout 404 commits behind origin).
+
+- **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — the remaining open items (two internal
+  benchmark re-run asks, the PM-checkout-staleness follow-up, and the benchmark-artifact update) are soft/low-value or
+  gated on the others, none individually a bounded worker-executable outcome on its own. **Independently reconfirmed the
+  PM-checkout-staleness premise with fresh, first-hand evidence this run**: this very dispatch's own boot message set
+  `PM_REPO_PATH` to the ROOT PM clone, and `unified-trading-pm/agents/na_eligibility_auditor.md`'s STEP 1 is a bare
+  `cd $PM_REPO_PATH` with no preceding `git pull`/fetch-rebase — confirming the P2 todo's premise is still live, not
+  just plausible. This run avoided the exposure entirely by operating from its own always-rebased slot clone instead
+  (per `RULES.md`'s root-read-only guardrail), which is a viable interim mitigation but not a fix for the other
+  scheduled skills that `cd $PM_REPO_PATH` directly. Recommend this graduate to its own small, precisely-scoped
+  `[SCRIPT]` todo/plan (add a fetch+rebase to each `plan_health`-family skill's STEP 0) rather than staying a buried P2
+  line here — flagged prominently in this run's chat report for operator attention, not resolved unilaterally since it
+  touches every scheduled skill's boot sequence.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped out the two now-CLOSED issue docs
+  (`aws_codebuild_terraform_import_pending_2026_07_22.md`,
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, both fully resolved per this doc's own P0 section) for
+  `/agents/na_eligibility_auditor.md`, the concrete file cited by the 2026-08-03 log entry above as needing the STEP-0
+  fetch+rebase fix; kept both still-relevant SKILL.md refs and the two still-open autonomous-sweep issue docs.

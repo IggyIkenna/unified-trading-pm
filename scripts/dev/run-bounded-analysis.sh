@@ -40,13 +40,24 @@
 #
 # Hosts without a working systemd --user instance (confirmed 2026-07-27: `systemd-run`
 # reports available but the scope launch itself silently fails on some hosts) fall back to
-# a per-process RLIMIT_AS hard cap via `ulimit -v` (bash builtin, no root required, enforced
-# by the kernel independent of cgroups) — NOT just an advisory log line. Only genuine
-# non-Linux hosts (macOS, where `ulimit -v` is accepted by bash but not enforced by the
-# kernel) fall all the way through to the advisory-only warning.
+# an RSS-poll cap: the command runs in its own session (`setsid`), and a background monitor
+# polls its real resident memory (/proc/<pid>/status VmRSS) every few seconds, SIGKILLing the
+# whole process group the first time RSS exceeds the cap.
+#
+# This used to be a per-process RLIMIT_AS hard cap via `ulimit -v` instead — REMOVED
+# 2026-08-03 (/plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md Todo 2):
+# RLIMIT_AS caps virtual address space, not physical residency, and pyarrow/grpc-heavy
+# workloads routinely reserve large virtual-address arenas (mmap pools, arena allocators)
+# well beyond what they actually touch — confirmed live, an 8G `ulimit -v` cap spuriously
+# failed a ~4.2MB allocation (`ArrowMemoryError: malloc of size 4423744 failed`) on a process
+# whose real peak RSS need was ~11.8GiB, i.e. the fallback failed BELOW the intended cap on
+# exactly the class of workload this wrapper exists to protect. RSS-poll measures the thing
+# the cap is actually meant to bound. Only genuine non-Linux hosts (macOS, or any host
+# missing `/proc` or `setsid`) fall all the way through to the advisory-only warning.
 #
 # SSOT: codex/05-infrastructure/vm-launcher-runbook.md § heavy-compute-on-shared-host,
-# codex/06-coding-standards/quality-gates-memory-governance.md (the mechanism this reuses).
+# codex/06-coding-standards/quality-gates-memory-governance.md (the cgroup mechanism this
+# reuses for the primary path).
 set -euo pipefail
 
 DEFAULT_MEM_CAP="4G"
@@ -89,7 +100,45 @@ if [[ $# -eq 0 ]]; then
     exit 2
 fi
 
+# RSS-poll fallback: launches "$@" in its own session/process group (setsid), polls its
+# real VmRSS every ANALYSIS_POLL_INTERVAL_S seconds (default 2), and SIGKILLs the whole
+# group the first time RSS exceeds the cap. Runs when systemd-run/cgroups aren't
+# available — see the header comment for why this replaced the old RLIMIT_AS/ulimit -v
+# fallback (it's virtual-address-space accounting, not physical residency, and fails
+# spuriously on pyarrow/grpc-heavy workloads well below the intended cap).
+_run_with_rss_poll_cap() {
+    local mem_cap_kb="$1"
+    shift
+    local poll_interval="${ANALYSIS_POLL_INTERVAL_S:-2}"
+
+    setsid "$@" &
+    local cmd_pid=$!
+
+    (
+        while kill -0 "$cmd_pid" 2>/dev/null; do
+            sleep "$poll_interval"
+            local rss_kb
+            rss_kb="$(awk '/^VmRSS:/{print $2}' "/proc/$cmd_pid/status" 2>/dev/null || true)"
+            if [[ -n "$rss_kb" ]] && (( rss_kb > mem_cap_kb )); then
+                echo "🛑 [run-bounded-analysis] RSS ${rss_kb}K exceeded cap ${mem_cap_kb}K — killing process group ${cmd_pid}" >&2
+                kill -KILL -- "-${cmd_pid}" 2>/dev/null || true
+                break
+            fi
+        done
+    ) &
+    local monitor_pid=$!
+
+    set +e
+    wait "$cmd_pid"
+    local exit_code=$?
+    set -e
+    kill "$monitor_pid" 2>/dev/null || true
+    wait "$monitor_pid" 2>/dev/null || true
+    return "$exit_code"
+}
+
 MEM_WRAP=()
+USE_RSS_POLL=0
 if [[ "$MEM_CAP" != "0" ]]; then
     if command -v systemd-run >/dev/null 2>&1 \
         && systemd-run --user --scope -p MemoryMax=100M --quiet -- true >/dev/null 2>&1; then
@@ -101,19 +150,20 @@ if [[ "$MEM_CAP" != "0" ]]; then
     else
         echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS / no user systemd instance)" >&2
         MEM_CAP_KB="$(_mem_cap_to_kb "$MEM_CAP")"
-        if [[ -n "$MEM_CAP_KB" ]] && (ulimit -v "$MEM_CAP_KB") >/dev/null 2>&1; then
-            # Hard fallback: RLIMIT_AS via `ulimit -v`, enforced by the kernel for this
-            # process tree regardless of cgroup/systemd availability. A real Linux host
-            # without systemd-run still gets genuine enforcement, not just a log line.
-            MEM_WRAP=(bash -c 'ulimit -v "$1"; shift; exec "$@"' bash "$MEM_CAP_KB")
-            echo "    → falling back to a hard RLIMIT_AS cap: ulimit -v ${MEM_CAP_KB}K (~${MEM_CAP})" >&2
+        if [[ -n "$MEM_CAP_KB" ]] && [[ -r /proc/self/status ]] && command -v setsid >/dev/null 2>&1; then
+            USE_RSS_POLL=1
+            echo "    → falling back to an RSS-poll cap: ~${MEM_CAP} (${MEM_CAP_KB}K), polled every ${ANALYSIS_POLL_INTERVAL_S:-2}s" >&2
         else
-            # `ulimit -v` itself failed (e.g. macOS, where bash accepts the builtin but the
-            # kernel does not enforce it) — no enforcement mechanism is available at all.
-            echo "    → ulimit -v unsupported on this host too — running fully UNWRAPPED, advisory only" >&2
+            # /proc or setsid unavailable (e.g. macOS) — no enforcement mechanism at all.
+            echo "    → RSS-poll fallback unavailable on this host too (needs /proc + setsid) — running fully UNWRAPPED, advisory only" >&2
             echo "    → keep the analysis genuinely bounded (streamed/chunked read) rather than relying on a cap" >&2
         fi
     fi
+fi
+
+if [[ "$USE_RSS_POLL" == "1" ]]; then
+    _run_with_rss_poll_cap "$MEM_CAP_KB" "$@"
+    exit $?
 fi
 
 exec "${MEM_WRAP[@]}" "$@"

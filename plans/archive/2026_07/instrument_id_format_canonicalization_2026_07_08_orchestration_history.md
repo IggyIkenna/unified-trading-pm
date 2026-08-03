@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [instrument-id, canonicalization, archived-history, line-cap-split]
 related:
   [
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
   ]
 created: 2026-07-08

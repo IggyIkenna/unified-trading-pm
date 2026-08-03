@@ -258,3 +258,5 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
   already-scoped-not-built home (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660`), left open. Doc
   stays `status: open` — D1 (DEFERRED-BY-DESIGN, no timeline), D2 (operator product-decision, tracked forward in
   `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110`), and D4 remain genuine open work.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body/frontmatter; no change needed.

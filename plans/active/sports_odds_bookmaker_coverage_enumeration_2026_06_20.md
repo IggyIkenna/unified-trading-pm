@@ -221,9 +221,12 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 > `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" — the single settled
 > location Track V now cites. Execute here as before; that section is visibility only.
 
-- [ ] [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
+- [x] ✅ [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
       league_ids to a `LeagueTier` key in `EXPECTED_BOOKMAKER_MARKET_SETS`** — without it, runtime cluster-validation
-      code cannot determine which expected bookmaker set applies to a given manifest row.
+      code cannot determine which expected bookmaker set applies to a given manifest row. **DONE** —
+      unified-api-contracts@53f2e48f. Added LEAGUE_ID_TO_TIER dict mapping 23 league_ids that cleanly fit the existing 3
+      tiers (tier_1_domestic, tier_1_international, tier_2_domestic). Both naming conventions included (odds_api
+      SOCCER_* prefix + canonical slugs). 28 non-EU leagues left unmapped per next todo. Quality gates green.
 - [ ] [AGENT] P1. **Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids** (A-LEAGUE,
       ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP,
       SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_CHINA_SUPERLEAGUE,
@@ -232,9 +235,14 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
       SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPERLIGA,
       SUPER_LEAGUE, SUPER_LIG) — or add a `tier_3_global` / `no_expectation` tier for non-EU leagues the empirical audit
       determines have inconsistent bookmaker coverage.
-- [ ] [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data has
-      all fixture_ids as NULL, which blocks per-fixture cluster validation entirely (this is the P1c Todo 4 gate
-      blocker).
+- [x] ✅ [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data
+      has all fixture_ids as NULL, which blocks per-fixture cluster validation entirely (this is the P1c Todo 4 gate
+      blocker). **DONE (na-eligibility-audit 2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md:344`:
+      `market-tick-data-service@3401c0ab` (slot 7, 2026-07-25). Confirmed ownership is market-tick-data-service, not
+      instruments-service; root cause was `_build_fixture_rows()` never emitting a key literally named `fixture_id`
+      (only `af_fixture_id`), so `venue_fetch.py`'s shard-grouping normalisation forced it to `""` for every row,
+      collapsing odds_api into league-level shards. Fixed by also emitting `fixture_id` alongside `af_fixture_id`; 6/6
+      tests pass (`test_odds_api_fixture_id_join.py` extended), `quality-gates.sh --no-fix` green.
 - [ ] [AGENT] P2. **Decide + implement the `trades` cluster-validation gap**: `data_type=trades` is not in
       `BUNDLED_DATA_TYPES` (see `_honest_coverage_clusters.py`), so cluster validation at `record_captured` does not
       fire for historical `trades` data — only `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` are enforced.
