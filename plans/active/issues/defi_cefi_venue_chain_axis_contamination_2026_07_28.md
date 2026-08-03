@@ -46,7 +46,7 @@ related:
     /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-28"
-last_updated: "2026-07-28"
+last_updated: "2026-08-03"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -179,19 +179,43 @@ in this read-only audit pass (time-bounded scope).
       (`test_defi_venue_chain_split_guarded_against_unknown_chain_suffix`) pinning the exact `BITGET-FUTURES` →
       `venue="BITGET-FUTURES", chain=""` (unsplit) behavior; existing `test_defi_combined_venue_chain_split`
       (`EIGENLAYER-ETHEREUM` → split) still passes unchanged. Full `quality-gates.sh` green.
-- [ ] [OPERATOR] [DATA] P2 (b)+(c) remaining, split out from the original combined todo above (part (a) is done): (b)
-      decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22) DUPLICATE CeFi objects
-      physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]** requires sign-off per
-      delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30 CONTESTED VERDICT below
-      already flagged this exact gap); confirm row-for-row duplication (not just prefix-existence) against the cefi
-      bucket copy FIRST — note the fix in (a) makes the manifest self-correcting on the NEXT
-      `backfill_orphan_class_e.py` sweep, so this remaining part is scoped to the physical GCS duplicate-object cleanup
-      only, not a manifest re-stamp; (c) decide whether `gas_fees`'s venue==chain shape (candidate-class-1 finding, NOT
-      cross-AG, NOT a writer bug in the "wrong data" sense) needs a `("venues","defi")` accepted-exception registry
-      entry (mirroring `_ACCEPTED_EXCEPTIONS` in `deployment-api/deployment_api/routes/data_status/_distinct_values.py`)
-      so it stops badging as drift, OR a schema change to leave `venue=""` for chain-only data_types — this is a design
-      decision, not a bug fix, and belongs to whoever owns the gas_fees writer + the distinct-values panel's exception
-      policy. Source: this doc, na-eligibility-audit 2026-07-30 tranche=defi CONTESTED VERDICT below.
+- [ ] [OPERATOR] [DATA] P2 (b). decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22)
+      DUPLICATE CeFi objects physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]**
+      requires sign-off per delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30
+      CONTESTED VERDICT below already flagged this exact gap); confirm row-for-row duplication (not just
+      prefix-existence) against the cefi bucket copy FIRST — note the fix in (a) makes the manifest self-correcting on
+      the NEXT `backfill_orphan_class_e.py` sweep, so this remaining part is scoped to the physical GCS duplicate-object
+      cleanup only, not a manifest re-stamp. Source: this doc, na-eligibility-audit 2026-07-30 tranche=defi CONTESTED
+      VERDICT below.
+- [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
+      `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
+      a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
+      2026-07-22 (`market-tick-data-service@522185a6`): every `write_defi_rows()` call site now stamps a synthetic
+      non-chain venue `_GAS_FEE_VENUE = "ALCHEMY"` (already a registered canonical DeFi venue —
+      `unified_api_contracts/registry/defi_venues.py:362`), leaving `chain=` alone to carry the real chain-level grain.
+      The pre-fix historical population (12,424 rows across 10 legacy `venue=<CHAINNAME>` prefixes: ETHEREUM, OPTIMISM,
+      BSC, POLYGON, BASE, ARBITRUM, AVALANCHE, LINEA, MANTLE, AURORA) was fully migrated to canonical `venue=ALCHEMY`
+      twins 2026-07-30 (`market-tick-data-service@8016c7e4`, 12,424/12,424 verified, `missing_source: 0`) — see
+      `/plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md` (archived, complete). That
+      migration COPIES, it does not delete: the 9-10 legacy-venue manifest rows/GCS objects this todo's non-canonical
+      census hit are that doc's own pending, already-staged, 5-part delete-safety-proofed, **`[OPERATOR]`-gated**
+      physical delete — a SEPARATE, already-tracked cleanup, not this doc's (b) item and not a new ask. Given that:
+      **(i) an `("venues","defi")` accepted-exception registry entry is the WRONG fix** — `_ACCEPTED_EXCEPTIONS`' own
+      stated semantics are "permanently accepted, not something anyone is going to fix" (`_distinct_values.py:42-57`);
+      this residue IS scheduled to be deleted (already staged), so accepting it permanently would misrepresent temporary
+      cleanup lag as a permanent design exception. **(ii) a schema change to leave `venue=""` for chain-only data_types
+      is also the WRONG fix** — it would require loosening `canonical_write.py::_normalize_venue()`'s deliberate hard
+      non-blank-venue guard (`if not venue: raise ValueError(...)`), an invariant enforced everywhere else in the DeFi
+      write path, to solve a "no real venue" problem the synthetic-venue (`ALCHEMY`) pattern already solves correctly
+      and consistently with every other exception case in this same registry. **No code, registry, or schema change
+      lands from this todo.** The 9 chain-shaped `defi.venues` non-canonical values will clear from the distinct-values
+      drift panel on their own once the already-staged legacy-prefix delete in the linked archived doc executes
+      (operator sign-off pending there, not here). Evidence trail: `market-tick-data-service@522185a6` (writer fix),
+      `market-tick-data-service@8016c7e4` (migration), `unified_api_contracts/registry/defi_venues.py:362` (ALCHEMY
+      canonical registration), `deployment-api/deployment_api/routes/data_status/_distinct_values.py:200-206`
+      (`_ACCEPTED_EXCEPTIONS` semantics reviewed, not modified),
+      `market-tick-data-service/market_interface/adapters/defi/canonical_write.py` (`_normalize_venue()` guard reviewed,
+      not modified).
 - [ ] [OPERATOR] P2. **Contested cross-AG architecture question**:
       `features-service/features_service/cefi/calculators/perp_funding_corpus.py:254-255` deliberately writes
       CEFI-tagged (`asset_group="cefi"` in the row, `_OUT_ASSET_GROUP`) perp-funding-corpus data into the SHARED
@@ -312,3 +336,15 @@ in this read-only audit pass (time-bounded scope).
   (gas_fees accepted-exception design decision) remain, both correctly gated (operator sign-off / design call) — doc
   stays active/open, not archivable yet. The separate `[OPERATOR] P2` contested-architecture todo also remains open.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
+- **slot-2 2026-08-03 — operator-ruling dispatch, todo (c) resolved**: Ruling dispatched PART (c) ONLY of the combined
+  (b)+(c) todo (part (b), the physical CeFi-duplicate-object GCS cleanup, stays untouched — no GCS delete/move
+  attempted). Investigation (grep+read across market-tick-data-service, unified-api-contracts, deployment-api) found the
+  original todo's two-option framing (accepted-exception vs. `venue=""` schema change) was superseded by work that had
+  already shipped between this doc's 2026-07-30 root-cause entry and today: `gas_fee_handler.py`'s venue==chain reuse
+  was fixed 2026-07-22 (`market-tick-data-service@522185a6`, synthetic `venue=ALCHEMY`) and the pre-fix 12,424-row
+  legacy population was migrated to canonical `ALCHEMY` twins 2026-07-30 (`market-tick-data-service@8016c7e4`) — see
+  `/plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md` (archived, complete). The
+  drift-panel non-canonical venues are that doc's own pending, already-staged, `[OPERATOR]`-gated legacy-prefix delete —
+  a different, already-tracked cleanup, not a new decision this todo needed to make. Neither accepted-exception nor
+  schema-change was applied; ruling + full reasoning recorded on the (c) checkbox above. Doc stays `status: open` (item
+  (b) and the separate `[OPERATOR] P2` cross-AG architecture todo both remain open).
