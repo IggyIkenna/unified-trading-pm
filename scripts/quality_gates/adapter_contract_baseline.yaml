@@ -153,7 +153,7 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/process_preflight.py:
     count: 3
   instruments-service/instruments_service/engine/orchestrator/process_write.py:
-    count: 11
+    count: 8
   instruments-service/instruments_service/engine/orchestrator/process_zero_records.py:
     count: 11
   instruments-service/instruments_service/engine/orchestrator/sfi.py:
@@ -173,7 +173,7 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/weather.py:
     count: 15
   instruments-service/instruments_service/engine/orchestrator/writers.py:
-    count: 4
+    count: 12
   instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/coinbase_cde.py:
