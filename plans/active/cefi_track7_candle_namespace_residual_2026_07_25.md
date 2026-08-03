@@ -53,8 +53,8 @@ context_scope:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+    plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
   ]
 ---
 
@@ -142,3 +142,7 @@ No new durable contract is created by this plan.
   taken; no changes needed.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped `availability-manifest-and-data-status.md`
+  (generic, not this doc's specific action) and added the CSV manifest this doc's sole todo names as the definitive
+  delete-target list (`cefi_todo19_149_residual_objects_2026_07_23.csv`) — the closest thing this operator-gated,
+  script-free delete plan has to a "source" a worker needs before executing it.

@@ -140,6 +140,8 @@ precondition named by the parent plan.
   (`superseded_by: capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`). No new work done yet — both items
   carried forward verbatim, unchanged in status (open/blocked, open/deferred).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the openapi-regen
+  script + questionnaire UI source paths and all entries still resolve.
 
 ## na-eligibility-audit verdict
 

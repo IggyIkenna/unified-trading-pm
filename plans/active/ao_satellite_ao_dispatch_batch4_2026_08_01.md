@@ -52,12 +52,9 @@ source: >-
   moot — see summary).
 context_scope:
   [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
   ]
 ---
 
@@ -160,6 +157,10 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
   a hard `depends_on` (cross-plan per-todo gates aren't expressible in this corpus's frontmatter; sequencing is enforced
   by execution order, not the schema). Operator approved starting work — flipped `status: draft` → `active`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries, trimmed from 6) — the sole todo is already `[x]`
+  shipped, so scope now points only at the finalize sibling (the active remaining work), the source issue doc, and the
+  real shipped fix location (`worker_liveness_watchdog.py`); dropped the generic architecture SSOTs the closed todo no
+  longer needs.
 - **2026-08-01 (sole todo shipped)** — Confirmed the true release call path (`_reconcile_unacked_dispatches` →
   `dispatch.py` R5 spill, both ping/pane-snapshot based, no real liveness check) and fixed it to require `_pane_is_dead`
   (existing discriminator, reused) before releasing a task off an apparently-silent owner. `agent-orchestrator@7911083`.

@@ -129,3 +129,5 @@ context_scope:
   `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check gates →
   archive sources → archive self) and several touch the same files. Left `status: draft`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all paths resolve, still the correct archival
+  SSOT + batch-sibling set; no change needed. Gated finalize doc, no source path.

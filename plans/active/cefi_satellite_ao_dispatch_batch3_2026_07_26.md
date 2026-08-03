@@ -53,12 +53,11 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
+    /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 
@@ -289,3 +288,8 @@ batch1/batch2 finalize pattern.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — fixed a duplicate-entry bug (batch1 archive link
+  was listed twice) and swapped the batch1/batch2 archived-lineage citations for the 3 issue docs this batch's own
+  still-open todos actually draw from (`cefi_e6_cf7_relabel...`, `cefi_hl_aster_batch_data_gaps...`,
+  `cefi_backfill_per_day_catalogue_reload...`), plus the companion finalize — a dispatch-batch coordinator, so no
+  source-code paths added (the underlying repos vary per-todo and are already named in each todo's own text).

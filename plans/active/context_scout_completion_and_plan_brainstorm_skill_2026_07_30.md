@@ -46,10 +46,10 @@ locked_since:
 context_scope:
   [
     /codex/11-project-management/doc-frontmatter-schema.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    cursor-configs/skills/context-scout/SKILL.md,
-    agents/context_scout_auditor.md,
     /plans/active/task_template.md,
+    scripts/plan-hygiene/generate_context_scope_inventory.py,
+    agent-orchestrator/server/prompts.py,
+    cursor-configs/skills/context-scout/SKILL.md,
   ]
 ---
 
@@ -170,6 +170,9 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   git-tracked content, which at least shows up in `git status`/stash) — write it, then commit it fast, don't let a plan
   doc itself become the uncommitted artifact a later cleanup pass can't see.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the two markdown role/skill files for the
+  real Python source this doc shipped (`generate_context_scope_inventory.py`) + the agent-orchestrator file whose
+  missing role-file bug this doc fixed (`server/prompts.py`), keeping one skill-doc pointer.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA-STALE
   (already-duplicated) — citation fix only, not a reclassification. This doc's sole remaining checkbox (`[SCRIPT] P0`,
   backfill `context_scope` corpus-wide) is the SAME work item actively extracted and tracked as todo 1 of

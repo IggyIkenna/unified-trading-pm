@@ -59,10 +59,9 @@ context_scope:
   [
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/04-architecture/global-ledger-architecture.md,
-    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
-    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     /plans/epics/batch_live_symmetry_master.md,
-    /plans/epics/global_ledger_pnl_attribution_master.md,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/engine/,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/stages/stage5_results_writer.py,
   ]
 ---
 
@@ -815,3 +814,6 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   NOTE a literal duplicated `- [ ] [CODE] P2.11.18` line (the first is a truncated fragment of the second) inflates this
   doc's open-todo count by 1.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped 2 narrower codex pointers + 1 epic to
+  make room for the determinism-spine's real source home (batch-live-reconciliation-service `engine/` +
+  `stage5_results_writer.py`, both named in the doc's own Progress Log), since prior scope was codex/plan-only.

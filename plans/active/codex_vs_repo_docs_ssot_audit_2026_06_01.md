@@ -51,7 +51,7 @@ context_scope:
     /codex/00-SSOT-INDEX.md,
     /codex/06-coding-standards/model-tier-selection.md,
     /plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md,
-    /plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+    scripts/quality_gates/check_repo_docs_ssot.py,
   ]
 ---
 
@@ -966,3 +966,6 @@ MIGRATE-TO-CODEX; no codex target needs creating.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the superseded consolidation issue for
+  the Phase-5 enforcement checker `check_repo_docs_ssot.py`, this plan's own real deliverable, since prior scope was
+  codex/plan-only.

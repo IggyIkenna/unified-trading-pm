@@ -64,12 +64,11 @@ umbrella: true
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
+    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
-    /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
-    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py,
   ]
 ---
 
@@ -831,3 +830,7 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
 > this — read here for the full narrative.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — trimmed 7→6, dropped the operator-owned
+  deribit_combo_perpetual_partition_move issue + the cross-cutting codex doc (superseded here by the CeFi-specific
+  blueprint), added the verify_cefi_canonical_4surface_2026_07_20.py source path (the migration's central verification
+  tool, cited throughout).

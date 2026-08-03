@@ -63,10 +63,6 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
-    /codex/04-architecture/ci-alerting.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/task_template.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -990,3 +986,5 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   once this batch's todos land — flipping it now, ahead of that, would be premature (nothing to reconcile yet). Same
   reasoning applied consistently to entries #22 (ao) and #38 (infra).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: trimmed context_scope to 5 entries -- dispatch-batch coordinator doc, correctly
+  code-free; dropped 4 narrower codex pointers not central to the surviving open item.

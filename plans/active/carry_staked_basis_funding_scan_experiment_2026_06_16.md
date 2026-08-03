@@ -766,3 +766,5 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
   scope/window with operator before launch'), and operator 2026-06-17 sequenced the next-fidelity set behind the v9
   migration.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
+  staked_basis_funding_scan.py harness source path and all entries still resolve.

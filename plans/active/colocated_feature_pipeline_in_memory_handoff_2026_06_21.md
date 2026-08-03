@@ -40,7 +40,7 @@ context_scope:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/epics/features_and_ml_master.md,
-    /plans/archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md,
+    features-service/features_service/delta_one/,
   ]
 ---
 
@@ -119,3 +119,6 @@ severities were weakened to `"none"`, masking 574 errors).
   correct SUPERSEDED-BY-BATCH1 citations (the KEEP-NA-STALE fix is already applied) and are deliberately held open as
   the bookkeeping record; the 4th is genuinely gated.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the archived predecessor plan for
+  features-service `delta_one/` (the real target of the remaining open item 1.5b column-pruning work), since prior scope
+  was codex/plan-only.

@@ -60,10 +60,9 @@ context_scope:
   [
     /codex/05-infrastructure/dual-cloud-image-builds.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
     /codex/06-coding-standards/ui-testing-layers.md,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    deployment-api/deployment_api/services/artifact_pipeline,
+    deployment-ui/src/pages/ArtifactPipeline.tsx,
   ]
 ---
 
@@ -947,3 +946,5 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   banner, dense ongoing operator sign-off history; remaining 12 items are either operator-paused, explicitly-optional
   stretch items, or follow-on cleanup tied to the same operator-reviewed design track.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the real backend service module + frontend
+  page as source targets (all 5 tabs already shipped there), dropped 2 codex refs tied to now-closed phases.

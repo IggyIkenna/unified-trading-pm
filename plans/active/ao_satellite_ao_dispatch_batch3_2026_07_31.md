@@ -48,9 +48,10 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
     /cursor-configs/skills/context-scout/SKILL.md,
+    scripts/docs/docspec.py,
+    scripts/plan-hygiene/generate_context_scope_inventory.py,
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
   ]
 source: >-
@@ -478,3 +479,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   mid-session, `test_impact_selective_execution_design_2026_08_03.md`, not yet scouted). `NEVER_SCOUTED` dropped 78→13
   net of the 1 newly-created doc. **Not done, deliberately**: the `FieldSpec` flip stays untouched — still far from 0/0,
   and the 9 line-cap docs need real trim/split work (tracked, not done here) before they can even be re-scouted.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — replaced the generic dispatch-architecture set
+  with the sole remaining todo's actual target (the context_scope backfill itself: its source plan, the skill, and the 2
+  scripts it names); dispatch-batch coordinator, source paths included since the todo names them directly.

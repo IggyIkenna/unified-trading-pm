@@ -64,9 +64,8 @@ context_scope:
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
+    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
   ]
 ---
 
@@ -478,6 +477,9 @@ reflect guard-refusal rather than a clean verdict is already tracked against the
 information here. A genuinely clean baseline follow-up is already queued on that issue doc, not duplicated in this plan.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — trimmed 7→6 (dropped the aggregated-sources
+  index + vm-launcher-runbook.md codex doc), added the `_cefi_canonical_resolver_migration_2026_07_18.py` source path
+  (the shared resolve_canonical script Track-8 todos build on).
 
 ## Reconciliation
 

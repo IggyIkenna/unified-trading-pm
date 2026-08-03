@@ -50,9 +50,9 @@ source: plans/archive/issues/asset_class_to_asset_group_rename_scope_underestima
 context_scope:
   [
     /codex/04-architecture/tier-and-import-architecture.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
-    /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
+    unified-api-contracts/unified_api_contracts/_instrument_enums.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/ledger/_enums.py,
   ]
 ---
 
@@ -153,3 +153,7 @@ trusting that).
   LOCAL/human by deliberate operator-protective default for a 9+-repo atomic breaking rename — 'do not do that
   unilaterally'.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped in the two-enum hazard's actual source
+  files (`_instrument_enums.py` rename target + the out-of-scope ledger twin `_enums.py`, both explicitly named in the
+  doc's own "two-enum hazard" section), dropped the availability-manifest codex ref + the superseded dart_ui issue doc
+  (todo 1 already re-confirmed this doesn't apply / already resolved).

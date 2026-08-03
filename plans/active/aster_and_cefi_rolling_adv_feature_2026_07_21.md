@@ -61,9 +61,10 @@ source:
 context_scope:
   [
     /codex/02-data/data-lineage-MTDS-features-ml.md,
-    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
     features-service/features_service/cross_instrument/app/calculators/adv.py,
+    features-service/features_service/cross_instrument/app/calculators/book_depth.py,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
   ]
 ---
 
@@ -135,6 +136,9 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - Phase 2 is an explicit operator
   "consumer-first, producer later" deferral and Phase 3 needs a design conversation on cap placement and the % ceiling.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `book_depth.py` as a second source path (the
+  Phase-3 stretch item's named target), since Phase 1's `adv.py` is now shipped and the remaining work is Phase 3
+  (strategy-side wiring) + the book_depth stretch item.
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 

@@ -127,3 +127,5 @@ context_scope:
   2026-07-30 no-double-gate finding — `gate_on_depends: true` alone correctly holds every todo above until batch4's own
   todos are done; batch4 itself remains `status: draft` pending operator approval.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: re-confirmed context_scope (6 entries) unchanged -- gated finalize doc, correctly
+  code-free (dispatch/archival coordination only), all entries still resolve.

@@ -39,9 +39,9 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /codex/06-coding-standards/README.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    features-service/features_service/delta_one/app/features/registry.py,
+    instruments-service/instruments_service/engine/orchestrator/,
   ]
 ---
 
@@ -645,3 +645,6 @@ for a `batch2` on the next pass and rehome then.
   cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 3 flagged as awaiting a batch2
   (pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer` — the last now closed above) are re-checked
   again this run: `infra_satellite_ao_dispatch_batch2_2026_07_27.md` still does not cover the remaining 2.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the doc's own flagship examples
+  (features-service `registry.py`, instruments-service `engine/orchestrator/`) since prior scope was codex/plan-only;
+  dropped README.md + batch2 (batch2 no longer covers the remaining items per the na-eligibility-audit note above).

@@ -158,3 +158,6 @@ context_scope:
     RULE: plans run to actual completion). **Re-dispatch this todo once batch1 + batch1b actually reach 0 open todos**
     to catch the remaining ~22 source-doc reconciliations in one pass.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) -- finalize gate doc, code-free
+  by rule, existing links (both gated source docs + parent closeout + skill + recurring wiring-gap issue) still resolve
+  and are the minimal correct set.
