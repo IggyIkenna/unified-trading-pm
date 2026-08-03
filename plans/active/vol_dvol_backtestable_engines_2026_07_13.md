@@ -208,24 +208,30 @@ what's missing.
       (`strategy_service/engine/strategies/v2/factory.py` — zero hits), so `not_available` is already the correct live
       state; no registry code change made. Filed the `BLOCKED-INSUFFICIENT-EDGE` decision-record todo below citing the
       exact metrics.
-- [ ] [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_ARB_RV_IV fails the HARD CONTRACT bar, no further work planned
-      unless a concrete param-sweep candidate is proposed.** The 2026-08-03 (slot-2) real backtest — `iv_atm` from the
-      captured DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series,
-      full honest intersection window 2021-03-24→2026-05-22 (1866/1886 candidate days, same window VOL_CARRY used),
-      `entry_gap=0.03` (arb_rv_iv.py default, untested), `vega_budget_per_leg=10` — came back non-passing for both
-      underlyings: BTC `sharpe_ratio=0.0099`, `sortino_ratio=0.0082`, `total_pnl=-9826.53`, `win_rate=24.1%` (1786
-      instructions/3572 fills); ETH `sharpe_ratio=0.0095`, `sortino_ratio=0.0080`, `total_pnl=-9612.40`,
-      `win_rate=23.7%` (1784 instructions/3568 fills). Both Sharpes are indistinguishable-from-noise (same bar VOL_CARRY
-      was held to), PnL is strongly negative for both assets (this engine has no exit/flatten state machine — unlike
-      VOL_CARRY, it re-enters a fresh straddle on EVERY day `|iv_atm - rv| >= entry_gap`, which is why trade count is
-      ~70x VOL_CARRY's at this same threshold), and win rate ~24% has no compensating asymmetric payoff — this is a
-      genuine "no edge at the default threshold" result, not a methodology gap (real captured data both legs, real
-      `GroupBRunner` wiring, full available window, unmodified engine code — the script does not add position-tracking
-      logic the engine itself doesn't have). **Not scheduling a param sweep here** — `entry_gap` was left at its default
-      and a different threshold MIGHT clear the bar (a wider gap would fire far less often, closer to VOL_CARRY's trade
-      cadence), but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to pursue, not a
-      mechanical follow-up. VOL_ARB_RV_IV stays `not_available`; re-open only if a specific alternative parameterization
-      is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-03 (slot-12, `data_engineering`).** This todo IS the decision record (filed
+      2026-08-03 by slot-2); no code task exists to ship. Re-verified live:
+      `strategy_service/engine/strategies/v2/factory.py`'s `ARCHETYPE_ENGINE_REGISTRY` still has zero hits for
+      `VOL_ARB_RV_IV`, confirming `not_available` hasn't drifted since the decision was recorded. No concrete
+      alternative param-sweep candidate has been proposed since filing (the only stated condition for re-opening), so
+      per the todo's own instruction there is no further mechanical action — flipping closed.
+      **BLOCKED-INSUFFICIENT-EDGE — VOL_ARB_RV_IV fails the HARD CONTRACT bar, no further work planned unless a concrete
+      param-sweep candidate is proposed.** The 2026-08-03 (slot-2) real backtest — `iv_atm` from the captured DVOL
+      series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series, full honest
+      intersection window 2021-03-24→2026-05-22 (1866/1886 candidate days, same window VOL_CARRY used), `entry_gap=0.03`
+      (arb_rv_iv.py default, untested), `vega_budget_per_leg=10` — came back non-passing for both underlyings: BTC
+      `sharpe_ratio=0.0099`, `sortino_ratio=0.0082`, `total_pnl=-9826.53`, `win_rate=24.1%` (1786 instructions/3572
+      fills); ETH `sharpe_ratio=0.0095`, `sortino_ratio=0.0080`, `total_pnl=-9612.40`, `win_rate=23.7%` (1784
+      instructions/3568 fills). Both Sharpes are indistinguishable-from-noise (same bar VOL_CARRY was held to), PnL is
+      strongly negative for both assets (this engine has no exit/flatten state machine — unlike VOL_CARRY, it re-enters
+      a fresh straddle on EVERY day `|iv_atm - rv| >= entry_gap`, which is why trade count is ~70x VOL_CARRY's at this
+      same threshold), and win rate ~24% has no compensating asymmetric payoff — this is a genuine "no edge at the
+      default threshold" result, not a methodology gap (real captured data both legs, real `GroupBRunner` wiring, full
+      available window, unmodified engine code — the script does not add position-tracking logic the engine itself
+      doesn't have). **Not scheduling a param sweep here** — `entry_gap` was left at its default and a different
+      threshold MIGHT clear the bar (a wider gap would fire far less often, closer to VOL_CARRY's trade cadence), but
+      that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to pursue, not a mechanical
+      follow-up. VOL_ARB_RV_IV stays `not_available`; re-open only if a specific alternative parameterization is
+      proposed with a stated rationale. Repo: strategy-service (no code — decision record).
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-15, `backend_engineer`).** Regenerated + committed
       `capability-verdict-matrix.json` — unified-api-contracts@`14dbb6d1`. **0 of the 2 engines flipped to `available`**
       (both VOL_CARRY and VOL_ARB_RV_IV failed their backtests per the two todos above and remain unregistered —
@@ -406,3 +412,14 @@ what's missing.
     matrix-regen todo below is a separate task (not dispatched to this slot) — since 0 of 2 engines flipped to
     `available`, whoever picks it up should confirm the regenerated matrix is unchanged rather than assume no regen is
     needed.
+
+- 2026-08-03 (slot-12, `data_engineering`): Flipped the `BLOCKED-INSUFFICIENT-EDGE` VOL_ARB_RV_IV P3 todo above. Same
+  pattern as VOL_CARRY's twin todo — it was already a complete decision record (filed 2026-08-03 by slot-2); no code
+  task exists to ship. Re-verified live: `strategy_service/engine/strategies/v2/factory.py`'s
+  `ARCHETYPE_ENGINE_REGISTRY` still has zero hits for `VOL_ARB_RV_IV`, and no alternative param-sweep candidate has been
+  proposed since filing. **All 5 of this plan's todos are now `[x]` and `locked_by:` is empty** — but this plan has a
+  machine-gated finalize twin (`vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md`,
+  `depends_on: [vol_dvol_backtestable_engines_2026_07_13]` + `gate_on_depends: true`) whose own todo is specifically the
+  re-verification + archival-eligibility check (measured DVOL date range, fresh backtest re-run for any flipped engine,
+  matrix-regen confirmation, then the standard 6-step archival ritual). Not doing that work here — it's out of scope for
+  this todo and the twin now becomes dispatchable to do it properly. Next: the finalize twin's `[SCRIPT] P2` todo.
