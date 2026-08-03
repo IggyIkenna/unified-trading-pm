@@ -40,7 +40,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T12:30Z
+last_updated: 2026-08-03T12:55Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -573,3 +573,30 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   real numbered slot) — per cicd.md, skipped the authoring-slot ping (dispatch-time Slack alert already covers the FYI).
   This is the 11th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains open
   and unaddressed by this entry.
+
+- **2026-08-03 ~12:40-12:55Z (`cicd` escalation `agt-5f4c41`, slot 9, `market-data-processing-service`,
+  `wall_type=main_ci_red`, `pr_number=0`) — re-fire of the same wall `agt-7784b3` already diagnosed at ~09:09-09:24Z
+  above; re-verified from scratch rather than trusting the cached entry**: `main`'s failing run is still the identical
+  `30790880111` (`chore(promote): LDR → main (Option-B direct)`, push, created 06:38:51Z, `QG slice (tests)` failed via
+  the same `PluggyTeardownRaisedWarning`/`OSError: cannot send (already closed?)` xdist-teardown-under-contention
+  signature this doc tracks — no dots-progress even printed before the 09:16→10:22Z hang, consistent with total
+  scheduler starvation rather than a per-test defect). `gh pr list --state open` for this repo → **0 open PRs** (the
+  promotion PR that produced this run already self-merged before its own confirmatory check completed, per this doc's
+  established self-merge-before-check pattern). `main-backmerge-to-ldr` (`30790879641`) and `Semver Agent`
+  (`30790879640`) both `success` at `06:38:50Z` — the business outcome (promote → backmerge → semver-tag) is fully
+  complete and has been since before the confirmatory check even finished; nothing is actually blocked. Checked
+  CONTEXT's own two hypotheses explicitly: (A) promotion stuck — false, 0 open PRs, already merged+backmerged+tagged;
+  (B) main-only stale-workflow/`[skip ci]` — also false, this is neither a workflow-definition problem nor a missing
+  check, it's the identical fleet-wide QG-governor host-contention root cause this doc-pair has tracked across 10+ repos
+  all day (root-cause fix in flight, out of scope, at
+  `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). LDR itself currently has a fresh run
+  in-flight (`30815224742`, workflow_dispatch, started 12:50:08Z, ~10min elapsed at check time, dispatched by an earlier
+  session) — did not re-dispatch a redundant run (would cancel its elapsed contention-survival progress via the
+  concurrency group for zero benefit, per this doc's established precedent). `GET /api/repo-blockers` → `open: []`.
+  **Disposition: no code or workflow change made or needed** — every candidate fix already exists on
+  `live-defi-rollout`, the promotion already completed, and the remaining main-side red is purely the stale confirmatory
+  check on an already-superseded commit sitting in a saturated shared-host runner queue. `AUTHORING_SLOT=ci-reconcile`
+  (sentinel, not a real numbered slot) — per cicd.md, skipped the authoring-slot ping. Slot left clean
+  (`market-data-processing-service` on `live-defi-rollout`, 0 commits ahead of origin, no local changes). This is the
+  2nd escalation for this exact repo's wall with no state change since the first — further corroborates todo 3's
+  operator-flagged dedup/cooldown gap.
