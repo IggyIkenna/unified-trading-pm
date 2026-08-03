@@ -158,7 +158,7 @@ stated done-when).
       `instruments-service/scripts/backfill_orphan_class_e_sports.py::record_cells()` (a case-sensitivity gap in its
       `resolve_source_and_mode()` helper, `:98-119`), not MTDS/MDPS as originally hypothesized. All 3 affected
       data_types have a written finding + recommendation.
-- [ ] 2. [SCRIPT] P2. **Fix `resolve_source_and_mode()`'s case-sensitivity gap** in
+- [x] 2. ✅ [SCRIPT] P2. **Fix `resolve_source_and_mode()`'s case-sensitivity gap** in
       `instruments-service/scripts/backfill_orphan_class_e_sports.py` (uppercase `data_type` before the
       `get_source_priority`/`SPORTS_DATA_TYPE_TO_SOURCE` probes) so `trades`→`odds_api` and
       `odds_horizon_bucket`→`mdps_odds_horizon_bucket` resolve correctly on the next re-run. Register `TRADES_INPLAY` in
@@ -166,7 +166,8 @@ stated done-when).
       resolves. Then run a bounded corrective backfill re-stamping the 2,490 already-recorded rows'
       `source`/`pipeline_mode` columns (not `venue`/`league_id`/`row_count`, which are already correct) — see the
       per-data_type recommendation above. Repo: instruments-service (fix) + unified-api-contracts (TRADES_INPLAY
-      registration).
+      registration). **Done — instruments-service@5573f817 + unified-api-contracts@b27717b8**, see Progress Log
+      2026-08-03 entry below.
 
 ## Progress Log
 
@@ -193,3 +194,20 @@ stated done-when).
     registration at all under any casing. The underlying cells/row_counts are real and correct; only the provenance
     columns are wrong. Filed follow-up todo 2 (writer fix + UAC registration + bounded re-stamp backfill) since this
     todo's own scope was read-only root-cause.
+- **2026-08-03** (AO dispatch, slot 14) — Todo 2 done. The case-sensitivity fix itself was already shipped
+  (`instruments-service@d9994199`, a concurrent slot-12 dispatch of the same todo) — verified via `git log` before
+  starting, not re-done. Remaining scope completed this turn: (1) registered `("sports", "TRADES_INPLAY"): ["odds_api"]`
+  in UAC `SOURCE_PRIORITY` (`unified-api-contracts@b27717b8`) — same odds_api writer family as `TRADES`, confirmed via
+  the market_data_categories.py "3 deliberate non-registrations" comment that `SPORTS_DATA_TYPE_TO_SOURCE` (the v2
+  expected-universe enumerator's iteration axis) is a DIFFERENT registry than `SOURCE_PRIORITY`, so this addition does
+  not reopen the expected-universe flood those non-registrations exist to prevent; also added the paired
+  `AVAILABILITY_AT_SEMANTICS` entry and a `_SOURCE_PRIORITY_CASE_FALLBACK_KEY` reachability exclusion (both required by
+  `test_validity_matrix_completeness.py`'s closed-set completeness tests, mirroring `TRADES`'s existing entries) — full
+  QG green. (2) Ran the corrective backfill (new script
+  `instruments-service/scripts/restamp_sports_orphan_source_provenance_2026_08_03.py`, reuses
+  `resolve_source_and_mode()` directly so it can't drift from the writer's own resolution) against PROD
+  `market-data-tick-sports-prd-central-element-323112`: dry-run matched exactly 2,490 rows split
+  trades=1,273/odds_horizon_bucket=1,106/trades_inplay=111 (matching the root-cause finding's own counts exactly),
+  snapshot taken before write, `--apply` restamped all 2,490, re-verified GREEN (0 remaining mis-stamped rows, total row
+  count unchanged at 645,045). `venue`/`league_id`/`row_count` untouched, only `source`/`pipeline_mode`. Shipped:
+  `unified-api-contracts@b27717b8`, `instruments-service@5573f817`.
