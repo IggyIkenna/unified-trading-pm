@@ -144,7 +144,7 @@ context_scope:
       in GCS: pre-run nightly-cron output backed up to `2026-08-01/_pre_rightsizing_verification_nightly_cron.json`;
       control run preserved to `2026-08-01/_verification_control_e2-highmem-4.json` before the test run overwrote the
       shared date-keyed output path. `quality-gates.sh` green both commits (sentinel-verified), shipped via quickmerge.
-- [ ] [INFRA] P3. **Combined honest-coverage launcher SSOT cleanup (2 sub-steps, same underlying drift, different
+- [x] ✅ [INFRA] P3. **Combined honest-coverage launcher SSOT cleanup (2 sub-steps, same underlying drift, different
       files):** (a) delete/merge the redundant honest-coverage launcher artifacts —
       `scripts/vm/launch-honest-coverage-vm.sh` (not the live cron path; the GCS
       `vm/launch-measure-honest-coverage-vm.sh` is) and `scripts/vm/honest-coverage-daily-workflow.yaml` (no such Cloud
@@ -162,7 +162,27 @@ context_scope:
       maintains that exact GCS path, `quality-gates.sh` green; (b) the instruments-service tarball's `.manifest.json`
       `commit_sha` matches `origin/live-defi-rollout` HEAD at time of republish. Source:
       `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
-      `defi_consolidated_closeout_2026_07_18.md` Track 8).
+      `defi_consolidated_closeout_2026_07_18.md` Track 8). **Evidence (2026-08-03, slot-7)**: (a) deleted
+      `scripts/vm/launch-honest-coverage-vm.sh` + `scripts/vm/honest-coverage-daily-workflow.yaml`; repointed
+      `terraform/gcp/honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased bucket-root
+      `vm/` path to `code/deployment-service/scripts/vm/` (the path `create-code-tarballs.sh`'s bare-launcher loop
+      auto-publishes on every run — every `launch-*.sh` + `lib/*.sh`), dropped the now-dead `"honest-coverage-"`
+      VM-prefix entry from both `vm_prefix_registry.py` and `launcher_registry.py` (the latter caught live by
+      `test_no_extra_registry_prefixes`), corrected `setup-honest-coverage-scheduler.sh`'s stale cron-vs-ad-hoc
+      description. `quality-gates.sh` green (sentinel-verified), shipped via quickmerge —
+      `deployment-service@f9cb12e`/`b23e1c9`/`72ea669`. Applied the matching `tofu` change to the LIVE Cloud Run Job
+      (`ENV=prod ./tofu.sh apply`, targeted plan, 0 add/1 change/0 destroy) after first confirming the new GCS path was
+      already populated (`gcloud storage ls` on both the launcher + `lib/`) — live-verified the fetch itself now
+      succeeds (`gcloud run jobs execute honest-coverage-daily-launcher --wait`:
+      `lc_verify_tarball_freshness: all 4     tarball(s) current`). That same manual trigger surfaced a SEPARATE,
+      pre-existing bug unrelated to this todo (the Cloud Run Job's own SA lacks `iam.serviceAccountUser` on `uts-prd-sa`
+      — same DP-VM-002 SA-rollout class as two already-tracked docs, new caller identity) blocking the VM-creation step;
+      filed `issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md` rather than self-fixing
+      (overlaps an active P0 sequential plan's claimed SA-rewiring scope) — `unified-trading-pm@cec66bf48`. (b)
+      confirmed the instruments-service tarball's deployed manifest `commit_sha` (`738242581a7b`) already exactly
+      matches `origin/live-defi-rollout` HEAD for instruments-service (an earlier republish already carried `a29e483` to
+      production) — re-verified via `create-code-tarballs.sh --include instruments-service` (skip-if-unchanged,
+      correctly a no-op).
 - [x] ✅ [DOC] P1. **Add the missing digest entry for `defi_track01_per_instrument_and_canon_id_2026_07_24.md` into
       `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`** and fix its dangling "tracked under X below" prose
       references so they resolve to a real linked entry instead of a phantom forward-pointer (bold digest style,
