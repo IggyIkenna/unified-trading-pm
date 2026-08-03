@@ -342,3 +342,15 @@ from `calculators/__init__.py`'s module-level registry):
   - an updated `test_unrecognized_venue_falls_back_rather_than_crashing` (its old assertion accidentally depended on the
     case-sensitivity bug being present).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- 2026-08-03 (slot-4, data_pipeline_failure escalation agt-285d66, REDISPATCH — confirmation only): Same
+  `escalation_id`/VM (`features-e2e-tradfi-20260803-113749-c81739`) redispatched to slot-4 a second time (prior
+  liveness/redispatch cause not visible to this session). Independently re-derived the full root-cause chain from raw
+  evidence (registry entry `a90d4597-c146-4ae2-8ea8-3f1c30bf39c3`, `run.log`, `resolve_launcher_for_vm`,
+  `DeploymentsRegistry` cross-check for today's `features-e2e-tradfi-*` attempts) before finding this doc already
+  covered it end-to-end, including a prior pass by this exact escalation id (see the earlier "escalation agt-285d66"
+  entry above) and the subsequent slot-3/slot-9 fixes (`unified-trading-library@597def48`, `features-service@8265205c`,
+  `features-service@b261f1e5`, `features-service@b24122c5` — all confirmed on `origin/live-defi-rollout` via current
+  HEAD). Confirmed: only the P3 data-density todo remains open, correctly gated on an operator decision before any
+  backfill VM launch — nothing actionable for a relaunch-scoped escalation. **Did NOT relaunch** (would still fail on
+  the tracked `UNEXPECTED_DATA_GAP` residual blocker). No code change. Re-pinged authoring slot (`dp-fleet-monitor`)
+  with this outcome.
