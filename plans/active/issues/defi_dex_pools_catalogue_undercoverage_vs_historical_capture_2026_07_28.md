@@ -149,6 +149,43 @@ the original 4-protocol finding — reused script:
 Progress Log entry below for why (no address-keyed-vs-symbol-named duality exists for Solana rows) — tracked as its own
 todo below rather than attempted with a technique that would produce a misleading number.
 
+## Quantification results — 4 Solana DEX protocols (2026-08-03)
+
+Different method (per this doc's own second todo): distinct pool ids CAPTURED historically (leaf filenames, which ARE
+the raw on-chain pool id for Solana rows — no address/symbol duality) vs distinct pool ids currently CATALOGUED
+(instruments-service `prod/catalog.parquet`, filtered to `instrument_type` case-insensitive
+`solana_amm_pool`/`solana_vault`, keyed by the catalogue's `raw_symbol` column — the catalogue's own `instrument_id`
+embeds a truncated 8-char id fragment, e.g. `KAMINO-SOLANA:SOLANA_VAULT:BONK-WIF:2stEMJaU`, not the full address;
+`raw_symbol` carries the full address verbatim, e.g. `2stEMJaU9coWrHLYrGXifuhBZGiJUYig24ppkVEBtCdQ`). Case-SENSITIVE
+comparison throughout (base58 Solana addresses are case-sensitive by construction). Full corpus scan, 2020-01-01 to
+2026-07-28, chain=SOLANA (the only chain these 4 protocols write to — they are not registered in the UAC protocol/chain
+registry, matching the write path's own hardcoded chain), 9,604 (day, protocol) shards, LIST-only (no downloads) —
+`market-tick-data-service/scripts/one_offs/quantify_solana_dex_pools_catalogue_gap_2026_08_02.py`
+(`market-tick-data-service@6a7e7698`), resume-log kept out of the repo (runtime artifact, not committed, 361 MB).
+
+```
+  protocol     captured  catalogued   overlap  captured_only  catalogued_only  catalogue_covers_captured_pct
+  kamino            513         113       113            400                0                       22.0%
+  orca            14093         130       130          13963                0                        0.9%
+  raydium           156          59        24            132               35                       15.4%
+  phoenix             2           0         0              2                0                        0.0%
+```
+
+Confirms the "structural, not specific to this plan" framing at a STARKER scale than even the EVM protocols: the
+catalogue currently tracks 0.9%-22.0% of every pool ever captured for these 4 protocols (orca alone: 13,963 of 14,093
+captured pools, ~99.1%, have NO catalogue entry at all). Two distinct gap directions, both real:
+
+1. **catalogue undercounts captured reality** (`captured_only`, the dominant gap, all 4 protocols) — a pool was
+   genuinely captured on-chain but the catalogue never lists it.
+2. **catalogue lists pools never captured** (`catalogued_only`, raydium=35 only) — 35 raydium pools the catalogue
+   currently lists as live were never once captured in `dex_pool_state` across the full 2020-2026 corpus; kamino/orca
+   show 0 here (every currently-catalogued pool for those two HAS been captured at least once, i.e. catalogue ⊆ captured
+   for those two, just a tiny fraction of it). Kamino's `catalogued_only=0` is notable given the raw capture count (513)
+   is much smaller than orca's (14,093) — kamino vault capture is comparatively sparse historically
+   (`fetch_kamino_vault`), not absent (an earlier coarse 60-day-step probe during this task's own investigation
+   mistakenly read kamino as 0-captured entirely before the exhaustive day-by-day scan found 513 — the sparse-but-
+   nonzero real distribution, not a script bug).
+
 ## Todos
 
 - [x] [DATA] P2. ✅ Quantify the same catalogue-vs-historical-capture gap for the OTHER 12 default protocols the
@@ -159,14 +196,16 @@ todo below rather than attempted with a technique that would produce a misleadin
       (uniswap_v3/v2/v4, balancer, pancakeswap_v3, sushiswap_v3, aerodrome_v3, camelot_v3); see the results table above.
       The remaining 4 protocols are Solana DEX (kamino/orca/raydium/phoenix), which this exact technique cannot measure
       (no address-keyed/symbol-named duality) — split into the new todo directly below.
-- [ ] [DATA] P2. Quantify the catalogue-vs-historical-capture gap for the 4 Solana DEX protocols (kamino, orca, raydium,
-      phoenix) that the standing `mtds-dex-pools-backfill` VM also covers, using a DIFFERENT method than the
+- [x] [DATA] P2. ✅ Quantify the catalogue-vs-historical-capture gap for the 4 Solana DEX protocols (kamino, orca,
+      raydium, phoenix) that the standing `mtds-dex-pools-backfill` VM also covers, using a DIFFERENT method than the
       address-keyed/symbol-named technique above (Solana rows always write `row.setdefault("symbol", pool_id_str)` per
       `_dex_pools_subgraph.py::_collect_solana_dex`, so there is no filename duality to detect). Method: compare the set
       of distinct `pool_id`s ever captured historically (across the full corpus, per (day, chain) shard directory)
       against the instruments-service catalogue's current Solana pool universe for each of the 4 protocols. Done-when: a
       per-protocol captured-vs-catalogued pool-count breakdown, in the same spirit as the EVM table above. (repo:
-      market-tick-data-service, instruments-service)
+      market-tick-data-service, instruments-service) — done, see "Quantification results — 4 Solana DEX protocols
+      (2026-08-03)" above: catalogue currently covers only 0.9%-22.0% of every pool ever captured across all 4
+      protocols.
 - [ ] [DATA] P2. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Expand the
       instruments-service DeFi pool catalogue via a full historical-discovery backfill covering every ever-captured pool
       for EVERY default DEX protocol (not just the 4 sampled) — full completion, no partial rollout, no MVP-only subset,
@@ -177,6 +216,21 @@ todo below rather than attempted with a technique that would produce a misleadin
 
 ## Progress Log
 
+- **2026-08-03 (slot 2, data_engineering/cicd, task
+  `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-003`)**: built + ran the Solana-specific quantification
+  script (`market-tick-data-service/scripts/one_offs/quantify_solana_dex_pools_catalogue_gap_2026_08_02.py`), covering
+  the last open todo. Investigated the write path first (`_dex_pools_subgraph.py::_collect_solana_dex`,
+  `canonical_write.write_defi_rows`, UAC `build_instrument_id`/`_build_defi`) to confirm the leaf filename for a Solana
+  `dex_pool_state` shard IS the raw on-chain pool id (colon-preserving leaf sanitiser, symbol=pool_id verbatim) — so a
+  cheap LIST-only (delimiter) directory scan across the full corpus recovers the captured-pool-id universe with zero
+  parquet downloads. Then inspected `prod/catalog.parquet` directly (not just the `_catalogue_filter.py` helper) and
+  found the catalogue's `instrument_id` column is NOT usable for this comparison — it truncates the address to an 8-char
+  fragment glued onto a symbol (`KAMINO-SOLANA:SOLANA_VAULT:BONK-WIF:2stEMJaU`); the full address lives in the separate
+  `raw_symbol` column instead, confirmed by direct inspection before writing any comparison code (would have silently
+  produced a ~0% overlap false-negative otherwise). Ran the full 2020-01-01..2026-07-28 scan (9,604 (day, protocol)
+  shards, 207s, `run_in_background` harness-tracked) — results + full table written into "Quantification results — 4
+  Solana DEX protocols (2026-08-03)" above. Flipped the todo. Resume-log (361 MB, per-shard pool-id lists) kept out of
+  the repo per `.gitignore` (`scripts/one_offs/*.resume.jsonl`), matching the sibling EVM script's own precedent.
 - **2026-08-02T~23:35Z (slot 16, data_engineering, task
   `defi_dex_pools_catalogue_undercoverage_vs_historical_capture-001` completed)**: picked up this task fresh (a
   different slot/session than the ones below); slot 4's background PID (1774871) was dead as expected (does not survive
