@@ -32,6 +32,7 @@ repos:
   [
     unified-trading-pm,
     unified-trading-api,
+    unified-api-contracts,
     features-service,
     market-data-processing-service,
     deployment-service,
@@ -52,7 +53,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T22:15Z
+last_updated: 2026-08-03T22:25Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -929,3 +930,37 @@ repeated here.
   same-day escalation for `features-service` alone across this doc-chain — further corroborates todo 2's
   operator-flagged missing cooldown/dedup guard on `ldr_qg_failure` re-dispatch for an already-in-flight-verification
   state.
+
+- **2026-08-03 ~22:15-22:25Z (`cicd` escalation `agt-63a88d`, slot 9, `unified-api-contracts`,
+  `wall_type=ldr_qg_failure`, `pr_number=837`) — this repo's own founding case
+  (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`) recurs in the xdist-channel-corruption variant, no code
+  gap, promotion already moot**: escalation cited run `30849457988` (created `20:18:06Z`, headSha `862ff5a6`) failing
+  the `tests` slice — read the full job log directly rather than trusting the cached summary:
+  `6205 passed, 686 skipped, 4 xfailed, 1 warning in 464.77s` with **zero named test failures**, then
+  `INTERNALERROR> RuntimeError: Unexpectedly no active workers available` — `pytest-timeout`'s SIGALRM handler fired
+  mid-`execnet` channel send (`xdist/remote.py:289`→`gateway_base.py::dumps_internal`), corrupting the worker/master
+  protocol and killing the session — the identical xdist-channel-corruption shape already logged for
+  `instruments-service` (`30774745528`) and `execution-service` (`30822100465`) above, not a per-test defect (no test
+  node was ever named as failing). Checked PR state first: `gh pr view 837` → **already `MERGED` at `20:16:22Z`**, ~2
+  minutes BEFORE this confirmatory run even started — the same self-merge-before-confirmatory-check-completes pattern
+  this doc-chain documents repeatedly (`agt-3fb529`/deployment-service#676 precedent); `gh pr list --state open` → 0
+  open PRs, confirms nothing is actually blocked by this run's outcome. Checked whether a repo-specific `PYTEST_TIMEOUT`
+  override was warranted before considering one: `unified-api-contracts/scripts/quality-gates.sh` has no override (stays
+  at `base-service.sh`'s shared 150s default); pulled the last 40 LDR `quality-gates-v2` runs — **28 success / 10
+  cancelled / 2 failure**, a healthy base rate (matches the `market-tick-data-service` precedent for withholding the
+  mitigation, not the ~100%-red bar that justified `PYTEST_TIMEOUT=300` elsewhere) — did NOT add an override.
+  `gh api .../actions/runners`: exactly ONE online runner (`glue-ip-172-31-3-59-1`), `busy=true` — same fleet-wide
+  single-runner bottleneck. `GET /api/repo-blockers` → `open: []`. LDR HEAD had already advanced twice since the failing
+  run (`862ff5a6`→`cec272e9`→`6806fd50`, both intervening commits promotion-backmerge-only) and an intervening run
+  against `cec272e9` had already gone `success` (`30850665921`) — no run yet targeted the true current HEAD, so
+  dispatched `gh workflow run quality-gates-v2.yml --repo IggyIkenna/unified-api-contracts --ref live-defi-rollout` →
+  run `30858497649`, confirmed queued against `6806fd50` within seconds (a second, independently fleet-dispatched run,
+  `30858491949`, landed on the same headSha ~5s earlier — coincidental, not caused by this dispatch). **Disposition: no
+  code or workflow change made or needed** — the promotion already completed before this run even started, every
+  sanctioned mitigation elsewhere in this doc-chain remains correctly withheld here given the healthy base rate,
+  remaining wall was pure runner-queue-depth/host-contention on an already-moot post-merge artifact; outcome of
+  `30858497649` left for the next occurrence. `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping. Slot left clean (`unified-api-contracts` and `unified-trading-pm`
+  both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either
+  repo). Added `unified-api-contracts` to this doc's `repos:` frontmatter (1st full write-up for this repo in this
+  specific split, though it is the doc-chain's founding case per the 2026-07-29 parent).
