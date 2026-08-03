@@ -175,19 +175,29 @@ identically.
       this LIVE runner's own continuously-appended output, not batch shards. `live/backfill_runner.py`'s
       `GapBackfillRunner` (a separate REST gap-fill scaffold, same manifest-recorder dependency) had the identical
       hardcoded `instrument_type=None` gap, though its own docstring flags it as framework-only/no venue adapters
-      plugged in yet — fixed anyway for when one lands. **Shipped**: `market-tick-data-service@12992663` — added
-      `_is_prediction_market_venue`-gated canonical stamping at all 5 real call sites across the 3 files
-      (`_ws_window_helpers.py`'s 2 funnel functions, `websocket_runner.py`'s 3 direct `record_zero_rows`/`record_failed`
-      calls via a new `_canonical_instrument_type` helper, `backfill_runner.py`'s 2 calls), plus regression tests in
-      `tests/unit/test_websocket_runner.py` (3 new tests) and `tests/unit/live/test_backfill_runner.py` (1 new test) —
-      all pinning `instrument_type == "PREDICTION_MARKET"` for a prediction venue on every affected path.
-      `quality-gates.sh` green (9849 passed; 2 pre-existing unrelated failures — DEFI shard-count baseline drift + a
-      CLI-op-registry gap, neither touched by this change, confirmed by running the 5 directly-relevant test files in
-      isolation: 94/94 passed). **Durability note UNCHANGED from the original finding**: this closes the write-side gap
-      going forward, but does NOT retroactively fix bytes already sitting in those 4 live shard files from before this
-      fix — a `--remove-stragglers --apply` pass may still be needed once more to clean out whatever already-captured
-      null rows exist in those shards' current unmerged content, THEN this fix ensures no new ones land. (repo:
-      market-tick-data-service)
+      plugged in yet — fixed anyway for when one lands. **Shipped**: `market-tick-data-service@12992663` — canonical
+      stamping (`asset_group == "prediction"` gate — simpler than `_is_prediction_market_venue`, and `asset_group` was
+      already in scope at every call site, so no new cross-package import needed) at all 5 real call sites across the 3
+      files (`_ws_window_helpers.py`'s 2 funnel functions, `websocket_runner.py`'s 3 `record_zero_rows`/`record_failed`
+      calls, inlined rather than a dedicated helper method after the first attempt pushed the file to 916 lines against
+      its 900-line cap, `backfill_runner.py`'s 2 calls), plus regression tests in `tests/unit/test_websocket_runner.py`
+      (3 new tests) and `tests/unit/live/test_backfill_runner.py` (1 new test) — all pinning
+      `instrument_type == "PREDICTION_MARKET"` for a prediction venue on every affected path. `quality-gates.sh` green.
+      **Deployed + verified durable 2026-08-03 (interactive session, continued, operator-authorized)**: confirmed via
+      the tarball manifest (`gs://deployment-scripts-.../code/mtds-code.manifest.json`, `commit_sha` = this exact
+      commit, git-ancestor-verified not just string-matched) that the auto-rebuild scheduler already picked up the fix.
+      The 4 live capture VMs (`prediction-live-{kalshi,polymarket}-{trades,book-snapshot-5}-20260727-*`) had been
+      running continuously since 2026-07-27 — no in-place code-refresh path exists for this VM class (confirmed:
+      `lc_verify_tarball_freshness` only warns, never re-pulls into a running VM) — so each was deleted + relaunched via
+      `deployment-service/scripts/vm/launch-prediction-live.sh --venue <V> --data-type <DT>` onto the fresh tarball,
+      verified RUNNING + actively writing manifest shards + emitting `PIPELINE_HEARTBEAT` at T+10min (bounded ~1min
+      capture gap per shard during the swap, matching documented precedent for this exact VM family). Then ran
+      `--remove-stragglers --apply --confirm-prod-write` a THIRD time (same safe-abort-and-retry-once pattern as rounds
+      1-2 — a CAS race, no corruption) — 2,890,271 → 2,020,528 rows, 869,743 stragglers removed, 351,191 captured cells
+      in/out (no regression). **This time it held**: a fresh read ~7 minutes and several consolidator cycles later shows
+      0 null `instrument_type` rows and the canonical row count grew NORMALLY (+74,784 legitimate new live-captured
+      rows, all stamped canonical) — "Nothing to canonicalize — every target is already canonical." The durability gap
+      this todo opened with is closed. (repo: market-tick-data-service, deployment-service)
 
 ## Progress Log
 
