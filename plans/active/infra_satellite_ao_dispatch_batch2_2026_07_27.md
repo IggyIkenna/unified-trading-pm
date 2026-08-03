@@ -127,18 +127,41 @@ once the corresponding todo below is actually done — not this plan.
       Repo: market-data-processing-service. Source: `candle_feature_canonical_path_divergence_2026_07_20.md` #16. Done
       when: a definitive root-cause is recorded (stale-docstring vs. genuine defect) with the checked object path cited;
       if genuine, file a follow-up todo/issue doc rather than fixing inline.
-- [ ] [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
+- [x] ✅ [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
       (`market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py:794-831`) — a destination that exists
       but FAILS verification (`SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`) is never re-copied on a subsequent
       run (gated on `dmeta is None`), so this straggler class cannot converge no matter how many re-runs. Fix: treat a
       verification-FAILED existing destination the same as an absent one (overwrite + re-verify), with tests against a
-      synthetic bad-destination fixture before trusting it on prod. Then run ONE surgical mop-up pass against CEFI's
-      (and TRADFI's, if the same class reproduces there) residual objects. Source data was never at risk (`KEPT_SRC`
-      never deletes source) — script gap, not a data-safety incident. Repo: market-data-processing-service. Source:
+      synthetic bad-destination fixture before trusting it on prod. Source data was never at risk (`KEPT_SRC` never
+      deletes source) — script gap, not a data-safety incident. Repo: market-data-processing-service. Source:
       `candle_feature_canonical_path_divergence_2026_07_20.md` #19 (full root-cause:
       `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`, "P7c: CEFI retry").
-      Done when: the fixture test passes, the fix is merged QG-green, and the mop-up pass against CEFI's 149-object (and
-      TRADFI's, if applicable) residual reports 0 remaining `SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`.
+      — market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e. `_copy_verify_delete()` now retries
+      (overwrite + re-verify) once on any verification failure, whether the destination was freshly copied or already
+      existed; 6 new fixture tests (mocked `unified_trading_library.cloud_interface`, no real GCS) cover: fresh-absent
+      convergence, existing-good no-copy, existing-bad-SIZE retry-converges, existing-bad-CRC32C retry-converges,
+      genuine-mismatch-after-retry keeps source, and SRC_ALREADY_GONE is unaffected. Full `quality-gates.sh` green
+      (sentinel = this SHA). **The mop-up pass itself is split to the new todo directly below** — it's a real prod-GCS
+      VM-scale operation (historically multi-hour with SPOT preemptions per the P7c progress log), a different-shaped
+      unit of work than this code fix, not something to fold into the same dispatch cycle.
+- [ ] [SCRIPT] P2. **Run the CEFI mop-up pass now that `_copy_verify_delete()`'s retry-idempotency gap is fixed** (todo
+      above, market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e). **TRADFI needs no mop-up** —
+      confirmed via `candle_feature_canonical_path_divergence_history_part2_2026_07_25.md` lines 666-669 ("P7d: TRADFI
+      DONE"): TRADFI's own migration converged to 0 outstanding legacy-path objects and never hit a single
+      `KEPT_SRC`-class straggler across either of its two runs — this todo is CEFI-only. The original CEFI apply run
+      never logged per-object URIs for `KEPT_SRC`-class outcomes (only
+      `"non-success outcome '<TYPE>' at shard-local     index N"`, no path) and its `--out` mapping TSV never uploaded
+      (runs exited rc=5, gated on `&&`), so the exact 149 objects are NOT independently known going in — a fresh
+      `--dry-run` classify pass over a current CEFI enumeration is required first to relocate them (the P8 fresh-count
+      re-verify after the original apply run found these same objects reclassify as `SPLIT_BRAIN_DUPLICATE` once a
+      canonical twin already exists, per the same history doc's line ~699 — that disposition is the expected signature
+      to search for). Then run `--apply` (MIGRATE/ SPLIT_BRAIN_DUPLICATE gate only, no `--quarantine`/`--content-repair`
+      needed for this residual class) against just the reclassified stragglers. Per the infra craft's VM-launch
+      discipline: NO fire-and-forget (STARTED <60s + ≥1 progress/hr + terminal STOPPED/FAILED, verified at T+10min),
+      SPOT provisioning, idempotent/safe re-run (this todo's own prerequisite fix is what makes it safe — `KEPT_SRC`
+      never deletes source on any residual failure, retried or not). Repo: market-data-processing-service. Source:
+      `candle_feature_canonical_path_divergence_2026_07_20.md` #19. Done when: a fresh CEFI dry-run classify + `--apply`
+      mop-up pass reports 0 remaining `SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC` (149-object baseline).
 - [ ] [SCRIPT] P2. **Add a Phase-0 `-test-` bucket assertion on the resolved WRITE bucket** to
       `/data-pipeline-check-mdps` and `/data-pipeline-check-features`, closing their fail-open
       `--output-bucket`/`--sink-bucket` mechanism (a skill invocation with a bad bucket flag currently fails open rather
@@ -163,3 +186,9 @@ once the corresponding todo below is actually done — not this plan.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **2026-08-03 (slot 9, infra)**: shipped the `_copy_verify_delete()` retry-idempotency fix
+  (market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e, QG-green, 6 new fixture tests). Split the
+  "Done when" clause's mop-up-pass requirement into its own todo (below the fix todo) — a real prod-GCS VM-scale
+  operation, historically multi-hour with SPOT preemptions, not the same-shaped unit of work as the code fix. Confirmed
+  via the linked history doc that TRADFI needs no mop-up (converged clean, 0 `KEPT_SRC` stragglers) — the new todo is
+  CEFI-only.
