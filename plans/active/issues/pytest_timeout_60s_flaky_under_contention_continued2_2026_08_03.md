@@ -42,6 +42,7 @@ repos:
     execution-service,
     market-tick-data-service,
     batch-live-reconciliation-service,
+    agent-orchestrator,
   ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
@@ -53,7 +54,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T22:25Z
+last_updated: 2026-08-03T22:50Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -964,3 +965,33 @@ repeated here.
   both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no branch changes in either
   repo). Added `unified-api-contracts` to this doc's `repos:` frontmatter (1st full write-up for this repo in this
   specific split, though it is the doc-chain's founding case per the 2026-07-29 parent).
+
+- **2026-08-03 ~22:30-22:50Z (`cicd` escalation `agt-5467b9`, slot 5, `agent-orchestrator`, `wall_type=ldr_qg_failure`,
+  `pr_number=766`) — `chore(promote): LDR → main` PR gate reported red on an already-fully-landed promotion, this
+  doc-chain's self-merge-before-confirmatory-check-completes pattern one more time, this time on the doc-chain's own
+  home repo**: escalation cited run `30843984596` (`event=pull_request`, headSha `57e38956`, PR #766) failing the
+  `QG slice (checks)` job's `Install dependencies` step with the identical `uv`-cache-corruption-under-contention
+  signature already tracked repeatedly above —
+  `error: Failed to install: typing_inspection-0.4.2-py3-none-any.whl ... Caused by: failed to read directory /home/ubuntu/.cache/uv/archive-v0/FmTx4U7lXPejS46mFkrlp: No such file or directory (os error 2)`
+  — a shared-runner concurrent-`uv`-cache race (the same `archive-v0` hardlink/directory-vanish shape as the
+  `pytz`/`vcrpy`/`basedpyright` entries elsewhere in this doc-chain), not a code or dependency-lock defect.
+  `gh run view --json createdAt`: this run was created `2026-08-03T19:02:25Z` — the EXACT same instant `gh pr view 766`
+  shows the PR `mergedAt` — confirming the now-familiar race (required check kicks off at merge time, then queues for
+  ~2h behind the sole shared runner before finally failing well after the PR is already gone).
+  `gh pr list --state all --limit 5`: PR #766 `MERGED`, and the fleet has since promoted TWICE more past it — PR #767
+  (`headRefOid` = current local LDR HEAD `d71f1d9`) also already `MERGED` (`22:41:59Z`), `main` HEAD now `48f839e5` (PR
+  #767's squash commit). Decisive external evidence in lieu of a fresh local reproduce (per this doc-chain's established
+  practice of trusting a corroborating real CI run over a redundant local one when one already exists):
+  `gh run list --branch live-defi-rollout --limit 5` shows a **`success`** `quality-gates-v2` run (`30854583572`,
+  56m10s, completed `2026-08-03T22:21:50Z`) landed AFTER this failing run's own conclusion (`21:01:36Z`) and BEFORE PR
+  #767 merged — LDR has been proven green since, ruling out a code regression definitively. `main`'s own post-PR#767
+  required check (`30859629406`) was `queued`/`in_progress` at check time, not red. `GET /api/repo-blockers` →
+  `open: []`. **Disposition: no code or workflow change made or needed** — the promotion business-outcome (LDR→main,
+  twice over) completed cleanly before and independent of this stale check's eventual failure; root cause remains the
+  fleet-wide shared self-hosted-runner `uv`-cache contention already tracked as out-of-scope-for-one-shot-wall-clearing
+  (`/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). `AUTHORING_SLOT=ci` is not a
+  real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping. Slot left clean
+  (`agent-orchestrator` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this
+  doc's own commit; no branch changes in either repo). Added `agent-orchestrator` to this doc's `repos:` frontmatter
+  (1st occurrence for this repo in this doc-chain, though the doc-chain itself lives in the PM repo that ships via this
+  same repo's orchestrator).
