@@ -872,3 +872,26 @@ bug and should not trigger a pass-4; confirm via a spot-check that a sample of t
 zero events from a fresh live API call before accepting that floor as final. Only then flip this issue doc's status +
 the parent plan's `sports_satellite_ao_dispatch_batch2-002` todo, and only then unblock the
 FIXTURE_STATS/FIXTURE_LINEUPS widening backfill.
+
+**Second, unrelated bug hit + fixed while re-running the corrected census 2026-08-03T05:00Z-06:53Z**: the manifest read
+(`pd.read_parquet(f"gs://{BUCKET}/_index/availability_index.parquet")`, a bare pandas/pyarrow native `gs://` read)
+started failing with `NOT_FOUND` on an object independently confirmed to exist via `gcloud storage objects describe`
+(fresh `creation_time`, real 250MB size) — 3 consecutive identical failures, not a transient consolidator-rewrite race.
+Root cause: this bare read resolves ADC independently of the rest of the same script (which reads schemas via the UTL
+`get_storage_client()` — a different, working credential path) — the ADC token had evidently gone stale mid-session
+while the UTL-backed path kept working. **Fix**: route the manifest read through the same UTL client
+(`client.download_bytes(...)` + `pd.read_parquet(io.BytesIO(...))`) instead of the native reader. Shipped
+`instruments-service@631fd6fc`. Re-ran the corrected census afterward — confirmed working, and (as expected) the
+classification counts are unchanged from the pre-recovery baseline (`canonical_13col: 35,997`,
+`degenerate_5col_stub: 1,943`, `af_prefixed_10col: 2,383`, `named_9col: 1`, `missing: 74` — no new recovery pass has run
+yet), but critically the recovery-ids parquet now has **26,554 rows** (up from 19,850 — the previously-invisible
+`af_prefixed_10col` objects' fixture ids are now correctly captured).
+
+**FIXTURE_EVENTS pass-3 launched 2026-08-03T07:00Z**: uploaded the corrected recovery-ids parquet to
+`gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/ recovery_fixture_ids_2026_08_03.parquet`,
+launched `--entity FIXTURE_EVENTS --recovery-fixture-ids <that path> 2020-06-06 2026-07-25` as
+`af-backfill-20260803-070016` (used the `LC_RUNTIME_SA=1060025368044-compute@developer.gserviceaccount.com` workaround
+per `issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`, still not durably granted). Rate-budget
+123 req/min (live daily quota check). This pass should genuinely fix the 2,383 `af_prefixed_10col` objects (never
+targeted before); the 1,943 `degenerate_5col_stub` objects are also in this recovery-ids set again but are expected to
+remain unchanged (honest-absence — see above). Monitoring to completion.
