@@ -205,7 +205,7 @@
       ],
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
       "codebase_health": {
         "qg_red_reason": "pytest",
