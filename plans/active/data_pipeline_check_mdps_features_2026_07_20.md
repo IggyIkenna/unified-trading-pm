@@ -454,8 +454,9 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       false-positive-free on live data; promoting either to authoritative is natural follow-up work, not done here.
       While verifying via a real `--dry-enumerate` smoke run, slot-8 also discovered + filed (did NOT fix — out of this
       todo's scope) a pre-existing, unrelated MDPS enumeration break:
-      `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` gained a new todo for `_candle_data_types_for_market_ag`'s
-      stale 2-tuple unpack against `mdps_mvp_universe()`'s now-3-tuple return.
+      `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` gained a new todo for
+      `_candle_data_types_for_market_ag`'s stale 2-tuple unpack against `mdps_mvp_universe()`'s now-3-tuple return
+      (that todo, and the doc's other 3, are now all done — archived 2026-08-03).
 
 ## Progress Log
 
@@ -526,8 +527,8 @@ While QG-verifying the MDPS driver via a real `--dry-enumerate` smoke run (`qual
 DRIVER SMOKE"), surfaced a genuine, PRE-EXISTING, unrelated break (confirmed via diff against the parent commit before
 my change touched this file): `_candle_data_types_for_market_ag` still unpacks `mdps_mvp_universe()`'s return as a
 2-tuple, but the function was extended to a 3-tuple `(venue, instrument_type, data_type)` in
-`unified-api-contracts@724b6633` (see `uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`, whose own caller-update
-sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
+`unified-api-contracts@724b6633` (see `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`,
+whose own caller-update sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
 `ValueError: too many values to unpack`. `quality-gates.sh`'s own exit code is 0 (this smoke step is non-blocking), so
 it did not block shipping, but it is a real correctness gap. Per findings triage (not small/clear enough to fix inline —
 needs redesigning the function's data_type derivation, not a 1-line unpack fix) filed as a new todo on the existing,
