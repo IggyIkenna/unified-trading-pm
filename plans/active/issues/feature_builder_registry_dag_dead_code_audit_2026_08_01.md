@@ -99,11 +99,12 @@ deleted, not left as misleading documentation.
       (volatility) entry (4 of 8 registry entries declare a non-empty `depends_on`, all 4 classified CONFIRMED-HARMLESS
       by the literal method, but compounded by a materially worse finding: all 4 dependent calculators, plus 2 more
       zero-dep entries, are entirely unwired from every production dispatch path — new follow-up todo added below).
-- [ ] [BACKEND] P1. **New, opened by the volatility audit above.** Wire (or delete) the 6 fully-unwired volatility
-      feature groups: `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `vol_surface_term_structure`,
-      `tradfi_vol_surface`, `vol_greeks_features`. None of the 8 registry entries' calculators for these 6 groups are
-      ever instantiated by any production dispatch path — confirmed via 3 independent surfaces: (1) the CLI's
-      `FEATURE_GROUPS` choices (`features_service/volatility/cli/parser.py:11-17`) list only
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-03 (slot-2) for 3/6 groups — remaining 3 split into a new follow-up todo below.**
+      Wire (or delete) the 6 fully-unwired volatility feature groups: `gamma_exposure`, `variance_risk_premium`,
+      `second_order_greeks`, `vol_surface_term_structure`, `tradfi_vol_surface`, `vol_greeks_features`. None of the 8
+      registry entries' calculators for these 6 groups are ever instantiated by any production dispatch path — confirmed
+      via 3 independent surfaces: (1) the CLI's `FEATURE_GROUPS` choices
+      (`features_service/volatility/cli/parser.py:11-17`) list only
       `options_iv`/`options_term_structure`/`futures_basis`/`futures_term_structure`/`ALL` — the other 6 groups cannot
       even be requested; (2) `VolatilityOrchestrationService._calculate_features`'s dispatch (the CLI batch/live
       handlers' orchestrator, `features_service/volatility/engine/feature_group_service.py:303-321`) has an `elif` chain
@@ -134,6 +135,43 @@ deleted, not left as misleading documentation.
       than left as misleading unwired documentation. (repo: features-service) — scoped out of THIS audit todo
       (classification only) given the larger surface (6 groups × dispatch wiring + per-group data-threading design +
       tests), mirroring how `onchain_regime`'s fix was scoped as its own separate unit of work.
+
+      **DONE 2026-08-03 (slot-2, backend_engineer craft) for the 3 drop-in groups** — `gamma_exposure`,
+          `vol_surface_term_structure`, `tradfi_vol_surface` all take the SAME raw options-chain input options_iv already
+          loads (no cross-calculator scalar threading needed), so wired identically to it: added to `FEATURE_GROUPS`,
+          widened `_load_raw_data` to route them to `load_options_chain_raw`, added
+          `_calculate_gamma_exposure`/`_calculate_vol_surface_term_structure`/`_calculate_tradfi_vol_surface` dispatch
+          methods mirroring `_calculate_options_iv`. `tradfi_vol_surface` gated to `--asset-group TRADFI` only (the
+          calculator is explicitly CME/CBOE-specialized). 9 new unit tests (dispatch + `_load_raw_data` routing + edge
+          cases + a real-computation test per group asserting genuine non-null output, not just "doesn't crash") +
+          6 new calculator-level integration tests (`tests/volatility/integration/test_volatility_integration.py`).
+          `bash scripts/quality-gates.sh` green (18130 passed). `features-service@1ce877a4` (verified ancestor of
+          `origin/live-defi-rollout`).
+
+- [ ] [BACKEND] P1. **NEW, this session (split from the todo above).** Wire (or delete) the remaining 3 volatility
+      feature groups — `variance_risk_premium`, `second_order_greeks`, `vol_greeks_features` — which need real
+      cross-calculator/cross-service data-threading, not the drop-in raw-data pattern the other 3 used: -
+      `second_order_greeks` (`SecondOrderGreeksCalculator.compute(call_delta, sigma, tau, vega)`): per its own docstring
+      these scalars come from `options_iv`'s computed `OptionsIvRecord` / the options chain — a genuine
+      producer→consumer relationship requiring `options_iv` to run FIRST for the same (underlying, timestamp) and its
+      output threaded in as scalar params, not a DataFrame injection point. - `variance_risk_premium`
+      (`VRPCalculator.compute(atm_iv, rv_20, vrp_history, front_atm_iv, back_atm_iv)`):
+      `atm_iv`/`front_atm_iv`/`back_atm_iv` need `options_iv`-sourced scalars (same sequencing need as above, across
+      MULTIPLE tenors); `rv_20` needs delta_one's `volatility_realized` feature family — a cross-FAMILY (not just
+      cross-calculator) data dependency this engine has never threaded before. - `vol_greeks_features`
+      (`_CALCULATOR_CLASS_MAP` maps it to `VolGreeksFeaturesExtractor`, which **does not exist as a class anywhere in
+      the codebase** — the real logic is module-level functions in
+      `vol_surface_feature_extractor.py::extract_vol_greeks_feature_dict(surface, snapshots)`, taking a
+      `CanonicalImpliedVolSurface` + `list[CanonicalGreeksSnapshot]`, typed objects this engine doesn't currently
+      construct anywhere): needs either a registry fix pointing at the real functions + an adapter building those typed
+      objects from raw options-chain data, or confirming whether `greeks-service` is meant to be the actual source and
+      integrating that cross-service read instead.
+
+      Genuinely bigger/riskier than the other 3 (sequencing within `_process_date`, a cross-family dependency, and a
+          dangling-class registry bug needing its own design call) — correctly NOT rushed into the same session as the
+          drop-in 3. Done when: same bar as the parent todo's (a)/(b) — each of the 3 either wired + integration-tested,
+          or deleted per operator ruling. Repo: features-service.
+
 - [x] ✅ [BACKEND] P1. **New, opened by the onchain audit above.** Wire (or delete) the fully-unwired `onchain_regime`
       feature group in features-service's onchain engine. `compute_onchain_regime_features()`
       (`features_service/onchain/app/calculators/onchain_regime_calculator.py`) is never registered via
@@ -313,3 +351,19 @@ deleted, not left as misleading documentation.
     via `git stash` — fails identically on a clean tree at the pre-change HEAD).
   - `quality-gates.sh` green (full run, exit 0) on the committed SHA. Shipped: features-service@8b602744 (quickmerge
     --agent, verified on origin/live-defi-rollout via `merge-base --is-ancestor`). Checkbox flipped above.
+- **2026-08-03 (slot-2, backend_engineer craft, dispatched to the volatility-wiring todo)** — wired 3 of the 6 unwired
+  volatility groups (`gamma_exposure`, `vol_surface_term_structure`, `tradfi_vol_surface`); split the remaining 3
+  (`variance_risk_premium`, `second_order_greeks`, `vol_greeks_features`) into a new follow-up todo since they need real
+  cross-calculator/cross-family scalar threading or a dangling-registry-class fix rather than the same drop-in
+  raw-options-chain pattern the other 3 used — rushing those in the same session risked a poorly-tested change to a P0
+  production feature-computation path. Verified each of the 3 wired calculators' exact required input columns by reading
+  their source directly rather than guessing (`VolSurfaceTermStructureCalculator`/`TradFiVolSurfaceCalculator` need
+  `expiry_days`/`mark_iv`/`delta`, not the `days_to_expiry`/`iv` columns used elsewhere in this same file's other tests
+  — an easy mismatch to get wrong by copying the nearest existing test fixture); also caught that
+  `VolSurfaceTermStructureRecord` is a features-service-local `@dataclass` (needs `dataclasses.asdict()`), not the
+  same-named UAC `BaseModel` (`model_dump()`) the TradFi calculator's `OptionsIvRecord` actually is — two classes with
+  identical names, different modules, different serialization. Full quality-gates.sh run (18130 passed) caught this
+  before it shipped. Shipped: features-service@1ce877a4 (quickmerge --agent, verified on origin/live-defi-rollout via
+  `merge-base --is-ancestor`; the background quickmerge invocation was killed mid-run by an unrelated session event,
+  retried in the foreground — the QG sentinel was still valid for the unchanged HEAD so Pass 2 skipped straight to the
+  push). Checkboxes flipped above.
