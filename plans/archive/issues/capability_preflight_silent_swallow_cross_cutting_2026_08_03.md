@@ -62,6 +62,11 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved`, sole todo `[x]`, `locked_by:` empty. Per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md),
+> a doc with every todo done archives immediately. Resolution evidence carried in `resolved_by:`
+> (execution-service@b68bc236, slot-3 2026-08-03). No content was rewritten.
+
 # Capability-preflight silent-swallow pattern — cross-cutting audit resolved
 
 ## What I found

@@ -31,7 +31,7 @@ related:
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md,
+    /plans/archive/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md,
   ]
 created: 2026-08-01
 last_updated: 2026-08-03
@@ -44,7 +44,7 @@ assigned_vm: planning
 resolved_by:
   "All 13 fix/decision todos + the operator-ruled scoping todo closed 2026-08-01 through 2026-08-03 (slots 6, 9, 13);
   the one workspace-wide-anti-pattern follow-up spun out to
-  /plans/active/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md."
+  /plans/archive/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md."
 locked_by:
 execution_scope: orchestrator-agent
 estimate_class: refactor
@@ -69,7 +69,7 @@ context_scope:
 > `locked_by:` empty. Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo
 > done archives immediately. The one spun-out follow-up (the cross-cutting capability-preflight silent-swallow defect
 > confirmed at `defi_execution/protocols/base.py`) is tracked at
-> `/plans/active/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md`.
+> `/plans/archive/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md`.
 
 ## What I found
 
@@ -334,7 +334,7 @@ named) rather than left as prose, per the findings-closure hard rule.
       were checked and found COMPLIANT — both already emit real observability (`classify_and_emit_error(...)` /
       `_logger.debug(...)` respectively), so this is NOT a workspace-wide anti-pattern, just one additional confirmed
       defect. Filed the follow-up fix todo per the ruling:
-      `/plans/active/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md` — unified-trading-pm@(this
+      `/plans/archive/issues/capability_preflight_silent_swallow_cross_cutting_2026_08_03.md` — unified-trading-pm@(this
       commit).
 - [x] ✅ [BACKEND] P2. Fix `prediction_markets/kalshi.py::KalshiAdapterConfig`'s stale/incorrect docstring
       (execution-service, lines 1-9, 19-24) — it claims Kalshi uses one combined secret (`kalshi-api-credentials`) and
