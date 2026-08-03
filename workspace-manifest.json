@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 1,
         "warn_file_count": 0,
@@ -826,10 +826,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "warn_file_count": 7,
+        "coverage_pct": null,
         "qg_red_reason": "pytest",
-        "large_file_count": 5,
-        "coverage_pct": null
+        "warn_file_count": 6,
+        "large_file_count": 6
       },
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
@@ -918,7 +918,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -954,8 +954,8 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 0,
+        "qg_red_reason": "pytest",
         "warn_file_count": 6,
         "coverage_pct": 82.62
       },
@@ -1220,7 +1220,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 27,
         "coverage_pct": 96.47,
@@ -1289,7 +1289,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1356,12 +1356,12 @@
       "semver_policy": "agent",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 80.97,
         "warn_file_count": 5,
-        "qg_red_reason": "pytest"
+        "qg_red_reason": "pytest",
+        "large_file_count": 0,
+        "coverage_pct": 80.95
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
