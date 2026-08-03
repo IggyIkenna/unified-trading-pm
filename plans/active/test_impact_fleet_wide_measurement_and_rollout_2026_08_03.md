@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [ci-cd, testing, pytest, selective-execution, test-impact-analysis, cost, measurement]
 related:
   [
-    /plans/active/issues/test_impact_selective_execution_design_2026_08_03.md,
+    /plans/archive/issues/test_impact_selective_execution_design_2026_08_03.md,
     /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
   ]

@@ -20,7 +20,7 @@ summary: >-
   recent-window catalogue re-enumeration" item from the same source doc. (3) INDEX GAP — 4 prediction-tranche docs
   created 2026-07-26..28 are named nowhere in `prediction_consolidated_closeout_2026_07_18.md`'s aggregated-sources
   index.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -67,6 +67,11 @@ context_scope:
     /plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 4 findings resolved. Moved by a `cicd` escalation (agt-5c37f6) triaging the
+> `check_archive_candidates` hard gate failure. No content was rewritten.
 
 # Prediction closeout-audit findings, 2026-07-30
 
@@ -216,15 +221,15 @@ candidate, not a batch todo.
       `ao`-owned file); still correctly parked, not stale.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the named target doc,
-                  `plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`, archived 2026-07-30 as a "pure reachability
-                  digest"; its own archived text explicitly redirects `ao`-tranche live coverage to
-                  `ao_open_issues_consolidated_close_out_2026_07_17.md` (+ `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/its
-                  finalize). `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28` IS now named there — it appears in
-                  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s "Operator-gated (needs a ruling, not another audit)" table
-                  (line 159) and is also cross-referenced in `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (line 269, "dual-tagged
-                  `[prediction, ao]`"). The done-when condition ("cited by an `ao`-tranche covering doc") is satisfied via the
-                  current live covering doc, even though the specific archived file this todo originally named is no longer that
-                  doc.
+                          `plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`, archived 2026-07-30 as a "pure reachability
+                          digest"; its own archived text explicitly redirects `ao`-tranche live coverage to
+                          `ao_open_issues_consolidated_close_out_2026_07_17.md` (+ `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/its
+                          finalize). `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28` IS now named there — it appears in
+                          `ao_open_issues_consolidated_close_out_2026_07_17.md`'s "Operator-gated (needs a ruling, not another audit)" table
+                          (line 159) and is also cross-referenced in `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (line 269, "dual-tagged
+                          `[prediction, ao]`"). The done-when condition ("cited by an `ao`-tranche covering doc") is satisfied via the
+                          current live covering doc, even though the specific archived file this todo originally named is no longer that
+                          doc.
 
 ## Codex SSOTs
 

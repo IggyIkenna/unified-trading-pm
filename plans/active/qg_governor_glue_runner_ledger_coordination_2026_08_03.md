@@ -199,8 +199,8 @@ fleet** — the central/planning VM (`agent-orchestrator-vm-1`, AWS `i-0c9b283b3
 hostname `ip-172-31-5-118`, 16 vCPU/61GB — the SAME box observed 2026-08-02). Proof:
 `deployment-service/scripts/vm/launch-central-brain-aws.sh` is the ONLY launcher (of ~180) that references
 `setup-glue-runners.sh`/`POOL_TAG`/`github-glue-runners`; no other repo has its own `self-hosted-runners/` dir;
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
-`codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` both confirm the single-VM architecture explicitly.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
+`/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` both confirm the single-VM architecture explicitly.
 This is a spec-clarification WITHIN the plan's documented intent (AUTONOMOUS_AGENT_RULES.md rule 12f) — the plan's
 actual GOAL ("resolve to one shared path per physical host, without merging across hosts") is unaffected; only the
 Phase-0 verification METHOD changes from "compare N hosts" to "sample the one host's N pool dirs."

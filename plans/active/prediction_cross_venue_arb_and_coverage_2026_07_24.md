@@ -758,7 +758,7 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       (`status: active`, `assigned_vm: planning`), which names this item verbatim as its `Source:`. batch6's duplicate
       copy of the same extraction was resolved 2026-07-31 (checked `[x]` in place with a "DUPLICATE — not independently
       executed" note plus a `## Deferred` section naming batch4 todo 3 as sole owner), per
-      [`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`](/plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md)
+      [`issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`](/plans/archive/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md)
       Finding 2 — so there is exactly ONE executing owner. Citation added by `/na-eligibility-audit` 2026-08-02 —
       checkbox stays `[ ]` as the tracking anchor, `assigned_vm` untouched.
 

@@ -34,7 +34,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
-    /plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
+    /plans/archive/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
   ]

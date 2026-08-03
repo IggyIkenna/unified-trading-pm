@@ -38,7 +38,7 @@ related:
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/tradfi_manifest_content_recovery_completion_history_2026_07_24.md,
   ]
@@ -72,7 +72,7 @@ source: >-
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py,

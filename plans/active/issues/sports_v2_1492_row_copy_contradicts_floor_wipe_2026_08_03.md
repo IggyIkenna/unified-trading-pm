@@ -27,7 +27,7 @@ tags: [sports, data-floor, delete-safety, ssot-contradiction, canonical-copy, bi
 related:
   [
     /codex/02-data/sports-2020-06-data-floor.md,
-    /plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
+    /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
@@ -58,7 +58,7 @@ source:
 context_scope:
   [
     /codex/02-data/sports-2020-06-data-floor.md,
-    /plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
+    /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py,
   ]
@@ -69,8 +69,8 @@ context_scope:
 ## What I found
 
 Task `sports_reference_v2_1492_row_canonical_copy-002` (todo 2 of
-`/plans/active/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`) instructs: "Copy the confirmed rows to
-canonical storage (the same target path/schema the rest of the sports corpus already uses)." That doc's own `source:`
+`/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`) instructs: "Copy the confirmed rows
+to canonical storage (the same target path/schema the rest of the sports corpus already uses)." That doc's own `source:`
 field traces it to `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 1b, option B — **operator- confirmed
 2026-08-03** ("resolve the 1,492 rows (copy to canonical) first, then the two todos revert to self-justified").
 

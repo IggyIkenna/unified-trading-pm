@@ -12,7 +12,7 @@ summary:
   operator decision + the enumerated real scope, mirroring
   [[defi_lending_atoken_debttoken_instrument_split_2026_07_07]]'s pattern (a real, decided target-state, current-state
   vs target-state framing in the mockup, staged migration to follow — not fixed today)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi, prediction]
 stage: [data, meta]
@@ -73,6 +73,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos (all 9 done); archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Moved by a `cicd` escalation (agt-5c37f6) triaging the `check_archive_candidates` hard gate
+> failure. No content was rewritten; every corpus referrer with a structured `/plans/active/issues/...` path was
+> repointed to `/plans/archive/issues/...` in the same commit.
 
 > **OPERATOR DECISION 2026-07-08 — target-state only, not fixed today** (was: still fully accurate as of authoring;
 > **PARTIALLY EXECUTED — banner corrected 2026-07-15**). Every finding below gets a canonical target format. This doc

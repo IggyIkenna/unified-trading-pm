@@ -54,6 +54,11 @@ locked_by:
 locked_since:
 ---
 
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Moved by a `cicd` escalation (agt-5c37f6) triaging the `check_archive_candidates` /
+> `check_terminal_status_archived` hard gate failures. No content was rewritten.
+
 # PM dependency-alignment gate blocks every code-carrying quickmerge (execution-service/MTDS tier exception)
 
 ## What I found

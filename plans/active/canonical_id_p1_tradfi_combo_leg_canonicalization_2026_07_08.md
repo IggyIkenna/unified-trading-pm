@@ -50,7 +50,7 @@ source:
   (InstrumentLeg/COMBO + the tradfi_symbology human-name registry) rather than a from-scratch design question."
 context_scope:
   [
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py,

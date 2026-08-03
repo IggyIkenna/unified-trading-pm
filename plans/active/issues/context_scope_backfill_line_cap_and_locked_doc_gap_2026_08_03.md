@@ -19,7 +19,7 @@ tags: [unified-trading-pm, context-scout, line-cap, locked-plan, plan-hygiene, d
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-08-03"
 parent_epic: agent_operating_framework_master
@@ -36,7 +36,7 @@ depends_on: []
 context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /cursor-configs/skills/context-scout/SKILL.md,
     scripts/plan-hygiene/check_line_caps.sh,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
@@ -221,7 +221,7 @@ plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md:
 plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py,

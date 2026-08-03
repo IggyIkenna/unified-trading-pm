@@ -17,19 +17,15 @@
 #
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
-max_na_docs: 362
-max_na_open_todos: 1336
+max_na_docs: 365
+max_na_open_todos: 1350
 last_updated: "2026-08-03"
-# 2026-08-03 justification (cicd escalation agt-ab3285, main_ci_red -> plan_health-shaped): raised
-# 360->362 docs (todos 1332->1336) after verifying both net-new docs since the prior 360 baseline are
-# genuinely NA-worthy, not bounded work defaulted to NA:
-#   - plans/active/issues/docs_reconcile_operator_decisions_2026_08_03.md: an explicit
-#     BLOCKED-OPERATOR-DECISION park (adversarial verification split on an `authoritative_for`
-#     authority call the skill's own contract never auto-decides).
-#   - plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md: carries a real
-#     `[OPERATOR]` P2 todo (a stalled backfill VM relaunch decision gated on an open, unresolved OOM
-#     root-cause investigation) sequenced ahead of its other todos.
-# A third NA doc that landed in the same window
-# (fix_frontmatter_clear_field_continuations_deletes_valid_trailing_comment_2026_08_03.md) was
-# RECLASSIFIED assigned_vm:NA -> planning instead of counted here -- its 2 todos were precisely-scoped
-# bounded work, not a genuine judgment call -- so it nets out of this raise entirely.
+
+# Raised 362->365 docs / 1336->1350 todos (cicd escalation agt-5c37f6, triaging the plan_health-shaped
+# quality-gates-v2 wall). Spot-checked all 6 net-new NA docs landed since the prior raise
+# (89631ea21, same day): context_scout_source_hunting_gap, defi_pyth_oracle_prices_seeded_feeds_
+# unfetchable, deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83,
+# tradfi_finding_e1_unsourced_operator_ruling_citation, qg_governor_glue_runner_ledger_coordination,
+# test_impact_fleet_wide_measurement_and_rollout -- all genuinely operator-gated/judgment work
+# ([OPERATOR]/[REVIEW] P1 rulings, staged-rollout promotion decisions), not bounded work mis-defaulted
+# to NA. No reclassification candidate found this pass.

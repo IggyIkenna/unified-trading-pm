@@ -334,6 +334,16 @@ Recommended next steps, in priority order:
 - [ ] 2. [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures`
       / `entity=fixture_stats` — a small, tractable per-league fan-out (reuse `migrate_sports_per_league.py`'s
       per-fixture-league-join logic), not a delete. Re-run the sweep after to confirm these flip to `A_canonical`.
+- [ ] 6. [DATA] P3. **Migrated from `/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`
+      todo 5 on archival (2026-08-03).** Root-cause and retire whatever wrote 764
+      `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
+      tree, not canonical `sports_reference/by_date/`) around 2026-06-24. Low urgency (byte-identical duplicates, no
+      correctness impact, mtimes cluster at a single past date so it does not look like an active ongoing writer), but
+      it's an undocumented migration-script side-effect worth tracing to its source script and either fixing (write to
+      the correct canonical path) or deleting. Note: the 764 pre-floor cells this duplicate population was originally
+      measured against were wiped 2026-08-03 (`sports_reference_v2_1492_row_canonical_copy_2026_08_03.md` todo 2) —
+      confirm whether the writer is still active for POST-floor days before tracing it as a live bug vs. historical-only
+      cleanup.
 - [x] ✅ 3. [CODE] P2. **Repoint or retire the two flat-legacy readers — DONE (instrumented, not removed)** 2026-07-25
       (slot 7, data_engineering). Removal was NOT the safe choice: ~478 of the 28,100 post-floor rows have zero
       canonical twin at any path variant and rely on these readers as their sole surviving data source — removing either

@@ -40,7 +40,7 @@ related:
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-08
@@ -71,7 +71,7 @@ context_scope:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
   ]
 ---

@@ -63,7 +63,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
   ]
 created: 2026-07-30
@@ -85,7 +85,7 @@ source: live-fix-worker (dispatched for market-tick-data-service live CeFi captu
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/okx_ws.py,

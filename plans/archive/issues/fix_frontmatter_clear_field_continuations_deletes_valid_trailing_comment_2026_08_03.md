@@ -20,7 +20,7 @@ summary: >-
   2026-08-02 operator ruling had just corrected. Caught only because this session happened to `git diff` before
   committing an unrelated auto-fixer side-effect rather than blindly staging it — a normal `--files`-scoped agent run
   that doesn't diff an incidentally-touched file would have shipped the revert silently.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -58,6 +58,12 @@ context_scope:
     /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Both todos done: `is_field_empty()` fixed to recognize a preserved continuation as a
+> deliberate value, extended tests, `quality-gates.sh` green. Moved by a `cicd` escalation (agt-5c37f6) triaging the
+> `check_archive_candidates` hard gate failure. No content was rewritten.
 
 # fix_frontmatter.py deletes a valid value when it's followed by a multi-line trailing comment
 

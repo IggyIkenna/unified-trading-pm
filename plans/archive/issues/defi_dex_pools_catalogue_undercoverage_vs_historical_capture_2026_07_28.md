@@ -8,7 +8,7 @@ summary:
   snapshot, not a full historical discovery mechanism. Makes
   /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 5's literal "zero unattributed
   leaves remain" done-when unsafe to pursue (would require deleting content with no verified replacement).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -44,6 +44,12 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 4 todos done (catalogue expanded 71,545 → 79,045 rows across all EVM + Solana DEX
+> protocols including the KAMINO split-off). Moved by a `cicd` escalation (agt-5c37f6) triaging the
+> `check_archive_candidates` hard gate failure. No content was rewritten.
 
 # DeFi dex_pools instruments-service catalogue drastically under-covers historically-captured pools
 

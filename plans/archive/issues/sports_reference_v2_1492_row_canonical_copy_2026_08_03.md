@@ -53,6 +53,13 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Todo 5 (root-cause the `pipeline_mode`-tagged duplicate writer) migrated to
+> `/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 per the todos-not-prose rule. Moved by a
+> `cicd` escalation (agt-5c37f6) triaging the `check_terminal_status_archived` hard gate failure. No content was
+> rewritten.
+
 # Copy the 1,492 sole-surviving-copy sports_reference_v2/by_date/ rows to canonical storage
 
 ## Why this doc exists
@@ -88,12 +95,13 @@ pending exactly this migration.
       764-row sole-surviving-copy carve-out that blocked them is resolved (wiped, not orphaned), so both revert toward
       self-justified. Full cull of the REMAINING 16 post-floor day dirs still needs its own reader-check first (not
       executed here — different, broader scope than this doc's 764-cell carve-out) — see those docs' updated todo text.
-- [ ] [DATA] P3. Root-cause and retire whatever wrote the 764 `pipeline_mode=batch_api_football`-tagged duplicate copies
-      INTO `sports_reference_v2/by_date/` (still the legacy tree, not canonical `sports_reference/by_date/`) around
-      2026-06-24 — see Progress Log finding below. Low urgency (byte-identical duplicates, no correctness impact, all
-      mtimes cluster at a single past date so it does not look like an active ongoing writer), but it's an undocumented
-      migration-script side-effect worth tracing to its source script and either fixing (write to the correct canonical
-      path) or deleting.
+- [x] ✅ [DATA] P3. **Migrated to `/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 on archival
+      (2026-08-03)**, per this workspace's todos-not-prose rule. Root-cause and retire whatever wrote the 764
+      `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
+      tree, not canonical `sports_reference/by_date/`) around 2026-06-24 — see Progress Log finding below. Low urgency
+      (byte-identical duplicates, no correctness impact, all mtimes cluster at a single past date so it does not look
+      like an active ongoing writer), but it's an undocumented migration-script side-effect worth tracing to its source
+      script and either fixing (write to the correct canonical path) or deleting.
 
 ## Progress Log
 

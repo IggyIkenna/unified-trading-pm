@@ -27,7 +27,7 @@ tags: [prediction, ag-closeout-audit, dead-code, adapter-dead-code-and-fallback-
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
+    /plans/archive/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
     /plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
     /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
