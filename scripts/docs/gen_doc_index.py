@@ -21,7 +21,10 @@ right". Reuses docspec for frontmatter parsing + doc_type detection + exemptions
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 import docspec
@@ -141,6 +144,22 @@ def build_index(pm_root: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _atomic_write(path: Path, content: str) -> None:
+    """Write `content` to `path` via temp-file + `os.replace` (same-directory rename is atomic
+    on POSIX). Multiple slots can call `--stale-check` on the SAME per-clone index concurrently
+    (the on-demand wrapper + the 5-min FF-pull cron both target it); this guarantees any reader
+    always sees a fully-old or fully-new file, never a truncated/interleaved one mid-write."""
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(content)
+        os.replace(tmp_name, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_name)
+        raise
+
+
 def _pm_root() -> Path:
     return docspec._pm_root()
 
@@ -164,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.stale_check and out.exists() and out.read_text() == content:
         print(f"doc-index fresh: {out}")
         return 0
-    out.write_text(content)
+    _atomic_write(out, content)
     n = content.count("\n- [")
     print(f"doc-index regenerated: {out} ({n} docs)")
     return 0
