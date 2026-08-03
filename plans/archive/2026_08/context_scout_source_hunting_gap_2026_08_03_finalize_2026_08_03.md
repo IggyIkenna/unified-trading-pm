@@ -8,7 +8,7 @@ summary: >-
   ship (citing each landing commit), then archives it via the standard 6-step ritual once fully closed. Authored
   2026-08-03 as part of the na-eligibility-audit ao-tranche Phase 1 reclassification pass, per task_template.md's
   finalize-plan-coverage rule (every assigned_vm:planning plan needs a companion gated finalize plan).
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -50,6 +50,13 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-03.** Only todo done: source doc ([[context_scout_source_hunting_gap_2026_08_03]]) reconciled +
+> archived to `plans/archive/issues/` (unified-trading-pm@f55f78f4e, @59e83e2b7, @35c72a7a9). This finalize plan itself
+> now has 0 open todos and no lock, so it archives in the same session per plan-completion-and-archival-discipline's
+> "archive immediately" rule — its own checkbox-flip commit (`35c72a7a9`) and this `git mv` are kept separate per
+> RULES.md's never-combine rule. No new durable contract from this finalize plan itself — the codex-alignment work is
+> recorded on the source doc's own archived banner.
 
 # context_scout_source_hunting_gap_2026_08_03 — finalize
 

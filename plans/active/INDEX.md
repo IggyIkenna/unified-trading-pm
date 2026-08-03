@@ -825,7 +825,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (12)
+### ao (11)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -855,10 +855,6 @@ by hand._
   — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
   control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
   context/cost/throughput/planning-quality…
-- [`context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03`](./context_scout_source_hunting_gap_2026_08_03_finalize_2026_08_03.md)
-  — Gated closeout for context_scout_source_hunting_gap_2026_08_03.md -- machine-held via depends_on + gate_on_depends:
-  true until all of that doc's todos are done. Reconciles the source doc's own checkboxes once its AO-dispatched todos
-  ship…
 - [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
@@ -871,12 +867,16 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (13)
+### ci (14)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
   archived (65/67 todos done, plan-line-cap remediation 2026-07-24): (1) the CI-runner-blocked full
   `generate-unified-openapi.sh`…
+- [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
+  The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
+  Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
+  runner…
 - [`ci_satellite_ao_dispatch_batch1_2026_07_26`](./ci_satellite_ao_dispatch_batch1_2026_07_26.md) — First AO-dispatch
   batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-26) after
   `/plan-reconcile ci` had just cleaned the same corpus. Phase 0 found the tranche has NO dispatch vehicle at all —…
@@ -917,8 +917,12 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (16)
+### infrastructure (17)
 
+- [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
+  The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
+  Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
+  runner…
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
   8k).
