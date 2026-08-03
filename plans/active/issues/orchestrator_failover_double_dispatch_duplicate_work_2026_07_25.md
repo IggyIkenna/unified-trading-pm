@@ -204,6 +204,18 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   a backend look at whether @7911083's gate covers concurrent-claim, or whether that's an uncovered delta.
 - Resolution of THIS instance is a WORKER dedup (pick one commit, verify it meets the perp-funding done-definition, ship
   it, drop the other); main cannot push code, so it's flagged here rather than resolved by main.
+- **RESOLVED — race self-resolved earliest-wins, no duplicate landed** (review msg #3602 + main agt-1756f6 verify,
+  2026-08-03 ~22:10Z): there was actually a THIRD, EARLIER sibling — slot-10 `fd9efc85` (`17:30:57Z`, same
+  `feat(perp-funding): add observed cadence-drift tracker`) — and IT is the one that LANDED (verified ancestor of
+  origin/live-defi-rollout, 422L script + 371L test, single-walk + CAS + honest-skips). The two later dupes here
+  (slot-12 `e93d54ac` ~18:12Z, slot-9 `0c5a472d` ~19:02Z) came AFTER and never became ancestors (confirmed not-on-LDR).
+  So the concurrent-build race did occur (3 slots, not 2), but the ship-side gate held: **earliest-wins, exactly one
+  landed, zero duplicate work reached origin.** This partially closes the HYPOTHESIS above — the
+  claim-time/concurrent-build race is real (worth the backend look at whether @7911083 covers concurrent-claim), but its
+  BLAST RADIUS on this occurrence was contained to wasted worker cycles on the two losing slots, not a duplicate
+  landing. Loose end from this incident was a stale wrong-SHA citation in
+  `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (cited `840c816d` instead of the winner
+  `fd9efc85`) — corrected 2026-08-03 (unified-trading-pm@8c75172e5).
 
 ## Progress Log
 
