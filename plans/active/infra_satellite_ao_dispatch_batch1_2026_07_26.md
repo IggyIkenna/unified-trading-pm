@@ -628,17 +628,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       of the dashboard is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
-- [ ] [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** The FF-pull cron
-      already regenerates `DOC_INDEX.generated.md` across every PM clone with `gen_doc_index.py --stale-check`
-      (`pm@b4d75366d`, fleet-wide 2026-07-04), but that leaves an inter-tick gap: an agent grepping the index within a
-      5-minute window of a doc change reads a stale map. Ship a thin wrapper an agent invokes first that runs the
-      existing `--stale-check` and regenerates only if stale (regen is ~1.4s), so the "grep the L0 index FIRST" rule
-      never routes off a stale index. Must be safe to call concurrently from multiple slots (the generator is already
-      deterministic and per-host, so guard against two simultaneous regens clobbering each other mid-write). **Done
-      when**: the wrapper exists, is documented in the retrieval SSOT
-      (`/codex/11-project-management/doc-frontmatter-schema.md` § 1 or the CLAUDE.md § "Doc retrieval" one-liner), and a
-      test proves concurrent invocation cannot leave a truncated index on disk. Repo: unified-trading-pm. Source:
-      `l0_doc_index_generator_2026_06_24.md`.
+- [x] ✅ [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** — DONE
+      2026-08-03 (slot-6, infra), `unified-trading-pm@54d7779a4`. Added `scripts/docs/refresh-doc-index.sh`: a thin
+      wrapper that resolves the calling clone's own generator + venv and runs `gen_doc_index.py --stale-check`
+      (regenerates only on content change, ~1.4s; no-op when fresh), closing the FF-cron's inter-tick staleness window
+      for the "grep the L0 index FIRST" rule. Made the generator's write atomic (`gen_doc_index.py::_atomic_write_text`
+      — temp sibling + fsync + `os.replace`) so the cron and this wrapper can regenerate the same per-clone file
+      concurrently without ever leaving a truncated index; concurrency test
+      `test_atomic_write_never_leaves_truncated_index_under_concurrency` (8 writers + a reader) proves 0 partial reads.
+      CLAUDE.md § Doc-retrieval one-liner now points at the wrapper. Shipped via the dirty-deps direct-push carve-out
+      (quickmerge blocked by the unrelated stalled aiohttp-CVE fan-out, tracked in
+      `aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03.md`). Source: `l0_doc_index_generator_2026_06_24.md`.
 
 - [x] ✅ [TEST] P3. **DONE 2026-07-31 (slot-13) — NOT REPRODUCIBLE, closing.** Re-ran the reproduction recipe against
       today's dependency universe: `uv lock --upgrade` (full fleet-wide upgrade, not one-by-one — deliberately broader
