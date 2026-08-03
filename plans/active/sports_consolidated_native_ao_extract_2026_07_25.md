@@ -483,22 +483,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                                                                          from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                                                                          404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                                                                          of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                                                                          correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                                                                          compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                                                                          count > 0) rather than a blanket `empty_confirmed`.
+                                                                                                                                              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                                                                                                              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                                                                                                              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                                                                                                              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                                                                                                              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                                                                                                              count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                                                                          **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                                                                          the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                                                                          never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                                                                          report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                                                                          defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                                                                          instance's result was independently verified correct, not corrupted by it): filed
-                                                                                                                                          `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                                                                          todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                                                                          day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                                                                                                              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                                                                                                              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                                                                                                              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                                                                                                              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                                                                                                              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                                                                                                              instance's result was independently verified correct, not corrupted by it): filed
+                                                                                                                                              `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                                                                                                              todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                                                                                                              day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -922,7 +922,7 @@ LADBROKES_UK/SPORT888 also carry 4 derived-candle data_types (arbitrage_opportun
 odds_movement/odds_snapshot, instrument_type=MATCH_ODDS) totaling 2,580 shards/~547,725 manifest rows combined, living
 under market-data-processing-service's `processed_candles/by_date/...` prefix — a structurally different GCS root the
 raw-tick tool cannot reach (confirmed via direct path sampling: `raw_tick_data/` contains ONLY the raw-tick shape for
-these venues). Filed `/plans/active/issues/sports_venue_restamp_derived_candle_gap_2026_07_27.md`
+these venues). Filed `/plans/archive/2026_08/sports_venue_restamp_derived_candle_gap_2026_07_27.md`
 (`assigned_vm: planning`, 2 AO-eligible todos) rather than building this inline, per the todo's own instruction —
 shipped `unified-trading-pm@1bcebee36`.
 
