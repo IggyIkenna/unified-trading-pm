@@ -360,13 +360,22 @@ concurrent workers do not collide on this file.
       single-repo/per-tick). Added `scripts/quality-gates-base/tests/test-ldr-promote-standalone-arm-failed-tally.sh`
       (structural + a functional extraction of a real if/else arm-site block evaluated against a stubbed `gh`, 8/8
       pass). Full `quality-gates.sh` green. — unified-trading-pm@5047141d0
-- [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
-      slowness.** The treadmill is currently only observable as a promotion-lag alert, which reads as latency. Add a
-      regression test / monitor that fires on N consecutive `SIT GATE BLOCK <repo>` verdicts for the same repo.
-      **Constraint**: implement as a NEW detector file — do **not** edit `ldr-to-main-promote-fleet.yml` (todo 12 owns a
-      comment there, and this doc's other promote-fleet todo is gated on an unmade direction ruling, `## Deferred` D12).
-      **Done when**: the detector fires on a synthetic N-tick block and stays silent on a block→revalidate→pass cycle.
-      Source: `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
+- [x] ✅ [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
+      slowness.** Added `scripts/cicd/sit_gate_stuck_detector.py` — a standalone detector (does NOT edit
+      `ldr-to-main-promote-fleet.yml`) that fetches the workflow's recent run LOGS via `gh run view --log` (the run's
+      own `conclusion` stays `success` on a SIT-gate block, so run-level status can't distinguish it — only the log text
+      can), extracts every `SIT GATE BLOCK <repo>: ...` line per tick, and pages once the SAME repo has been blocked on
+      the `--threshold` (default 3) most-recent CONSECUTIVE ticks — always counted from the newest tick backward, so a
+      block→revalidate→PASS cycle self-silences the moment the newest tick is clean, regardless of the prior streak
+      length. Wired a new `.github/workflows/sit-gate-stuck-detector.yml` (every 30 min, mirrors
+      `promote-fleet-startup-failure-monitor.yml`'s shape) posting via the `notify-slack.yml` carrier with its own
+      `dedup_key: sit-gate-stuck` / `cooldown_min: 60` (distinct from promotion-lag's / startup-failure's, no shared
+      cooldown). **Done when, verified**: `tests/unit/test_sit_gate_stuck_detector.py` (22/22 pass) proves both
+      acceptance cases directly on synthetic tick histories — `test_stuck_repos_fires_on_exact_threshold_streak` (fires
+      on a synthetic 3-tick block) and `test_stuck_repos_silent_on_block_revalidate_pass_cycle` (silent once a
+      block→revalidate→PASS cycle completes), plus insufficient-history / multi-repo-independent-streak /
+      report-formatting coverage. Full `quality-gates.sh` green. — unified-trading-pm@020b50dc8 Source:
+      `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P3).
 - [x] ✅ [INFRA] P2. **Apply the shipped sha-tag-guard to deployment-api's two unguarded secondary cloudbuild configs.**
       Applied the identical first-push-wins guard from `cloudbuild.yaml` to both `cloudbuild-tier3.yaml` and
       `cloudbuild-dashboard.yaml`: a `sha-tag-guard` step writing `/workspace/.sha_tag_preexists`, a conditional push
