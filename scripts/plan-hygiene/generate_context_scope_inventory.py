@@ -78,8 +78,9 @@ def _iter_docs() -> list[Path]:
 _REF_ONLY_FIELDS = ("context_scope:", "related:", "supersedes:", "superseded_by:", "depends_on:")
 # Bounded walk-back depth. Deliberately small: measured 2026-08-03, 61% of docs on this fallback
 # path resolve on the FIRST historical commit checked; a deep cap buys little extra accuracy for a
-# real per-commit cost (each commit needs its OWN diff + its OWN full-file fetch -- see why in
-# _commit_touches_only_ref_fields's docstring). Never returns a date OLDER than the truth, only
+# real per-commit cost (each commit needs its own parent's file content fetched AND its own file
+# content fetched -- see _commit_touches_only_ref_fields's docstring). Never returns a date OLDER
+# than the truth, only
 # ever fails to look far enough back on a doc with an unusually long run of pure-reference commits
 # -- a safe direction to fail in (worst case: a few docs stay STALE that a deeper walk would have
 # cleared, never the reverse).
@@ -87,59 +88,62 @@ _MAX_HISTORY_WALK = 5
 
 
 def _commit_touches_only_ref_fields(sha: str, path: Path) -> bool:
-    """True if `sha`'s diff to `path` is confined to the flow-list bodies of _REF_ONLY_FIELDS.
+    """True if `sha`'s change to `path` leaves the body and every non-ref frontmatter field
+    byte-identical to the parent commit -- i.e. only the _REF_ONLY_FIELDS values differ.
 
-    Needs the file's content AT THIS COMMIT (not the current HEAD content) to locate those
-    fields' line ranges -- an earlier version reused the current file's line positions as an
-    approximation and it was wrong in practice (frontmatter shifts between commits, e.g. a field
-    added/removed upstream of context_scope moves everything below it), producing a WORSE STALE
-    count than not fixing this at all. Correctness over speed: this is 2 subprocess calls per
-    commit walked, bounded by _MAX_HISTORY_WALK.
+    Parses both the parent's and this commit's file content via the same PyYAML-backed
+    docspec parser the rest of the corpus tooling uses, then diffs the STRUCTURED frontmatter
+    dict + body string -- rather than hand-scanning the diff's hunk line ranges against a
+    string-matched bracket span. That line-range heuristic (kept in git history if needed)
+    mis-measured a single-line field's span: `depends_on: []` closes its bracket inline, so
+    the scan for "the next bare ']' line" kept hunting PAST it looking for a closing bracket
+    that was never there for depends_on -- and instead landed on an unrelated LATER field's
+    closing bracket (e.g. context_scope's, several fields down), silently absorbing every
+    field in between into depends_on's "block". Confirmed on a real corpus commit
+    (17b53df1e3 against ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md):
+    a genuinely new field, `archive_exempt: true`, landed between `resolved_by:`/`locked_by:`
+    inside that erroneous span and was misclassified as ref-only-confined -- a false
+    UP_TO_DATE risk, since walking back past a commit that actually changed real frontmatter
+    content means `_last_touched` can return an earlier date than the truth. A structured
+    old-vs-new comparison has no line-position component to get wrong. Still 2 subprocess
+    calls per commit walked (parent content + this commit's content), same cost as before.
     """
-    diff = subprocess.run(
-        ["git", "show", sha, "--unified=0", "--", str(path)],
+    parent = subprocess.run(
+        ["git", "show", f"{sha}^:{path.relative_to(PM).as_posix()}"],
         cwd=PM,
         capture_output=True,
         text=True,
         timeout=10,
         check=False,
-    ).stdout
-    hunk_headers = re.findall(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", diff, re.MULTILINE)
-    if not hunk_headers:
-        return False
+    )
+    if parent.returncode != 0:
+        return False  # no parent (doc created in this commit) -- always real content
 
-    full_new = subprocess.run(
+    new_text = subprocess.run(
         ["git", "show", f"{sha}:{path.relative_to(PM).as_posix()}"],
         cwd=PM,
         capture_output=True,
         text=True,
         timeout=10,
         check=False,
-    ).stdout.splitlines()
+    ).stdout
 
-    blocks: list[tuple[int, int]] = []
-    for idx, line in enumerate(full_new):
-        stripped = line.strip()
-        if any(stripped.startswith(f) for f in _REF_ONLY_FIELDS):
-            start = idx + 1
-            end = start
-            for j in range(idx + 1, min(idx + 60, len(full_new))):
-                if full_new[j].strip() in ("]", "],"):
-                    end = j + 1
-                    break
-            blocks.append((start, end))
-    if not blocks:
+    try:
+        fm_old, body_old = ds.parse_frontmatter(parent.stdout)
+        fm_new, body_new = ds.parse_frontmatter(new_text)
+    except yaml.YAMLError:
+        return False
+    if fm_old is None or fm_new is None:
+        return False
+    if body_old != body_new:
         return False
 
-    def in_any_block(line_no: int) -> bool:
-        return any(s <= line_no <= e for s, e in blocks)
-
-    for new_start_s, new_count_s in hunk_headers:
-        new_start = int(new_start_s)
-        new_count = int(new_count_s) if new_count_s else 1
-        for offset in range(max(new_count, 1)):
-            if not in_any_block(new_start + offset):
-                return False
+    ref_keys = {f.rstrip(":") for f in _REF_ONLY_FIELDS}
+    for key in set(fm_old) | set(fm_new):
+        if key in ref_keys:
+            continue
+        if fm_old.get(key) != fm_new.get(key):
+            return False
     return True
 
 

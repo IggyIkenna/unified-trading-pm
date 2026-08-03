@@ -162,12 +162,28 @@ to matter most.
       entries) is correctly NOT flagged. `ruff check`/`ruff format --check`/`basedpyright` all clean. Wired into
       `cursor-configs/skills/context-scout/SKILL.md` Phase 3 as a new "Post-hoc source-hunting lint" subsection so
       future scheduled/interactive runs fold its output into the report.
-- [ ] [SCRIPT] P3. Verify whether `generate_context_scope_inventory.py`'s STALE/UP_TO_DATE fallback (git last-commit
+- [x] ✅ [SCRIPT] P3. Verify whether `generate_context_scope_inventory.py`'s STALE/UP_TO_DATE fallback (git last-commit
       date, when frontmatter `last_updated` is absent) can produce a false UP_TO_DATE when a content-irrelevant
       mechanical commit (e.g. a corpus-wide hygiene/reference-path-fix sweep) bumps a doc's git last-commit date past
       its last real context-scout marker. If confirmed, the fix is comparing against the latest commit that touched doc
       BODY content (via `git log -p` diff classification, or excluding known hygiene-sweep commit patterns) rather than
-      any commit touching the file at all.
+      any commit touching the file at all. — CONFIRMED via an adversarial cross-check (parse-based ground truth: old vs
+      new frontmatter dict + body compared directly, over all 214 fallback-eligible docs' bounded 5-commit walk, 1006
+      (doc, commit) pairs): the prior `_commit_touches_only_ref_fields` line/bracket-scan heuristic had 5 real
+      mismatches vs ground truth, 2 in the dangerous direction (misclassified as ref-only when real content changed —
+      exactly the false-UP_TO_DATE risk this todo asked about). Root cause: a single-line ref-field with its bracket
+      closed inline (e.g. `depends_on: []`) made the scanner hunt forward for "the next bare `]` line" past its own
+      (nonexistent) closing bracket, landing on an UNRELATED later field's closing bracket several fields down and
+      silently absorbing everything in between into the "block". Live repro: commit `17b53df1e3` (the exact commit
+      already flagged as suspicious in this doc's "What I found" section) added a genuinely new field,
+      `archive_exempt: true`, between `resolved_by:`/`locked_by:` on
+      `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` — that line fell inside the
+      over-extended span rooted at `depends_on: []` and was misclassified as ref-only-confined. Fix shipped: replaced
+      the line/bracket-scan with a structured old-vs-new comparison (parse both versions' frontmatter + body via the
+      existing `docspec.parse_frontmatter` PyYAML loader; ref-only iff body is byte-identical AND every non-ref
+      frontmatter key is unchanged) — same 2-subprocess-call cost per commit walked, no line-position heuristic left to
+      get wrong. Re-ran the adversarial cross-check against the fixed code: 0 mismatches across all 1007 pairs / 214
+      docs. — unified-trading-pm (this commit).
 
 ## Progress Log
 
@@ -192,3 +208,12 @@ to matter most.
   62.1% excluding legitimate carve-outs / 63.5% raw across 447 docs scouted since 2026-08-01, vs. the 2026-07-30 51%
   baseline — a genuine improvement, not flat; full detail + the 25-doc sample in item 2's own checkbox above). Items 3
   and 4 (the deterministic post-hoc lint, and the STALE/UP_TO_DATE false-positive check) remain open.
+- **2026-08-03 (slot 10, docs_reconciler)**: closed item 4, the last open item — CONFIRMED the false-UP_TO_DATE risk
+  (not a false alarm): the git-fallback's ref-only-commit heuristic had a real line/bracket-scan bug that could
+  misclassify a commit touching real frontmatter content as ref-only-confined, letting `_last_touched` return an
+  earlier-than-true date. Found 2 live occurrences in the corpus (1006 pairs checked), one of them the EXACT commit
+  (`17b53df1e3`) this doc's own "What I found" section had already flagged as suspicious — so the suspicion recorded
+  there was correct. Replaced the heuristic with a structured parse-based old-vs-new comparison (see the checkbox above
+  for the full root-cause + fix writeup); re-verified 0 mismatches across the full 214-doc / 1007-pair adversarial
+  cross-check post-fix. This issue doc's 4 todos are now all closed — eligible for archival next hygiene sweep (not
+  archived in this commit, per the never-combine-flip-with-archival rule).
