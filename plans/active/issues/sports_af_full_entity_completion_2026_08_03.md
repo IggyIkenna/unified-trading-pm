@@ -191,3 +191,23 @@ a genuinely sequential, multi-day-to-multi-week campaign, not something to paral
 (P1 before P2) reflects: entities already declared as "widened this session" (FIXTURE_STATS/LINEUPS/ PLAYER_STATS)
 before the newly-discovered-but-not-yet-widened-in-conversation entities (INJURIES/STANDINGS/TEAMS/ LEAGUES), though all
 are genuinely in scope for the operator's "no exceptions" directive.
+
+## Progress Log
+
+- **2026-08-03 (main agt-1756f6)** — Blocked-queue Q **BLK-169e1207** (slot 12, task
+  `sports_af_full_entity_completion-003` = "Launch FIXTURE_LINEUPS all-leagues backfill") answered **A: do NOT launch
+  now**. The worker correctly caught a **premature-dispatch**: FIXTURE_LINEUPS is gated on "after FIXTURE_STATS
+  converges" (todo above), but FIXTURE_STATS (`af-backfill-20260803-233053`) had only started ~10 min earlier (69,171
+  shards, multi-day) and was the sole RUNNING AF VM. Launching FIXTURE_LINEUPS then would have run a 2nd concurrent AF
+  VM against the **shared singleton lock / one API-Football daily quota** (the Sequencing note above), violating the
+  lock. Instructed `skip-current-task` (returns to queue).
+- **Recurring risk flagged (durable fix needed, not yet done)**: the launch todos here are serialized only by
+  `sequential:true`, which encodes **dispatch order, NOT the real convergence gate**. So each launch todo redispatches
+  the instant the prior one _completes_ (i.e. the prior VM _launches_ / its dispatch finishes), not when the prior
+  entity's backfill actually _converges_ (census == 0 needed) and frees the singleton lock. Any slot that next claims a
+  launch todo will hit the same trap. **Proper fix**: gate each launch todo on a real prerequisite keyed to the prior
+  entity's census-0 / lock-free state (a `depends_on` prerequisite the backend actually blocks on, or park the
+  downstream launch todos until an operator/worker confirms the prior AF VM finished), rather than relying on dispatch
+  ordering. Until then, any worker dispatched a `Launch <ENTITY> backfill` todo here MUST first verify no other
+  `af-backfill-*`/`af-audit-*` VM is RUNNING (singleton lock free) and that the immediately-prior entity's census shows
+  ~0 needed — if not, `skip-current-task` and it requeues (do NOT launch a 2nd concurrent AF VM).
