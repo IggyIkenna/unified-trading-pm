@@ -40,10 +40,18 @@
 #
 # Hosts without a working systemd --user instance (confirmed 2026-07-27: `systemd-run`
 # reports available but the scope launch itself silently fails on some hosts) fall back to
-# a per-process RLIMIT_AS hard cap via `ulimit -v` (bash builtin, no root required, enforced
-# by the kernel independent of cgroups) — NOT just an advisory log line. Only genuine
-# non-Linux hosts (macOS, where `ulimit -v` is accepted by bash but not enforced by the
-# kernel) fall all the way through to the advisory-only warning.
+# an RSS poll-and-kill loop (background `/proc/<pid>/status` VmRSS poll, `kill -KILL` on
+# breach) rather than a `ulimit -v` (RLIMIT_AS) hard cap. RLIMIT_AS was tried first
+# (2026-07-27) and DROPPED (2026-08-01,
+# plans/active/issues/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md):
+# RLIMIT_AS caps virtual address space, not resident memory, and pyarrow/grpc reserve large
+# virtual ranges (arena allocators, mmap pools) that count against `ulimit -v` even when not
+# physically resident — confirmed spurious failure (`ArrowMemoryError: malloc of size
+# 4423744 failed` under an 8G cap on a ~4.2MB allocation) on exactly the pyarrow-heavy
+# workload class this wrapper exists to protect. RSS polling was independently improvised
+# ad hoc in that same incident (5s interval, caught a 1.67GB→15.5GB-in-5s spike before host
+# impact) and is now the standing fallback mechanism. Only genuine non-Linux hosts (macOS,
+# where `/proc` doesn't exist) fall all the way through to the advisory-only warning.
 #
 # SSOT: codex/05-infrastructure/vm-launcher-runbook.md § heavy-compute-on-shared-host,
 # codex/06-coding-standards/quality-gates-memory-governance.md (the mechanism this reuses).
@@ -51,10 +59,17 @@ set -euo pipefail
 
 DEFAULT_MEM_CAP="4G"
 MEM_CAP="${ANALYSIS_MEM_CAP:-$DEFAULT_MEM_CAP}"
+# How often (seconds) the RSS-poll fallback samples /proc/<pid>/status. Tighter than the
+# 5s interval improvised in the 2026-08-01 incident (that interval still caught the spike
+# before host impact, but only because an operator was watching an ad-hoc safety net; the
+# unattended default here polls faster to reduce the overshoot window).
+DEFAULT_MEM_POLL_INTERVAL="2"
+MEM_POLL_INTERVAL="${ANALYSIS_MEM_POLL_INTERVAL:-$DEFAULT_MEM_POLL_INTERVAL}"
 
 # Convert a systemd-run-style size (e.g. "4G", "512M", "2048K", or a bare byte count) into
-# whole kilobytes for `ulimit -v` (which always takes KB). Prints nothing (empty stdout) on
-# an unrecognized format so the caller can skip the ulimit fallback rather than mis-cap.
+# whole kilobytes (used both for the cgroup path's own bookkeeping and the RSS-poll cap).
+# Prints nothing (empty stdout) on an unrecognized format so the caller can skip the
+# fallback rather than mis-cap.
 _mem_cap_to_kb() {
     local val="$1" num unit
     if [[ "$val" =~ ^([0-9]+)([KMGT]?)$ ]]; then
@@ -89,7 +104,54 @@ if [[ $# -eq 0 ]]; then
     exit 2
 fi
 
+# Sum VmRSS (KB) across a PID and all of its live descendants (a pyarrow/grpc workload can
+# fan out worker processes that individually stay small while the tree's total is what
+# actually threatens the host). Prints 0 for a PID whose /proc entry is already gone
+# (process exited between the caller's liveness check and this read) rather than erroring.
+_sum_tree_rss_kb() {
+    local root_pid="$1" total=0 pid child
+    local -a queue=("$root_pid")
+    local i=0
+    while [[ $i -lt ${#queue[@]} ]]; do
+        pid="${queue[$i]}"
+        i=$((i + 1))
+        if [[ -r "/proc/$pid/status" ]]; then
+            local rss
+            rss="$(awk '/^VmRSS:/{print $2}' "/proc/$pid/status" 2>/dev/null)"
+            [[ -n "$rss" ]] && total=$((total + rss))
+        fi
+        while IFS= read -r child; do
+            [[ -n "$child" ]] && queue+=("$child")
+        done < <(pgrep -P "$pid" 2>/dev/null)
+    done
+    echo "$total"
+}
+
+# Background poll-and-kill loop: samples the process tree's summed RSS every
+# MEM_POLL_INTERVAL seconds and SIGKILLs the whole tree the first time it exceeds cap_kb.
+# This is the RSS-based fallback used when systemd-run/cgroups are unavailable — it
+# replaced a `ulimit -v` (RLIMIT_AS) cap, which spuriously fails pyarrow-heavy workloads
+# well below the intended cap (virtual address space != resident memory; see the header
+# comment). Runs as a detached background job; the caller kills it once the monitored
+# command exits on its own.
+_rss_poll_kill_loop() {
+    local watch_pid="$1" cap_kb="$2" interval="$3"
+    while kill -0 "$watch_pid" 2>/dev/null; do
+        sleep "$interval"
+        kill -0 "$watch_pid" 2>/dev/null || break
+        local rss_kb
+        rss_kb="$(_sum_tree_rss_kb "$watch_pid")"
+        if [[ "$rss_kb" -gt "$cap_kb" ]]; then
+            echo "⚠️  [run-bounded-analysis] RSS ${rss_kb}KB exceeded cap ${cap_kb}KB — killing process tree (PID $watch_pid)" >&2
+            kill -KILL "$watch_pid" 2>/dev/null || :
+            pkill -KILL -P "$watch_pid" 2>/dev/null || :
+            break
+        fi
+    done
+}
+
 MEM_WRAP=()
+RSS_POLL_CAP_KB=""
 if [[ "$MEM_CAP" != "0" ]]; then
     if command -v systemd-run >/dev/null 2>&1 \
         && systemd-run --user --scope -p MemoryMax=100M --quiet -- true >/dev/null 2>&1; then
@@ -101,19 +163,38 @@ if [[ "$MEM_CAP" != "0" ]]; then
     else
         echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS / no user systemd instance)" >&2
         MEM_CAP_KB="$(_mem_cap_to_kb "$MEM_CAP")"
-        if [[ -n "$MEM_CAP_KB" ]] && (ulimit -v "$MEM_CAP_KB") >/dev/null 2>&1; then
-            # Hard fallback: RLIMIT_AS via `ulimit -v`, enforced by the kernel for this
-            # process tree regardless of cgroup/systemd availability. A real Linux host
-            # without systemd-run still gets genuine enforcement, not just a log line.
-            MEM_WRAP=(bash -c 'ulimit -v "$1"; shift; exec "$@"' bash "$MEM_CAP_KB")
-            echo "    → falling back to a hard RLIMIT_AS cap: ulimit -v ${MEM_CAP_KB}K (~${MEM_CAP})" >&2
+        if [[ -n "$MEM_CAP_KB" ]] && [[ -d /proc/self ]]; then
+            # RSS-poll fallback: enforced by a background monitor reading
+            # /proc/<pid>/status, not the kernel — a fast-growing allocation can overshoot
+            # the cap between polls (bounded by MEM_POLL_INTERVAL), unlike a true kernel
+            # limit. That tradeoff is deliberate: `ulimit -v` (RLIMIT_AS) WAS a true kernel
+            # limit and it spuriously killed legitimate pyarrow reads well under cap, which
+            # is worse than a slightly-delayed-but-accurate kill. See header comment.
+            RSS_POLL_CAP_KB="$MEM_CAP_KB"
+            echo "    → falling back to an RSS-poll cap: ~${MEM_CAP} (${MEM_CAP_KB}K), sampled every ${MEM_POLL_INTERVAL}s" >&2
         else
-            # `ulimit -v` itself failed (e.g. macOS, where bash accepts the builtin but the
-            # kernel does not enforce it) — no enforcement mechanism is available at all.
-            echo "    → ulimit -v unsupported on this host too — running fully UNWRAPPED, advisory only" >&2
+            # /proc doesn't exist on this host (e.g. macOS) — no enforcement mechanism is
+            # available at all.
+            echo "    → /proc unavailable on this host too — running fully UNWRAPPED, advisory only" >&2
             echo "    → keep the analysis genuinely bounded (streamed/chunked read) rather than relying on a cap" >&2
         fi
     fi
+fi
+
+if [[ -n "$RSS_POLL_CAP_KB" ]]; then
+    # Can't `exec` here — the poller needs to keep running alongside the monitored command,
+    # so this process stays alive as the shepherd instead of being replaced by "$@".
+    "$@" &
+    CMD_PID=$!
+    _rss_poll_kill_loop "$CMD_PID" "$RSS_POLL_CAP_KB" "$MEM_POLL_INTERVAL" &
+    POLL_PID=$!
+    set +e
+    wait "$CMD_PID"
+    CMD_STATUS=$?
+    set -e
+    kill "$POLL_PID" 2>/dev/null || :
+    wait "$POLL_PID" 2>/dev/null || :
+    exit "$CMD_STATUS"
 fi
 
 exec "${MEM_WRAP[@]}" "$@"
