@@ -11,7 +11,7 @@ summary: >-
   reduced-flat shape. The fix MUST use the sink PREFIX mechanism to bake the ordered canonical keys, NOT the partition
   dict — the UTL sink sorts partition-dict keys ALPHABETICALLY, so adding keys to the dict produces the wrong order
   (asset_group first, day not first). The registry template is the SSOT and must be updated to the full-hive shape too.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi, defi, prediction]
 stage: [data]
@@ -64,10 +64,21 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "todo 8 (slot-3, 2026-08-03) — historical migration EXECUTED (todos 7c/7d), canonical-cutover-register.md §6b +
+  non-canonical-path-inventory.md row #16 updated with a dated post-migration probe. All 8 todos closed. Residual
+  (content_mismatch + sports/prediction unrecognized shapes) filed separately:
+  instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md"
 source: operator HARD RULE 2026-07-21 (every data-at-rest bucket uses the full canonical hive grammar)
 depends_on: []
 sequential: true
 ---
+
+> **🟢 ARCHIVED 2026-08-03** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. All 8 todos closed; the recognized flat-shape historical migration ran to completion (117,166
+> candidates: 84,320 copied-to-hive-and-purged, 32,846 content_mismatch correctly preserved, 0 failed). Genuine residual
+> work (content_mismatch resolution policy, sports's actual live-writer shape, prediction's second unrecognized shape)
+> is tracked in a NEW issue doc, not here:
+> `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`.
 
 # instrument_availability full-hive canonicalisation (2026-07-21)
 
@@ -208,17 +219,17 @@ shape, which is the one now actually stale).
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |---|---|---|
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | cefi | 53,419 | 0 |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | defi | 177,346 | 0 |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | tradfi | 50,700 | 0 |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | sports | 148,691 | 0 |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | prediction | 22,637 | 12,582 |
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | **TOTAL** | **452,793** | **12,582** |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |---|---|---|
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | cefi | 53,419 | 0 |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | defi | 177,346 | 0 |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | tradfi | 50,700 | 0 |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | sports | 148,691 | 0 |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | prediction | 22,637 | 12,582 |
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **TOTAL** | **452,793** | **12,582** |
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      in-session action. Sizing now available to scope todo 7c.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          in-session action. Sizing now available to scope todo 7c.
 
 - [x] 7c. ✅ [DATA] P2. **Copy-and-verify half — COMPLETE for the recognized-flat-shape population, real PROD infra,
       2026-08-03 (slot-8, building on an earlier slot-9 partial run same day).** Built + ran
@@ -229,29 +240,29 @@ shape, which is the one now actually stale).
       TWICE (idempotency reconfirmed: second run reports `copied: 0`, same content_mismatch count both times).
 
       **Important correction to this todo's own premise**: the 465,375 figure (7b's raw prefix-object COUNT) was NOT
-                      a shape classification — it included already-hive objects, and, critically, objects in shapes the tool doesn't
-                      even recognize. The REAL recognized-flat-shape candidate population across the 5 buckets is **117,166**
-                      (cefi 7,650 / defi 73,679 / tradfi 25,402 / prediction 4,105 / sports 6,330), of which:
+                          a shape classification — it included already-hive objects, and, critically, objects in shapes the tool doesn't
+                          even recognize. The REAL recognized-flat-shape candidate population across the 5 buckets is **117,166**
+                          (cefi 7,650 / defi 73,679 / tradfi 25,402 / prediction 4,105 / sports 6,330), of which:
 
-                      - **84,320 copied-or-verified-present** (safe, additive, real PROD writes: cefi 6,156 / defi 42,364 / tradfi
-                        25,365 / prediction 4,105 / sports 6,330 — prediction and sports are 100% clean, zero residual).
-                      - **32,846 content_mismatch** (cefi 1,494 / defi 31,315 / tradfi 37) — the hive target already exists with a
-                        DIFFERENT (crc32c, size) than the flat source; the tool correctly refuses to overwrite. Needs a human
-                        authoritative-source decision before these can resolve — tracked as todo 4 of the new issue doc below.
-                      - **0 failed.**
+                          - **84,320 copied-or-verified-present** (safe, additive, real PROD writes: cefi 6,156 / defi 42,364 / tradfi
+                            25,365 / prediction 4,105 / sports 6,330 — prediction and sports are 100% clean, zero residual).
+                          - **32,846 content_mismatch** (cefi 1,494 / defi 31,315 / tradfi 37) — the hive target already exists with a
+                            DIFFERENT (crc32c, size) than the flat source; the tool correctly refuses to overwrite. Needs a human
+                            authoritative-source decision before these can resolve — tracked as todo 4 of the new issue doc below.
+                          - **0 failed.**
 
-                      **New finding, NOT covered by this todo's original scope — filed separately**: sports's writer was NEVER
-                      actually fixed by `a9be6ce9` (still emitting a THIRD flat shape, `day=/league=/venue=/...`, as of TODAY
-                      2026-08-02) and prediction has a SECOND unrecognized shape
-                      (`canonical_question_group=/day=/venue=/...`, group-before-day) — combined **~198,340 objects** (sports
-                      172,595 + prediction 25,745) are invisible to this migration tool entirely and were NOT touched by this todo.
-                      Full writeup + 5 new todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution
-                      policy, doc correction):
-                      `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`.
+                          **New finding, NOT covered by this todo's original scope — filed separately**: sports's writer was NEVER
+                          actually fixed by `a9be6ce9` (still emitting a THIRD flat shape, `day=/league=/venue=/...`, as of TODAY
+                          2026-08-02) and prediction has a SECOND unrecognized shape
+                          (`canonical_question_group=/day=/venue=/...`, group-before-day) — combined **~198,340 objects** (sports
+                          172,595 + prediction 25,745) are invisible to this migration tool entirely and were NOT touched by this todo.
+                          Full writeup + 5 new todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution
+                          policy, doc correction):
+                          `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`.
 
-                      Evidence: `instruments-service@242b29ae` (tool) + `deployment-service@1c19e5e` (launcher wiring, both pre-existing
-                      this session) — real VM runs this session: `canonical-migration-{cefi,defi,tradfi,prediction,sports}-iah-2026080
-                      3-0708xx` through `-0724xx` (asia-northeast1-c), all self-deleted on completion, fleet confirmed clean after.
+                          Evidence: `instruments-service@242b29ae` (tool) + `deployment-service@1c19e5e` (launcher wiring, both pre-existing
+                          this session) — real VM runs this session: `canonical-migration-{cefi,defi,tradfi,prediction,sports}-iah-2026080
+                          3-0708xx` through `-0724xx` (asia-northeast1-c), all self-deleted on completion, fleet confirmed clean after.
 
 - [x] 7d. ✅ [DATA] P2. **Purge half — COMPLETE, real PROD infra, 2026-08-03 (slot-3).** Built
       `instruments-service/scripts/purge_flat_instrument_availability_hive_2026_08_03.py`
@@ -264,59 +275,62 @@ shape, which is the one now actually stale).
       (`deployment-service@b19c94b7`), one dedicated VM per asset_group, never in-session, per the heavy-I/O rule.
 
       **Same-run finding-T check**: every asset_group's fresh `gcs_bucket_soft_delete_retention_seconds()` call
-          returned exactly `604800s` (7 days) — all 5 buckets qualify, no separate operator sign-off needed, purge
-          proceeded per this todo's own pre-authorization.
+              returned exactly `604800s` (7 days) — all 5 buckets qualify, no separate operator sign-off needed, purge
+              proceeded per this todo's own pre-authorization.
 
-          **Real PROD delete results** (fresh per-object verify, dry-run-confirmed candidate counts matched 7c's figures
-          exactly before any delete):
+              **Real PROD delete results** (fresh per-object verify, dry-run-confirmed candidate counts matched 7c's figures
+              exactly before any delete):
 
-          | asset_group | flat candidates | deleted (safe, twin-verified) | skipped content_mismatch (preserved, untouched) | failed |
-          |---|---:|---:|---:|---:|
-          | cefi | 7,650 | 6,156 | 1,494 | 0 |
-          | defi | 73,679 | 42,364 | 31,315 | 0 |
-          | tradfi | 25,402 | 25,365 | 37 | 0 |
-          | sports | 6,330 | 6,330 | 0 | 0 |
-          | prediction | 4,105 | 4,105 | 0 | 0 |
-          | **TOTAL** | **117,166** | **84,320** | **32,846** | **0** |
+              | asset_group | flat candidates | deleted (safe, twin-verified) | skipped content_mismatch (preserved, untouched) | failed |
+              |---|---:|---:|---:|---:|
+              | cefi | 7,650 | 6,156 | 1,494 | 0 |
+              | defi | 73,679 | 42,364 | 31,315 | 0 |
+              | tradfi | 25,402 | 25,365 | 37 | 0 |
+              | sports | 6,330 | 6,330 | 0 | 0 |
+              | prediction | 4,105 | 4,105 | 0 | 0 |
+              | **TOTAL** | **117,166** | **84,320** | **32,846** | **0** |
 
-          Totals reconcile exactly with 7c's own figures: 84,320 deleted == 7c's "copied-or-verified-present" safe set;
-          32,846 preserved == the content_mismatch population tracked in
-          `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`
-          todo 4 (still pending the operator's authoritative-source decision — those flat originals are correctly left
-          alone, not purged). Sports's/prediction's unrecognized-shape populations (league=/canonical_question_group=,
-          ~198,340 objects, tracked in the same issue doc's todos 2-3) were never in scope for this tool and remain
-          untouched. `no_twin`/`source_vanished`/`race_lost` were 0 across every asset_group — no unexpected drift since
-          7c's run earlier the same day.
+              Totals reconcile exactly with 7c's own figures: 84,320 deleted == 7c's "copied-or-verified-present" safe set;
+              32,846 preserved == the content_mismatch population tracked in
+              `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`
+              todo 4 (still pending the operator's authoritative-source decision — those flat originals are correctly left
+              alone, not purged). Sports's/prediction's unrecognized-shape populations (league=/canonical_question_group=,
+              ~198,340 objects, tracked in the same issue doc's todos 2-3) were never in scope for this tool and remain
+              untouched. `no_twin`/`source_vanished`/`race_lost` were 0 across every asset_group — no unexpected drift since
+              7c's run earlier the same day.
 
-          **New IAM gap found + self-fixed** (RULES.md §5 self-service, not an `[OPERATOR]` escalation): the first full-mode
-          attempt on all 5 asset_groups failed identically —
-          `uts-prd-sa@central-element-323112.iam.gserviceaccount.com does not have storage.buckets.get access` — because
-          7c's copy tool only ever needed object-level `gcs_describe_object`/`gcs_copy_object` (covered by the existing
-          `roles/storage.objectAdmin`), while this purge tool's §3a retention check calls `gcs_bucket_soft_delete_retention_seconds()`,
-          which needs bucket-metadata read. Confirmed via `gcloud compute operations list` that this failed BEFORE any
-          per-object work (the retention check is the first GCS call in `main()`) — zero deletes attempted, safe to
-          retry cleanly. Self-granted `roles/storage.legacyBucketReader` (least-privilege bucket-scoped role covering
-          exactly `storage.buckets.get`, not a broader grant) on all 5 `instruments-store-{ag}-prd` buckets via the
-          `unified-trading-sa` self-service identity (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`),
-          then relaunched — all 5 succeeded on the retry.
+              **New IAM gap found + self-fixed** (RULES.md §5 self-service, not an `[OPERATOR]` escalation): the first full-mode
+              attempt on all 5 asset_groups failed identically —
+              `uts-prd-sa@central-element-323112.iam.gserviceaccount.com does not have storage.buckets.get access` — because
+              7c's copy tool only ever needed object-level `gcs_describe_object`/`gcs_copy_object` (covered by the existing
+              `roles/storage.objectAdmin`), while this purge tool's §3a retention check calls `gcs_bucket_soft_delete_retention_seconds()`,
+              which needs bucket-metadata read. Confirmed via `gcloud compute operations list` that this failed BEFORE any
+              per-object work (the retention check is the first GCS call in `main()`) — zero deletes attempted, safe to
+              retry cleanly. Self-granted `roles/storage.legacyBucketReader` (least-privilege bucket-scoped role covering
+              exactly `storage.buckets.get`, not a broader grant) on all 5 `instruments-store-{ag}-prd` buckets via the
+              `unified-trading-sa` self-service identity (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`),
+              then relaunched — all 5 succeeded on the retry.
 
-          Also hit 3 transient SPOT preemptions during the dry-run phase (cefi x2, prediction x1,
-          `compute.instances.preempted` confirmed via `gcloud compute operations list`) — pure bad luck, zero work lost
-          (dry-run does no GCS writes), relaunched each and all completed cleanly.
+              Also hit 3 transient SPOT preemptions during the dry-run phase (cefi x2, prediction x1,
+              `compute.instances.preempted` confirmed via `gcloud compute operations list`) — pure bad luck, zero work lost
+              (dry-run does no GCS writes), relaunched each and all completed cleanly.
 
-          Evidence: `instruments-service@06be51ec` (script+tests) + `deployment-service@b19c94b7` (launcher wiring, both
-          shipped this session) — real VM runs: `canonical-migration-{cefi,defi,tradfi,sports,prediction}-iah-purge-2026080
-          3-0816xx` through `-0817xx` (full mode, asia-northeast1-c), all self-deleted on completion, fleet confirmed
-          clean after.
+              Evidence: `instruments-service@06be51ec` (script+tests) + `deployment-service@b19c94b7` (launcher wiring, both
+              shipped this session) — real VM runs: `canonical-migration-{cefi,defi,tradfi,sports,prediction}-iah-purge-2026080
+              3-0816xx` through `-0817xx` (full mode, asia-northeast1-c), all self-deleted on completion, fleet confirmed
+              clean after.
 
-- [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
-      `/codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
-      EXECUTED with a dated post-migration probe. **Still deferred** (pairs with todo 7d — the purge half, now that 7c
-      is split — not 7a/7b: cutover date should be the historical-migration date, not the writer-ship date or the
-      proof/sizing date, per the register's own convention). **Dispatch-hygiene note (2026-07-27, slot-2)**: this todo
-      was dispatched to a worker before the migration had run (only `depends_on` scopes whole-plan ordering; there was
-      no per-todo gate between the last two remaining todos) — recording a "cutover date" ahead of the actual migration
-      would be fabricating the record, so the worker correctly declined rather than faking it. Added `sequential: true`
-      to this plan's frontmatter so `regen_backlog_from_plan.py`'s `_wire_sequential_prereqs` chains todo 8 behind the
-      migration by `plan_order` (harmless for the already-`[x]` todos 1-7b) — todo 8 will not re-dispatch until 7d is
-      marked done.
+- [x] 8. ✅ [REVIEW] P1. **DONE 2026-08-03 (slot-3).** Recorded the historical-migration cutover in
+      `/codex/02-data/canonical-cutover-register.md` §6b (`unified-trading-pm` this commit) — 117,166 recognized flat
+      `day=/venue=` candidates, 84,320 copied-to-hive-and-purged (`instruments-service@242b29ae`+`06be51ec`,
+      `deployment-service@1c19e5e`+`b19c94b7`), 32,846 content_mismatch correctly preserved pending an operator
+      decision, 0 failed. Flipped non-canonical-path-inventory row #16 to RETIRED (partial) with a dated 2026-08-03 live
+      `gcloud storage ls` post-migration probe (cefi `day=2020-06-15/` purged clean; `day=2019-03-30/` shows the
+      expected hive+preserved-flat content_mismatch pair). **Not marked fully EXECUTED**: sports's live writer was never
+      actually fixed (still emits an unrecognized THIRD flat shape) and 32,846 content_mismatch objects + prediction's
+      second unrecognized shape remain non-canonical — both docs cross-link the new residual issue doc
+      `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` rather than
+      overclaiming closure. **Dispatch-hygiene note (2026-07-27, slot-2)**: this todo was originally dispatched before
+      the migration had run; a prior worker correctly declined rather than fabricating a cutover date. That gate
+      (`sequential: true` chaining todo 8 behind 7d via `plan_order`) is what allowed this todo to dispatch only now
+      that 7d is done.
