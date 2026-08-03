@@ -74,13 +74,14 @@ exact canonical-set derivation the G1 delete script
 
 **Neither cited figure matches current reality, under any canonical-set cut**:
 
-| Canonical set used                                    | Non-canonical rows | Unique league_ids |
-| ----------------------------------------------------- | -----------------: | ----------------: |
-| Plan's G1 figure (as originally measured, 2026-06-27) |           ~106,000 |             1,437 |
-| §U's approved purge (Track V, 2026-07-20)             |             10,869 |               489 |
-| **Live: FULL registry (383 leagues) as canonical**    |        **268,094** |           **780** |
-| **Live: MVP-scope (96 leagues) as canonical**         |      **1,476,781** |         **1,067** |
-| **Live: FULL registry, football data_types only**     |         **17,767** |           **734** |
+| Canonical set used                                                                       | Non-canonical rows | Unique league_ids |
+| ---------------------------------------------------------------------------------------- | -----------------: | ----------------: |
+| Plan's G1 figure (as originally measured, 2026-06-27)                                    |           ~106,000 |             1,437 |
+| §U's approved purge (Track V, 2026-07-20)                                                |             10,869 |               489 |
+| **Live: FULL registry (383 leagues) as canonical**                                       |        **268,094** |           **780** |
+| **Live: MVP-scope (96 leagues) as canonical**                                            |      **1,476,781** |         **1,067** |
+| **Live: FULL registry, football data_types only (2026-07-27 manual census)**             |         **17,767** |           **734** |
+| **Live: FULL registry, football-only, FIXED SCRIPT dry-run (2026-08-03, authoritative)** |         **11,403** |           **755** |
 
 (MVP-scope is the wrong cut for a "not in registry" wipe — it also flags genuinely-registered, just non-MVP leagues, so
 it over-counts by design; included for completeness only.)
@@ -150,12 +151,19 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
 > the ordering matters and is stated in the text (there is no per-todo prereq syntax; prereqs come only from
 > `sequential`/`gate_on_depends`).
 
-- [ ] [OPERATOR] P2. **Decide which canonical-set definition is authoritative for a "not in registry" wipe** — the full
-      383-league registry, NOT MVP-96 (MVP-scope incorrectly flags valid non-MVP _registered_ leagues as noise). This is
-      a judgment call about what may be deleted, so it is operator-gated and must not be guessed. Once ruled,
-      re-baseline the G1 NOISE population's tracked figure in the plan corpus against a fresh, football-only,
-      fixed-script **dry-run** (the scope-bug fix in item 1 has already shipped, so the dry-run is now meaningful).
-      (repo: `instruments-service`)
+- [x] ✅ **[CODE] P2 — RULED + re-baselined, 2026-08-03.** Operator ruling: the full 383-league registry is
+      authoritative for the "not in registry" wipe, NOT MVP-96 — MVP-scope incorrectly flags valid non-MVP _registered_
+      leagues as noise, per this todo's own stated reasoning. This is exactly what `_load_canonical_league_ids()`
+      already derives via `get_expected_leagues_for_source("api_football")`, so the ruling required no canonical-set
+      code change — only the decision + a fresh baseline. Ran the fixed script (`instruments-service@7409c5b1`) in
+      dry-run mode (`--skip-gcs --skip-seed`; `_legacy_seed.parquet` no longer exists in the prod bucket — 404
+      confirmed) against the live `availability_index.parquet`: **11,403 non-canonical rows / 755 unique league_ids**
+      under the full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332,
+      INJURIES 1644, ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket` rows,
+      confirming the scope-bug fix holds). This is now the authoritative baseline row in the table above, superseding
+      the 2026-07-27 manual census's 17,767/734 figure for the same cut (index grew to 11,853,040 total rows in the
+      intervening week, and the manual census pre-dated the fixed script). Read-only: no `--apply`, no writes, no GCS
+      object scan. (repo: `instruments-service`)
 - [ ] [DIAG] P2. **Reconcile §U's exact population** — a fresh, scoped, SINGLE-WALK read of raw FIXTURES parquet content
       (`af_league_id` + `round`) to determine whether §U's 10,869/489 population is in fact a subset of the
       football-only 17,767/734 manifest-index cut measured here. **Done-when**: the subset question is answered yes/no
@@ -196,3 +204,10 @@ script was run; no snapshots, no writes, no GCS deletes.
   clone, so a dispatched worker genuinely cannot perform that edit itself (root-clone reads are READ-ONLY per RULES.md §
   1); did not fabricate a `POST /api/prerequisites/...` call ahead of the actual attachment since an unattached
   condition would be inert. Did NOT flip item-3's checkbox.
+- **2026-08-03 (slot 11, worker)**: Applied the operator ruling for item-1 (full 383-league registry is authoritative,
+  not MVP-96). Ran the fixed `delete_noncanonical_sports_leagues_2026_06_25.py` (`instruments-service@7409c5b1`) in
+  dry-run mode against the live prod index (bounded via `run-bounded-analysis.sh`, 24G cap — the unfiltered
+  11.85M-row/38-column parquet needed more than the default 4G/10G caps to arrow→pandas-convert; no `--apply`, no
+  writes). Fresh baseline: 11,403 non-canonical rows / 755 league_ids (football-only, full-registry). Added this as the
+  authoritative row in the census table and flipped item-1's checkbox. Items 2 ([DIAG] §U reconciliation) and 4
+  ([OPERATOR] mechanical park) remain open; item-3 stays PARKED (still behind item-2).
