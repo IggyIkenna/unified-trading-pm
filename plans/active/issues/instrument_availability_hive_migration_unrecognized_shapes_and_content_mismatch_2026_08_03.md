@@ -175,10 +175,15 @@ discarding real data.
       key (appended after `venue=`, before the leaf file), keeping the writer's existing per-league split rather than
       rolling it up to a per-venue grain. `cross-asset-canonical-target-ssot.md` §8 amended (sports-exception banner) +
       §11c decision log entry added (repo: unified-trading-pm). `migration_pending` — unblocks todo 2 below.
-- [ ] 2. [DATA] P1. Fix the sports `instrument_availability` writer to emit the ruled shape from todo 1 (trailing
+- [x] ✅ 2. [DATA] P1. Fix the sports `instrument_availability` writer to emit the ruled shape from todo 1 (trailing
       `league=`, plus the still-missing `pipeline_mode=`/`asset_group=` keys), then extend
       `migrate_instrument_availability_hive_2026_08_03.py` to recognize + migrate the sports `league=` shape (~172,595
-      objects) (repo: instruments-service). Todo 1's ruling is now resolved — no longer gated.
+      objects) (repo: instruments-service). Todo 1's ruling is now resolved — no longer gated. —
+      instruments-service@ba87cc32: `_write_sports_fixture_venue` now writes via `_instrument_availability_sink_for`
+      (full-hive prefix) with `league=` as a trailing partition key after `venue=`; migration tool's `hive_target_for`
+      extended with `_SPORTS_LEAGUE_FLAT_RE` to recognize + map the legacy `day=/league=/venue=` flat shape to its hive
+      target. 125 targeted unit tests green (incl. new regression coverage for both the writer's sink call args and the
+      migration tool's sports-league mapping); full QG green.
 - [ ] 3. [DATA] P2. Investigate whether prediction's `canonical_question_group=`-before-`day=` shape is still being
       written post-2026-07-21; extend the migration tool to recognize + migrate it (~25,745 objects) (repo:
       instruments-service).
