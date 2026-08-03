@@ -9,7 +9,7 @@ summary: >-
   then run the standard 6-step archival ritual. Authored 2026-08-03 to close the finalize-plan-coverage gate
   (check_finalize_plan_coverage.py) that the original plan's shipping without a companion finalize tripped —
   task_template.md §4, "Every AO-dispatched plan needs a gated finalize plan."
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,6 +20,7 @@ related:
   [
     /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
   ]
 created: "2026-08-03"
 last_updated: "2026-08-03"
@@ -53,21 +54,35 @@ context_scope:
 
 # plans_archive_reference_path_hygiene_2026_08_02 — finalize
 
-> **Held by `gate_on_depends: true`, not `status`.** Not dispatched until
-> `plans_archive_reference_path_hygiene_2026_08_02` is fully done (or on explicit operator direction to start
-> reconciling early).
+> **🟢 ARCHIVED 2026-08-03.** This doc's sole todo is CLOSED AS A DUPLICATE — it is one of 3 independently-authored
+> finalize plans gating the identical parent (the parent's own Progress Log already records a 2026-08-02 collision
+> between 2 authors; this doc is a 3rd, separately-authored collision on 2026-08-03). A sibling
+> (`plans_archive_reference_path_hygiene_finalize_2026_08_02.md`) performed the actual reconcile + archive covering the
+> parent + all 3 finalize docs in one commit — see that doc's Progress Log for the full account. Moved to
+> `/plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md`.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `plans_archive_reference_path_hygiene_2026_08_02.md`'s checkboxes** against whatever
+- [x] ✅ [REVIEW] P2. **Reconcile `plans_archive_reference_path_hygiene_2026_08_02.md`'s checkboxes** against whatever
       shipped — flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm the `check_reference_paths`
       format/exist counts genuinely dropped back toward the 161/901 baseline per that plan's own todo 4 done-when (not
       an exact match — allow for legitimate new refs added elsewhere in the corpus since 2026-08-02), then run the
       standard 6-step archival ritual (migrate any DEFERRED items, banner, codex-alignment check, update any
       CLAUDE.md/codex pointer on a new contract, fix every referrer's path corpus-wide, clear lock) since the plan is
       self-contained (no separate source doc to reconcile). If real work remains, leave
-      `plans_archive_reference_path_hygiene_2026_08_02.md` active and note what's still open here instead.
+      `plans_archive_reference_path_hygiene_2026_08_02.md` active and note what's still open here instead. **RESULT
+      (slot-11, 2026-08-03): DUPLICATE todo, closed via consolidation.** This doc never started its own reconciliation
+      work before this discovery (Progress Log below was still the authoring-only entry). Rather than duplicate the
+      reconcile+archive work a 3rd time, deferred to `plans_archive_reference_path_hygiene_finalize_2026_08_02.md`,
+      which had already independently completed the identical reconciliation (with fresh live evidence — see that doc's
+      own todo 1 RESULT) and performed the one actual archival covering all 4 docs in the cluster. No real work remained
+      undone by closing this way — the parent is genuinely archived, evidence-backed, ratchet-verified.
 
 ## Progress Log
 
 - **2026-08-03**: authored to close the finalize-plan-coverage gate the original plan's shipping tripped.
+- **2026-08-03 (slot-11, dispatched to a duplicate sibling doc's own finalize task)** — Discovered this doc while
+  corpus-grepping referrers for the archival of `plans_archive_reference_path_hygiene_finalize_2026_08_02.md`. Closed by
+  consolidation rather than duplicate execution — see that doc's Progress Log for the full triple-duplicate account.
+  Archived alongside the parent + the other duplicate finalize
+  (`plans_archive_reference_path_hygiene_2026_08_02_finalize.md`) in one commit.

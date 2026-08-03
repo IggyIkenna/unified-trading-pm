@@ -4,7 +4,7 @@ title: Scoped reference-path hygiene pass over plans/archive/
 summary: >-
   Run scripts/plan-hygiene/fix_reference_paths.py over the plans/archive/ population specifically to clear the
   check_reference_paths format/exist regression (+47/+14 over baseline) that an active-corpus-only pass cannot reach.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,9 +15,12 @@ related:
   [
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
+    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md,
+    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-02
+last_updated: "2026-08-03"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -36,6 +39,14 @@ source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.
 ---
 
 # Scoped reference-path hygiene pass over `plans/archive/`
+
+> **🟢 ARCHIVED 2026-08-03.** All 6 todos resolved and evidence-verified (see the finalize doc's own reconciliation
+> RESULT). `check_reference_paths` ratchet confirmed clean: format 81/81, existence 87/87. Closed out via
+> `plans_archive_reference_path_hygiene_finalize_2026_08_02.md` (and its 2 duplicate siblings, consolidated into the
+> same archival commit — see that doc's Progress Log). Moved to
+> `/plans/active/plans_archive_reference_path_hygiene_2026_08_02.md`; corpus referrers updated. No new durable contract
+> from this plan (it only ran an existing script over an existing population — codex-alignment check: nothing to
+> update).
 
 ## Why this plan exists
 

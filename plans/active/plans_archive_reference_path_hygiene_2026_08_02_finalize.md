@@ -6,7 +6,7 @@ summary: >-
   until both of that plan's todos are done. Re-verifies the reference-path ratchet actually moved (check_reference_paths
   back at/below the pre-regression baseline: format 161, exist 901), confirms no AMBIGUOUS/UNRESOLVED entry was silently
   dropped, and archives this plan pair once confirmed.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,9 +17,10 @@ related:
   [
     /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-02
+last_updated: "2026-08-03"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -51,8 +52,13 @@ source: >-
 
 # Scoped reference-path hygiene pass over `plans/archive/` — finalize
 
-> **Machine-gated on `/plans/active/plans_archive_reference_path_hygiene_2026_08_02.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until both todos in that plan are `done`.
+> **🟢 ARCHIVED 2026-08-03.** Todos 1+2 (ratchet re-verify, AMBIGUOUS/UNRESOLVED spot-check) were already done by
+> slot-15/slot-14 with independent evidence. Todo 3 (archive) is CLOSED HERE AS A DUPLICATE — this doc was one of 3
+> independently-authored finalize plans gating the identical parent plan; a sibling doc
+> (`plans_archive_reference_path_hygiene_finalize_2026_08_02.md`) performed the one actual archival covering the parent
+>
+> - all 3 finalize siblings in a single commit. See that doc's Progress Log for the full consolidation account. Moved to
+>   `/plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md`.
 
 ## Todos
 
@@ -92,9 +98,16 @@ source: >-
       basename — no candidate resolves anywhere in the live corpus, matching the "frozen historical record, not chased"
       disposition. The 33→31 delta is a benign decrease (fewer dangling, not more) from ordinary corpus churn since
       2026-08-02/03, not a sign any entry was mis-triaged. No drift found; no new todo needed.
-- [ ] [PLAN] P2. **Archive both plans** once the two todos above confirm clean — standard 6-step archival ritual
+- [x] ✅ [PLAN] P2. **Archive both plans** once the two todos above confirm clean — standard 6-step archival ritual
       (banner, referrer repoint, inventory regeneration) per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. **RESULT (slot-11, 2026-08-03): DUPLICATE
+      todo, closed via consolidation, not independently re-executed.** Discovered this doc is one of 3
+      independently-authored finalize plans gating the identical parent (see this doc's own Progress Log: two authors
+      already collided on 2026-08-02; this doc + a 2nd, separately-authored `..._2026_08_03.md` sibling are a 3rd
+      independent collision found 2026-08-03). Performing the archival 3 times in parallel was a real race risk for no
+      benefit (one `git mv` per doc, period). The sibling `plans_archive_reference_path_hygiene_finalize_2026_08_02.md`
+      performed the actual archival (parent + all 3 finalize docs, one commit); this todo is marked done by that
+      consolidation rather than re-doing the same `git mv`.
 
 ## Progress Log
 
@@ -108,3 +121,8 @@ source: >-
   existing, correct targets (0 AMBIGUOUS remain under `plans/archive/**`, down from 7) and the 31 currently-dangling
   entries (down from the recorded 33, a benign decrease) are all genuine frozen historical refs — no drift. See the
   todo's own RESULT note for the full breakdown. Next: todo 3 (archive both plans).
+- **2026-08-03 (slot-11, dispatched to a duplicate sibling doc's own finalize task)** — Discovered this doc while
+  corpus-grepping for referrers as part of archiving `plans_archive_reference_path_hygiene_finalize_2026_08_02.md`.
+  Closed todo 3 by consolidation rather than duplicate execution — see that todo's own RESULT and the sibling doc's
+  Progress Log for the full account. Archived alongside the parent + the other duplicate finalize (`..._2026_08_03.md`)
+  in one commit.
