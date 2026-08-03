@@ -38,6 +38,12 @@ depends_on: []
 source: ["cross-asset-group smoke sweep run 2026-07-20 while completing the CeFi throughput close-out"]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+  ]
 ---
 
 # Pipeline smoke sweep — findings

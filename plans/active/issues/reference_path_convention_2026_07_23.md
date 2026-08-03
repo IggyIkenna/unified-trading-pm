@@ -34,6 +34,13 @@ drift_direction: advance-code
 source: [operator request 2026-07-23]
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/PLAN_FORMAT.md,
+    /plans/active/task_template.md,
+    scripts/plan-hygiene/check_reference_paths.py,
+  ]
 depends_on: []
 ---
 

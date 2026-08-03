@@ -33,6 +33,13 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    e2e-testing/scripts/audit/manifest_hygiene_daily.py,
+    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
+    deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf,
+  ]
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5

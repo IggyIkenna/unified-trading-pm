@@ -42,6 +42,13 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
+    .github/workflows/ldr-to-main-promote-fleet.yml,
+    /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
+  ]
 assigned_vm: planning
 resolved_by:
 ---

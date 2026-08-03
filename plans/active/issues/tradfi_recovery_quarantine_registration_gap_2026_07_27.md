@@ -42,6 +42,9 @@ locked_since: 2026-05-21
 context_scope:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
+    market-tick-data-service/market_tick_data_service/scripts/recover_tradfi_chain_manifest_registration_2026_07_22.py,
+    market-tick-data-service/market_tick_data_service/scripts/register_tradfi_recovery_quarantine_manifest_2026_07_30.py,
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
     /plans/epics/tradfi_master.md,
   ]

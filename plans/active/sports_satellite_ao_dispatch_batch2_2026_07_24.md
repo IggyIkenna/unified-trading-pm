@@ -86,6 +86,10 @@ source: >-
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
 context_scope:
   [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/epics/sports_master.md,

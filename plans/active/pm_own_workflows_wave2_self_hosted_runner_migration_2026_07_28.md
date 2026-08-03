@@ -49,6 +49,8 @@ context_scope:
     /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/self_hosted_runner_pm_core_workflows_2026_07_28.md,
+    scripts/self-hosted-runners/classify-glue-workflows.sh,
   ]
 ---
 

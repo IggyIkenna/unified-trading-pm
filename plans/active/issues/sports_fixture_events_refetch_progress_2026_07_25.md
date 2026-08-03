@@ -31,6 +31,15 @@ sequential: false
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    instruments-service/scripts/census_fixture_events_schema_variants_2026_07_25.py,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+    instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

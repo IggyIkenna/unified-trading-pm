@@ -25,6 +25,14 @@ source:
 assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    scripts/quality-gates-base/base-service.sh,
+    pyproject.toml,
+  ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

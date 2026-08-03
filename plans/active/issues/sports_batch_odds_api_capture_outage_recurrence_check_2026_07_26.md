@@ -60,6 +60,13 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 supersedes:
 superseded_by:
 resolved_by:
@@ -266,31 +273,30 @@ write a manifest row of any kind — not even `attempted_failed`).
 
 - [ ] [DATA] P0 — **NOT YET LAUNCHED (corrected 2026-08-02: the prior `[x]` mismarked the launch-decision + credential
       gate as the whole todo — both are clear, but the backfill itself has not run).** UNBLOCKED 2026-07-29 (was
-      `BLOCKED-CREDENTIALS` through 2026-07-28 — a 2026-07-29 mechanical
-      rephrase pass, commit `6edd4486a`, had once already incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker
-      to "credential gate cleared" with no real fix behind it, conflating the operator's LAUNCH-DECISION ruling below
-      with the separate CREDENTIAL gate — that rephrase was reverted the same day. This time the credential is genuinely
-      fixed, see banner above and Progress Log). Confirm deploy (DONE, see banner) is unaffected by this correction; the
-      backfill is now launchable but has not been launched as part of this edit. Deploy confirmation: DEPLOY CONFIRMED
-      (2026-07-26, directly verified, not inferred) — see the dated correction banner above, image `f6ea001`/`410d756`
-      digests + a log-inspected post-deploy execution with zero `DATA_NOT_AVAILABLE`. **Backfill DECISION: RULED
-      2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month sports odds gap backfill (scope + spend
-      approved)."** Retagged from `[OPERATOR]` to `[DATA]` (decision approved) — and as of 2026-07-29 the CREDENTIAL
-      gate agrees: the sole wired credential path (`odds-api-key` Secret Manager secret,
-      `sports_odds_api_key_deactivated_2026_07_26.md`) now returns HTTP 200 (`x-requests-remaining: 5000000`) on direct
-      live verification, not `error_code=DEACTIVATED_KEY` — the operator rotated it to a new key on a
-      5,000,000-credits/month subscription, superseding that same doc's 2026-07-28 decline. Both gates now agree:
-      launch-decision approved + credential working. Per the reframed two-sub-question scope from the correction banner
-      above, once unblocked, launch BOTH windows via the Odds-API historical endpoint, in full (no partial-window
-      shortcut — per the operator's general "do not allow anything to partially complete" + "full backfills... DO IT"
-      theme): 1. **The 2026-06-27…2026-07-15 total-gap window (~19 days, zero data)** — genuinely missing days; backfill
-      every league's odds via the historical endpoint for this exact range. 2. **The 2026-07-16…2026-07-25
-      granularity-loss window (~10 days, one late T+1 snapshot instead of the intended 8-point pre-match horizon grid:
-      T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at the correct historical T-minus offsets for each fixture
-      in this range to recover the lost odds-trajectory signal (CLV, drift, steam-move features), not just the single
-      already-captured daily snapshot. **Done when**: both windows show full historical coverage in the manifest
-      (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no GCS walk) at the intended
-      granularity, and this todo cites the launcher/dispatch evidence.
+      `BLOCKED-CREDENTIALS` through 2026-07-28 — a 2026-07-29 mechanical rephrase pass, commit `6edd4486a`, had once
+      already incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker to "credential gate cleared" with no real
+      fix behind it, conflating the operator's LAUNCH-DECISION ruling below with the separate CREDENTIAL gate — that
+      rephrase was reverted the same day. This time the credential is genuinely fixed, see banner above and Progress
+      Log). Confirm deploy (DONE, see banner) is unaffected by this correction; the backfill is now launchable but has
+      not been launched as part of this edit. Deploy confirmation: DEPLOY CONFIRMED (2026-07-26, directly verified, not
+      inferred) — see the dated correction banner above, image `f6ea001`/`410d756` digests + a log-inspected post-deploy
+      execution with zero `DATA_NOT_AVAILABLE`. **Backfill DECISION: RULED 2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, do
+      it — launch the ~1-month sports odds gap backfill (scope + spend approved)."** Retagged from `[OPERATOR]` to
+      `[DATA]` (decision approved) — and as of 2026-07-29 the CREDENTIAL gate agrees: the sole wired credential path
+      (`odds-api-key` Secret Manager secret, `sports_odds_api_key_deactivated_2026_07_26.md`) now returns HTTP 200
+      (`x-requests-remaining: 5000000`) on direct live verification, not `error_code=DEACTIVATED_KEY` — the operator
+      rotated it to a new key on a 5,000,000-credits/month subscription, superseding that same doc's 2026-07-28 decline.
+      Both gates now agree: launch-decision approved + credential working. Per the reframed two-sub-question scope from
+      the correction banner above, once unblocked, launch BOTH windows via the Odds-API historical endpoint, in full (no
+      partial-window shortcut — per the operator's general "do not allow anything to partially complete" + "full
+      backfills... DO IT" theme): 1. **The 2026-06-27…2026-07-15 total-gap window (~19 days, zero data)** — genuinely
+      missing days; backfill every league's odds via the historical endpoint for this exact range. 2. **The
+      2026-07-16…2026-07-25 granularity-loss window (~10 days, one late T+1 snapshot instead of the intended 8-point
+      pre-match horizon grid: T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at the correct historical T-minus
+      offsets for each fixture in this range to recover the lost odds-trajectory signal (CLV, drift, steam-move
+      features), not just the single already-captured daily snapshot. **Done when**: both windows show full historical
+      coverage in the manifest (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no
+      GCS walk) at the intended granularity, and this todo cites the launcher/dispatch evidence.
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should

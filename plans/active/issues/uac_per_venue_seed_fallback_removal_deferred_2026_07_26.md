@@ -49,7 +49,10 @@ locked_since:
 assigned_role: backend_engineer
 context_scope:
   [
+    /plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
+    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/epics/cefi_master.md,
   ]

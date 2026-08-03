@@ -43,9 +43,10 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /codex/03-observability/monitoring-control-plane.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/epics/observability_master.md,
   ]
 ---

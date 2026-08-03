@@ -29,6 +29,12 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
+context_scope:
+  [
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
+  ]
 locked_since:
 resolved_by:
 ---

@@ -37,6 +37,13 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 locked_by:
+context_scope:
+  [
+    /codex/08-workflows/t1-batch-dag.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/config.py,
+    /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
+  ]
 locked_since:
 assigned_vm: NA
 resolved_by:

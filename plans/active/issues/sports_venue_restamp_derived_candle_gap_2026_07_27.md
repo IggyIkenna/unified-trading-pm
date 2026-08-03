@@ -48,6 +48,9 @@ assigned_role: data_engineering
 resolved_by:
 context_scope:
   [
+    market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py,
+    market-tick-data-service/scripts/sports/manifest_swap_venue_restamp_2026_07_27.py,
+    market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/epics/sports_master.md,

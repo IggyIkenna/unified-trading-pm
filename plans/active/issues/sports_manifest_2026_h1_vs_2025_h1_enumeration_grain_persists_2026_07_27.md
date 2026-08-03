@@ -56,6 +56,14 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
+context_scope:
+  [
+    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf,
+    instruments-service/scripts/sports_manifest_enumeration_grain_check_2026_07_27.py,
+  ]
 resolved_by:
 source: >-
   sports_satellite_ao_dispatch_batch3_2026_07_25.md's "[DIAG] P1. Verify whether the sports manifest's

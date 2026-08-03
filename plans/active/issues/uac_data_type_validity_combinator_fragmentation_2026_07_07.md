@@ -52,7 +52,11 @@ drift_direction: correct-codex
 locked_since:
 context_scope:
   [
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/partitioning.md,
   ]

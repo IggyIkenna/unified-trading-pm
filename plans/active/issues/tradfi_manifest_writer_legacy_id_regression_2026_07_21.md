@@ -34,9 +34,12 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/epics/tradfi_master.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
+    /plans/epics/tradfi_master.md,
   ]
 ---
 

@@ -54,6 +54,14 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    deployment-api/deployment_api/services/manifest_source.py,
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
+  ]
 locked_since:
 ---
 

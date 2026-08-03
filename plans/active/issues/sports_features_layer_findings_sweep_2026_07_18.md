@@ -73,6 +73,14 @@ depends_on: []
 last_updated: 2026-07-18
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    features-service/features_service/sports/data/gcs_normalizers.py,
+    features-service/scripts/sports/honest_coverage_report.py,
+  ]
 ---
 
 # Sports features-layer findings sweep (2026-07-18)

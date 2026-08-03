@@ -52,6 +52,12 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    e2e-testing/scripts/validation/validate_shards_4pillar.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
 ---
 
 # Silent-wrong-answer audit — the untracked schema-contract follow-up

@@ -61,6 +61,14 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
+    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+    unified-api-contracts/unified_api_contracts/_instrument_enums.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

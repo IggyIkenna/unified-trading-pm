@@ -31,7 +31,14 @@ depends_on: []
 source:
 drift_direction: advance-code
 context_scope:
-  [/plans/epics/batch_live_symmetry_master.md, /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md]
+  [
+    [/plans/epics/batch_live_symmetry_master.md, /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md],
+    ? context_scope,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
+  ]
 ---
 
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —

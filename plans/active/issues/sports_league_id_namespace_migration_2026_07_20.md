@@ -22,6 +22,14 @@ created: "2026-07-20"
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py,
+    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
+    deployment-service/scripts/rebuild_sports_manifest.py,
+  ]
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

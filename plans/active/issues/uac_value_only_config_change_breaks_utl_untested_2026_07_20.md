@@ -44,7 +44,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
 context_scope:
-  [/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md, /plans/epics/infrastructure_master.md]
+  [
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/epics/infrastructure_master.md,
+    /plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
+    .github/workflows/python-quality-gates-v2.yml,
+    scripts/cicd/detect_breaking_change.py,
+  ]
 ---
 
 # UAC value-only config changes break UTL with no gate able to see it

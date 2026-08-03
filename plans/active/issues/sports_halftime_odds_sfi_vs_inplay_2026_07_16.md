@@ -81,6 +81,15 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md,
+    /plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    /plans/epics/sports_master.md,
+  ]
 supersedes:
 superseded_by:
 resolved_by:

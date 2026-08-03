@@ -50,6 +50,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
+    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/venue-availability.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,

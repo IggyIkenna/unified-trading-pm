@@ -40,7 +40,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
 context_scope:
-  [/plans/epics/infrastructure_master.md, /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md]
+  [
+    /plans/epics/infrastructure_master.md,
+    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/issues/dp_watcher_003_consolidator_scheduler_paused_maintenance_window_gap_2026_07_29.md,
+    unified-trading-library/unified_trading_library/monitors/consolidator_liveness.py,
+    deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf,
+  ]
 ---
 
 # TradFi + prediction manifest-consolidator crons stuck PAUSED (2026-07-29)

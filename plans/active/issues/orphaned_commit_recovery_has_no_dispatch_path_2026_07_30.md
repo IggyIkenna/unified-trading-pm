@@ -68,6 +68,13 @@ resolved_by:
   of 2026-08-02
 archive_exempt: true # inline status comment is stale (all 3 prevention todos now closed) -- archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
+    /plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
+    agent-orchestrator/server/worktree_clean_check/_liveness.py,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 locked_since:
 depends_on: []
 source: >-

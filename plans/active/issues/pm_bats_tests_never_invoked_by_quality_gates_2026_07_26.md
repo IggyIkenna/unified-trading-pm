@@ -43,6 +43,13 @@ estimate_class: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
+    scripts/quality-gates-base/base-service.sh,
+    .github/workflows/python-quality-gates-v2.yml,
+  ]
 locked_since:
 supersedes:
 superseded_by:

@@ -48,6 +48,14 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 locked_by:
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md,
+    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    scripts/deploy/trading-kill-switch.sh,
+    scripts/cicd/reconcile_release_tags.py,
+  ]
 resolved_by:
 depends_on: []
 source:

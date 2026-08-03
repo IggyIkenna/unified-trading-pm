@@ -51,6 +51,12 @@ source: >-
   some tasks are I.O heavy and wait heavy") rather than accepting the hand-wavy load-average-only explanation.
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
+    agent-orchestrator/server/host_resources.py,
+  ]
 locked_since:
 ---
 

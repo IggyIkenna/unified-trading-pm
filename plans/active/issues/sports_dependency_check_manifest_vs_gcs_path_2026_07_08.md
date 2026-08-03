@@ -53,6 +53,14 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
+    instruments-service/instruments_service/reference_data/sports_dependency.py,
+  ]
 resolved_by:
 ---
 

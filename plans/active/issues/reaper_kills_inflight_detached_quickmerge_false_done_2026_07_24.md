@@ -37,6 +37,13 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/orphan_reap.py,
+    scripts/quality_gates/check_evidence_backed_completion.py,
+  ]
 depends_on: []
 ---
 

@@ -25,6 +25,13 @@ status: open
 assigned_vm: NA
 resolved_by:
 locked_by:
+context_scope:
+  [
+    scripts/dev/slot-cron-ff-pull.sh,
+    scripts/dev/slot-git-status-report.sh,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 nature: issue
 asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; per-slot AO crons, not multi-AG
 stage: [meta]
