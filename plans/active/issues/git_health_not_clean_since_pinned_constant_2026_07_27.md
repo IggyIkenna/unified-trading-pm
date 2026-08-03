@@ -91,10 +91,15 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 ## Todos
 
 - [ ] [BACKEND] P3. Instrument or trace `slot-git-status-report.sh`'s `reported_at`/dirty-transition posting to confirm
-      whether it sends a fresh timestamp per run or a fixed value (repo: agent-orchestrator).
+      whether it sends a fresh timestamp per run or a fixed value (repo: agent-orchestrator). **Already tracked**:
+      combined with the next item into one open `[BACKEND] P3` todo in
+      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (line ~160, status: active, assigned_vm:
+      planning) — that todo explicitly sources this doc's items #1+#2 by path. Do not duplicate a fresh dispatch for
+      this item; the batch3 todo is the live tracker.
 - [ ] [BACKEND] P3. Audit `GET /api/fleet/git-health`'s aggregation path to confirm it surfaces
       `SlotGitStatusRow`-scoped `not_clean_since` per (host, slot, repo) rather than any global/shared snapshot value
-      (repo: agent-orchestrator).
+      (repo: agent-orchestrator). **Already tracked** — same
+      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above.
 - [ ] [BACKEND] P3. Based on the above, either fix the upstream timestamp source, or add a distinct "last observed dirty
       transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
       (review.md § 3d) can reliably distinguish a fresh edit from a genuinely long-stuck worktree (repo:
@@ -110,3 +115,13 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   unchanged. All 3 `[BACKEND] P3` todos are diagnostics feeding the doc's own unresolved field-design choice (keep the
   hysteresis-gated `not_clean_since` and ADD a separate "last observed dirty transition" field, vs. bugfix the existing
   field's reset semantics) — a genuine judgment call.
+- **na-eligibility-audit 2026-08-03** (ao tranche): **KEEP-NA, valid — citation fix only, no reclassify.** In scope
+  because the doc was edited since the 2026-08-02 marker (`context_scope` backfill). New finding this run: todos #1 and
+  #2 (the two diagnostic instrument/audit tasks) are already duplicated — combined into one open `[BACKEND] P3` todo in
+  `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (status: active, assigned_vm: planning, line ~160),
+  which explicitly sources this doc's items #1+#2 by path and states its own done-when as writing the verdict back into
+  this doc's Progress Log. Added a citation on both items above pointing at that live tracker so a future dispatch pass
+  doesn't duplicate the diagnostic work. Doc stays NA overall — todo #3 (the field-design fork) remains a genuine
+  root-cause-contingent architecture decision, unchanged from every prior pass, and
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own combined todo explicitly excludes that branch from its
+  bounded scope too ("a code change only if the verdict is (i) or (ii)... NOT a schema/field addition").
