@@ -9,7 +9,7 @@ summary: >-
   market-data-processing-service's candle-building path, all reproducible against real prod data, none specific to the 4
   target venues (they'd affect any high-volume/high-instrument-count CeFi venue's candle backfill). Filed here per the
   findings-closure hard rule rather than left as prose in the source plan's Progress Log.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -45,6 +45,9 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py,
   ]
 resolved_by:
+  slot-12 (todo 1, 2026-07-26, market-data-processing-service@335e9cc), slot-7 (todo 3, 2026-08-03,
+  market-data-processing-service@e3fc539), slot-6 (todo 2, 2026-08-03, market-data-processing-service@f23e75f), slot-10
+  (todo 4, 2026-08-03, market-data-processing-service@e90e5be)
 depends_on: []
 ---
 

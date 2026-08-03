@@ -20,7 +20,7 @@ stage: [data]
 repos: [market-data-processing-service]
 scope: [engineer]
 tags: [mdps, candle, derivative-ticker, memory, resource-usage, host-contention]
-related: [/plans/active/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md]
+related: [/plans/archive/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md]
 created: "2026-08-03"
 last_updated: "2026-08-03"
 parent_epic: cefi_master
