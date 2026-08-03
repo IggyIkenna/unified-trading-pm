@@ -173,6 +173,14 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
       two docs describing the same incidents under different causes. Repo: unified-trading-pm (investigation + doc
       correction only, no code).
 
+      **na-eligibility-audit 2026-08-03**: the referenced doc is now archived/resolved
+                  (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, 2026-07-28) but via a
+                  DIFFERENT fix mechanism (a qg-governor runtime abort-monitor watchdog + SIGTERM/SIGINT/SIGHUP signal traps) — its
+                  own extensive multi-session Progress Log never performs the specific `orphan_reap`/`kill_session`-journalctl
+                  cross-check this todo asks for; every one of its own recorded incidents cites `free -h` swings, load-average
+                  spikes, OOM-killer signatures, or TYPE-CHECK/pytest timeouts, never an `orphan_reap sweep ... KILLED` log line.
+                  This cross-check remains genuinely un-done, not closing here.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-02** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. Covered by

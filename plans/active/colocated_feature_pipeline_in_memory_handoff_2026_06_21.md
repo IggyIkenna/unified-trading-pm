@@ -67,17 +67,20 @@ severities were weakened to `"none"`, masking 574 errors).
 > ships, at which point flip both this doc's and batch1's copies together citing the same commit sha(s). Item 1.5b
 > (column pruning) was NOT migrated anywhere — confirmed still genuinely gated (see its own note below).
 
-- [ ] [DESIGN] P3. **1.4 — feature dependency DAG handoff in-memory** — pass derived feature frames between calculators
-      in-process instead of round-tripping through parquet, so a colocated feature run computes the dependency DAG once.
-      Repo: features-service. **MIGRATED FROM:** `features_calc_efficiency_and_correctness` item 1.4.
-      **SUPERSEDED-BY-BATCH1 (2026-07-27):** dispatched verbatim in
-      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (~L113-125, part of the combined
-      in-memory-DAG-handoff todo) — do not dispatch a second copy from here.
+- [x] ✅ [DESIGN] P3. **1.4 — feature dependency DAG handoff in-memory** — pass derived feature frames between
+      calculators in-process instead of round-tripping through parquet, so a colocated feature run computes the
+      dependency DAG once. Repo: features-service. **MIGRATED FROM:** `features_calc_efficiency_and_correctness` item
+      1.4. **DONE (na-eligibility-audit 2026-08-03)** — `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      combined todo (item 1/3, DONE 2026-08-01 slot 7): `features-service@b457ee43` — composite_sr/flow_interaction get
+      liquidity_walls/liquidation_clusters in-memory via the registry's `depends_on` order, fixing a real live-prod bug
+      (composite_sr was ALWAYS null). 786 tests + full QG green.
 - [ ] [REFACTOR] P3. **1.3b — one parquet per (day, feature_group, timeframe)** — consolidate the per-instrument parquet
       fan-out into a single file per (day,fg,tf) to cut object count + selective-read list cost. Repo: features-service.
       **MIGRATED FROM:** item 1.3b. **SUPERSEDED-BY-BATCH1 (2026-07-27):** dispatched verbatim in
       `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (~L113-125, part of the combined todo) —
-      do not dispatch a second copy from here.
+      do not dispatch a second copy from here. **na-eligibility-audit 2026-08-03**: already tracked (still open, as
+      "Item 2/3 — parquet consolidation") in `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, not closing
+      here.
 - [ ] [REFACTOR] P3. **1.5b — column pruning at the delta_one read** — push column selection down so a delta_one read
       materialises only the requested feature columns. Revisit after the end-to-end pipeline is green. Repo:
       features-service. **MIGRATED FROM:** item 1.5b. **NOT migrated anywhere (confirmed 2026-07-27) — stays open here,
@@ -95,7 +98,9 @@ severities were weakened to `"none"`, masking 574 errors).
       basedpyright-severity weakening). Repo: features-service. **MIGRATED FROM:** item 1.7e (no prior home).
       **SUPERSEDED-BY-BATCH1 (2026-07-27):** dispatched verbatim in
       `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (~L113-125, part of the combined todo) —
-      do not dispatch a second copy from here.
+      do not dispatch a second copy from here. **na-eligibility-audit 2026-08-03**: already tracked (still open, as
+      "Item 3/3 — basedpyright burn-down") in `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, not closing
+      here.
 
 ## Success criteria
 

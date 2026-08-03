@@ -122,15 +122,21 @@ at this doc's own frontmatter level (this is a scoping/triage document, not a pr
 below is explicitly gated on a human design call) — a future triage pass should spin item 1 off into its own
 `assigned_vm: planning` dispatch todo once picked up, since it alone is genuinely bounded.
 
-- [ ] [CODE] P1. **Fix the `governance_adapter.py` swallowed-exception bug** (the one real correctness gap found here,
-      market-tick-data-service): raise on a genuine HTTP/network error from `_fetch_subgraph_proposals`/
+- [x] ✅ [CODE] P1. **Fix the `governance_adapter.py` swallowed-exception bug** (the one real correctness gap found
+      here, market-tick-data-service): raise on a genuine HTTP/network error from `_fetch_subgraph_proposals`/
       `_fetch_snapshot_proposals` (both currently `except (aiohttp.ClientError, OSError, ValueError): return []`)
       instead of returning `[]`, so the per-protocol caller's existing `record_failed` path (not the clean-empty path)
       catches it — mirrors the C1 fix pattern already applied elsewhere per `clean_fetch_evidence()`'s own docstring
       citation. This alone does NOT require threading real HTTP status through anything; it is a bounded, single-file,
       testable fix. **Done when**: a test proves a simulated 5xx/network error on either fetch path reaches
       `record_failed`, not a silent empty-list `SOURCE_RETURNED_ZERO`; existing "genuinely zero proposals this window"
-      behavior is unchanged.
+      behavior is unchanged. **DONE (na-eligibility-audit 2026-08-03)** —
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md`:121 shipped this exact fix: `market-tick-data-service@d74984b0`
+      (+ fixup `d040d457`) removed the swallow so both fetch functions let a genuine transport error propagate to
+      `record_failed` while a real empty-200 response still short-circuits to `[]`; `_fetch_both_sources` switched to
+      `asyncio.gather(..., return_exceptions=True)`; new unit tests cover genuine-empty vs HTTP-error vs
+      connection-error plus a `_process_protocol`-level test proving the error reaches `record_failed` not
+      `record_zero_rows`.
 - [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
       Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
       the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)

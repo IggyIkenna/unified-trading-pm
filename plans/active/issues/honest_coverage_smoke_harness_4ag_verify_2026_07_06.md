@@ -190,7 +190,17 @@ numbering.)**
       `rebuild_tradfi_manifest.py`), (c) Plan 2 tasks 2/5/6/7 chain, (d) either the operator writes `catalog.parquet` to
       the `prd/` prefix expected by this task OR the task text is amended to reference the actual `prod/` prefix
       (verified live 2026-07-06: `prod/catalog.parquet` = 10,561,159 bytes; `prd/catalog.parquet` = 404 NotFound), (e)
-      operator clears this BLOCKED- marker → -004 re-dispatches.
+      operator clears this BLOCKED- marker → -004 re-dispatches. **na-eligibility-audit 2026-08-03**: the cited
+      prerequisite plan `tradfi_v9_stage1_finish_2026_07_06` is now fully resolved + archived (2026-07-24, all 11 of its
+      own todos `[x]`; the 2 remaining forked out verbatim to `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
+      and `tradfi_consolidated_closeout_2026_07_18.md`) — so tasks 2-11 have landed. `catalog.parquet` does now exist
+      and is actively read/written elsewhere (`tradfi_consolidated_native_ao_extract_2026_07_25.md:353`,
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md:577`), but at `prod/catalog.parquet`, NOT the `prd/`
+      prefix this task's own text expects — unresolved per option (d) above. No doc in the active corpus records
+      `run_live_verify_tradfi.py` actually having been re-run/published since;
+      `instruments_remaining_work_audit_2026_07_10.md` item 11 (2026-07-10 vintage, predates the plan's 2026-07-24
+      resolution) still lists this as the sole remaining item. Not closing: the prerequisite plan landed but the actual
+      re-run + prd/prod path reconciliation has not been done or evidenced.
 
 ## Evidence
 

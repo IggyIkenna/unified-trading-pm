@@ -161,10 +161,16 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`);
       `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
       `ledger_asset_resolution` WIP landed.)
-- [ ] [DEFERRED] P0. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
-      aiohttp-3.14 unblock — `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED
+- [x] ✅ [DEFERRED] P0. ~~**Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped~~ (gated on
+      the aiohttp-3.14 unblock — `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED
       2026-07-27: aiohttp>=3.14.1 + vcrpy>=8.2.1 fleet-wide since 2026-06-23, GHSA-rpj2 closed for 17/18 repos — verify
-      whether this repo's ignore is still needed or now droppable).
+      whether this repo's ignore is still needed or now droppable). **DONE (na-eligibility-audit 2026-08-03)** — the
+      archived issue's final banner (ARCHIVED 2026-07-27) confirms the sole remaining holdout (execution-service, not
+      among this plan's repos) was fixed the same day (`execution-service@9ce159a7`), and "all 11 `--ignore-vuln` CVE
+      entries removed fleet-wide... from the fleet-wide `QG_PIP_AUDIT_COMMON_IGNORES` (consolidated into
+      `scripts/quality-gates-base/qg-common.sh`)" — i.e. the drop is centralized in the shared QG base, so none of this
+      plan's repos (agent-orchestrator/alerting-service/client-reporting-api/deployment-api/deployment-service/
+      e2e-testing) carry it anymore.
 
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
 

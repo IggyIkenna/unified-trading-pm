@@ -130,11 +130,15 @@ decide "already promoted".
       `workflow_dispatch` self-resume — via
       `plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md` (a separate, unrelated plan; no
       cross-reference existed between the two docs until now).
-- [ ] [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive ticks —
-      the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a stuck
-      gate. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
+- [x] ✅ [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive
+      ticks — the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a
+      stuck gate. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ([INFRA] P3, "A repo SIT-BLOCKED for N consecutive promoter ticks
       must be visible as a stuck gate"), which cites this exact checkbox as its Source — track completion there.**
+      **DONE (na-eligibility-audit 2026-08-03)** — closed via
+      `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md:363`: `unified-trading-pm@409c35437`, new
+      `scripts/cicd/sit_gate_stuck_detector.py` + `.github/workflows/sit-gate-stuck-detector.yml` (every 30 min) pages
+      once the same repo is SIT-blocked on the threshold's most-recent consecutive ticks; 22/22 tests pass.
 - [x] ✅ [DEVOPS] P2. Distinct sub-finding (2026-07-25, not the moving-tree race itself): when two `SIT-on-LDR`
       dispatches for the same repo overlap (e.g. two promote-fleet ticks within the concurrency-group's cancellation
       window), the OLDER dispatch gets `cancelled` by `system-integration-tests`'s concurrency group, but its

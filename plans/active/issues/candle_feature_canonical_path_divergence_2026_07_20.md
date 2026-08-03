@@ -483,13 +483,17 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [ ] 15. [DOC] P3. `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows the
       SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
       is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
-      the docstring example to match the 2026-07-21 correction.
+      the docstring example to match the 2026-07-21 correction. **na-eligibility-audit 2026-08-03**: already tracked
+      (still open) in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:127-131 (citing this doc's #15 as its own
+      `Source:`) — not closing here.
 - [ ] 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
       `off_template=29` (timeframe mismatch against the raw `"24h"` token) while the canonical leg still passes it —
       confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
-      real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`.
-- [ ] 19. [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
+      real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`. **na-eligibility-audit
+      2026-08-03**: already tracked (still open) in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:132-137 (citing
+      this doc's #16 as its own `Source:`) — not closing here.
+- [x] ✅ 19. [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
       (`migrate_candle_canonical_2026_07.py:794-831`) — a destination that exists but FAILS verification
       (`SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`) is never re-copied on a subsequent run (the copy is gated on
       `dmeta is None`), so this straggler class cannot converge no matter how many times the shard is re-run — proven
@@ -500,7 +504,14 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       was never at risk (`KEPT_SRC` never deletes source) — this is a script gap, not a data-safety incident. Full
       root-cause writeup in the history doc, part 2, "P7c: CEFI retry — another 3-shard SPOT preemption burst;
       ROOT-CAUSED..." entry
-      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`).
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`). **DONE
+      (na-eligibility-audit 2026-08-03)** — both halves shipped in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:
+      the code fix at that doc's line 138 (`market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e`,
+      retry-on-verification-failure + 6 new fixture tests, quality-gates.sh green) and the CEFI mop-up pass at that
+      doc's line 155 (fresh `cefi-candle-census` dry-run over the live 938,607-object CEFI corpus found exactly the
+      149-object baseline; targeted `--apply` converged 144/149 on the first run and the remaining 5 on an idempotent
+      retry; hard-verified 0/149 legacy-path objects remain in GCS — TRADFI confirmed needing no mop-up per the P7d
+      history entry).
 
 ## Progress Log
 

@@ -401,19 +401,26 @@ exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_
   is full of meaningless empties rather than blanks-where-data-was-expected.
 
 - [ ] [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it (honest-
-      absence correctness)**: (1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
+      absence correctness)**: ~~(1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
       `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
       (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell (captured/empty/failed) for dates WITHIN
       `[available_from, available_to]`; outside the market's life = honest BLANK (absence) / `expected_unattempted`,
       NEVER `empty_confirmed`. Reconsider whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong
-      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data." (3) Re-walk
+      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data."~~ (3) Re-walk
       (`rebuild_prediction_manifest --venue POLYMARKET`) to drop/reclassify the ~49.6k out-of-existence empties so
       honest coverage reflects the in-lifecycle universe; audit whether the 93,264 `SOURCE_RETURNED_ZERO` include
-      out-of-lifecycle dates (same root cause). **Same NULL-lifecycle check for KALSHI** (adapter sets
+      out-of-lifecycle dates (same root cause). ~~**Same NULL-lifecycle check for KALSHI** (adapter sets
       `market_created_at`/`resolution_time` on MarketLifecycle — verify `available_from/to_datetime` flow onto the
-      InstrumentRecord). Repo: instruments-service (gamma lifecycle population) + market-tick-data-service / UTL
+      InstrumentRecord).~~ Repo: instruments-service (gamma lifecycle population) + market-tick-data-service / UTL
       (emission bounding) + unified-api-contracts (EMPTY_CONFIRMED_REASONS taxonomy). Provenance: operator
-      empty_confirmed drill-down 2026-06-23. **BIG finding — data-correctness, honest-coverage semantics.**
+      empty_confirmed drill-down 2026-06-23. **BIG finding — data-correctness, honest-coverage semantics.** **STALE
+      (na-eligibility-audit 2026-08-03)** — struck legs (1)/(2)/KALSHI-check/taxonomy-reconsider are DONE per
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md:95`: POLYMARKET (`instruments-service@be45660f`) + KALSHI
+      (`@686e0ac4`) already set `available_from/to_datetime` in `_parse_market()`; MTDS emission already bounded
+      (`sentinels.py::_emit_tier3_for_dt`); UAC's `OUT_OF_COVERAGE_WINDOW_REASONS` already clips these reasons from the
+      numerator/denominator (operator ruling `autonomous_session_operator_decisions_2026_07_25.md` #13 — keep the enum
+      members). **Remaining open scope = (3) the historical manifest re-walk only** — that batch4 todo's own text calls
+      it "the SEPARATE `[OPERATOR]` walk in the Deferred section (gated on this todo landing)", not yet executed.
 
 ### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
 

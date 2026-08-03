@@ -129,7 +129,11 @@ context_scope:
       (gate-audit §6, 2026-07-24 — gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8).
       Determine which launcher runs it (single-VM vs. cross-VM sharded) and whether `max_workers` lets concurrent writes
       overlap GCS (~8x ETA impact suspected, unconfirmed). Definition of done: name the launcher + cite a measured
-      write-concurrency figure. (repos: market-data-processing-service, deployment-service)
+      write-concurrency figure. (repos: market-data-processing-service, deployment-service) **na-eligibility-audit
+      2026-08-03**: the gate is now cleared — `candle_canonical_path_migration_execution_2026_07_24.md` is archived
+      `status: complete` (all 17 todos done, P8 cross-AG verify/reconcile confirmed clean for all 4 AGs, archived
+      2026-07-28). This checkbox's own definition-of-done (name the launcher + a measured write-concurrency figure) has
+      not itself been produced anywhere found in the corpus — not closing, just unblocked now.
 - [ ] [DATA] P1. **Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi backfill**
       (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
       of either on record for defi today). Cite each run's report path + date. (repos: instruments-service,

@@ -80,7 +80,15 @@ source:
       `utl_shared_clone_commits_repeatedly_reset_2026_07_22`,
       `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24`,
       `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25`. **Done when**: each is re-classified
-      cleared/still-gated with evidence.
+      cleared/still-gated with evidence. **DONE (na-eligibility-audit 2026-08-03)** —
+      `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (now archived) records exactly this re-triage as completed
+      2026-07-31 (interactive session): its own `## Deferred` banner gives a verdict for all 8 named docs —
+      `ahead_push_sentinel_...`/`reaper_kills_inflight_...` re-triaged (verdicts recorded in their own Progress Logs),
+      `orchestrator_failover_double_dispatch_...` still gated (different reason, root cause unidentified),
+      `killed_slot_orphans_...` checkbox fixed, `one_shot_worker_completes_...`/
+      `host_saturation_false_worker_kicks_...`/`utl_shared_clone_commits_repeatedly_reset_...` reclassified,
+      `slot_recurring_wedge_...` needed one more live check. All 8 accounted for with evidence, matching this todo's
+      done-when exactly.
 - [ ] [REVIEW] P2. **Read + properly bucket the remaining 7 "unclear" docs** the Phase-1 audit agent couldn't cleanly
       classify (was 8 — `unified_trading_system_ui_e2e_specs_hardcode_ports_bypass_per_slot_derivation_2026_07_28`
       bucketed **archivable/ACKED-INTO-CODE 2026-08-01**: its last open todo shipped unified-trading-system-ui@741d0a6b,

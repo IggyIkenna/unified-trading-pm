@@ -220,7 +220,12 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   back to 2022-11; `-prd` has only `_migration/`) — IDENTICAL to the `lst-rates` debt. So the Aave backfill VM is
   writing to the legacy bucket too. Needs (a) writer-env fix so future writes resolve to `-prd`, (b) migrate existing
   legacy data → `-prd`. Owned by `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (same class as
-  lst-rates). The harness reads the legacy bucket for now (as it does for lst-rates).
+  lst-rates). The harness reads the legacy bucket for now (as it does for lst-rates). **na-eligibility-audit
+  2026-08-03**: the owner doc is now archived (`status: superseded`, superseded_by
+  `data_completion_to_100_all_ag_2026_06_21` — which itself never mentions lending-indices/lst-rates); the real
+  lending-indices/lst-rates bucket topic is still tracked as ACTIVE, unresolved work in
+  `plans/active/data_completion_defi_2026_07_15.md` and `plans/active/defi_migration_audit_log_2026_07_24.md`
+  (2026-07-24 entries still flag unresolved verify/migrate steps for lending-indices) — not closing here.
 - **2026-06-16** — Harness cleaned to **0 basedpyright / ruff-green** under the e2e QG config (deleted 2 dead EWMA fns,
   annotated `client: StorageClient`, knob constants → `globals()`); **e2e quality-gates.sh exit 0**. Quickmerge
   **BLOCKED on foreign UAC WIP** (`config_versioning.py` — another agent's uncommitted change; not mine, won't touch).
@@ -263,7 +268,9 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       scoped to `aave_v3 ETHEREUM` only (don't split the subgraph budget across all protocols/chains) or use a paid
       TheGraph key; then run the lending-indices manifest consolidator (it was stale). **Repo:
       market-tick-data-service + deployment-service.** Owner:
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`. **na-eligibility-audit 2026-08-03**: owner doc
+      archived/superseded without covering this item; still tracked open in `data_completion_defi_2026_07_15.md` /
+      `defi_migration_audit_log_2026_07_24.md` — not closing here.
 - [ ] [DATA] P3. lending-indices writer emits the **legacy `category=defi` path key** (not canonical `asset_group=`) +
       the legacy un-suffixed bucket — fix both to canonical v9. **Repo: market-tick-data-service.**
 - **2026-06-16** — **Treasury/Trading rebalancing sim BUILT** (`--simulate-treasury`, prototypes the unshipped prod
@@ -528,7 +535,9 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - [ ] [DATA] P2. `lending-indices` (+ `lst-rates`) writer targets the LEGACY un-suffixed bucket; canonical is
       `lending-indices-prd-…` / `lst-rates-prd-…` (empty `_migration/`). Fix the writer to `resolve_bucket_name`
       env-split + migrate legacy data → `-prd`. **Repo: market-tick-data-service + a GCS migration.** Owner:
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`. **na-eligibility-audit 2026-08-03**: owner doc
+      archived/superseded without covering this item; still tracked open in `data_completion_defi_2026_07_15.md` /
+      `defi_migration_audit_log_2026_07_24.md` — not closing here.
 
 ## Findings filed
 

@@ -435,9 +435,12 @@ verified complete**.
       (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as a new todo directly into
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its `## Deferred`). Not executed yet
       — tracked there going forward; not duplicating here.
-- [ ] [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
+- [x] ✅ [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
-      canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings).
+      canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings). **DONE (na-eligibility-audit
+      2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md:405`: DONE 2026-08-03
+      (slot-4, backend_engineer), `execution-service@8479a77f`, normalized every `service_name` producer to canonical
+      singular `"execution-service"`.
 - [x] ✅ [BUILD] P2. **RESOLVED — closed via `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10 (2026-08-01,
       slot-5).** Both fixes predate this todo's own dispatch: `MANIFEST_ALIGNMENT_SKIP=true`
       (`system-integration-tests@19fea221`, 2026-06-10) and `.coverage-floor-exception.md`
@@ -458,11 +461,16 @@ verified complete**.
 - [ ] [INFRA] P2. `tofu apply` `vm_log_archival_scheduler.tf` + `vm_serial_capture_scheduler.tf` +
       `api_host_auto_reboot.tf`; verify `apply_resource_limits.sh` (MemoryMax=56G) is live on the API host. Source:
       fleet_audit_triad + api_host_chronic_impairment.
-- [ ] [INFRA] P2. deployment-scripts bucket: add prefix-scoped lifecycle rules (`vm-logs/`>14d, `log-archive/`>90d) +
+- [x] ✅ [INFRA] P2. deployment-scripts bucket: add prefix-scoped lifecycle rules (`vm-logs/`>14d, `log-archive/`>90d) +
       cross-bucket soft-delete bloat audit via `gcs_bucket_stats.py --bloat_pct`. Source: deployment_scripts_bucket.
       **REHOMED 2026-07-27** — per operator decision (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as
       a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its
-      `## Deferred`). Not executed yet — tracked there going forward; not duplicating here.
+      `## Deferred`). Not executed yet — tracked there going forward; not duplicating here. **DONE (na-eligibility-audit
+      2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md:703`: RESOLVED
+      2026-08-02 (slot 7, infra) — lifecycle-rule half was stale premise (operator already overrode with a stricter flat
+      30d cap, TF-codified at `deployment-service@75012d3`, live in `main.tf`); bloat-audit half RUN via
+      `gcs_bucket_stats.py` (103 buckets, 75 non-empty, 64.69 TiB via Cloud Monitoring), one real finding tracked
+      forward in `issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`.
 
 ## BLOCKED clusters (NOT credentials — discipline / coordination)
 

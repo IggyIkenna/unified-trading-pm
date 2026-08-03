@@ -129,9 +129,14 @@ evidence. Summary of what each site currently uses:
       drift since the 2026-07-25T14:20Z checkpoint this todo's source doc flagged): `b03a6de4` confirmed an ancestor of
       current HEAD via `git merge-base --is-ancestor`, and the exact `odds_decimal_{outcome}_{venue}` f-string is
       present in the current file. (repo: features-service)
-- [ ] [DATA] P1. Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names chosen
-      in todo 1 (rename in place — UAC being SSOT doesn't make its current names sacrosanct). Add/update the UAC unit
-      tests covering the schema's field set. (repo: unified-api-contracts)
+- [x] ✅ [DATA] P1. Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names
+      chosen in todo 1 (rename in place — UAC being SSOT doesn't make its current names sacrosanct). Add/update the UAC
+      unit tests covering the schema's field set. (repo: unified-api-contracts) **DONE (na-eligibility-audit
+      2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md:416`: `unified-api-contracts@689efa54` +
+      `ml-service@91f031a`, all 49 fields renamed to the decided scheme, grounded in features-service's actual
+      calculator output (not a blind find-replace — same-named-but-unrelated columns in other layers correctly left
+      untouched). New UAC test file asserts the exact field set. Known transitional gap noted there: some FSS-side
+      renames still pending (this doc's own todo above, already tracked, separately closed).
 - [x] ✅ [DATA] P2. Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS` + the odds-features
       exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
       the exporter's own tests + any downstream fixture files that assert the old column names. (repo: features-service)

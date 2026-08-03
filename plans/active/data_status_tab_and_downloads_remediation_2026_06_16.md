@@ -168,7 +168,12 @@ context_scope:
       **NOT ticked ✅ — `pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit
       0** (13 unrelated failures, see the 🟡 2026-07-28 banner above +
       `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked on that separate doc, not
-      an unrun check. — deployment-ui `[UI]`
+      an unrun check. — deployment-ui `[UI]`. **na-eligibility-audit 2026-08-03**: the cited blocker doc is now
+      `status: resolved`/ARCHIVED (2026-07-29, `deployment-ui@067f7cd`, "89/89 Playwright smoke tests pass", no compat
+      redirect needed per operator direction) — the specific 13-failure Fleet-Git nav regression that was the sole
+      reason this wasn't ticked is fixed. Not flipping here myself (no fresh `pw:L2` re-run performed this pass, and the
+      runtime-verification rule requires an actual green run, not a doc-only inference) — the next touch should re-run
+      `pw:L2` full suite and tick on a confirmed exit 0.
 
 ## Phase B (TIER 1 cleanup) — UI clarity (duplicate panels, pagination)
 
@@ -177,14 +182,16 @@ context_scope:
       Node 22). **`pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit 0**
       (same unrelated 13-failure Fleet-Git nav regression, see the 🟡 2026-07-28 banner above +
       `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked, not an unrun check. —
-      deployment-ui `[UI]`
+      deployment-ui `[UI]`. **na-eligibility-audit 2026-08-03**: same resolved-blocker citation as the venue-filter item
+      above (`deployment-ui@067f7cd`, 2026-07-29, 89/89 pass) — not flipping without a fresh `pw:L2` re-run.
 - [ ] [UI] P2. **Pagination visible-count selector** — CODE-SHIPPED deployment-ui@`80c547d` (`DateList` size selector
       50/100/200/1000/2000/All; same regression spec; green under Node 22). Static server-truncation `+{N} more` labels
       (`:3891,3911,5386`, `VenuePillList :230`) still need a backend `limit` bump to be client-pageable — follow-on if
       wanted. **`pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit 0**
       (same unrelated 13-failure Fleet-Git nav regression, see the 🟡 2026-07-28 banner above +
       `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked, not an unrun check. —
-      deployment-ui `[UI]`
+      deployment-ui `[UI]`. **na-eligibility-audit 2026-08-03**: same resolved-blocker citation as the venue-filter item
+      above (`deployment-ui@067f7cd`, 2026-07-29, 89/89 pass) — not flipping without a fresh `pw:L2` re-run.
 - [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui

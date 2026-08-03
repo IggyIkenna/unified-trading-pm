@@ -188,10 +188,12 @@ class in a third script.
       `test_ag_tranche_membership_unaffected_by_the_fix`,
       `test_cross_cutting_solo_tag_is_assigned_without_data_epic_or_citation`,
       `test_ag_tagged_doc_with_cross_cutting_is_not_double_counted_unless_data_epic`. All 7 pass.
-- [ ] [SCRIPT] P3. Evaluate bundling this fix with the sibling script's fix
-      (`generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`) given
-      the near-verbatim shared helper shapes — consider extracting one shared membership-test module both scripts
-      import, to prevent a third recurrence of this bug class.
+- [ ] [SCRIPT] P3. Evaluate ~~bundling this fix with the sibling script's fix~~ **STALE (na-eligibility-audit
+      2026-08-03)** — the sibling script's own fix already shipped independently, same day, in a separate commit
+      (`plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`,
+      `unified-trading-pm@e88c41727`, 2026-07-30 — vs. this doc's own fix at `@6228cff7e`, also 2026-07-30); the two
+      were never bundled and that opportunity has passed. What remains genuinely open is the underlying idea: consider
+      extracting one shared membership-test module both scripts import, to prevent a third recurrence of this bug class.
 
 ## Progress Log
 

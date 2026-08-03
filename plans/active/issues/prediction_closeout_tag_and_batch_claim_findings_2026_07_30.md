@@ -208,12 +208,23 @@ candidate, not a batch todo.
       this same run (bonus, same fix shape) and a stale-entry correction for `kalshi_live_capture_regression_and_drift`
       (was citing 3 long-resolved prose items). `check_todo_format.sh` and `check_ag_closeout_linkage.py` both green (10
       orphans corpus-wide, baseline 32, zero `[prediction]`-tagged).
-- [ ] [DOC] P3. Resolve Finding 4: have the `ao` tranche adopt
+- [x] ✅ [DOC] P3. Resolve Finding 4: have the `ao` tranche adopt
       `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` — name it in
       `ao_consolidated_closeout_2026_07_25.md`'s own sources list so it stops reporting `orphaned_never_touched` from
       prediction's audit. **Done when**: that doc is cited by an `ao`-tranche covering doc. (repo: unified-trading-pm)
       **Re-confirmed still open 2026-07-31** — out of prediction-tranche scope to fix directly (would write to an
       `ao`-owned file); still correctly parked, not stale.
+
+      **DONE (na-eligibility-audit 2026-08-03)** — the named target doc,
+                  `plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`, archived 2026-07-30 as a "pure reachability
+                  digest"; its own archived text explicitly redirects `ao`-tranche live coverage to
+                  `ao_open_issues_consolidated_close_out_2026_07_17.md` (+ `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/its
+                  finalize). `issues/prediction_trades_migration_concurrent_dispatch_2026_07_28` IS now named there — it appears in
+                  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s "Operator-gated (needs a ruling, not another audit)" table
+                  (line 159) and is also cross-referenced in `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (line 269, "dual-tagged
+                  `[prediction, ao]`"). The done-when condition ("cited by an `ao`-tranche covering doc") is satisfied via the
+                  current live covering doc, even though the specific archived file this todo originally named is no longer that
+                  doc.
 
 ## Codex SSOTs
 

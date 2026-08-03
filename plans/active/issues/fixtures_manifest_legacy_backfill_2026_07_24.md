@@ -214,9 +214,13 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       stopgap that works correctly either way.
 - [ ] [DATA] P1. **Resolve the 55,233 collision-residual decision + re-verify the census** — per the 2026-07-26 update,
       the `FIXTURES` census did NOT stabilize at the expected 55,233 (it was growing due to a 10th call site, since
-      fixed); decide delete-vs-leave for the stable 55,233-row collision residual (tracked in
-      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) and re-run the census after the next
-      `enum-universe-sports-*` run + ≥2 consolidator cycles to confirm decay toward it.
+      fixed); ~~decide delete-vs-leave for the stable 55,233-row collision residual (tracked in
+      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`)~~ **STALE (na-eligibility-audit 2026-08-03)** —
+      already decided: that doc (now archived, `status: resolved`) recorded option (b) 2026-07-30 — leave the 55,233
+      rows as permanent noise, no delete executed, `SCHEDULE_DEFINING_DATA_TYPES` stays additive permanently as the
+      accepted cost. Remaining open here: re-run the census after the next `enum-universe-sports-*` run + ≥2
+      consolidator cycles to confirm decay/stabilization toward the 55,233 figure (verifies the 10th-call-site leak fix
+      actually held — unrelated to the delete-vs-leave choice, which is settled).
 
 ## Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_batch4-002)
 

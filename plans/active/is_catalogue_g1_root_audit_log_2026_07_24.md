@@ -336,7 +336,14 @@ context_scope:
       `--apply-write` prediction v2 at conditionId grain** (unchanged). Named successor for the loader-wiring
       prerequisite: `prediction_cqg_residual_2026_07_24.md` todo 2 (repos: instruments-service, unified-api-contracts);
       once that lands, this todo's cqg-bundle-grain seed run is normal AO-dispatchable engineering work
-      (`enumerate_expected_universe.py` at cqg-bundle grain), no further operator input needed.
+      (`enumerate_expected_universe.py` at cqg-bundle grain), no further operator input needed. **na-eligibility-audit
+      2026-08-03**: the loader-wiring prerequisite has now landed — `prediction_cqg_residual_2026_07_24.md` is archived
+      `status: complete` ("todo 2 (249-b, cqg grain) shipped and flipped", 2026-07-29,
+      `unified-api-contracts@283d7449` + `instruments-service@38e393de`, `quality-gates.sh` green both repos). That same
+      doc explicitly notes "Prod `catalog.parquet` promotion explicitly NOT run... carried by
+      `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen" — so the actual cqg-bundle-grain seed run this
+      checkbox asks for is still not executed; not flipping here, the AO-dispatchable seed-run work now lives (or should
+      be tracked) in `prediction_phase_ab_residuals_2026_07_24.md` (active).
 - [ ] [DATA] P2. **G1.run-full-history — extend the bounded-window seed to the FULL 2018→today per-instrument universe
       (~190M rows fleet-wide)** once the index-size/reader-perf impact is operator-reviewed (the bounded window keeps
       the LIVE denominator honest now; full history is the complete drilldown denominator). **DEFERRED** (named

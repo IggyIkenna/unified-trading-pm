@@ -128,10 +128,15 @@ shape alone" rule applies equally to a scope-safety claim).
       `codex/` for prose references to "AssetClass" describing the domain concept and update to "AssetGroup"; leave any
       doc correctly describing `LedgerAssetClass` untouched. Gated on todos 2-4 landing (the terminology should match
       shipped code, not precede it). (repo: unified-trading-pm)
-- [ ] [PLANNING] P2. **Supersede todo C** in
+- [x] ✅ [PLANNING] P2. **Supersede todo C** in
       `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md` with a pointer to
       this plan (mark it non-dispatchable / point here) so the original P3 mechanical-sweep framing never gets picked up
-      and executed under the old, underscoped understanding. (repo: unified-trading-pm)
+      and executed under the old, underscoped understanding. (repo: unified-trading-pm) **DONE (na-eligibility-audit
+      2026-08-03)** — verified live in the archived doc: its todo C (line ~203) already reads
+      `[x] BLOCKED-SUPERSEDED [CODE] P3` with the struck-through original text, "SUPERSEDED 2026-07-21...
+      Non-dispatchable — do not execute this line as scoped", and an explicit pointer: "already covered by
+      plans/active/asset_class_to_asset_group_rename_2026_07_21.md (see that doc for execution)." This is exactly the
+      treatment this todo asks for — already applied, nothing further to do.
 
 ## Codex SSOTs
 

@@ -161,11 +161,15 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
 - [ ] [DEVOPS] P3. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all three installers point at
       `scripts/hooks/pre-push`). Still referenced by `migrate-slots-to-pathb.sh`, `quickmerge.sh` and two codex docs —
       delete + repoint per "delete deprecated code (no shims)".
-- [ ] [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
+- [x] ✅ [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
       pre-push. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ([INFRA] P3, "The two husky UI repos carry no strict-quickmerge
-      guard"), which cites this exact checkbox as its Source — track completion there.**
+      guard"), which cites this exact checkbox as its Source — track completion there.** **DONE (na-eligibility-audit
+      2026-08-03)** — closed via `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md:422`: DONE 2026-08-03
+      (slot-9, infra), added a committed `.husky/pre-push` delegate in both `deployment-ui@a3268d0` and
+      `unified-trading-system-ui@563f6238` that execs the fleet's canonical guard; 15/15 regression cases pass; full
+      `quality-gates.sh` green on all three repos.
 - [x] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
       blocks. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for
       execution).

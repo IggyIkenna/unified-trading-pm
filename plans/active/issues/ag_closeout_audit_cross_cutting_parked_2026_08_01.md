@@ -186,15 +186,24 @@ member, not just a retag.
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag `plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`'s `asset_group`
-      `[cross-cutting]` → `[ao, ci]` (finding 1) — owning-tranche fix, leave to the `ao`/`ci` tranches' own audit, not
-      this run. Done when: the tag is corrected, the doc is folded into the receiving tranche(s)' closeout membership,
-      and (since all 8 todos are already done) it is routed through the standard archival ritual.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md`'s
+      `asset_group` `[cross-cutting]` → `[ao, ci]` (finding 1)~~ — owning-tranche fix, leave to the `ao`/`ci` tranches'
+      own audit, not this run. Done when: the tag is corrected, the doc is folded into the receiving tranche(s)'
+      closeout membership, and (since all 8 todos are already done) it is routed through the standard archival ritual.
+      **DONE (na-eligibility-audit 2026-08-03)** — the doc's `asset_group` is now `[ci]` (corrected 2026-08-02, comment:
+      "operator-ruled... squarely ci-tranche, not generic cross-AG content" — a refinement of this todo's proposed
+      `[ao, ci]` to `[ci]` only, not a discrepancy), and it carries a full `✅ ARCHIVED 2026-08-02` banner citing
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 22 as the archival
+      authorization (all 8/8 todos done, `locked_by` cleared).
 - [ ] [DOCS] P3. Retag
       `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[ao]` (finding 2). Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per the 2026-07-31 audit — confirm the
-      retag catches up to that citation).
+      retag catches up to that citation). **na-eligibility-audit 2026-08-03**: `ao_consolidated_closeout_2026_07_25.md`
+      is now archived `status: complete` (2026-07-30), but that doesn't close this todo — checked the target doc's
+      current frontmatter and the retag has NOT happened yet:
+      `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` still carries
+      `asset_group: [cross-cutting]`. Still genuinely open; not flipping.
 - [x] ✅ [DOCS] P3. ~~Retag
       `plans/active/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[ui]` (finding 3).~~ **MOOT — 2026-08-01 (slot 9, review)**: the doc's one remaining todo
@@ -207,9 +216,16 @@ member, not just a retag.
       `[cross-cutting]` → `[infrastructure]` (finding 4). Done when: the tag is corrected, the doc is folded into
       `infra_consolidated_closeout_2026_07_25.md`'s membership, and its 2 AO-eligible items (live SA enumeration;
       default-compute-SA risk documentation) are considered for the infra tranche's next batch.
-- [ ] [DOCS] P3. Retag `plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s
-      `asset_group` `[cross-cutting]` → `[ao]` (finding 5). Done when: the tag is corrected and the doc is folded into
+- [x] ✅ [DOCS] P3. ~~Retag `plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s
+      `asset_group` `[cross-cutting]` → `[ao]` (finding 5)~~. Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per 2 independent prior audits).
+      **DONE, WITH A CORRECTION (na-eligibility-audit 2026-08-03)** — the doc's `asset_group` is now corrected
+      (2026-08-02, operator-ruled), but to `[ci]`, not `[ao]` as this todo proposed: comment reads "content is
+      workflow-template-parity QG drift during the Phase-7 self-hosted-runner rollout, squarely ci-tranche... not
+      generic cross-AG content." That also means the "fold into `ao_consolidated_closeout_2026_07_25.md`" clause is moot
+      — the doc's real home is the `ci` tranche (`ci_consolidated_closeout_2026_07_25.md`, itself also archived
+      `status: complete`), not `ao`. The underlying goal (fix the wrong cross-cutting tag) is achieved; this todo's
+      specific proposed target tranche was superseded by the operator ruling.
 - [ ] [DOCS] P3. Retag `plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`'s `asset_group`
       `[cross-cutting]` → `[tradfi]` (finding 6). Done when: the tag is corrected and the doc is folded into the tradfi
       tranche's closeout membership as a fresh (previously invisible) member.

@@ -613,10 +613,14 @@ the related ship-hygiene item.)
       bug, so this is a code-evidence verdict, not a fresh empirical one. If a NEW hollow-pass instance is ever observed
       (a QG run that exits 0 but visibly collects the wrong repo's tests), file a fresh issue doc rather than reopen
       this line.
-- [ ] [DATA] P1. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent tail**
-      (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are single,
-      canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2). **TWO
-      defects**: (1) an instruments-service `by_date` WRITER regression that nested a second `day=` for recent snapshots
+- [x] ✅ [DATA] P1. **DONE (na-eligibility-audit 2026-08-03)** — `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s
+      corresponding todo shipped both fixes: (1) the instruments-service `by_date` writer regression, and (2)
+      `migrate_instruments_store_v9.py`'s `canonical_object_rel` doubled-`day=` collapse. Repo: instruments-service.
+      `quality-gates.sh` green. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent
+      tail** (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are
+      single, canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2).
+      **TWO defects**: (1) an instruments-service `by_date` WRITER regression that nested a second `day=` for recent
+      snapshots
       (`gs://instruments-store-defi-prd-…/instrument_availability/by_date/day=2026-05-07/day=2026-05-07/venue=AAVEV3-ARBITRUM/instruments.parquet`);
       (2) the slot-7 v9 OBJECT migrator (`migrate_instruments_store_v9.py` `canonical_object_rel`) inserts
       `pipeline_mode=/asset_group=` after the FIRST `day=` but does NOT normalise the second → its projected canonical

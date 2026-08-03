@@ -221,12 +221,23 @@ nothing: it is architecturally cached against exactly the input that changed.
       on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
 - [ ] [DEVOPS] P2. **EXTRACTED 2026-08-02** (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
       na-eligibility-audit item 18, option A) to `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1
-      chain stays `locked_by`/operator-gated as before; only this bounded item moved. Fix the invalid `sit_retry_cap`
-      wall_type in `sit-debounce-trigger.yml` (it can never succeed) and decide whether a red SIT should escalate to a
-      background worker rather than Issue + Slack only.
-- [ ] [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to `ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
-      Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved cross-repo
-      combination was executed" — it is a surface check.
+      chain stays `locked_by`/operator-gated as before; only this bounded item moved. ~~Fix the invalid `sit_retry_cap`
+      wall_type in `sit-debounce-trigger.yml` (it can never succeed)~~ and decide whether a red SIT should escalate to a
+      background worker rather than Issue + Slack only. **STALE (na-eligibility-audit 2026-08-03)** — the struck phrase
+      is DONE: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (~line 240) records `unified-trading-pm@2e5a42479` +
+      `agent-orchestrator@dbdccb6` fixing the choice-list + `EscalateRequest` Literal (confirmed live in this repo —
+      `escalate-to-orchestrator.yml` now accepts `sit_retry_cap` at lines 37/67/81/150/152), with a full round-trip
+      proof (`agt-d37ed9` dispatched → worker executed → closed 2026-07-28). The remaining clause (design call: should a
+      red SIT escalate to a background worker rather than Issue + Slack only) stays **explicitly unresolved by design**
+      per that same doc (~lines 832-839) — "a genuine design call and should stay NA regardless of which option is
+      picked" — so this item stays open for that clause only.
+- [x] ✅ [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Correct the `full-workspace-sit` messaging/naming so
+      `SIT_VALIDATED` cannot be read as "the resolved cross-repo combination was executed" — it is a surface check.
+      **DONE (na-eligibility-audit 2026-08-03)** — `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (~lines 840-852):
+      already shipped pre-extraction via `system-integration-tests@33cf6f0` (2026-07-29), which added the "WHAT
+      `SIT_VALIDATED` ACTUALLY MEANS" header block to `full-workspace-sit.yml`; verified ancestor-merged onto
+      `origin/live-defi-rollout` and no other repo/doc carries the same over-claim.
 
 ## Progress Log
 

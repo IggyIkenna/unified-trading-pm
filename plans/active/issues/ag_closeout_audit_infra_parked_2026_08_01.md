@@ -195,8 +195,16 @@ no drift:
       fixture.
 - [ ] [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`'s `asset_group`
       `[meta]` → `[ao]` (finding 6) — owning-tranche fix, leave to the `ao`-tranche's own audit or a corpus-wide
-      `meta`-fold-in pass, not this run. Done when: the tag is corrected and the doc is folded into
-      `ao_consolidated_closeout_2026_07_25.md`'s membership.
+      `meta`-fold-in pass, not this run. Done when: the tag is corrected and ~~the doc is folded into
+      `ao_consolidated_closeout_2026_07_25.md`'s membership~~. **STALE (na-eligibility-audit 2026-08-03)** —
+      `ao_consolidated_closeout_2026_07_25.md` archived 2026-07-30 (`status: complete`); its own ARCHIVED banner says it
+      no longer tracks live Sources membership (37/44 orphaned as of that date) and redirects membership authority to
+      `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (+ gated finalize) and
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` — `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s own
+      2026-08-01 Progress Log independently reached the same conclusion for an identical citation on its own todo 11
+      ("editing the literal doc this todo named is moot since it archived 2026-07-30 and its own banner already
+      redirects membership authority elsewhere"). The retag half of this todo is still open and undone; only the fold-in
+      target needs updating to the live doc.
 - [ ] [DOCS] P3. Re-carry forward the 3 still-open 2026-07-31 findings/todos (reconcile `delta_proxy_repricer.py`'s
       checkbox; positively confirm the stash-clone directory's real-host state; retag
       `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) — see

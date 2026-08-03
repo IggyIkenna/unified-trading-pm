@@ -159,6 +159,16 @@ overhead.
   migration's remaining todos actually land. No feature code implemented (correctly still blocked) — escalating via
   `/blocked` rather than fabricating progress or silently sitting idle.
 
+  **na-eligibility-audit 2026-08-03**: the depended-on doc has since resolved —
+  `plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md` is now `status: resolved` (`resolved_by`:
+  "all 8 todos shipped with commit SHAs, test names, and a real GCS `-test-` bucket end-to-end proof dated 2026-07-27"),
+  including todos 5-8 this block cited as open. The gate's stated reason ("surfacing pre-migration data would be
+  misleading") is now moot too: todo 6 there enumerated **0** real v5 cefi chain objects to migrate (307 manifest rows,
+  all `attempted_failed`/`empty_confirmed`, zero `captured`), so there is no inconsistent pre-migration data to surface.
+  **Not closing this todo** — the gate is cleared but the actual API work (adding `quote_asset`/`margin_type` to the
+  deployment-api response) has not been implemented; this is still genuinely open, just no longer blocked. Same applies
+  to the UI todo below (transitively gated on this one).
+
 - [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
       them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
       (transitively blocked on the API todo, which is blocked on the v6 migration).

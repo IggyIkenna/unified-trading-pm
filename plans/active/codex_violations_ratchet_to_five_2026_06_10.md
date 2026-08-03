@@ -573,11 +573,15 @@ unchanged:
 
 ## deployment-api — remaining 5 (added 2026-06-19)
 
-- [ ] [INFRA] P2. **Drive deployment-api codex violations 5 → 0.** Ratcheted **6→5** on 2026-06-19 (cleared the
-      deep-UAC-import in `utils/pipeline_mode_paths.py` → facade `from unified_api_contracts import Mode`). Remaining 5,
-      all pre-existing/foreign (surfaced when the version-alignment lag unblocked the QG during the dep-order-surface
-      ship): (1) **imports-inside-functions** (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py`
-      — some are deliberate lazy/circular-avoidance; triage each); (2) **direct cloud-SDK imports**
+- [x] ✅ [INFRA] P2. **Drive deployment-api codex violations 5 → 0.** **DONE (na-eligibility-audit 2026-08-03)** —
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Drive deployment-api's codex violations from 5 to 0" todo
+      (DONE 2026-07-26) shipped this exact work: `deployment-api@4c4b007` cleared all 3 remaining classes
+      (imports-inside-functions, direct-cloud-SDK, broad-except) to `V=0`, `CODEX_MAX_VIOLATIONS` ratcheted 3→0, full
+      `quality-gates.sh` green (5077 passed). Ratcheted **6→5** on 2026-06-19 (cleared the deep-UAC-import in
+      `utils/pipeline_mode_paths.py` → facade `from unified_api_contracts import Mode`). Remaining 5, all
+      pre-existing/foreign (surfaced when the version-alignment lag unblocked the QG during the dep-order-surface ship):
+      (1) **imports-inside-functions** (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py` — some
+      are deliberate lazy/circular-avoidance; triage each); (2) **direct cloud-SDK imports**
       (`from google.cloud import …` in firebase_auth / health_routes — route through
       `unified_trading_library.cloud_interface` `get_storage_client`/`get_secret_client`); (3) **files >900 lines**; (4)
       **function/method size** (~24 over the limit, e.g. `deployment_manager.run_deployment_background` 155L,

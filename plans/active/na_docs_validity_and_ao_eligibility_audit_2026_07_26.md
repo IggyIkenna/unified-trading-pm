@@ -173,10 +173,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `_finalize` pair — canonical `task_template.md` AO frontmatter (`assigned_vm: planning`,
       `execution_scope: orchestrator-agent`, `parent_epic`, `assigned_role`, 10-100 todos, `[TAG] P#.` format),
       `status: draft` until explicitly flipped (same ask-before-creating discipline as tonight).
-- [ ] [REVIEW] P2. **Fold in the standing debt from tonight's own work**: the 30 docs
+- [x] [REVIEW] P2. ✅ **Fold in the standing debt from tonight's own work**: the 30 docs
       `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` flipped to `assigned_vm: planning` still need this
       same conflict-check before their content is trusted for dispatch — do not re-audit them from scratch, just run the
-      conflict-check step against them here.
+      conflict-check step against them here. **DONE (na-eligibility-audit 2026-08-03)** — the cited doc's own 4th todo
+      did exactly this before it archived: population re-derived live (30→13 docs/46 open todos after 4 days of
+      independent drain), conflict-check run on all 13 (5 parallel investigation sub-agents), verdict tally 32 CLEAR /
+      11 CONFLICT / 2 STALE-DONE / 1 CLEAR-with-flag, all 14 non-CLEAR todos annotated in place across their 6 source
+      docs — see `plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`'s Progress Log
+      "slot-15 2026-07-30" entry for the full per-doc breakdown.
 
 ## Phase 3 — Re-run the orphan-detector to verify total coverage
 

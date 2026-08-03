@@ -169,7 +169,19 @@ context_scope:
       `solana_defi_handler`, `evm_defi_handler`. (Existing handler tests that call `process()` must patch
       `assert_defi_catalog_fresh` → True, as done for dex_pools/lst_rates.) **Codex SSOT**: add a DeFi row to the
       instruments-preflight-chain doc (`/codex/04-architecture/instruments-preflight-chain.md`). **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** **STALE
+      (na-eligibility-audit 2026-08-03) — PARTIAL, checkbox stays open**:
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s "A12a follow-through" todo
+      (`market-tick-data-service@f7d6f5fd`) wired 15 of the handlers listed here — `dex_swaps_handler`,
+      `oracle_prices_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`, `vault_share_price_handler`,
+      `gas_fee_handler`, `governance_events_handler`, `governance_proposals_handler`, `mev_events_handler`,
+      `position_data_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`, `orca_whirlpool_state_handler`,
+      `raydium_classic_amm_handler`, `evm_defi_handler` — each now calls `assert_defi_catalog_fresh(...)` at its
+      `process()` chokepoint. `drift_v2_historical_handler` was confirmed removed/renamed (no file exists under that
+      name). `perp_funding_handler` was confirmed intentionally NOT wired (its only live venues are UAC-classified cefi,
+      never consult the DeFi catalog). **Still open** (not covered by that todo): `lending_indices_handler`,
+      `liquidations_handler`, `liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`,
+      `aggregator_route_handler`, `flash_loan_events_handler`, `solana_defi_handler`.
 
 - [ ] ❌ [DATA] P1. OBSOLETE/WONTFIX. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) —
       run the dual-source backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on

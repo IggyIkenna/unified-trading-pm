@@ -153,13 +153,19 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
 
 - [x] ✅ [INFRA] PB.1. Redeploy `paper-signal-engine` (now COPYs `_ledgers.py`/`_ledgers_json.py`/`_coin_history.py`;
       rolling 3-day 1m floor) + `paper-trading-engine` (real-margin `paper_engine.py`). Repo: e2e-testing.
-- [ ] [SCRIPT] P2. **BLOCKED (pre-existing e2e ratchet drift, NOT this work)** — Land the engine source to
+- [x] ✅ [SCRIPT] P2. ~~**BLOCKED (pre-existing e2e ratchet drift, NOT this work)**~~ — Land the engine source to
       `e2e-testing/scripts/paper_trading/`. Source is SYNCED + all OWN gate items GREEN (ruff-clean, lifecycle markers,
       basedpyright-excluded per script-homes rule, codex `uv pip install`, TID251 `# noqa`, Dockerfile digest-pinned).
       Quickmerge is blocked by a **pre-existing repo-wide STEP 5.95 TID251 ratchet breakage** (5 un-noqa'd
       `scripts/sports/*` `google.cloud` sites, 15>baseline 10, red before any paper-trading change) → issue:
       `plans/active/issues/e2e_testing_tid251_ratchet_over_baseline_2026_06_20.md`. Engine is already DEPLOYED + the
       source lives in `.tabs/1/`; lands as soon as the sports/e2e-domain reconciles the ratchet. Repo: e2e-testing.
+      **DONE (na-eligibility-audit 2026-08-03)** — the cited issue is `status: resolved` (RESOLVED 2026-06-19,
+      `e2e-testing@02912ad` + PM baseline ratchet-down, tid251 15→5, "e2e gate is now GREEN fleet-wide... paper-trading
+      POC landing... is unblocked"); this doc's OWN later Progress Log entry (2026-06-21 section,
+      "MACHINE-INDEPENDENCE") confirms the engine source was in fact landed the next day — "the MAINTAINED deployable
+      engine + research harnesses were already landed (`e2e-testing@237d4d8d`...)" (2026-06-20 19:19, per the same
+      section's final confirmation) with a follow-up `RECOVERY.md` manifest at `e2e-testing@061e0f78`.
 - [x] ✅ [UI] PB.3. Land the UI (Ledgers tab + per-coin analytics + hero reframe + real-margin panel) — DONE,
       `unified-trading-system-ui@d8362766` on `live-defi-rollout` (Tier-C drain → staging). `pw:L2` ✓ 6 passed.
       regression: `tests/smoke/paper-trading-live-ledgers.smoke.spec.ts`. Repo: unified-trading-system-ui.

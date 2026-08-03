@@ -153,11 +153,13 @@ satisfies every requirement:
       `league=` dirs across 2018-2025; the partition key is already `league=EPL` etc.). The earlier "no league
       partition" reasoning was WRONG (sampled a 2015 bare path); the conclusion holds because in-universe data is
       already canonical.
-- [ ] [DATA] P0. **Eliminate the bare/legacy dual-layout (operator: "legacy needs canonicalising or deleting — that's
+- [x] ✅ [DATA] P0. **Eliminate the bare/legacy dual-layout (operator: "legacy needs canonicalising or deleting — that's
       the whole point")** — per-league entities that have BOTH a per-league split AND bare files for older days
       (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR
       DELETE (pre-retention). Distinguish from the _by-design_ bare entities (XG/WEATHER/player_values-bulk) which stay
-      bare.
+      bare. **DONE (na-eligibility-audit 2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md:118`:
+      VERIFIED CLEAN 2026-07-25 (slot 2) — the dual-layout condition does not currently exist for any of the 15
+      `PER_DAY_PER_LEAGUE` entities; zero canonicalize/delete action needed. Full census in that plan's Progress Log.
 - [x] ✅ [DATA] P0. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — this bullet's own nested
       2026-07-25 banner already says the premise is superseded by the 2026-07-21 2020-06-06 data-floor ruling; the
       checkbox here just never got updated to match. The real remaining blocker is a genuine human-only hard-stop for an
@@ -200,9 +202,14 @@ satisfies every requirement:
       resolution in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo — instruments-service@2c4fa059.
 - [x] ✅ [DATA] P0. **94-league enrichment backfill** — re-measured + closed. Full resolution + evidence in
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo — unified-trading-pm@(this commit).
-- [ ] [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
+- [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
       start/end + transfer window; per-source eligibility maps + annual-id-change handling; team/player/fixture
-      canonical + mappings. Wire honest-coverage to consume them.
+      canonical + mappings. Wire honest-coverage to consume them. **DONE (na-eligibility-audit 2026-08-03)** —
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md:165`: `unified-api-contracts@ce18ff15` audited every clause
+      against current code (most already canonical: name/ids/country/season dates, transfer windows, team cross-source
+      mapping, fixture/player canonical ids, annual footystats-id rotation via `check_footystats_season_drift.py`); 2
+      genuine gaps closed (`LeagueDefinition.is_cup` added; `is_sports_structural_gap()` wired into
+      `get_expected_leagues_for_source()`). 4 new regression tests, `quality-gates.sh` green.
 - [ ] [DATA] P1. **Define the curated ~300-league reference set** (94 + below-division + continental cups + majors) +
       widen the write-gate to it.
 - [ ] [DATA] P2. **Curated-universe backfill** (API-Football fixtures + enrichment, 2019→, burn ~6M over weeks; gated +

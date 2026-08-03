@@ -222,11 +222,18 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 
 ## Todos
 
-- [ ] [DATA] P1. **Legacy-bucket delete (defi/tradfi/sports) + cefi CF-audit adjudication** — the standalone legacy
-      bucket each remaining AG's own E8 step targets (defi/tradfi/sports) remains genuinely undeleted, and cefi's
-      CF-4/CF-5/Era-B data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi).
+- [ ] [DATA] P1. **Legacy-bucket delete (defi/tradfi/sports) ~~+ cefi CF-audit adjudication~~** — the standalone legacy
+      bucket each remaining AG's own E8 step targets (defi/tradfi/sports) remains genuinely undeleted~~, and cefi's
+      CF-4/CF-5/Era-B data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi)~~.
       **cefi's own legacy-bucket delete is DONE (corrected 2026-08-02, see the cefi table row above) — dropped from this
-      todo's AG list; the CF-audit adjudication half is unaffected and still open.**
+      todo's AG list.** **STALE (na-eligibility-audit 2026-08-03)** — the cefi CF-audit adjudication half is ALSO done,
+      not "unaffected and still open" as the 2026-08-02 correction claimed:
+      `cross_cutting_satellite_ao_dispatch_batch1_     2026_07_26.md`:465 (DONE 2026-08-01, slot-6, data_engineering)
+      ran a fresh `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd-central-element-323112` manifest
+      and confirmed CF-1/CF-3/CF-4/CF-5/Era-B all GREEN for cefi (`market-tick-data-service@c2ae82e0`, 9,662,116 rows,
+      independently re-verified post-apply) — this is exactly the named CF-4/CF-5/Era-B adjudication this todo asked for
+      (CF-8/CF-2-paths stay RED but were already explicitly out of that todo's scope, tracked separately). **Remaining
+      open scope on this todo: legacy-bucket delete for defi/tradfi/sports only.**
 
 ## Progress Log
 

@@ -151,7 +151,11 @@ forces an operator/main manual DB patch outside the normal flow.
       quickmerge.
 - [ ] [DOC] P3. Once either fix above ships, add the accepted BLOCKED-marker convention to `task_template.md`'s
       "remove/re-state a todo" section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions)
-      so future RED-gate todos use a consistent, machine-recognized marker from the start.
+      so future RED-gate todos use a consistent, machine-recognized marker from the start. **na-eligibility-audit
+      2026-08-03**: `ao_satellite_ao_dispatch_batch2_2026_07_30.md`:103-116 explicitly covers only 3 of this doc's 4
+      todos and calls out this 4th (doc-note) todo as "sequenced behind these and stays with the source doc" — not
+      closing here. Its precondition ("once either fix above ships") is now met (both fixes above are `[x]`), so it is
+      unblocked but still not done.
 - [x] ✅ [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
       the `plan_ref` out of `plans/active/` (an in-same-commit archival closure) AND the moved content carries an
       accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker reads

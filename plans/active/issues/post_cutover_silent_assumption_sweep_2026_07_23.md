@@ -588,7 +588,11 @@ codex, or a future staging re-entry gets a dead pipeline.
       (`--baseline-write`) as each is fixed so the ratchet only ever shrinks.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
-      costs real money via `ubuntu-latest` fan-out); make `workspace-quickmerge-validation` fail when it logs a failure.
+      costs real money via `ubuntu-latest` fan-out); ~~make `workspace-quickmerge-validation` fail when it logs a
+      failure~~. **STALE (na-eligibility-audit 2026-08-03)** — the `workspace-quickmerge-validation` fix is DONE, closed
+      via `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md:229` (`unified-trading-pm@6f898f930`, removed the
+      blanket `|| true`, `if: always()` on artifact-upload, fixed a `set -e` early-exit bug). The other sub-items (F4
+      vacuous crons, `digest-drift-sweep` non-convergence) remain open — not closing this checkbox.
 - [x] ✅ [INFRA] P2. Fix the F5 readers so an empty input renders as **"unknown"/"not applicable", never GREEN** —
       starting with the `deployed_versions` shape mismatch and the `stuck_in_sit` / promotion-blocked panels. Correct
       the false comment at `ldr-to-main-promote-fleet.yml:422-434`. — **3/4 sub-items DONE 2026-07-29 via
