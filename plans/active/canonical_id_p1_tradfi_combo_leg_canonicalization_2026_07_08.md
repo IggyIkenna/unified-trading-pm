@@ -201,6 +201,14 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-03** (tradfi tranche, dispatch agt-06b4c6): **KEEP-NA, valid — re-verified, disposition
+  unchanged.** The 2026-08-02 plan-hygiene sweep (`17b53df1`) converted this doc's prose-only remaining action into a
+  real `- [ ] [OPERATOR] P2` checkbox ("Re-apply the historical catalog canonicalization scripts") — a formatting
+  change, not new content: the SAME residual (91-CBOE + 312-DBEQ rows) and the SAME operator-gating (this plan's own
+  "Rollout methodology" section, ¶114-117: pause for confirmation before any unsupervised sweep) that the 2026-07-31
+  pass below already assessed when this was still buried in the "Scope migration mechanics" prose. No stale items, no
+  duplicate claim elsewhere, no reclassify — a GCS-catalog `--apply` rewrite genuinely awaiting the recorded operator
+  go-ahead, now just correctly tracked as its own checkbox instead of a prose aside.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA, valid.** 0 open checkboxes
   (matches tranche-inventory tool), but this doc is a live "prose-only remaining work" case — the entry below already
   self-flags that it does not genuinely reach 0 open todos (the residual 91-CBOE + 312-DBEQ historical catalog `--apply`
