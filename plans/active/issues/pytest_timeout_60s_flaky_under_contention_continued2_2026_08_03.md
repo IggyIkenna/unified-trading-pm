@@ -52,7 +52,7 @@ related:
     /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T21:05Z
+last_updated: 2026-08-03T21:45Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -784,3 +784,39 @@ repeated here.
   clean (`instruments-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
   this doc's own commit; no branch changes in either repo). `instruments-service` already present in this doc's `repos:`
   frontmatter — no frontmatter change needed.
+
+- **2026-08-03 ~21:20-21:45Z (`cicd` escalation `agt-88658c`, slot 10, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=679`) — deployment-service's 4th occurrence in this doc-chain, exact same test class as its 3 prior entries
+  above, decisively reproduced clean, PR already moot**: escalation cited failing run `30843983859` (`promote/
+  deployment-service/7197eaf9bcda`, LDR → main). Read the full `tests`-slice job log directly (job `91787698183` — `gh
+  run view --log-failed` truncated before the real failure, so fetched the job's raw log instead): `tests` slice ran to
+  99% then hit `Failed: Timeout (>300.0s) from pytest-timeout` on
+  `TestApiFootballLauncherHardenedPreemptionSignal::test_shutdown_script_syntax_and_shellcheck_clean` (`1 failed, 2888
+  passed, 17 skipped, 8 warnings in 2084.68s (0:34:44)`) — the identical test class already diagnosed 3× for this repo
+  in this doc-chain (`agt-a46033`, `agt-3fb529` ×2, `agt-7bcb7c`), a 4th distinct random test within the same class
+  (`test_shutdown_script_syntax_and_shellcheck_clean`, not previously named for this repo) reinforcing the
+  scheduler-starvation signature over any single-test theory. Confirmed PR #679 was **already MERGED**
+  (`mergedAt: 2026-08-03T19:02:26Z`, mergeCommit `3b186a13`) before this session even started — `gh pr list --state
+  open --repo IggyIkenna/deployment-service` → 0 open PRs; verified `3b186a13` is an ancestor of BOTH
+  `origin/main` and `origin/live-defi-rollout` — nothing is actually blocked. Confirmed `PYTEST_TIMEOUT=300`/
+  `PYRIGHT_TIMEOUT=300` still intact and unchanged in `scripts/quality-gates.sh` (already at the sanctioned ceiling) —
+  did NOT raise a third time, per this doc-chain's established todo-1 practice. **Reproduced the full failing test
+  class locally, decisive**: `.venv/bin/python -m pytest tests/unit/test_vm_launcher_scripts.py::
+  TestApiFootballLauncherHardenedPreemptionSignal -v --timeout=90` → **6/6 passed in 58.80s**, INCLUDING the specific
+  named failing test, on the SAME shared host under comparable contention (`uptime` load average 26.07/28.56/28.16 at
+  investigation time) — zero code/test defect. Read the launcher script (`scripts/vm/launch-api-football-backfill-vm.sh`)
+  for any un-mocked network call that could explain a genuine hang before accepting the doc-chain's conclusion: the only
+  real (non-`gcloud`-mocked) network call is a `curl --max-time 15` to `api-sports.io/status`, gated behind
+  `[[ -n "$AF_KEY" ]]` where `AF_KEY` comes from the mocked `gcloud secrets versions access` (which returns empty
+  stdout under the test's mock), so the curl never fires in-test — ruled out a launcher-specific hang, consistent with
+  the clean local repro. `GET /api/repo-blockers` → `open: []`. A fresh LDR re-verify run was already `in_progress`
+  against the true current HEAD (`30854592002`, headSha `5478a92f`, 11+min elapsed at investigation time) — left it
+  running rather than cancel/redispatch (would forfeit real elapsed queue/run position for zero benefit), consistent
+  with established precedent. **Disposition: no code or workflow change made or needed** — every sanctioned mitigation
+  already exists and is intact on `live-defi-rollout`; PR already merged and moot; outcome of `30854592002` left for
+  the next occurrence. `AUTHORING_SLOT=ci` is not a real numbered slot (fails `cicd.md`'s `^[0-9]+$` check) — skipped
+  the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`deployment-service`
+  and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no
+  branch changes in either repo). `deployment-service` already present in this doc's `repos:` frontmatter — no
+  frontmatter change needed. Now the **4th same-day escalation for this exact repo/test-class** in this doc-chain
+  alone.
