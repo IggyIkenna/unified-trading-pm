@@ -57,9 +57,10 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
   ]
 ---
 
@@ -763,3 +764,5 @@ speed-note (both deferred optimisations, non-blocking).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added dex_swaps_handler.py/canonical_write.py,
+  the real handler + writer touched by the open P1 bucket-redirect todo.

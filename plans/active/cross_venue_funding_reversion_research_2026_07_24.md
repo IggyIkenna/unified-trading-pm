@@ -513,3 +513,6 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
   frontmatter, body byte-identical): KEEP-NA, valid — every open todo is strategy/ML research judgment (GBM squeeze
   models, archetype shelving decisions, structure-5 candidacy, prime-broker research).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) --
+  `funding_reversion_crossvenue_book.py` is confirmed the doc's own primary shipped script (cited 5x incl. "THE full
+  deployable stack" line); parent/sibling fork + custody-providers codex remain the minimal correct set.

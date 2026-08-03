@@ -69,3 +69,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (3 entries, corrects the prior marker's
+  stale count) -- unchanged; this is a gated finalize/archival doc, genuinely code-free.

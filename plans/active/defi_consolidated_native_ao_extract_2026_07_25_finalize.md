@@ -92,3 +92,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) -- unchanged, already the minimal set covering
+  both open reconcile/archive todos (source docs cited by the open Re-check + Archive steps).

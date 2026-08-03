@@ -52,7 +52,7 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
-    /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
+    /cursor-configs/skills/vm-preemption-billing-waste-audit/SKILL.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
@@ -576,3 +576,6 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   cheap but belongs with … not a batch todo that would re-diagnose a stale snapshot'). Respecting that prior routing
   rather than overriding it.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- swapped the ag-residual
+  sibling for the `/vm-preemption-billing-waste-audit` skill, the doc's own text names as the execution mechanism for
+  its sole open P0 todo.

@@ -953,7 +953,7 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   text data", `test -L` false) with root-relative `"path"` entries (`.`, `unified-trading-api`, `unified-trading-pm`,
   …), spot-checked 2 of them (`unified-trading-api/.git`, `unified-trading-pm/.git`) resolve to real repos inside the
   workspace root. No commit needed — nothing to ship.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries) — dispatch-batch coordinator.
 
 ## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM) — SUPERSEDED, see slot-7 re-check below the table
 

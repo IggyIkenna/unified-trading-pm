@@ -531,6 +531,9 @@ dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-data
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - dominated by `[DESIGN]`/`[RESEARCH]`
   archetype + hedge-venue + universe-construction calls, plus a BLOCKED-DATA Korea-equity vendor ask.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries) -- both source paths
+  (`crypto_equity_link.py`, the tardis parsing adapter) plus the KRX-equity-twin precedent issue doc still match this
+  plan's live BLOCKED-DATA item; codex SSOTs for cefi capture + tradfi sourcing remain correct.
 
 ## Temporary states + their canonical follow-up plans
 

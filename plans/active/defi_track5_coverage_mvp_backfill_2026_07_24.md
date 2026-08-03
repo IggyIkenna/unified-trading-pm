@@ -50,10 +50,9 @@ context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
     /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
-    /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
   ]
 ---
 
@@ -161,3 +160,6 @@ the parent plan's Track 7 culled-venue ruling.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - depends_on + gate_on_depends:true on
   defi_consolidated_closeout_2026_07_18 which still carries 19 open todos — KEEP-NA on the gate citation alone
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — fixed a duplicated entry (the same optimization
+  issue doc was listed twice) and swapped in the real `dex_pools_handler.py` fan-out target named in the doc's own
+  Track-5 async-fan-out todo.

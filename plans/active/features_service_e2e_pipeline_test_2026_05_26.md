@@ -45,13 +45,12 @@ estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving 
   "
 context_scope:
   [
-    /plans/archive/2026_06/features_input_manifest_migration_2026_05_25.md,
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    features-service/features_service/delta_one/app/core/feature_writer.py,
     /codex/02-data/honest-absence-downstream-handling.md,
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    features-service/features_service/onchain/live/lst_yields_compute_runner.py,
   ]
 drift_direction: advance-code
 ---
@@ -754,3 +753,7 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   2026-05-26/06-03 todo list, and the "Open Track-1 todos" section (lines 677-707) which is itself the surviving,
   already-re-triaged remainder (3 of the ori...
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, was 7 — over the 2-6 target) — re-anchored on the
+  doc's real remaining scope (the 4 open Track-1 todos: staked-basis onchain e2e, CeFi MDPS top-up, deferred backfill,
+  the yield-stub), dropping the archived predecessor plan and the long-since-shipped Phase-1 WRITE-blocker source path
+  in favor of the `lst_yields` compute runner Phase A actually names.

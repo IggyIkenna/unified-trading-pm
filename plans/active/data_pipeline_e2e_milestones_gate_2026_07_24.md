@@ -512,3 +512,6 @@ is the single place to scan them all in one pass.
   KEEP-NA, valid — dated operator ruling (autonomous_session_operator_decisions_2026_07_25 entry #10, resolved
   2026-07-26 option A): standing reference surface, not an archival candidate; 0 open todos is expected here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
+  stale count) -- unchanged; this is a standing tracking/index surface (0 open todos by design), no source path applies
+  -- real work lives in the cited target plans.

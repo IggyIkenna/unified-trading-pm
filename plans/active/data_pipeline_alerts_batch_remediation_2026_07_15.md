@@ -123,3 +123,6 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   instruction to run locally/autonomously, not AO-dispatched; one item is a 24h real-wall-clock observation window that
   cannot complete in one session.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (5 entries, corrects the prior marker's
+  stale count) -- unchanged; both remaining open todos (a docs-fix + a real-time observation window) are non-code, no
+  source path applies.

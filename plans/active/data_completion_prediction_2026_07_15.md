@@ -420,3 +420,6 @@ range never overlaps a still-in-flight per-market-only day).
   migration were closed with evidence (the second `grain_for_instrument_type` copy and the second `FLAG 3`
   deployment-api copy) — 23 open todos -> 21, no tracked work dropped.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) --
+  `rebuild_prediction_manifest.py` (cited twice in-body, the manifest-rebuild script this plan's todos operate on)
+  remains the correct source target alongside the M-1 coordinator + the 3 pipeline/bucket/manifest codex SSOTs.

@@ -45,6 +45,7 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+    unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
   ]
 ---
 
@@ -206,6 +207,8 @@ QG-green per repo.
   passive wait + a fresh count). Re-verify with fresh measurements at that time; do not reuse this note's or the linked
   issue doc's counts (per this doc's own re-verification convention). The remaining GO/NO-GO items stay
   operator-supervised per this doc's own banner; `assigned_vm` is intentionally left untouched.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `gcs_blob_ops.py` (the `gcs_delete_object`
+  wrapper this doc's own "Gotchas" section names as the mandatory delete path).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
 ## Codex SSOTs

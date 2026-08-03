@@ -54,11 +54,10 @@ context_scope:
   [
     /cursor-configs/skills/data-pipeline-reconciliation/SKILL.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
-    /codex/02-data/reconciliation-finding-taxonomy.md,
-    /codex/02-data/cross-asset-canonical-target-ssot.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
   ]
 ---
 
@@ -966,6 +965,9 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   option A) — standing reference surface; the single residual todo is a prod sports orphan back-fill + legacy-dup
   triage.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries, trimmed from 7 to fit the MVI
+  cap) -- dropped cross-asset-canonical-target-ssot.md, both remaining open todos are orphan-measurement, not
+  canonical-target work.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid (blocker-currency only) — the "Sports orphan
   back-fill" todo's named dependency (`estate_orphan_assessment_2026_07_21.md` todos 1-2) is stale-resolved (both `[x]`
   DONE 2026-07-22); annotated in place. The sibling todo (measure historical per-venue non-canonical row count for 8

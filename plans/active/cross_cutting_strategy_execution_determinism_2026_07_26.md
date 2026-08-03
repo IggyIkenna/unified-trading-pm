@@ -108,3 +108,6 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   the ask-before-creating HARD RULE makes plan destination an operator call; the doc itself frames its content as
   'design/research judgment, not a checkable fact'.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries) -- pure coordination-index doc
+  over 8 source plans (this doc's own todo is a future triage pass, not itself code work), so no source-code path
+  applies; existing plan/issue/codex links remain the minimal correct set.

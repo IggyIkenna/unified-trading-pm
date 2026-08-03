@@ -43,9 +43,9 @@ context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/02-data/lst-exchange-rate-surfaces.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
     /cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 depends_on: []
 source: >-
@@ -127,3 +127,5 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
   annotation text is preserved verbatim in that issue doc for whoever unblocks the cap.
 
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the skill-doc-only entry for the real
+  `oracle_prices_handler.py` CLI-handler source path the todo's `collect-oracle-prices` operation resolves to.

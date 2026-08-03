@@ -42,6 +42,7 @@ context_scope:
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/03-observability/alerting.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py,
   ]
 ---
 
@@ -311,3 +312,5 @@ droppability now rather than treated as still-gated.
   dependency/CVE ops blocked on foreign repo state, documented as genuine-impossibility-in-scope. NOTE the vcrpy
   ignore-vuln is now re-checkable — the aiohttp<3.14 pin it was gated on lifted 2026-06-23.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (5 entries) -- added the UAC
+  `data_freshness.py` SSOT the registry design centers on.

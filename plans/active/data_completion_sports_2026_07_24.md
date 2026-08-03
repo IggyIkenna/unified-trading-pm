@@ -865,6 +865,9 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 > shipped/`[x]`/narrative, zero open todos. See that file for the full early-campaign narrative.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries) -- `honest_coverage.py` (cited
+  twice in-body, the canonical honest-coverage type this plan's sports-lane checks against) remains the correct source
+  target alongside M-1 + the line-cap-remediation issue + the sports-floor/honest-coverage/vm-launcher codex SSOTs.
 
 ## Deferred work — migrated to:
 

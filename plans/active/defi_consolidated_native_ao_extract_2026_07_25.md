@@ -50,12 +50,10 @@ source: >-
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    instruments-service/scripts/measure_honest_coverage.py,
   ]
 ---
 
@@ -327,6 +325,8 @@ session's final report; condensed here for anyone re-auditing this doc later:
   category.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped a repeated batch1 entry, swapped in the
+  finalize companion + measure_honest_coverage.py, the real file the one substantive shipped todo touched.
 
 ## Codex SSOTs
 

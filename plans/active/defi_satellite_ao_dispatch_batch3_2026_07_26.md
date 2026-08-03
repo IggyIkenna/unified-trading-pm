@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                      `returns`/onchain reconfirmed). Evidence:
-                                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                              `returns`/onchain reconfirmed). Evidence:
+                                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -636,3 +636,5 @@ part of this plan was migrated elsewhere.
   confirmed the naming reconciliation is already tracked as `[DATA] P3` in the issue doc (not duplicated). Hit and
   resolved (same session, via slot-6) an unrelated pre-existing instruments-service QG failure — repo-blocker
   `RB-48c5820b`, detail in the issue doc's Progress Log.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal (code-free
+  dispatch-batch coordinator; umbrella/predecessor-batch/finalize/skill/naming-SSOT set).
