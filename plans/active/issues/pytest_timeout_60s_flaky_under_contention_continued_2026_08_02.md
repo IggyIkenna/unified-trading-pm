@@ -40,7 +40,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
-last_updated: 2026-08-03T12:55Z
+last_updated: 2026-08-03T14:00Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -653,3 +653,37 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   for a follow-up occurrence. `GET /api/repo-blockers` → `open: []`. `AUTHORING_SLOT=ci-reconcile` (sentinel) — per
   cicd.md, skipped the authoring-slot ping. Slot left clean (`market-data-processing-service` on `live-defi-rollout`, 0
   commits ahead of origin, working tree clean throughout).
+
+- **2026-08-03 ~13:52-14:00Z (`cicd` escalation `agt-1e081d`, slot 7, `features-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — 12th escalation for this repo's wall, no material change since `agt-6db24c`'s 12:20-12:30Z entry**:
+  `main` still red at the same already-diagnosed run `30780455914` (pre-`c092df50` 150s-timeout shape, fix on LDR,
+  pending promotion — nothing new). Checked LDR: `agt-6db24c`'s dispatched run `30813594354` (against headSha
+  `b261f1e5`) had completed by this session — FAILED again, `tests` slice hung ~10min inside
+  `test_feature_groups/test_signal_confirmation.py::test_all_outputs_binary` (`_add_lagged_features`→pandas
+  `shift`/`check_dict_or_set_indexers`) before the 300s watchdog fired; same scheduler-starvation signature (a live
+  faulthandler stack trapped mid-pandas-call, not a hung-forever deadlock), no test-content overlap with any prior
+  entry's hang site. `checks` slice separately failed with 1031 informational (non-blocking) basedpyright warnings plus
+  16 blocking `reportAny` errors in `e2e-testing/scripts/delta_one/smoke_matrix.py` and `commodity/smoke_matrix.py` —
+  confirmed these are PRE-EXISTING peripheral-script type-hygiene gaps unrelated to this doc's timeout class (a
+  `list_blobs`/`blobs` partially-unknown GCS-SDK type + downstream `Any` propagation), not a new regression from this
+  run's own change (LDR head `8265205c` = one commit ahead of the tested `b261f1e5`, touching only
+  `fix(delta_one): normalize candle timestamp dtype + set TRADFI TIMEFRAME override` — no e2e-testing/smoke_matrix
+  touch). This 16-error basedpyright gap is real but out of scope for this wall-clearing task (a peripheral-script
+  hygiene debt, not a CI-timeout mitigation) — leaving it untouched rather than scope-creeping a fix into this session.
+  LDR HEAD had advanced one further commit (`abff85a3`→`8265205c`) with a run already in-flight against the
+  slightly-stale `abff85a3` (`30818407385`, workflow_dispatch, dispatched ~13:32:16Z by an earlier process, both
+  `tests`/`checks` slices still running at ~23min elapsed when checked) — the one new commit touches only `delta_one`
+  candle-dtype logic, not test-timeout config, so this in-flight run's outcome remains a valid signal for the current
+  head; did NOT redispatch (would cancel its elapsed contention-survival progress via the concurrency group for zero
+  benefit, per this doc's established precedent). Verified all three timeout mitigations (`PYTEST_TIMEOUT=300`,
+  `PYRIGHT_TIMEOUT=300`, `FORMULA_DRIFT_TIMEOUT=240`) still intact in `scripts/quality-gates.sh` at LDR HEAD — no
+  regression. `GET /api/repo-blockers` → `open: []`. Confirmed via `ldr-to-main-promote-fleet`'s own log (`30819955373`,
+  13:52:13Z) that the gate is unchanged:
+  `GATE BLOCK features-service: ci_status=FAILING (cached='FAILING', live='FAILING')` — will auto-promote the instant
+  any LDR run reports green, no manual promotion action needed. **Disposition: no code or workflow change made or
+  needed** — root cause remains fleet-wide `glue`-runner contention, root-cause fix still correctly out of scope
+  (`/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`, Phase 2-3 open).
+  `AUTHORING_SLOT=ci-reconcile` (sentinel) — per cicd.md, skipped the authoring-slot ping. Slot left clean
+  (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc
+  edit). This is the 12th same-day escalation for this exact wall — todo 3's operator-flagged dedup/cooldown gap remains
+  open and unaddressed by this entry.
