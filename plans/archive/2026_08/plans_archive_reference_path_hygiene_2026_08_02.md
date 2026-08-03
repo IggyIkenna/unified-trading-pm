@@ -15,9 +15,9 @@ related:
   [
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md,
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02_finalize.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md,
   ]
 created: 2026-08-02
 last_updated: "2026-08-03"
@@ -44,9 +44,9 @@ source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.
 > RESULT). `check_reference_paths` ratchet confirmed clean: format 81/81, existence 87/87. Closed out via
 > `plans_archive_reference_path_hygiene_finalize_2026_08_02.md` (and its 2 duplicate siblings, consolidated into the
 > same archival commit — see that doc's Progress Log). Moved to
-> `/plans/active/plans_archive_reference_path_hygiene_2026_08_02.md`; corpus referrers updated. No new durable contract
-> from this plan (it only ran an existing script over an existing population — codex-alignment check: nothing to
-> update).
+> `/plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md`; corpus referrers updated. No new durable
+> contract from this plan (it only ran an existing script over an existing population — codex-alignment check: nothing
+> to update).
 
 ## Why this plan exists
 

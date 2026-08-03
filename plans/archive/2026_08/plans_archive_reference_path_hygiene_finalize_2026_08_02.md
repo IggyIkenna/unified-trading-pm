@@ -16,12 +16,12 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, ratchet, mechanical, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/task_template.md,
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md,
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02_finalize.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02_finalize_2026_08_03.md,
   ]
 created: "2026-08-02"
 last_updated: "2026-08-03"
@@ -54,7 +54,7 @@ drift_direction: advance-code
 
 > **🟢 ARCHIVED 2026-08-03.** Both todos confirmed evidence-backed and executed — see RESULTs below. Consolidated with
 > two duplicate finalize plans that independently gated the same parent (see Progress Log) into this single archival
-> commit. Moved to `/plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md`.
+> commit. Moved to `/plans/archive/2026_08/plans_archive_reference_path_hygiene_finalize_2026_08_02.md`.
 
 ## Todos
 

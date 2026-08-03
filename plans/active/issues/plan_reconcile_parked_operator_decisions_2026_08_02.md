@@ -313,8 +313,8 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 - [x] ✅ [OPERATOR] P2. **Rule § 4** — RULED 2026-08-02, option B (exclude `plans/archive/` from the ratchet).
       `check_reference_paths.py`'s `target_files()` now skips `plans/archive/`; re-baselined from
       format=158/existence=407 down to format=81/existence=90 (both green, well under the reduced baseline). A separate
-      tracked mechanical-cleanup plan, `/plans/active/plans_archive_reference_path_hygiene_2026_08_02.md` (archived
-      2026-08-03, all todos done), was also filed independently (option A) to actually fix the underlying
+      tracked mechanical-cleanup plan, `/plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md`
+      (archived 2026-08-03, all todos done), was also filed independently (option A) to actually fix the underlying
       `plans/archive/` reference-path defects rather than only exclude them from the ratchet — not urgent now that the
       ratchet itself is green, but still useful hygiene. (repo: `unified-trading-pm`)
 - [ ] [DOC] P2. **Name this register in the skill file** — `cursor-configs/skills/plan-reconcile/SKILL.md:301`'s

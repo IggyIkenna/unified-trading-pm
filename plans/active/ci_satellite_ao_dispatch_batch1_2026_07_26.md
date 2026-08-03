@@ -714,7 +714,7 @@ here now, retroactively, to close that gap. Each item cites its source doc + ori
       regression test (`test-ldr-promote-arm-failed-tally.sh`) proving the ARM_FAILED tally with both structural
       assertions and a functional harness against the real extracted aggregation code. Full PM `quality-gates.sh` green.
       **Incidental fix, filed separately**: authored the missing companion finalize plan for
-      `/plans/active/plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after
+      `/plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md` (`unified-trading-pm@fb1c05791`) after
       discovering it was blocking the corpus-wide `check_finalize_plan_coverage.py` gate — unrelated to this todo,
       shipped as its own commit. (Both the source plan and its finalize are now archived, 2026-08-03.)
 - [ ] [DEVOPS] P2. **EXTRACTED** from `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (locked doc, only

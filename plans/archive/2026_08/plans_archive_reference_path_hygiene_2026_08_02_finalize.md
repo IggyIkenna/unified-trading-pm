@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, ratchet, mechanical, finalize]
 related:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
-    /plans/active/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_finalize_2026_08_02.md,
   ]
 created: 2026-08-02
 last_updated: "2026-08-03"
@@ -39,7 +39,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/plans_archive_reference_path_hygiene_2026_08_02.md,
+    /plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -58,7 +58,7 @@ source: >-
 > (`plans_archive_reference_path_hygiene_finalize_2026_08_02.md`) performed the one actual archival covering the parent
 >
 > - all 3 finalize siblings in a single commit. See that doc's Progress Log for the full consolidation account. Moved to
->   `/plans/active/plans_archive_reference_path_hygiene_2026_08_02_finalize.md`.
+>   `/plans/archive/2026_08/plans_archive_reference_path_hygiene_2026_08_02_finalize.md`.
 
 ## Todos
 
