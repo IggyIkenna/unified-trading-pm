@@ -9,10 +9,13 @@ summary: >-
   `sports_fixture_events_refetch_progress_2026_07_25.md`. Explicit business goal: once genuinely complete, the operator
   wants to downgrade the API-Football subscription tier, so full completion here is the actual deliverable, not just
   data-quality hygiene. Censused the 5 previously-untracked AF entities (PLAYER_STATS/INJURIES/STANDINGS/TEAMS/LEAGUES)
-  against their own SPORTS_ENTITY_LEAGUE_COVERAGE scope — all 5 show substantial genuine gaps (381,163 total needed
-  shards), plausibly explained by the SAME unconditional-MVP-pre-filter bug already found + fixed this session (todo #3,
-  `instruments-service` per-fixture task-queueing loop) — these entities were already declared `None` (all-383) in the
-  coverage dict from day one, but the actual fetch loop silently capped them to MVP-96 until that fix landed.
+  against their own SPORTS_ENTITY_LEAGUE_COVERAGE scope — 4 of the 5 show substantial genuine gaps (270,873 total needed
+  shards across PLAYER_STATS/INJURIES/STANDINGS/TEAMS), plausibly explained by the SAME unconditional-MVP-pre-filter bug
+  already found + fixed this session (todo #3, `instruments-service` per-fixture task-queueing loop) — these entities
+  were already declared `None` (all-383) in the coverage dict from day one, but the actual fetch loop silently capped
+  them to MVP-96 until that fix landed. **LEAGUES resolved 2026-08-03**: its initial 110,290-shard "gap" was a
+  census-script artifact — the entity's daily write path was retired 2026-05-07 (replaced by code-committed UAC static
+  data), confirmed via a live manifest spot-check; zero genuine work remains for LEAGUES.
 status: open
 nature: issue
 asset_group: [sports]
@@ -71,7 +74,7 @@ Per `unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_EN
 | **INJURIES**     | **all-383**                  | **NEW this doc** — 110,739 expected, 9,994 captured, **100,745 needed**                                                        |
 | **STANDINGS**    | **all-383**                  | **NEW this doc** — 110,739 expected, 25,792 captured, **84,947 needed**                                                        |
 | **TEAMS**        | **all-383**                  | **NEW this doc** — 110,739 expected, 42,998 captured, **67,741 needed**                                                        |
-| **LEAGUES**      | **all-383**                  | **NEW this doc** — 110,739 expected, 449 captured, **110,290 needed** (⚠️ see caveat below)                                    |
+| **LEAGUES**      | **all-383**                  | **RESOLVED 2026-08-03 (spot-check)** — retired 2026-05-07, **0 genuinely needed** (see spot-check finding below)               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -80,18 +83,47 @@ same gap the writer's own empty-gap emission targets, not an invented denominato
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` (single UTL-client manifest read, same
 credential-safe pattern as the fixed `census_fixture_events_schema_variants_2026_07_25.py`).
 
-**Grand total needed across these 5 entities: 381,163 shards.**
+**Grand total needed across these 5 entities: 381,163 shards** (⚠️ superseded — see spot-check finding below; the
+genuine actionable total across the 4 still-live entities is **270,873 shards**, LEAGUES excluded).
+
+## ✅ Spot-check finding (2026-08-03) — LEAGUES is RETIRED, not a genuine 110,290-shard gap
+
+Resolves caveat item 1 below. Read the writer call sites (`instruments_service/engine/orchestrator/sports_reference.py`
+line 134) + git history, then spot-checked the live manifest directly:
+
+- **`git show 93efebf3`** — `feat(orchestrator)!: retire api_football LEAGUES daily-dump (C.1)`, landed 2026-05-07.
+  Commit message confirms the pre-retirement cadence explicitly: "was 3046 daily shards of **identical static league
+  refdata**" — so LEAGUES genuinely WAS written per-(date,league) historically (not per-season — ruling out caveat
+  option (b) as originally framed), but every date's shard held redundant, unchanging content. The `/leagues` API call
+  was removed from the daily orchestrator entirely; teams/standings fetch now reads league scope from UAC
+  `get_prediction_leagues()` instead of a freshly-fetched `leagues_df`. Replacement: UAC `LeagueDefinition` +
+  `provider_league_ids` (`FOOTYSTATS_SEASON_IDS`, `FOOTYSTATS_HISTORICAL_SEASON_IDS`, etc.) — league metadata is now
+  canonicalised via **code commits at season start**, not a daily GCS dump. No downstream consumer regressed (features-
+  sports' `LEAGUES_COLUMNS` was schema-only, no feature ever read `logo_url` etc. beyond what UAC already provides).
+- **`scripts/migrate_leagues_kill_2026_05_07.py`** — the companion migration that flips every pre-existing
+  `data_type=LEAGUES` manifest row to `capture_status=empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`
+  (per UAC `EmptyConfirmedReason`), so honest-absence downstream consumers (deployment-api data-status panel) stop
+  reading LEAGUES as phantom-missing.
+- **Live manifest spot-check (single targeted read of the same `_index/availability_index.parquet` this doc's own census
+  already reads, column-pruned, no new whole-corpus walk)**: **ALL 8,780** `data_type=LEAGUES` rows currently show
+  `capture_status=empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` — **zero** rows show
+  `capture_status=captured` (row dates span 2018-01-01 through 2026-05-04, i.e. stop right at the retirement commit).
+  This confirms the migration was genuinely **applied**, not just written.
+- **Root cause of the false 110,290 figure**: `scripts/census_all_af_entities_completion_2026_08_03.py` (this doc's own
+  census script) only counts `capture_status == "captured"` rows as "already captured" (line 56) and never checks for
+  `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE` — so it silently treats every genuine fixture-day, past AND future,
+  as still needing a LEAGUES capture, when the entity has had **zero** live write path since 2026-05-07 and never will
+  again. The correct "needed" count for LEAGUES is **0** — not a coarser-cadence overestimate (caveat option (b)), a
+  **fully retired entity the census script doesn't know how to mark as done**.
+- **Action**: LEAGUES is REMOVED from this campaign's launch scope (see todo below) and from the grand-total needed
+  count. No VM launch, no backfill, no further work on LEAGUES under this doc.
 
 ## ⚠️ Caveat before launching anything — two things NOT yet verified
 
-1. **LEAGUES' near-total absence (449/110,739 = 0.4% captured) is different in KIND from the other 4** (which show 9-39%
-   captured, consistent with "MVP-only was captured pre-fix, non-MVP wasn't"). This could mean either (a) LEAGUES is
-   genuinely this far behind for the same MVP-pre-filter reason, just more severely, or (b) LEAGUES is actually captured
-   at a coarser real-world cadence (once per league/season, not once per fixture-date) and the per-fixture-date shard
-   atom this census assumes doesn't match how the writer actually stamps LEAGUES freshness — in which case 110,290 would
-   be a significant overestimate of real work, not a genuine gap. **Do not launch a LEAGUES backfill VM until this is
-   checked** (read a few seconds of the LEAGUES writer path, or spot-check 2-3 already-`captured` LEAGUES objects'
-   actual GCS write cadence/content to see if they cover multiple dates).
+1. ✅ **RESOLVED 2026-08-03** — LEAGUES' near-total absence was neither (a) nor (b) as originally framed: the entity's
+   daily write path was **permanently retired 2026-05-07** and replaced by code-committed UAC static data. See the
+   "Spot-check finding" section above. LEAGUES needed zero further verification of "coarser cadence" because there is no
+   cadence at all anymore — confirmed via both the retirement commit + a live manifest read.
 2. **The "needed shards → API calls" conversion is UNKNOWN for TEAMS/STANDINGS/LEAGUES/INJURIES.** The
    4.5875-fixtures-per-shard ratio used to estimate FIXTURE_STATS/LINEUPS/EVENTS call volume was derived from
    FIXTURE_EVENTS specifically (a genuinely per-fixture entity — one event-list call per match). TEAMS/LEAGUES are
@@ -104,9 +136,12 @@ credential-safe pattern as the fixed `census_fixture_events_schema_variants_2026
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Spot-check LEAGUES' real write cadence** before launching anything for it — read
-      `_sports_ref_canonical_blob_path`/writer call sites for `LEAGUES`, or fetch 2-3 already-`captured` LEAGUES objects
-      and check whether they're written per-date or per-season, to confirm or correct the 110,290 estimate above.
+- [x] ✅ [SCRIPT] P1. **Spot-check LEAGUES' real write cadence** before launching anything for it — unified-trading-pm@
+      (this commit). Found: LEAGUES daily-dump write path retired 2026-05-07 (`instruments-service@93efebf3`), replaced
+      by code-committed UAC static data; migration `migrate_leagues_kill_2026_05_07.py` confirmed APPLIED via a live
+      manifest spot-check (all 8,780 LEAGUES rows = `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`, zero `captured`).
+      110,290 "needed" was a census-script artifact (doesn't recognize the deprecated-entity marker), not a real gap —
+      see "Spot-check finding" section above.
 - [ ] [SCRIPT] P1. **Launch FIXTURE_STATS all-leagues backfill** (`--entity FIXTURE_STATS 2020-06-06 <today>`, daily
       stop-at-quota-exhaustion/resume-at-reset per operator's 2026-07-31 ruling) once the FIXTURE_EVENTS pass-3
       singleton lock clears. Already-staged census: `census_fixture_stats_lineups_widening_volume_2026_07_31.py`.
@@ -121,12 +156,14 @@ credential-safe pattern as the fixed `census_fixture_events_schema_variants_2026
 - [ ] [SCRIPT] P2. **Launch TEAMS all-leagues backfill** (67,741 needed shards, BUT likely 1 call/league not 1
       call/shard — confirm real call cost before estimating timeline; may complete far faster than the shard count
       implies).
-- [ ] [SCRIPT] P2. **Launch LEAGUES all-leagues backfill** (110,290 needed shards, PENDING the spot-check todo above —
-      do not launch blind).
-- [ ] [SCRIPT] P0. **Re-census all 9 entities once every backfill above completes**, confirm every needed-count
-      converges to ~0 (accounting for genuine honest-absence floors per entity, same pattern as FIXTURE_EVENTS'
-      ~1,943-stub floor), and only then close this doc + notify the operator the full AF completion is genuinely done
-      and the API-Football plan can be downgraded.
+- [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved by the spot-check above:
+      LEAGUES is a retired entity (no write path since 2026-05-07); there is nothing to launch. Excluded from this
+      campaign's remaining scope and from the grand-total needed count (270,873 across the 4 still-live entities).
+- [ ] [SCRIPT] P0. **Re-census the 4 remaining live entities** (PLAYER_STATS/INJURIES/STANDINGS/TEAMS — LEAGUES
+      excluded, see above) once every backfill above completes, confirm every needed-count converges to ~0 (accounting
+      for genuine honest-absence floors per entity, same pattern as FIXTURE_EVENTS' ~1,943-stub floor), and only then
+      close this doc + notify the operator the full AF completion is genuinely done and the API-Football plan can be
+      downgraded.
 
 ## Sequencing note
 
