@@ -79,19 +79,25 @@ unsupported-in-this-context provider value that should never reach production co
 > tree — NO MDPS commit can ship until it lands (confirmed: slot-5's verified-correct adapter-registration commit is
 > stuck on it, and its task is parked pending this fix). Prioritised urgent; land it to unblock all MDPS shipping.
 
-- [ ] [SCRIPT] P1. Root-cause why cloud provider `"local"` reaches `as_cloud()` in
-      `test_instruments_domain_separation`'s environment and fix the env resolution. **NOT via a bare
-      `try/except BucketNamingError: pytest.skip(...)`** around the loop body (investigated + rejected 2026-08-04 — see
-      Progress Log: it makes both tests in the file skip-only on this host, which trips `quality-gates.sh`'s
-      `zero-test-silent-pass` guard, `❌ ZERO TESTS RAN`). The autouse `_skip_integration_without_creds` fixture
-      (`tests/conftest.py`) only checks "are ADC credentials present at all", not "is `config.cloud_provider` actually
-      `gcp`/`aws`" — on hosts with ambient GCP ADC creds but a mock/local `cloud_provider` config (this shared fleet's
-      dev VMs), that mismatch is exactly what lets the test run instead of skip, then fail. Fix candidates: (a) widen
-      the autouse fixture's skip condition to also check `config.cloud_provider in ('gcp','aws')`, not just
-      credential-presence; (b) have this specific test construct a `CloudDataProvider` with an explicit real-cloud
-      override instead of relying on ambient config (repo: market-data-processing-service). Done when the test reliably
-      PASSES on a real `gcp`/`aws` config and reliably SKIPS (not fails, not silently vanishes to zero-tests-ran) on a
-      mock/local one.
+- [x] ✅ [SCRIPT] P1. Root-cause why cloud provider `"local"` reaches `as_cloud()` in
+      `test_instruments_domain_separation`'s environment and fix the env resolution —
+      market-data-processing-service@3a69c6d. **Real root cause (neither of the two candidates guessed above):
+      `tests/unit/test_unified_deps_functional.py` had a MODULE-LEVEL `os.environ.setdefault("CLOUD_PROVIDER", "local")`
+      (line 28, executed at pytest collection time, before any test runs). MDPS's `get_service_config()` is a
+      process-wide singleton — whichever test first calls it locks in `cloud_provider` for the rest of the pytest
+      session. Every actual config-instantiation site in that file already scoped its own env correctly via a per-test
+      `@patch.dict(os.environ, {...})` decorator, so the module-level `setdefault` was dead weight that did nothing for
+      that file's own tests and only leaked `CLOUD_PROVIDER=local` process-wide for whichever test ran later —
+      reproduced 1:1 by running that file + the integration test together (fails), vs the integration test alone
+      (passes). Fix: deleted the module-level `setdefault` lines. Confirmed deterministic-repro before,
+      deterministic-pass after (37 passed/1 skipped together, unrelated pre-existing GCS skip). Also applied fix
+      candidate (a) from this todo as defense-in-depth: widened `tests/conftest.py`'s autouse
+      `_skip_integration_without_creds` fixture to additionally check `config.cloud_provider in ('gcp','aws')`, not just
+      credential-presence — verified live with `CLOUD_PROVIDER=local` env override: test now SKIPS (not fails) instead
+      of hard-erroring. Both acceptance-criteria halves verified: real `gcp` config → PASSES; mock/local config → SKIPS.
+      Evidence: `bash scripts/quality-gates.sh` green (sentinel
+      `.qg_last_passed_sha=3a69c6d3dda7f2484a56d3e85eece33623ac0df1` == HEAD), shipped via quickmerge, verified on
+      `origin/live-defi-rollout`.
 
 ## Progress Log
 
@@ -105,3 +111,13 @@ unsupported-in-this-context provider value that should never reach production co
   `test_get_instruments_from_gcs`'s `None`-tolerance) — reverted after it tripped the zero-test-silent-pass guard (both
   tests in the file skip on this host). Recorded the rejected approach + real root cause (autouse fixture checks
   creds-presence, not cloud-provider-shape) above so the next attempt doesn't re-walk the same dead end.
+- **2026-08-04 (slot 3, data_engineering)** — Root-caused for real: not a fixture-narrowness problem at all, but a
+  `tests/unit/test_unified_deps_functional.py` module-level `os.environ.setdefault("CLOUD_PROVIDER", "local")`
+  (collection-time, unscoped) leaking into MDPS's process-wide `get_service_config()` singleton for the rest of the
+  pytest session — reproduced the exact failure by running that file + the integration test together, confirmed clean
+  pass running the integration test alone. Removed the dead module-level `setdefault` (every real usage in that file
+  already scopes its own env via `@patch.dict`) and, as defense-in-depth on top of the removed leak, also widened
+  `tests/conftest.py`'s autouse `_skip_integration_without_creds` fixture per this todo's candidate (a) to check
+  `config.cloud_provider in ('gcp','aws')`. Both acceptance-criteria halves verified live (real gcp config → passes;
+  `CLOUD_PROVIDER=local` override → skips, not fails). Shipped market-data-processing-service@3a69c6d,
+  `quality-gates.sh` green, verified on origin. Todo done — repo-wide MDPS shipping blocker cleared.
