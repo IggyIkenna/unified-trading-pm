@@ -240,19 +240,16 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       (repo: market-tick-data-service + features-service, verification only) Source:
       `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
 
-- [ ] [DIAG] P2. **Verify whether the Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence already closes §E3's
-      sparse-forward-polling gap — close or re-scope, do not re-implement blind.** §E3 (2026-07-18) diagnosed the root
-      cause of thin early-horizon buckets as a single daily 12:00 UTC fetch sampling only a narrow slice of each
-      declared horizon window. `sports_live_availability_and_source_latency_2026_07_24.md` (last updated 2026-07-29) now
-      describes a Tier-3 snapshot system firing multiple horizon-targeted snapshots per day (`odds_t24h`/`t6h`/`t1h`) —
-      plausibly the forward-fix §E3 asked for, but this was not confirmed against §E3's specific ask (every declared
-      horizon window sampled with enough density, not just at 3 named horizons) during this triage pass. Read the Tier-3
-      scheduler config + a sample day's actual per-horizon sample density; if it meets §E3's bar, flip §E3 in the source
-      doc citing this evidence; if a real gap remains (e.g. a horizon window still under-sampled), describe it precisely
-      as a fresh, separately-scoped follow-up rather than fixing it in this same todo. **Done when**: §E3 is either
-      closed-with-citation or replaced by a precisely-scoped new finding. (repo: market-tick-data-service,
-      deployment-service — read-only config/log inspection, no code change unless the gap is trivial). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E3 (line 511).
+- [x] ✅ [DIAG] P2. **Verified 2026-08-04: Tier-3 design partially closes §E3's gap — 3/8 horizons covered; residual
+      tracked as new [CONFIG] P2 in the source doc.** Tier-3 config (`sports-trigger-tiers.yaml`) defines 3 snapshot
+      triggers (T-24h/T-6h/T-1h) replacing the single daily 12:00 UTC poll with per-fixture, per-horizon snapshots —
+      this would give 100% fixture coverage at those 3 horizons (vs. original 25/68 at T-24h). However: (a) only 3/8
+      declared MODEL_HORIZONS are covered (T-12h/T-4h/T-2h/T-10m/T-0 have no forward trigger), (b) the sports-scheduler
+      VM is NOT currently running (`gcloud compute instances list` confirms zero `sports-scheduler-*` instances in
+      `asia-northeast1-c`), so even the 3 named triggers aren't active, (c) the historical backfill adapter IS verified
+      working (`/v4/historical`, since 2026-04-11) so retroactive fill is possible. §E3 in the source doc is now CLOSED
+      with this evidence + a new residual [CONFIG] P2 todo (add T-12h/T-4h/T-2h triggers + relaunch VM). (repo:
+      market-tick-data-service, deployment-service — read-only inspection).
 
 - [ ] [AUDIT] P2. **Extend the canonical-naming audit (§F1-F6 methodology) to league / fixture / betting-market
       identifier columns (§F residual).** The existing F1-F6 audit (case-duplication, dimension-pollution, timeframe-

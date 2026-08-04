@@ -584,13 +584,32 @@ a credential ask.
       adapter's own documented "non-matchday skip" behavior, not a gap). No indication of WHEN/HOW this backfill ran (no
       commit/plan doc found citing it) — it simply happened, and this checkbox was never flipped to reflect it. (repo:
       features-service + market-tick-data-service, verification only — data already correct, no re-derivation needed)
-- [ ] [CONFIG] P1. FORWARD fix — start capture earlier and poll often enough that every fixture is sampled in every
-      declared horizon window (the observed 53-min slice of a 120-min T-24h window shows current polling is too sparse).
-      **2026-07-30 batch8 triage note**: `sports_live_availability_and_source_latency_2026_07_24.md` (updated
-      2026-07-29) now describes a Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence that plausibly addresses this,
-      but it was not confirmed against this item's specific density bar during the triage pass — a dedicated DIAG
-      verify-or-rescope todo is tracked in `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. Leave open until that
-      todo resolves it one way or the other.
+- [x] ✅ [CONFIG] P1. **CLOSED 2026-08-04 — Tier-3 design verified, partially closes the gap; residual tracked as new
+      [CONFIG] P2 below.** DIAG (`sports_satellite_ao_dispatch_batch8-004`, slot-5): (a) The Tier-3 config
+      (`deployment-service/configs/sports-trigger-tiers.yaml`) defines 3 fixture-proximate snapshot triggers:
+      `odds_t24h` (T-24h ±30min), `odds_t6h` (T-6h ±30min), `odds_t1h` (T-1h ±15min), each firing per-fixture via the
+      Cloud Run `uts-prod-market-tick-data-service-fast-t1-recon` job → `OddsApiAdapter.download_batch()`. This replaces
+      the single daily 12:00 UTC poll (the root cause) with per-fixture, per-horizon snapshots, which would give 100%
+      fixture coverage at those 3 horizons (vs. the original 25/68 at T-24h). (b) However, the config explicitly names
+      only 3 of the 8 declared `MODEL_HORIZONS` — T-12h, T-4h, T-2h, T-10m, and T-0 have NO dedicated forward trigger.
+      The T-10m/T-0 near-kickoff horizons are partially covered by the live in-play WS connector
+      (`mtds-live-sports-odds-api-trades` VM, RUNNING, 60s poll per `odds_api_ws.py`), but T-12h/T-4h/T-2h are a genuine
+      forward-capture gap. (c) The historical backfill adapter (`/v4/historical`, `OddsApiAdapter._discover_fixtures` /
+      `_run_league_fetch_loop`, live since 2026-04-11) CAN retroactively fill any horizon for any past date — so the
+      combined forward + backfill path IS complete, but the forward-only path is not. (d) The `sports-scheduler-*` VM
+      that executes the Tier-3 triggers is NOT currently running (confirmed via `gcloud compute instances list` in
+      `asia-northeast1-c` — zero matches for the singleton-lock pattern `sports-scheduler-*`), so even the 3 named
+      horizons are not being proactively captured right now. (repo: market-tick-data-service, deployment-service —
+      read-only inspection, no code change). Evidence: `unified-trading-pm@<sha>` (this edit).
+  - [ ] [CONFIG] P2. **Residual gap — add T-12h/T-4h/T-2h snapshot triggers + relaunch the sports-scheduler VM.** (a)
+        Add `odds_t12h`, `odds_t4h`, `odds_t2h` entries to `deployment-service/configs/sports-trigger-tiers.yaml`'s
+        `pre_match.triggers` list (follow the existing `odds_t24h`/`t6h`/`t1h` pattern — each with
+        `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"` and appropriate tolerances: ±30min for
+        T-12h, ±15min for T-4h/T-2h). (b) Relaunch the sports-scheduler VM via
+        `bash deployment-service/scripts/vm/launch-sports-scheduler-vm.sh` (the singleton lock confirms no running
+        instance; SPOT OK per the scheduler's GCS-state-backed resume design). (c) Verify via a sample day's manifest
+        that all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. (repo:
+        deployment-service). Source: this DIAG's residual finding, 2026-08-04.
 - [x] [CONFIG] P1. Enable the live in-play connector (`market_tick_data_service/live/connectors/odds_api_ws.py`) now
       that credentials exist — this is what populates the HT horizon, which currently emits nothing. HT is already
       declared in `MODEL_HORIZONS` + `FEATURE_HORIZONS`, so it populates with NO contract change. (Its prior
