@@ -211,3 +211,25 @@ are genuinely in scope for the operator's "no exceptions" directive.
   ordering. Until then, any worker dispatched a `Launch <ENTITY> backfill` todo here MUST first verify no other
   `af-backfill-*`/`af-audit-*` VM is RUNNING (singleton lock free) and that the immediately-prior entity's census shows
   ~0 needed — if not, `skip-current-task` and it requeues (do NOT launch a 2nd concurrent AF VM).
+- **2026-08-04 (slot 4)** — Dispatched the same `sports_af_full_entity_completion-003` (Launch FIXTURE_LINEUPS) todo.
+  Re-verified the gate per the risk note above: singleton lock was FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING —
+  confirmed via `gcloud compute instances list`), but FIXTURE_STATS had **not converged**: re-ran
+  `census_fixture_stats_lineups_widening_volume_2026_07_31.py`, which showed only 125/68,409 non-MVP shards captured
+  (0.18%) — essentially unchanged from launch. Root cause: the prior FIXTURE_STATS VM (`af-backfill-20260803-233053`)
+  was **SPOT-preempted ~17 min after launch** (audit log: `compute.instances.preempted` at 2026-08-03T23:47-48Z, ~16 min
+  after the 23:31 `instances.insert`) and **never auto-resumed** — the VM no longer exists at all (not even TERMINATED
+  in the instance list), and no successor `af-backfill-*` VM was ever launched. This is exactly the class the codex HARD
+  RULE "preemption recovery must resume from measured PROGRESS, never replay START_DATE" exists for
+  (`/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis/backfill preemption); the
+  `exit_code_fleet_monitor`/`RelaunchPreemptedVm` auto-recovery apparently did not fire for this VM (worth a follow-up
+  look at why, not chased further here — out of this doc's scope). **Action taken**: relaunched FIXTURE_STATS as
+  `af-backfill-20260804-001203` (`launch-api-football-backfill-vm.sh --entity FIXTURE_STATS 2020-06-06 2026-08-04`,
+  SPOT, idempotent skip-if-captured — no `--force`, so this is a safe resume, not a redo_all). Verified healthy at
+  T+~4min: `run.log` shows genuine per-fixture FIXTURE_STATS fetches (`Fetched 2 stat rows for fixture=...`), correct
+  skip-already-captured + observed-out-of-coverage handling, and correct 429 rate-limit backoff — not a crash-loop.
+  **FIXTURE_LINEUPS remains blocked** — its gate ("after FIXTURE_STATS converges") is still unmet; did NOT launch it.
+  `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once FIXTURE_STATS genuinely
+  converges. The durable fix flagged above (a real `depends_on` convergence gate instead of dispatch-order
+  `sequential:true`) is still not implemented — a future worker will hit this same trap a third time until it is; not
+  fixed in this session (outside this task's scope, flagging again for whoever next touches plan authoring for this
+  campaign).
