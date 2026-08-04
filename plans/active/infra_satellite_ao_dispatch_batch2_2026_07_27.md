@@ -120,13 +120,21 @@ once the corresponding todo below is actually done — not this plan.
       adjacent-but-out-of-scope broken launchers found while verifying (`launch-ml-training-vm.sh`,
       `launch-prediction-pipeline-vm.sh`) — same consolidation-drift bug class, different files, needing a design
       decision this todo didn't scope.
-- [ ] [SCRIPT] P3. **Delete 3 named MDPS one-off scripts past their `Delete-when` condition, after verifying each
+- [x] ✅ [SCRIPT] P3. **Delete 3 named MDPS one-off scripts past their `Delete-when` condition, after verifying each
       condition holds**: `reconcile_mdps_available_at_2026_05_13.py`,
       `reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py`, `reconcile_1440_nan_placeholders.py`. KEEP
       `benchmark_fullmonth_binance.py` (still reused for MDPS steady-state benchmarking — do not delete). Repo:
       market-data-processing-service. Source: `mdps_features_deadcode_consolidation_2026_07_20.md` #6. Done when: each
       of the 3 named scripts' own `# Delete-when:` marker is re-verified true as of today (cite the check), the 3 files
       are deleted, and `benchmark_fullmonth_binance.py` is confirmed still present and referenced by its live consumer.
+      — market-data-processing-service@75509b8. Delete-when verified 2026-08-04: (1)
+      reconcile_mdps_available_at_2026_05_13.py: parent plan available_at_lookahead_bias_completion_2026_05_08.md
+      status=complete (archived 2026-05). (2) reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py: same
+      plan, status=complete. (3) reconcile_1440_nan_placeholders.py: parent plan
+      writegate_honest_coverage_endtoend_2026_05_06.md archived 2026-05-23; Phase 3.A entry [x] done; MDPS writer fix
+      mdps@93883b7. Companion test files for scripts 1+2 deleted (imported the deleted scripts directly).
+      benchmark_fullmonth_binance.py confirmed still present. quality-gates.sh green
+      (sentinel=75509b876a43ee6c84de6c68317bf844449c4db4).
 - [ ] [DOC] P3. **Repoint `features-service/scripts/sports/smoke_matrix.py`'s stale SSOT citations** (currently cite an
       archived plan + the dead `launch-features-backfill-vm.sh` header) to `launch-features-vm.sh` + the current codex
       smoke-matrix doc. **Citation-only scope** — do NOT physically relocate `smoke_matrix.py` (that relocation is
