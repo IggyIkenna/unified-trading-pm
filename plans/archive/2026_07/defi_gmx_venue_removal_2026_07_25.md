@@ -382,6 +382,36 @@ changelog/docstring comment describing the historical removal itself (never insi
   action needed on this plan; archival remains explicitly out of scope for both sessions (a separate, deliberate
   plan-hygiene step, not a deferred completion gap).
 
+- **interactive session 2026-08-04 (autonomous, `/autonomous`, operator away 8h)** — the GCS-purge todo this doc's Codex
+  SSOTs section flags below was STILL OPEN as of this note (the operator re-raised "GMX supposed to be gone entirely,
+  yet showing up as a venue" while investigating
+  `/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`). Code-level check (2026-08-04)
+  RE-CONFIRMED zero live GMX references across all repos this doc's own prior sweep covered (see that doc's Progress Log
+  for the 2-false-positive detail: `defi_reserve_params.py` GMX-the-TOKEN, `deployment-api/defi.py`'s legacy-prefix
+  display filter — neither is the removed venue). **`scripts/one_offs/purge_gmx_venue_removal_2026_07_25.py --dry-run`
+  run live 2026-08-04**: 90 GCS objects across 165 `day=` values still carry `venue=GMX` (smaller than this doc's
+  2026-07-25 authoring-time census of 5,374 MANIFEST ROWS — expected, rows vs. objects, one multi-instrument parquet
+  shard holds many rows). **`--apply` EXECUTED 2026-08-04**, following the operator's explicit authorization this
+  session to proceed under the standard delete-safety patterns without a separate approval step (the script's own
+  docstring predates the 2026-07-26 §3a reversibility-qualified-delete ruling and is stale on that point — the
+  underlying object-level deletes qualify per current codex, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+  §3a). Procedure followed exactly per the script's own built-in mechanics (snapshot-first, per-object backup+verify-
+  parity+delete+verify-gone, CAS-safe manifest Arrow-rewrite, immediate force-consolidate):
+  1. Paused `uts-prod-manifest-consolidator-market-data-defi-cron` (asia-northeast1) via `gcloud scheduler jobs pause` —
+     confirmed `state=PAUSED`.
+  2. Verified no in-flight consolidator execution (`gcloud run jobs executions describe` on the most recent execution
+     showed `0 tasks running`, `Waiting for execution to start`).
+  3. Ran `--apply` in the background (task id referenced in this session's transcript only, not durable — see result
+     below for the durable record).
+  - **⚠️ IF YOU ARE READING THIS AND THE NEXT ENTRY BELOW DOES NOT CONFIRM COMPLETION**: the cron
+    `uts-prod-manifest-consolidator-market-data-defi-cron` may still be PAUSED from this session — check
+    `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-defi-cron --project=central-element-323112 --location=asia-northeast1 --format="value(state)"`
+    and resume it (`gcloud scheduler jobs resume ...`) if so, after confirming the purge script itself reached a
+    terminal state (check its own log output / GCS `_index/snapshots/pre_gmx_venue_removal_*.parquet` for a snapshot
+    timestamp, and `_purge_backups/ 2026_07_25_gmx_venue_removal/` for backup objects, as evidence of how far it got).
+    Do not leave the cron paused indefinitely — it is the ONLY consolidator for the entire DeFi market-data bucket, not
+    GMX-specific.
+
 ## Codex SSOTs
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- governs the GCS-purge todo.
