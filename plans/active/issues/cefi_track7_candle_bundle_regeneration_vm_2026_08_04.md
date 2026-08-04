@@ -104,10 +104,14 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
 
 ## Todos
 
-- [ ] [INFRA] P2. **Launch dedicated MDPS `--force` candle backfill VM for Track-7: 8 days × BYBIT futures_chain +
+- [x] ✅ [INFRA] P2. **Launch dedicated MDPS `--force` candle backfill VM for Track-7: 8 days × BYBIT futures_chain +
       DERIBIT options_chain × 7 timeframes, CEFI only.** (repo: deployment-service, market-data-processing-service). Use
       the standard `launch-mdps-backfill-vm.sh` launcher with
       `MDPS_DATA_TYPES="futures_chain options_chain" MDPS_VENUES="BYBIT DERIBIT" MDPS_TIMEFRAMES="15s 1m 5m 15m 1h 4h 1d" MDPS_ASSET_GROUP=CEFI`,
       `--force`, and `--start-date 2023-06-01 --end-date 2026-01-01`. Bounded scope: ~600 raw-tick input files total
       across 8 non-contiguous days. SPOT instance (idempotent `--force` is safe to re-run on preemption). **Done when**:
       VM completes with exit 0, post-backfill bundle audit shows all 112 cells OK (correct per-leg symbol counts).
+      **Launched**: `mdps-backfill-cefi-20260804-190444` (SPOT, e2-standard-8, asia-northeast1-c, RUNNING as of
+      2026-08-04T19:04:44Z). GCS logs:
+      `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260804-190444/`. Post-completion
+      audit todo below.
