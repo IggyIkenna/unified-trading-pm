@@ -22,8 +22,8 @@ tags: [ag-closeout-audit, autonomous, plan-hygiene, ao-dispatch, orphan-audit]
 related:
   - /cursor-configs/skills/ag-closeout-audit/SKILL.md
   - /plans/active/sports_consolidated_closeout_2026_07_19.md
-  - /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md
-  - /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
+  - /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md
+  - /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
   - /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md
 created: "2026-07-25"
 last_updated: "2026-07-25"

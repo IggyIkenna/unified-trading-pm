@@ -20,7 +20,7 @@ tags: [qg-red, plan-hygiene, commit-sha-evidence, repo-blocker, ratchet]
 related:
   [
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-08-04
 author: slot-8

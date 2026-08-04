@@ -47,7 +47,7 @@ context_scope:
   [
     /plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     instruments-service/scripts/enumerate_expected_universe.py,
     instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,

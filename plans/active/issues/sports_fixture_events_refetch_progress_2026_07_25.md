@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [sports, fixture-events, canonical, re-fetch, api-football, backfill]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/issues/sports_fixture_events_phantom_manifest_rows_2026_07_25.md,
   ]
@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     instruments-service/scripts/census_fixture_events_schema_variants_2026_07_25.py,

@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [sports, curated-universe, league-registry, mvp-scope, directive-a-b]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
   ]
@@ -37,7 +37,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md,
     /codex/02-data/sports-2020-06-data-floor.md,

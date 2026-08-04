@@ -32,7 +32,7 @@ tags: [sports, ao-dispatch, close-out, batch-5, satellite-docs, fresh-triage]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md,

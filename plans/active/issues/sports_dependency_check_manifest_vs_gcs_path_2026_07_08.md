@@ -57,8 +57,8 @@ locked_since:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
     instruments-service/instruments_service/reference_data/sports_dependency.py,
   ]

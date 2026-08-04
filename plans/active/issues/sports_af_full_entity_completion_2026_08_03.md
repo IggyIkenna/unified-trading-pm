@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [sports, api-football, entity-completion, downgrade-planning, mvp-scope]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /codex/02-data/mvp-scope-canonical.md,
     /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,

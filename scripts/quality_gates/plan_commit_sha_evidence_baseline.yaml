@@ -47,7 +47,7 @@ baseline_citations:
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/11/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
     line: 319
     cited: deployment-ui@1ad86d5
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/11/unified-trading-pm/plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/11/unified-trading-pm/plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
     line: 117
     cited: unified-trading-pm@d35a9b4ba
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/11/unified-trading-pm/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md

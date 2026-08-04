@@ -57,7 +57,7 @@ related_plans:
   - ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
   - ../active/sports_odds_feature_naming_canonicalization_2026_07_21.md
   - ../active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
-  - ../active/sports_satellite_ao_dispatch_batch2_2026_07_24.md
+  - ../archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md
   - ../active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
 last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
@@ -1421,7 +1421,7 @@ enumeration + NaN-fill + cluster validation
 
 **status**: complete · **estimate**: 3.2 cal AI-days (class: infra)
 
-### [`sports_satellite_ao_dispatch_batch2_2026_07_24`](../active/sports_satellite_ao_dispatch_batch2_2026_07_24.md)
+### [`sports_satellite_ao_dispatch_batch2_2026_07_24`](../archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md)
 
 **status**: active · **estimate**: 7.4 cal AI-days (class: infra)
 
