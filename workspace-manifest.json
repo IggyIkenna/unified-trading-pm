@@ -247,7 +247,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -274,10 +274,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
-        "large_file_count": 0,
         "coverage_pct": 74.71,
-        "qg_red_reason": "qg",
-        "warn_file_count": 4
+        "qg_red_reason": null,
+        "warn_file_count": 4,
+        "large_file_count": 0
       }
     },
     "deployment-api": {
@@ -307,7 +307,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -342,10 +342,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": "pytest",
-        "coverage_pct": 83.9,
-        "warn_file_count": 17
+        "coverage_pct": 83.89,
+        "qg_red_reason": "qg",
+        "warn_file_count": 17,
+        "large_file_count": 0
       }
     },
     "deployment-service": {
@@ -394,9 +394,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "coverage_pct": null,
-        "large_file_count": 6,
         "qg_red_reason": "qg",
-        "warn_file_count": 8
+        "warn_file_count": 9,
+        "large_file_count": 6
       }
     },
     "execution-service": {
@@ -566,7 +566,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -795,7 +795,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -826,10 +826,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 6,
-        "qg_red_reason": "pytest",
-        "coverage_pct": 89.82,
-        "warn_file_count": 6
+        "coverage_pct": 28.82,
+        "qg_red_reason": null,
+        "warn_file_count": 6,
+        "large_file_count": 6
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -887,10 +887,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": "qg",
-        "coverage_pct": null,
-        "warn_file_count": 47
+        "coverage_pct": 83.65,
+        "qg_red_reason": "pytest",
+        "warn_file_count": 47,
+        "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": "qg",
-        "coverage_pct": 73.73,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1525,10 +1525,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
-        "large_file_count": 14,
-        "qg_red_reason": "qg",
         "coverage_pct": null,
-        "warn_file_count": 8
+        "qg_red_reason": null,
+        "warn_file_count": 8,
+        "large_file_count": 14
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
