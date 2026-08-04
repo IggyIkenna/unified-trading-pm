@@ -87,12 +87,12 @@ depends_on: []
       schema** (e.g. a codex/plan note); absent that, worker.md's HARD RULE is authoritative and the schema is simply
       stale. done-when: docspec.py + the schema doc + worker.md §4.5 agree on whether issue docs carry `author`, QG
       green. Repo: unified-trading-pm. — unified-trading-pm@<sha>.
-- [ ] [DOC] P3. **Backfill `author` on the 438 existing issue docs that lack it.** Only 6 of 444 issue docs carry
+- [x] ✅ [DOC] P3. **Backfill `author` on the 438 existing issue docs that lack it.** Only 6 of 444 issue docs carry
       `author` today (2026-08-04); the schema now recognizes it as elective (validated when present, no gate break when
       absent). worker.md §4.5 mandates it for new issue docs. Run a scripted backfill pass over
       `plans/active/issues/*.md` to populate `author` from each doc's git-log author or the Progress Log's most recent
       entry, defaulting to `unknown` where neither source exists. done-when: ≥90% of issue docs carry `author`, QG green
-      (no new violations — elective fields don't gate). Repo: unified-trading-pm.
+      (no new violations — elective fields don't gate). Repo: unified-trading-pm. — unified-trading-pm@a6e5eae25
 
 ## Notes
 
@@ -127,3 +127,4 @@ depends_on: []
   docs. Filed a P3 backfill todo for the existing corpus. All three sources now agree: worker.md §4.5 mandates `author`
   on new issue docs, docspec.py validates it when present (elective, no gate break on absent), schema doc documents the
   contract. QG green.
+- **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill: 441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap (`instruments_remaining_work_audit_2026_07_10.md`, `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25
