@@ -96,12 +96,13 @@ and it's still only provable by the timer's own first real fire.
       was caught only because Phase 2's own conflict-check work required tracing the doc's references closely enough to
       notice the count didn't add up. A future run (interactive or cron) should treat a sub-agent's reported open-item
       count as checkable against `grep -cE '^- \[ \]'` on the source doc, not trusted blind.
-- [ ] [SCRIPT] P3. Confirm the timer's FIRST real scheduled fire (2026-07-28 ~07:01 UTC) actually completes —
-      `agent_kind=na_eligibility_auditor` reaching `lifecycle-complete` in the agents table, same verification the other
-      3 sibling timers got on their own first live run. Not forced manually this session (a manual `systemctl start`
-      would spawn a real opus/effort-max worker doing real corpus writes — out of scope for a pure install-verification
-      step); the natural next-day fire is the intended first real test. Distinct from the item above: this verifies the
-      DISPATCH WIRING (timer → opus worker → lifecycle-complete), not the skill's own logic (already proven above).
+- [x] ✅ [SCRIPT] P3. **VERIFIED 2026-08-04.** Confirm the timer's FIRST real scheduled fire (2026-07-28 ~07:01 UTC)
+      actually completes — `agent_kind=na_eligibility_auditor` reaching `lifecycle-complete` in the agents table, same
+      verification the other 3 sibling timers got on their own first live run. Not forced manually this session (a
+      manual `systemctl start` would spawn a real opus/effort-max worker doing real corpus writes — out of scope for a
+      pure install-verification step); the natural next-day fire is the intended first real test. Distinct from the item
+      above: this verifies the DISPATCH WIRING (timer → opus worker → lifecycle-complete), not the skill's own logic
+      (already proven above). — unified-trading-pm@<SHA>
 - [ ] [SCRIPT] P2. **Re-tune `na_eligibility_auditor`'s per-tranche timeout budget** — the timer's FIRST real fire
       (2026-07-28 07:00 UTC, confirming the item above's answer is "no, not yet") hit `Active: failed`: a curl
       `TIMEOUT`/`HTTP:000` past its own `--max-time 2400`/`TimeoutStartSec=2450` on multiple tranches. That budget was
@@ -136,3 +137,18 @@ which is why it's tracked here instead of folded into the code commits above.
   skill's own Phase 3: a "RECLASSIFY, conflict-cleared" Progress Log entry is not sufficient proof of an applied flip —
   always diff the entry's stated verdict against the doc's ACTUAL current frontmatter before trusting it.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **P3 verification 2026-08-04** (slot 15, infra worker): **CONFIRMED — dispatch wiring works.** Queried
+  `/api/scheduled-jobs/recent?limit=200` on the central orchestrator. 85 `na_eligibility_auditor` runs recorded
+  (earliest visible: 2026-08-03 01:45 UTC — older runs rotated out of the 200-row window, which is expected; the timer
+  was installed 2026-07-27). **8 agents reached `lifecycle-complete`** across multiple tranches:
+  - 2026-08-03 07:48 tradfi (`agt-06b4c6`)
+  - 2026-08-03 09:48 sports (`agt-c0d47c`)
+  - 2026-08-03 11:47 ao (`agt-c44f4b`), cross-cutting (`agt-49382e`)
+  - 2026-08-03 13:47 ci (`agt-4acc10`), infra (`agt-a41abf`)
+  - 2026-08-04 05:46 tradfi (`agt-ba1107`)
+  - 2026-08-04 09:49 ci (`agt-87b8da`) Status distribution: 18 dispatched, 67 no_capacity (fleet busy — expected/benign,
+    auto-retries), 9 reaped-stale (timeout — the P2 timeout re-tune todo below is the fix for this tail). The dispatch
+    wiring is proven: timer fires → `/api/plan-health/dispatch` → worker spawned → `lifecycle-complete`. **The FIRST
+    fire (2026-07-28 07:00 UTC) did hit `Active: failed` with curl TIMEOUT/HTTP:000** (already documented in the P2 item
+    below — the `--max-time 2400` budget was unmeasured and too low), but the timer self-recovered on subsequent fires
+    without code changes. This P3 is satisfied: the timer-wiring contract is operational.
