@@ -20,7 +20,12 @@ summary: >-
   10:37:55Z) is running the OLD (pre-fix) metadata and is on track to hit the same stall-kill around 11:38-11:43Z.
 status: open
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group:
+  [cross-cutting] # corrected 2026-08-04 (/ag-closeout-audit cross-cutting, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [defi, cross-cutting], a genuine mistag: root cause is a fleet-wide bug in the shared
+  # vm-exec-with-gcs-tee.sh stall watchdog (STALL_PROGRESS_REGEX mismatch), and this doc's own todos fix/sweep it
+  # across MULTIPLE asset groups' launchers (tradfi-catalogue-canon, mdps-sharded-backfill, sports category,
+  # iah/iah-purge), not just the originating defi backfill instance -- genuinely cross-AG, not defi-specific.
 stage: [data, meta]
 repos: [deployment-service, market-data-processing-service, unified-trading-pm]
 scope: [engineer, admin]
