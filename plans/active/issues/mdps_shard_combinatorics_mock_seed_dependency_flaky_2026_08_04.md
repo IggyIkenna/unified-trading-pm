@@ -107,7 +107,7 @@ full `quality-gates.sh --no-fix` processes during this investigation).
 
 ## Todos
 
-- [ ] [INFRA] P2. **Make the slot-level mock-seed-data chain (instruments-service → market-tick-data-service →
+- [x] ✅ [INFRA] P2. ~~**Make the slot-level mock-seed-data chain (instruments-service → market-tick-data-service →
       market-data-processing-service) deterministically available before
       `tests/smoke/test_shard_combinatorics.py::test_cli_dry_run_all_category_venue_combos` runs**, OR mark that
       parametrized test `@pytest.mark.skipif` when the upstream `.seed-complete` marker is absent (a live-verified
@@ -122,16 +122,38 @@ full `quality-gates.sh --no-fix` processes during this investigation).
       from a genuinely clean slot** (fresh `.tabs/<N>/` checkout, no pre-existing `.local-dev-cache/`) — i.e. no
       `.seed-complete` dependency left un-resolved, or the dependent test explicitly skips instead of failing when
       absent. Operator ruling 2026-08-04 (`BLK-0b3353db`): this is real 3-repo scope, decoupled from any single
-      adapter-registration task — do not fold it into an unrelated diff's shipping path.
-- [ ] [SCRIPT] P3. **Fix the stale `test_total_shard_combinations` threshold**
+      adapter-registration task — do not fold it into an unrelated diff's shipping path.~~ — **FIXED 2026-08-04**: went
+      with the skipif path (the deterministic-seed-chain path needs a brand-new `instruments-service` seed script —
+      genuinely larger scope than this todo's bound). `test_cli_dry_run_all_category_venue_combos` now checks the
+      upstream `.seed-complete` marker itself (via `mock_data_provider._get_seed_base`) and calls `pytest.skip()` with a
+      clear reason when absent, instead of raw-asserting `result == 0` for all 135 combos. Verified live on this slot
+      (marker genuinely absent): all 135 combos report `SKIPPED`, not `FAILED`.
+      `market-data-processing-service@41a4f300b7de98a83dca4dc6490191c918d57b53`.
+- [x] ✅ [SCRIPT] P3. ~~**Fix the stale `test_total_shard_combinations` threshold**
       (`tests/smoke/test_shard_combinatorics.py:92`) — either raise the hardcoded `< 10000` bound to reflect the real
       current combinatorics (27055+ headroom) or make it a documented ratchet rather than a magic number. Repo:
-      market-data-processing-service.
-- [ ] [SCRIPT] P3. **Fix the stale `test_defi_specific_data_types` assertion**
+      market-data-processing-service.~~ — **FIXED 2026-08-04**: fixed in the same commit as todo 3 below — this
+      pre-existing failure was blocking a green QG tree for todo 1's fix in the same file. Replaced the `< 10000` magic
+      number with a documented `MAX_SHARD_COMBINATIONS_RATCHET = 50000` class constant (real count is 27055; the ratchet
+      gives headroom for registry growth while still catching a genuine combinatorial blow-up).
+      `market-data-processing-service@a0c822e2b6f08857e80e8bff5fc159dcfe36660e`.
+- [x] ✅ [SCRIPT] P3. ~~**Fix the stale `test_defi_specific_data_types` assertion**
       (`tests/smoke/test_shard_combinatorics.py:118`) — replace the retired `"dex_swaps"` expectation with the canonical
-      `"dex_pool_swaps"` name per `codex/02-data/defi-canonical-naming-ssot.md`. Repo: market-data-processing-service.
+      `"dex_pool_swaps"` name per `codex/02-data/defi-canonical-naming-ssot.md`. Repo: market-data-processing-service.~~
+      — **FIXED 2026-08-04**: same commit as todo 2 above, same reason (blocking QG for todo 1). Replaced `"dex_swaps"`
+      with `"dex_pool_swaps"`. `market-data-processing-service@a0c822e2b6f08857e80e8bff5fc159dcfe36660e`.
 
 ## Progress Log
 
 - **2026-08-04 (slot-5, backend_engineer)**: filed after root-causing a 4-of-5 non-deterministic QG run while shipping
   an unrelated diff; full evidence above.
+- **2026-08-04 (slot 6, infra)**: dispatched todo 1. Implemented the `pytest.skip()` fallback rather than the full
+  3-repo deterministic-seed-chain path (that needs a genuinely new `instruments-service` seed script — separately
+  scoped, larger effort than this todo's bound). Shipped `market-data-processing-service@41a4f30`. Running
+  `quality-gates.sh` on that commit then surfaced todos 2 and 3 as hard pytest FAILURES in the SAME file (not flaky —
+  deterministic, exactly as this doc's own analysis predicted: "would fail on ANY commit"), blocking the QG-green-tree
+  requirement to ship todo 1's own fix. Per CLAUDE.md findings-triage ("in your file → fix in same commit"), fixed both
+  in a follow-up commit: `test_total_shard_combinations`'s magic `< 10000` became a documented
+  `MAX_SHARD_COMBINATIONS_RATCHET = 50000` constant; `test_defi_specific_data_types` now expects `"dex_pool_swaps"`
+  instead of the retired `"dex_swaps"`. `quality-gates.sh` green after both commits, sentinel verified against HEAD.
+  Shipped `market-data-processing-service@a0c822e`. All 3 todos flipped above.
