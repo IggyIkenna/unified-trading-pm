@@ -884,3 +884,20 @@ default from an external reference.
       previously shared "stale" with rate_limited/auth_failed, which would have read as an error rather than a
       deliberate operator action). Works identically for Claude and DeepSeek accounts (provider-agnostic — it's the same
       `account_status` column every other lifecycle mark already uses). — same commit, `agent-orchestrator@8cc6a4f`.
+- [x] [BUG] P1. ✅ **Live incident, 2026-08-04** — the fleet-wide `is_pool_critically_exhausted` halt (operator ruling
+      2026-07-29) was Claude-only/provider-blind: it ranked ONLY `provider == "anthropic"` accounts and short-circuited
+      the ENTIRE new-dispatch tick whenever the best Claude account crossed 90%, BEFORE the DeepSeek-aware router in
+      this plan ever ran — so a healthy, funded, idle DeepSeek pool sat starved behind a Claude-only signal (519 queued,
+      1 dispatched, confirmed real ready work). The halt predates this plan's DeepSeek integration by one day and was
+      never reconciled with it. Root-caused live by the main orchestrating agent (`agt-fdecde`, msg 3706/3707) after an
+      operator report; fixed same-day. Full writeup:
+      `plans/active/issues/autospawn_pool_critical_halt_starves_deepseek_2026_08_04.md`
+      (`unified-trading-pm@f7af03a1a`). Fix: `is_pool_critically_exhausted` now also requires
+      `_non_anthropic_pool_has_capacity` (usable + health-gate-clear + real `balance_usd`/`balance_is_available`, the
+      same balance telemetry the `[UI] P1` DeepSeek-balance todo above just shipped) to be False before halting; the
+      same balance check is now also wired into `select_account_for_spawn`'s per-candidate DeepSeek eligibility
+      (proactive skip on a drained account, not just reactive after spawn failures accumulate). —
+      `agent-orchestrator@3f06bea`, `ahead=0`. Also bumped `deepseek_route_fraction` 0.8→0.9 (env-free `TuningDefaults`
+      field — no env var exists for it; code-default + redeploy is the only lever) — `agent-orchestrator@0b62753`.
+- [ ] [OPERATOR] P2. Top up the `deepseek-v4-pro` balance (`$0.34` as of 2026-08-04T14:05Z, dropping in real time) —
+      even with the halt fix above, DeepSeek dispatch fails closed at zero balance. Tracked in the same issue doc.
