@@ -153,3 +153,27 @@ false-positive surface). Recommend, in order:
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: added
   `agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py` (the regression-test home both remaining `[INFRA]`
   todos need to extend, per the shipped todo 2's own evidence line) — now 4 entries.
+
+- [ ] [INFRA] P3. **Land the orphaned commit that already IMPLEMENTS the `[INFRA] P3` guard-/done-sha-vs-evidence todo
+      above — do NOT re-implement it.** Dead slot-8 (died 2026-08-04T09:11:01Z) left `agent-orchestrator@3080fecd7da9`
+      "feat(done): cross-check /done reported sha against evidence-cited commit" — the full fix
+      (`verify.resolve_sha_in_worktree()` + a ~200-line regression test), preserved on origin at
+      `refs/heads/wip-preserve/orchestrator-slot-8-3080fec` (also still in `.tabs/8/agent-orchestrator`, clean tree,
+      ahead=1). Its `Quickmerge:agent` trailer is pre-stamped but Pass-1 QG never actually ran on it
+      (`.qg_last_passed_sha` = parent `2e5792b`, not `3080fec`), so `quickmerge --agent` will refuse until QG re-runs.
+      Action for a worker (NOT main — this is code, and main cannot push code): either inherit slot-8's dead worktree
+      per the LIVENESS-gated inherited-dirty-WIP rule (dead claim, safe) or cherry-pick the wip-preserve ref, run a
+      fresh Pass-1 `quality-gates.sh`, then `quickmerge.sh --agent`. Once landed, flip the `[INFRA] P3` guard-/done-sha
+      todo above to `[x]` and **unpark `ao_done_gate_tag_correlation_false_match_on_leading_marker-002`** (main parked
+      it 2026-08-04 to stop a fresh worker duplicating this exact fix — condition
+      `auto_unpark__ao_done_gate_tag_correlation_false_match_on_leading_marker-002`). Repo: agent-orchestrator.
+
+- **2026-08-04 (main agt-1756f6, from review #3680)** — Orphan-WIP dedup. Review flagged that dead slot-8's unpushed
+  `3080fec` already implements the `[INFRA] P3` guard-/done-sha todo above, while its originating task
+  `ao_done_gate_tag_correlation_false_match_on_leading_marker-002` had `resume_decision=requeue` (back in the backlog) —
+  a fresh worker would duplicate or collide with it. Verified read-only: slot-8 dead, `3080fec` present in
+  `.tabs/8/agent-orchestrator` (clean, ahead=1) AND preserved on origin at `wip-preserve/orchestrator-slot-8-3080fec`
+  (so the work is SAFE, not lost — the watchdog preserve-half fired). Main PARKED task `-002` (`/api/backlog/.../park`,
+  condition `auto_unpark__…-002`) to stop the duplication — within main's authority (RULES.md §4). Did NOT land
+  `3080fec` (code — main never pushes code); filed the landing as the tracked `[INFRA]` todo above for a worker to pick
+  up.
