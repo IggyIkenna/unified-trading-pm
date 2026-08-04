@@ -163,7 +163,8 @@ ops/follow-up:
       "who else might already be fixing this" from the registry by hand. If it was another `data_pipeline_failure`
       escalation worker, no action needed — just confirms the multi-escalation dispatch model is working as intended for
       a fleet-wide failure.
-- [ ] [DATA] P2. `mdps-backfill-tradfi-y2026es-20260731-023743`'s dead `run.log` shows 42 dates hard-failing
+- [x] ✅ [DATA] P2. `mdps-backfill-tradfi-y2026es-20260731-023743`'s dead `run.log` shows 42 dates hard-failing —
+      market-data-processing-service@c861fd0 (calendar-aware dependency check for TRADFI non-trading days)
       `DEPENDENCY CHECK FAILED` (`market_data_processing_service.app.core.dependency_checker`, raw GCS blob-existence
       probe, `required=True`) — every one a Saturday/Sunday (confirmed by date), but **only from 2026-02-07 onward**;
       every January 2026 weekend (Jan 3/4, 10/11, 17/18, 24/25, 31) passed the SAME check cleanly. Direct GCS check
