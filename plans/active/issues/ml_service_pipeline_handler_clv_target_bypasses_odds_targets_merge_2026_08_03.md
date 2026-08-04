@@ -270,12 +270,17 @@ all).
       handles the raw `{-1,0,1}` CLV labels fine as classification via its own separate `ModelTrainer`) as the correct
       retrain command going forward. Actioned in the parent doc's Progress Log + `[ML] P2` todo, which is now DONE — all
       3 variants produced and GCS-verified using this exact command.
-- [ ] [INFRA] P2. Provision the missing GCP Pub/Sub topic `ml_model_coordination_events` in `central-element-323112` (or
-      fix `_emit_model_trained_event`'s error handling to not crash the whole process on a best-effort
+- [x] ✅ [INFRA] P2. Provision the missing GCP Pub/Sub topic `ml_model_coordination_events` in `central-element-323112`
+      (or fix `_emit_model_trained_event`'s error handling to not crash the whole process on a best-effort
       coordination-event publish failure — `log_event("STARTED", ...)` elsewhere in this same file already treats its
       own GCS write as best-effort/non-fatal; this publish call should probably match that pattern) — currently ANY
       successful training run of ANY operation in this GCP project exits non-zero after real success, which will confuse
-      any automation that gates on exit code. (repo: ml-service or infra, needs an owner)
+      any automation that gates on exit code. (repo: ml-service or infra, needs an owner) **DONE 2026-08-04 (slot-5,
+      infra)** — (1) Provisioned topic `ml_model_coordination_events` in `central-element-323112` via
+      `gcloud pubsub topics create`; (2) added `GoogleAPIError` to the except clause in `_emit_model_trained_event`
+      (already imported) so any future pub/sub infra gap is best-effort/non-fatal, mirroring
+      `_write_experiment_metrics`'s pattern; (3) added regression test `test_does_not_raise_on_google_api_error`
+      (NotFound). ml-service@9a8cafd, QG green (full pass).
 
 Findings 1+2 are fixed and shipped. Finding 4 needed no code fix (just the correct `--task-type` flag). Finding 5 means
 `--operation train --skip-dependency-check --task-type regression` (not `pipeline`) is the actual correct retrain
