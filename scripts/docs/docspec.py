@@ -167,6 +167,10 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
         FieldSpec("context_scope", Req.E, "free_list"),
+        # worker.md §4.5 (FINDINGS CLOSURE, HARD RULE 2026-06-10) mandates author on issue docs.
+        # Elective (not Required): only 6 of 444 existing issue docs carry author today
+        # (2026-08-04); Required would red the tree. Backfill tracked in the reconciling plan.
+        FieldSpec("author", Req.E, "scalar"),
     ],
     "audit-result": [
         FieldSpec("audited_scope", Req.R, "scalar"),
