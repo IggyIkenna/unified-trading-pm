@@ -65,3 +65,16 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       hard cap (`tardis-concurrency-guard.sh`) — this will queue behind/ahead of the daily cron fire, size the launch
       window accordingly. Verify via manifest row counts pre/post, not just VM exit code. **Repo:
       market-tick-data-service** (verification) **+ deployment-service** (launch).
+
+## Progress Log
+
+- **slot-9 2026-08-04**: `launch-cefi-forward-poll.sh 2026-05-01 2026-08-02` already launched
+  (`cefi-fwd-20260804-021235`, e2-standard-8, `asia-northeast1-c`, started ~2026-08-04T02:12:40Z) — covers both
+  per-venue gap-starts (2026-05-01 and 2026-05-22) through 2026-08-02 in one sequential single-VM pass, respecting the
+  Tardis 1-concurrent-VM cap. Confirmed via `run.log` actively writing real `derivative_ticker` shards (e.g.
+  `COINBASE-FUTURES:PERPETUAL:QQQ-USD@LIN.parquet`, 225340 rows) and a per-minute `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE`
+  cadence — healthy, not stalled. `vm-logs/<vm>/PROGRESS.json` write is monotonic-gated per-VM; day markers in `run.log`
+  are the more reliable in-flight progress signal (sequential per-day pass starting at `VM_START_DATE`). This is a long
+  single-VM sequential backfill (~94 days × 8+ venues) — monitoring via bounded background watchdogs (~10 min cadence,
+  reading `run.log` day markers + VM status) rather than continuous polling, per the async-wait-discipline HARD RULE.
+  Will verify via manifest row counts once the VM shuts down (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo.
