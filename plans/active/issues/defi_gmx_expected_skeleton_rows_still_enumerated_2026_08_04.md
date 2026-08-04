@@ -108,19 +108,31 @@ under critical context pressure.
 
 ## Todos
 
-- [ ] [DIAG] P1. Locate the actual IS instrument-catalogue artifact (bucket + object path, or code path if it's not
+- [x] [DIAG] P1. Locate the actual IS instrument-catalogue artifact (bucket + object path, or code path if it's not
       GCS-backed) that `enumerate_expected_universe.py`'s Layer-1 skeleton-builder reads for the DEFI asset group, and
-      confirm whether it still lists a GMX pool instrument.
-- [ ] [OPERATOR] P1. (Gated on the above.) If confirmed, prune the stale GMX catalogue entry (or rebuild the catalogue
-      from current source, whichever this workspace's established catalogue-maintenance convention is) and re-run the
-      honest-coverage `--asset-group defi` measurement to confirm the 4 `expected_unattempted` rows stop reappearing.
-      **Tagged `[OPERATOR]` (na-eligibility-audit 2026-08-04, finding O path (b)): the exact artifact/mechanism this
-      mutates is still unknown until the [DIAG] P1 todo above locates it — cannot state a safe-idempotent/
-      reversibility-verified justification (finding O path (a)/(c)) before that's known.** Once [DIAG] P1 lands, the
-      executing worker must either (i) cite a fresh `gcs_bucket_soft_delete_retention_seconds()` check ≥604800s per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a if this resolves to a reversible GCS object
-      mutation (finding T — then this tag may be dropped to `[DATA]` before execution), or (ii) get explicit operator
-      authorization first if it's a whole-artifact rebuild or fails that check.
+      confirm whether it still lists a GMX pool instrument. ✅ **Artifact**:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet` — written by
+      `build_instrument_catalogue.py` (scheduled via `lifecycle_catalogue_scheduler.tf`, 01:00 UTC daily, using
+      `instruments-service:latest`). Current catalog has **0 rows with venue=GMX** (79,002 rows total, updated
+      2026-08-04T08:22:59Z). Pre-rebuild backup (`catalog.parquet.pre_cefi_reclassified_venue_purge_2026_08_04.bak`,
+      08:22:49 UTC, 79,035 rows) also has 0 GMX rows — confirming the catalog was already clean when the daily 01:30 UTC
+      enumerator ran today. July-22 backup (`catalog.20260722-025355.restakinglrt.bak.parquet`) confirms GMX was present
+      before 2026-07-25 removal (1 row: venue=GMX, chain=ARBITRUM, instrument_type=POOL,
+      instrument_id=0x489ee077994b6658eafa855c308275ead8097c4a, available_to=None). **Catalog does NOT still list GMX.**
+      The 4 manifest rows are stale residue from a pre-cleanup enumerator run; the incremental manifest consolidator
+      preserves old rows that no shard explicitly overwrites — they will persist until pruned.
+- [ ] [DATA] P1. (Gated on [DIAG] P1 above, now resolved.) Prune the 4 stale `venue=GMX` manifest rows from
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` and re-run
+      `measure_honest_coverage.py --asset-group defi` to confirm they stop appearing. **Tag demoted [OPERATOR]→[DATA]
+      per inline note:** (i) `gcs_bucket_soft_delete_retention_seconds()` for the manifest bucket = 604800s (≥604800s,
+      effectiveTime 2026-05-12) — reversibility-verified per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+      §3a. **Mutation scope**: NOT catalogue pruning (catalog is already clean). Needed: targeted removal of exactly 4
+      rows
+      `(venue=GMX, chain=ARBITRUM, instrument_type=pool, date=2026-08-04, instrument_id=0x489ee077994b6658eafa855c308275ead8097c4a,     data_type∈{dex_pool_state,dex_pool_swaps,governance_events,position_data})`
+      from the consolidated manifest. Use `manifest_reprocess.py` (UTL) or a bounded pruning script (run via
+      `run-bounded-analysis.sh`; manifest is 1.75GB so I/O is heavy — run on AO VM not local host per heavy-I/O rule).
+      **Self-healing note**: the daily 01:30 UTC enumerator (clean catalog) will NOT re-seed these rows; once pruned
+      they will not reappear.
 - [ ] [DIAG] P2. Check whether DRIFT/PACIFICA (removed 2026-07-16, per
       `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) have the same class of surviving catalogue
       residue — same root-cause family as this finding, not yet checked.
@@ -134,6 +146,17 @@ under critical context pressure.
   `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`'s Progress Log — that claim was accurate for the
   generated-bundle + source-registry surfaces it was scoped to, but this manifest-skeleton surface was not checked at
   the time and is not clean. Not resolved this session — context budget exhausted; filed for a fresh follow-up.
+- **AO slot-16 backend_engineer 2026-08-04** (dispatch defi_gmx_expected_skeleton_rows_still_enumerated-001): **[DIAG]
+  P1 COMPLETE.** Artifact located: `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`
+  (GCS-backed, built by `lifecycle-catalogue-regen-defi` Cloud Run Job at 01:00 UTC via `build_instrument_catalogue.py`,
+  read by `expected-universe-v2-defi` enumerator at 01:30 UTC via `--catalog-path`). **Catalog is CLEAN**: 0 GMX rows in
+  both current (79,002 rows) and pre-08:22 backup (79,035 rows). Root-cause of the 4 stale manifest rows: an older
+  enumerator run (before the catalog was cleaned on 2026-07-25) seeded `expected_unattempted` rows for the GMX pool
+  instrument; the incremental manifest consolidator preserves those rows because no shard has since written an override
+  for those keys. Self-healing from daily enumerator alone is NOT sufficient — the enumerator adds rows from the clean
+  catalog but never removes old rows not in its output. Manifest bucket soft-delete retention = 604800s (≥604800s) →
+  [OPERATOR] P1 tag demoted to [DATA] P1 per §3a reversibility check. Mutation scope: targeted row pruning of 4 rows
+  from `availability_index.parquet`, NOT catalog rebuild. Recommended: bounded pruning script on AO VM + re-verify.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): **RECLASSIFY, conflict-check CLEAR.** All 3
   open todos are bounded locate/confirm/fix/re-verify tasks over the IS instrument-catalogue + honest-coverage manifest
   with objectively checkable done-states, never previously assessed for AO eligibility (simply defaulted to NA at filing
