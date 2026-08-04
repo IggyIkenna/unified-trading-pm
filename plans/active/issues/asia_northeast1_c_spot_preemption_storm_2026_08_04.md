@@ -155,7 +155,11 @@ to preemption with proportionally little forward progress while it lasts.
       "Additional finding" below). Converted into a new todo below rather than re-opening this one, since the prefix fix
       itself IS verified working.
 - [ ] [SCRIPT] P2. Re-check `compute.instances.preempted` volume in `asia-northeast1-c` after several hours — confirm
-      whether the storm has subsided; note the outcome in this doc's Progress Log (repo: deployment-service).
+      whether the storm has subsided; note the outcome in this doc's Progress Log (repo: deployment-service). **Clock
+      reset 2026-08-04T03:29Z** (see Progress Log entry below) — a fresh, sharper spike (peak 20/min at 03:10, far
+      exceeding the original 32/10min peak) landed well inside the originally-scheduled ~03:52-04:54Z recheck window
+      itself. Do not treat that window as satisfied by pre-spike data — the next recheck should look for a genuinely
+      clean window measured FROM the 03:10 spike, not from the original ~00:54Z filing time.
 - [ ] [SCRIPT] P2. **NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
       `terminated = [name for name in prior if     name not in running]` diff (`exit_code_fleet_monitor.py:565`)
       requires a VM to have appeared in a PRIOR tick's `running` census before its disappearance can ever be detected. A
@@ -226,3 +230,19 @@ to preemption with proportionally little forward progress while it lasts.
   `skip-current-task`'d (reason_code=GATED, estimated_unblock_minutes≈120) rather than force a premature verdict;
   recommend the next dispatch of this specific todo not fire before ~03:54Z, and pull the FULL trailing window (not just
   since my 23:00Z start point) at that time.
+- **2026-08-04T03:29Z** — Checked ~25min early (working the sports campaign's own monitoring loop, not a fresh dispatch
+  of this todo) since my prior `gcloud logging read` query syntax was broken (`jsonPayload.event_subtype=...` returned 0
+  results even over a 6h window with known events in range) — found the working filter other slots used
+  (`protoPayload.methodName="compute.instances.preempted"`) cited in this doc's own earlier entry and re-ran it
+  properly. **Finding: the storm did NOT taper toward subsidence — it had a fresh, SHARPER spike.** Minute-by-minute
+  breakdown of the trailing 3h: quiet 00:30-03:06 (0-3 events/min, consistent with slot-11's "low background ~2/10min"
+  read), then a sudden burst 03:07-03:20 (9, 1, 1, **20**, 2, 2, 6, 5, 1 events per minute — peak of 20 in the single
+  minute 03:10, i.e. **more concentrated and higher-peak than the original 00:10-00:20Z storm's 32-events-over-10min**),
+  then tapering to 2, 2 events at 03:22 and 03:28 (last event 03:28:45Z, ~30s before this check at 03:29:15Z — still not
+  a clean window). 94 total preemption events in the trailing 3h. Did **not** attempt a FIXTURE_STATS relaunch — this is
+  stronger evidence against subsidence than before, not weaker. **Recommendation**: treat 03:10Z as a new reference
+  point for the "genuinely clean window" bar, not the original ~00:54Z filing time or the ~01:52Z low-background reading
+  — a recheck immediately at the nominal ~03:52-04:54Z window would be measuring from pre-spike data if done using only
+  the older entries above. Whoever does the next recheck should pull the FULL trailing window fresh (not rely on this
+  entry's numbers going stale) and confirm at least 30-60 clean minutes measured forward from whatever the actual latest
+  event turns out to be at check time.
