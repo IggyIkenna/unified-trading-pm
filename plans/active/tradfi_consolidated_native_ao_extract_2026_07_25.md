@@ -227,7 +227,7 @@ drift_direction: advance-code
       `_umi_yahoo.py`/`_umi_fred.py` naming-resemblance suspicion was investigated and cleared — routing layer, not a
       competing implementation).
 
-- [ ] [CODE] P2. **Wire a durable classification so billing-gated Databento L2/L3 entitlement-guard rejections
+- [x] ✅ [CODE] P2. **Wire a durable classification so billing-gated Databento L2/L3 entitlement-guard rejections
       (`mbp_10`/`trades`/`tbbo` outside the 1-month L3 / 1-year L1 window) do not count as `attempted_failed`.** Source
       native todo (lines 314-323), unmodified — a scoped code change: a new UAC `classify_venue_error()` outcome or
       `expected_reason` value recognizing the billing-entitlement-guard rejection, routing it to
@@ -236,7 +236,13 @@ drift_direction: advance-code
       `mbp_10`/`trades`/`tbbo` on a Databento tradfi shard yields 0 `attempted_failed` rows, PLUS a live manifest
       spot-check shows the count trending down after the fix ships; `quality-gates.sh --no-fix` green in both repos.
       Evidence is the shipped commit + test name + spot-check numbers (cited in this todo's own commit message; no
-      separate markdown doc needed). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 314-323).
+      separate markdown doc needed). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 314-323). —
+      **DONE 2026-08-04 (slot-4, data_engineering):** UAC @ f2a86e1e + MTDS @ b0d44fb2. Added
+      `DATABENTO_LOOKBACK_EXCEEDED` and `DATABENTO_SUBSCRIPTION_GUARD` to `VENUE_ERRORS_TRADFI[databento]` with
+      `ErrorAction.SKIP`; `_classify_databento_exception()` now detects `DatabentoSubscriptionError` subclasses before
+      falling through to string-matching. 14 unit tests (5 UAC + 9 MTDS) assert the classification:
+      `TestDatabentoBillingGuardClassification` + `TestClassifyDatabentoException`. Both repos QG-green shipped via
+      quickmerge.
 
 - [x] ✅ [REVIEW] P1. **Verify the data-status page (Upcoming expiries widget + catalogue view) now renders canonical
       tradfi ids, given catalogue Surface A shipped live since this native todo was written — plus confirm the
