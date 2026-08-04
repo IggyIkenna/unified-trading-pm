@@ -28,6 +28,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /codex/02-data/mvp-scope-canonical.md,
+    /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 created: 2026-08-03
 priority: P1
@@ -483,24 +484,24 @@ are genuinely in scope for the operator's "no exceptions" directive.
   separate fleet's contention sharing the same zone. Not investigated further (out of this campaign's scope; the
   resolved `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` doc is the right home if anyone picks that up).
   Relaunched FIXTURE_STATS once more (`af-backfill-20260804-130914`), confirmed RUNNING.
-- **2026-08-04T13:29Z — RESOLVES the open question flagged earlier (2026-08-04T08:xx, "empty_confirmed may not be
-  materialized without a separate rescan").** `-130914` ran a genuinely decent ~11min (12:10:17Z→12:21:20Z), but an
-  immediate re-census showed exactly zero movement (still 77,092/56,940). Rather than accept that at face value, pulled
-  the actual VM run.log (`gcloud storage cat gs://deployment-scripts.../vm-logs/af-backfill-20260804-130914/run.log`)
-  and confirmed real work happened: `ManifestWriter: per-VM shard updated (10873 total entries, 372 new)`, and the run
-  legitimately deduped against prior work
-  (`89 (entity, fixture_id) pairs already in existing per-league parquets — skipping`). **Confirms the mechanism**:
-  manifest writes land in a per-VM shard parquet (`_index/per_vm/<vm-name>-c1.parquet`) first; only the automatic Cloud
-  Scheduler consolidator (SSOT `/codex/05-infrastructure/manifest-consolidator-ssot.md`, runs `*/1min` but this specific
-  sports bucket's merge cycle "regularly takes 400-460s" per that doc) folds it into the master
-  `_index/availability_index.parquet` my census reads — so a census run shortly after a preemption will systematically
-  undercount real progress until the next merge cycle lands. The underlying per-fixture DATA itself (not just the
-  manifest) is durable and dedup-checked directly against existing per-league parquets, so **every preempted run's work,
-  even a short one, is real and not wasted** — it just isn't visible to this doc's census checks until the consolidator
-  catches up. Calibration for future ticks: don't re-census immediately after a preemption expecting to see movement;
-  space census checks out more, or expect a multi-cycle lag. Did not manually invoke
-  `launch-sports-manifest-rescan-vm.sh` — its own header describes a narrower, different purpose (FIXTURES
-  canonical-league-ID remapping, not general per-VM consolidation) and carries real risk (singleton lock, explicit
-  warnings against deleting a VM that might be another dispatch's live work) that isn't worth taking on for what the
-  automatic consolidator should already self-heal. Relaunched FIXTURE_STATS again (`af-backfill-20260804-132909`),
-  confirmed RUNNING, to keep building on the -130914 run's real (if invisible) progress.
+- **2026-08-04T13:29Z-13:37Z** — `-130914` ran a genuinely decent ~11min but an immediate re-census showed exactly zero
+  movement. Initially attributed this to ordinary consolidator lag (per-VM shard writes confirmed real via run.log,
+  mechanism seemed to just need time to fold in). **Superseded by the 2026-08-04T13:37Z finding below** — it's not lag,
+  the consolidator is genuinely frozen. Relaunched FIXTURE_STATS regardless (`-132909`, then `-133748`) since the
+  underlying per-fixture data writes are durable independent of this.
+- **2026-08-04T13:37Z — MAJOR FINDING, separate issue doc filed.** After `-133748` ran 22+ min with the consolidator
+  STILL showing zero canonical movement, dug into the actual `uts-prod-manifest-consolidator-instruments-sports` Cloud
+  Run job execution logs (not just scheduler health). **The consolidator's canonical `rows_out` has been frozen at
+  exactly 9,239,513 for 5+ hours (2026-08-04T08:06Z→13:08Z+), across ~35+ successful merges**, despite processing 3-15
+  shards and 187-2,000,000 `dedup_dropped` rows every single cycle — the arithmetic
+  (`dedup_dropped = rows_in - rows_out`) holds exactly every time, meaning every row entering the merge across the
+  ENTIRE sports-prd bucket (not just AF — enrichment crons, fixtures schedules, other backfills all write here) is being
+  classified as a duplicate and dropped, not merged in. This is NOT the previously-resolved staleness/loud-fail issue —
+  this consolidator reports `success=True error=-` every cycle, believing it's working normally; the existing liveness
+  watchdog only checks heartbeat age, not output growth, so it wouldn't catch this. Filed
+  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` with full evidence/repro steps — out of this
+  campaign's scope to root-cause (needs someone with context on `manifest_consolidator.py`'s merge/dedup logic).
+  **Practical implication for this campaign**: keep launching backfills (real data keeps accumulating durably, confirmed
+  independent of this bug), but census-confirmed convergence cannot be truthfully declared for ANY entity in this doc
+  while the consolidator stays frozen — treat every "needed" figure in this doc as a stale floor, not current truth,
+  until that issue resolves. Relaunched FIXTURE_STATS again regardless.
