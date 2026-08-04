@@ -46,7 +46,7 @@ related:
     /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
   ]
 created: "2026-07-28"
-last_updated: "2026-08-03"
+last_updated: "2026-08-04"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -178,14 +178,38 @@ in this read-only audit pass (time-bounded scope).
       (`test_defi_venue_chain_split_guarded_against_unknown_chain_suffix`) pinning the exact `BITGET-FUTURES` →
       `venue="BITGET-FUTURES", chain=""` (unsplit) behavior; existing `test_defi_combined_venue_chain_split`
       (`EIGENLAYER-ETHEREUM` → split) still passes unchanged. Full `quality-gates.sh` green.
-- [ ] [OPERATOR] [DATA] P2 (b). decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22)
-      DUPLICATE CeFi objects physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]**
-      requires sign-off per delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30
-      CONTESTED VERDICT below already flagged this exact gap); confirm row-for-row duplication (not just
-      prefix-existence) against the cefi bucket copy FIRST — note the fix in (a) makes the manifest self-correcting on
-      the NEXT `backfill_orphan_class_e.py` sweep, so this remaining part is scoped to the physical GCS duplicate-object
-      cleanup only, not a manifest re-stamp. Source: this doc, na-eligibility-audit 2026-07-30 tranche=defi CONTESTED
-      VERDICT below.
+- [ ] [DATA] P1. **RE-SCOPED 2026-08-04 (interactive session) — the prior "safe cleanup" framing was WRONG; Part 4 of
+      the delete-safety five-part-proof FAILS with direct evidence, not merely unverified.** Live-code check
+      (`strategy-service`): `strategy_service/cli/handlers/paper_run_handler.py:1987-1988` — the CARRY_BASIS_PERP /
+      CARRY_FUNDING_DISPERSION tick-building path (`GroupBRunner`) instantiates
+      `CanonicalPerpFundingProvider().funding_window(window_start, window_end, venue=venue)`, which per
+      `strategy_service/engine/core/canonical_perp_funding_provider.py:142-150` reads `data_type=perp_daily_ctx` **ONLY
+      from the shared DeFi bucket** (`resolve_bucket_name(kind="tick-data", asset_group="defi")`, no cefi-bucket
+      fallback), via an unscoped glob that "picks up whatever `pipeline_mode=`/`venue=` shards the pipeline wrote,
+      without hardcoding the source/venue partitions" — i.e. it reads ANY venue physically present at that path, not an
+      allowlist. `strategy_service/engine/strategies/v2/target_universe/catalog_carry.py:217-234` configures **exactly 6
+      of the 7 contaminated venues** (`KRAKEN-FUTURES`, `BINANCE-FUTURES`, `BYBIT-FUTURES`, `OKX-FUTURES`,
+      `BITFINEX-FUTURES`, `BITGET-FUTURES`) as the real CARRY_BASIS_PERP venue universe. This module's own docstring
+      states determinism is "a pure function of (bucket corpus, window, venue, coin)" — i.e.
+      `paper(W) ==     batch-rerun(W)` epsilon=0 depends on this exact physical data being present. **Deleting these
+      objects would not be a redundant-duplicate cleanup — it would silently remove data a live, determinism-critical
+      strategy path reads today, with no fallback to the cefi-bucket copy.** This is confirmed by direct code read (not
+      inferred), and it DIRECTLY CONTRADICTS this doc's own prior claim ("a cleanup of the DeFi-bucket copies is
+      unlikely to lose data") — that claim was never verified against the actual reader, only against GCS path/prefix
+      existence. **Disposition per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`:
+      `no-still-authoritative`** (the DeFi-bucket copy is, today, the ONLY thing `CanonicalPerpFundingProvider` reads
+      for these venues — not a delete candidate at all until proven otherwise). **Do NOT delete.** Remaining open
+      question for whoever picks this up: whether `CanonicalDerivativeTickerFundingProvider` (a separate provider class,
+      used elsewhere in `paper_run_handler.py` at line 2364, reading a `derivative_ticker`-shaped cefi-native corpus)
+      could be repointed-to instead for these 6 venues — if so, THAT is the correct fix (repoint reader → confirm parity
+      → then delete, mirroring the Part-5 "legacy-copied-not-moved" recipe), not a blind delete. Not resolved here;
+      flagging as the concrete next step rather than re-opening the original mis-scoped `[OPERATOR]` framing. Checklist:
+      Part 1 twin `NOT RE-EVALUATED this session` (prior finding stands: exists in cefi bucket) · Part 2 content
+      `NOT RE-EVALUATED this session` · Part 3 writers: no live writer targets this exact path today (TOCTOU bug fixed
+      2026-07-24, `instruments-service@f651ff8b`) · **Part 4 readers: FAILS — `paper_run_handler.py:1987-1988` +
+      `canonical_perp_funding_provider.py` confirmed live reader, see above** · Part 5 N/A (not a legacy-copy scenario).
+      Disposition: `no-still-authoritative`. Hard stop: none crossed (disposition itself blocks action, not an
+      operator-approval gate).
 - [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
@@ -215,23 +239,126 @@ in this read-only audit pass (time-bounded scope).
       (`_ACCEPTED_EXCEPTIONS` semantics reviewed, not modified),
       `market-tick-data-service/market_interface/adapters/defi/canonical_write.py` (`_normalize_venue()` guard reviewed,
       not modified).
-- [ ] [OPERATOR] P2. **Contested cross-AG architecture question**:
+- [x] ✅ P2. **RESOLVED 2026-08-04 (interactive, autonomous).** Contested cross-AG architecture question:
       `features-service/features_service/cefi/calculators/perp_funding_corpus.py:254-255` deliberately writes
       CEFI-tagged (`asset_group="cefi"` in the row, `_OUT_ASSET_GROUP`) perp-funding-corpus data into the SHARED
       **DeFi** tick-data bucket (`dst_bucket = resolve_bucket_name(..., asset_group="defi")`, docstring: "writes ...
-      into the shared DeFi tick-data bucket (the bucket `CanonicalPerpFundingProvider` reads)") — this is intentional
-      architecture (a strategy needs both cefi+defi funding context in one read location), NOT itself a bug. But it
-      means any generic manifest/orphan-sweep tool run with `--asset-group defi` against that shared bucket will
-      encounter cefi-tagged objects and — per the cross-AG finding above — mis-handle them unless it's cefi-aware.
-      Confirm with the operator whether this shared-bucket-cross-tagging design is still wanted (vs. e.g. a dedicated
-      cross-cutting bucket `CanonicalPerpFundingProvider` reads from instead), since it is the root ARCHITECTURAL reason
-      this bug class is even possible — fixing `migration_orphan_sweep.py` closes THIS instance but not the underlying
-      hazard. Not a worker-resolvable design call.
+      into the shared DeFi tick-data bucket (the bucket `CanonicalPerpFundingProvider` reads)") — is this shared-bucket
+      cross-tagging design still wanted? **Yes, keep it — it is demonstrably load-bearing, not merely
+      "intentional-in-theory."** The P2(b) re-scope above independently proves it by direct code read:
+      `strategy_service/cli/handlers/paper_run_handler.py:1987-1988`'s CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION path
+      calls `CanonicalPerpFundingProvider().funding_window(...)`, which reads `perp_daily_ctx`/`perp_funding` ONLY from
+      this exact shared DeFi bucket, for exactly the cefi-tagged venues `catalog_carry.py` configures as the live venue
+      universe. A dedicated cross-cutting bucket would require a reader repoint + backfill/dual-read transition for a
+      currently-live determinism-critical strategy path — real risk for a design that is already working as intended,
+      not a bug needing architectural correction. The remaining hazard this question originally flagged (generic
+      orphan-sweep tools mishandling cefi-tagged objects found under `--asset-group defi`) is ALREADY closed by P2(a)'s
+      shipped chain-allowlist fix (`instruments-service@f651ff8b`) — no further architecture change needed. Decided
+      using this doc's own new evidence per the autonomous-dispatch "decide, don't ask" rule (documented record of
+      intent: this doc's own P2(b) investigation), not a fresh guess.
+- [ ] [DATA] P3. **NEW 2026-08-04.** Fold historical `instrument_type=POOL` (uppercase) defi manifest rows to canonical
+      lowercase `pool` — confirmed pure historical residue via direct code read (both `write_defi_rows()`
+      `canonical_write.py:260/314/334/353` and `websocket_runner.py:112` already lowercase before persistence; no live
+      writer emits uppercase). NOT currently badged non-canonical (the `(defi, instrument_types)` case-insensitive
+      comparison exception in `deployment-api/deployment_api/routes/data_status/_distinct_values.py` already silences
+      it), so this is a cosmetic/hygiene data migration, not a correctness fix — P3, not urgent. Recipe: bounded
+      manifest read filtered to `instrument_type=="POOL"`, verify the lowercase canonical twin either already exists
+      (fold, Part-5 legacy-copied-not-moved invariant) or doesn't (straight case-rename, no content risk since it's the
+      same rows) before any manifest rewrite; mirror the `register_defi_fold_manifest.py`/dex_pools-fold precedent. Not
+      executed this session — flagged, not yet scoped with live row counts.
 
 ## Progress Log
 
-- **slot-15 2026-07-30 — todo-1 trace, live query + code read (not whole-corpus — targeted `columns=`/filter read of the
-  already-consolidated index)**:
+- **interactive session 2026-08-04 (autonomous, operator away 8h, `/autonomous`)** — operator re-raised this exact DEFI
+  distinct-values panel drift (screenshot: chain-shaped venues, `FUTURES`/`HYPERLIQUID` chains, GMX still showing as a
+  venue, `POOL` vs `pool` instrument_type casing, `dex_pool_fees`/`dex_pools`/`dex_swaps` non-canonical data_types) and
+  asked to take it to completion, updating existing tracked docs rather than duplicating. This entry consolidates
+  everything found/decided this session (full findings — this doc stays the SSOT, do not re-derive):
+  - **P2(b) cross-AG duplicate delete — RE-SCOPED, see the rewritten todo above.** Do not delete; disposition flipped to
+    `no-still-authoritative` after finding a live strategy reader depends on this exact data.
+  - **Contested `[OPERATOR]` cross-AG architecture question (below) — RESOLVED, see its own checkbox.** The same Part-4
+    investigation above independently proves the shared-bucket cross-tagging design is load-bearing for a live strategy
+    path today, answering the open question.
+  - **GMX residual-code check — FALSE POSITIVE, no fix needed.** Operator flagged "GMX supposed to be gone entirely, yet
+    showing up as a venue." Grepped all 6 repos the original `defi_gmx_venue_removal_2026_07_25.md` claimed clean
+    (`unified-api-contracts`, `market-tick-data-service`, `instruments-service`, `execution-service`,
+    `strategy-service`, `unified-trading-library`) plus `deployment-api`/`features-service`. Two live (non-comment)
+    hits, both verified NOT bugs: `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py:1159` is
+    the **GMX ERC-20 token** as a Compound V3 Arbitrum collateral-reserve entry (unrelated to the GMX DEX venue that was
+    removed); `deployment-api/deployment_api/services/data_status/defi.py:80` is a legacy-protocol-prefix filter list
+    that CORRECTLY handles residual pre-canonicalisation `GMX-*` composite-venue rows for UI display (defensive code,
+    not a bug). The claim in `purge_gmx_venue_removal_2026_07_25.py`'s docstring ("zero live gmx references... across [6
+    repos]") independently RE-CONFIRMED true. **The venue's continued appearance in the panel is pure manifest/GCS data
+    residue** — 5,374 real historical `venue=GMX` rows (per that script's 2026-07-25 authoring-time census: ARBITRUM
+    3,165 / AVALANCHE 2,209; `dex_pool_state` 4,115 / `perp_funding` 1,235 / `derivative_ticker` 16 / `liquidations` 8)
+    that the purge script's `--apply` mode was written to remove but has never been run. `--dry-run` launched this
+    session against LIVE data to get the current count before deciding next steps — see below/next Progress Log entry
+    for the result (long-running: reads the ~52M-row consolidated index + day-sharded GCS discovery, ran in background).
+  - **`POOL` (uppercase) vs `pool` (lowercase) `instrument_type` — operator-flagged, confirmed real residual drift, NOT
+    a live-writer bug.** `solana_amm_pool`/`solana_vault` are correctly separate canonical values (not part of this
+    finding) per `/codex/02-data/defi-canonical-naming-ssot.md`'s "dex_pool_state = EVM + Solana union" section.
+    `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1238` confirms lowercase `"pool"` is
+    canonical. Grepped live writers: MTDS batch adapters (`uniswapv2_adapter.py`, `curve_adapter.py`,
+    `balancer_adapter.py`, `uniswapv4_adapter.py`, `uniswap_v3_adapter.py`) build row dicts with
+    `"instrument_type": "POOL"` (uppercase) as an INTERMEDIATE value, but `canonical_write.py::write_defi_rows()` (the
+    actual persistence chokepoint, lines 260/314/334/353) always stamps `instrument_type.value.lower()` before writing —
+    the uppercase never reaches disk from this path. Live websocket connectors (`phoenix_ws.py`,
+    `dex_swap_uniswap_v3_ws.py`, `curve_defi_ws.py`, `orca_defi_ws.py`, `raydium_defi_ws.py`) pass
+    `instrument_type="POOL"` into `ReceivedTick`, but `websocket_runner.py:112`
+    (`itype_l = (instrument_type or "").lower()`) normalizes before persisting too. **Both batch and live write paths
+    already lowercase before persistence — confirmed by direct code read, not inferred.** Conclusion: `POOL` in the
+    manifest is 100% historical residue (pre-dates one or both of these normalization chokepoints, or came from a
+    since-retired direct-write path), not an active leak. It IS already silenced from the `is_canonical` badge by the
+    existing `(defi, instrument_types)` case-insensitive comparison exception in
+    `deployment-api/deployment_api/routes/data_status/_distinct_values.py` (operator-ruled 2026-07-22) — so it's not
+    mis-flagged, just still cluttering the raw distinct-values enumeration as a genuinely separate historical string.
+    **New todo filed below** — this is a real, if low-priority, data-only migration (fold historical `POOL` manifest
+    rows to `pool`), not a code fix.
+  - **`dex_pool_fees` — operator ruling: do NOT add to canonical registry (my working assumption "registry-completeness
+    gap, should be added" was WRONG).** Operator's domain guidance: pool fee-tier is a static, per-pool attribute
+    already encoded in the instrument definition/`instrument_id` (the `{fee_rate_bps}BPS`/`TS{tick_spacing}` symbol
+    discriminator, see `/codex/02-data/defi-canonical-naming-ssot.md` "Solana AMM pool SYMBOL grammar" — same principle
+    applies to EVM `fee_rate_bps` columns already on `dex_pool_state` rows) — fee ACCRUAL (the thing
+    `strategy-service/scripts/materialize_dex_pool_fees.py` actually computes, $ revenue = volume × rate) is derivable
+    downstream from `dex_pool_state` (rate) × `dex_pool_swaps` (volume), the same "engineer it from what's already
+    canonical" principle the operator applied to gas fees (gas cost = gas units, backfilled separately, × static per-tx
+    complexity — no separate "total gas fee" corpus needed either). The script's own
+    `# Delete-when: the MTDS dex_pool_state writer joins subgraph feesUSD/volumeUSD` marker already anticipated this —
+    it was always meant to be temporary. **Disposition: `dex_pool_fees` staying OUT of
+    `DATA_TYPES_BY_ASSET_GROUP["defi"]` is CORRECT, not a gap** — the real remaining work is confirming whether
+    `dex_pool_state`/`dex_pool_swaps` already carry the columns needed to retire `materialize_dex_pool_fees.py` +
+    `canonical_dex_pool_provider.py`'s separate join, which is a strategy-layer (PnL-adjacent) change big enough to
+    warrant its own dedicated investigation rather than a same-session code change — filed as a new issue doc rather
+    than executed live against strategy fee computation without a dedicated review.
+  - **`dex_pools`/`dex_swaps`/`rate_indices` (bare, legacy manifest data_type values, distinct from the already-RESOLVED
+    2026-07-21 `dex_pools/` GCS-path-prefix fold) — confirmed real, large historical residue, NOT a live-writer bug**:
+    `/codex/02-data/defi-canonical-naming-ssot.md:88` is unambiguous — "the legacy 2-layer split (on-disk
+    `dex_pool_state` vs manifest `dex_pools`) is RETIRED — `dex_pool_state`/`dex_pool_swaps` are canonical at every
+    layer" (operator-locked 2026-06-01). MTDS handler consts already write canonical names (`dex_pools_handler.py:83` →
+    `dex_pool_state`, `dex_swaps_handler.py:92` → `dex_pool_swaps`); MDPS's `orchestration_scanner.py`/`swap_adapter.py`
+    treat the bare forms purely as legacy-alias READ compatibility (`swap_adapter.py:59`: "legacy pre-migration MTDS
+    backfill files"). `unified-api-contracts/.../_schema_spec_defi.py`'s docstring claiming `dex_pools`/`dex_swaps` are
+    "current writers" is STALE relative to the SSOT + actual writer code — flagging for a doc fix, not a data
+    implication. Row counts are real and large (2026-07-22 live census, cited in
+    `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_progress_log_history_2026_08_03.md:105-107`):
+    `dex_pools` 454,077 / `dex_swaps` 3,458,668 / `rate_indices` 49,096 rows. **Already owned by
+    `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`** (status: active) — this doc does
+    NOT duplicate that ownership; a migration of this size (millions of rows) needs its own dedicated dry-run/apply pass
+    and is out of scope to execute inline here. Not re-filed as a new doc.
+  - **`perp_daily_ctx`/`perp_mark_price` registration** — confirmed already correctly scoped + unclaimed in the live AO
+    backlog (`defi_satellite_ao_dispatch_batch6-010`, `status=queued dispatched_to=None`, verified via
+    `check-ao-backlog-status.sh`) — dispatched to a sub-agent this session with the source issue doc's exact scope
+    boundary (does NOT touch the live `CanonicalPerpFundingProvider` reader or either writer's row shape; registers the
+    data_type + backfills manifest rows for already-migrated historical objects only). Result pending; will be journaled
+    here or in `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` once complete.
+  - **HYPERLIQUID residual `asset_group=defi` manifest rows** — the citation in this doc's own earlier entries (and the
+    2026-08-03 cross-tranche census table) attributing this to
+    `defi_venue_phase_live_definition_contradiction_2026_07_22.md` does NOT hold up — that doc, read in full, has ZERO
+    mentions of HYPERLIQUID (it covers 11 unrelated `phase=="pipeline"`-filtered venues). The real reclassification SSOT
+    (`/codex/02-data/defi-canonical-naming-ssot.md` "On-chain perp CLOBs are CeFi, NOT DeFi", codified 2026-06-25) cites
+    `plans/active/instruments_foundation_completeness_2026_06_24.md`'s 1,802-row contaminant purge, but that purge
+    explicitly names EXTENDED/PACIFICA/LIGHTER, not HYPERLIQUID. **No doc actually explains the HYPERLIQUID residual —
+    filed as a new issue doc** rather than left as an uncited assumption (see repo root for the new doc).
 
   Query:
   `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", columns=["venue","chain","source","pipeline_mode"])`,
