@@ -75,8 +75,18 @@ unsupported-in-this-context provider value that should never reach production co
 ## Todos
 
 - [ ] [SCRIPT] P3. Root-cause why cloud provider `"local"` reaches `as_cloud()` in
-      `test_instruments_domain_separation`'s environment and fix the env resolution (or mark the test `skipif` with a
-      stated reason if `"local"` is out of scope for this test context) (repo: market-data-processing-service).
+      `test_instruments_domain_separation`'s environment and fix the env resolution. **NOT via a bare
+      `try/except BucketNamingError: pytest.skip(...)`** around the loop body (investigated + rejected 2026-08-04 — see
+      Progress Log: it makes both tests in the file skip-only on this host, which trips `quality-gates.sh`'s
+      `zero-test-silent-pass` guard, `❌ ZERO TESTS RAN`). The autouse `_skip_integration_without_creds` fixture
+      (`tests/conftest.py`) only checks "are ADC credentials present at all", not "is `config.cloud_provider` actually
+      `gcp`/`aws`" — on hosts with ambient GCP ADC creds but a mock/local `cloud_provider` config (this shared fleet's
+      dev VMs), that mismatch is exactly what lets the test run instead of skip, then fail. Fix candidates: (a) widen
+      the autouse fixture's skip condition to also check `config.cloud_provider in ('gcp','aws')`, not just
+      credential-presence; (b) have this specific test construct a `CloudDataProvider` with an explicit real-cloud
+      override instead of relying on ambient config (repo: market-data-processing-service). Done when the test reliably
+      PASSES on a real `gcp`/`aws` config and reliably SKIPS (not fails, not silently vanishes to zero-tests-ran) on a
+      mock/local one.
 
 ## Progress Log
 
@@ -84,3 +94,9 @@ unsupported-in-this-context provider value that should never reach production co
   (all 3 of its own todos done) per the archival ritual's step 1 — this finding was described in that doc's "What I
   found" item 4 but never given its own todo, a prose-deferral gap. Migrated here untouched (not investigated further
   this session).
+- **2026-08-04 (slot-5, backend_engineer)** — hit this same failure live while trying to land a green Pass-1 for an
+  unrelated diff (still blocked on it — `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` todo 4).
+  Tried the obvious same-pattern fix (skip on `BucketNamingError`, mirroring the sibling
+  `test_get_instruments_from_gcs`'s `None`-tolerance) — reverted after it tripped the zero-test-silent-pass guard (both
+  tests in the file skip on this host). Recorded the rejected approach + real root cause (autouse fixture checks
+  creds-presence, not cloud-provider-shape) above so the next attempt doesn't re-walk the same dead end.
