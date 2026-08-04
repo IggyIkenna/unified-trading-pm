@@ -32,7 +32,7 @@ referenced_by:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 owner:
-last_reviewed: 2026-07-24
+last_reviewed: 2026-08-04
 code_refs:
 type: infrastructure
 execution:
@@ -71,7 +71,16 @@ before this doc (2026-07-24 gap analysis, `data_pipeline_e2e_milestones_gate_202
   orchestrator's relaunch record. **A preemption with no matching relaunch, or a relaunch that restarted from
   `START_DATE` instead of the checkpoint, is a finding** — investigate why the PROGRESS-checkpoint contract didn't fire
   for that specific launcher (see `spot-vms-for-backfill.md`'s own note: verify the specific rebuild/relaunch tool
-  actually targets the right launcher class before trusting it fits).
+  actually targets the right launcher class before trusting it fits). **But check the classification gate FIRST**:
+  `exit_code_fleet_monitor.sweep()` only ever considers a VM whose name passes
+  `deployment_service.data_pipeline_monitors.vm_classification.is_data_vm()` (an ASSET_GROUPS substring OR a
+  `DATA_VM_PREFIXES` entry) — a VM invisible to that filter never reaches PREEMPTED classification at all, so
+  `RelaunchPreemptedVm` has no chance to fire regardless of whether the checkpoint contract itself is sound
+  (`af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`, archived: 31 VM-name prefixes across the fleet had
+  this exact gap before the 2026-08-04 fix + the `test_data_vm_prefixes_cover_every_relaunchable_launcher` regression
+  guard closed it). If a genuinely relaunchable prefix (a real `launcher_registry.LAUNCHER_FOR_VM_PREFIX` entry) is ever
+  silently missing from that classifier again, that guard test should already be failing CI — treat a live repeat of
+  this finding as evidence the guard itself regressed, not just the prefix list.
 
 ### 2. attempted_failed billing-waste audit
 

@@ -10,7 +10,7 @@ summary: >-
   resume env, PREEMPTED relaunch budget is 48/day — nowhere near exhausted by 1-2 events), so this reads as a genuine
   runtime gap, not a missing-config issue. Root cause NOT YET DIAGNOSED — filing so it is tracked instead of silently
   re-discovered a third time (the gating doc below already flagged this twice as "out of scope, not chased further").
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@16938c1
 source:
   [
     "sports_af_full_entity_completion-003 (slot 6), 2026-08-04 — found while re-verifying the FIXTURE_LINEUPS launch
@@ -180,9 +180,39 @@ changes, and should resolve which of them is the real cause.
       `verdict=preempted`, regardless of timing. Fixed: `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`
       (added both prefixes + regression test `test_is_data_vm_filters_infra`). QG green, shipped via quickmerge,
       verified on origin. See "RESOLVED" section above.
-- [ ] [SCRIPT] P2. Once root-caused, re-check whether the same gap affects other `VM_PREFIX_TO_BUCKET` families beyond
-      `af-backfill-*` (cross-reference against `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s incident
-      — same shape, different launcher) (repo: deployment-service).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-04 (slot 12)** — `deployment-service@16938c1`. Cross-referenced EVERY
+      `launcher_registry.LAUNCHER_FOR_VM_PREFIX` entry with a real (non-None) relaunch launcher — i.e. every genuinely
+      auto-relaunchable data VM — against `cli._is_data_vm()` (ASSET_GROUPS substring OR `_DATA_VM_PREFIXES`
+      membership). Found **29 more prefixes with the identical gap**: a real launcher, but a VM name carrying no
+      cefi/defi/tradfi/sports/prediction substring and not in `_DATA_VM_PREFIXES` — af-recover-, aster-fwd-,
+      blank-reason-recon-, deribit-opts-fwd-, dvol-deribit-, expected-universe-v2-, feat-orph- (covers feat-orph-bf- by
+      prefix), features- (covers features-xc-), fill-missing-player-stats-, footystats-fwd-, fss-backfill-vm-,
+      governance-backfill-, instr-backfill-pred, jito-solana-backfill-, marinade-backfill-, ml-orph-, opt-cboe-,
+      opt-cme-, opt-deribit-, opt-okx-, pyth-lst-backfill-, replay-, scenario-matrix-, sfi-backfill-, sfi-fwd-,
+      strat-orph-, tm-forward-poll-, us-backfill-, us-forward-poll-. Verified each against the actual launcher script's
+      `VM_NAME=` construction (not just the registered prefix string) for the ambiguous cases — `feat-orph-`/
+      `feat-orph-bf-` was the sharpest example of why prefix-membership can't be inferred from "usually contains the
+      asset group": their VM names embed `ASSET_GROUP_ABBREV`, which passes cefi/defi/sports through literally but
+      remaps tradfi->tfi, prediction->pred, and no `--asset-group` at all -> `gl`, so only 3 of 5 asset-group cells
+      accidentally matched via substring — the other 2 (+ the global family) were silently invisible regardless of the
+      `_DATA_VM_PREFIXES` fix.
+
+      Cross-referenced `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` per this todo's own pointer: that
+              incident is a **different root cause**, not this one — `cefi-queue-*` VM names already contain `cefi` and were
+              always visible to `_is_data_vm()`; that doc's chain of preemptions instead traced to missing `PROGRESS.json`
+              checkpoint emission + a `VM_TASK` collision + a `WORKER_STALLED` watchdog kill. Same failure SHAPE
+              (preempted/killed, no auto-recovery), genuinely different mechanism — noting this here so a future investigator
+              doesn't assume they're the same bug.
+
+              **Fix**: added all 29 prefixes to `_DATA_VM_PREFIXES`, split into a new `vm_classification.py` module (the
+              addition pushed `cli.py` to 975 lines, over the repo's 930-line `MAX_FILE_LINES` gate — extracted
+              `_asset_group_for_vm`/`_is_data_vm`/`_DATA_VM_PREFIXES` following the same precedent as `meta_targets.py`'s
+              2026-07-13 split; `cli.py` re-imports them aliased to their original names so every existing call site, incl.
+              tests, is unchanged). Added a permanent regression guard,
+              `test_data_vm_prefixes_cover_every_relaunchable_launcher`, asserting every CURRENT AND FUTURE
+              `LAUNCHER_FOR_VM_PREFIX` entry with a real launcher resolves `True` through `_is_data_vm()` — closes this bug
+              class going forward, not just today's 31 instances. Full `deployment-service` `quality-gates.sh` green (230s,
+              sentinel matches `16938c1`), 313/313 unit tests pass. Shipped via quickmerge, verified on origin.
 
 ## Progress Log
 
