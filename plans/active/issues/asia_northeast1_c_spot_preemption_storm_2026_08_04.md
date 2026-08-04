@@ -13,7 +13,7 @@ summary: >-
   the most recent 10-minute window). This is fleet-wide billing waste happening right now, not isolated to this campaign
   — flagging per the CLAUDE.md "regularly check every running VM for preemption ... billing waste" rule and the "big
   finding" escalation bar (affects 3+ asset groups' active backfills simultaneously).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, tradfi, cefi, prediction]
 stage: [meta]
@@ -40,6 +40,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  deployment-service@7a2b28f (sub-tick census fix), deployment-service@1861cbe (residual expected-universe-v2-sports
+  preemption backoff)
 source:
   [
     "sports_af_full_entity_completion-003 (slot 5), 2026-08-04 — found while re-verifying the FIXTURE_LINEUPS launch
@@ -186,8 +188,8 @@ to preemption with proportionally little forward progress while it lasts.
       dies before the next external tick. Never triggers in `--dry-run`. 3 new unit tests cover storm-triggers-
       resweep-then-caps, below-threshold-sweeps-once, and dry-run-never-resweeps —
       `deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`.
-- [ ] [SCRIPT] P3. **NEW 2026-08-04** — investigate the residual `expected-universe-v2-sports-*` SPOT preemption pattern
-      in `asia-northeast1-c` discovered while resolving the recheck todo above: distinct from the (now resolved)
+- [x] ✅ [SCRIPT] P3. ~~**NEW 2026-08-04** — investigate the residual `expected-universe-v2-sports-*` SPOT preemption
+      pattern in `asia-northeast1-c` discovered while resolving the recheck todo above: distinct from the (now resolved)
       cross-cutting storm, this ONE VM family has taken isolated preemption hits at a low, non-zero, ongoing rate (~1
       every 2-25 min, ~11+ hits observed 03:47Z-05:16Z) while tradfi/cefi/af-backfill have all gone completely quiet in
       the same zone over the same window. Determine whether this is (a) a persistent machine-type-specific SPOT capacity
@@ -202,7 +204,23 @@ to preemption with proportionally little forward progress while it lasts.
       capacity pressure may not be perfectly isolated to the `expected-universe-v2-sports` name/launcher — worth
       checking machine type overlap (is af-backfill also `e2-standard-8`, same as this family?) as part of the
       investigation above, not just the launcher config. Full detail: `sports_af_full_entity_completion_2026_08_03.md`'s
-      06:03Z entry.
+      06:03Z entry.~~ — **RESOLVED 2026-08-04 (slot 5) — verdict (a), fixed**: confirmed via
+      `gcloud compute instances list --filter='name~"^expected-universe-v2-sports-"'` — 48
+      `expected-universe-v2-sports-*` VMs launched 2026-08-03T23:07Z-2026-08-04T06:30Z (one still `RUNNING` at check
+      time), the large majority TERMINATED within 1-3min of creation, matching the doc's "isolated hit" pattern exactly.
+      Root cause: this VM family comes from `launch-expected-universe-v2-historical-backfill-vm.sh` (the GATED one-time
+      sports historical `expected_unattempted` backfill, floor 2020-06-06 — NOT the daily Cloud Run Job scheduler in
+      `expected_universe_v2_scheduler.tf`, which can't be SPOT-preempted at all) — its sequential per-chunk retry loop
+      retried a CONFIRMED preemption (`_was_preempted`) with **zero backoff**, `continue`-ing straight back into another
+      launch on the same `e2-standard-4`/`asia-northeast1-c` SPOT pool it had just been reclaimed from. That answers the
+      06:03Z correction too: `launch-api-football-backfill-vm.sh` (af-backfill) computes a dynamic default machine type
+      that falls back to `e2-standard-4` (same as this family) when unset — real overlap, not two independent capacity
+      pools, so the two launchers WERE colliding on the same constrained SPOT tier. Fixed by adding
+      `PREEMPTION_BACKOFF_BASE_SECONDS`/`PREEMPTION_BACKOFF_MAX_SECONDS` (default 60s/600s, doubling per consecutive
+      confirmed preemption of the same chunk, resetting once a launch reaches the enumerator — halt-safety
+      `EXIT_STATUS=5` retries stay immediate, that's real progress hitting a write cap, not a capacity collision). 2
+      new/updated shell-test cases cover the backoff message and the growth-then-cap behavior (17/17 pass).
+      `deployment-service@1861cbe`, verified on `origin/live-defi-rollout`.
 
 ## Progress Log
 
@@ -363,3 +381,22 @@ to preemption with proportionally little forward progress while it lasts.
   (prediction). Retried the KALSHI force+skip pair once (single retry, per this doc's "do not blind-loop" guidance,
   given this is a P2 baseline-checkpoint task with no hard deadline, not a business-critical backfill) — outcome logged
   separately in the consuming task's own plan.
+- **2026-08-04 (slot 5)** — Direct dispatch of the residual-pattern todo.
+  `gcloud compute instances list --filter='name~"^expected-universe-v2-sports-"'` showed 48 VMs launched
+  2026-08-03T23:07Z-2026-08-04T06:30Z (1 still `RUNNING`), the large majority `TERMINATED` within 1-3min — this VM
+  family is `launch-expected-universe-v2-historical-backfill-vm.sh` (the gated one-time sports historical
+  `expected_unattempted` backfill; NOT the daily Cloud Run Job scheduler, which can't be SPOT-preempted). Read its
+  sequential per-chunk retry loop: the confirmed-preemption branch (`_was_preempted` → true) retried with ZERO delay,
+  `continue`-ing straight back into another launch on the same `e2-standard-4`/`asia-northeast1-c` SPOT pool it had just
+  been reclaimed from — verdict (a) from the todo's own framing, not (b). This also resolves the 06:03Z correction's
+  open question: `launch-api-football-backfill-vm.sh` (af-backfill) computes a DEFAULT machine type that falls back to
+  `e2-standard-4` too (same as this family) when unset — genuine overlap on one constrained SPOT tier, not two
+  independent pools. Fix: `PREEMPTION_BACKOFF_BASE_SECONDS`/`PREEMPTION_BACKOFF_MAX_SECONDS` (60s/600s default, doubling
+  per consecutive confirmed preemption of the SAME chunk, resetting once a launch reaches the enumerator — halt-safety
+  `EXIT_STATUS=5` stays immediate-retry since that's real progress, not a capacity collision). 2 new/updated shell-test
+  cases (17/17 pass, ~6s). Shipped `deployment-service@1861cbe`, verified on `origin/live-defi-rollout`. Added the
+  general pattern (a launcher's own in-process retry loop needs backoff on confirmed preemption, distinct from the
+  fleet-wide `RelaunchPreemptedVm` auto-recovery) to `/codex/05-infrastructure/spot-vms-for-backfill.md` so other
+  launcher authors don't repeat the zero-backoff mistake. Every todo in this doc is now checked with no lock — archiving
+  per the plan-completion-and-archival-discipline HARD RULE (6-step ritual: referrer paths updated corpus-wide, see this
+  commit's sibling commits touching the 5 referring docs).
