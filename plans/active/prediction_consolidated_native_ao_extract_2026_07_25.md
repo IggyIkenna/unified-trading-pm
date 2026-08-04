@@ -104,11 +104,11 @@ context_scope:
       audit" subsection. Source: **corrected 2026-07-25** — `prediction_phase_ab_residuals_2026_07_24.md`, "A5 — Adapter
       code-quality audit" (was `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated
       there same-day).
-- [ ] [DATA] P2. **`data-pipeline-check-is` — pre-Phase-B baseline checkpoint (partial slice).** Run
-      `/data-pipeline-check-is --asset-group prediction` ONE time now as the pre-Phase-B baseline checkpoint. Phase B
-      (the canonicalisation migration) has NOT started — it stays gated on a shared cefi/tradfi-migration VM drain
-      window per the parent doc's "Deferred work after 2026-07-18" section — so only the PRE-Phase-B leg of the source
-      todo's "twice more" requirement (pre-Phase-B baseline + Phase-B mid-migration spot-check) is currently
+- [x] ✅ [DATA] P2. **`data-pipeline-check-is` — pre-Phase-B baseline checkpoint (partial slice) — DONE 2026-08-04 (slot
+      6).** Ran `/data-pipeline-check-is --asset-group prediction` ONE time now as the pre-Phase-B baseline checkpoint.
+      Phase B (the canonicalisation migration) has NOT started — it stays gated on a shared cefi/tradfi-migration VM
+      drain window per the parent doc's "Deferred work after 2026-07-18" section — so only the PRE-Phase-B leg of the
+      source todo's "twice more" requirement (pre-Phase-B baseline + Phase-B mid-migration spot-check) is currently
       dispatchable; the mid-migration leg is genuinely blocked (there is no migration in flight to spot-check yet). This
       is a partial-parallelism SPLIT per `task_template.md` §4 — the mid-migration leg stays tracked by the ORIGINAL
       todo, unchanged. Repo: market-tick-data-service / instruments-service (via the skill, `-test-` buckets only).
@@ -231,3 +231,15 @@ to every classification in this doc + the Deferred section above).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in phase_d (now owns 3 of the 4 remaining
   open todos) + reconciliation-finding-taxonomy.md (todo 4's codex); dropped the now-done todo 1's codex ref.
+- **2026-08-04 (slot-6, data_engineering) — todo 2 (`data-pipeline-check-is` pre-Phase-B baseline) DONE.** Operator
+  supplied `--day 2026-08-02` via a blocked-question answer (the skill refuses to invent one). Ran the full
+  force/skip/live matrix for both MVP prediction venues (POLYMARKET, KALSHI); result is a genuine partial pass —
+  POLYMARKET force+skip PASSED, POLYMARKET live-leg + all KALSHI legs FAILED, every failure independently confirmed as
+  real SPOT preemption of the check-VM (not a code/data defect), corroborating the already-open
+  `asia_northeast1_c_spot_preemption_storm_2026_08_04.md`. Full evidence + the report path recorded in this todo's own
+  Done-when target, `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress Log, labeled "pre-Phase-B
+  baseline (1 of 2)" per spec — that doc's own `-is` 3x-cadence-top-up checkbox is intentionally NOT flipped (mid-
+  migration leg still pending). Report: `/plans/audit/results/data_pipeline_e2e_check_is_2026_08_02.md` (+ `.json`).
+  Side findings filed to two existing issue docs rather than duplicated:
+  `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (a false-positive PERMISSION_DENIED mid-run) and
+  `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (extended scope to a 4th asset group + 2 more VM families).
