@@ -375,8 +375,9 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       by the sibling CF-11-fixed block at line 520. `bash scripts/quality-gates.sh` green (all 6 gate stages passed);
       shipped via `quickmerge.sh --agent`.
 
-- [ ] [BACKEND] P3. **Narrow `ibkr_tradfi.py::close()`'s bare `except BaseException`** (Finding E-3, lines 638-643) to a
-      specific exception type and bump the log level from `debug` to `warning`. Repo: execution-service.
+- [x] ✅ [BACKEND] P3. **Narrow `ibkr_tradfi.py::close()`'s bare `except BaseException`** (Finding E-3, lines 638-643)
+      to a specific exception type and bump the log level from `debug` to `warning`. Repo: execution-service —
+      execution-service@4485e0bd (already landed by another slot; verified ancestor of origin/live-defi-rollout).
 
 - [ ] [BACKEND] P3. **Update MTDS `market_interface/adapters/tradfi/__init__.py`'s module docstring** (lines 1-16) to
       mention all 10 exported adapter/converter classes (currently narrates only 6 of 10) once todos for M-2/M-3 above
