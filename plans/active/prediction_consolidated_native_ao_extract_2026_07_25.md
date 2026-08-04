@@ -15,7 +15,7 @@ summary: >-
   Phase-B-post-migration blocker), and the P1 POLYMARKET `prediction_trades` schema-extension todo stays human — its own
   linked issue doc states the trader-identity/PII field list "needs a separate call", an unresolved UAC canonical-schema
   architecture decision, not a bounded worker task.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -32,7 +32,7 @@ related:
     /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): all 5 todos' Done-when/Source lines corrected to point at their new homes in phase_ab_residuals/phase_d (the parent's "Queued audits + reviews" section they originally cited no longer carries real checkboxes); related: extended to add phase_ab_residuals
+last_updated: "2026-08-04" # ARCHIVED — all 5 todos done + verified at new homes; Deferred items resolved; corpus referrers updated; doc moved to plans/archive/2026_07/
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -65,6 +65,13 @@ context_scope:
 ---
 
 # Prediction consolidated closeout — native-todo AO extract
+
+> **🟢 ARCHIVED 2026-08-04.** All 5 todos done + verified at their new homes (phase_ab_residuals / phase_d). The 2 Deferred items
+> are both resolved: the P3 duplicate-note merged into `prediction_phase_ab_residuals_2026_07_24.md`'s reconciliation-cadence
+> todo (still deferred pending Phase B migration), and the P1 POLYMARKET trader-identity/PII schema-extension RULED 2026-07-28
+> (EXCLUDED permanently, A2c checkbox `[x]` DONE 2026-07-30). The companion finalize plan
+> (`prediction_consolidated_native_ao_extract_2026_07_25_finalize.md`) is archived alongside this doc. Every corpus referrer
+> now points to the archived path: `/plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md`.
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule, a triage-drafted AO batch is never auto-shipped to `active`
 > — flip this frontmatter's `status` to `active` only after operator review.

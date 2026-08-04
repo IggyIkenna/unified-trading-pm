@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [pipeline-e2e-check, data_pipeline_e2e_check_is, pre-phase-b-baseline, spot-preemption]
 related:
   [
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md,
   ]

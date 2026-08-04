@@ -34,7 +34,7 @@ tags:
   [pipeline-e2e-check, data-pipeline-check-mtds, report-write, process-hang, memory-leak, shared-host, resource-cleanup]
 related:
   [
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -62,7 +62,7 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/scripts/pipeline_e2e_check.py,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
   ]
 ---
 
