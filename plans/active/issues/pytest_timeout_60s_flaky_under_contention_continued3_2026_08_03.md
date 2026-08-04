@@ -353,6 +353,49 @@ here.
   todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement check, this escalation
   fired ~7h after `agt-edf42f` already re-fired the identical repo's identical wall class green).
 
+- **2026-08-04 ~09:45-10:05Z (`cicd` escalation `agt-58f46b`, slot 4, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=935`) — 3rd occurrence for `features-service` (7th for the whole doc-chain), SAME test file as
+  `agt-5ea4c7`'s PR#934 entry immediately above; already self-resolved before investigation, no code action needed**:
+  escalation cited failing run `30858945592` (`QG slice (tests)` job `91836443052`) — `pytest-timeout` (thread-dumper)
+  fired mid `tests/delta_one/unit/test_cli_parser.py`, dumping MainThread's stack inside `_pytest/skipping.py`'s
+  `evaluate_xfail_marks` → `stash.get()` — the IDENTICAL call path, identical file, identical
+  no-plausible-hang-mechanism signature `agt-5ea4c7` already root-caused for this repo 2.5h earlier, then
+  `QG selector 'tests' FAILED (leg=tests, exit=1)`. Independently re-read both the test file (29 tests, pure argparse)
+  and `features_service/delta_one/cli/parser.py` (the module under test — `valid_date`/`add_delta_one_extra_args`/
+  `validate_args`, zero I/O, zero blocking calls, zero fixtures) before touching anything — confirms `agt-5ea4c7`'s
+  finding rather than assuming it: no credible code-level hang mechanism in either file. Checked the PR directly rather
+  than trusting the escalation's staleness: `gh pr view 935` → already **`MERGED`**, `mergedAt=2026-08-03T22:31:08Z`;
+  the escalating run's own `createdAt` = `2026-08-03T22:31:05Z` — **3 seconds BEFORE** the merge, the same
+  "confirmatory-check-still-running-when-PR-self-merges" pattern this doc-chain documents repeatedly. Went one step
+  further than a bare merge-timestamp check: found the run that actually SATISFIED the required check —
+  `gh run list --workflow quality-gates-v2.yml` for the same headSha (`5275fef1d6ed`) shows an EARLIER completed run
+  (`30857768146`, `createdAt=22:12:34Z`, `conclusion=success`) that finished ~19 minutes before the later,
+  escalation-flagged run (`30858945592`, `createdAt=22:31:05Z`) even started — i.e. two `quality-gates-v2` runs fired
+  for the identical commit (ordinary `pull_request`-sync trigger + a later re-check/supersede trigger), the first went
+  green and gated the merge, the second is the redundant one that hit host contention and failed ~16 minutes AFTER the
+  PR had already merged on the first green run. Verified the merge commit (`aa175f1d`) is an ancestor of BOTH
+  `origin/main` and `origin/live-defi-rollout` (`git merge-base --is-ancestor` → yes/yes) — nothing outstanding to ship
+  for PR#935. Checked live gate state instead of stopping at the PR check: current LDR HEAD (`85e72625`) is many commits
+  past this merge; a `workflow_dispatch` run already `in_progress` against that exact current HEAD (`30897598328`,
+  `QG slice (tests)` job running since `10:58:21Z`, ~52min elapsed at investigation time) — did NOT re-trigger a
+  duplicate, one is already in flight against the true current tree. Checked runner state before concluding this was
+  "just waiting": `gh api .../actions/runners` shows `features-service` has exactly ONE self-hosted runner
+  (`glue-ip-172-31-3-59-1`, `busy=true`) — the same single-runner-per-repo topology `agt-88658c`'s `deployment-service`
+  entry flagged as a second, distinct contributing mechanism (queue-starvation, not just the xdist/timeout signature
+  itself). Host `uptime` at investigation time: load average 19.73/19.64/18.96 — `qg-host-governor.sh` is not present in
+  this repo's `scripts/quality-gates-base/` (a per-repo layout difference, not investigated further — out of scope for a
+  one-shot wall-clearing session), so could not directly reproduce the governor-blind-to-load check other entries ran,
+  but the load level itself is consistent with the same contention class. `GET /api/repo-blockers` → `{"open": []}` —
+  nothing to fast-path for `features-service`. **Disposition: no code or workflow change made or needed** — the wall was
+  already fully cleared (PR merged via an earlier green run of the same commit, LDR green-in-flight at a much later
+  HEAD, no repo-blocker). `AUTHORING_SLOT=ci` (sentinel, fails `cicd.md`'s `^[0-9]+$` check) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no code
+  changes made in either repo). This is now the **3rd occurrence for `features-service`** (all three:
+  `test_cli_parser.py` ×2, `test_technical_indicators.py` ×1) and **7th for the whole doc-chain** — further corroborates
+  todo 1 (capacity-side root cause, not a per-repo timeout raise) and the new single-runner-topology angle `agt-88658c`
+  first surfaced (now observed on a SECOND repo).
+
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous, first pass): **KEEP-NA, valid.** This is the 3rd
