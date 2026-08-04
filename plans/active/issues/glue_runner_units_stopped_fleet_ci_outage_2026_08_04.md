@@ -24,7 +24,7 @@ status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, unified-api-contracts, instruments-service]
+repos: [agent-orchestrator, unified-api-contracts, instruments-service, market-tick-data-service]
 scope: [admin, engineer]
 tags: [ci-outage, glue-runner, self-hosted-runner, systemd, tier-a-gate, promotion-blocked, monitoring-gap, big-finding]
 related:
@@ -80,6 +80,17 @@ depends_on: []
    thing standing between instruments-service and a green LDR — the test-layer fix was also required and is now on LDR.
 4. All 11 OTHER repos' `github-glue-runner-*@glue-1.service` units are `active/running` (main verified) — confirming the
    two named units are the isolated anomaly, not a fleet-wide runner-config problem.
+5. **CORRECTION 2026-08-04 (interactive session, `/autonomous` continuation) — a THIRD unit was ALSO stopped, undetected
+   by this doc's original sweep**: `github-glue-runner-market-tick-data-service@glue-1.service` was independently found
+   `inactive` while investigating an unrelated MTDS workflow stuck QUEUED since 11:09Z. `journalctl` for all three units
+   shows the SAME pattern within the SAME ~30s window (08:59:35–09:02:27 UTC): each was mid-job
+   (`Running job: Quality Gates ...`) when systemd logged an EXTERNAL `Stopping ...` action, cancelling the in-flight
+   job — not a crash, not a `Restart=always` failure. Host `uptime`/`apt` history/process list show NO reboot, NO
+   package upgrade, and NO active maintenance process around that window (last boot 2026-07-29, last apt upgrade
+   2026-08-01) — nothing found to correlate with a deliberate pause, so this reads as an anomalous/unexplained
+   coordinated stop across (at least) 3 units, not confirmed-safe-to-assume-intentional but also not evidence of
+   in-flight work to protect. The original "all 11 others active" claim was accurate for what slot-11/main checked at
+   the time; it did not cover MTDS.
 
 ## Why neither worker nor main can self-serve
 
@@ -89,14 +100,18 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Immediate host action (unblocks 11 repos).** On the planning VM (ip-172-31-5-118), with root:
-      `sudo systemctl start github-glue-runner-unified-api-contracts@glue-1.service` and
-      `sudo systemctl start github-glue-runner-instruments-service@glue-1.service`; confirm both go `active (running)`
-      (`systemctl is-active …`). Then re-verify UAC LDR run 30894307404 (and instruments-service 30894282946) leave
-      QUEUED and go green, and the `ldr-to-main-promote-fleet` job picks UAC up on its next ~5-15min tick, draining the
-      Tier-A gate for the 11 dependent repos. If the instruments-service unit was stopped deliberately (external
-      `systemctl stop` 09:01:57), confirm no in-flight maintenance conflicts before starting. (planning VM — operator
-      host action)
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-04 (interactive session, `/autonomous` continuation) — executed via AWS SSM
+      (`admin_od` identity has `ssm:DescribeInstanceInformation` + Run Command reach to i-0c9b283b31d6b5ca7, unlike the
+      `ikenna-worker`/main identities that filed this as operator-gated).** Read-only checked all three stopped units
+      first (journal history, host uptime, apt history, running processes — see correction above) to rule out
+      interrupting genuine in-flight maintenance before touching anything; found none. Ran
+      `systemctl start github-glue-runner-{unified-api-contracts,instruments-service,market-tick-data-service}@glue-1.service`
+      via SSM `AWS-RunShellScript`; confirmed all three `active` (running) via a follow-up `systemctl is-active`.
+      **Live-verified the fix took**: MTDS's queued `update-dependency-version` run (30903608513, queued since 11:09Z)
+      moved to `in_progress` within seconds of the restart and completed `success` at 11:27Z; MTDS's `quality-gates-v2`
+      run also left QUEUED. Did not independently re-verify the UAC/instruments-service run IDs named above (they were
+      slot-11/main's runs, may have timed out/been superseded by now) — whoever next touches this repo should confirm
+      UAC's `ci_status` and the Tier-A drain completed, not just that the runners are active again.
 - [ ] [INFRA] P2. **Close the monitoring gap.** The glue-runner-crash-loop-watchdog only flags units actively
       crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always suppressed by an
       explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
@@ -121,3 +136,14 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   ancestor-of-origin). Added the "Correction" note above rather than leaving the incomplete diagnosis to stand. Did NOT
   touch the glue-runner infra (operator-gated, out of scope for this role, already correctly filed as the P1
   `[OPERATOR]` todo below).
+- **2026-08-04 (interactive session, `/autonomous` continuation)** — Hit this same outage independently while chasing an
+  unrelated stuck MTDS workflow (`update-dependency-version`, queued 10+ min). Found a THIRD stopped unit
+  (`market-tick-data-service`) this doc's original sweep missed. Had SSM reach to the planning VM via the interactive
+  session's own `admin_od` AWS identity — a capability the filing identities explicitly lacked — so executed the P1 fix
+  directly rather than re-escalating: read-only diagnosis (journal, uptime, apt history, `ps`) found no evidence of
+  legitimate in-flight maintenance around the 09:01-09:02Z stop window, then `systemctl start` on all three units,
+  confirmed `active`, confirmed the MTDS workflow immediately picked up a runner and completed. **P1 done. P2
+  (monitoring-gap hardening in agent-orchestrator) is NOT done** — left open as the genuine remaining follow-up; this
+  doc's `status` stays `open` until that lands. Also note for whoever picks up P2: three units stopping within the same
+  ~30s window, each cancelling an in-flight job, is a pattern worth alerting on directly (not just "any one unit
+  inactive too long") — a coordinated multi-unit stop is a stronger signal than an isolated one.
