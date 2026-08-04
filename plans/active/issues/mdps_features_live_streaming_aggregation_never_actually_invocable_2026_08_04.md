@@ -297,11 +297,19 @@ OOM if left running). The named successor is this issue doc's Todos below.
       the worker's actual `--shard-spec` target AG — a TradFi worker shouldn't fail because CEFI data is missing. Fix:
       when `mode=live`, either skip the GCS dependency check entirely (live data comes from Pub/Sub) or scope it to only
       the target asset_group from `--shard-spec`. Repo: market-data-processing-service.
-- [ ] [INFRA] P1. **Provision Pub/Sub topics and subscriptions for TradFi asset group in prod.** The pilot confirmed 404
-      on: `tradfi-delta-one-features-ready-sub` (cross_instrument/delta_one input), `commodity-signals-ng`,
+- [x] ✅ [INFRA] P1. **Provision Pub/Sub topics and subscriptions for TradFi asset group in prod.** The pilot confirmed
+      404 on: `tradfi-delta-one-features-ready-sub` (cross_instrument/delta_one input), `commodity-signals-ng`,
       `commodity-signals-cl` (commodity output topics). These were never created because the mdps-features-live cluster
       was never operationally launched for TradFi before. Also audit CEFI/DeFi Pub/Sub resources — they may have the
-      same gap. Repo: deployment-service (infra-as-code or manual `gcloud pubsub` provisioning).
+      same gap. Repo: deployment-service (infra-as-code or manual `gcloud pubsub` provisioning). — slot-14 (infra):
+      **TradFi provisioned** — created topics `commodity-signals-ng`, `commodity-signals-cl`,
+      `tradfi-cross-instrument-features-ready` + subscription `tradfi-delta-one-features-ready-sub` →
+      `features-delta-one-ready`. **Audit**: CEFI was covered by flat-named `features-delta-one-ready-sub` /
+      `features-cross-instrument-ready-sub` (no `cefi-` prefix), but the per-asset-group convention used by
+      `cross_instrument/live_handler.py` expects `{ag}-delta-one-features-ready-sub` — created
+      `cefi-delta-one-features-ready-sub`, `cefi-cross-instrument-features-ready`, `defi-delta-one-features-ready-sub`,
+      `defi-cross-instrument-features-ready` to close the same gap proactively. All resources created in
+      `central-element-323112` (prod) via `unified-trading-sa`. Zero-cost when idle.
 - [ ] [BACKEND] P2. **Fix `cross_instrument` `_run_message_loop` to catch Pub/Sub `NotFound` (and other non-retriable
       errors) instead of crashing the async generator.** The UTL fix (8a89005a) catches `subscribe_once` failures in
       `LiveDataSource.stream()`, but `cross_instrument/cli/handlers/live_handler.py`'s `_run_message_loop` calls
@@ -345,3 +353,12 @@ OOM if left running). The named successor is this issue doc's Todos below.
   `cross_instrument`'s `_run_message_loop` calls `subscribe_once` via bare lambda without error handling — the UTL fix
   protects `LiveDataSource.stream()` but cross_instrument bypasses it. VM deleted after confirming findings (zero useful
   work possible without MTDS upstream data). 3 new actionable todos filed above. Todo 7 flipped ✅.
+- **2026-08-04 (slot-14, infra)**: shipped todo 8 (INFRA P1 Pub/Sub provisioning). **TradFi**: created topics
+  `commodity-signals-ng`, `commodity-signals-cl`, `tradfi-cross-instrument-features-ready` + subscription
+  `tradfi-delta-one-features-ready-sub` → `features-delta-one-ready`. **Audit finding**: CEFI was covered by the
+  pre-existing flat-named `features-delta-one-ready-sub` / `features-cross-instrument-ready-sub` (no `cefi-` prefix),
+  but the per-asset-group convention used by `cross_instrument/cli/handlers/live_handler.py` expects
+  `{ag}-delta-one-features-ready-sub` — created `cefi-delta-one-features-ready-sub`,
+  `cefi-cross-instrument-features-ready`, `defi-delta-one-features-ready-sub`, `defi-cross-instrument-features-ready` to
+  close the same gap proactively across all 3 asset groups. All resources in `central-element-323112` (prod) via
+  `unified-trading-sa`. Zero-cost when idle — unblocks the next TradFi re-pilot on the Pub/Sub front.
