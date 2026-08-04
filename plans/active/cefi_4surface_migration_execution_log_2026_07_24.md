@@ -101,16 +101,29 @@ context_scope:
 
 **Deferred / handoff (each needs a tracked todo before this plan archives):**
 
-- [ ] [SCRIPT] P0. Script 2 `_PATH_RE` must tolerate an embedded-slash wire stem (KRAKEN-SPOT 25,131). FENCED to the
-      live rename fleet — needs the fleet owner. The rename is a real GCS move (pseudo-dir → single object).
-- [ ] [DATA] P0. De-duplicate the 658 ambiguous catalogue wire keys (off-by-one expiry duplicates) in
-      `build_instrument_catalogue.py`. FENCED to the DeFi removal-probe agent.
+- [x] ✅ [SCRIPT] P0. Script 2 `_PATH_RE` must tolerate an embedded-slash wire stem (KRAKEN-SPOT 25,131). FENCED to the
+      live rename fleet — needs the fleet owner. The rename is a real GCS move (pseudo-dir → single object). **CLOSED
+      2026-08-04 (na-eligibility-audit)**: DONE per the "Deferred work after 2026-07-24 ~13:35Z" table row 1 below
+      ("~~KRAKEN-SPOT Surface A~~ — DONE") — 155,872 objects auto-renamed, genuinely fully clean.
+- [x] ✅ [DATA] P0. De-duplicate the 658 ambiguous catalogue wire keys (off-by-one expiry duplicates) in
+      `build_instrument_catalogue.py`. FENCED to the DeFi removal-probe agent. **CLOSED 2026-08-04
+      (na-eligibility-audit)**: DONE per the "Deferred work after 2026-07-24 ~13:35Z" table row 4/4b below ("~~Residual
+      ambiguous wire-keys + margin_type mislabel~~ — DONE") — re-measured (658→1,018) then resolved via
+      `instruments-service@bf5322bb9`+`@39e26bfe`+`@1c920fab` (213/216 shipped; 3 remain forever, correctly excluded).
 - [ ] [DATA] P0. Enumerate the MISSING catalogue rows behind the ≈5,413 healthy-venue residue in
       `build_instrument_catalogue.py` (FENCED): OKX-SPOT fiat-quote pairs (AED/AUD/BRL/TRY), COINBASE-SPOT crypto-quote
       pairs (`-BTC`/`-ETH`), BITGET-FUTURES CME-letter-month dated futures (`BTCUSDH26`). Each measured at 0 catalogue
-      rows against on-disk data that exists.
+      rows against on-disk data that exists. **PARTIAL — measurement DONE, fix NOT done (na-eligibility-audit
+      2026-08-04)**: per table row 5 below ("~~Catalogue-enumeration-gap script~~ — DONE"), a re-runnable measurement
+      script (`instruments-service@f6f16785`) shipped and live-measured 211 gap rows, retiring this stale ~5,413/~422
+      estimate — but the underlying fix (adding the missing rows) is separately tracked and still open; left unchecked
+      because the checkbox's literal ask (enumerate) is done but the row's broader scope is not.
 - [ ] [DATA] P1. Add a LIGHTER-ZKSYNC market-index → symbol map so the ~11,283 numeric-stem objects resolve.
-- [ ] [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT.
+- [x] ✅ [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT. **CLOSED 2026-08-04 (na-eligibility-audit)**:
+      the design doc `/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` exists and is described
+      as ready — this checkbox's ask was the DESIGN only; the actual partition-move APPLY (15,119 rows) is a separate,
+      still-open, operator-gated action tracked by the cross-reference todo further down this file and by table row 7
+      below ("DERIBIT combo PARTITION-MOVE — Operator-owned, explicitly out of scope").
 - [ ] [DATA] P2. Register PACIFICA-SOLANA (265) in the fail-hard quarantine set.
 
 > **NOTE (2026-07-24, added at extraction time — verify before acting, do not assume stale-closed):** later DELTA
@@ -134,6 +147,13 @@ context_scope:
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - todos are FENCED to other owners
   (live rename fleet / DeFi removal-probe agent), the DERIBIT combo partition-MOVE needs explicit operator sign-off, and
   the doc records an explicit operator STOP.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale items — doc stays NA (live,
+  connectivity-sensitive, multi-repo GCS migration execution work with explicit dated operator gating, not
+  worker-determinable bounded audit work), but re-checked the 6 handoff checkboxes above against the final "Deferred
+  work after 2026-07-24 ~13:35Z" table per this doc's own 2026-07-24 invitation to do so: closed 3 (KRAKEN-SPOT
+  `_PATH_RE`, the 658-key dedup, the DERIBIT combo design) as DONE, left the enumeration-vs-fix item open with a
+  clarifying note (measurement done, fix not), and left 2 (LIGHTER-ZKSYNC symbol map, PACIFICA-SOLANA quarantine
+  registration) open — could not confirm either resolved.
 
 ## PRE-COMPACT RESUMPTION CHECKPOINT — 2026-07-22 ~05:00Z (3rd checkpoint, post would_patch-ALL_DONE)
 
