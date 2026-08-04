@@ -132,10 +132,18 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
 
 ## Recommended next steps
 
-- [ ] [DATA] P2. Trace the exact write batch that created the `venue=SPOT` and `venue=YAHOO_FINANCE` duplicate GCS
-      objects on 2026-07-20 (correlate `time_created`/`service_name`/`job_id` provenance, mirroring the method that
-      root-caused the sibling `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` and
-      `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` findings). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **DONE 2026-08-04.** Traced the 2026-07-20 write batch via code-trace of
+      `migrate_tradfi_canonical_2026_07.py` (commit e16705db, 2026-07-19). Root cause: the July 2026 migration executor
+      has NO `_VENUE_REMAP` dict (unlike predecessor `migrate_tradfi_to_hive.py`, which has carried
+      `_VENUE_REMAP = {"YAHOO_FINANCE": "FX"}` from inception). As a result, any intermediate-format object in the
+      enumeration with a wrong venue token is promoted to a canonical path preserving that token verbatim.
+      `venue=YAHOO_FINANCE` (04:28:59Z): D_SINGLE_NOOP path, `_target_single` extracts `_kv(rel)["venue"]` verbatim;
+      `_pipeline_mode("YAHOO_FINANCE","ohlcv_24h")` → YAHOO_FINANCE absent from `_VENUE_OVERRIDES` → SOURCE_PRIORITY
+      lookup → `["yahoo"]` → `batch_yahoo`. `venue=SPOT` (04:35:37Z, ~7 min later, same run): D_NONHIVE_EQ path,
+      `_target_nonhive_eq` extracts `bare[-1]="SPOT"` as venue from a non-hive object. Manifest rows for both venues
+      were not registered on 2026-07-20 — the 7 `venue=SPOT` manifest rows appeared only on 2026-08-02 via the
+      consolidation discovery run. Investigation script committed: market-tick-data-service@332f405b
+      (`scripts/investigate_tradfi_fx_krw_usd_venue_triplication_provenance_2026_08.py`).
 - [x] ✅ [DATA] P2. **DONE 2026-08-04.** Measured full scope: bounded reads scoped to `venue=SPOT`/`venue=YAHOO_FINANCE`
       confirmed exactly the 7+13=20 manifest rows already found (2025-01-02..01-10, KRW-USD only, no other
       instrument/date affected) — content-verified all 7 affected dates' `SPOT` and `YAHOO_FINANCE` GCS objects are
@@ -167,3 +175,10 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
   occurrence (a different instrument/date) would not be structurally prevented. Also triggered a fresh
   `measure-honest-coverage` VM run (tradfi-scoped) so the deployment-ui distinct-values panel reflects this fix instead
   of its previous (up to 24h-stale) cached rollup.
+- **2026-08-04 (AO dispatch agt-tradfi_fx_krw_usd_triplicate_venue_partitions-001, slot 2)**: closed todo 1. Code-traced
+  `migrate_tradfi_canonical_2026_07.py` (commit e16705db, 2026-07-19) as the exact writer for both wrong-venue GCS
+  objects. Root cause: missing `_VENUE_REMAP` dict — the July 2026 executor preserves source venue verbatim, unlike
+  `migrate_tradfi_to_hive.py` (has `_VENUE_REMAP = {"YAHOO_FINANCE": "FX"}` from inception). The `venue=YAHOO_FINANCE`
+  object (D_SINGLE_NOOP path) and `venue=SPOT` object (D_NONHIVE_EQ bare-segment extraction, ~7 min later) were both
+  produced by the same migration run. Manifest rows registered only on 2026-08-02 by the consolidation job (not on
+  2026-07-20 when the GCS objects were created). Investigation script committed: market-tick-data-service@332f405b.
