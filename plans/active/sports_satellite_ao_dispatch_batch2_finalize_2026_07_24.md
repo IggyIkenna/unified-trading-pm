@@ -138,7 +138,7 @@ context_scope:
       SportsMatchingEngine-vs-L0Matcher decision gate STILL OPEN — confirmed via direct read of
       `sports_group_c_execution_backtest_harness_2026_07_21.md` (`[DESIGN] P3` todo 3 still `[ ]`) + batch5-finalize
       (2026-07-28) + prediction batch6 (2026-07-29) + grep of plans/active/issues/ (0 results); explicitly not
-      dispatching 3 todos speculatively. — unified-trading-pm@(this commit)
+      dispatching 3 todos speculatively. — unified-trading-pm@d35a9b4ba
 - [ ] [REVIEW] P2. **FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (P2a)** — gate from batch 2's
       deferred section now cleared (all 5 naming-migration todos done 2026-08-04). Write the cross-repo parity test
       requested in `sports_odds_feature_naming_canonicalization_2026_07_21.md` (line 197–200): against the now-real UAC
