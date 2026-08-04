@@ -19,7 +19,7 @@ summary: >-
   bucket). The SAFE, additive sibling function `rebuild_manifest()` already exists in the same module and does the right
   thing (merges with existing, only adds missing keys) — the fix is to route both call sites through it, or teach
   `rebuild_manifest_from_canonical_paths` to preserve out-of-prefix existing rows.
-status: open
+status: resolved # (was: open) 2026-08-04 -- all 5 todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
