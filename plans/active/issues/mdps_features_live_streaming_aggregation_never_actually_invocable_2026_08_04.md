@@ -210,14 +210,20 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `_bridge_operation_and_build_continuous_args()`; 2 new regression tests in `tests/unit/test_cli_main_coverage.py`:
       `test_mdps_shard_spec_env_var_bridges_to_shard_spec_flag` +
       `test_no_mdps_shard_spec_env_var_omits_shard_spec_flag`; full quality-gates.sh green on this SHA).
-- [ ] [SCRIPT] P1. **Fix `setup-data-pipeline-vm.sh`'s `mdps-features-live` exec-dispatch branch** (~line 2474,
+- [x] ✅ [SCRIPT] P1. **Fix `setup-data-pipeline-vm.sh`'s `mdps-features-live` exec-dispatch branch** (~line 2474,
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) to invoke MDPS via the REAL entry-point contract:
       `MDPS_OPERATION=streaming-aggregation MDPS_SHARD_SPEC=<ag>:<venue>:<data_type> "$VENV/bin/python" -m     market_data_processing_service --operation process --mode live --start-date ... --end-date ...`
       (env vars set in the subshell that backgrounds each worker, NOT
       `process --operation streaming-aggregation --shard-spec ...` as positional/flag argv the way it's written today) —
       depends on the todo above shipping first (shard-spec bridge must exist before the launcher can rely on it). Verify
       locally (no VM needed) by running the exact generated command against a real checkout before the next live-VM
-      pilot. Repo: deployment-service.
+      pilot. Repo: deployment-service. — deployment-service@3bf71b4 (fanout-script printf changed to set
+      `MDPS_OPERATION`/`MDPS_SHARD_SPEC` env vars ahead of the python invocation, alongside the top-level
+      ServiceBootstrap `--operation process --mode live` flags; verified locally by running the exact generated command
+      against a real MDPS checkout — the `MDPS legacy argv` log line confirmed
+      `--operation streaming-aggregation --shard-spec     tradfi:CME:ohlcv_1m` reached the legacy parser with no
+      argparse crash, only failing later on the expected missing-`GCP_PROJECT_ID` local-env gap; full quality-gates.sh
+      green on this SHA).
 - [ ] [BACKEND] P1. **Root-cause and fix the features-service `--mode live` calendar/commodity path running as a
       one-shot batch job instead of a persistent stream subscriber.** `Batch processing complete` /
       `exiting with code 1` after ~15-70s directly contradicts the "operationally launch a live consumer" premise —
@@ -266,3 +272,7 @@ OOM if left running). The named successor is this issue doc's Todos below.
   independent reasons; both VMs deleted. Full evidence above. Resolves
   `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` todo 3 via the "explicitly decide not to launch"
   path, with this doc as the named successor.
+- **2026-08-04 (slot-8, data_engineering)**: shipped todo 2 (deployment-service@3bf71b4) — the exec-dispatch branch now
+  bridges `MDPS_OPERATION`/`MDPS_SHARD_SPEC` via env vars instead of positional/flag argv, matching the real
+  `ServiceBootstrap` entry-point contract landed by todo 1. Verified locally (no VM) against a real MDPS checkout —
+  `MDPS legacy argv` log confirmed the shard-spec + operation reached the legacy parser correctly, no argparse crash.
