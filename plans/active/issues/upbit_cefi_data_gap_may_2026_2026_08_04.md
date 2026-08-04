@@ -28,6 +28,9 @@ parent_epic: cefi_master
 resolved_by:
 locked_by:
 priority: P1
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # UPBIT CeFi data gap — zero captured objects since 2026-05-25
