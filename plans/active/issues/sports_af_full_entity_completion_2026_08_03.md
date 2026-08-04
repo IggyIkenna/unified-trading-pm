@@ -254,3 +254,23 @@ are genuinely in scope for the operator's "no exceptions" directive.
   FIXTURE_STATS genuinely converges. Given this is now 2 preemptions in <24h with 2 manual relaunches, the durable
   convergence-gate fix (flagged twice above, still not implemented) and the new auto-recovery issue doc are both now
   higher-priority than before — a fourth dispatch of this same todo without either fix landing is a near-certainty.
+- **2026-08-04 (slot 6, continued)** — Root-caused + fixed the auto-recovery gap in the same session (see
+  `af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`): `af-backfill-`/`af-audit-` were entirely missing
+  from `exit_code_fleet_monitor`'s `_DATA_VM_PREFIXES`, making these VMs structurally invisible to the preemption
+  classifier regardless of timing. Shipped `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`.
+- **2026-08-04 (slot 5)** — Dispatched `sports_af_full_entity_completion-003` a fourth time, exactly as slot 6's note
+  predicted. Re-verified the gate: singleton lock FREE, FIXTURE_STATS still NOT converged (125/68,409 non-MVP shards,
+  unchanged). Relaunched FIXTURE_STATS as `af-backfill-20260804-004955` (same safe idempotent resume) — preempted almost
+  immediately (~1.5 min lifetime, 00:49:55Z→00:51:21Z), the **third** preemption of this entity in <24h, each faster
+  than the last (17min→6min→1.5min). Investigated further and found this is **not af-backfill-specific**:
+  `asia-northeast1-c` is in an active, sustained SPOT preemption storm — 151 `compute.instances.preempted` events over
+  the prior 5h, hitting sports/tradfi/cefi concurrently, still firing as of the check. Filed
+  `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (P1, cross-cutting) with the full
+  evidence and a recommended decision (confirm the auto-recovery fix above is actually deployed to the live Cloud Run
+  job image; re-check preemption volume in a few hours; do not keep blind-relaunching into an active storm). **Did NOT
+  attempt a further relaunch** — burning more SPOT minutes into a confirmed active storm is not productive.
+  `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once the storm subsides and
+  FIXTURE_STATS can make real progress. The durable convergence-gate fix (flagged three times now) remains the standing
+  structural recommendation — but the storm, not the gate mechanism, is now the actual blocker for FIXTURE_STATS itself;
+  a fifth dispatch should first check `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`
+  before relaunching again.
