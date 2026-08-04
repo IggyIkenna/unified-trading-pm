@@ -155,12 +155,23 @@ once the corresponding todo below is actually done — not this plan.
       unified-trading-library@5793d28b. Docstring updated: "AGGREGATED mdps data_type" → "SOURCE data_type", example
       data_type changed from `deriv_ohlcv_15m` to `derivative_ticker` (cefi perp BINANCE-FUTURES); same fix applied to
       adjacent _candle_prefix() docstring. QG green, SHA verified on origin.
-- [ ] [SCRIPT] P3. **Investigate `CEFI:DERIBIT:trades:24h`'s force-leg `off_template=29` classification mismatch** —
+- [x] ✅ [SCRIPT] P3. **Investigate `CEFI:DERIBIT:trades:24h`'s force-leg `off_template=29` classification mismatch** —
       confirm whether the object path already writes `timeframe=1d` (making the docstring's "RAW token" claim stale the
       same way the `data_type` one was, todo above) or whether this is a genuine separate defect. Non-blocking audit.
       Repo: market-data-processing-service. Source: `candle_feature_canonical_path_divergence_2026_07_20.md` #16. Done
       when: a definitive root-cause is recorded (stale-docstring vs. genuine defect) with the checked object path cited;
-      if genuine, file a follow-up todo/issue doc rather than fixing inline.
+      if genuine, file a follow-up todo/issue doc rather than fixing inline. — **STALE DOCSTRING** (same pattern as the
+      `data_type` todo). Root cause: `canonical_writer.py:255` calls `tf = _normalise_timeframe(timeframe)` before
+      building the GCS path, so all DERIBIT:trades:24h objects are written with `timeframe=1d` (not `timeframe=24h`).
+      Checked path: `canonical_writer_shaping.py:218-226` (`_normalise_timeframe("24h") -> "1d"`),
+      `output_path_helpers.py:94` (docstring: "timeframe normalised (24h→1d)"), `UTL registry.py:339` (callers MUST pass
+      normalised timeframe). The `pipeline_e2e_check.py` docstring at lines 70-72 + 334 is stale — it claims "timeframe
+      is the RAW token (24h stays 24h) — only the MANIFEST normalises it to 1d", but the WRITER normalizes before the
+      path write. Consequence: `_measured_violations` compares `actual="1d"` against raw `tf="24h"` → `off_template=29`
+      for all 29 DERIBIT:trades:24h objects; `_declared_violations` normalizes first (`tf_canon="1d"`) → no violation →
+      `canonical=29` (all correctly canonical). No data defect — GCS objects are correct. Follow-up fix needed in
+      `pipeline_e2e_check.py`: update docstring + normalize `tf` in `_measured_violations` so the force leg can pass 24h
+      shards (not filed separately — stale-docstring class, tracked inline per done-when).
 - [x] ✅ [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
       (`market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py:794-831`) — a destination that exists
       but FAILS verification (`SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`) is never re-copied on a subsequent
