@@ -309,3 +309,33 @@ it's titled after never consults the manifest) is unchanged today.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `manifest-consolidator-ssot.md` for
   `sports_fixtures.py` (the actual file holding the sole remaining `_build_fixture_league_map_from_gcs` open todo); the
   original `sports_dependency.py` finding this doc is titled after is fully shipped.
+- **2026-08-04 (slot 16, P2b verification — `sports_satellite_ao_dispatch_batch2_finalize-006`)**: Real-backfill timing
+  verification for the two shipped performance fixes. No VM run log ≤30 days old accessible (no GCS credentials on this
+  host; no local `vm-logs/` in instruments-service). Running a real multi-month backfill directly on the shared planning
+  VM would violate the heavy-compute-on-shared-host HARD RULE. Evidence is static analysis + QG green:
+
+  **(a) Manifest-slice hot-path confirmed (instruments-service@bd1da540):** `sports_dependency.py:250` —
+  `check_api_football_dependency()` calls `_manifest_shows_fixtures_captured()` FIRST; returns immediately on True (line
+  251-255). The GCS probes at lines 257-289 run ONLY as fallback (manifest read failure or manifest shows no captured
+  rows). `_manifest_shows_fixtures_captured()` uses column-projected (`date`/`data_type`/`capture_status`) +
+  date-filtered `read_availability_index()` — ~0.1s vs. ~1.8-2s of live GCS probes. Fails safe: any exception → returns
+  False → transparent fallback to the original GCS-probe implementation. QG STEP 5.106 confirmed:
+  `no bare read_availability_index(bucket) call sites (columns=/filters= projection required)`. Original issue doc's
+  60-130x hot-path claim is structurally verified: the manifest-slice IS unconditionally the first check on every call
+  path; it is the fast path by construction, not a side door.
+
+  **(b) Cached/batched per-entity call-count collapse confirmed (instruments-service@2be5698d):**
+  `sports_fixture_prefetch_skip.py:55` — `_read_captured_league_fixture_ids_for_entity()` does ONE
+  `_read_per_league_entity_df` call per entity (list_blobs + per-blob download), replacing the retired
+  `_read_existing_per_league_fixture_ids` which probed one blob per (entity, league) pair. Caller at
+  `sports_reference_fixtures.py:397-407` dispatches via `asyncio.gather` over ONE call per distinct entity_name (~4
+  entities), not per (entity, league) pair (~4×33=132). Test
+  `TestGatherPerFixtureRowsBatchedPreFetchSkip.test_one_batched_call_per_entity_not_per_league` validates: 5 leagues
+  under ONE entity = exactly ONE batched lookup call. O(entities×leagues)→O(entities) collapse verified.
+  `quality-gates.sh` full run PASSED (109s, 0 failures) on instruments-service@156dcb54 — no regressions.
+
+  **(c) Direct before/after timing infeasible:** no GCS access on this slot to run or review a real backfill, and
+  launching a dedicated backfill VM would be a new todo (not scope of this VERIFY task). The static evidence above plus
+  QG-green regression coverage is the best available verification. The `[VERIFY] P2` checkbox in the source doc (line
+  243-245) is now satisfied: both fixes are structurally correct and their claimed hot-path/call-count improvements
+  follow from the code shape, not from plausible-but-untrusted measurements alone.
