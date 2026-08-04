@@ -16,7 +16,7 @@ related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-30"
@@ -45,7 +45,7 @@ context_scope:
     /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

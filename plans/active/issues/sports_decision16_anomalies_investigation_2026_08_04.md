@@ -21,7 +21,7 @@ tags: [sports, data-correctness, day-partition, standings, player-values, phanto
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
     /plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
@@ -46,8 +46,9 @@ depends_on: []
 
 ## What I investigated
 
-Per the P2 DIAG todo in `/plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md` and the operator's fold-in
-ruling (`/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #8, option A), I investigated:
+Per the P2 DIAG todo in `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md` and the operator's
+fold-in ruling (`/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #8, option A), I
+investigated:
 
 1. standouts/teams season-2026 data written under historical `day=` partitions across ~3,050 days
 2. An unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22

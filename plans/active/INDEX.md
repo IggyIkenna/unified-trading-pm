@@ -473,10 +473,11 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch6_2026_07_26.md — machine-held via depends_on +
   gate_on_depends: true until all 9 of that plan's todos are done. Mirrors the batch3/batch4/batch5-finalize pattern
   (reconcile each…
-- [`sports_satellite_ao_dispatch_batch7_2026_07_27`](./sports_satellite_ao_dispatch_batch7_2026_07_27.md) — Seventh
-  AO-dispatch batch for sports, produced by an `/ag-closeout-audit sports` run 2026-07-27 (autonomous mode, operator
-  away) targeted specifically at `sports_consolidated_closeout_2026_07_19.md`'s own ~35 remaining open todos (not a…
-- [`sports_satellite_ao_dispatch_batch7_2026_07_27_finalize`](./sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md)
+- [`sports_satellite_ao_dispatch_batch7_2026_07_27`](../archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md)
+  — Seventh AO-dispatch batch for sports, produced by an `/ag-closeout-audit sports` run 2026-07-27 (autonomous mode,
+  operator away) targeted specifically at `sports_consolidated_closeout_2026_07_19.md`'s own ~35 remaining open todos
+  (not a…
+- [`sports_satellite_ao_dispatch_batch7_2026_07_27_finalize`](../archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md)
   — Gated closeout for sports_satellite_ao_dispatch_batch7_2026_07_27.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch3-6-finalize pattern: reconcile each
   distinct source…
