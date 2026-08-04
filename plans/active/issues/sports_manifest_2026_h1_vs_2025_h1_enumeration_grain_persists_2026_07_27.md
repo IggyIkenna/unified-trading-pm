@@ -344,3 +344,25 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
      raise `--max-writes-per-run` — just relaunch again; only escalate/pause if a `would-write` count from a SINGLE
      attempt is ever anomalously large (e.g. 10x+ the prior norm), which would be the actual runaway-bug signature, not
      repeated exhaustion from preemption alone.
+- **data_pipeline_failure escalation worker (slot 9) 2026-08-04**: dispatched as a fresh `DP_VM_EXIT_NONZERO`
+  (DP-VM-001) escalation (`agt-fde525`) for `expected-universe-v2-sports-20260803-231931` (`exit_code=5`, terminated
+  2026-08-03T23:23 UTC). Investigated per `rb_infra_relaunch.md` before relaunching: read the VM's `run.log` +
+  `DeploymentsRegistry` archive entry (`deployment_id=b4f1cf5e-...`) — confirmed this is chunk 2's routine
+  `max_writes_per_run` halt-safety (`start_date=2021-01-01, end_date=2021-12-31`, matches this campaign exactly), NOT a
+  novel infra failure. Checked the registry archive for the vm-prefix and found 3 more identical same-day exit_code=5
+  halts immediately before it (22:56/23:00/23:10 UTC) plus dozens more after (`gcloud compute instances list` shows
+  ~70 terminated `expected-universe-v2-sports-*` VMs spanning 2026-08-03T23:07 through 2026-08-04T09:57, one more
+  terminating live during this check). Confirmed via `ps aux` that slot 14's wrapper (`launch-expected-universe-v2-
+  historical-backfill-vm.sh sports`, PID 1073285, started 09:23 UTC, "v9" per its own log filename) is still actively
+  running and driving the retry loop right now — this escalation's target VM was superseded within minutes by the
+  wrapper's own built-in retry (per fix 1 in the 2026-08-03 entry above) long before I was dispatched. **No relaunch
+  performed** — a manual relaunch would have (a) hit the launcher's own singleton lock once the wrapper's next attempt
+  started, and (b) duplicated/interfered with slot 14's in-flight ownership of this campaign, which RULES.md's
+  "don't touch foreign in-flight work" rule and the `rb_infra_relaunch.md` bound (≥2 relaunches/prefix/day → page, don't
+  relaunch — already exceeded here many times over) both argue against. Filed
+  `dp_vm_001_escalation_noise_for_self_healing_backfill_campaigns_2026_08_04.md` (cross-cutting, P2) recommending the
+  fleet monitor add a supersession check before paging/escalating a terminated VM whose vm-prefix already has a
+  newer RUNNING/succeeded instance — this exact chunk-retry pattern has apparently been re-escalating on every single
+  `max_writes_per_run` halt for the ~10+ hours this campaign has been running, burning escalation-worker capacity for
+  an already-self-healing condition. Pinged `dp-fleet-monitor` with the outcome. This todo (job 2's launch+verify)
+  otherwise unchanged — still open/in-progress under slot 14.
