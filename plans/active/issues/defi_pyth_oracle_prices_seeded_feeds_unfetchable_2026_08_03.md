@@ -297,3 +297,22 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   collection run — still applies). **Checkbox stays UNFLIPPED** — released via `/skip-current-task` rather than forcing
   a launch outside this todo's scope; next dispatch should re-check whether a collection has run in the meantime before
   re-attempting this same bounded read.
+- **2026-08-04T01:50Z (slot 11, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`)**:
+  Re-dispatched ~7.5h after slot-12's check. Precondition still unmet — no live/backfill collection has run since the
+  code fix landed. Confirmed fresh, not assumed: `gcloud compute instances list --filter="name~'pyth'"` returns zero
+  instances (any status), and a `compute.instances.*` audit-log sweep for any `pyth`-named resource since
+  2026-08-03T18:00Z returns zero operations — no VM was ever launched post-fix. Re-ran the same bounded, filtered
+  manifest read (`filters=[(venue,PYTH),(data_type,oracle_prices),(date>=2026-07-15)]`, single predicate-pushdown read
+  via `run-bounded-analysis.sh`, no whole-corpus walk) with explicit written_at checks against the fix-landing
+  timestamps: BTC/ETH/INF (`BTC_USD`/`ETH_USD`/`INF_USD`, `btc,eth,inf/usd`) still max out at `date=2026-07-18`,
+  `written_at=2026-08-03T10:22:43Z` — hours before `market-tick-data-service@cd017a1c` (18:08:46Z) and
+  `instruments-service@dec90cc0` (18:22:04Z) — zero rows written after either fix, byte-identical to slot-12's finding.
+  Family-3 `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` rows (JTO/RAY/WIF/JUP/USDC + the 4 overlap symbols) are still 100%
+  `expected_unattempted`, `written_at` max unchanged at `2026-08-03T01:34:37Z` (the original seeder timestamp). No
+  routine live/cron path exists (unchanged since slot-12's check — collection is manual-VM-only, and this todo's own
+  scope is explicitly verification-only, no launch). **Checkbox stays UNFLIPPED** — released via `/skip-current-task`
+  (reason_code=GATED, genuinely worker-unresolvable: launching the verification collection is out of this todo's scope
+  and gated on an operator ack per the launcher's own header). No further re-dispatch of this exact todo is useful until
+  someone (operator, or a differently-scoped todo) actually launches a post-fix Pyth collection VM — recommend the next
+  dispatch check `gcloud compute instances list --filter="name~'pyth'"` for a NEW VM before repeating this identical
+  manifest read a 3rd time.
