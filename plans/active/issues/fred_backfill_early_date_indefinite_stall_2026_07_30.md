@@ -297,10 +297,26 @@ anywhere.
       `page_operator`) + 1 new `sweep()` end-to-end test reproducing this doc's own `bdd2f745-...` incident's run.log
       shape via `finding_sink`. `quality-gates.sh` green (sentinel `e9196eea87a0bda842e179954be3dabfcc1c2066`), verified
       on origin.
-- [ ] [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
+- [x] ✅ [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
       tradfi launcher today (neither reads a `MACHINE_TYPE` env consistently per the note above) — if it is a silent
       no-op, either wire it through properly or drop the hint rather than leave a documented-but-dead auto-escalation
-      path. Repo: deployment-service.
+      path. Repo: deployment-service. — **deployment-service@3fd24cb**: confirmed both were silent no-ops and wired
+      `MACHINE_TYPE` through properly (chose "wire it through," matching the convention most other launchers already
+      follow via `${MACHINE_TYPE:-default}`, over dropping the hint). `launch-tradfi-backfill-vm.sh` (the generic
+      CME/BTC/ETH launcher) hardcoded `MACHINE_TYPE="e2-standard-4"` as a direct assignment, discarding any inherited
+      env — now `${MACHINE_TYPE:-e2-standard-4}`. `_tradfi-ohlcv-launcher-lib.sh` (shared by the CME/ICE/NASDAQ/NYSE/
+      CBOE/CFE/KRX/FX OHLCV launchers, incl. `launch-tradfi-bf-fred.sh`) only ever read the differently-named
+      `TRADFI_OHLCV_MACHINE` — the escalation actuator injects `MACHINE_TYPE`, a name this lib never looked at, so the
+      hint was invisible to the whole family; now `MACHINE_TYPE` wins first, then the pre-existing
+      `TRADFI_OHLCV_MACHINE` override, then the family default. `launch-tradfi-bf-fred.sh` additionally re-hardcoded
+      `TRADFI_OHLCV_MACHINE` right after sourcing the lib (with its own comment explaining why a self-referential `:-`
+      there would be a no-op) — fixed the same way, against `MACHINE_TYPE` instead of the self-referential var. Verified
+      live via `--dry-run` on all three launchers (default machine unchanged, `MACHINE_TYPE=<bigger>` env now escalates
+      as expected) + 8 new regression tests (`tests/unit/test_vm_launcher_scripts.py`:
+      `TestFredBackfillDateFloor::test_machine_type_env_escalates_past_the_fred_default`,
+      `TestTradfiOhlcvMachineTypeEscalation` ×3, `TestTradfiBackfillVmMachineTypeEscalation` ×2 — plus the two
+      pre-existing default-value assertions those new classes' fixtures also cover). `quality-gates.sh` green (sentinel
+      `3fd24cb34606a3631e6cfe01e80da8fad719fb8b`), verified on origin.
 
 - **2026-07-30 (separate session, closing this thread out) — the real root cause of the SLOW cycle times this whole doc
   chases was found + fixed: the tradfi manifest consolidator's own chunk-count blowup, not anything specific to FRED's
