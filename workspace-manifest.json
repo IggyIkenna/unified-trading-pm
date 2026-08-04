@@ -536,7 +536,7 @@
         "warn_file_count": 15,
         "coverage_pct": 86.23
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
     "fund-administration-service": {
@@ -885,7 +885,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
         "warn_file_count": 47,
@@ -2195,8 +2195,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.72.1.dev9+g938c72daa",
-      "published_at": "2026-08-04T08:09:19Z",
+      "version": "0.72.1.dev10+g9bdf8eafb",
+      "published_at": "2026-08-04T08:48:36Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2205,8 +2205,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.1.dev3+ge700368fb",
-      "published_at": "2026-08-04T08:03:32Z",
+      "version": "0.98.1.dev4+g65cb22d7a",
+      "published_at": "2026-08-04T08:51:35Z",
       "registry": "artifact-registry"
     }
   }
