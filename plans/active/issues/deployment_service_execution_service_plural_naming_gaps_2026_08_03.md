@@ -116,7 +116,7 @@ form and were NOT fixed as part of that todo:
 
 ## Recommended decision
 
-- [ ] [CODE] P3. Fix `deployment_service/shard_builder.py`'s `_SERVICE_STORAGE_DOMAINS` dict key from
+- [x] ✅ [CODE] P3. Fix `deployment_service/shard_builder.py`'s `_SERVICE_STORAGE_DOMAINS` dict key from
       `"execution-services"` to `"execution-service"` (single-line fix). Before/alongside the fix, grep+READ
       `worker_manager.py`/`_worker_rolling.py`'s callers to confirm whether execution-service shards actually flow
       through `build_storage_env_vars` in a live launch today, and add a unit test asserting
@@ -124,7 +124,10 @@ form and were NOT fixed as part of that todo:
       `EXECUTION_STORE_GCS_BUCKET`-shaped key (mirroring how the other `_SERVICE_STORAGE_DOMAINS` entries are/should be
       tested). **Done when**: the dict key is singular, `_SERVICE_STORAGE_DOMAINS.get("execution-service")` resolves
       non-empty, a regression test pins it, and the investigation's finding (live path or not) is recorded in this
-      todo's evidence. Repo: deployment-service.
+      todo's evidence. Repo: deployment-service. — deployment-service@138c82d: dict key fixed, both callers
+      (worker_manager.py:164, _worker_rolling.py:160) confirmed live — `state.service` from sharding YAML (singular) was
+      silently missing the old plural key; regression test `test_execution_service_injects_bucket` added to
+      `TestBuildStorageEnvVars`.
 - [ ] [INFRA] P3. Determine whether `scripts/run-all-quality-gates.sh` and `scripts/run-uv-lock-all.sh` (both in
       deployment-service) are still referenced by any CI workflow, runbook, or other script (grep the fleet for their
       filenames) or are dead/superseded by `workspace-manifest.json`-driven sweeps. If live: fix both REPOS arrays
