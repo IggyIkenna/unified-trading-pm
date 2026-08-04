@@ -64,17 +64,20 @@ does not close.
 
 Per `unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_ENTITY_LEAGUE_COVERAGE`:
 
-| Entity           | Scope                        | Status (2026-08-03)                                                                                                            |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                           |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes not a gap, same doc               |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | queued, not yet launched — census: 69,171 non-MVP shards needed (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`) |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | queued, not yet launched — census: 69,165 non-MVP shards needed                                                                |
-| **PLAYER_STATS** | **MVP-96**                   | **NEW this doc** — 42,368 expected, 24,928 captured, **17,440 needed**                                                         |
-| **INJURIES**     | **all-383**                  | **NEW this doc** — 110,739 expected, 9,994 captured, **100,745 needed**                                                        |
-| **STANDINGS**    | **all-383**                  | **NEW this doc** — 110,739 expected, 25,792 captured, **84,947 needed**                                                        |
-| **TEAMS**        | **all-383**                  | **NEW this doc** — 110,739 expected, 42,998 captured, **67,741 needed**                                                        |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                    |
+**⚠️ ALL "needed" figures below are STALE (2026-08-04) — the census scripts had a confirmed empty_confirmed blind spot,
+see the 08:31Z Progress Log entry. Do not launch or size work off these numbers; wait for the corrected re-census.**
+
+| Entity           | Scope                        | Status (2026-08-03)                                                                                                   |
+| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                  |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes not a gap, same doc      |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | STALE — census: 69,171 non-MVP shards needed (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`, pre-fix)  |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | STALE — census: 69,165 non-MVP shards needed (pre-fix)                                                                |
+| **PLAYER_STATS** | **MVP-96**                   | STALE — 42,368 expected, 24,928 captured, **17,440 needed** (pre-fix)                                                 |
+| **INJURIES**     | **all-383**                  | STALE — 110,739 expected, 9,994 captured, **100,745 needed** (pre-fix)                                                |
+| **STANDINGS**    | **all-383**                  | STALE — 110,739 expected, 25,792 captured, **84,947 needed** (pre-fix)                                                |
+| **TEAMS**        | **all-383**                  | STALE — 110,739 expected, 42,998 captured, **67,741 needed** (pre-fix, likely closest to accurate — see 08:31Z entry) |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                           |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -418,3 +421,26 @@ are genuinely in scope for the operator's "no exceptions" directive.
   even materialized as `empty_confirmed` yet without that separate rescan step, which would mean the census isn't wrong
   per se, just measuring a state that hasn't been finalized. Do not assume either direction until the pending query
   resolves or someone re-checks.
+- **2026-08-04T08:31Z — CONFIRMED, campaign-wide census bug, both scripts fixed.** The `capture_status` breakdown is now
+  in: **FIXTURE_STATS** `empty_confirmed=266,758 expected_unattempted=127,600 captured=37,024`. Ran the same check for
+  the other 5 remaining entities — **every one shows the identical pattern**: FIXTURE_LINEUPS
+  `empty_confirmed=228,117 expected_unattempted=153,761 captured=42,539`; PLAYER_STATS
+  `empty_confirmed=399,716 captured=26,787 expected_unattempted=1,768`; INJURIES
+  `empty_confirmed=295,481 expected_unattempted=202,453 captured=10,337`; STANDINGS
+  `expected_unattempted=195,080 empty_confirmed=191,514 captured=117,373`; TEAMS
+  `captured=445,266 expected_unattempted=197,025 empty_confirmed=26,864` (TEAMS is the one exception where `captured`
+  already dominates, consistent with it being observed as ~1 API call per league rather than per fixture-date). **Both
+  census scripts** (`census_fixture_stats_lineups_widening_volume_2026_07_31.py` and my own
+  `census_all_af_entities_completion_2026_08_03.py`) only counted `capture_status=="captured"` as resolved, with zero
+  accounting for `empty_confirmed` — silently counting hundreds of thousands of already-resolved honest-absence shards
+  as still needed, for every entity except LEAGUES (already separately fixed) and possibly TEAMS (where the effect is
+  smaller since captured already dominates). **Fixed both scripts** to treat
+  `capture_status in {"captured", "empty_confirmed"}` as resolved (also routed the widening script's manifest read
+  through the UTL storage client instead of a bare `gs://` reader, matching the reliability fix already applied
+  elsewhere this campaign). Re-running both corrected scripts now (background, heavy manifest-read contention today is
+  making single reads take 5-10+ min) to get the TRUE remaining volume for all 6 affected entities before launching or
+  continuing any further backfills against the old, inflated numbers. **Do not trust the
+  68,284/68,290/17,440/100,745/84,947/67,741 figures elsewhere in this doc until the corrected re-census lands** — they
+  are very likely substantial overstatements. FIXTURE_STATS VM relaunched again (13th attempt,
+  `af-backfill-20260804-093140`) after two more short preemptions (12th attempt `-091624` ~5.4min); this remains a
+  separate, already-understood SPOT-variance issue, not blocked on the census fix.
