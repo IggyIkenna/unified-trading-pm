@@ -128,7 +128,7 @@ form and were NOT fixed as part of that todo:
       (worker_manager.py:164, _worker_rolling.py:160) confirmed live — `state.service` from sharding YAML (singular) was
       silently missing the old plural key; regression test `test_execution_service_injects_bucket` added to
       `TestBuildStorageEnvVars`.
-- [ ] [INFRA] P3. Determine whether `scripts/run-all-quality-gates.sh` and `scripts/run-uv-lock-all.sh` (both in
+- [x] ✅ [INFRA] P3. Determine whether `scripts/run-all-quality-gates.sh` and `scripts/run-uv-lock-all.sh` (both in
       deployment-service) are still referenced by any CI workflow, runbook, or other script (grep the fleet for their
       filenames) or are dead/superseded by `workspace-manifest.json`-driven sweeps. If live: fix both REPOS arrays
       (`execution-services` → `execution-service`; drop the now-consolidated
@@ -136,7 +136,10 @@ form and were NOT fixed as part of that todo:
       `market-tick-data-service`) so they actually cover the current 25-repo fleet. If dead: delete both scripts per the
       "delete deprecated code, no shims" HARD RULE, after confirming zero referrers. **Done when**: either both scripts
       are corrected and re-verified against `workspace-manifest.json`'s repo list, or both are deleted with a
-      referrer-check citation proving nothing points at them. Repo: deployment-service.
+      referrer-check citation proving nothing points at them. Repo: deployment-service. — deployment-service@3d1d817:
+      both scripts dead — zero CI workflow refs, zero active referrers (only reference in an archived plan). Deleted.
+      Canonical `run-all-quality-gates.sh` lives at `unified-trading-pm/scripts/repo-management/` and derives repos
+      dynamically from `workspace-manifest.json`.
 
 ## Progress Log
 
@@ -146,3 +149,8 @@ form and were NOT fixed as part of that todo:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `worker_manager.py` (the confirmed live
   caller of `build_storage_env_vars`) and `run-all-quality-gates.sh` (the fleet-sweep script for finding 2) alongside
   the 3 pre-existing entries.
+- 2026-08-04 (slot-9, infra): Completed finding 2. Both scripts deleted from deployment-service@3d1d817. Investigation:
+  zero CI workflow references to either script; `run-uv-lock-all.sh` had zero external referrers;
+  `run-all-quality-gates.sh` has a canonical copy at `unified-trading-pm/scripts/repo-management/` that derives repos
+  from `workspace-manifest.json`. The deployment-service copies were stale duplicates with hardcoded incorrect repo
+  names (execution-services, ml-training-service, ml-inference-service, market-tick-data-handler).
