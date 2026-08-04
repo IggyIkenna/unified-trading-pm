@@ -850,3 +850,12 @@ offered to the queue once these are the only real blockers.
   status — flagging purely so a future reconciliation sweep sees the connection and so
   `canonicalize_sports_league_id_ schema_2026_06_24.py`'s `--drop-out-of-universe` gains an exclusion for this doc's
   tracked raw-name population before anyone runs it again.
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid — re-verified, unchanged in substance since the
+  2026-07-30 verdict (the only edits since were a context-scout refresh and the 2026-08-03 near-miss cross-reference
+  note above, which explicitly makes no change to this doc's own open todo or status). The sole open `[DATA] P1` todo
+  ("ship Track H's registry-aware honest-coverage denominator once its 2 remaining blockers land") remains
+  prerequisite-gated on two pieces of unlanded upstream work (the `odds_horizon_bucket` MDPS reprocess Step-7 re-run
+  and the `batch_footystats` copy+swap apply script, neither of which exists yet) — not independently actionable, and
+  this doc's own text documents 3 same-day dispatches already hitting this identical STOP condition. This is also a
+  massive, partially-irreversible, human-gated GCS relocation (STOP conditions, human-only final delete) — squarely
+  genuine judgment/operator-adjacent work, not a defaulted-and-never-assessed doc.

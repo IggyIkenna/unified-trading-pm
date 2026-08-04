@@ -155,3 +155,7 @@ contract.
   and added the two source files the doc's own diagnosis is actually about (`multisource_xg_calculator.py`, the dead
   21-column target; `season_context.py`, the confirmed-not-recurring comparison read from the 2026-07-30 entry above),
   plus the sibling `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` issue already in `related:`.
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid — re-verified, unchanged since the 2026-08-01
+  verdict (only the context-scout refresh landed since). Sole open todo remains `[OPERATOR/DESIGN] P3`, a genuine
+  design decision the doc itself defers ("this doc intentionally stops at diagnosis, per the 'figure out how X should
+  look' dispatch-scope rule").

@@ -218,3 +218,17 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   step needed per the already-cleared §3a bucket check). Did NOT build the migration script or touch prod. `[OPERATOR]`
   tag removed from the remaining todos (the delete-safety gate that tag existed for is already satisfied; what remains
   is a design/build/review gate, tracked via the split, not an operator authorization gate).
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid this pass — but flagging as near-RECLASSIFY-ready
+  for the next run, not a stable established-NA verdict. The blocker the 2026-08-01 verdict cited (root-cause trace
+  bundled with an ungated migration) is now resolved: the trace+fix shipped today, the `[OPERATOR]` tag was removed
+  from both remaining todos with a stated reason (delete-safety §3a bucket-retention check already cleared, 30-day
+  window ≥ the 604,800s reversibility-qualified path (c) threshold), and the doc's own 2026-08-04 slot-12 Progress Log
+  entry explicitly invites re-classification ("a future audit pass should re-classify the migration todo once it's
+  picked up"). Held back this pass on freshness grounds, not a content objection: this doc has had 3 separate dispatch
+  sessions and a live operator exchange (BLK-88a22681) TODAY alone, and the sports-tranche precedent for flipping an
+  actively-churning, complex, multi-session doc mid-stream is the exact incident class `regen_positional_task_ids_not_
+  content_stable_2026_07_17.md`/BLK-29884333 warns about (a rushed RECLASSIFY on a live doc caused 3 real
+  mis-dispatches before it was caught and reverted). Recommend re-evaluating for RECLASSIFY once this doc goes a full
+  day without a new dispatch session — the remaining 2 todos (build migration script + dry-run; apply gated on
+  review) read as bounded, deterministic-outcome work with the design questions already pre-answered in the todo text
+  itself (mirror-the-sibling-script pattern, cross-entity borrow rule, quarantine rule all spelled out).

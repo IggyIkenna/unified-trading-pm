@@ -166,3 +166,8 @@ should be tracked via the (still all-open) canonicalization plan.
   `sports_odds_feature_naming_canonicalization_2026_07_21.md` migration plan, itself correctly `assigned_vm: NA`
   (operator-directed LOCAL track) — no independent dispatchable content here.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid — re-verified, unchanged since the 2026-08-01
+  verdict (only the context-scout refresh landed since). Sole open todo remains a status pointer at the sibling
+  `sports_odds_feature_naming_canonicalization_2026_07_21.md` migration plan (itself correctly `assigned_vm: NA`,
+  operator-directed LOCAL track per BLK-a1ce4719) — no independent dispatchable content here, per the doc's own
+  RE-TRIAGE (2026-07-23) established ruling.

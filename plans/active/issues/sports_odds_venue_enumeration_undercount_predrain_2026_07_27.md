@@ -286,3 +286,7 @@ on this bucket.
   classification call (which of 19 bookmakers is EXCHANGE_ODDS vs FIXED_ODDS).
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid — re-verified, unchanged since the 2026-08-01
+  verdict (only a context-scout re-read since, no content change). Sole open `[DATA] P0` todo still self-identifies as
+  an operator/data-engineering classification call ("which of 19 bookmakers is EXCHANGE_ODDS vs FIXED_ODDS ... not a
+  mechanical fact") — established framing, not re-derived here.

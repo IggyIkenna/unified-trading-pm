@@ -310,3 +310,11 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — kept the prior 5, added
   `sweep_sports_odds_horizon_bucket_zombie_contamination_2026_07_27.py` (`market-tick-data-service@76ca401f`), the exact
   read-only sweep script the still-open `[DATA] P2` purge/re-derive todo re-verifies against.
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: KEEP-NA, valid — re-verified, unchanged since the 2026-08-01
+  verdict (only the context-scout refresh landed since). Both open todos independently justify KEEP-NA per that
+  verdict's own reasoning: `[DATA] P2` (Russia-Premier-League purge) is a GCS delete/re-derive operation tagged
+  `[DATA]` not `[OPERATOR]` with no delete-safety-cite or stated safe-idempotent justification on the checkbox itself,
+  so it does not meet the GCS-delete AO-dispatch gating bar as currently written; `[DATA] P3` bundles a bounded
+  re-run with an open judgment call (whether the strict per-day gate is still the right pass criterion for near-empty
+  international-break days). Not re-tagging/re-scoping either item on this pass — that would be doing the
+  data-engineering scoping work this audit doesn't own, not a mechanical reclassification.
