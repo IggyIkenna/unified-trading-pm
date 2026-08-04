@@ -15,7 +15,7 @@ summary: >-
   finding" escalation bar (affects 3+ asset groups' active backfills simultaneously).
 status: open
 nature: issue
-asset_group: [sports, tradfi, cefi]
+asset_group: [sports, tradfi, cefi, prediction]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
@@ -342,3 +342,24 @@ to preemption with proportionally little forward progress while it lasts.
   campaign specifically: af-backfill (the FIXTURE_STATS entity blocking `sports_af_full_ entity_completion-003`'s
   FIXTURE_LINEUPS gate) has been preemption-free for ~3.9h — the original blocking condition for that campaign looks
   clear now, though a relaunch attempt is outside this todo's scope to make.
+- **2026-08-04T06:07-06:10Z (slot 6)** — Side-effect finding while running
+  `/data-pipeline-check-is --asset-group prediction --day 2026-08-02`
+  (`prediction_consolidated_native_ao_extract_2026_07_25.md` todo 2, unrelated task). Extends the residual-pattern scope
+  found beyond `expected-universe-v2-sports`: both KALSHI check-VMs
+  (`instr-backfill-pred-pchk-0804060413-{f,s}-6969-kalshi`, `e2-standard-4` — a DIFFERENT machine type than the
+  `expected-universe-v2-sports`/af-backfill family) were preempted before writing any `run.log`/`EXIT_STATUS` —
+  force-leg at 06:07:32-44Z (launched 06:04:22Z, ~3.2min lifetime), skip-leg at 06:09:33-47Z (launched 06:08:15Z,
+  ~1.3min lifetime) — confirmed via
+  `gcloud compute operations list --filter="targetLink~<vm> AND operationType=compute.instances.preempted"` (both
+  DONE/"Instance was preempted."), not a code defect. A concurrent POLYMARKET skip-leg VM
+  (`instr-backfill-pred-pchk-0804060413-s-6969-polymarket`) also shows a `compute.instances. preempted` event
+  (06:08:02-17Z) but its result stands as genuinely `passed` — the preemption landed after the VM had already written
+  its manifest row + parquet (verified via the check's own GCS-artifact read, duration 221.5s matching a normal
+  completion), consistent with `VM_SHUTDOWN_ON_COMPLETION=true` racing a preemption notice on an already-done VM rather
+  than an in-progress kill. Trailing-30min zone-wide sample at 06:10Z: 5 events across 4 distinct VM families
+  (`expected-universe-v2-sports` x2, `tradfi-bf-cme-ohlcv-1m-*` x2, `instr-backfill-pred-pchk-*` x4) — roughly 1
+  event/6min, matching the doc's already-documented "low, ongoing, non-zero" residual rate, now confirmed to span at
+  least 3 VM families / 2 machine types (not just `e2-standard-8` sports/af-backfill) and a 4th asset group
+  (prediction). Retried the KALSHI force+skip pair once (single retry, per this doc's "do not blind-loop" guidance,
+  given this is a P2 baseline-checkpoint task with no hard deadline, not a business-critical backfill) — outcome logged
+  separately in the consuming task's own plan.
