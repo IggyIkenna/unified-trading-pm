@@ -287,16 +287,22 @@ OOM if left running). The named successor is this issue doc's Todos below.
       dependency check (zero useful output possible without upstream MTDS data). Evidence: full run.log captured via SSH
       (`/tmp/vm-exec-9242.log`), serial console clean, heartbeat confirmed alive. — deployment-service@4f38f6e (launcher
       tarball SHA; no new code to ship — all fixes were pre-existing in deployed tarballs).
-- [ ] [BACKEND] P1. **Fix MDPS dependency check to be live-mode-aware — skip GCS batch-data gate when `--mode live`.**
-      The dependency check in `ServiceBootstrap` (or the legacy `cli/parser.py` path) validates GCS raw-tick-data
-      existence for ALL 5 asset groups across the `--start-date`/`--end-date` range. For live streaming-aggregation,
-      this is wrong: MDPS subscribes to Pub/Sub `streaming.{ag}.candle_boundary_crossed` events (emitted by MTDS live),
-      not GCS batch data. The check blocked all 14 TradFi MDPS workers because MTDS raw tick data doesn't exist for
-      2026-08-04 on GCS — even though MTDS live would be emitting `candle_boundary_crossed` events in real time if it
-      were running. Additionally, the check validates ALL asset groups (cefi, defi, sports, prediction) regardless of
-      the worker's actual `--shard-spec` target AG — a TradFi worker shouldn't fail because CEFI data is missing. Fix:
-      when `mode=live`, either skip the GCS dependency check entirely (live data comes from Pub/Sub) or scope it to only
-      the target asset_group from `--shard-spec`. Repo: market-data-processing-service.
+- [x] ✅ [BACKEND] P1. **Fix MDPS dependency check to be live-mode-aware — skip GCS batch-data gate when
+      `--mode live`.** — market-data-processing-service@2279a98 (two changes: (1) bridge --mode from ServiceBootstrap to
+      legacy argv in `_build_legacy_argv()` so `_mode_dispatch_handler` routes live+streaming-aggregation to
+      `live_aggregator_handler.run()` — no GCS dep check; (2) defense-in-depth: skip GCS dep check in
+      `_process_candles_for_one_date()` when mode=live; extracted `_bridge_narrow_scope_env_filters()` to stay under
+      complexity cap). 3 new regression tests in `tests/unit/test_cli_main_coverage.py`:
+      `test_mode_live_bridged_from_bootstrap_args` + `test_mode_batch_not_added_to_legacy_argv`; full quality-gates.sh
+      green on this SHA. The dependency check in `ServiceBootstrap` (or the legacy `cli/parser.py` path) validates GCS
+      raw-tick-data existence for ALL 5 asset groups across the `--start-date`/`--end-date` range. For live
+      streaming-aggregation, this is wrong: MDPS subscribes to Pub/Sub `streaming.{ag}.candle_boundary_crossed` events
+      (emitted by MTDS live), not GCS batch data. The check blocked all 14 TradFi MDPS workers because MTDS raw tick
+      data doesn't exist for 2026-08-04 on GCS — even though MTDS live would be emitting `candle_boundary_crossed`
+      events in real time if it were running. Additionally, the check validates ALL asset groups (cefi, defi, sports,
+      prediction) regardless of the worker's actual `--shard-spec` target AG — a TradFi worker shouldn't fail because
+      CEFI data is missing. Fix: when `mode=live`, either skip the GCS dependency check entirely (live data comes from
+      Pub/Sub) or scope it to only the target asset_group from `--shard-spec`. Repo: market-data-processing-service.
 - [x] ✅ [INFRA] P1. **Provision Pub/Sub topics and subscriptions for TradFi asset group in prod.** The pilot confirmed
       404 on: `tradfi-delta-one-features-ready-sub` (cross_instrument/delta_one input), `commodity-signals-ng`,
       `commodity-signals-cl` (commodity output topics). These were never created because the mdps-features-live cluster
