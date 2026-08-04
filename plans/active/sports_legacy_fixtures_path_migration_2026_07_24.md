@@ -270,10 +270,10 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
 - [x] ✅ [DOC] P2. Update `sports_consolidated_closeout_2026_07_19.md`'s FROZEN-legacy-path declaration to state the
       freeze is now TRUE (no live reads of the legacy path remain), citing this plan's completion. Update
       `/codex/02-data/sports-gcs-path-ssot.md` if it references the fallback as a known exception. **DONE 2026-08-04,
-      `unified-trading-pm@<sha>`.** Updated the FROZEN-legacy-path declaration in the closeout doc (line ~197): replaced
-      the 2026-07-23 NOTE listing 3 violations with a RESOLVED-for-reads banner citing `instruments-service@333c35d2`
-      and this plan's completion, with the Phase-1 census evidence (0 load-bearing dates). The codex doc
-      (`/codex/02-data/sports-gcs-path-ssot.md`) was checked — it does NOT reference the removed
+      `unified-trading-pm@ed18aa9a0`.** Updated the FROZEN-legacy-path declaration in the closeout doc (line ~197):
+      replaced the 2026-07-23 NOTE listing 3 violations with a RESOLVED-for-reads banner citing
+      `instruments-service@333c35d2` and this plan's completion, with the Phase-1 census evidence (0 load-bearing
+      dates). The codex doc (`/codex/02-data/sports-gcs-path-ssot.md`) was checked — it does NOT reference the removed
       `_read_fixtures_entity_with_schedule_fallback` fallback reader; its "legacy fallback" mentions are about the UAC
       `candidate_parquet_paths()` path resolver (canonical-then-legacy-shape probing), a different layer, and its
       `FIXTURES (FROZEN)` table entry is already correct. No codex change needed. **Done when**: both docs' bodies match
