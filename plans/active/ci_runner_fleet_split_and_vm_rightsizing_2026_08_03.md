@@ -346,3 +346,13 @@ any VM is launched.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `classify-glue-workflows.sh` (never
   mentioned in this doc's own body) for `ssm-run.sh` and `hosted-baseline.sh`, which the doc's own "Mechanics carried
   over" section explicitly flags as "read before touching either VM."
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA, valid.** First verdict for this
+  doc. Read end-to-end; `grep -cE '^- \[ \]'` = **6**, matching this verdict's item count. This is genuinely a
+  `nature: process`, human/local-track plan by explicit operator choice at authoring time (per its own summary:
+  "human plan (not AO-dispatched) because each phase gate is a live judgment call, not a determinable worker todo"),
+  actively being executed interactively right now (13/25 runner pools migrated as of this doc's latest entry, with an
+  explicit operator hold on the PM/AO pool migration + AO downsize pending confirmation, plus live AWS billing
+  decisions). Every remaining open todo requires a live judgment call or an explicit operator go-ahead at each phase
+  gate — not a bounded, worker-determinable outcome. Independently corroborated by `/ag-closeout-audit infra`'s
+  2026-08-04 run, which classified this same doc `orphaned_never_touched` but correctly non-batchable
+  (too-large-or-risky / actively-draining-process taxonomy).

@@ -125,3 +125,10 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   depends on. Independently corroborated by the 2026-08-01 `/ag-closeout-audit infra` run, which classified it
   `orphaned_never_touched` but correctly non-batchable on the same grounds.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA, valid — new todo since the
+  last marker, still NA.** The original sole todo (the retention-policy direction decision) is now `[x]` DONE
+  2026-08-02, but a NEW "Follow-up — residual soft-deleted volume" todo was added the same day. Read end-to-end;
+  `grep -cE '^- \[ \]'` = **1**, this new item. It is explicitly time-gated, not a judgment call: its own "Done when"
+  requires a fresh `gcs_bucket_stats.py` run "on/after 2026-08-09" — today is 2026-08-04, 5 days before the earliest
+  point the done-when signal can even be measured. Not worker-determinable yet regardless of bound/mechanical shape;
+  stays NA until that date passes.

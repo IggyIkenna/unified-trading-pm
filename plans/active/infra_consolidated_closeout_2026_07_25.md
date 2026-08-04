@@ -502,3 +502,14 @@ not data-pipeline).
   shipped `unified-trading-pm@ebc2075b9` same day — correctly excluded from this run's Phase-1 candidate set by the
   generator's own `EXCLUDED_STATUS` filter, but still linkage-unlinked). Named here per the established discoverability
   remedy.
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA, valid — unchanged from the
+  2026-08-02 verdict.** In scope this run because the doc was edited since that marker (2026-08-03/08-04
+  `/ag-closeout-audit` Progress-Log appends drafting satellite batches 6/7, plus a context-scout backfill — all
+  narrative/frontmatter, no todo content change). Read end-to-end; `grep -cE '^- \[ \]'` = **3**, unchanged from the
+  last marker. The 3 remaining `[REVIEW]` todos are the same unchanged all-of-N Track close-out gates created by the
+  explicit resolved operator decision (`issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38); the
+  2026-07-30 reasoning (a gating shape belongs in `depends_on`+`gate_on_depends`, not an `NA -> planning` flip) still
+  holds. The doc's own still-open tranche-level `BLOCKED-OPERATOR-DECISION` (the `asset_group` ao/meta mistag retag
+  deadlock, options A/B/C) is unchanged since 2026-08-02 and is outside this skill's Phase-3 apply set (an
+  `asset_group` write, not `assigned_vm`/checkbox/archival/marker) — not actioned here, consistent with every prior
+  audit that has seen it.

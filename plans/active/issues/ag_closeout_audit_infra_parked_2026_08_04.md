@@ -185,3 +185,9 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
   `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + finalize twin (3 todos, both `status: draft`). **Ledger**: 1 new
   parked finding + 3 re-verified carry-forwards (all still open) + 3 net-new docs classified, 1 entry written above —
   balanced.
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA, valid.** First verdict for this
+  doc. Read end-to-end; `grep -cE '^- \[ \]'` = **5**, matching this verdict's item count. This doc IS an
+  operator-decision queue register by construction — every todo is `[OPERATOR]`-tagged (re-apply a flip, investigate
+  a possible data loss, review/approve 4 drafted batches) or `[DOCS]`-tagged (a design/tooling-priority call), none
+  is a bounded worker-determinable outcome. Confirmed each is a genuine judgment/authorization call, not a
+  mechanically-resolvable fact.

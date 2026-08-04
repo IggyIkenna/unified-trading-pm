@@ -27,8 +27,9 @@ related:
 created: 2026-08-03
 priority: P2
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 sequential: true
 depends_on: []
 locked_by:
@@ -85,3 +86,31 @@ whenever infra/dependency-hygiene work is next in queue; no urgency to interrupt
 same day) covers a dead slot's unpushed `unified-trading-library` aiohttp bump to `>=3.14.3` closing 3 different, real,
 currently-unpatched CVEs (2026-59881/69243/69244) — that rescue is P1 and should happen first; once it lands,
 unified-trading-library resolves off this doc's 16-repo mismatch list, leaving 15.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **RECLASSIFY, conflict-cleared —
+  `assigned_vm: NA -> planning`.** First verdict for this doc. All 4 todos are bounded/deterministic (bump one
+  `workspace-constraints.toml` entry, regenerate the canonical manifest from it, propagate via the existing
+  `propagate-canonical-versions.py` tool across the named repos, then re-verify with `check-dependency-alignment.py`)
+  with a fully decided fix approach — the doc's own "What was actually tried" section already ruled out the naive
+  one-line bump and specifies the correct multi-step sequence; `sequential: true` was already set. **Conflict-check
+  (codex `ao-dispatch-batch-naming-and-conflict-check.md` §3) run before flipping**: (a) same `parent_epic`
+  (`infrastructure_master`) active `assigned_vm: planning` docs — `cve_affected_pinned_deps_remediation_2026_06_18.md`
+  (619 lines, itself mid-execution) was checked in full: its own aiohttp thread is marked `RESOLVED 2026-07-27`
+  (the earlier `<3.14` vcrpy-blocked cap, a DIFFERENT and already-closed gap) and its one remaining open todo
+  (`[SCRIPT] P3`, "one-by-one for the rest") doesn't name aiohttp or `workspace-constraints.toml` — no overlapping
+  claim. Live-verified the actual file state rather than trusting prose: `workspace-constraints.toml:11` still reads
+  `aiohttp = "aiohttp>=3.14.1,<4.0.0"` today (2026-08-04) despite that doc's own same-day Progress Log (slot-9,
+  neighboring commit `unified-trading-pm@13c6d1b1f`) describing a canonical-floor raise — confirmed that raise was for
+  `cryptography` only; the aiohttp mentions there are per-repo (unified-trading-pm's own pyproject) fixes, not a
+  canonical-floor change, so this doc's claim on `workspace-constraints.toml`'s aiohttp entry is genuinely unclaimed.
+  (b) no sibling batch/finalize doc drafted earlier in this run (first RECLASSIFY this pass). (c)
+  `infra_consolidated_closeout_2026_07_25.md` Track 1 does not yet cite this doc (a discoverability gap for
+  `/ag-closeout-audit`, not a conflict) and its Track 1 criterion doesn't claim this specific gap. **Soft
+  cross-doc note, not a conflict**: `orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md` (different tranche,
+  `parent_epic: agent_operating_framework_master`) covers a related but distinct rescue (dead-slot orphan commit) for
+  ONE of the 16 repos this doc's todo 3 touches (`unified-trading-library`) — live-verified that rescue has ALREADY
+  landed (`unified-trading-library@d42fe019`, 2026-08-03, confirmed ancestor of this slot's synced HEAD), so todo 3's
+  fleet propagation will find that repo already correct and no-op it; zero collision risk either order. Finalize twin:
+  `aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03_finalize_2026_08_04.md`.

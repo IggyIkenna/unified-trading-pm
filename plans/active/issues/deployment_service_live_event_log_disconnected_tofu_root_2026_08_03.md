@@ -91,3 +91,14 @@ judgment call, hence `assigned_vm: NA`.
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the parent issue this doc was explicitly
   deferred from, which is the whole reason the "two independent OpenTofu roots" question exists.
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA, valid.** First verdict for
+  this doc. Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The doc's own
+  "Recommended decision" section explicitly bundles a worker-doable investigation (git-history read) with an
+  operator-only structural decision ("(a) intentional isolation... or (b) accidental... Needs an
+  operator/architect call... not a mechanical fix"), and states so directly: "the decision on whether to consolidate
+  the roots is the human judgment call, hence `assigned_vm: NA`." The bounded investigation half is already
+  extracted (with a citation back to this doc) into `infra_satellite_ao_dispatch_batch7_2026_08_04.md`'s 3rd todo
+  (drafted by `/ag-closeout-audit infra` earlier today, `status: draft`) — per that batch's own text: "extracts ONLY
+  the bounded investigation half... leaves the latter gated." This doc's own single todo stays as-written (bundled)
+  and NA as a whole — not split here (splitting a todo is outside this skill's Phase-3 apply set) — since the
+  decision half has no home anywhere else and flipping the whole bundled todo would blind-dispatch that half too.

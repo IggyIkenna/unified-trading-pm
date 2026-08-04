@@ -168,3 +168,17 @@ rather than the filer marking their own work ready-to-dispatch in one unbroken a
 - **context-scout 2026-08-03**: refreshed context_scope (2 entries, unchanged) — both entries already map 1:1 onto this
   doc's two todos (the SCRIPT todo touches `generate_na_doc_tranche_inventory.py`, the DOCS todo touches the SKILL.md
   Phase-0 section); genuinely minimal and correct, no expansion needed.
+- **na-eligibility-audit 2026-08-04** (infra tranche, dispatch agt-f8d9c4): **KEEP-NA-STALE (already-duplicated) —
+  citation fix only, no `assigned_vm` change.** Both todos here were already extracted verbatim, with explicit
+  per-item citations back to this doc, into `infra_satellite_ao_dispatch_batch7_2026_08_04.md` (drafted by
+  `/ag-closeout-audit infra` earlier today, `status: draft` — todo 1 = this doc's todo 1, todo 2 = this doc's todo 2).
+  Per the skill's KEEP-NA-STALE rubric and the codex conflict-check protocol §3 item 4 ("already-shipped elsewhere,
+  checkbox just never flipped... this is a stale-checkbox correction, not a reclassification and not a conflict"):
+  flipping THIS doc's own `assigned_vm` to `planning` now would open a second, independent live-dispatch path to the
+  exact same 2 todos batch7 already carries — once the operator reviews and flips batch7 to `active` (per
+  `ag_closeout_audit_infra_parked_2026_08_04.md` finding 14, currently the recommended next step for 4 backlogged
+  drafted batches), the same work would exist in two places. Correct action is citation only, which this entry is;
+  `assigned_vm` stays `NA` deliberately. When batch7's own todos ship, its finalize plan
+  (`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md`, already gated on it) is responsible for flipping this
+  doc's checkboxes to `[x]` with the real commit SHA and checking archival eligibility — no action needed here until
+  then.
