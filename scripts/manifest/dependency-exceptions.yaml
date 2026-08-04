@@ -120,10 +120,10 @@ exceptions:
     package: cryptography
     spec: "cryptography>=47.0.0,<50.0.0"
     justification: >
-      TEMPORARY, mid-sweep divergence: same shape as strategy-service above — the canonical cryptography floor was just
-      raised to >=50.0.0,<51.0.0 to close CVE-2026-69247. system-integration-tests' own bump is a separate,
-      already-queued P1 todo in the same sweep (not yet executed as of this exception). Remove this exception the moment
-      that todo ships and system-integration-tests' pin reads >=50.0.0,<51.0.0.
+      TEMPORARY, mid-sweep divergence: the canonical cryptography floor was just raised to >=50.0.0,<51.0.0 to close
+      CVE-2026-69247 (Bleichenbacher oracle in PKCS#7 EnvelopedData decryption). system-integration-tests' own bump is a
+      separate, already-queued P1 todo in the same sweep (not yet executed as of this exception). Remove this exception
+      the moment that todo ships and system-integration-tests' pin reads >=50.0.0,<51.0.0.
     ssot: [plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md]
     added: "2026-08-04"
 
