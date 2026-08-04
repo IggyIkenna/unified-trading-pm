@@ -115,3 +115,38 @@ exceptions:
       migration; original investigation not separately re-cited here, see the SSOT below for the class of issue).
     ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
     added: "2026-07-13"
+
+  - repo: system-integration-tests
+    package: cryptography
+    spec: "cryptography>=47.0.0,<50.0.0"
+    justification: >
+      TEMPORARY, mid-sweep divergence: same shape as strategy-service above — the canonical cryptography floor was just
+      raised to >=50.0.0,<51.0.0 to close CVE-2026-69247. system-integration-tests' own bump is a separate,
+      already-queued P1 todo in the same sweep (not yet executed as of this exception). Remove this exception the moment
+      that todo ships and system-integration-tests' pin reads >=50.0.0,<51.0.0.
+    ssot: [plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md]
+    added: "2026-08-04"
+
+  - repo: unified-trading-library
+    package: aiohttp
+    spec: "aiohttp>=3.14.3,<4.0.0"
+    justification: >
+      Already ahead of the canonical aiohttp>=3.14.1,<4.0.0 floor — closes CVE-2026-59881 (RSV1 decompress bomb),
+      CVE-2026-69243 (WebSocket-upgrade request smuggling), CVE-2026-69244 (OOB heap read in the C response parser),
+      found via pip-audit on the ldr_qg_failure escalation for #729 (unified-trading-library commit d42fe019).
+      Pre-existing, unrelated to the cryptography sweep this exception file edit rides along with — a separate tracked
+      fleet sweep (SSOT below) is expected to raise the canonical floor to match once every declaring repo lands; not
+      this todo's decision to make.
+    ssot: [plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md]
+    added: "2026-08-04"
+
+  - repo: market-tick-data-service
+    package: aiohttp
+    spec: "aiohttp>=3.14.3,<4.0.0"
+    justification: >
+      Same shape as unified-trading-library above — already ahead of the canonical aiohttp>=3.14.1,<4.0.0 floor, closing
+      the same CVE-2026-59881/-69243/-69244 cluster (market-tick-data-service commit b55cf9ad: "upgrade aiohttp
+      3.14.1→3.14.3 (CVE-2026-59881/-69243/-69244)"). Pre-existing, unrelated to the cryptography sweep this exception
+      file edit rides along with.
+    ssot: [plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md]
+    added: "2026-08-04"
