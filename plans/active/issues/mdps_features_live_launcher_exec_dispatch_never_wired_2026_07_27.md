@@ -222,14 +222,21 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       the branch actually consumes. — deployment-service@3cfe056 (already shipped as part of the exec-dispatch P2 todo
       at e7d17f2; the P2 branch wired `--operation streaming-aggregation` for MDPS, and this launcher's `VM_OPERATION`
       metadata was corrected to `streaming-aggregation` in that same push — checkbox missed the flip)
-- [ ] [SCRIPT] P3. Related, smaller gap noticed in passing: `vm-exec-with-gcs-tee.sh`'s post-launch task-failure path (a
-      wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
+- [x] ✅ [SCRIPT] P3. Related, smaller gap noticed in passing: `vm-exec-with-gcs-tee.sh`'s post-launch task-failure path
+      (a wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
       `[vm-exec] command exited     rc=1`) does not appear to self-delete or otherwise loudly signal on a
       `VM_SHUTDOWN_ON_COMPLETION=false` live launcher, mirroring (but distinct from) the bootstrap-phase gap fixed in
       `/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md` Update 4 — not
       investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
       worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
-      behavior against.
+      behavior against. **Audited 2026-08-04 (slot-16): NO GAP — the daemon emits `DEPLOYMENT_FAILED` (severity=ERROR)
+      via Pub/Sub when the wrapped command exits non-zero, regardless of `VM_SHUTDOWN_ON_COMPLETION`. Full trace: shell
+      `wait` → `$RC` → `EXIT_STATUS_FILE` → SIGTERM daemon → `HeartbeatDaemon._signal_handler` → `complete()` →
+      `_archive_terminal_state()` reads exit status → `status="failed"` → `DEPLOYMENT_FAILED` Pub/Sub event
+      (severity=ERROR) → `run_ledger` flat publish → final GCS upload + durable snapshot. Self-delete correctly skipped
+      for live launchers (persistent services, not batch). Two narrow edge cases noted (daemon SIGKILLed after 30s hang
+      or daemon silent startup crash — GCS EXIT_STATUS still lands but Pub/Sub event lost; both separately observable
+      via missing heartbeats). No code change needed.**
 
 ## Progress Log
 
@@ -252,3 +259,10 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
   scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **2026-08-04 (slot-16, this task)**: Audited the last unchecked P3 todo (vm-exec-with-gcs-tee.sh post-launch
+  task-failure path). Full end-to-end trace confirms the daemon emits `DEPLOYMENT_FAILED` (severity=ERROR) via Pub/Sub
+  when the wrapped command exits non-zero, regardless of `VM_SHUTDOWN_ON_COMPLETION`. Self-delete correctly gated to
+  `VM_SHUTDOWN_ON_COMPLETION=true` only. Two narrow edge cases documented in the todo flip (daemon SIGKILL after 30s
+  hang, daemon silent startup crash) — GCS EXIT_STATUS still lands in both cases, Pub/Sub event lost but separately
+  observable via missing heartbeats. No code change needed — the suspected gap does not exist. All 5 todos in this issue
+  doc are now done; plan is eligible for archival.
