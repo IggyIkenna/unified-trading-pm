@@ -853,3 +853,34 @@ default from an external reference.
       further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
       business decision, tagged `[OPERATOR]` per the business/spend-judgment carve-out, not something to build
       speculatively ahead of that decision.
+- [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (operator ask, 2026-08-04, after
+      `[INFRA] P0`'s VM-side registration shipped) — confirmed via DeepSeek's own API docs
+      (`https://api-docs.deepseek.com/api/get-user-balance/`) that `GET /user/balance` exposes only a REMAINING-balance
+      snapshot (`total_balance`/`granted_balance`/`topped_up_balance`), never a spend/usage-history endpoint — so this
+      can only ever show "available", never "used vs available" (operator explicitly chose the available-balance-only
+      design over an auto-tracked-cumulative-spend or manual-funded-amount alternative). Done when: the dashboard shows
+      a live DeepSeek balance sourced from a real poller, not a stub. — New `DeepSeekBalancePoller`
+      (`server/deepseek_balance_poller.py`, 30-min cadence, deliberately separate loop from the Anthropic `UsagePoller`
+      since DeepSeek accounts carry no `CLAUDE_CODE_OAUTH_TOKEN`/5h-weekly-cap concept) + `server/deepseek_balance.py`
+      (`fetch_deepseek_balance`, USD-preferring currency selection); `usage_tracker.py`'s `CLAUDE_CODE_OAUTH_TOKEN`-only
+      env-file reader generalized to `read_env_var_from_file(env_file, var_name)` so the new poller can read
+      `ANTHROPIC_AUTH_TOKEN` without a new parser; `AccountUsageRow`/`AccountView` gained
+      `balance_usd`/`balance_currency`/`balance_is_available`/`balance_checked_at` (additive, non-deepseek accounts stay
+      null); dashboard's `AccountRow` renders a `DeepSeekBalanceLine` in place of the Anthropic weekly/5-hour bars for
+      `provider === "deepseek"`. 27 new backend unit tests + full existing suite green (2322 passed) +
+      `basedpyright`/`tsc`/`vitest` (173 passed) all clean. — `agent-orchestrator@8cc6a4f` on `live-defi-rollout`,
+      `ahead=0`.
+- [x] [UI] P1. ✅ Operator-directed account pause/resume via the dashboard (bundled into the same session/commit as the
+      DeepSeek balance todo above, same operator ask). Reuses the PRE-EXISTING `account_status="disabled"` lifecycle
+      state (`AccountStatus.disabled` already existed in the enum and `account_is_usable()` already excluded it — this
+      todo is the first thing to actually SET it operator-side; nothing previously did). New
+      `state_store.disable_account` / `enable_account` (deliberately distinct from the poller-detected, auto-clearing
+      `auth_failed`/`rate_limited` marks — "disabled" is sticky, only `enable_account` clears it, and neither the
+      usage-poller success path nor the fast-reprobe loop can silently re-enable one) +
+      `POST /api/accounts/{id}/disable` / `/enable` routes (disable fans out
+      `rotate_all_slots_off_account(..., reason=RotationReason.operator_directed)` so any slot already running on a
+      paused account moves off immediately, not just future spawns). Dashboard: a Pause/Resume button per account card,
+      a "Paused" badge, and a dedicated muted dot color (`statusToClass` gained a `disabled -> "paused"` case —
+      previously shared "stale" with rate_limited/auth_failed, which would have read as an error rather than a
+      deliberate operator action). Works identically for Claude and DeepSeek accounts (provider-agnostic — it's the same
+      `account_status` column every other lifecycle mark already uses). — same commit, `agent-orchestrator@8cc6a4f`.
