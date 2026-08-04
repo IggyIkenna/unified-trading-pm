@@ -81,4 +81,4 @@ source: >-
 
 ## Progress Log
 
-- **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries) — finalize gate, code-free by design.

@@ -34,7 +34,7 @@ drift_direction: NA
 context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/epics/infrastructure_master.md,
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
   ]
 ---
@@ -177,3 +177,5 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   automatically instead of needing another manual sweep. Tracked + evidence-cited separately in that Phase 5 todo's own
   extraction doc (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`), not duplicated here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the generic epic pointer for the guardrail
+  hook that actually blocks the open `[OPERATOR]` mechanical-drop todos (`block_destructive_commands.py`).

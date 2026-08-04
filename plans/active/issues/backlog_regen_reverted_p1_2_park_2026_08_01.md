@@ -18,7 +18,9 @@ summary: >-
   (`agent-orchestrator@8dd5763`) — the fix either doesn't cover this code path or has regressed.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Genuinely AO backlog/park
+  # mechanism content (agent-orchestrator's own regen/dispatch code), not cross-AG.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -106,14 +108,17 @@ re-applied by hand again.
       `POST /api/prerequisites/p1-2-preconditions-met {"value": false, "set_by": "main"}` is (re-)set false. Verify it
       actually stuck after the next `PlanRegenLoop` tick / `POST /api/backlog/regen` (not just `/reload`), per the exact
       verification recipe in `unified-trading-pm/agents/RULES.md` § 4.
-- [ ] [AO] P1. Root-cause why the `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` fix
-      (`agent-orchestrator@8dd5763`) did not prevent this reversion (repo: agent-orchestrator). Check whether
-      `PlanRegenLoop` / `regen_backlog_from_plan.py` ran between `~2026-07-31T22:20Z` (park applied) and
-      `2026-08-01T00:55:27Z` (this dispatch), and whether the preserved-field set that fix introduced covers BOTH
-      `priority`/`priority_override` AND `prereqs.prerequisites` on every regen code path (`/api/backlog/regen` and
-      `/api/backlog/reload` both, not just one) — this occurrence lost BOTH fields simultaneously, which the original
-      fix should have carried forward for at least `priority_override`. Ship a fix + a regression test asserting a
-      hand-tuned `priority_override: true` + `prereqs.prerequisites` entry survives a `PlanRegenLoop` tick unchanged.
+- [x] ✅ [AO] P1. **ALREADY ANSWERED (found 2026-08-04, `/ag-closeout-audit ao`) — cited, not re-derived.** Root-cause
+      why the `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` fix (`agent-orchestrator@8dd5763`) did not prevent
+      this reversion: `p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` independently investigated this EXACT same
+      incident (same task, same window) and confirmed via `journalctl -u orchestrator.service` that the only two API
+      calls in the window were `POST /api/prerequisites/p1-2-preconditions-met` (sets the condition value only) and
+      `POST /api/backlog/reload` (re-reads disk, never writes) — **the actual `backlog.yaml` file edit that sets
+      `priority`/`priority_override`/`prereqs.prerequisites` was never performed at all.** A static read of
+      `_reconcile_task_fields()` additionally confirmed `prereqs.prerequisites` has no revert code path, ruling out a
+      `backlog_regen_drops_handtuned_prereqs`-class regression. **This is a one-time process gap (an intended edit that
+      didn't happen), not a code defect** — no fix or regression test is warranted; the code path is sound. See that
+      doc's own Progress Log for the full evidence trail.
 - [ ] [SCRIPT] P2. Consider a standing assertion (hygiene sweep or a lightweight periodic check) that flags any backlog
       entry whose plan-todo text starts with "**⏸ PARKED" but whose live `priority` != 999 or `priority_override` !=
       true — this exact drift is otherwise silent until a worker happens to notice and file a doc like this one (repo:

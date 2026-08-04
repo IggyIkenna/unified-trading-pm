@@ -1,0 +1,109 @@
+{
+  "service": "data_pipeline_e2e_check_is",
+  "run_date": "2026-08-02",
+  "asset_group": "PREDICTION",
+  "legs": ["force", "skip", "live"],
+  "started_at": "2026-08-04T05:35:43.571722+00:00",
+  "finished_at": "2026-08-04T06:23:38.763146+00:00",
+  "consolidated_from_invocations": 5,
+  "total": 8,
+  "passed": 2,
+  "failed": 6,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "PREDICTION/POLYMARKET/2026-08-02",
+      "leg": "force",
+      "attempt": 1,
+      "status": "passed",
+      "reason": "ok",
+      "vm_name": "instr-backfill-pred-pchk-0804053543-f-6969-polymarket",
+      "duration_sec": 1519.3
+    },
+    {
+      "shard_label": "PREDICTION/POLYMARKET/2026-08-02",
+      "leg": "skip",
+      "attempt": 1,
+      "status": "failed",
+      "reason": "vm_run_not_successful:launcher_script_nonzero_rc=1",
+      "vm_name": "instr-backfill-pred-pchk-0804053543-s-6969-polymarket",
+      "root_cause": "shared_host_gcloud_active_account_cross_slot_clobber (not a genuine IAM gap)"
+    },
+    {
+      "shard_label": "PREDICTION/POLYMARKET/2026-08-02",
+      "leg": "skip",
+      "attempt": 2,
+      "status": "passed",
+      "reason": "ok",
+      "skip_proof": "genuine",
+      "vm_name": "instr-backfill-pred-pchk-0804060413-s-6969-polymarket",
+      "duration_sec": 221.5,
+      "note": "identity-scoped retry via CLOUDSDK_ACTIVE_CONFIG_NAME=slot6-work pinned to unified-trading-sa"
+    },
+    {
+      "shard_label": "PREDICTION/POLYMARKET/2026-08-02",
+      "leg": "live",
+      "attempt": 1,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804061420-l-6969-polymarket",
+      "duration_sec": 181.7,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:16:56-17:06Z)"
+    },
+    {
+      "shard_label": "PREDICTION/KALSHI/2026-08-02",
+      "leg": "force",
+      "attempt": 1,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804060413-f-6969-kalshi",
+      "duration_sec": 232.5,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:07:32-44Z)"
+    },
+    {
+      "shard_label": "PREDICTION/KALSHI/2026-08-02",
+      "leg": "skip",
+      "attempt": 1,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804060413-s-6969-kalshi",
+      "duration_sec": 133.2,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:09:33-47Z)"
+    },
+    {
+      "shard_label": "PREDICTION/KALSHI/2026-08-02",
+      "leg": "force",
+      "attempt": 2,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804061348-f-6969-kalshi",
+      "duration_sec": 137.3,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:15:24-36Z)"
+    },
+    {
+      "shard_label": "PREDICTION/KALSHI/2026-08-02",
+      "leg": "skip",
+      "attempt": 2,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804061348-s-6969-kalshi",
+      "duration_sec": 179.9,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:18:41-53Z)"
+    },
+    {
+      "shard_label": "PREDICTION/KALSHI/2026-08-02",
+      "leg": "live",
+      "attempt": 1,
+      "status": "failed",
+      "reason": "vm_run_not_successful:vm_self_deleted_no_exit_status",
+      "vm_name": "instr-backfill-pred-pchk-0804061420-l-6969-kalshi",
+      "duration_sec": 366.0,
+      "root_cause": "compute.instances.preempted (confirmed via gcloud compute operations list, 06:23:14-24Z)"
+    }
+  ],
+  "related_issue_docs": [
+    "/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md",
+    "/plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md"
+  ]
+}

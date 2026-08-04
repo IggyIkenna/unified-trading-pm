@@ -34,7 +34,8 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/sports-data-source-coverage-matrix.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/epics/sports_master.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    market-tick-data-service/market_tick_data_service/scripts/_migrate_drop_stale.py,
   ]
 ---
 
@@ -183,7 +184,7 @@ satisfies every requirement:
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
   - > **🟡 2026-07-25 status**: this bullet's premise is stale — see
-    > `/plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
+    > `/plans/archive/2026_08/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
     > not mechanically executable as described (TEAMS has no FLAT layout; the legacy vs. live venue key spaces have zero
     > overlap) and is now `BLOCKED-OPERATOR-DECISION` in the AO-dispatched copy of this todo
     > (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`). The per-source genesis dates quoted above are also
@@ -530,6 +531,9 @@ materialized.
   wrote out-of-universe/numeric rows (the over-capture) + burned the 6M API-Football budget on the full ~2,400-league
   provider universe. They stay paused until the write-gate ships (see Temporary states).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the parent epic for the write-gate source
+  (`sports_reference_core.py`) and the open E8 legacy-delete stub source (`_migrate_drop_stale.py`), the two remaining
+  open-todo targets.
 
 ## Temporary states + their canonical follow-up
 

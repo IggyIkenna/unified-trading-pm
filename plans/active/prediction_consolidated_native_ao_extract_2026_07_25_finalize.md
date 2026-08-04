@@ -50,7 +50,9 @@ context_scope:
   [
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/epics/predictions_master.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -119,3 +121,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added phase_d (2nd reconciliation-target home)
+  - the parent closeout doc + the archival-ritual codex SSOT (finalize gate, no source-code target).

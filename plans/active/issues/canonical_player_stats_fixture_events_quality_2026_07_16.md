@@ -49,10 +49,9 @@ context_scope:
   [
     /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/epics/sports_master.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
-    instruments-service/scripts/dedup_canonical_player_stats_2026_07_25.py,
+    instruments-service/scripts/census_player_stats_2025_missing_2026_08_02.py,
   ]
 ---
 
@@ -266,3 +265,10 @@ its own touched subset piecemeal.
     its own rows).
   - Evidence: `instruments-service@36b59400` (census script + JSON root-cause report,
     `scripts/_player_stats_2025_missing_root_cause_2026_08_02.json`).
+
+## Progress Log
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the honest-absence codex doc and the
+  now-superseded dedup script (Finding 1 fully resolved), added the 2025-cell root-cause census script since the sole
+  remaining open item (the P3 manifest-reconciliation todo) builds directly on it.

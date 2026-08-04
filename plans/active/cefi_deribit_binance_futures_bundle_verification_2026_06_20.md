@@ -36,12 +36,11 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    /plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md,
-    /plans/epics/cefi_master.md,
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
-    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
 
@@ -214,3 +213,7 @@ rate.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the manifest-canonicalisation/epic/
+  vm-preempted-issue entries (topically peripheral to this doc's own remaining Success-criteria gap) and added the two
+  source-code scripts this doc's own body names by name (`reconcile_phantom_manifest_rows_all.py`'s cefi `prefix_tpls`,
+  `launch-cefi-sharded-backfill.sh`), per the updated methodology's source-path-is-half-the-job rule.

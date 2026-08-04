@@ -28,11 +28,10 @@ ccxt = "ccxt>=4.5.24,<5.0.0"
 # original >=8.3.2 floor bump — 8.3.2 itself is now listed vulnerable, fix is 8.3.3. SSOT:
 # plans/active/issues/fund_administration_service_click_pysec_2026_2132_2026_07_13.md
 click = "click>=8.3.3,<9.0.0"
-# GHSA-537c-gmf6-5ccf: cryptography<=46.0.7 wheels statically link an OpenSSL with a known CVE.
-# Floor bumped off the advisory line; ceiling widened to admit what the fleet already naturally
-# resolves to (47/48/49 seen pre-bump on repos without an explicit ceiling). SSOT:
-# fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md
-cryptography = "cryptography>=47.0.0,<50.0.0"
+# CVE-2026-69247 (PKCS#7 EnvelopedData decryption Bleichenbacher oracle, introduced in 44.0.0):
+# floor raised off the vulnerable <50.0.0 range fleet-wide. SSOT:
+# plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+cryptography = "cryptography>=50.0.0,<51.0.0"
 databento = "databento>=0.32.0,<1.0.0"
 db_dtypes = "db-dtypes>=1.5.0,<2.0.0"
 docker = "docker>=7.1.0,<8.0.0"

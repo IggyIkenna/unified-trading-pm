@@ -49,8 +49,9 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/epics/sports_master.md,
+    /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
+    features-service/features_service/sports/calculators/multisource_xg_calculator.py,
+    features-service/features_service/sports/calculators/season_context.py,
   ]
 ---
 
@@ -150,3 +151,7 @@ contract.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since the 2026-07-30
   verdict (only a context-scout frontmatter backfill touched this doc since); sole open todo remains
   `[OPERATOR/DESIGN] P3`, a genuine design decision the doc itself defers.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — dropped the generic `sports_master.md` epic link
+  and added the two source files the doc's own diagnosis is actually about (`multisource_xg_calculator.py`, the dead
+  21-column target; `season_context.py`, the confirmed-not-recurring comparison read from the 2026-07-30 entry above),
+  plus the sibling `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` issue already in `related:`.

@@ -60,6 +60,7 @@ context_scope:
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     deployment-service/terraform/gcp/main.tf,
+    /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 ---
 
@@ -168,3 +169,5 @@ retag doing the real work here).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the bucket-isolation-model codex SSOT (the
+  domain doc governing the god-SA removal + tier-SA sequencing this doc's own open `[OPERATOR]` todo is gated on).

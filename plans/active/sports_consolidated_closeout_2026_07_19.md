@@ -111,6 +111,8 @@ context_scope:
     /plans/epics/sports_master.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
   ]
 ---
 
@@ -985,3 +987,5 @@ section above, which conflated answered and open items):
   audit's to resolve): the new `sports_reference_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` issue directly
   bears on this doc's own `sports_reference_v2/by_date/` cull-todo framing — see that doc for the live SSOT-conflict
   finding.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the native-extract child plan + the Track C
+  root-cause source file (canonical_writer_shaping.py).

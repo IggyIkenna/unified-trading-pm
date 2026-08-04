@@ -126,6 +126,9 @@ exists" section together before scoping the workstream.
   doc; if they're still real, worth splitting into a narrower follow-up scoped to just those three. Deferring the
   archive-or-split call to the operator rather than guessing.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries — corrects the 2026-08-01 marker's stale count, the
+  list itself already carried 5) — all still resolve; still covers the doc's live remaining scope (pain points 2-4:
+  scale/triage, dedup, dead-agent transcript-jump), unaffected by the same-day canned-options-B/C fix noted below.
 - **2026-08-03**: operator asked (fresh, unprompted by this doc) why so many operator-blocking questions stay open and
   what answering them actually does — independent confirmation this doc's pain points are still live, ~9 days after the
   2026-07-31 entry above flagged them as possibly-still-open. Investigation this session also found, and fixed, a

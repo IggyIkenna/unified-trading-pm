@@ -311,6 +311,27 @@ not just noting.
   (unrelated `features-service` entry only). No code/test change made or needed. Slot left clean on `live-defi-rollout`
   (only this doc touched).
 
+- **2026-08-03 ~21:32Z (review agt msg #3596, main agt-1756f6 verified on-host)** — fresh CPU-oversubscription incident,
+  the strongest QG-count reading yet on this box. Review reported ~18 concurrent `quality-gates.sh` + loadavg 31.5; main
+  re-measured live seconds later and found it **WORSE — 26 concurrent `quality-gates.sh` on 16 cores** (cap=4, violated
+  6x+ on the QG count alone), loadavg **33.49 / 29.69 / 28.39** (>2x oversubscribed). Concrete harm this time is a real
+  ship failure, not just elevated load: **slot 2 (task `mtds_type_ignore_ratchet_regression`, repo
+  market-tick-data-service) reported 3 consecutive ship attempts dying ~7min in at 68% test progress, self-diagnosed as
+  host contention (not a code defect) and backed off.** Review flags a likely compounding factor: 8+ `ldr_qg_failure`
+  cicd-escalation agents spawned across repos in the prior ~45min, each running its own QG investigation on top of
+  normal worker QG load — so some red-gate signals may themselves be contention-induced flakiness rather than real
+  regressions (echoes the 16th-corroboration local-green pattern logged above). Worker-level backoff (slot 2) is the
+  ONLY mitigation live and is reactive/uncoordinated, so runs will pile back up. **This is fresh, concrete justifying
+  harm for the still-pending fix**: the machine-enforced host QG concurrency gate is already built in
+  `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (flock-protected reservation-ledger admission
+  governor, largely shipped) — the ONE remaining piece is the **live-admission cutover**, explicitly flagged there as
+  the safety-critical, operator-aware step (not an autonomous flip). Today's slot-2 ship failures are exactly the harm
+  that cutover prevents; surfacing to the operator as justification to prioritize it. Main took no process-kill action
+  (bulk-killing another slot's in-flight QG/pytest is BANNED per CLAUDE.md multi-agent-safety; these are legitimate
+  runs, not a single runaway). Separately noted by review (FYI, already self-healed, no action): a mass
+  `tmux_session_lost` sweep at 21:23:17Z across slots 1/4/5/8/12 + a ~90s orchestrator restart ~21:30Z — all recovered
+  via existing AutoSpawn/inherit-dirty-WIP, no data loss.
+
 - **2026-08-03 ~05:25-05:50Z (cicd escalation `agt-8e5d24`, slot 2, `features-service`, `wall_type=main_ci_red`,
   `pr_number=0`)** — the exact wall `agt-f70a66`/`agt-c82335`/`agt-15e651` (all above) diagnosed; per `agt-15e651`'s own
   note this should be the point a re-dispatch stops re-deriving the diagnosis and instead applies this doc's own
@@ -408,3 +429,59 @@ today), so respecting the standing deferral rather than proposing a fresh RECLAS
 `journalctl -k` confirmation — needs root, operator-gated. (3) `RETRY_PER_TICK` scaling design question — genuine
 undecided tradeoff, "leave as-is" is a valid outcome. No RECLASSIFY, no ARCHIVE. Flagging item 1 for whoever next
 assembles a ci satellite batch once this doc's Progress Log stabilizes.
+
+- **2026-08-03 ~19:56Z (main agt-1756f6, via review agt slot-1 flag msg #3584)**: Fresh confirmed incident instance of
+  the runner-pool starvation — verified LIVE via GitHub API: `quality-gates-v2` runs stuck in `queued` (never starting,
+  NOT failing) on market-data-processing-service (oldest 81min), deployment-service (25min + two at 55min),
+  instruments-service and unified-api-contracts (~25min), WHILE greeks-service + execution-service completed SUCCESS
+  normally in the same window. The subset pattern (queued-never-starts on some repos, clean completion on others) is the
+  self-hosted-runner-POOL starvation signature — greeks/exec hit a healthy pool. This is what's driving the recurring "N
+  tasks blocked on prereqs" idle-slot state (slots 4/9/12) and it lines up with the escalation_unresolved pings already
+  firing (some reescalated=true) on exactly these repos. `/api/repo-blockers` was empty — that §4b filing is
+  worker-owned (a worker files when its task is CI-blocked), main does not file it. Root fix = runner capacity
+  (operator/infra), already this doc's open remediation. Recorded here so the next incarnation inherits the datapoint
+  instead of re-discovering it.
+
+- **2026-08-03 ~20:30Z (interactive session, `/autonomous` on
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) — material improvement, NOT full resolution.** One of
+  this crisis's root causes — the reservation-ledger governor resolving a SEPARATE, isolated ledger per repo on this
+  same shared host (confirmed 2026-08-02, ~10 repos piling on with zero shared admission) — is now fixed and live:
+  `unified-trading-pm@fada7dc20` extends `_qg_shared_root()` to collapse every glue-runner pool's ledger onto one
+  shared, host-writable path (`/opt/.qg-governor-glue-shared`), propagating organically to every pool via its next CI
+  run (no fleet "flip" step). Live-validated via direct host introspection (not just synthetic test): **before** — 10
+  repos, each blind to the other 9's reservations, admitting as if it owned the whole host; **after** — 6+ real
+  concurrent repos (`client-reporting-api`, `deployment-service`/`-api`, `batch-live-reconciliation-service`,
+  `instruments-service`, `features-service`, `unified-api-contracts`, seen across 3 separate spot-checks this session)
+  correctly sharing one ledger, admission math (`running heavy phases` vs `CPU slots (80%×N)`) actually binding, 0 OOM
+  observed. **What this does NOT fix** — the `~19:56Z` entry immediately above this one is a DIFFERENT root cause this
+  fix doesn't touch: runner-POOL starvation (a pool with zero available runner processes queues forever, never even
+  starting — a capacity/count problem, not an admission-coordination one; this doc's own remediation for that is
+  runner-count policy, separate from the ledger fix). Also out of scope: AO slot-worker QG runs (a separate
+  `.tabs`-scoped ledger population on this same host) are still NOT unified with the glue-runner pools' ledger — two
+  populations sharing a host but not yet a combined budget view. Neither this doc nor
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (at 995/1000 lines — no new entry added there, see
+  that doc's own note on why continuations land here) should be marked resolved on this fix alone. A ~90min live soak of
+  the ledger fix specifically is running in the background at time of writing; see
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`'s Progress Log for its outcome.
+
+- **2026-08-03 ~21:20Z (cicd agent slot-5, escalation `agt-31303a`, wall_type=ldr_qg_failure, strategy-service#485)** —
+  same signature, same repo, third corroboration this week (see the `~15:40Z 2026-08-02` entry above, `agt-6f553d`).
+  Dispatched on `quality-gates-v2` FAILURE, run
+  [30843816625](https://github.com/IggyIkenna/strategy-service/actions/runs/30843816625): job-level breakdown shows
+  `QG slice (tests)` SUCCESS (19:01:45→19:12:10) but `QG slice (checks)` FAILURE — its own log shows the `qg-governor`
+  CPU-admission wait alone ran 1526s (~25.4min, `WAIT_CPU 30s`→`WAIT_CPU 1500s` ticks) before basedpyright even started,
+  then basedpyright hit the documented hard `Type check FAILED/timeout (exit=124)` at exactly 120s (`PYRIGHT_TIMEOUT`
+  default) with 0 errors/0 warnings extracted — the canonical host-contention-timeout signature this doc tracks, not a
+  code regression. Confirmed via live host check: `uptime` load average 30.80/29.54/28.96 on the same implicated box,
+  consistent with the crisis still being active. Did NOT need a local repro or code fix — PR #485 was **already
+  `MERGED`** (`mergedAt=2026-08-03T19:00:21Z`) by the time this escalation was triaged: the actual `push:main`
+  `quality-gates-v2` run for the merge commit
+  ([30843825878](https://github.com/IggyIkenna/strategy-service/actions/runs/30843825878)) ran independently and
+  completed SUCCESS (29m11s), and `live-defi-rollout`'s own latest `quality-gates-v2` `workflow_dispatch` run is green
+  (36s, content-sentinel hit). `gh pr list --state open` → `[]`, `/api/repo-blockers` → no `strategy-service` entries —
+  nothing is currently blocked. Same "merged via an already-satisfied required-check path independent of this specific
+  run" pattern as every prior corroboration in this doc. No code/test/workflow change made or needed; did not touch
+  `self_hosted_runner_labels` (`strategy-service` stays on the operator's protected-6, per the 2026-07-28 ruling).
+  `$AUTHORING_SLOT` was the literal sentinel `ci` (not a numbered slot) — skipped the authoring-slot ping per
+  `cicd.md`'s rule (no real originator to notify; the dispatch-time Slack alert already covered the FYI). Slot left
+  clean on `live-defi-rollout` (only this doc touched).

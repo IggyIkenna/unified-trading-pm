@@ -41,7 +41,9 @@ context_scope:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /plans/epics/mtds_mdps_master.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf,
+    unified-trading-library/unified_trading_library/core/cloud_constants.py,
   ]
 ---
 
@@ -241,3 +243,5 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
   prod-bucket deletes = human-only hard stop; a [BLOCKED-INFRA] P0 carries a 3-option operator decision on tarball
   persistence.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- added the tarball-deployment codex SSOT
+  (current BLOCKED-INFRA gate), the legacy-cron terraform target, and the bucket-resolver source module.

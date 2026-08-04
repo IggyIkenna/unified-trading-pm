@@ -169,3 +169,8 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   ingested, NOT dispatched today" wording; disposition unchanged (KEEP-NA-STALE, `assigned_vm` stays NA).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added the doc's own named target file
   (`yahoo_finance_adapter.py`, previously missing) and `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`.
+- **na-eligibility-audit 2026-08-04** (tradfi tranche, dispatch agt-ba1107): **KEEP-NA-STALE, re-verified — citation
+  still accurate.** Sole open todo re-read; count matches (1/1). Directly re-confirmed via grep of
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` todo 8 (line ~239): still `[ ]` open, still verbatim-covers this
+  doc's Phase-0 investigation, still sequenced first among the 3 entangled Yahoo/venue todos. Disposition unchanged
+  (KEEP-NA-STALE, `assigned_vm` stays NA).

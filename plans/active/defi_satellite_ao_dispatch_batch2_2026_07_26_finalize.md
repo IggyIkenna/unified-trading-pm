@@ -49,7 +49,7 @@ context_scope:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -102,3 +102,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped a repeated batch1-finalize entry, added
+  the archival-discipline codex SSOT (the 6-step ritual this doc's archive todo runs).

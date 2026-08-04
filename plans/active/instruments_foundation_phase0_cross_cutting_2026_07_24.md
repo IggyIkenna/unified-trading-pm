@@ -48,11 +48,11 @@ locked_since:
 context_scope:
   [
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/deployment-observability.md,
+    instruments-service/scripts/measure_honest_coverage.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+    unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py,
   ]
 supersedes:
 superseded_by:
@@ -614,4 +614,6 @@ wrong).
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
   frontmatter, body byte-identical): KEEP-NA, valid — all 10 items sit behind GATE 0, explicitly NOT RECORDED SIGNED
   OFF, and were re-reconciled 2026-07-28 with per-item evidence confirming each stays open.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — swapped the 2 sibling AG
+  gate-execution plans for 3 real source paths (the honest-coverage v2 producer script + the 2 UAC crosscutting modules
+  the still-open items 2/3/8/10 all cite live-grep evidence against).

@@ -68,11 +68,11 @@ drift_direction: advance-code
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
-    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
+    deployment-api/deployment_api/services/data_status/breakdowns_core.py,
+    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
   ]
 ---
 
@@ -335,3 +335,5 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   `cefi_consolidated_native_ao_extract_2026_07_25.md` (active/planning) already reviewed and explicitly excluded this
   exact item as an undecided policy question. No reclassification.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped 2 archived plan links, added 3 real
+  source-code targets (breakdowns_core.py, _distinct_values.py, canonical_id_builder.py) the doc's own findings name.

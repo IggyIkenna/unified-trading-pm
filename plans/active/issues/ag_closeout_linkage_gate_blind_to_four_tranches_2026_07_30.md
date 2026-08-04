@@ -52,13 +52,10 @@ source: >-
 depends_on: []
 context_scope:
   [
-    scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 ---
@@ -327,3 +324,5 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
   over a passing count.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped an accidental repeat entry, dropped 2
+  weakly-relevant codex/plan links, kept the source script + the doc where the actual shipped fix landed.

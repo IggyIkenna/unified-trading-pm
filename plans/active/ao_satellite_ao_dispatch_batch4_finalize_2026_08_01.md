@@ -156,3 +156,6 @@ source: >-
   `/done`-idempotency item file-collision-held against `server/routes/slots_worker.py`), not just the one P3 caution
   named in this todo's own text. Only the `[BACKEND] P2` item is done. No archival ritual run; referrer grep (13 hits,
   all still on the live path) confirms nothing needed repointing.
+
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still the correct archival SSOT + batch pointer;
+  no change needed. Gated finalize doc, no source path.

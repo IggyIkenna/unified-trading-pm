@@ -49,10 +49,10 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/epics/cefi_master.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
     market-tick-data-service/scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py,
+    unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py,
     /codex/02-data/honest-coverage-model.md,
   ]
 ---
@@ -190,3 +190,6 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in
+  `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate
+  todo must coordinate with) for the generic `cefi_master.md` epic pointer.

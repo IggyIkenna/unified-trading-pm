@@ -101,3 +101,4 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
   frontmatter had been `active` since 2026-07-30. No todo/gating change: this plan stays machine-held on batch5 via
   `depends_on` + `gate_on_depends: true`. Note for whoever runs todo 1: batch5 now has 3 of 7 todos closed (one more was
   verified-stale + flipped 2026-08-02), so only 4 source docs remain to reconcile, not 7.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal.

@@ -153,7 +153,7 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 - [ ] [DOC] P3. No action needed on Finding 1 unless/until an operator or the next worker touching either adapter file
       picks (A) or (B) on the two named issue docs directly — this finding is informational (explains why neither was
       batched), not itself an actionable task. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to resolve the closeout hub
+- [x] ✅ [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to resolve the closeout hub
       doc's own frontmatter `depends_on:` (not just each discovered `_finalize` doc's) to real files, unioning them into
       the covering set — same pattern as the existing finalize→main resolution. **Done when**:
       `--tranche prediction --json`'s `covering_paths` includes all 4 Phase A-E children structurally (not just via
@@ -161,7 +161,18 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
       the existing `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` test (or a sibling) still
       passes. Cross-reference `issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`
       before starting (same function, avoid duplicate/conflicting edits) — this is a distinct, additive extension of
-      that doc's already-shipped todo 2, not a re-open of it. (repo: unified-trading-pm)
+      that doc's already-shipped todo 2, not a re-open of it. (repo: unified-trading-pm) **DONE 2026-08-01 —
+      `unified-trading-pm@be7269449` ("fix(plan-hygiene): resolve closeout doc's own depends_on for finalize-less
+      forks"), shipped by the `ag-closeout-audit` tradfi-tranche run (not prediction's), same shared cross-tranche
+      script per the primary-owner rule — found and verified stale-unchecked here by the 2026-08-04
+      `/ag-closeout-audit     prediction` run. Verified live 2026-08-04**: `--tranche prediction --json`'s
+      `covering_paths` now returns 11 entries INCLUDING all 4 Phase A-E children
+      (`prediction_phase_ab_residuals_2026_07_24.md`/`_c_data_status_ui_`/`_d_formal_smoke_and_backfill_`/`_e_football_arb_live_`,
+      all 2026-07-24) structurally, not via incidental text citation (was 7 entries on 2026-07-31, pre-fix). The named
+      regression test `test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair` exists in
+      `tests/unit/test_generate_ag_closeout_audit_candidates.py`, and the pre-existing
+      `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` is still present alongside it (both, not a
+      replacement). `be7269449` confirmed an ancestor of `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 
@@ -254,3 +265,21 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **2026-08-04 (slot-11, ag_closeout_auditor) — `/ag-closeout-audit prediction` scheduled run.** Per the skill's
+  iterative-drain step 1, re-checked this doc's own open items before fresh triage. **Finding 2's todo was stale `[ ]`**
+  — live-verified the fix actually shipped 2026-08-01 (`unified-trading-pm@be7269449`, by the tradfi-tranche sibling
+  run, same shared script) and is genuinely on `origin/live-defi-rollout`: `--tranche prediction --json` now returns 11
+  `covering_paths` (was 7), including all 4 Phase A-E children structurally; the named regression test exists alongside
+  the pre-existing one. Flipped `[x]` with full evidence (see Todos). Finding 1 remains correctly open (informational,
+  no operator action taken on the two adapter dead-code docs since 2026-07-31). Live re-run of
+  `generate_ag_closeout_audit_candidates.py --tranche prediction --json`: `total_members=48` (was 52 — 5 previously
+  `cited_somewhere` prediction docs archived/resolved since 07-31, net corpus shrink), `never_cited_count=12` (was 11 —
+  the 11 prior `never_cited` basenames are ALL still present unchanged, still genuinely cross-cutting multi-AG-tagged
+  per a fresh frontmatter check today; +1 new: `mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`,
+  single-tagged `[prediction]`, created 2026-08-02, 1 remaining open P3 todo — genuinely orphaned, real Phase-1
+  classification + Phase 3 batch-eligibility assessment in progress, full result in this run's own
+  `ag_closeout_audit_prediction_parked_2026_08_04.md` / batch7 (if drafted)). Also confirmed
+  `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (today's data-correctness FAIL-verdict finding,
+  `parent: predictions_master`) is `assigned_vm: planning` + actively worked (3/5 todos closed today by other slots) —
+  self-dispatched, not an orphan, no action needed from this audit.

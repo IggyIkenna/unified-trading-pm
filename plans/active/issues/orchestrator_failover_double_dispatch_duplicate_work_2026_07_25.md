@@ -186,6 +186,37 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   once, discovered only because slot 6 happened to ask a question before acting rather than starting an implementation
   blind.
 
+## Incident 5 — perp-funding observed-cadence drift tracker on market-tick-data-service (slots 9 & 12), ~2026-08-03
+
+- Surfaced by review (fleet-git-health, msg #3590, 2026-08-03) + confirmed by main (agt-1756f6): slots 9 AND 12 each
+  independently produced the SAME feature commit on market-tick-data-service — slot-9 `0c5a472d` and slot-12 `e93d54ac`,
+  both titled `feat(perp-funding): add observed-cadence drift tracker (GCS-persisted)`, slot-12 committed ~18:12Z /
+  slot-9 ~19:02Z. Both are 1-ahead-unpushed and already safely captured on wip-preserve refs (no work lost); neither
+  shipped.
+- **TIMING — this is a POST-FIX recurrence, not stale residue** (verified by review #3593 via `git show`): the
+  release-confirmation fix `agent-orchestrator@7911083` landed **2026-08-01T08:39Z**, but both dupe commits are
+  **2026-08-03** (slot-12 18:12Z, slot-9 19:02Z) — ~2 days AFTER the fix. So the shipped `WorkerLivenessWatchdog`
+  liveness-re-check did NOT prevent this occurrence.
+- **HYPOTHESIS — possibly a DIFFERENT mechanism than Incidents 1-4** (for the backend/doc owner to confirm, not a
+  main/review priority call): Incidents 1-4 were failover-RELEASE races (a task re-dispatched off an apparently-silent
+  owner). This one presents as two slots concurrently building the SAME feature FROM SCRATCH — which could instead be a
+  claim-time race (the same queued task claimed by two slots), a path the release-confirmation fix wouldn't cover. Worth
+  a backend look at whether @7911083's gate covers concurrent-claim, or whether that's an uncovered delta.
+- Resolution of THIS instance is a WORKER dedup (pick one commit, verify it meets the perp-funding done-definition, ship
+  it, drop the other); main cannot push code, so it's flagged here rather than resolved by main.
+- **RESOLVED — race self-resolved earliest-wins, no duplicate landed** (review msg #3602 + main agt-1756f6 verify,
+  2026-08-03 ~22:10Z): there was actually a THIRD, EARLIER sibling — slot-10 `fd9efc85` (`17:30:57Z`, same
+  `feat(perp-funding): add observed cadence-drift tracker`) — and IT is the one that LANDED (verified ancestor of
+  origin/live-defi-rollout, 422L script + 371L test, single-walk + CAS + honest-skips). The two later dupes here
+  (slot-12 `e93d54ac` ~18:12Z, slot-9 `0c5a472d` ~19:02Z) came AFTER and never became ancestors (confirmed not-on-LDR).
+  So the concurrent-build race did occur (3 slots, not 2), but the ship-side gate held: **earliest-wins, exactly one
+  landed, zero duplicate work reached origin.** This partially closes the HYPOTHESIS above — the
+  claim-time/concurrent-build race is real (worth the backend look at whether @7911083 covers concurrent-claim), but its
+  BLAST RADIUS on this occurrence was contained to wasted worker cycles on the two losing slots, not a duplicate
+  landing. Loose end from this incident was a stale wrong-SHA citation in
+  `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (cited `840c816d` instead of the winner
+  `fd9efc85`) — corrected 2026-08-03 (unified-trading-pm@8c75172e5).
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are held by established conflict-gated rulings
@@ -261,3 +292,14 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   general single-vm-architecture codex (background, not load-bearing for the 2 remaining todos); added the 2 sibling
   docs sharing the `/done`-handler file-collision gate on `slots_worker.py` plus `dispatch.py` (the
   current_task-clearing item's other touched file).
+- **Incident-6 — 2026-08-04 (review agt-10313c #3636 + main agt-1756f6 verify) — RESOLVED, earliest-wins held again**:
+  `cve_affected_pinned_deps_remediation-006` (agent-orchestrator cryptography CVE-2026-69247 bump, from the fleet sweep
+  main dispatched) double-dispatched to slots 10 and 11. Slot 11 won the race and shipped `agent-orchestrator@8b1ae78`
+  (main-verified ON origin/live-defi-rollout — the CVE is genuinely closed); slot 10 (since killed) held a functionally
+  IDENTICAL redundant local unpushed copy `1040985` (same override-dependencies pin/version, only comment wording +
+  insertion point differ), never pushed, nothing unique to rescue. Same benign pattern as Incident-5: concurrent-build
+  race occurred but the ship-side gate held — exactly one landed, zero duplicate reached origin. Slot 10's copy is
+  cleaned by the pre-spawn drift-quarantine gate on its next respawn (no action needed). Recurrence of the class (now 6
+  incidents) keeps this doc's dispatcher-dedup todos live: the backlog still occasionally hands one todo to two slots
+  simultaneously — the earliest-wins ship gate is the working backstop, but the dispatch-side dedup remains the real
+  fix.

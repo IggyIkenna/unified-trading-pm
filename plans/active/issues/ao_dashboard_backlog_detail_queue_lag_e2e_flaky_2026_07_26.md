@@ -109,3 +109,5 @@ is just wrong to assume it won't fire.
   re-litigated. Independently confirmed both items still open and accurate: no commit has touched the seed script or
   investigated the reconciler loops since filing.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (4 entries) — still the right
+  minimal set for both open todos.

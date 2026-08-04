@@ -48,13 +48,12 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /codex/04-architecture/reconciliation-resolution.md,
-    /codex/04-architecture/reconciliation-age-tracking.md,
-    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-    /codex/04-architecture/paper-vs-live-execution-seam.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
     /plans/archive/issues/recon_freeze_armed_never_published_2026_05_27.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    batch-live-reconciliation-service/,
   ]
 ---
 
@@ -608,3 +607,9 @@ defect, just confirming the coupling is daily, not real-time.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — this doc's own § 10 shows its real remaining work
+  is fully rehomed (G1 done here; G3/G10 rescoped into `blrs_g3_g10_rescope_2026_07_28.md`; G12 into
+  `recon_freeze_armed_never_published_2026_05_27.md`; the live BLRS/determinism-spine successor is
+  `citadel_paper_batch_live_reconciliation_2026_06_19.md`), so those three took priority over the doc's own frontmatter
+  `related:`/`source:` codex list. Added the `batch-live-reconciliation-service/` source dir (previously absent despite
+  this being a service-code audit) and dropped two secondary codex docs to stay within the 2-6 cap.

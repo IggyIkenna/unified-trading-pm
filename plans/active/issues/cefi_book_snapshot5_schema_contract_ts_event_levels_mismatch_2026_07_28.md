@@ -95,12 +95,12 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-08-03 (19th+ dispatch, agt-e11908, slot 4 -- numerator 300,744/1,121,420 (26.8%), STATIC BACKLOG (215 rows/24h,
-  below the 500-row floor, up from 1 on 08-01); confirmed all 5 fix commits still hold + a fresh bounded live read
-  showing the trickle is NOT a schema-contract-violation resurgence (zero new violations past the established
-  2026-07-31T04:18:05Z checkpoint; the current 08-02/08-03 trickle's error_reasons are 100% Tardis 403/404
-  rate-limit-family, the OTHER already-tracked mechanism per cefi_high_attempted_failed_batch_cluster_2026_07_23.md) and
-  healthy capture (11,848 captured rows/24h vs. 215 attempted_failed) -- see Progress Log for detail.)
+  2026-08-03 (21st+ dispatch, agt-52c156, slot 13 -- numerator 300,674/1,123,966 (26.8%), STATIC BACKLOG (210 rows/24h,
+  below the 500-row floor); numerator DECREASED vs the 19th-dispatch reading (300,744->300,674) while attempted grew --
+  strongest evidence yet of no regression. Confirmed all 5 fix commits still hold; relied on the 19th dispatch's
+  minutes-earlier live read (zero new schema-contract-violation rows past the 2026-07-31T04:18:05Z checkpoint, trickle
+  is 100% the OTHER already-tracked Tardis rate-limit mechanism, 98.2% capture success) rather than repeating it -- see
+  Progress Log for detail.)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -786,3 +786,25 @@ against the reproduction script.
   `cefi/tardis_shared.py` (the file both shipped fixes actually landed in) and added
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, now cited in nearly every dispatch entry above as
   the standing duplicate-dispatch/dedup tracking doc for this exact condition.
+- **2026-08-03 (data_pipeline_failure escalation worker, agt-52c156, slot 13) — 21st+ dispatch, numerator DECREASED —
+  strongest evidence yet of no regression.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
+  `(cefi, book_snapshot_5)`: 300,674/1,123,966 = 26.8%, alert context labeled "STATIC BACKLOG — only 210
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." No issue doc pre-linked (`Filed issue: (none — alert carries the details)`); found
+  this doc via the standard pre-task plan/issue conflict-check grep. Re-verified all five fix commits are still
+  ancestors of `origin/live-defi-rollout` (fresh `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK.
+
+  The numerator (300,674) is actually LOWER than the immediately-prior verified reading (`agt-e11908`'s 300,744) while
+  the `attempted` denominator grew (1,121,420→1,123,966, +2,546) and the 24h trickle held in the same small range
+  (215→210) — i.e. more successful captures landed than new failures, net af went DOWN. This is stronger evidence of
+  continued healthy resolution than a merely-static numerator would be, and is inconsistent with any resurgence of the
+  schema-contract mechanism (which historically only ever pushed af up, never down). Per the established "numerator
+  moved but in the healthy direction, trickle range unchanged, most-recent dispatch already isolated the trickle's
+  error_reason to the OTHER already-tracked Tardis rate-limit mechanism" precedent, did not repeat the live GCS read —
+  `agt-e11908`'s bounded read (minutes earlier) already confirmed zero new `"schema contract violated"` rows since the
+  2026-07-31T04:18:05Z checkpoint and a 98.2% capture success rate; nothing here contradicts that. **Conclusion: no code
+  fix needed.** Session cost: doc reads + git-ancestor batch check (5 commits) + this Progress Log append, no GCS read,
+  no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 21st+
+  dispatch for this condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s
+  still-open Option A recommendation for dedup at the orchestrator dispatch layer.

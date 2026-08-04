@@ -172,3 +172,7 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   verified live: all 3 of that doc's `[SCRIPT]` todos are still unchecked, and it is itself held KEEP-NA on a standing
   corpus ruling that AO/orchestrator dispatch-and-state machinery stays human-reviewed even when a fix looks mechanical.
   No operator has answered this doc's own A/B/C options yet, so the hold continues.
+
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (codex
+  SSOT + the conflicting composer-guard doc + the 2 role-file docs + the 2 backend source files the mechanism section
+  cites) — no changes.

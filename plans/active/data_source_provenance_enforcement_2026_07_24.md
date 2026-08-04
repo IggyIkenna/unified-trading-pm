@@ -243,3 +243,6 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
   single-walk sequencing is coordination judgment. Genuinely AO-eligible slices exist ([SCRIPT]
   backfill_defi_source_column, [TEST] unit tests, [QG] checker wiring) but splitting them out is a plan-authoring call.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
+  stale count) -- unchanged; already covers the enforcement SSOT source + the preflight-chain codex doc the A12a todo
+  needs.

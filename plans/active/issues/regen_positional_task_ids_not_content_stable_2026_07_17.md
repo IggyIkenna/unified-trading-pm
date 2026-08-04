@@ -282,3 +282,6 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   to rediscover this citation by luck.
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (the
+  consolidated-execution plan + archived hardening batch + the two source files the mechanism section cites file:line
+  against) — no changes.

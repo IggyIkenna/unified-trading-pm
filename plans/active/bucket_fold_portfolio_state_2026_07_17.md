@@ -68,9 +68,9 @@ context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
+    strategy-service/strategy_service/pnl/config.py,
   ]
 ---
 
@@ -190,3 +190,5 @@ per-domain path prefixes:
   against the 2026-07-18/19 Progress Log (targets provisioned; yaml/registry/\_KIND_ALIASES landed with the `[x]`
   cutover).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in registry.py + strategy-service
+  pnl/config.py source paths (the real driver files) for bucket_iam_write_protection + pipeline-mode-partition.

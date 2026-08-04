@@ -50,9 +50,8 @@ source: >-
 context_scope:
   [
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 ---
 
@@ -110,3 +109,6 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
   archival candidate. Did not execute the archival itself in this pass (13+ corpus-wide referrers — a larger blast
   radius than my own assigned task that session covered); left this todo open for its own dispatch to run the 6-step
   ritual, now that both verification legs are already recorded here.
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — dropped the now-resolved classification-decision
+  refs (skill/naming-conflict codex), kept the parent + archival-discipline codex + the live-data-persistence codex the
+  body's own "Codex SSOTs" section already cites, since the only remaining work is the archival todo.

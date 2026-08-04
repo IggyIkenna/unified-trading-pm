@@ -21,7 +21,9 @@ right". Reuses docspec for frontmatter parsing + doc_type detection + exemptions
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 import docspec
@@ -141,6 +143,35 @@ def build_index(pm_root: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _atomic_write_text(out: Path, content: str) -> None:
+    """Write `content` to `out` atomically so no reader or racing writer ever sees a partial index.
+
+    The write is truncate-then-write when done via `Path.write_text`, which leaves a window where a
+    concurrent reader (an agent grepping the L0 map) reads a truncated file, or two concurrent writers
+    (the FF-pull cron regenerating this per-clone file at the same instant the on-demand
+    `refresh-doc-index.sh` wrapper does) interleave into a corrupt one. Instead: write to a
+    uniquely-named temp file in the SAME directory (a same-filesystem sibling is required for the
+    rename to be atomic), fsync it durable, then `os.replace()` it over `out` — a single atomic
+    rename syscall on POSIX. The generator is deterministic + per-host, so racing writers emit
+    byte-identical content; whichever rename lands last, `out` is always a complete, valid index and
+    a reader observes either the old or the new file, never a truncation.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # mkstemp guarantees a unique name, so two concurrent writers never share a temp file. The
+    # leading-dot + out.name prefix makes any crash-leftover temp obvious and gitignore-matchable.
+    fd, tmp_name = tempfile.mkstemp(dir=str(out.parent), prefix=f".{out.name}.", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, out)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
 def _pm_root() -> Path:
     return docspec._pm_root()
 
@@ -164,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.stale_check and out.exists() and out.read_text() == content:
         print(f"doc-index fresh: {out}")
         return 0
-    out.write_text(content)
+    _atomic_write_text(out, content)
     n = content.count("\n- [")
     print(f"doc-index regenerated: {out} ({n} docs)")
     return 0

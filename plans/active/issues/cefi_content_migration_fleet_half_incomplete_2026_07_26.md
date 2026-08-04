@@ -43,8 +43,9 @@ context_scope:
   [
     /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
     /plans/active/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
-    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 
@@ -665,3 +666,6 @@ accordingly.
   frontier) — 2nd relaunch today, within budget. 1st retry (`-054648`) preempted at 98s (unrelated); `-055259` verified
   STARTED+PROGRESS. gcloud active-identity poisoning recurred 2x this session — reset both times, no code changed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped the progress-log-archive doc, added the
+  actual migration script + launcher (this doc's own context_scope had zero source-code paths despite being the primary
+  write-up of a code-driven fleet failure).

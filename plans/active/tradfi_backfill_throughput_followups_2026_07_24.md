@@ -36,10 +36,12 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
 context_scope:
   [
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
+    deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 drift_direction: none
 locked_by:
@@ -622,6 +624,10 @@ than left buried here per PLAN_FORMAT.md's structural-order rule: re-shard equit
   landed mid-session and I rebased onto it, then the gate went green.)
 
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-03 (re-scout)**: refreshed context_scope (6 entries) -- swapped the parent closeout-doc
+  pointer for the 2 docs actually holding the doc's one remaining genuinely open todo's real work
+  (`tradfi_backfill_oom_remediation_2026_06_24.md`, `consolidator_throughput_backlog_monitor_2026_07_09.md`) plus the
+  central shipped launcher-lib source file.
 
 ## Backfill drive — Progress Log (2026-07-21, autonomous session)
 

@@ -46,7 +46,7 @@ context_scope:
     /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
-    /plans/epics/predictions_master.md,
+    execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py,
   ]
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
@@ -259,4 +259,6 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   credential reshape in `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md` (the root cause of why
   this verification could never have passed). Leave it owned there.
 
-- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped `predictions_master.md` epic for
+  `execution-service/.../adapters/exchanges/kalshi.py`, the real source target of the sole open todo (verify the Kalshi
+  paper-order flow end-to-end).

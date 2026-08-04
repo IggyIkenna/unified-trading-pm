@@ -51,7 +51,7 @@ context_scope:
     /codex/05-infrastructure/gcs-object-operations.md,
     /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
     /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
-    /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md,
+    deployment-api/deployment_api/routes/deployments_inventory/_registry_io.py,
   ]
 ---
 
@@ -225,3 +225,7 @@ heartbeat
   blocked. The finalize plan itself archived (its own todo done, no lock); this overview stays `active` until P3
   unblocks and P5 runs.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — the doc's own cited source file
+  (`deployment_api/routes/deployments_inventory.py`) is now a package (refactored
+  `deployment_api_qg_size_gate_debt_2026_07_30.md`, pure code motion); swapped in the resolving `_registry_io.py` (the
+  actual GCS-census read logic this doc's Problem section describes) in place of the archived ci_status precedent link.

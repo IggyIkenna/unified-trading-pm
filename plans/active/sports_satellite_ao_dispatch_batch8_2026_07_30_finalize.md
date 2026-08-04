@@ -42,9 +42,9 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -84,5 +84,8 @@ context_scope:
 None new — see the parent batch's own Codex SSOTs section.
 
 ## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (6 entries) -- includes the source doc todo 1 reconciles
+  checkboxes against.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

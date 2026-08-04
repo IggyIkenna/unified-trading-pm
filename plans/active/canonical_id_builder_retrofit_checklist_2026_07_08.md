@@ -267,3 +267,5 @@ context_scope:
   catalog-regeneration gap (1,330/2,753 real rows still stale) — added as a new todo above, correctly scoped out of this
   pass (needs its own migration script, not a code change).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
+  canonical_id_builder.py source path and all entries still resolve.

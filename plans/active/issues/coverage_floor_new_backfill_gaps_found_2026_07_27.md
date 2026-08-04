@@ -38,9 +38,9 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
-    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
 
@@ -122,3 +122,7 @@ context_scope:
   `coverage_floor_registries_no_cross_propagation_2026_07_17.md`. 1 of 3 todos in this doc now remain open (P3
   BINANCE-DELIVERY); the doc's own header note (fold into the parent doc + delete once disk recovers) is still
   outstanding but out of scope for this task.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — the 2 closed todos' targets (hyperliquid_s3.py,
+  cefi_consolidated_closeout) dropped since only the open BINANCE-DELIVERY P3 investigation remains; swapped in
+  `symbol_rules.py` (where BINANCE-DELIVERY is coded) and the sharded-backfill launcher (the DERIBIT fix's precedent the
+  next launch would follow).

@@ -59,8 +59,8 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/PLAN_FORMAT.md,
   ]
 ---
 
@@ -217,3 +217,5 @@ Other: operator can type a custom answer
   (`ag_closeout_audit_scope_widening_triage` cites a different, already-archived defect). Shared conflict-check
   protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the archived triage doc (self-confirmed
+  unrelated in this doc's own 2026-07-30 conflict-check) for PLAN_FORMAT.md, named in the escalation's own body text.

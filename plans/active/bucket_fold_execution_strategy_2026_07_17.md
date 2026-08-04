@@ -62,10 +62,10 @@ source:
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    /plans/archive/issues/strategy_store_split_brain_2026_07_13.md,
+    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    deployment-service/terraform/aws/main.tf,
   ]
 ---
 
@@ -263,3 +263,8 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   (verified)', parity-migrate 'MIGRATE DONE + PARITY ✓', and the duplicated '(orig) Atomic cutover' whose `[x]` twin
   sits directly above it) — flagged, not flipped, to keep the fold's audit trail operator-owned.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — re-derived off the 3 genuinely still-open todos
+  (AWS leg + terraform-plan drift assert, IAM+lifecycle, alias sunset — everything else already flipped `[x]` in the
+  2026-07-31 corpus sweep); added 2 real source paths (`bucket_naming.py`'s `_KIND_ALIASES`, the AWS `main.tf`
+  `group_b_buckets` for_each), dropped the manifest-consolidator/pipeline-mode SSOTs + the now-resolved split-brain
+  issue doc tied to the DONE cutover phases.

@@ -41,9 +41,11 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    /plans/epics/infrastructure_master.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
-    /codex/06-coding-standards/quality-gates.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/glassnode.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py,
+    market-tick-data-service/scripts/quality-gates.sh,
   ]
 ---
 
@@ -151,3 +153,5 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   doc's original todos (Source cites this file by path). Verbatim duplicate claim — parked for an operator ruling on
   which side owns it.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the batch1b execution-vehicle plan (do NOT
+  double-dispatch) + the 2 residual adapter files + the MTDS QG script the new lint step lands in.

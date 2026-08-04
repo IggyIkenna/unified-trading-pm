@@ -52,14 +52,12 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
+    deployment-service/scripts/vm/launch-features-vm.sh,
+    features-service/features_service/sports/calculators/multisource_xg_calculator.py,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/02-data/sports-2020-06-data-floor.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -514,3 +512,5 @@ review-blocking.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- swapped doc-only precedent entries for the 2
+  remaining open [CODE] todos' actual source-code targets (launch-features-vm.sh, multisource_xg_calculator.py).

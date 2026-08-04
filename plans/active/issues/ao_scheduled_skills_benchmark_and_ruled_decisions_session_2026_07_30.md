@@ -342,3 +342,6 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, both fully resolved per this doc's own P0 section) for
   `/agents/na_eligibility_auditor.md`, the concrete file cited by the 2026-08-03 log entry above as needing the STEP-0
   fetch+rebase fix; kept both still-relevant SKILL.md refs and the two still-open autonomous-sweep issue docs.
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (5 entries) — still the right
+  minimal set for the remaining open items (benchmark re-runs, the PM-checkout-staleness follow-up, the benchmark-
+  artifact update).

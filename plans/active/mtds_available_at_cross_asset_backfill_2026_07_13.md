@@ -49,21 +49,19 @@ context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/epics/manifest_master.md,
-    /plans/archive/issues/mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md,
+    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    unified-trading-library/unified_trading_library/manifest_writer,
   ]
 ---
 
 # Cross-asset-group available_at manifest backfill (market-data-tick)
 
-> **🟡 URGENT — this plan's tradfi cron-pause is now causing a FLEET-WIDE tradfi backfill outage (2026-08-02).**
-> `uts-prod-manifest-consolidator-market-data-tradfi-cron` (paused by this plan's own 2026-07-29 pause todo) has kept
-> `market-data-tick-tradfi-prd-*`'s `_index/availability_index.parquet` stale past `setup-data-pipeline-vm.sh`'s 24h
-> OOM-preflight budget (~42h stale as of this writing) — EVERY tradfi download-VM launch now self-deletes at boot
-> (`exit_code=78`) before doing any work, fleet-wide, not one shard. Details + evidence:
-> `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`. The "Apply
-> `rebuild_tradfi_manifest.py`..." + "Resume the tradfi consolidator cron" todos below are now CRITICAL PATH for the
-> whole tradfi asset group, not routine cleanup — prioritize accordingly.
+> **✅ RESOLVED 2026-08-02 (was: 🟡 URGENT fleet-wide tradfi backfill outage).** The cron-pause-driven outage this
+> banner warned about is closed — "Resume the tradfi consolidator cron" below was completed 2026-08-02, cron confirmed
+> `ENABLED`, re-verified live 2026-08-03T19:33Z (`gcloud scheduler jobs describe`: `ENABLED`, index updated 3 min
+> prior). Full incident detail (now archived):
+> `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
 
 ## Why this plan exists
 
@@ -363,7 +361,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `gcloud`. (repo: market-tick-data-service) — ✅ 2026-08-02 (data_engineering slot-3): ran the sanctioned resume
       script, maintenance window released, cron confirmed `ENABLED` (`*/1 * * * *`) via
       `gcloud scheduler jobs     describe`. This closes the fleet-wide tradfi backfill VM outage tracked in
-      `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` — the index
+      `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` — the index
       will re-freshen every minute going forward, clearing the OOM-preflight guard for new VM launches.
 - [ ] [INFRA] P3. **NEW — 2026-08-02 (slot-3)**: `MANIFEST_COLUMN_FILL_REGRESSION` (the consolidator's
       column-fill-regression guardrail) has no awareness of legitimately-blank-by-shape columns — tradfi's apply today
@@ -675,7 +673,7 @@ that, the lock needs renewing before it lapses.
 
 Dispatched via `cf_manifest_audit_first_full_rollup_findings-001` (the fresh CF-manifest-audit's CF-8 finding for
 tradfi, which is exactly this plan's remaining tradfi todos — folded in here rather than duplicated). Also the CRITICAL
-PATH context from `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`:
+PATH context from `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`:
 the cron pause since 07-29 has left `availability_index.parquet` ~42h+ stale, causing EVERY tradfi download-VM to
 self-delete at boot (`exit_code=78` OOM preflight) — fleet-wide outage, not one shard.
 
@@ -741,13 +739,13 @@ Downloaded pre/post index parquets and diffed directly:
 
 **Resumed the cron**: `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` — maintenance window released,
 `gcloud scheduler jobs describe` confirms `ENABLED` (`*/1 * * * *`). This closes the fleet-wide tradfi backfill VM
-outage (`/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`) — the index
-will stay fresh going forward, clearing the `setup-data-pipeline-vm.sh` OOM-preflight guard for new launches. **This
-cron-resume is independently complete and MUST NOT be re-paused** — re-pausing would reopen the fleet-wide outage this
-closed. Only the "Apply" todo's completeness is still an open question — see #12 immediately below, which read the index
-shortly after this checkpoint and found the aggregate fill number alone hides a real per-month structural gap. 07-29
-snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) remains the pre-backfill rollback point if ever needed
-(untouched this session). The guardrail false-positive is filed as its own new P3 todo above
+outage (`/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`) — the
+index will stay fresh going forward, clearing the `setup-data-pipeline-vm.sh` OOM-preflight guard for new launches.
+**This cron-resume is independently complete and MUST NOT be re-paused** — re-pausing would reopen the fleet-wide outage
+this closed. Only the "Apply" todo's completeness is still an open question — see #12 immediately below, which read the
+index shortly after this checkpoint and found the aggregate fill number alone hides a real per-month structural gap.
+07-29 snapshot (`pre_available_at_backfill_20260729T010709Z.parquet`) remains the pre-backfill rollback point if ever
+needed (untouched this session). The guardrail false-positive is filed as its own new P3 todo above
 (`MANIFEST_COLUMN_FILL_REGRESSION` blind to legitimately-blank-by-shape columns) — it will likely recur on this plan's
 own prediction/defi apply todos.
 
@@ -992,3 +990,6 @@ follow-up: `plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type
 `uts-prod-manifest-consolidator-market-data- prediction-cron` resumed, maintenance window RELEASED. Prediction lane is
 now fully closed under the corrected scope; the `trades`/`book_snapshot_5` question is tracked separately in the new
 issue doc, not blocking this plan further.
+
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the archived issue/epic pointer for the
+  live phantom-manifest-rows issue and the two source paths behind the still-open DeFi `available_at` shim.

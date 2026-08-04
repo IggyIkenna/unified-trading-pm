@@ -52,6 +52,7 @@ context_scope:
     /codex/05-infrastructure/deployment-service-gcp-tofu-state.md,
     deployment-service/terraform/gcp/main.tf,
     deployment-service/terraform/gcp/live_event_log/main.tf,
+    /plans/archive/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md,
   ]
 ---
 
@@ -87,3 +88,6 @@ judgment call, hence `assigned_vm: NA`.
       — wire it as a real `module` block to consolidate state. (repo: deployment-service)
 
 ## Progress Log
+
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the parent issue this doc was explicitly
+  deferred from, which is the whole reason the "two independent OpenTofu roots" question exists.

@@ -24,7 +24,9 @@ summary: >-
   captured at dispatch time, not re-read from the doc.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [meta]. Genuinely AO server code
+  # (agent-orchestrator/server/verify.py M3 tag-correlation fallback), not a generic process doc.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -47,6 +49,7 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/verify.py,
+    agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py,
     /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -147,3 +150,6 @@ false-positive surface). Recommend, in order:
   `agent-orchestrator@3511af4` — see the flipped checkbox above for the fix summary. Todo 1 (widen
   `_TODO_TAG_PRIORITY_RE` for a leading marker) remains open, unassigned to this task.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
+- **context-scout 2026-08-03 (re-pass, updated methodology)**: added
+  `agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py` (the regression-test home both remaining `[INFRA]`
+  todos need to extend, per the shipped todo 2's own evidence line) — now 4 entries.

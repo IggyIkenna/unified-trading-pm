@@ -43,11 +43,10 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
     /codex/02-data/manifest-migration-coordination.md,
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 supersedes:
@@ -215,7 +214,7 @@ source: >-
   doc's own fork chain — a real instance of the stale-carry-forward pattern this doc itself exists to catch. Only item 4
   (deployment-ui could-exist/out_of_window surfacing) was genuinely open; fixed via `deployment-ui@727298b`. All 4
   flipped `[x]` with citations; full evidence in the satellite batch1 plan.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-scouted; refreshed context_scope (5 entries) — added the v9 re-stamp source script.
 
 ## Deferred work — migrated to:
 

@@ -34,7 +34,13 @@ depends_on:
 source:
 assigned_role: ui_developer
 drift_direction: advance-code
-context_scope: [/plans/epics/predictions_master.md]
+context_scope:
+  [
+    /plans/epics/predictions_master.md,
+    unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    deployment-ui/src/components/HierarchicalShardDrilldown.tsx,
+  ]
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -172,3 +178,9 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   judgment call); the `[SCRIPT] P1` Phase-5 canonical-groups backfill is CONFLICT — claimed by
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 11. Doc is also `locked_by: live-defi-rollout`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added 3 source paths (UAC `PREDICTION_GROUPS`/
+  `OTHER`-bucket registry, the MTDS sentinel fan-out orchestrator, and the deployment-ui hierarchical drilldown
+  component), previously epic-only. Note: the doc's own `related:` frontmatter cites
+  `./prediction_manifest_canonicalisation_2026_06_01.md`, which no longer resolves under `plans/active/` — it was
+  archived to `plans/archive/2026_07/`; left out of context_scope, not flagged for a body rewrite (out of this skill's
+  scope).

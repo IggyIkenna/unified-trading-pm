@@ -603,3 +603,7 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   `[RESEARCH]` strategy work (execution sweeps, allocator design, leg re-specs, universe construction); the archetypal
   judgment corpus NA exists for.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) --
+  `e2e-testing/scripts/paper_trading/` (the standalone paper-trading POC dashboard named in the doc's own summary) + its
+  `RECOVERY.md` remain the correct source targets alongside the parent plan + line-cap-remediation issue +
+  strategy_master epic.

@@ -144,3 +144,5 @@ an adapter/handler file.
   `market-tick-data-service@57dfccc7`, full `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. No
   other repo in the workspace still wraps the check at 60s.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-confirmed context_scope (4 entries, unchanged) -- already minimal with 2 real
+  source-code targets (the QG script + the wrapping quality-gates.sh).

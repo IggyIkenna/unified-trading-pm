@@ -656,7 +656,26 @@ jobs:
           uv venv .venv
           # 1.5b frozen-lock: install the COMMITTED lock EXACTLY (no re-resolve) — local==CI parity.
           # --frozen NOT --locked: --locked hard-fails on the semver-agent CI-side `version =` bump.
-          uv sync --frozen
+          #
+          # Retry on a transient concurrent uv-cache race: self-hosted "glue" runners are a
+          # persistent shared host, so ~/.cache/uv survives AND is shared across every job running
+          # on that box AT THE SAME TIME (this leg's sibling `tests` slice, or an unrelated repo's
+          # QG run) — see this step's own cache-step comment above. A concurrent uv write/GC in
+          # ANOTHER job can evict/rewrite a cache/archive-v0 entry between this job's cache-index
+          # read and its extraction, surfacing as "failed to read directory .../archive-v0/<hash>:
+          # No such file or directory (os error 2)" — not a real dependency or lockfile problem
+          # (root-caused 2026-08-03, agent-orchestrator PR#766, escalation agt-5467b9; a bare retry
+          # is safe because the OTHER job's write has normally settled within a few seconds).
+          _uv_sync_attempt=0
+          until uv sync --frozen; do
+            _uv_sync_attempt=$((_uv_sync_attempt + 1))
+            if [ "$_uv_sync_attempt" -ge 3 ]; then
+              echo "::error::uv sync --frozen failed after ${_uv_sync_attempt} attempts (not just the shared-cache race — treat as a real failure)"
+              exit 1
+            fi
+            echo "WARN: uv sync --frozen attempt ${_uv_sync_attempt}/3 failed (possible concurrent uv-cache race on the shared self-hosted host) — retrying in 5s"
+            sleep 5
+          done
           # Install test-only sibling deps that were cloned (DEP_REPOS) but are NOT in
           # [project.dependencies], so `uv sync` skips them — e.g. deployment-api for
           # deployment-service, or UTL/UAC for unified-trading-pm (declares no UTL/UAC project dep,

@@ -71,7 +71,8 @@ context_scope:
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
-    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
+    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
   ]
 ---
 
@@ -544,3 +545,6 @@ and the residual-KeyError defense-in-depth path.
   because of the identity gap and because this doc's own launcher script carries an explicit historical warning against
   reflexively deleting a live VM (`zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`). No code change (none
   needed — the fix is already correct and shipped), no GCS/manifest write, no VM launched/deleted this session.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-superseded
+  `tardis_concurrent_ip_lockout` background pointer for the two artifacts the new `[OPERATOR]` P1 todo (cycle the stuck
+  live VM) actually needs: the launcher script to run and the VM-deletion-caution precedent doc it cites.

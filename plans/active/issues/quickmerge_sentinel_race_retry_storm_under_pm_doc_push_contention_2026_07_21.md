@@ -144,3 +144,5 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
   active plan (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`) shipped a
   related-but-distinct fix (`scripts/dev/safe-doc-push.sh`) that does not touch this doc's actual fix 1 (content-hash QG
   cache) or fix 3 (serialized PM-doc-push queue) — no duplication. No RECLASSIFY, no ARCHIVE.
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (SSOT +
+  related issue + archived sibling fix doc + quickmerge.sh) — no changes.

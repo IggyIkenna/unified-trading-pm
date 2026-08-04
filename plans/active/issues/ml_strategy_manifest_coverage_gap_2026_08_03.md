@@ -47,9 +47,9 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
-    ml-service/scripts/ml_orphan_sweep.py,
+    ml-service/ml_service/inference/cli/main.py,
+    strategy-service/scripts/backfill_strategy_instructions_orphan_class_e.py,
     strategy-service/scripts/strategy_orphan_sweep.py,
   ]
 depends_on: []
@@ -285,3 +285,5 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
   under an invalidated task identity, and captured it as todo 4 instead of losing the diagnosis. **This todo's actual
   goal (backfill the 7 real orphans) is complete and verified**; todo 4 is the only loose end, and is a pure
   code-quality fix with no data-correctness impact (the write itself was already independently proven correct).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — todos 1-2 are done; swapped the archived
+  parent-issue link for the two live source files the still-open todos 3-4 actually touch.

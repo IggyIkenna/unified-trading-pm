@@ -58,8 +58,6 @@ context_scope:
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     batch-live-reconciliation-service/batch_live_reconciliation_service/stages/stage4_agent_analysis.py,
-    /codex/04-architecture/agent-orchestrator-autospawn.md,
-    /plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md,
   ]
 ---
 
@@ -344,3 +342,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
   its §5 'Follow-up todos' are prose bullets, not tracked checkboxes — violates the 'every follow-up is a `- [ ]` todo,
   never prose' HARD RULE, and one of them is an explicit [OPERATOR] policy call.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: fixed a duplicated entry (`blrs_g3_g10_rescope_2026_07_28.md` was listed twice, pushing
+  the list to 8) and dropped the least-cited codex link (`agent-orchestrator-autospawn.md`, 2 body mentions vs.
+  `agent-orchestrator-single-vm-architecture.md`'s 5) to land back at the 6-entry cap; kept the Stage-4 source path
+  (`stage4_agent_analysis.py`) since it is the exact leg this design completes.

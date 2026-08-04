@@ -77,11 +77,11 @@ source:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    /codex/06-coding-standards/read-time-filter-pushdown.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
+    market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py,
   ]
 ---
 
@@ -575,3 +575,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a BLOCKED-DATA Korea-equity
   vendor ask (operator) plus 3 `[DESIGN]` archetype/hedge-venue calls that are not worker-determinable.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — was codex-only; swapped 3 of the 5 codex docs for
+  the migration-cutover critical-path child, the execution-log child, and a source path (the noncanonical
+  manifest-enumeration audit script cited in the closeout's own body).

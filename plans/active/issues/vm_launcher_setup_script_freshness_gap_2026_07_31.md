@@ -53,10 +53,10 @@ supersedes:
 superseded_by:
 context_scope:
   [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
-    /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
-    /plans/epics/infrastructure_master.md,
   ]
 ---
 
@@ -131,11 +131,12 @@ sweep here.
 
 - [x] ✅ [INFRA] P2. Correct `launcher_common.sh:291-292`'s stale "~80 launchers" comment to the measured count (4) — a
       one-line doc fix, cheap and immediately actionable. (repo: deployment-service) — deployment-service@daf3ad5
-- [ ] [DATA] P2. Determine whether GCS object versioning can be retroactively enabled on
+- [x] ✅ [DATA] P2. Determine whether GCS object versioning can be retroactively enabled on
       `deployment-scripts-central-element-323112` (and the other `deployment-scripts-*` buckets) so a future incident of
       this shape has a historical generation to inspect — would have let this session confirm/refute theory 1 directly
       instead of leaving it open. (repo: deployment-service / infra — GCS bucket config, read the current bucket policy
-      first)
+      first) — **DETERMINED 2026-08-04 (slot 6, data_engineering): technically YES, but NOT recommended bucket-wide.**
+      See Progress Log entry below for the full finding + risk analysis.
 - [ ] [OPERATOR] P2. Decide the remediation shape for the 139-launcher gap: (a) migrate high-value raw-create launchers
       to `lc_gcloud_create` (larger diff per launcher, but centralizes ALL pre-launch guards, not just this one); (b)
       add a standalone `lc_verify_setup_script_freshness` call to each raw-create launcher (smaller per-file diff, keeps
@@ -150,3 +151,53 @@ sweep here.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) -- swapped in the two named source files
+  (`launcher_common.sh`, `setup-data-pipeline-vm.sh`) the doc's own root-cause section cites, dropped two related-issue
+  entries to stay minimal.
+- **data_engineering 2026-08-04 (slot 6) — GCS versioning retroactive-enablement determination**:
+  - **Buckets**: `gcloud storage buckets list | grep deployment-scripts` returns exactly ONE bucket,
+    `deployment-scripts-central-element-323112` — it's a documented SINGLETON (`terraform/gcp/main.tf:201-243` comment:
+    "one physical bucket in the central project"). There are no other `deployment-scripts-*` buckets to consider.
+  - **Can it be retroactively enabled? YES, mechanically** — `gcloud storage buckets update <bucket> --versioning` is a
+    bucket-level toggle available on any existing bucket at any time (confirmed: `gcloud storage buckets update --help`
+    lists `--[no-]versioning`). Live-checked the bucket now (`gcloud storage buckets describe … --format=json`):
+    `uniform_bucket_level_access: false`, `soft_delete_policy.retentionDurationSeconds: "0"`, no `versioning` key
+    present (= disabled, the default) — confirms versioning is currently OFF and nothing structural (e.g. a
+    retention-lock) blocks turning it on.
+  - **But it does NOT retroactively recover history** — GCS Object Versioning only versions objects created/overwritten
+    AFTER it's enabled; it cannot reconstruct generations for objects already overwritten before the flag flips. So even
+    if enabled today, it would NOT retroactively resolve theory 1 for the 5 already-confirmed af-backfill preemption
+    events (2026-07-25..07-31) — those `vm/setup-data-pipeline-vm.sh` overwrites, if any happened, are already gone. It
+    only helps a **future** incident of this shape, exactly as the todo's own title frames it.
+  - **Risk-informed recommendation: do NOT enable it bucket-wide.** This exact bucket has documented incident history
+    directly on point — `plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`: 57 TiB
+    (~$1.3k/mo, growing ~8 TiB/day) of retained shadow copies from `vm-logs/run.log` re-uploads (every 30-120s,
+    whole-file, 3-16 MiB each) and `deployments/active/*.json` heartbeats (~60s cadence). The 2026-06-01 remediation
+    explicitly disabled soft-delete AND codified **"no versioning"** into Terraform (`main.tf:205,207-243`) as one of
+    the two settings that fixed it. GCS Object Versioning has no per-prefix scope (unlike the Delete lifecycle rules,
+    which DO support `matches_prefix`) — it is bucket-wide only, so turning it on would apply to the same
+    `vm-logs/`/`deployments/active/` high-churn prefixes that caused the original incident, minting a new noncurrent
+    generation on every overwrite.
+  - **Partial mitigation, not a clean bill of health**: the bucket's existing Delete lifecycle rules (`age=14` on
+    `vm-logs/`, `age=15` on `vm-heartbeat/`, `age=30` on the rest — live-reconfirmed via
+    `gcloud storage buckets describe --format="json(lifecycle_config)"`) use bare `age` conditions with no `isLive`
+    restriction, and GCS's `Age` condition is measured per-version from that version's own creation time — so noncurrent
+    versions under those prefixes would still age out on the same 14/15/30-day windows rather than accumulating forever
+    the way soft-delete's Google-managed shadow copies did (soft-delete objects sit outside lifecycle-rule reach
+    entirely — the actual mechanism difference behind the original incident). Bounded ≠ free, though: it would still
+    sustain a steady-state noncurrent-version multiplier on `vm-logs/` (the bucket's dominant contributor already) for a
+    benefit that only serves a small set of genuinely low-churn files.
+  - **The file that actually needs this (`vm/setup-data-pipeline-vm.sh` + `scripts/vm/lib/*`) is low-churn, not
+    high-churn**: traced its writer — `scripts/vm/create-code-tarballs.sh:539` (`gcs_upload "vm" …`), invoked either by
+    an operator manually or by `cloud-build/refresh-tarballs.cloudbuild.yaml` (fires only when a tarball is older than
+    the latest `live-defi-rollout` commit) — i.e. per-relevant-commit, not a 30-120s loop. The `vm/` prefix currently
+    has NO lifecycle rule at all (deliberately, per the archived doc: "launch-time working copies").
+  - **Net**: bucket-wide versioning is technically available but reintroduces a shaped risk this same bucket already
+    paid to eliminate, for a payoff (retroactive lookup) that the archived-and-gone incidents can't retroactively claim
+    anyway. If the operator's pending remediation-shape decision (see the `[OPERATOR]` todo below) ends up wanting
+    historical-generation visibility specifically for `vm/`-prefix files, the lower-risk path is scoping that need away
+    from this singleton bucket (e.g. a dedicated low-churn bucket/prefix for launch-time config, or leaning on the
+    existing `lc_verify_setup_script_freshness` md5-drift check, which already catches DRIFT prospectively without
+    needing historical generations) rather than flipping versioning bucket-wide here. Left as informational context for
+    the `[OPERATOR]` todo below, not a new decision to make — that todo's scope is the 139-launcher remediation shape,
+    not this bucket's versioning policy specifically.

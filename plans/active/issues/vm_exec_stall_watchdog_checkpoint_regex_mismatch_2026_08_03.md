@@ -49,11 +49,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
+    deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh,
     deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
   ]
 depends_on: []
 ---
@@ -223,9 +223,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                      todos 6 and 7 below.
+                                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -250,13 +250,24 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       for the one real gap this surfaced: a genuine future `WORKER_STALLED` self-delete (as opposed to preemption) is
       NOT covered by this same auto-recovery path — it pages an operator instead, per `exit_code_fleet_monitor.py`'s
       `EscalationTier.PAGE_OPERATOR` routing for any non-137 non-preempted exit.
-- [ ] [DATA] P2. **Cross-link this doc's finding into `reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`'s
+- [x] ✅ [DATA] P2. **Cross-link this doc's finding into `reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md`'s
       remaining open todos (2-4)** — todo 2 there ("audit whether reap-zombies.sh has silently killed other healthy
       VMs") is effectively answered NO by this doc's audit (see "What I found" above); its todo 4 ("make the day-level
       checkpoint durable against an early kill") remains independently valid but is now understood to be a SEPARATE
       hardening improvement, not the fix for why the original VM died. Update that doc's Progress Log to reference this
       correction (this doc's own filing already cross-references it via `related:`; this todo is a light consistency
-      pass, not new investigation). (repo: unified-trading-pm)
+      pass, not new investigation). (repo: unified-trading-pm) — **ALREADY DONE, verified 2026-08-03 (slot-12,
+      data_engineering craft)**: read the now-archived
+      `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` — its Progress Log already
+      carries the full cross-link (the `2026-08-03T~11:30Z (AO dispatch, slot 6, infra)` entry states "Correction to
+      this doc's own root cause: the flagged VM was NOT killed by reap-zombies.sh..." with the complete evidence chain
+      and a direct link to this doc, and the `~11:45Z` entry for todo 3 cross-references it again), and its top-of-doc
+      `🟢 RESOLVED` banner explicitly names this doc's path as the source of the correction. All 4 of that doc's own
+      todos (1-4, including todo 4's checkpoint-durability hardening, `market-data-processing-service@8ce3378`) are
+      already flipped `[x]` and the doc itself is archived/closed — the same slot-6 session that filed this issue doc
+      performed the cross-link update contemporaneously, so no additional edit to the archived doc is needed or
+      appropriate (editing a closed/archived doc further, when its content is already accurate and complete, would be
+      scope creep beyond this "light consistency pass" todo).
 - [x] ✅ [INFRA] P1. **Extend `launch-mdps-sharded-backfill.sh`'s `Processing|Skipping` stall-progress marker from
       `sports`-only to the `cefi`/`defi`/`tradfi`/`prediction` categories of the SAME launcher** (found during todo 2's
       sweep). All 5 categories invoke the identical entrypoint
@@ -400,8 +411,8 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       one-time census, not a full migration run) before deciding whether 5000 is safe per-AG, or lower the modulus in
       the target script itself so it fires reliably regardless of AG size, before ever setting this launcher's metadata.
       (repo: deployment-service, instruments-service)
-- [ ] [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design decision,
-      not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
+- [x] ✅ [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design
+      decision, not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
       (launch-canonical-migration-vm.sh:1164) invokes
       `python -m market_tick_data_service.scripts.migrate_sports_canonical` — verified via `find` +
       `python3 -c "importlib.util.find_spec(...)"` that no such module exists; only
@@ -411,10 +422,16 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       launcher never passes it at all, so the invocation would still crash on a missing required argument; the script
       also uses `--apply`/dry-by-default (mirroring `--dry-run` is NOT its convention), while `_launch()`'s generic
       dispatch appends `--dry-run` for this category's `MODE=dry` branch — a flag the script's argparse doesn't define
-      at all. Needs an operator/design decision (does `sports` become two categories,
-      `sports-mdps`/`sports-instruments`, mirroring the script's own `--surface` split? or does the launcher pick one
-      surface by default and expose the other via `MIGRATION_EXTRA_ARGS`?) before implementing — not attempted in this
-      dispatch. (repo: deployment-service)
+      at all. **Resolved 2026-08-03 via `/blocked` (BLK-a66bfc9d), operator ruling: option A** — split into
+      `sports-mdps`/`sports-instruments`, each hardcoding its own `--surface`, using the correct
+      `migrate_sports_     canonical_v9` module, and moved into the apply-on-full category list (dry-by-default +
+      `--apply`, no `--dry-run` — matching the real script's contract, not the generic convention). Also fixed the `all`
+      category dispatch (previously called the now-nonexistent bare `sports`) and the usage string. Runtime-verified all
+      4 dry/full × mdps/instruments constructed commands parse cleanly against the real script's argparse (no
+      unrecognized-argument errors) before shipping. 3 new parametrized regression tests added.
+      `deployment-service@d172008`, `quality-gates.sh` green (276s, `IGNORE_TIMEOUT=true` — sanctioned transient
+      contention escape, host load avg 34-39 from concurrent slots), quickmerge landed on `live-defi-rollout`, SHA
+      verified ancestor of origin. (repo: deployment-service)
 
 ## Progress Log
 
@@ -496,6 +513,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   background Explore agent and this doc edit; the actual relaunches were performed by the fleet's own automation, not by
   this agent.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03 (re-refresh)**: swapped in `launch-backfill-defi-dex-swaps-source-correction-vm.sh` — todo
+  1's actual fix target, previously missing despite being this doc's primary bug file; dropped `relaunch_backfill_vm.py`
+  to hold the cap at 5.
 - **2026-08-03T~14:00-14:40Z** (AO dispatch, slot 8, `infra`, task
   `vm_exec_stall_watchdog_checkpoint_regex_mismatch-005`, todo 5) — Completed the full per-category
   `STALL_PROGRESS_REGEX` sweep for every remaining `launch-canonical-migration-vm.sh` category. Fanned out 6 parallel
@@ -542,3 +562,44 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   standalone to rule out a foreign/transient issue first) before assuming the code itself is wrong — both prior failures
   were mechanical (a line-cap), not logic bugs.** No GCS/VM mutations this dispatch — pure code change + its own test
   suite.
+- **2026-08-03T~18:40-19:08Z** (AO dispatch, slot 6, `infra`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-009`, todo 11) — Filed `/blocked` (BLK-a66bfc9d) with the two design
+  options already framed in this todo's text, plus one additional confirmed detail (the generic launcher's `--dry-run`
+  append is ALSO wrong for `sports` regardless of which option is picked, since `migrate_sports_canonical_v9` has no
+  `--dry-run` flag at all — dry-by-default + `--apply`). Operator/main ruled option A (split into
+  `sports-mdps`/`sports-instruments`) — convention-matching (mirrors `tradfi-cme-monolith` vs `tradfi-cme-options`
+  already splitting one target script's invocation shapes into separate categories) and the safer choice (a REQUIRED
+  `--surface` selector should never be a silently-defaulted `MIGRATION_EXTRA_ARGS` override). Implemented all three
+  fixes explicitly named in the ruling: correct module (`migrate_sports_canonical_v9`), per-category hardcoded
+  `--surface`, and moved both new categories into the apply-on-full list (dry mode emits no flag, full mode appends
+  `--apply`) instead of the generic `--dry-run`-append branch. Also fixed two call sites the sweep surfaced that would
+  otherwise still be broken post-split: the `all` category's dispatch loop (`_launch sports` → `_launch sports-mdps` +
+  `_launch sports-instruments`) and the top-of-file `Usage:` string. Before shipping, runtime-verified per the
+  operator's instruction: (a) captured the actual assembled `gcloud compute instances create` command for all 4 dry/full
+  × mdps/instruments combinations via a mocked-`gcloud` subprocess harness (confirmed correct module, `--surface`, and
+  apply/dry-run behavior byte-for-byte); (b) parsed all 4 constructed arg lists against a literal replica of the real
+  script's `argparse` definition (read directly from `migrate_sports_canonical_v9.py`'s `main()`) — all 4 resolve with
+  no unrecognized-argument error. Added 3 new parametrized regression tests
+  (`test_sports_split_categories_use_v9_module_and_correct_surface`,
+  `test_sports_split_categories_dry_by_default_no_dry_run_flag`,
+  `test_sports_split_categories_full_mode_uses_apply_flag`) to `tests/unit/test_vm_launcher_scripts.py`. First
+  `quality-gates.sh` run (accidentally run before committing) failed ONLY on the wall-clock meta-gate (336s > 300s)
+  under measured host contention (load avg 34-39 from concurrent slots' QG/pytest runs) — every real content gate
+  passed. Corrected the ordering (commit first, per `worker.md`), re-ran with the sanctioned `IGNORE_TIMEOUT=true`
+  contention escape (`codex/06-coding-standards/quality-gates.md`), green in 276s, sentinel matched the committed HEAD
+  exactly. `deployment-service@d172008`, quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
+  Considered (not implemented, out of the operator's named 3-bug scope): a more precise
+  `canonical-migration-sports-instruments-` VM-prefix-registry bucket entry (mirroring the existing
+  `canonical-migration-sports-features-` precedent, since `--surface instruments` targets the instruments-store bucket,
+  not the tick bucket the generic `canonical-migration-sports-` prefix maps to) — the existing generic prefix already
+  covers both new categories via longest-prefix match so nothing is unregistered/broken, this would only refine
+  dashboard/monitoring bucket classification; flagging here rather than expanding scope unrequested. No GCS/VM mutations
+  this dispatch — pure code + test change, verified via mocked/replica-argparse harnesses only.
+- **2026-08-03T~23:55Z** (AO dispatch, slot 12, `data_engineering`, task
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch-003`, todo "Cross-link ... into reap_zombies ...'s remaining open
+  todos (2-4)") — Verified the requested cross-link already exists: the archived
+  `/plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md` carries it in both its
+  `2026-08-03T~11:30Z`/`~11:45Z` Progress Log entries and its RESOLVED banner, all 4 of that doc's own todos are done,
+  and it is already archived — no further edit needed there. Flipped this todo `[x]` above with that evidence. Doc-only,
+  read-verify pass — no code shipped, no GCS/VM mutations. Two todos remain open in this doc (`tradfi-catalogue-canon`
+  shard-log fan-in gap, `*-iah`/`*-iah-purge` candidate-count risk) so it stays active, not archived.

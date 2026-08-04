@@ -200,6 +200,7 @@ still in flight.
   established precedent; relying on the idle-lingering-reclaim reaper path. from this worker slot, same constraint every
   prior reporter hit).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
 - **2026-08-03 (ag_closeout_auditor, slot 2, dispatch agt-330130, tranche=`ao`):** sixth corroboration, a NEW role
   hitting the same gap, and a new sub-variant of the mid-session-loss shape. Booted normally, ran the full
   `/ag-closeout-audit ao` procedure end-to-end (a long-running task: Phase 0 discovery + a backgrounded 41-agent

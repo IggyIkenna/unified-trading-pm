@@ -183,3 +183,5 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   (`audit-scope -> wrapper plan -> epic VM`), splitting the bundled todo into its constituent AO-eligible pieces.
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (codex
+  DAG SSOT + archived consolidation plan + BLRS config source + archived drift-resurrection issue) — no changes.

@@ -23,7 +23,9 @@ summary: >-
   mis-skips.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Agent-operating-framework
+  # process tooling (na-eligibility-audit/ag-closeout-audit skill concurrency + draft-gate mechanics), not cross-AG.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

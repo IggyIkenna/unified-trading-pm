@@ -3243,6 +3243,19 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > (mode, budget / reserved / cpu_slots / live reservations) and `--probe` (capacity). SSOT:
 > `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
 
+> **🟢 2026-08-03 — the GHA self-hosted glue-runner topology is now covered too.** The banner above only shared the
+> ledger correctly across interactive dev-VM SLOTS; on the GHA self-hosted glue-runner host (the SAME central/planning
+> VM, `agent-orchestrator-vm-1`) each repo's CI job resolved its own ISOLATED ledger under its own
+> `/opt/github-glue-runners[-<repo>]` pool dir — confirmed live 2026-08-02 (~10 repos piling onto one host, load average
+> 42-43, zero shared admission). Fixed by extending `_qg_shared_root()` to collapse any glue-runner-topology
+> `WORKSPACE_ROOT` to one host-shared dir (`/opt/.qg-governor-glue-shared`) — **not** the pool dirs themselves, which
+> are `root:root 0755` and unwritable by the `ubuntu` runner user (verified live; the naive "reuse the existing pool
+> parent" design does not work). Propagates organically — every CI job self-clones
+> `unified-trading-pm@live-defi-rollout` fresh, so no separate fleet "flip" step exists. Live-validated 2026-08-03:
+> direct host introspection confirmed ≥6 real concurrent repos already sharing one ledger correctly, with admission
+> gating (CPU slots) actually binding. SSOT:
+> `plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
+
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a
    shared host always permits 2 concurrent full QGs — on the macOS operator host `lscpu`+`nproc` are both absent → cores

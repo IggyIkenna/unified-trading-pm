@@ -40,10 +40,11 @@ superseded_by:
 source:
 context_scope:
   [
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/config.py,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/06-coding-standards/model-tier-selection.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
   ]
 ---
 
@@ -537,6 +538,10 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
     reach for vector embeddings by default (per the standing grep-native principle) — a genuine future data point on the
     dense/many-call-sites case would strengthen this further, but is not needed to close this todo's stated done-when.
 
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in autospawn.py/config.py, the actual
+  files hosting select_account_for_spawn/_pick_headroom_account/_resume_pass and the deepseek_route_fraction tuning
+  knob.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -594,11 +599,11 @@ graph → file ranking, targeting ~500k→200k token code context) is a DIFFEREN
 existing grep-native L0-L4 system (`context_scout`/`context_scope`, targets plan/codex/frontmatter retrieval, not
 general source-code symbol lookup) — so there's no direct doc-vs-doc conflict. But this workspace has an explicit,
 broadly-worded governing principle on record: _"The whole retrieval design is grep-native, NOT vector-RAG... embeddings
-rejected"_ (`/codex/11-project-management/doc-frontmatter-schema.md:49`). Any code-context-reduction work should evaluate
-grep/symbol-based techniques (ripgrep, ctags/AST-grep-style symbol lookup, import/dependency graphs derivable from
-existing tooling) FIRST, consistent with that principle — a vector-embedding code-retrieval layer is its own separate,
-explicitly-flagged decision if grep/symbol-based reduction proves insufficient, never something to adopt by default from
-an external reference.
+rejected"_ (`/codex/11-project-management/doc-frontmatter-schema.md:49`). Any code-context-reduction work should
+evaluate grep/symbol-based techniques (ripgrep, ctags/AST-grep-style symbol lookup, import/dependency graphs derivable
+from existing tooling) FIRST, consistent with that principle — a vector-embedding code-retrieval layer is its own
+separate, explicitly-flagged decision if grep/symbol-based reduction proves insufficient, never something to adopt by
+default from an external reference.
 
 ## Todos
 

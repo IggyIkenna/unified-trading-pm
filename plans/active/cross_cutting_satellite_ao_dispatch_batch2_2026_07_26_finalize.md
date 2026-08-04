@@ -154,3 +154,6 @@ context_scope:
   plan's authors explicitly intended to run only after the full batch lands, and re-checks (a)/(b) in its own text
   reference OTHER tranches' finalizes whose state I have not verified either. Skipped back to the queue.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries, corrected count from the prior
+  marker) -- finalize gate doc, code-free by rule; existing links (gated source + parent closeout + 2 archival/naming
+  codex SSOTs + skill) still resolve and remain the minimal correct set.

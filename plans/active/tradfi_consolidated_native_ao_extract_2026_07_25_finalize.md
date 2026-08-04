@@ -99,4 +99,5 @@ drift_direction: advance-code
 
 ## Progress Log
 
-- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate (finalize gate, code-free), no
+  changes needed.

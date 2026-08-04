@@ -433,23 +433,20 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       predate the 2026-07-26 batch-1 draft by 6+ weeks. Repo: system-integration-tests. Source:
       `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
-- [ ] [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** UAC
-      `internal/domain/execution_service/defi_position.py` hardcodes a liquidation threshold of `1.1`, while the live
-      execution-service local copy uses `LIQUIDATION_PARAMS_REGISTRY[MarginModel.AAVE_V3].health_factor_critical`
-      (`1.15`). Make UAC read the registry rather than the literal so the two cannot drift again, and confirm no
-      consumer depends on the `1.1` value (grep then READ each hit). **Done when**: the hardcoded constant is gone, UAC
-      resolves the value from `LIQUIDATION_PARAMS_REGISTRY`, a test pins the resolved value, and UAC's QG is green.
-      Repo: unified-api-contracts. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
+- [x] ✅ [CODE] P3. **Reconcile UAC's stale `defi_position.py` liquidation threshold to the registry-driven form.** —
+      unified-api-contracts@194f3f7f. `is_at_risk` now resolves
+      `LIQUIDATION_PARAMS_REGISTRY[AAVE_V3].     health_factor_critical` (`1.15`) instead of hardcoded `1.1`, mirroring
+      execution-service's local copy. Grepped + read every consumer —
+      `execution-service/execution_service/models/position.py` is a bare re-export, no consumer depended on `1.1`. Added
+      `tests/internal/unit/domain/execution_service/test_defi_position.py` pinning `1.15`. QG green. Repo:
+      unified-api-contracts. Source: `codex_violations_ratchet_to_five_2026_06_10.md`.
 
-- [ ] [CODE] P3. **Rename UAC's `infura_*` Starknet endpoint-template key away from the banned provider name, and add
-      the clarifying note.** Infura is a REMOVED provider (CLAUDE.md § DeFi execution — removed providers must not be
-      referenced), but the public Starknet endpoint SHAPE the `infura_compatible` template describes is still wanted —
-      so keep the template, rename its key to something provider-neutral, and add a one-line note explaining that the
-      retained thing is the endpoint shape, not the vendor. Because this is a registry key, migrate every consumer in
-      the SAME unit (grep the workspace for the old key, READ each hit before editing — a runtime-resolved lookup will
-      not necessarily show up as a literal). **Done when**: `rg 'infura' unified-api-contracts/` returns only the new
-      note (no key or lookup), every consumer resolves the new key, and UAC + any consumer repo touched are QG-green.
-      Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
+- [x] ✅ [CODE] P3. **Rename UAC's `infura_*` Starknet endpoint-template key away from the banned provider name.** —
+      unified-api-contracts@862ff5a6. Premise stale at dispatch: the `infura_compatible` template was already
+      **deleted** (not renamed) 2026-06-09 as D8 (UAC@8a117153, no consumer referenced the key) — nothing left to
+      rename/migrate. Re-`rg -rni infura unified-api-contracts/` found one surviving hit (a comment naming the banned
+      provider in `_defi_chain_data.py`); reworded it. `rg 'infura' unified-api-contracts/` now 0 hits (done-when met).
+      QG green. Repo: unified-api-contracts. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 - [x] ✅ [INFRA] P2. **Drive deployment-api's codex violations from 5 to 0.** — deployment-api@4c4b007. Premise was
       stale at dispatch: file-size/function-size were already cleared (moved to a separate zero-tolerance gate, already
@@ -477,20 +474,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       invalid-Epic/invalid-Lifecycle/na-misuse even once the missing-field precondition clears). Did **not** build or
       wire the checker, per scope. Source: `repo_scripts_governance_audit_2026_06_18.md`.
 
-- [ ] [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
-      Dockerfile.** `strategy-service`'s Dockerfile vendors `COPY market-tick-data-service/` into its build context —
-      the source doc flags this as possibly a service↔service import, which the HARD RULE forbids (a T4 service depends
-      only on UTL/UAC/`unified-*-interface`; services integrate by API contract + mocks, never Python import). Read what
-      strategy-service actually imports from MTDS at runtime (grep then READ — the vendoring may be a leftover build
-      artifact with no live import, in which case the fix is just dropping the `COPY`). If a genuine import exists, do
-      NOT paper over it with vendoring: report which symbol and propose the shared-lib relocation, matching how
-      `databento_classifier`→UAC and the treasury NAV functions→UTL were resolved. Note the sibling precedent already
-      recorded in `utl_uac_reuse_consolidation_remediation_2026_06_10.md`: strategy-service's ONLY MTDS coupling was a
-      single test, and the path-dep was removed at `strategy-service@d1f5a6a8` — so the Dockerfile `COPY` may now be
-      pure dead weight. **Done when**: a written verdict names either (a) zero live MTDS imports → drop the `COPY` + the
-      `stage-siblings` step + verify a green build, or (b) the specific violating symbol + a proposed relocation target,
-      filed as a follow-up todo. Repos: strategy-service (read), unified-trading-pm (the verdict). Source:
-      `issues/service_dockerfile_pattern_normalization_2026_06_17.md`.
+- [x] ✅ [BUG] P3. **Confirm or rule out the strategy-service → market-tick-data-service tier violation hiding in a
+      Dockerfile.** **VERDICT (a): zero live MTDS imports — already resolved, no code change needed this session.**
+      Re-verified fresh against current `strategy-service` HEAD across every surface this todo names: (1)
+      `grep -rn     "import market_tick_data_service\|from market_tick_data_service"` over all `.py` files → 0 hits; (2)
+      `pyproject.toml` → no `market-tick-data-service`/`market_tick_data_service` entry; (3) `uv.lock` → no
+      `market-tick-data-service` package entry; (4) `Dockerfile` → no `COPY market-tick-data-service/` (Pattern-A
+      single-context `COPY . .` only, with an explanatory comment on the removal); (5) `cloudbuild.yaml` → no
+      `stage-siblings` step or MTDS vendoring (only a comment documenting the prior removal); (6) `buildspec.aws.yaml` →
+      MTDS clone explicitly removed (comment: "market-tick-data-service is NOT cloned here (Pattern-A normalization
+      2026-07)"). This confirms — and is consistent with — the archived source doc's own resolution:
+      `plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md` `resolved_by` field states the
+      Pattern-A normalization fan-out (2026-07-28) already dropped the vestigial `COPY` + `stage-siblings` step as a
+      side effect, after confirming the real dependency was removed 2026-06-10 (`strategy-service@d1f5a6a8`). This todo
+      in the active plan was stale (duplicate of already-landed work) — no follow-up todo needed. Repos:
+      strategy-service (read-only verification). Source: `issues/service_dockerfile_pattern_normalization_2026_06_17.md`
+      (archived, resolved).
 
 - [x] ✅ [DOCS] P2. **Land the 3 bounded codex FIX-STALE corrections this audit plan has carried unowned since
       2026-06-01.** (a) **AUDIT-03 F-45**: code wins — the events GCS path keys on `instance_id`; `correlation_id` is a
@@ -629,17 +628,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       of the dashboard is, and nothing gitignored got committed. Repo: agent-orchestrator. Source:
       `l0_doc_index_generator_2026_06_24.md`.
 
-- [ ] [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** The FF-pull cron
-      already regenerates `DOC_INDEX.generated.md` across every PM clone with `gen_doc_index.py --stale-check`
-      (`pm@b4d75366d`, fleet-wide 2026-07-04), but that leaves an inter-tick gap: an agent grepping the index within a
-      5-minute window of a doc change reads a stale map. Ship a thin wrapper an agent invokes first that runs the
-      existing `--stale-check` and regenerates only if stale (regen is ~1.4s), so the "grep the L0 index FIRST" rule
-      never routes off a stale index. Must be safe to call concurrently from multiple slots (the generator is already
-      deterministic and per-host, so guard against two simultaneous regens clobbering each other mid-write). **Done
-      when**: the wrapper exists, is documented in the retrieval SSOT
-      (`/codex/11-project-management/doc-frontmatter-schema.md` § 1 or the CLAUDE.md § "Doc retrieval" one-liner), and a
-      test proves concurrent invocation cannot leave a truncated index on disk. Repo: unified-trading-pm. Source:
-      `l0_doc_index_generator_2026_06_24.md`.
+- [x] ✅ [SCRIPT] P3. **Add the on-demand L0-index stale-check wrapper an agent calls before grepping.** — DONE
+      2026-08-03 (slot-6, infra), `unified-trading-pm@54d7779a4`. Added `scripts/docs/refresh-doc-index.sh`: a thin
+      wrapper that resolves the calling clone's own generator + venv and runs `gen_doc_index.py --stale-check`
+      (regenerates only on content change, ~1.4s; no-op when fresh), closing the FF-cron's inter-tick staleness window
+      for the "grep the L0 index FIRST" rule. Made the generator's write atomic (`gen_doc_index.py::_atomic_write_text`
+      — temp sibling + fsync + `os.replace`) so the cron and this wrapper can regenerate the same per-clone file
+      concurrently without ever leaving a truncated index; concurrency test
+      `test_atomic_write_never_leaves_truncated_index_under_concurrency` (8 writers + a reader) proves 0 partial reads.
+      CLAUDE.md § Doc-retrieval one-liner now points at the wrapper. Shipped via the dirty-deps direct-push carve-out
+      (quickmerge blocked by the unrelated stalled aiohttp-CVE fan-out, tracked in
+      `aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03.md`). Source: `l0_doc_index_generator_2026_06_24.md`.
 
 - [x] ✅ [TEST] P3. **DONE 2026-07-31 (slot-13) — NOT REPRODUCIBLE, closing.** Re-ran the reproduction recipe against
       today's dependency universe: `uv lock --upgrade` (full fleet-wide upgrade, not one-by-one — deliberately broader
@@ -659,19 +658,21 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       Repo: alerting-service (investigation only, zero-diff). Source:
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 
-- [ ] [INFRA] P3. **Smoke-test the stash-pile classifier before anyone trusts its auto-drop classes (dry-run only, no
-      `--apply`).** `scripts/dev/audit-stash-pile.sh` shipped (`pm@e4ef61532`) with a dry-run default and an
-      archive-first 3-way safety spine, but its classifier has never been validated. Run
-      `bash scripts/dev/audit-stash-pile.sh --repo unified-trading-pm` (dry-run is the default — do NOT pass `--apply`),
-      eyeball the full classification, and **hand-verify at least 3 stashes it labels `redundant`** by diffing each
-      one's tree against `origin/live-defi-rollout` yourself to confirm there is genuinely no net change, before anyone
-      relies on the auto-drop class. Also confirm the base-ref resolution is right per repo (`origin/main` for
-      agent-orchestrator, `origin/live-defi-rollout` otherwise). **This todo must not drop, pop, or apply any stash** —
-      a foreign WIP stash dropped by mistake is UNRECOVERABLE. The `--apply` sweep, the per-host fan-out, and the
-      archive purge all stay out of scope (the fan-out's targets are a parked operator decision — see `## Deferred`).
-      **Done when**: a written classification report exists for PM's stash pile with ≥3 hand-verified `redundant` calls
-      and an explicit "classifier trustworthy: yes/no" verdict. Repo: unified-trading-pm. Source:
-      `stash_pile_workspace_cleanup_2026_06_03.md`.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-04 — `unified-trading-pm@1fa747856`.** Smoke-test the stash-pile classifier before
+      anyone trusts its auto-drop classes (dry-run only, no `--apply`). Ran
+      `bash scripts/dev/audit-stash-pile.sh --repo unified-trading-pm` (dry-run, nothing dropped/popped/applied) against
+      the host's shared root-clone stash pile — **76 stashes** (grown from the 31 the parent plan measured against),
+      classifying to **1 `redundant`** / 0 `empty` / 0 `foreign-park` / 75 `genuine-WIP`. The done-when's "≥3
+      hand-verified redundant calls" does not hold against the current data (there is only 1 such call to verify, not an
+      oversight) — hand-verified that 1 as a TRUE POSITIVE (byte-identical vs `origin/live-defi-rollout`, no
+      captured-untracked 3rd parent) and broadened to 5 additional `genuine-WIP` boundary-case spot-checks (smallest
+      file-counts) to compensate, including one case (`stash@{37}`) that validates the untracked-file safety net
+      actually fires on an empty tracked diff. Confirmed base-ref resolution (`origin/main` for agent-orchestrator,
+      `origin/live-defi-rollout` otherwise) correct both by source read and by this run's own `base-verified: yes`.
+      **Verdict: classifier trustworthy: YES** (zero false positives found; caveat: redundant-class n=1, re-verify when
+      the pile's redundant count grows). Full report:
+      `plans/active/issues/stash_audit_reports/stash-audit-ip-172-31-5-118-20260804.md`. No stash dropped, popped, or
+      applied. Repo: unified-trading-pm. Source: `stash_pile_workspace_cleanup_2026_06_03.md`.
 
 - [x] ✅ [INFRA] P3. **DONE 2026-07-30 — `unified-trading-pm@59756e802`.** Folded a WARNING-only `--max-stash-age`-style
       signal into `scripts/dev/slot-git-status-report.sh`: a new standalone detector
@@ -954,7 +955,7 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   text data", `test -L` false) with root-relative `"path"` entries (`.`, `unified-trading-api`, `unified-trading-pm`,
   …), spot-checked 2 of them (`unified-trading-api/.git`, `unified-trading-pm/.git`) resolve to real repos inside the
   workspace root. No commit needed — nothing to ship.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries) — dispatch-batch coordinator.
 
 ## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM) — SUPERSEDED, see slot-7 re-check below the table
 

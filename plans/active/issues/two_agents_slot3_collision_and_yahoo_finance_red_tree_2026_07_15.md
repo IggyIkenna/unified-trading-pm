@@ -39,7 +39,6 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
-    /plans/epics/cefi_master.md,
   ]
 ---
 
@@ -168,3 +167,5 @@ is not complete until the counterpart's files build again, not just until your o
   `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 5, which batch1 already deferred for needing 'its own
   scoped plan with operator sign-off'.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — marker was stale (claimed 2, held 5, missing
+  epic-vs-source balance); dropped the generic `cefi_master` epic pointer, kept the named `quickmerge.sh` source file.

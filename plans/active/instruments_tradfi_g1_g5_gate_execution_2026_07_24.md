@@ -56,11 +56,12 @@ source:
   ]
 context_scope:
   [
-    /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
+    /plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
 ---
 
@@ -638,3 +639,6 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   genuinely open here, that cross-tranche gate correctly stays unfired; no action needed on this doc for that reason. No
   fresh RECLASSIFY candidates this pass (the 2 that would have are already covered by the drafted batch6). `assigned_vm`
   unchanged.
+
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- swapped the umbrella + cefi-sibling plan links
+  for the filed zero-capture issue doc + 2 real source-code targets (catalogue builder, ES_OPT VM launcher).

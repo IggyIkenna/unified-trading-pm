@@ -16,7 +16,7 @@ summary: >-
   the raw-tick restamp tool's prefix scan structurally cannot reach these objects. This was flagged explicitly (not
   silently dropped) in the Track C todo's own corrected scope text as needing its own follow-up tooling; this doc is
   that follow-up.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -45,7 +45,7 @@ locked_by:
 locked_since:
 assigned_vm: planning
 assigned_role: data_engineering
-resolved_by:
+resolved_by: "slot-13 (data_engineering), sports_venue_restamp_derived_candle_gap-001, 2026-08-03"
 context_scope:
   [
     market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py,
@@ -106,20 +106,38 @@ is needed, which is why this is filed `assigned_vm: planning` rather than a huma
 
 ## Todos
 
-- [ ] [DATA] P2. **Build + run the derived-candle venue re-stamp** for LADBROKES_UK->LADBROKES and SPORT888->BET888SPORT
-      across the 4 `data_type`s (arbitrage_opportunity/odds_horizon_bucket/odds_movement/ odds_snapshot), mirroring
-      `restamp_sports_bookmaker_venue_2026_07_27.py`'s GCS read/transform/write pattern against
-      market-data-processing-service's `processed_candles/by_date/...venue={V}/` prefix (confirm the exact parquet
-      content columns needing a venue-value rewrite before writing — the candle schema may differ from the raw-tick
-      schema's `venue`/`instrument_id` pair). (repo: market-data-processing-service). **Done when**: a live GCS +
-      manifest census shows 0 remaining LADBROKES_UK/SPORT888 rows across these 4 data_types.
-- [ ] [DATA] P2. **Manifest-swap the same 4 data_types** for the two venues, mirroring
-      `manifest_swap_venue_restamp_2026_07_27.py`'s live-index CAS relabel pattern (no VM report needed — derive the
-      ADD/REMOVE plan directly from the live index, gated on the GCS-rewrite todo above completing with 0 failures
-      first). (repo: market-tick-data-service, `_index/availability_index.parquet`). **Done when**: a fresh census shows
-      0 stale rows for the 4 data_types at the old venue names, matching the GCS-side verification above.
+- [x] ✅ [DATA] P2. **Build + run the derived-candle venue re-stamp** for LADBROKES_UK->LADBROKES and
+      SPORT888->BET888SPORT across the 4 `data_type`s (arbitrage_opportunity/odds_horizon_bucket/odds_movement/
+      odds_snapshot). **Path-shape correction**: this doc's own "What was measured" section understated the real
+      canonical path — live GCS sampling + the UTL `build_canonical_candle_path` SSOT both confirm it also carries
+      `pipeline_mode=` and `instrument_type=` segments the doc's text omitted:
+      `processed_candles/by_date/day={D}/pipeline_mode={pm}/timeframe={tf}/data_type={dt}/instrument_type={it}/venue={V}/{instrument_id}.parquet`.
+      Content-rewrite covers THREE columns carrying the venue token (not just one) — `venue` (direct), `symbol` and
+      `instrument_id` (colon-segment index 1) — confirmed by direct inspection of a real captured object. Built
+      `market-data-processing-service/scripts/sports/restamp_sports_candle_venue_2026_08_03.py` (day/timeframe scope
+      derived from the live manifest's distinct `(date, timeframe)` pairs, never a blind range). Verified live against
+      prod: dry-run then `--apply` for both venues × all 4 data_types, 0 failed / 0 content_mismatch — LADBROKES_UK
+      372+266+362+374=1,374 objects, SPORT888 308+254+304+300=1,166 objects. `market-data-processing-service@28ffed1`.
+      **Done when**: satisfied — see the manifest-swap todo's fresh census below.
+- [x] ✅ [DATA] P2. **Manifest-swap the same 4 data_types** for the two venues, mirroring
+      `manifest_swap_venue_restamp_2026_07_27.py`'s live-index CAS relabel pattern, widened to all 4 data_types in one
+      CAS pass per venue. Built
+      `market-tick-data-service/scripts/sports/manifest_swap_venue_restamp_candles_2026_08_03.py`. Verified live against
+      prod: LADBROKES_UK 1,674 rows removed+added, SPORT888 1,184 rows removed+added, snapshot-verified pre-write,
+      post-write re-download confirms 0 stale rows for each. **Done when — satisfied**: a final combined census across
+      both venues + all 4 data_types independently confirms 0 stale old-venue rows remaining, 3,578 new-venue rows now
+      present. `market-tick-data-service@06cd3ca5`.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **2026-08-03T~19:30Z** (AO dispatch, slot 13, `data_engineering`) — Shipped both todos. Verified live against prod the
+  doc's own claimed candle path shape was incomplete (missing `pipeline_mode=`/`instrument_type=` segments) before
+  building against it — corrected via direct GCS sampling + the UTL `build_canonical_candle_path` SSOT. Built +ran
+  `restamp_sports_candle_venue_2026_08_03.py` (GCS content-rewrite, `market-data-processing-service@28ffed1`) then
+  `manifest_swap_venue_restamp_candles_2026_08_03.py` (manifest CAS relabel, `market-tick-data-service@06cd3ca5`) for
+  both venues across all 4 data_types — 0 failed/content_mismatch throughout, final combined census confirms 0 stale
+  old-venue rows, 3,578 new-venue rows present. Both repos' `quality-gates.sh` full runs green; both SHAs verified
+  ancestors of `origin/live-defi-rollout`. Doc `status` flipped to `resolved`; archiving per issue-doc-lifecycle (all
+  todos done, unlocked).

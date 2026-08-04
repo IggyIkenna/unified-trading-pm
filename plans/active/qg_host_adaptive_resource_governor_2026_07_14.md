@@ -45,7 +45,7 @@ context_scope:
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     scripts/quality-gates-base/base-service.sh,
-    /plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
+    /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 ---
 
@@ -379,6 +379,27 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       looked like the proximate trigger in the captured traceback (worker died handling its OWN 60s per-test timeout,
       not an external kill). Possible directions: retry-once-on-worker-death in `base-service.sh`'s pytest invocation,
       or a stricter host-wide admission enforcement (the governor's own budget is being exceeded, not just reported).
+- [ ] [INFRA] P2. NEW FINDING (2026-08-03, from the glue-runner ledger fork's soak) — AO's own slot-worker QG runs (a
+      separate `.tabs`-scoped ledger population on `agent-orchestrator-vm-1`, the SAME host that runs the glue-runner
+      pools) are still NOT unified with the glue-runner pools' ledger (`/opt/.qg-governor-glue-shared`) even after the
+      cross-repo fix. Both populations correctly share ONE ledger internally, but the two populations don't share a
+      COMBINED budget view of each other — an AO slot-worker QG run and a glue-runner CI QG run can both admit
+      independently even though they compete for the same physical CPU/RAM. Not attempted in the fork (out of its scope:
+      cross-repo CI sharing, not cross-population sharing). Possible direction: extend `_qg_shared_root()` further so
+      BOTH the `.tabs` strip and the `/opt/github-glue-runners*` collapse resolve to the SAME final path when running on
+      this one host (they're currently two different literal constants). SSOT for the fix already shipped:
+      `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
+- [x] [OPERATOR] P3. ~~Block ticket `BLK-7eedce54` ... needs its ticket-system status flipped~~ — 2026-08-04:
+      **CORRECTED, nothing to do.** Queried `state.db`'s `blocked_queue` table directly (read-only, via SSM same-box
+      trust boundary — no JWT needed, same mechanism `check-ao-backlog-status.sh` uses for its GET calls). Confirmed
+      `BLK-7eedce54` was already `answered_at=2026-08-02 16:01:50`, `answered_by=main` — answered within ~3min of being
+      filed, over a day before this plan's glue-runner fork even existed. This plan's own framing ("flagged via `cicd`'s
+      `/blocked` ... rather than fixed in-scope") overstated what the ticket actually was: the real question (from
+      `agt-fea289`, slot 2) was narrower — "keep holding this slot waiting on a slow CI retry, or exit given host
+      contention" — answered "exit now," with the systemic resource-contention finding explicitly routed to a DIFFERENT
+      already-open escalation, not deferred as its own new ticket. There was never an open ticket-system record waiting
+      on the ledger fix; the prior "needs operator API access to close it" framing was itself the error, not a genuine
+      gap.
 
 ## Progress Log
 
@@ -683,15 +704,25 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   Distinct failure mode from the 2026-07-27 fleet-soak's "false 80% abort" check (that soak ran single-repo, single
   ledger — this is cross-repo ledger fragmentation, only reachable on the GHA glue-runner topology, not the slot
   worktree topology the soak covered).
-- [ ] [INFRA] P1. **FORKED 2026-08-03 — see `/plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`**
-      (dedicated scoped plan, per this doc's own note below that a one-shot task is the wrong place to redesign ledger
-      scoping across the whole glue-runner fleet). Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA
-      glue-runner jobs across DIFFERENT repos on the SAME physical host share one ledger — e.g. derive the shared root
-      from the stable `/opt/github-glue-runners-*` parent (or a host-identity env var set once per VM at runner-install
-      time) instead of `WORKSPACE_ROOT`, which is per-repo-job on this topology. Until fixed, the governor provides NO
-      cross-repo admission control on glue-runner hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also
-      per-repo) RAM-pressure watchdog apply, which is why 10 repos could pile up here. Leave this checkbox `[ ]` until
-      the forked plan ships and closes it back here.
+- [x] [INFRA] P1. **FORKED 2026-08-03 — see
+      `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`** (dedicated scoped plan, per
+      this doc's own note below that a one-shot task is the wrong place to redesign ledger scoping across the whole
+      glue-runner fleet). Fix (or explicitly scope-fence) `_qg_shared_root()` so GHA glue-runner jobs across DIFFERENT
+      repos on the SAME physical host share one ledger — e.g. derive the shared root from the stable
+      `/opt/github-glue-runners-*` parent (or a host-identity env var set once per VM at runner-install time) instead of
+      `WORKSPACE_ROOT`, which is per-repo-job on this topology. Until fixed, the governor provides NO cross-repo
+      admission control on glue-runner hosts — only the per-repo `QG_HOST_CONCURRENCY` limit and the (also per-repo)
+      RAM-pressure watchdog apply, which is why 10 repos could pile up here. Leave this checkbox `[ ]` until the forked
+      plan ships and closes it back here. — 2026-08-03: **CLOSED — the fork shipped.** Fix is
+      `unified-trading-pm@fada7dc20` (live, organically propagating to every pool via each job's fresh
+      `live-defi-rollout` self-clone — no separate flip needed). Live-validated: direct host introspection confirmed ≥6
+      real concurrent repos already sharing one ledger correctly, admission gating actually binding. The one remaining
+      item in the fork (a ~90min soak, running in background at close time) doesn't gate this closure — the fix's
+      correctness is independently proven; the soak is a sustained-duration confidence check, not a go/no-go for the
+      code already live. Block ticket `BLK-7eedce54`'s underlying issue is resolved and documented here + in the fork;
+      did not flip its status in the AO `/blocked` ticket system itself (no verified API access from this interactive
+      session — see the fork's Phase 3 Progress Log for detail). SSOT:
+      `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
 - **Not fixed in this session** — flagged via `cicd` `/blocked` (`BLK-7eedce54`) rather than fixed in-scope: a one-shot
   wall-clearing task is the wrong place to redesign ledger scoping across the whole glue-runner fleet: real blast radius
   (every repo's CI), needs its own scoped plan/PR + a fleet soak on the GHA topology specifically (the existing 93-min

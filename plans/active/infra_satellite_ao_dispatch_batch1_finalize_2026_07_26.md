@@ -43,12 +43,12 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /codex/11-project-management/,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/PLAN_FORMAT.md,
     /plans/active/task_template.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
 superseded_by:
@@ -180,4 +180,4 @@ the orphan count look better while leaving the mechanism that produced it untouc
 
 - **2026-07-26** — Drafted alongside `infra_satellite_ao_dispatch_batch1_2026_07_26.md` by `/ag-closeout-audit infra`
   (Autonomous mode). Left `status: draft` — flips to `active` only with its parent, on explicit operator approval.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-scouted; context_scope refreshed (6 entries) — finalize gate, code-free by design.

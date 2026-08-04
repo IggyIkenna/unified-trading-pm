@@ -40,7 +40,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
-    /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
+    /plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
     /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
@@ -69,12 +69,12 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    instruments-service/instruments_service/engine/orchestrator/venue_core.py,
+    features-service/scripts/sports/verify_ml_readiness.py,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -134,8 +134,8 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
   generically. Checked off in source, citing the covering todo.
 - § F6 "why is the instruments-sports consolidated index persistently older than its 120s budget" — **clear duplicate.**
   Already fully root-caused (no per-AG staleness-budget override; ~11min consolidator cadence vs the 120s generic
-  default) in `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md`. Checked off in source,
-  citing that issue doc.
+  default) in `plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md`. Checked off in
+  source, citing that issue doc.
 
 ## Todos
 
@@ -297,3 +297,5 @@ SSOT for the dedicated-triage-pass procedure this plan followed.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the 2 remaining open [CODE]/[DIAG] todos'
+  real source-code targets (venue_core.py's allow-list, verify_ml_readiness.py).

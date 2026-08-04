@@ -92,12 +92,33 @@ This doc is a **digest** — being listed as a Source below is discoverability, 
 todos of its own**. The plans that actually work these docs' open items:
 
 - [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
-  **`status: draft`, awaiting operator approval** (10 todos) + its gated pair
-  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
+  **archived 2026-08-01, all 11 todos `[x]`** (was `status: draft`; operator-approved and shipped) + its gated pair
+  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md),
+  also archived. Superseded by
+  [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
+  [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
+  [batch4_2026_08_01](/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md), and
+  [batch5_2026_08_03](/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`, awaiting operator
+  approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle continued per the
+  skill's own methodology.
 - [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
-  — an earlier AO-scope tracker (9 open todos) that is **not** in the Sources lists below but does cover some of them
-  (its Recovery-audit Layer-1 producer todo owns `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Whether it
-  should join this tranche's membership is an open operator question, raised by `/plan-reconcile ao` 2026-07-26.
+  — an earlier AO-scope tracker (8 open todos as of 2026-08-04) that is **not** in the Sources lists below but does
+  cover some of them (its Recovery-audit Layer-1 producer todo owns
+  `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Confirmed (2026-08-04) as a genuine `ao`-tranche covering
+  plan — treated as such by every batch2-5 audit run since.
+- **2026-08-04 (`/ag-closeout-audit ao`, autonomous) — Orthogonality HARD CHECK found + retagged 8 genuine `ao`
+  mistags** (bare `[meta]`/`[cross-cutting]` with `orchestrator_master`/`agent_operating_framework_master`
+  `parent_epic`, each verified by reading the doc's real content, not tag shape):
+  [ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02](/plans/active/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md),
+  [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
+  [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
+  [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
+  [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
+  [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),
+  [na_and_ag_closeout_audit_population_overlap_2026_07_31](/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md),
+  [na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30](/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md).
+  None yet covered by a dispatched batch — see this run's own report (`ag_closeout_audit_ao_parked_2026_08_04.md` / the
+  next satellite batch) for disposition.
 
 ## Track 1 — Dispatch/backlog scheduling bugs · P0/P1
 

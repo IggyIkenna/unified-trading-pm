@@ -144,3 +144,5 @@ even if nobody revisits it.
   (`regen_backlog_from_plan.py`, the file todo 1 modifies), the prior-art mechanism (`auto_park.py`, already cross-
   referenced by the na-eligibility-audit note above), and the sibling park-durability issue doc alongside the
   existing 2.
+- **context-scout 2026-08-03 (re-pass)**: re-verified under the updated methodology, unchanged (5 entries) — all still
+  resolve and remain the right minimal set for both open todos.

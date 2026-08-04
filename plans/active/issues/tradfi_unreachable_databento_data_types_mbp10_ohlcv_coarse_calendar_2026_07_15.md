@@ -84,7 +84,11 @@ assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 last_updated: 2026-07-16
-context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /codex/02-data/honest-coverage-model.md]
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    features-service/features_service/delta_one/app/core/candle_resampler.py,
+  ]
 ---
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths

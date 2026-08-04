@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [recovery, kill-switch, defence-in-depth, codex-drift, agent-role, ssot-contradiction, operator-decision]
 related:
   [
-    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
@@ -51,12 +51,10 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
     unified-trading-library/unified_trading_library/recovery/agent_action.py,
     alerting-service/alerting_service/api/routes/safety_ops.py,
     alerting-service/alerting_service/gateway/gateway_state.py,
     unified-api-contracts/unified_api_contracts/incident.py,
-    /codex/04-architecture/agent-orchestrator-overview.md,
   ]
 ---
 
@@ -171,6 +169,13 @@ function.
   through `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` ('Do NOT start work from this doc alone').
   Not re-litigated.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: trimmed context_scope 7→5 entries (prior pass was over this skill's 2-6 target) —
+  dropped `autonomous-recovery-matrix.md` and `agent-orchestrator-overview.md` (background/scope-clarifier reading, not
+  build targets) and kept the codex doc the sole open todo updates plus the 4 live components the standalone producer
+  (Option B) must integrate with (Layer-0 publish, the ingest endpoint, the actuation gateway, the signoff contract).
+  Checked `ao_orphan_audit_followup_triage_2026_07_30.md`'s claim that `ao_satellite_ao_dispatch_batch2_2026_07_30.md`
+  already carries a fix for this doc — grep against the live batch2 doc found zero mentions of recovery-audit/this doc,
+  so that candidate was NOT added (flagged as a stale pointer on the triage doc instead, not fixed here).
 
 ## Todos
 

@@ -246,3 +246,5 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   commit list in the parent task's final report> together with 3 pre-existing, already-verified, unrelated commits that
   were blocked from landing only by this WIP's test regression contaminating the shared tree.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the databento
+  symbology.py source path and all entries still resolve.

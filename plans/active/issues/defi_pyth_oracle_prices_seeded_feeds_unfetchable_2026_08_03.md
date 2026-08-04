@@ -38,10 +38,11 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
+    instruments-service/instruments_service/reference_data/adapters/defi/pyth.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/data_completion_defi_2026_07_15.md,
   ]
 ---
 
@@ -182,6 +183,21 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 - [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
       form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
       market-tick-data-service, unified-api-contracts)
+- [ ] [OPERATOR] P2. Authorize + launch a fresh, narrow post-fix Pyth `oracle_prices` verification collection VM
+      covering the regression window (2026-07-15..present, superset of the 2026-07-19..2026-08-01 BTC/ETH/INF gap) — the
+      plan's `[DATA] P2` re-verify todo (`defi_satellite_ao_dispatch_batch3_2026_07_26.md`) cannot ever complete without
+      this: 3 independent dispatches (slot-12 2026-08-03, slot-11 2026-08-03, slot-11 2026-08-04T01:50Z) all confirmed
+      zero post-fix collection has run and all 3 declined to self-launch, citing
+      `deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`'s own header ("DO NOT LAUNCH without operator
+      [ack]" — a caution from its origin plan `solana_lst_native_staking_adapters_2026_05_14.md` Phase 4, written for a
+      7+ month backfill window, not this ~3-week verification window). Safe-idempotent case for the operator's
+      consideration: SPOT, idempotent re-fetch (`MANIFEST_PER_VM_SHARDS=true` + last-writer-wins consolidation — same
+      pattern as the 3 Pyth VMs that already ran cleanly to `exit_code=0` this same week), and the code fix + operator
+      ruling this verifies (`instruments-service@dec90cc0`, `market-tick-data-service@cd017a1c`, direction 1 "extend")
+      are already both landed. Once launched + confirmed `EXIT_STATUS=0`, re-dispatch `[DATA] P2` to run its same
+      bounded manifest read. Repo: deployment-service (VM launch only, no code change). Source: split off after 3
+      consecutive re-verify dispatches hit the identical unmet-precondition dead-end
+      (`defi_satellite_ao_dispatch_batch3-015`, 2026-08-04).
 - [x] ✅ [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss) → instruments-service@dec90cc0 (2026-08-03,
       slot-8). Rebased my local commit onto slot-6's `a325da86` (which cleared repo-blocker `RB-48c5820b` — the
       unrelated STEP 5.106 gate failure this fix was blocked behind), re-ran `quality-gates.sh` clean, verified
@@ -202,6 +218,10 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   the manifest to determine real remaining gap. Filed this issue; C6 itself proceeds on its own achievable scope (the
   7-symbol fetchable universe) with a Progress Log note pointing here for the structurally-separate gap.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-03 (re-scout)**: refreshed context_scope (5 entries) — swapped
+  `data_completion_defi_2026_07_15` (no longer relevant) for the IS-side `pyth.py` (PYTH_PRICE_FEEDS, root of the
+  BTC/ETH/INF regression fix) + `canonical_write.py` (SPOT_ASSET/SPOT_PAIR schema-contract path the remaining [DATA] P3
+  naming-reconciliation todo touches).
 - **2026-08-03 (slot-11, data_engineering craft)**: Re-dispatched onto C6, found all 3 in-flight/relaunched Pyth
   backfill VMs from earlier today (`074918`, `081601`, `093121`) completed cleanly (`EXIT_STATUS=0` each, live-verified
   via `gsutil cat`, not from memory) with `081601`/`093121` covering the full `2026-04-15..2026-08-03` C6 window. Ran a
@@ -271,3 +291,55 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   production data under the current naming. Real, separate, higher-risk work matching this doc's own earlier caution
   about this exact reconciliation ("an early pass... produced a false '77 gap days' result") — left for `[DATA] P3`'s
   dedicated pass, not rushed here.
+- **2026-08-03 (slot-12, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`, the plan's
+  `[DATA] P2` re-verify todo)**: precondition not yet met — **no live/backfill collection has run since the code fix
+  landed**, so nothing to verify yet. Ran the same bounded manifest read this todo specifies
+  (`read_availability_index(..., columns=[...], filters=[("venue","=","PYTH"),("data_type","=","oracle_prices"), ("date",">=","2026-07-18")])`,
+  single filtered slim read, no whole-corpus walk, via `scripts/dev/run-bounded-analysis.sh`) and confirmed:
+  `BTC_USD`/`btc/usd`, `ETH_USD`/`eth/usd`, `INF_USD`/`inf/usd` still have zero rows past `2026-07-18` (their
+  `written_at` max is `2026-08-03T10:22:43Z`, hours BEFORE `market-tick-data-service@cd017a1c` (18:08Z) and
+  `instruments-service@dec90cc0` (18:22Z) landed — so even that stale row predates the fix).
+  `JTO`/`RAY`/`WIF`/`JUP`/`USDC` (family-3 `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` rows) are still 100%
+  `expected_unattempted`, `written_at` max `2026-08-03T01:34:37Z` (the original seeder timestamp, also pre-fix). Checked
+  for a routine live/cron path that might pick this up automatically without a manual VM launch — none found
+  (`gcloud compute instances list` shows zero Pyth-named VMs running; grepped
+  `market-tick-data-service/.github/ workflows/*.yml` for a scheduled oracle_prices job, none exists — collection here
+  is via manually-launched `pyth-lst-backfill-*`/`mtds-pyth-archive-*` SPOT VMs, same as the 3 that already
+  ran-to-completion earlier today, all BEFORE the fix). Did not launch a new verification VM myself: this todo's own
+  scope is explicitly "verification only, no code" (a launch is out of scope for the split-off `[DATA] P2` todo), and
+  `launch-mtds-pyth-lst-backfill-vm.sh`'s header gates any launch on an operator `[ack]` (stale pointer to the retired
+  file-ping mechanism, but the underlying caution — don't self-authorize a fresh multi-symbol Hermes-rate-limited
+  collection run — still applies). **Checkbox stays UNFLIPPED** — released via `/skip-current-task` rather than forcing
+  a launch outside this todo's scope; next dispatch should re-check whether a collection has run in the meantime before
+  re-attempting this same bounded read.
+- **2026-08-04T01:50Z (slot 11, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`)**:
+  Re-dispatched ~7.5h after slot-12's check. Precondition still unmet — no live/backfill collection has run since the
+  code fix landed. Confirmed fresh, not assumed: `gcloud compute instances list --filter="name~'pyth'"` returns zero
+  instances (any status), and a `compute.instances.*` audit-log sweep for any `pyth`-named resource since
+  2026-08-03T18:00Z returns zero operations — no VM was ever launched post-fix. Re-ran the same bounded, filtered
+  manifest read (`filters=[(venue,PYTH),(data_type,oracle_prices),(date>=2026-07-15)]`, single predicate-pushdown read
+  via `run-bounded-analysis.sh`, no whole-corpus walk) with explicit written_at checks against the fix-landing
+  timestamps: BTC/ETH/INF (`BTC_USD`/`ETH_USD`/`INF_USD`, `btc,eth,inf/usd`) still max out at `date=2026-07-18`,
+  `written_at=2026-08-03T10:22:43Z` — hours before `market-tick-data-service@cd017a1c` (18:08:46Z) and
+  `instruments-service@dec90cc0` (18:22:04Z) — zero rows written after either fix, byte-identical to slot-12's finding.
+  Family-3 `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` rows (JTO/RAY/WIF/JUP/USDC + the 4 overlap symbols) are still 100%
+  `expected_unattempted`, `written_at` max unchanged at `2026-08-03T01:34:37Z` (the original seeder timestamp). No
+  routine live/cron path exists (unchanged since slot-12's check — collection is manual-VM-only, and this todo's own
+  scope is explicitly verification-only, no launch). **Checkbox stays UNFLIPPED** — released via `/skip-current-task`
+  (reason_code=GATED, genuinely worker-unresolvable: launching the verification collection is out of this todo's scope
+  and gated on an operator ack per the launcher's own header). No further re-dispatch of this exact todo is useful until
+  someone (operator, or a differently-scoped todo) actually launches a post-fix Pyth collection VM — recommend the next
+  dispatch check `gcloud compute instances list --filter="name~'pyth'"` for a NEW VM before repeating this identical
+  manifest read a 3rd time.
+- **2026-08-04 (slot-5, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`, 3rd re-verify
+  dispatch)**: Followed slot-11's own recommendation before repeating the manifest read a 3rd time — checked for a NEW
+  Pyth VM first: `gcloud compute instances list --filter="name~'pyth'"` returns zero instances (any status), and a
+  `compute.instances.insert` audit-log sweep (`--freshness=2d`) shows the same 6 insert events as slot-11 already
+  verified, latest `2026-08-03T09:31:36Z` (`pyth-lst-backfill-20260803-093121`) — zero new launches since slot-11's
+  2026-08-04T01:50Z check. Precondition still unmet; did not repeat the manifest read (no new data to find). Instead of
+  a 4th identical dead-end dispatch, closed the actual gap: 3 consecutive slots independently declined to self-launch
+  the verification VM (citing the same launcher header) but none of them turned that into trackable work — added the
+  `[OPERATOR] P2` todo above so the launch decision has an explicit, dispatchable-to-a-human home instead of being
+  rediscovered from Progress Log prose on every future dispatch. **Checkbox stays UNFLIPPED** on `[DATA] P2` (plan) —
+  released via `/skip-current-task` (reason_code=GATED). Recommend no further re-dispatch of the plan's `[DATA] P2`
+  until the new `[OPERATOR] P2` todo here is actioned and a fresh Pyth VM reaches `EXIT_STATUS=0`.

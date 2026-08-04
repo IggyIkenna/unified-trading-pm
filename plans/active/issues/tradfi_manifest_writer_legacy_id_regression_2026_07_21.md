@@ -34,12 +34,12 @@ locked_by:
 resolved_by:
 context_scope:
   [
+    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
     market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
-    /plans/epics/tradfi_master.md,
   ]
 ---
 
@@ -450,3 +450,14 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   live-manifest CAS-write lacking a stated safe-idempotent justification or `[OPERATOR]` tag. No content drift. Nothing
   to reclassify.
 - **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries).
+- **context-scout 2026-08-03** (second pass, refreshed methodology): refreshed context_scope (6 entries) — swapped the
+  generic epic pointer for `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`, whose 2026-07-27T16:46:31-
+  40Z phantom-batch root-cause (market-data-processing-service `canonical_writer.py`) looks like the same underlying
+  write event as this doc's still-open 2026-07-27T16:46:40-48Z null-id registration-burst todo — flagging the overlap
+  for whoever picks this up, not confirmed identical here.
+- **na-eligibility-audit 2026-08-04** (tradfi tranche, dispatch agt-ba1107): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open todo (the historical manifest repair) re-read end-to-end; count reconciled (1/1). Same two
+  independently-sufficient grounds as 2026-08-01/08-02 still hold: the registration/recovery script identification step
+  remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a stated safe-idempotent
+  justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout `context_scope` touches
+  since. Nothing to reclassify.

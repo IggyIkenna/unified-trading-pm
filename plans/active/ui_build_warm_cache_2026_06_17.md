@@ -40,7 +40,6 @@ context_scope:
     scripts/setup.sh,
     scripts/quality-gates-base/base-ui.sh,
     /plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md,
-    /plans/epics/infrastructure_master.md,
   ]
 ---
 
@@ -134,4 +133,7 @@ ruling confirmed present, not re-litigated.
 
 ## Progress Log
 
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries, trimmed from 7) — dropped the generic parent epic
+  pointer (`infrastructure_master.md`); kept both source scripts (`setup.sh`, `base-ui.sh`) since the sole open todo
+  (pnpm migration) directly edits both.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

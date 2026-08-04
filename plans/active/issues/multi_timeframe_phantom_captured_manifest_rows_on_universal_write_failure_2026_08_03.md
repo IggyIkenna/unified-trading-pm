@@ -57,6 +57,7 @@ locked_since:
 context_scope:
   [
     features-service/features_service/multi_timeframe/engine/orchestrator.py,
+    features-service/features_service/delta_one/config.py,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
@@ -282,3 +283,5 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
   manifest write path itself is fixed (not a full from-scratch batch VM run — see the todo's own resolution note for the
   scope call). One `[OPERATOR]` P2 todo remains open (genuinely operator-gated design decision) — this doc correctly
   stays `active`, not archived.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `delta_one/config.py`
+  (`DEFAULT_FEATURE_GROUPS`), the exact artifact the sole remaining open `[OPERATOR]` todo needs to weigh.

@@ -45,8 +45,11 @@ locked_by:
 locked_since:
 context_scope:
   [
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py,
     features-service/features_service/cross_instrument/cli/handlers/batch_handler.py,
-    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    features-service/scripts/pipeline_e2e_check.py,
+    deployment-service/deployment_service/smoke_test_framework.py,
+    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
     /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
   ]
 resolved_by:
@@ -160,16 +163,22 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
       through the existing `deployment-service/smoke_test_framework.py::clean_test_bucket` helper if its shape fits,
       else a scoped `list_blobs`+`delete_blob` loop restricted to the exact `day=` prefix being re-checked. Repo:
       features-service.
-- [ ] [BACKEND] P3. **Follow-up optimization (deferred, not required for the P2 fix above):** eliminate the reload() tax
-      at its root for callers that never use blob size — add an opt-in `resolve_size: bool = True` parameter to
-      `StorageClient.list_blobs()` (default `True` preserves existing behavior for size-sensitive callers like
-      `_apply_per_vm_merge_budget`), thread it through `GCSStorageClient.list_blobs()` to skip
-      `_resolve_list_blobs_size()`'s reload() entirely when `False`, and pass `resolve_size=False` from
-      `features-service`'s `_ingest_delta_one`/`_list_polymarket_parquets` (both discard `.size`, only using `.name`).
-      Deferred from this task because it touches the abstract `StorageClient` interface + `StorageClientProtocol`
-      (unified-api-contracts) + all 4 provider implementations (GCS/AWS/local/async) for what the P2 fix above already
-      makes safe (bounded) rather than fast — a real latency win, not a correctness fix, so lower urgency than the
-      hang-elimination shipped above. Repos: unified-trading-library, unified-api-contracts, features-service.
+- [x] ✅ [BACKEND] P3. **Follow-up optimization (deferred, not required for the P2 fix above):** eliminate the reload()
+      tax at its root for callers that never use blob size — unified-trading-library@649fd8e1,
+      features-service@5275fef1. Added an opt-in `resolve_size: bool = True` parameter to `StorageClient.list_blobs()`
+      (default `True` preserves existing behavior for size-sensitive callers like `_apply_per_vm_merge_budget`),
+      threaded through `GCSStorageClient.list_blobs()` to skip `_resolve_list_blobs_size()`'s reload() entirely when
+      `False` (falls back to `blob.size or 0` instead), and threaded through the AWS + local providers + the
+      `AsyncStorageClient` abstract signature for interface parity (S3/local already get size for free, so
+      `resolve_size=False` there just zeros it for cross-provider consistency, not a perf win). Passed
+      `resolve_size=False` from `features-service`'s `_ingest_delta_one`/`_list_polymarket_parquets` (both discard
+      `.size`, only using `.name`). **Scope correction**: the deferred-todo text named `StorageClientProtocol`
+      (unified-api-contracts) as a 4th touch point — on inspection that Protocol describes the native
+      `google.cloud.storage.Client`/`Bucket`/`Blob` SDK surface for basedpyright casting, not our abstract
+      `StorageClient`; it has no `resolve_size`-relevant `list_blobs()` signature to thread through, so no UAC change
+      was needed or made. QG green both repos (had to trim two docstrings in `abstractions.py`/`aws.py` to stay under
+      the 900-line file cap — both were already exactly at the cap pre-change); unit test coverage added in both repos
+      (GCS reload-skip + size-passthrough, AWS/local zero-size behavior, features-service call-site kwarg assertions).
 
 ## Progress Log
 
@@ -192,3 +201,8 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
   neutralized by tree scale (PROD's `check_exists` short-circuit keeps mature day= trees' recent-write density low
   regardless of total size). Filed the pruning fix as its own P3 todo rather than implementing inline. See checkbox
   above for full evidence chain.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — the P2 diagnostic fix is shipped in UTL's `gcp.py`
+  (not previously in scope), so re-pointed at the actual fix site plus the two remaining open P3 todos' real targets;
+  dropped the async-wait-discipline codex doc since the hang mechanism is now deterministically understood.
+- 2026-08-03 (slot-9, backend_engineer): shipped the `[BACKEND] P3` reload()-elimination follow-up — see checkbox above
+  for full detail. One open todo remains in this doc (`[INFRA] P3` stale-prefix pruning), so not archiving.

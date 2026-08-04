@@ -269,6 +269,73 @@ the candle layer instead of raw-tick.
 
 ## Progress Log
 
+- **2026-08-03T22:13Z** (AO dispatch, slot 15, `data_engineering`) — **NEW failure mode found + fixed**: the on-demand
+  VM (`backfill-defi-dex-swaps-20260803-202140`) ran preemption-free for ~1h43m (through 613/1155 days, 2023-01-01
+  through 2024-06-08) before **crashing on an unhandled GCS 429** on the checkpoint object itself
+  (`_dex_swaps_source_correction_checkpoint.json` — "exceeded the rate limit for object mutation operations", exhausting
+  UTL's own 600s-deadline retry budget). Root cause: another agent had already fixed the checkpoint-cadence gap I filed
+  earlier today (now persists after EVERY day, not every 20th — see `unified-api-contracts`/deployment-service
+  context_scope refs), but writing to the SAME object every ~15-40s during this fast-skip period (many small
+  already-mostly-covered days) — compounded by ~10 VM relaunches earlier today all hammering the same object path —
+  pushed it into sustained GCS per-object rate limiting. **Fixed** (`market-data-processing-service@db055ba`): wrapped
+  the checkpoint write in try/except — on failure, log a WARNING and continue processing rather than crash the whole
+  run. Safe because the checkpoint is a resume-OPTIMIZATION, not a correctness requirement — the actual per-day data
+  copy + `record_captured` writes are already durable before the checkpoint call runs; losing one checkpoint persist
+  just means a future resume re-verifies that one day (fast, idempotent no-op), never data loss or corruption. Shipped
+  via full QG + quickmerge, verified on origin. **A second VM launched before the fix was published (still ran stale
+  code, crashed again — checkpoint advanced to 542 days first)**; republished the tarball
+  (`create-code-tarballs.sh --include market-data-processing-service`) and relaunched
+  `backfill-defi-dex-swaps-20260803-221324` (`ON_DEMAND=true`, confirmed running
+  `market-data-processing-service-code @ db055ba8ee27` — the fix). Still not flipping this todo's checkbox.
+- **2026-08-03T20:22Z** (AO dispatch, slot 15, `data_engineering`) — Sixth campaign VM
+  (`backfill-defi-dex-swaps-20260803-201901`) was preempted after only **~67 seconds** (launched 20:19:08Z, preempted
+  20:20:15Z — never even produced a run.log), the **5th genuine SPOT preemption** in this session, all confirmed
+  `compute.instances.preempted` events (never the reap-zombies.sh bug — that fix is holding). Checkpoint unaffected
+  (still 420 days). This near-instant re-preemption pattern indicates a real, severe SPOT capacity shortage in
+  `asia-northeast1-c` right now, not routine churn — continuing to retry SPOT would likely just repeat this cycle.
+  **Escalated to the CLAUDE.md-sanctioned `ON_DEMAND=true` opt-out** (backfill VMs default to SPOT, but the on-demand
+  override is an explicit, no-operator-gate escape hatch for exactly this situation): relaunched
+  `backfill-defi-dex-swaps-20260803-202140` with `ON_DEMAND=true --force`, confirmed non-preemptible (`PREEMPTIBLE`
+  field empty in `gcloud compute instances list`). This is more expensive per-hour but removes the preemption risk
+  entirely for the remainder of this campaign — appropriate given 5 preemptions have already cost meaningful wall-clock
+  time and the remaining corpus is finite (~680 days left). Once this campaign fully completes, consider whether the
+  on-demand instance should be manually stopped promptly (it will self-shutdown on completion per
+  `VM_SHUTDOWN_ON_COMPLETION=true`, so no separate cleanup should be needed).
+- **2026-08-03T20:19Z** (AO dispatch, slot 15, `data_engineering`) — Fifth campaign VM
+  (`backfill-defi-dex-swaps-20260803-141041`) ran healthy for ~2h36m total (through 473/1155 days, 2023-01-01 through
+  2024-03-13, all `errors=0`) before a **4th genuine SPOT preemption** at `20:17:22Z` (confirmed via
+  `gcloud compute operations list` — `compute.instances.preempted` system event, NOT a `delete` — the reap-zombies.sh
+  fix from the earlier incident is holding; this is ordinary SPOT capacity churn in `asia-northeast1-c`). Checkpoint had
+  advanced further this cycle — 420 days saved (through 2024-02-25, vs. 360 last time), so the redo window is smaller
+  (~17 days: 2024-02-26 through 2024-03-13, all idempotent re-verification). **Relaunched**:
+  `backfill-defi-dex-swaps-20260803-201901` (same `--force` resume recipe), confirmed RUNNING. Still not flipping this
+  todo's checkbox — genuinely not done.
+- **2026-08-03T19:52Z** (AO dispatch, slot 15, `data_engineering`) — **Pre-compact checkpoint** (session context hit
+  ~65%, handing off — this entry IS the resume point, not a summary). Fifth campaign VM
+  (`backfill-defi-dex-swaps-20260803-141041`, launched 13:41Z) has run **~2h11m with ZERO preemptions/incidents**,
+  cleanly processing every day from 2023-12-28 through **2024-03-04** (the resumed run's dst-check pass confirmed
+  2023-12-28..2024-01-06 were already fully copied by the prior VMs — zero real work lost across all 3 earlier
+  preemptions), all `errors=0`. **464/1155 days done (~40%)**, steady ~2-4min/day pace for 2024 dates (larger than 2023
+  due to more DeFi venue activity — CAMELOT_V3/PANCAKESWAP_V3/SUSHISWAP_V3(+chain suffixes)/UNISWAP_V3 all now populated
+  vs. mostly BALANCER/CURVE/SUSHISWAP/UNISWAP_V3 in early 2023). **No action needed to resume** — the VM is still
+  running unattended; a fresh session should just re-poll
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-141041/run.log`
+  (grep `day=.*errors=` for progress, watch for the terminal `=== VERDICT defi-dex-swaps-source-correction: ...` line —
+  acceptance is `copy_errors=0 footer_failed=0`) and
+  `gcloud compute instances describe backfill-defi-dex-swaps-20260803-141041 --zone=asia-northeast1-c` for liveness; if
+  terminated without a VERDICT line, check
+  `gcloud compute operations list --filter="targetLink:instances/backfill-defi-dex-swaps-20260803-141041"` for
+  `compute.instances.preempted` (genuine, just relaunch via
+  `bash deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh --force`) vs. a `delete`
+  operation (would indicate the reap-zombies.sh bug recurred despite the fix todo being filed — escalate the P0 issue
+  doc's priority if so). **Lesson for the next session**: background bash watchdogs in this environment occasionally
+  self-terminate early with a non-standard exit code (144) that is NOT one of the polling script's own designed exits
+  (0=VERDICT, 1=30min timeout, 2=VM not running) — always verify the TARGET VM's real status directly via
+  `gcloud compute instances describe` rather than trusting the watchdog's own exit code alone; every occurrence this
+  session was a false alarm (VM was still healthy). **Still NOT flipping this todo's checkbox** — genuinely not done
+  yet, ~691 days remain at the observed pace (order-of-magnitude: several more hours if the 2024+ pace holds, since
+  post-2026-06-08 SOURCE_PRIORITY-fix dates should need zero/near-zero copying and process near-instantly like the early
+  skip-only days did).
 - **2026-08-03T14:10Z** (AO dispatch, slot 15, `data_engineering`) — Third and fourth campaign VMs both preempted
   rapidly: `backfill-defi-dex-swaps-20260803-133142` preempted ~2min after launch (never produced a run.log);
   `backfill-defi-dex-swaps-20260803-133550` ran ~33min, cleanly processed 2 more real days (2024-01-05: copied=17612,

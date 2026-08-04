@@ -70,7 +70,8 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md,
+    plans/audit/results/cf_manifest_audit_2026_06_01.py,
   ]
 ---
 
@@ -423,3 +424,6 @@ context_scope:
   diagnosis from scratch. Logged a disposition entry on the tracking issue doc's Progress Log (see that doc) rather than
   silently re-bouncing. No code shipped — nothing to fix within this worker's reach; checkbox correctly stays open.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the `blocked_prerequisites` dispatch-regex
+  bug issue (explains why several todos here keep re-bouncing) and `cf_manifest_audit_2026_06_01.py` (the audit script
+  gating the P0 E8 legacy-bucket delete item).

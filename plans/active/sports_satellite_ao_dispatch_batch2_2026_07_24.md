@@ -86,12 +86,10 @@ source: >-
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/data_completion_sports_2026_07_24.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/epics/sports_master.md,
   ]
 ---
@@ -743,11 +741,13 @@ context_scope:
       done-when). Two incidental findings, left untouched not absorbed: schema heterogeneity also affects ~12% of
       player_stats cells; ~4.9% of captured cells have no GCS object (2019 era). Detail:
       `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1, resolved).
-- [ ] [DATA] P1. **`fixture_events` re-fetch into the canonical 13-col schema** — fold into the OR-1 `fixture_events`
-      re-fetch campaign. (repo: instruments-service). **Done when**: a full re-census shows 0 genuinely non-canonical
-      objects remaining (or documented unrecoverable). **🟡 IN PROGRESS (2026-07-25, slot 2)**: full census done
-      (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the af-backfill
-      singleton lock (INJURIES VM still running) — full state + resume command:
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-03**: `fixture_events` re-fetch into the canonical 13-col schema — pass-3
+      complete, zero failures; final census `canonical_13col=38,376 degenerate_5col_stub=1,973 af_prefixed_10col=29`.
+      The 1,973 figure is NOT a gap (corrected via live-API spot-check: legacy blank-league_id duplicate objects whose
+      data already exists in the real per-league canonical objects) — full evidence in
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. **🟡 IN PROGRESS (2026-07-25, slot 2)**: full
+      census done (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the
+      af-backfill singleton lock (INJURIES VM still running) — full state + resume command:
       `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. — **Stale sub-status corrected 2026-07-25T05:38Z
       (slot 11): the INJURIES-VM lock cleared hours ago; the re-fetch VM (`af-backfill-20260725-032253`) has been
       RUNNING since 03:22Z** (launched by slot 4, health-checked healthy by slot 11 at 04:18Z and again now — heartbeat
@@ -766,17 +766,18 @@ context_scope:
       stamped `empty_confirmed`/`EXPECTED_NO_FIXTURE` instead of `attempted_failed` — the exact honest-absence violation
       this campaign exists to fix. Full evidence:
       `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`
-      (`unified-trading-pm@9022488a2`, PR #1492). Filed `/blocked` (`BLK-78a76a51`); main ruled **A — stop the VM now**
-      (SPOT+idempotent, safe to relaunch; leaving it running keeps writing false `empty_confirmed`, which is WORSE than
-      `attempted_failed` since downstream won't retry it). **Fix shipped**: `instruments-service@f31fb2e9` — the 4
-      adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4 unit tests updated
-      (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing `get_injuries_error_propagates` precedent);
-      full `quality-gates.sh` green (109s); orchestrator-level `TestCF11PerFixtureEntityFailurePath` suite (already
-      correct) confirms `_fetch_one`/`_handle_empty_fixture_entity` now actually receive the failure signal. **Not an
-      operator gate (re-tagged 2026-07-28) — a transient local credential gap only**: this is the SAME ambient
-      `unified-trading-sa`/`uts-orchestrator-epic-role` identity every AO worker runs as, not a genuine cross-identity
-      authorization gap (`task_template.md` finding O/finding ii doesn't apply here). Could not execute the VM stop from
-      THIS slot — `gcloud` auth expired mid-session
+      (`unified-trading-pm@ac4ace8b9`, PR #1492 — corrected 2026-08-04, slot-8: prior citation `9022488a2` did not
+      resolve to any commit; `gh pr view 1492` confirms the real merge SHA). Filed `/blocked` (`BLK-78a76a51`); main
+      ruled **A — stop the VM now** (SPOT+idempotent, safe to relaunch; leaving it running keeps writing false
+      `empty_confirmed`, which is WORSE than `attempted_failed` since downstream won't retry it). **Fix shipped**:
+      `instruments-service@f31fb2e9` — the 4 adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4
+      unit tests updated (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing
+      `get_injuries_error_propagates` precedent); full `quality-gates.sh` green (109s); orchestrator-level
+      `TestCF11PerFixtureEntityFailurePath` suite (already correct) confirms `_fetch_one`/`_handle_empty_fixture_entity`
+      now actually receive the failure signal. **Not an operator gate (re-tagged 2026-07-28) — a transient local
+      credential gap only**: this is the SAME ambient `unified-trading-sa`/`uts-orchestrator-epic-role` identity every
+      AO worker runs as, not a genuine cross-identity authorization gap (`task_template.md` finding O/finding ii doesn't
+      apply here). Could not execute the VM stop from THIS slot — `gcloud` auth expired mid-session
       (`Unable to retrieve Identity Pool subject token: job is already     completed`, both available accounts,
       non-interactive reauth impossible this session) — dispatch to any worker/slot with a currently-valid `gcloud`
       session to run `gcloud compute instances stop af-backfill-20260725-032253     --zone asia-northeast1-c` directly;
@@ -978,6 +979,8 @@ context_scope:
   insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
   `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: trimmed context_scope to 5 (was 7, over the 2-6 guidance) — no source path added, this
+  is a dispatch-batch coordinator whose real content lives in its 15 named source docs (each has its own).
 
 ## Reconciliation
 

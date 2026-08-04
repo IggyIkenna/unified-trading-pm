@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                      `returns`/onchain reconfirmed). Evidence:
-                                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                      `returns`/onchain reconfirmed). Evidence:
+                                                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -636,3 +636,22 @@ part of this plan was migrated elsewhere.
   confirmed the naming reconciliation is already tracked as `[DATA] P3` in the issue doc (not duplicated). Hit and
   resolved (same session, via slot-6) an unrelated pre-existing instruments-service QG failure — repo-blocker
   `RB-48c5820b`, detail in the issue doc's Progress Log.
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal (code-free
+  dispatch-batch coordinator; umbrella/predecessor-batch/finalize/skill/naming-SSOT set).
+- **2026-08-04 (slot-5, data_engineering craft, `[DATA] P2` re-verify, 3rd dispatch)**: precondition still unmet — no
+  post-fix Pyth collection VM has run (confirmed fresh via `gcloud compute instances list` + an audit-log sweep, zero
+  new launches since slot-11's 2026-08-04T01:50Z check). Per slot-11's own recommendation, did not repeat the manifest
+  read a 3rd time with no new VM to check. Closed the actual gap instead: added an `[OPERATOR] P2` todo to
+  `/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` authorizing the missing
+  verification-VM launch (3 prior slots each declined to self-launch but never tracked that decision as actionable
+  work). **Checkbox stays UNFLIPPED.** Released via `/skip-current-task`. Full detail in the issue doc's Progress Log.
+- **2026-08-04 (slot-10, data_engineering craft, `[DATA] P2` re-verify, 5th dispatch)**: re-verified fresh —
+  precondition still unmet (`gcloud compute instances list`: zero `pyth`/`oracle`/`mtds-pyth`-named VMs running or
+  recently launched across the full fleet; no dedicated live/cron oracle_prices collector exists either). No new commits
+  on `market-tick-data-service`/`instruments-service` since the 2026-08-03 code-fix SHAs. The `[OPERATOR] P2` launch-
+  authorization todo in `/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` is still
+  unactioned. This is the 5th consecutive dispatch to hit the identical dead end (slot-10, slot-11 x2, slot-5, now
+  slot-10 again) — did not repeat the manifest read a 4th time with nothing new to check. Filed `BLK-ddb041e2`
+  escalating the repeated-dispatch waste itself: recommend the operator action the `[OPERATOR] P2` VM launch directly
+  (fastest fix) or main park this task in the backlog against that todo so it stops re-dispatching until the VM has run.
+  **Checkbox stays UNFLIPPED.** Releasing via `/skip-current-task`.

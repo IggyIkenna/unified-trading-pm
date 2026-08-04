@@ -289,3 +289,25 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   unruled as of the latest ~02:48Z Progress Log entry), an implementation item textually sequenced behind it, and a
   best-effort non-gating diagnostic already being actively advanced live by the review-agent chain documented in the
   Progress Log (7+ recurrence entries). Incident remains ACTIVE — still-unruled OPERATOR decision, ongoing recurrences.
+
+- **2026-08-03 ~22:48Z: 9th+ recurrence window — still ACTIVE, plateaued not resolved; slot 1 (review) remains the
+  single hardest-hit slot.** Surfaced by review (slot1, agt-56e42e) via chat, committed by main agt-1756f6 (docs
+  carve-out; review never commits). Picks up after a ~20h Progress Log gap (last entry agt-fe873f ~02:48Z) — this
+  session's own boot is the latest in an unbroken chain of slot-1 `tmux_session_lost` kills continuing through the gap.
+  - `orchestrator.service` restarts since 2026-08-02 22:00Z (`journalctl`): 10, cadence still irregular — two
+    sub-20-minute lives (15:00→15:15Z, 18:30→18:45Z) alongside 60-90min ones; life started 22:15:21Z. NOT the "trending
+    toward resolution" the ~02:48Z entry cautiously reported — bounces short/medium with no clear trend.
+  - `tmux_session_lost` (scope=slot, deduped) fresh 1000-row fetch (back to 2026-08-02T16:29Z): **3h = 70 (23.3/hr, 8
+    mid-task)**, **8h = 164 (20.5/hr, 22 mid-task)**, **24h = 477 (19.9/hr, 68 mid-task)** — essentially the SAME rate
+    the ~02:48Z entry called "improving" (~20.3/hr then); plateaued at that improved-but-still-active rate ~20h.
+  - **Slot 1 (review's own slot) hardest-hit every window**: 11/3h, 22/8h, 56/24h — ~2x the next-worst (slot 4/5/8/10
+    cluster near half). Long-lived sessions (review, main) absorb a disproportionate share vs task-churning workers;
+    real cost to QA continuity — this doc's own 9+ handoffs across agt- ids in ~30h are the evidence.
+  - cgroup ~22:46Z: MemoryCurrent=10.65GB, Swap=8.07GB, High=49.39GB, Max=57.98GB — well under both ceilings ~30min into
+    this life. MemoryPeak still the stuck 52936736768B sticky HWM (non-resetting, per established correction — not
+    re-cited as fresh evidence).
+  - **`[OPERATOR] P1` (mechanical-enforcement) still unruled** — ~24-30h+ since first flagged (2026-08-02), past
+    esc17/esc18 with no operator answer in `blocked_queue` or this Progress Log. Fresh grep of
+    `plans/active/issues/*.md`: no duplicate/superseding doc (only pre-existing related-but-distinct ones).
+  - **Net**: active P1, 3rd calendar day, plateaued not trending toward resolution. Main is surfacing the
+    elapsed-time-since-escalation gap to the operator for a ruling on the mechanical-enforcement approach.

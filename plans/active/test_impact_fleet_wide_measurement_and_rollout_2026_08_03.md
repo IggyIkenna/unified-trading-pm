@@ -451,3 +451,5 @@ happened this session is a timing question outside na-eligibility-audit's mechan
 due for its own pre-authorized next action independent of this audit.
 
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-03 (re-scout)**: re-verified context_scope (6 entries) -- all paths resolve
+  (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, already correctly dated); no change needed.

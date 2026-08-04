@@ -55,7 +55,6 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/non-canonical-path-inventory.md,
     /plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 ---
 
@@ -172,3 +171,6 @@ vault-share-price collector) end-to-end:
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - todo 4 is an explicit [DECISION] on adding a second
   SOURCE_PRIORITY source (multi-source cell + backfill call); todo 5 targets codex
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 6) — dropped the archived batch1 dispatch doc
+  (its only cited todo, #3, is already shipped); remaining set covers the two still-open items (todo 4 [DECISION], todo
+  5 register-append).

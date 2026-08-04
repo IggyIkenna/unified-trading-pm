@@ -148,3 +148,5 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added
   `/plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`, the archived doc whose
   shipped gate-aware sweep (`agent-orchestrator@49c919d`) unblocked the still-open `/done`-on-origin-gate todo.
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 5 entries resolve on disk (sibling
+  issue + codex SSOT + reaper source + evidence-gate QG check + the archived unblocking fix) — no changes.

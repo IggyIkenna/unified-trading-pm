@@ -115,3 +115,6 @@ source: >-
   archival-discipline doc at `/codex/12-agent-workflow/`). `context_scope` above uses the CORRECTED, disk-verified
   paths; the body line is left unedited per this pass's scope (frontmatter + Progress Log only) — flagging for a future
   doc-body fix.
+- **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) -- finalize gate doc, code-free
+  by rule; the "Codex SSOTs" body-line staleness flagged above is unrelated to the (already-correct) context_scope
+  entries and remains a body-content fix outside this pass's scope.

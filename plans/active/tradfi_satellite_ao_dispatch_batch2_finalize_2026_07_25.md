@@ -131,4 +131,6 @@ context_scope:
   is not yet all-done; this finalize plan's `depends_on`/`gate_on_depends: true` hold is correct and unchanged. No todos
   executed in this doc — leaving as-is for the agent actively working batch2 to resolve (a) and (c), or for this gate to
   naturally clear once they do.**
+- **context-scout 2026-08-03**: re-verified context_scope (5 entries, all resolving) — finalize gate, code-free; no
+  changes needed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

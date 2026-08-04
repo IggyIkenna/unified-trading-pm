@@ -38,7 +38,11 @@ source:
   ]
 drift_direction: advance-code
 context_scope:
-  [/codex/06-coding-standards/data-engine-selection.md, /codex/06-coding-standards/read-time-filter-pushdown.md]
+  [
+    /codex/06-coding-standards/data-engine-selection.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    deployment-service/terraform/gcp/bigquery_feature_external_tables.tf,
+  ]
 ---
 
 # BigQuery as an OPTIONAL feature/ML compute engine
@@ -119,3 +123,5 @@ context_scope:
   BQML-vs-feature-store, sequencing behind the canonical-v9 migration) gate every remaining todo;
   `locked_by: live-defi-rollout`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added the shipped Terraform external-tables file
+  (`deployment-service@eaff3a7`) as a real source target alongside the 2 composes-with codex SSOTs.

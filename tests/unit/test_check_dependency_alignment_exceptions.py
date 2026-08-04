@@ -35,10 +35,13 @@ def _write_yaml(tmp_path: Path, content: dict[str, object]) -> Path:
 
 def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
     """The real fixture, loaded through the real loader, produces the exact
-    9-entry dict the pre-migration hand-edited dict literal declared."""
+    9-entry fastapi set the pre-migration hand-edited dict literal declared,
+    plus whatever later, independently-justified entries have accrued since
+    (each carrying its own justification/ssot/added fields, schema-validated
+    by the loader — this test's job is the SHAPE, not a frozen entry count)."""
     mod = _load_module()
     exceptions = mod._load_per_repo_exceptions(mod.EXCEPTIONS_YAML_PATH)
-    assert len(exceptions) == 9
+    assert len(exceptions) == 12
     for repo in (
         "ml-service",
         "unified-trading-library",
@@ -51,6 +54,12 @@ def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
         "unified-trading-api",
     ):
         assert exceptions[(repo, "fastapi")] == "fastapi>=0.115.0,<0.138.0"
+
+    # CVE-2026-59881/-69243/-69244 aiohttp cluster (2026-08-04): repos ahead of the canonical
+    # aiohttp>=3.14.1,<4.0.0 floor, which stays put pending its own separate fleet sweep.
+    assert exceptions[("unified-trading-library", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
+    assert exceptions[("market-tick-data-service", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
+    assert exceptions[("unified-trading-pm", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
 
 
 def test_missing_file_returns_empty_dict(tmp_path: Path) -> None:

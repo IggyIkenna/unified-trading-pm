@@ -52,9 +52,10 @@ context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
+    unified-trading-library/unified_trading_library/domain_client/artifact_store.py,
+    unified-trading-library/unified_trading_library/ml/model_registry.py,
   ]
 ---
 
@@ -468,3 +469,5 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own Progress Log lists
   `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the artifact_store.py/model_registry.py
+  prefix-collision source paths, dropped pipeline-mode-partition.md.

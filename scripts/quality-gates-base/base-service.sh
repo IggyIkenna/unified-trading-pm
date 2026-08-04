@@ -510,12 +510,42 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md § Phase 1.5b.
     UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --quiet \
         || log_warn "uv sync --frozen failed (lock stale/broken?) — QG runs against the existing .venv"
+    # `uv pip install -e` is uv's pip-compatible interface — unlike `uv sync` above, it does NOT read a
+    # sibling's OWN [tool.uv] override-dependencies (project-mode-only), so a sibling whose CVE fix lives
+    # ONLY in that section (e.g. unified-api-contracts's cryptography>=50.0.0 floor) is silently
+    # re-resolved back down by this editable install, even though `uv sync --frozen` above got it right.
+    # `--no-deps` was tried and REJECTED: it skips ALL of the sibling's transitive deps, not just the
+    # overridden ones — confirmed live, it breaks unified_api_contracts's own pydantic-based imports in
+    # consuming repos whose OWN pyproject never declares pydantic (only reachable via UAC's normal
+    # resolve). Extracting every LOCAL_DEPS sibling's override-dependencies into one combined
+    # `--overrides` requirements file preserves full normal transitive resolution while still forcing the
+    # intended floor. SSOT:
+    # plans/active/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md.
+    _local_deps_overrides="${TMPDIR:-/tmp}/qg-local-deps-overrides.$$"
+    : > "$_local_deps_overrides"
     for lib in "${LOCAL_DEPS[@]}"; do
         for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
-            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --quiet \
+            [ -f "$_libcand/pyproject.toml" ] || continue
+            python3 -c "
+import tomllib, sys
+try:
+    with open(sys.argv[1], 'rb') as f:
+        d = tomllib.load(f)
+except Exception:
+    sys.exit(0)
+for line in d.get('tool', {}).get('uv', {}).get('override-dependencies', []):
+    print(line)
+" "$_libcand/pyproject.toml" >> "$_local_deps_overrides" 2>/dev/null
+            break
+        done
+    done
+    for lib in "${LOCAL_DEPS[@]}"; do
+        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
+            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --overrides "$_local_deps_overrides" --quiet \
                 || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
         done
     done
+    rm -f "$_local_deps_overrides"
 fi
 PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 

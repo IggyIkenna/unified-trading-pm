@@ -36,10 +36,10 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     scripts/dev/audit-stash-pile.sh,
-    /plans/epics/infrastructure_master.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
 
@@ -203,6 +203,9 @@ surface — do not auto-drop — genuine WIP.
 purge here.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the BLOCKED-OPERATOR-DECISION doc
+  (`infra_plan_reconcile_parked_decisions_2026_07_26.md`) that actually gates Phase 3/4's re-targeting, replacing the
+  generic epic-index pointer.
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA-STALE — unchanged from the 2026-07-30
   verdict.** In scope only because a context-scout backfill touched the file; no content change since the last marker.
   Read end-to-end; `grep -cE '^- \[ \]'` = **17**, matching this verdict's item count. The 3 items already

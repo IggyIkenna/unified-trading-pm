@@ -50,7 +50,7 @@ context_scope:
     /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
     unified-trading-system-ui/.github/workflows/ci.yml,
-    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    scripts/openapi/generate_ui_reference_data.py,
   ]
 ---
 
@@ -472,3 +472,5 @@ Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
+- **context-scout 2026-08-03 (re-scout)**: swapped the now-stale capacity-crisis doc (the 2026-08-02 entry confirms that
+  blocker cleared) for the actual regen script (`generate_ui_reference_data.py`) todo 3's remaining work runs.

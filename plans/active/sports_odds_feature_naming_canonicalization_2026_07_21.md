@@ -41,8 +41,10 @@ superseded_by:
 context_scope:
   [
     /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
+    features-service/features_service/sports/exporters/odds_features_exporter.py,
+    ml-service/ml_service/training/app/core/sports_feature_loader.py,
+    strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
   ]
 ---
 
@@ -277,3 +279,5 @@ work doesn't reintroduce a 5th convention.
   mechanism for landing its work is already chosen and is NOT a flip of this doc; re-litigating it would contradict a
   ruling 1 day old
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the UAC schema file this migration targets
+  - the 3 real consumer source files (producer/loader/subscriber) the remaining parity-test todo spans.

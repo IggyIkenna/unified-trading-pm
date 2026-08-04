@@ -43,9 +43,9 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -100,5 +100,8 @@ context_scope:
       to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` is 0-hard-failures afterwards.
 
 ## Progress Log
+
+- **context-scout 2026-08-03**: populated context_scope (6 entries) -- includes the pre-floor-wipe duplicate-tracking
+  doc todo 1's own text says must be flipped in the same pass.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

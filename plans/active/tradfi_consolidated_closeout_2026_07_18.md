@@ -94,8 +94,8 @@ context_scope:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
   ]
 drift_direction: none
@@ -282,6 +282,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the IS-SSOT codex doc for the 2 other live
+  sibling children (Phase-D gate + registry/coverage) so the umbrella's reading list covers all 3 forked-child
+  companions plus the 3 domain codex SSOTs.
 - **`/ag-closeout-audit tradfi` 2026-08-01 (slot 2, dispatch agt-d7b683, scheduled `ag_closeout_auditor` worker,
   operator away)**: fresh full pass. Phase 0 fixed a same-session tooling gap
   (`generate_ag_closeout_audit_candidates.py` wasn't resolving this doc's own `depends_on:` for finalize-less forks —

@@ -152,7 +152,7 @@ qg_host_capacity() {
 # cross-slot coordination. On a single-clone host the strip is a no-op.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 #
-# GLUE-RUNNER topology (plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md):
+# GLUE-RUNNER topology (plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md):
 # on the GHA self-hosted glue-runner host, each repo's CI job runs from its own
 # POOL_TAG-suffixed runner dir (/opt/github-glue-runners[-<repo>]/glue-N/_work/<repo>),
 # so quality-gates.sh's own `WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`

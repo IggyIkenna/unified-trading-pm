@@ -855,3 +855,6 @@ fired.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
+  resolve; the doc carries zero open `- [ ]` items (a fully-resolved running gap-pool, kept `status: open` by design per
+  its own stated purpose), so the sibling findings doc + parent plan + source registries remain the right set.

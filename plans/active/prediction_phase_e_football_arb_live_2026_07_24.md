@@ -75,10 +75,11 @@ source: >-
   header text ("gated on B+D") as a real dispatch gate.
 context_scope:
   [
-    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
-    /codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md,
-    /plans/epics/predictions_master.md,
+    features-service/features_service/cross_instrument/app/calculators/prediction_cross_venue_dispatch.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/predictions/cross_venue_mapping.py,
   ]
 ---
 
@@ -171,3 +172,6 @@ context_scope:
   including the live-execution-bridge P1 issue (`issues/prediction_arb_live_execution_bridge_2026_07_20.md`) opened
   along the way. Future work on this plan logs new entries below.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the 2 real gate dependencies
+  (phase_ab_residuals, phase_d) + E3's 2 named source files (features-service dispatch calculator, UAC cross-venue
+  mapping).

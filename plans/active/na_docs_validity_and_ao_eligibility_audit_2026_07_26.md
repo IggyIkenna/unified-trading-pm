@@ -59,6 +59,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/task_template.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
   ]
 ---
 
@@ -650,6 +651,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   before executing, not a rider on this already-large tick.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the tranche-inventory generator script the
+  incremental audit runs are actually driven by.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

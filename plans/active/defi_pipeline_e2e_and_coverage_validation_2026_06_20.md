@@ -42,10 +42,9 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/epics/defi_master.md,
-    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
-    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     strategy-service/scripts/phase_d_gate.py,
+    execution-service/execution_service/matching_engine/solidly_fork.py,
   ]
 ---
 
@@ -157,3 +156,5 @@ fixtures are real on-chain `Swap` events, not synthetic.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added solidly_fork.py for the open P2 golden-swap
+  todo, dropped a less-central archived plan ref.

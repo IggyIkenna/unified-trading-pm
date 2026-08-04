@@ -491,8 +491,8 @@ longer has its own download button.
       (2) `FRED` confirmed correctly placed, not a conflation instance (real adapter + matching capability entry). A
       definitive verdict is recorded and a new spot found while auditing "anywhere else" (`data_availability.py`'s
       `VENUE_DATA_AVAILABILITY["POLYGON"]`, NOT dead code, still surfaced into `ui-reference-data.json`) was filed as
-      its own follow-up doc (`issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`) rather than fixed
-      inline — matching this todo's own "this todo is the audit, not the fix" done-when.
+      its own follow-up doc (`archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`) rather than
+      fixed inline — matching this todo's own "this todo is the audit, not the fix" done-when.
 - [x] ✅ [VERIFY] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 1) — read-only,
       no code change.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read as
       likely hitting the same multi-type blank-collapse: `OKX-FUTURES`, bare `BYBIT`, `BINANCE-FUTURES`,

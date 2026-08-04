@@ -40,7 +40,14 @@ source:
   ]
 assigned_role: backend_engineer
 drift_direction: advance-code
-context_scope: [/codex/04-architecture/backtest-groups.md, /plans/epics/sports_master.md]
+context_scope:
+  [
+    /codex/04-architecture/backtest-groups.md,
+    /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    execution-service/execution_service/matching_engine/engine.py,
+    execution-service/execution_service/matching_engine/sports_matching.py,
+    execution-service/execution_service/cli/backtest_domains.py,
+  ]
 ---
 
 # Sports/predictions Group-C execution-alpha backtest harness — scope note
@@ -104,3 +111,5 @@ CLI wiring, same shape as the 3 domains that already have it.
   operator sign-off before implementation dispatches' section (craft split + priority) — an established,
   still-unanswered gate; not re-litigated
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the 3 execution-service source files this
+  scope note names directly (`engine.py`, `sports_matching.py`, `backtest_domains.py`) and the decision issue.

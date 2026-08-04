@@ -37,7 +37,14 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
-context_scope: [/plans/epics/sports_master.md, /codex/02-data/honest-absence-downstream-handling.md]
+context_scope:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md,
+  ]
 ---
 
 > **🔒 NOT a clean auto-archive candidate (flagged 2026-07-24, plan-reconcile audit)** — do not archive this doc, do not
@@ -256,3 +263,6 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
   and a flagged regression-test-deletion discrepancy on todos 2/3 that 'needs an operator call before those checkboxes
   can be trusted at face value'
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — was thin/codex-only; added the source file both
+  remaining open todos actually touch (`_honest_coverage_clusters.py`), the merged league_id-tracking issue, and the
+  regression-test-discrepancy audit the 🔒 banner says to check before trusting todos 2/3.

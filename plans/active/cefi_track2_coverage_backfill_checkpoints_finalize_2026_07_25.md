@@ -99,3 +99,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) unchanged — `_finalize` gate doc, no source-code
+  paths added per the skip-source carve-out; all 6 entries confirmed resolving on disk.

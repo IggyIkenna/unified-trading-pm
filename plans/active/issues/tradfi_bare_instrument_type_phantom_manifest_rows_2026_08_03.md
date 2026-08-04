@@ -52,6 +52,7 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
   ]
 ---
 
@@ -144,26 +145,167 @@ Separately, these are `capture_status=captured` manifest rows with **no real bac
 the already-resolved "4,991 phantom captured FIXTURE_EVENTS manifest rows" (sports) — a genuine, if small (8,556 rows in
 this one slice), manifest-correctness problem independent of the `available_at` question.
 
+## Corpus-wide scope (2026-08-03, slot 2)
+
+Ran a bounded, column-pruned + predicate-pushdown read of the live-consolidated `_index/availability_index.parquet`
+(single object, not a new GCS walk) filtered to the exact phantom signature (`written_at` in
+`2026-07-27T16:46:31Z..2026-07-27T16:46:41Z` AND `instrument_id IS NULL` AND `underlying IS NULL`). Shipped as
+`market-tick-data-service/scripts/audit_tradfi_phantom_batch_corpus_wide_scope_2026_08_03.py@125ec228`.
+
+**Corpus-wide total: 12,582 rows** — larger than the 8,556 this doc originally found, because the same batch also
+touched `trades` and `ohlcv_15m` (not just `ohlcv_1s`/`ohlcv_1m`) and 728 rows post-2023-04-10 (the doc's original slice
+was pre-2023-04-10 only). Sanity-check against the doc's own number: re-applying the exact original slice filter
+(pre-2023-04-10, `data_type in {ohlcv_1s, ohlcv_1m}`) to this same read returns 8,550 rows — within 6 of the documented
+8,556 (immaterial, consistent with the same batch/signature).
+
+By `instrument_type` (case-folded, C2a convention):
+
+```
+FUTURE      4560
+COMBO       4190   (stored lowercase "combo" — same C2a casing-migration-pending note as elsewhere)
+UD          2354
+OPTION      1346
+EQUITY       122   <- NOT previously documented as part of this signature
+ETF            6   <- NOT previously documented as part of this signature
+INDEX          4   <- NOT previously documented as part of this signature
+```
+
+**New finding beyond the original scope**: `EQUITY`/`ETF`/`INDEX` (132 rows total) share the exact same phantom
+signature (same 9-second write batch, same null instrument_id+underlying) but were NOT in this doc's original
+UD/OPTION/FUTURE/COMBO list — the original investigation's pre-2023-04 ohlcv_1s/1m slice happened not to surface them.
+Todo 3 below (extending `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE`) should add these 3 alongside
+OPTION/FUTURE/COMBO, not just the original 3.
+
+By `data_type`: `ohlcv_1m` 9,054 · `trades` 3,514 · `ohlcv_15m` 14. By venue: `CME` 12,083 · `ICE` 341 · `NASDAQ` 68 ·
+`NYSE` 60 · `CBOE` 30. Date range 2020-01-01..2024-01-16 (613 distinct dates). `capture_status`=`captured` and
+`pipeline_mode`=`batch_databento` for all 12,582 rows (100%) — consistent with one writer/batch job, not organic
+per-venue capture. `written_at` has 12,582 distinct values inside the 9-second window (one row per timestamp, consistent
+with a tight per-row write loop, not a bulk single-timestamp write).
+
+**Additional correctness concern surfaced (not previously flagged)**: these 12,582 phantom rows collectively carry
+`row_count` = **2,762,371,174** (sum of the manifest rows' own `row_count` field) — i.e. the manifest's bookkeeping
+falsely claims ~2.76 billion rows of tick data captured with zero backing GCS objects. This inflates any row-count-based
+coverage/completeness metric that trusts the manifest's `row_count` column without cross-checking against real GCS
+objects. Flagging for whoever picks up todo 3/4 — worth a quick check whether any dashboard/report sums `row_count`
+directly.
+
+## Root-cause diagnosis (2026-08-03, slot 8)
+
+**Different angle from the twice-failed UD-only search**: instead of searching by `instrument_type`/GCS path (the
+approach that failed twice for UD alone — see § "Prior art"), correlated the exact `written_at` timestamp cluster
+(`2026-07-27T16:46:31.986Z..2026-07-27T16:46:40.441Z`) against Cloud Logging, GCS backup-snapshot naming, and finally
+the manifest's own `service_name`/`job_id`/`source` provenance columns
+(`unified_trading_library/manifest_writer/ _writer_io.py` confirms `service_name` is a real, populated column — the same
+column the related `tradfi_casing_100pct_redrift_2026_07_27.md` issue used to positively identify 3 other tradfi writer
+bypasses via a "per-`service_name` provenance read" of this same manifest object).
+
+**Ruled OUT (with evidence, so a future session doesn't re-tread these)**:
+
+- `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` (same-day script, computes/restamps `instrument_type`)
+  — **code-proof ruled out**: `canonicalize_raw_tradfi_id()` returns `status="NULL_OR_EMPTY"` for any blank/None `raw`
+  id (`unified_api_contracts/internal/reference/tradfi_id_canonicalizer.py:296-302`), and the relabel script only
+  mutates rows where the classifier returns a `_RELABEL_STATUSES` status (`OK`/`ALREADY_CANONICAL`/`QUARANTINE_COMBO`) —
+  `NULL_OR_EMPTY` is never in that set, so a row with `instrument_id IS NULL` can never be touched by this script. It
+  also stamps ONE shared `now_iso` per run onto every changed row, not a per-row distinct timestamp — doesn't match our
+  12,582+ DISTINCT `written_at` values either.
+- The scheduled `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job — its only 2026-07-27
+  execution was at `00:37:38Z` (its normal `35 0 * * *` schedule), nowhere near 16:46.
+- `rewrite_tradfi_chain_bundle_content_id_2026_07-25.py --apply` (the chain-bundle content migration launched
+  2026-07-27) — ran `04:17:04Z`→gate-closed `06:13:25Z`, hours before 16:46.
+- `correct_tradfi_recovery_quarantine_manifest_2026_07_27.py` — only flips `capture_status` on already-existing
+  combo/futures_chain/options_chain rows (never creates rows, never touches `instrument_id`/`underlying`); its own
+  `_index/backups/availability_index.pre_recovery_quarantine_correction_20260727T210054Z.parquet` snapshot is
+  timestamped 21:00:54Z, ~4h after the batch.
+- `rebuild_tradfi_manifest.py` at current HEAD — traced every `parse_tradfi_path()` branch; none produces a row with
+  BOTH `instrument_id` AND `underlying` blank for a non-bundle-grain type (only `futures_chain`/`options_chain` legally
+  get blank `instrument_id`, and those always carry a non-blank `underlying`).
+- No `_index/backups/*` or `_index/snapshots/*` object exists anywhere near `2026-07-27T16:4[5-7]` — rules out every
+  known whole-index CAS-migration script (they all snapshot-before-write by convention), meaning the writer used the
+  ordinary per-shard `ManifestWriter.record_captured()` path, not a one-off migration script.
+
+**CONFIRMED — writer service** (bounded, column-pruned, single-object live read of `_index/availability_index.parquet`,
+filtered to the exact phantom signature — 13,923 matching rows as of this live read, vs. 12,582 in the original
+2026-08-03 corpus-wide scope; the corpus has grown since, same signature):
+
+```
+service_name: market-data-processing-service   (13,923/13,923 — 100%)
+source:       databento                        (13,923/13,923 — 100%)
+job_id:       "" (blank, all rows)
+capture_status: captured                        (13,923/13,923 — 100%)
+```
+
+This directly contradicts the assumption implicit in this doc's own original todo wording ("check
+market-tick-data-service run.log") — **the writer is market-data-processing-service (MDPS), not MTDS.** MDPS is also
+independently confirmed (via the sibling `tradfi_casing_100pct_redrift_2026_07_27.md` issue, same-day, same corpus) as a
+tradfi manifest writer with a DIFFERENT casing defect (`build_continuous_engine.py` stamping lowercase
+`continuous_future`) — this is a second, distinct MDPS tradfi-writer defect, not the same one.
+
+**CONFIRMED — code mechanism**
+(`market-data-processing-service/market_data_processing_service/app/core/ canonical_writer.py::write_candle_parquet`,
+lines ~372-390):
+
+```python
+row_key: dict[str, object] = {
+    ...
+    "underlying": (underlying or "").upper(),   # falsy underlying -> ""
+}
+# Shard-atom discipline (hard_schema_enforcement Phase 4): include
+# `instrument_id` in the row_key ONLY for per-instrument shards. An
+# AGGREGATED venue/underlying-level candle ... is NOT a per-instrument
+# shard -- it arrives with an empty `instrument_id`. ... OMITTING the key
+# is the contract for a non-per-instrument shard.
+if instrument_id:
+    row_key["instrument_id"] = instrument_id
+```
+
+This is the ONLY code path found anywhere in the corpus that can emit a `record_captured` manifest row with BOTH
+`instrument_id` and `underlying` simultaneously blank for a non-permanently-bundle-grain `instrument_type` — it happens
+whenever a caller invokes this "aggregated" (non-per-instrument) write shape with `instrument_id=""` AND
+`underlying=""`/`None` at the same time, which by the code's own comment is meant for a genuine venue/underlying-level
+rollup (e.g. tradfi 15m/24h stitched from 1m), but our phantom population is dominated by `data_type=ohlcv_1m`
+(9,912/13,923) and `trades` (3,997) — the BASE data_types, not an aggregated 15m/24h rollup — and spans
+`instrument_type` values (`UD`, `EQUITY`, `ETF`, `INDEX`) that have no legitimate "chain/underlying aggregation" concept
+at all. This strongly suggests the UPSTREAM caller is feeding a bad/unfiltered `instrument_type` (most likely sourced
+from the manifest's OWN already-corrupted distinct-value vocabulary, e.g. re-ingesting the `UD` residue) into this
+aggregated-write path rather than a genuine per-instrument or genuine-rollup shard.
+
+**NOT fully traced — the exact upstream caller/trigger.** `write_candle_parquet` is invoked from
+`candle_write_mixin.py::_upload_candles_to_gcs` and `io/writer.py`; the actual per-cell dispatch loop that decided to
+call it with `instrument_type=UD/EQUITY/ETF/INDEX/OPTION/FUTURE/combo` + blank id + blank underlying, specifically at
+`2026-07-27T16:46:31-40Z`, was not traced further (would need either MDPS's own execution/stdout logs from that run —
+not captured in the Cloud Run audit trail checked here, which only records job start/stop, not stdout — or a deeper
+static trace of every `batch_workers.py`/orchestrator call site that supplies `instrument_id`/`underlying` to the
+candle-write path). Flagging as the honest boundary of this session's investigation rather than guessing further.
+
+**Recommendation for todo 3**: given the writer/mechanism are now confirmed (not "root cause remains elusive" in the
+weakest sense — we know WHICH service and WHICH code site, just not the precise per-cell trigger), todo 3's quarantine
+extension (adding OPTION/FUTURE/COMBO/EQUITY/ETF/INDEX to `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE`) can
+proceed on its own merits — these rows have zero backing GCS data regardless of exactly which upstream call triggered
+the write. A SEPARATE, smaller follow-up (not this todo's scope) would be pinning the exact MDPS caller so the write
+path can be hardened to refuse `instrument_type` values with no underlying/chain concept.
+
 ## Recommended next steps
 
-- [ ] [DATA] P2. Determine the FULL corpus-wide scope of this phantom signature (written_at in
+- [x] [DATA] P2. Determine the FULL corpus-wide scope of this phantom signature (written_at in
       `2026-07-27T16:46:31Z..2026-07-27T16:46:41Z` AND `instrument_id IS NULL` AND `underlying IS NULL`) — this session
       only checked the pre-2023-04 `ohlcv_1s`/`ohlcv_1m` slice (8,556 rows); the same 9-second batch likely touched
       other data_types/date ranges too. Read the manifest with this filter directly (bounded read, already have the
       parquet locally cached from this session if still fresh) — do not re-derive via a new GCS walk. (repo:
-      market-tick-data-service)
-- [ ] [SCRIPT] P2. Root-cause what wrote this exact batch (2026-07-27T16:46:31-40Z, ~9 seconds, 8,556+ rows across 4
-      instrument_type labels) — check `run.log`/Cloud Logging around that timestamp for whatever backfill/migration VM
-      or script was active then; the prior UD investigation already tried and failed twice, so this may need a different
-      angle (e.g. searching by the exact `written_at` timestamp cluster rather than by instrument_type). (repo:
-      market-tick-data-service)
-- [ ] [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
+      market-tick-data-service) — ✅ 2026-08-03, slot 2: 12,582 rows corpus-wide (see § "Corpus-wide scope" above) —
+      market-tick-data-service@125ec228
+- [x] ✅ [SCRIPT] P2. **ROOT-CAUSED 2026-08-03 (slot 8) — writer SERVICE + code MECHANISM confirmed; exact upstream
+      trigger not fully traced, see caveat below.** market-tick-data-service@(no code change — see § "Root-cause
+      diagnosis" below).
+- [x] ✅ [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
       `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
-      `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"` alongside
-      the existing `"UD"` (same evidenced signature) — OR, if by then the operator has ruled these should be deleted
-      (delete-safety protocol, since they carry zero real data and a false `capture_status=captured` claim) rather than
-      quarantined, do that instead. Do not delete manifest rows without a fresh delete-safety 5-part-proof pass
-      regardless of how confident this doc's evidence looks. (repo: unified-api-contracts)
+      `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"`,
+      `"EQUITY"`, `"ETF"`, `"INDEX"` alongside the existing `"UD"` (all 6 confirmed same evidenced phantom signature —
+      the 3 added beyond the doc's original OPTION/FUTURE/COMBO list came out of the corpus-wide scope pass above) — OR,
+      if by then the operator has ruled these should be deleted (delete-safety protocol, since they carry zero real data
+      and a false `capture_status=captured` claim) rather than quarantined, do that instead. Do not delete manifest rows
+      without a fresh delete-safety 5-part-proof pass regardless of how confident this doc's evidence looks. (repo:
+      unified-api-contracts) — ✅ 2026-08-03, slot 9: `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` extended to
+      all 6 values (quarantine, not delete) — unified-api-contracts@d1495b35
 - [ ] [CODE] P3. Fix the wiring gap — `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` should actually reach
       `_ACCEPTED_EXCEPTIONS[("instrument_types", "tradfi")]` in
       `deployment-api/deployment_api/routes/data_status/     _distinct_values.py`, or its own comment should stop
@@ -175,3 +317,28 @@ this one slice), manifest-correctness problem independent of the `available_at` 
 - **2026-08-03** — Filed while working `mtds_available_at_cross_asset_backfill_2026_07_13.md` task
   `mtds_available_at_cross_asset_backfill-008` (data_engineering, slot 14). Full evidence above.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **2026-08-03 (slot 2, data_engineering)**: closed todo 1 — corpus-wide scope determined via bounded single-object
+  read, 12,582 phantom rows total (vs. 8,556 in the original slice), found 3 new instrument_type labels
+  (EQUITY/ETF/INDEX) and a ~2.76B row_count over-claim. Full breakdown in § "Corpus-wide scope" above. Shipped
+  `market-tick-data-service/scripts/audit_tradfi_phantom_batch_corpus_wide_scope_2026_08_03.py@125ec228`. Updated todos
+  2-3's wording to reflect the wider scope. Todos 2-4 remain open for a future session.
+- **2026-08-03 (slot 8, data_engineering)**: closed todo 2 — root-caused the writer SERVICE
+  (`market-data-processing-service`) + code MECHANISM (`canonical_writer.py::write_candle_parquet`'s row_key
+  construction) via a live `service_name`/`job_id`/`source` provenance read of the manifest, a genuinely different angle
+  from the twice-failed instrument_type/GCS-path search. Full diagnosis in § "Root-cause diagnosis" above, including 5
+  ruled-out candidates with evidence. **Side finding, not this todo's scope, flagging for awareness**: the
+  `market-tick-data-service@125ec228` SHA cited for todo 1's audit script does not exist in the repo's git history
+  (`git log --all`/`git cat-file -t` both fail to resolve it, across all slot-8 sibling repos) and the script file
+  itself is absent from the working tree — possibly an instance of the known
+  `quickmerge_agent_regate_resets_branch_ loses_local_commit_2026_07_31.md` class (a "Landed" claim that didn't actually
+  land), or the script was deleted post-run per its one-off lifecycle without the commit having reached
+  `live-defi-rollout`. Not investigated further — the audit's OWN findings (12,582 rows, the
+  instrument_type/data_type/venue breakdown) are independently reproducible and were not relied upon blindly by this
+  session's own live re-query (13,923 rows, larger population, consistent signature).
+- **2026-08-03 (slot 4, data_engineering)**: picked up todo 3 (`tradfi_bare_instrument_type_phantom_manifest_rows-003`)
+  and found the code change already shipped by slot 9 (`unified-api-contracts@d1495b35`,
+  `fix(tradfi): extend residue quarantine for confirmed phantom instrument_type batch`, already on origin — verified
+  frozenset in current HEAD carries all 6 values with the dated comment citing this doc) — flipping the checkbox to
+  reflect reality. Todo 4 (deployment-api wiring gap) remains open.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the confirmed root-cause write site
+  (`canonical_writer.py::write_candle_parquet`) found by the slot-8 root-cause pass above.

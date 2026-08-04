@@ -42,9 +42,11 @@ locked_by:
 locked_since:
 context_scope:
   [
+    strategy-service/strategy_service/config_reloaders.py,
+    unified-trading-library/unified_trading_library/domain_config_reloader.py,
     /codex/04-architecture/live-strategy-config-hot-reload.md,
+    /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
     /codex/06-coding-standards/config-reloader-pattern.md,
-    /plans/epics/infrastructure_master.md,
   ]
 ---
 
@@ -108,3 +110,7 @@ stating that the allow-list and error type do not exist and that the instrument 
   live instrument-universe hot-swap is position-state-safe) is a genuine unresolved design/judgment call requiring an
   operator decision — stays KEEP_JUDGMENT. The other item (document VersionGovernanceReloader +
   StrategyDirectiveReloader in the codex SSOT...
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in the actual shipped source
+  (`config_reloaders.py`) and its UTL base class (`domain_config_reloader.py`), and the sibling codex doc
+  (`instrument-lifecycle-cache-delta-hot-reload.md`) the open `[OPERATOR]` position-state-safety ruling bears on;
+  dropped the generic epic pointer.

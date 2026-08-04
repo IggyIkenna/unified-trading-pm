@@ -28,7 +28,7 @@ context_scope:
   [
     /plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md,
     /codex/06-coding-standards/ui-testing-layers.md,
-    deployment-ui/tests/smoke/nav-menu-dedup.spec.ts,
+    deployment-ui/tests/smoke/top-nav-bar.spec.ts,
   ]
 locked_since: 2026-05-21
 assigned_vm: planning
@@ -112,3 +112,7 @@ or their MTDS-related constants).
   citing this evidence; no code change needed (all 3 items in this doc are now done).
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — all 3 todos are now done; entries still
   resolve and remain accurate for anyone verifying/closing this doc.
+- **context-scout 2026-08-03**: corrected a dead path — `nav-menu-dedup.spec.ts` (cited in this doc's own prose/earlier
+  context_scope) no longer exists on disk; its coverage was renamed/consolidated into
+  `deployment-ui/tests/smoke/top-nav-bar.spec.ts` (confirmed via the live "the always-visible top bar carries all 16
+  canonical entries" test). Swapped the entry to the real current file.

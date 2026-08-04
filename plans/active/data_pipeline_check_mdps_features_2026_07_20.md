@@ -951,3 +951,5 @@ sections (already superseded by later work, nothing still-open) to
 the already-archived "Option-A candle canonical-path migration" section.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope, no change needed (5 entries) -- doc is
+  near the 1000L cap, kept the entry count flat.

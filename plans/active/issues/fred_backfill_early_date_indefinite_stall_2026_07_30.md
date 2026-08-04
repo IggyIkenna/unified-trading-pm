@@ -280,16 +280,43 @@ var, ignoring any env; `_tradfi-ohlcv-launcher-lib.sh` reads a differently-named
 verifying whether `escalation._recover_backfill_vm`'s `bigger_machine` wiring is a live no-op before trusting it
 anywhere.
 
-- [ ] [BACKEND] P3. Distinguish a genuine OOM from a stall-induced SIGKILL in `exit_code_fleet_monitor._finding_for()`
-      before setting `details["oom"]`/`bigger_machine` — e.g. read the archived deployment record's
-      `mem_pct`/`mem_slope` history (already collected in `host_metrics_window`) or the run.log's own
-      `cause=`/`WORKER_STALLED` marker, and only flag OOM when memory was genuinely climbing toward the critical
+- [x] ✅ [BACKEND] P3. Distinguish a genuine OOM from a stall-induced SIGKILL in
+      `exit_code_fleet_monitor._finding_for()` before setting `details["oom"]`/`bigger_machine` — e.g. read the archived
+      deployment record's `mem_pct`/`mem_slope` history (already collected in `host_metrics_window`) or the run.log's
+      own `cause=`/`WORKER_STALLED` marker, and only flag OOM when memory was genuinely climbing toward the critical
       threshold at kill time. Repo: deployment-service. Evidence: this doc's Progress Log entry above (deployment_id
-      `bdd2f745-bea7-46a0-89a3-ed6e962fd74a`, `mem_pct` flat at 17.0%, `cause=stall`).
-- [ ] [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
+      `bdd2f745-bea7-46a0-89a3-ed6e962fd74a`, `mem_pct` flat at 17.0%, `cause=stall`). — **deployment-service@e9196ee**:
+      added a `stall_marker: bool` param to `_finding_for()`, sourced in `sweep()` from the existing (already-tested)
+      `_gcs.run_log_shows_stall()` helper, gated to only read run.log on the `exit_code==137` candidate path (same
+      per-tick download-count discipline as the other gated reads in `sweep()`). `oom` is now
+      `exit_code == 137 and not stall_marker` — a positive `WORKER_STALLED`/`cause=stall` run.log marker overrides the
+      pure exit-code-137 equality check, so `details["oom"]`/`bigger_machine` are no longer stamped on a stall-induced
+      SIGKILL (tier falls to the safe pre-existing `page_operator` default rather than the OOM `auto_recover` path — no
+      escalation-routing re-architecture attempted, scoped strictly to the mislabeling per the todo text). 2 new
+      `_finding_for`-level tests (137-without-marker still OOM; 137-with-marker not OOM, no `bigger_machine`, stays
+      `page_operator`) + 1 new `sweep()` end-to-end test reproducing this doc's own `bdd2f745-...` incident's run.log
+      shape via `finding_sink`. `quality-gates.sh` green (sentinel `e9196eea87a0bda842e179954be3dabfcc1c2066`), verified
+      on origin.
+- [x] ✅ [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
       tradfi launcher today (neither reads a `MACHINE_TYPE` env consistently per the note above) — if it is a silent
       no-op, either wire it through properly or drop the hint rather than leave a documented-but-dead auto-escalation
-      path. Repo: deployment-service.
+      path. Repo: deployment-service. — **deployment-service@3fd24cb**: confirmed both were silent no-ops and wired
+      `MACHINE_TYPE` through properly (chose "wire it through," matching the convention most other launchers already
+      follow via `${MACHINE_TYPE:-default}`, over dropping the hint). `launch-tradfi-backfill-vm.sh` (the generic
+      CME/BTC/ETH launcher) hardcoded `MACHINE_TYPE="e2-standard-4"` as a direct assignment, discarding any inherited
+      env — now `${MACHINE_TYPE:-e2-standard-4}`. `_tradfi-ohlcv-launcher-lib.sh` (shared by the CME/ICE/NASDAQ/NYSE/
+      CBOE/CFE/KRX/FX OHLCV launchers, incl. `launch-tradfi-bf-fred.sh`) only ever read the differently-named
+      `TRADFI_OHLCV_MACHINE` — the escalation actuator injects `MACHINE_TYPE`, a name this lib never looked at, so the
+      hint was invisible to the whole family; now `MACHINE_TYPE` wins first, then the pre-existing
+      `TRADFI_OHLCV_MACHINE` override, then the family default. `launch-tradfi-bf-fred.sh` additionally re-hardcoded
+      `TRADFI_OHLCV_MACHINE` right after sourcing the lib (with its own comment explaining why a self-referential `:-`
+      there would be a no-op) — fixed the same way, against `MACHINE_TYPE` instead of the self-referential var. Verified
+      live via `--dry-run` on all three launchers (default machine unchanged, `MACHINE_TYPE=<bigger>` env now escalates
+      as expected) + 8 new regression tests (`tests/unit/test_vm_launcher_scripts.py`:
+      `TestFredBackfillDateFloor::test_machine_type_env_escalates_past_the_fred_default`,
+      `TestTradfiOhlcvMachineTypeEscalation` ×3, `TestTradfiBackfillVmMachineTypeEscalation` ×2 — plus the two
+      pre-existing default-value assertions those new classes' fixtures also cover). `quality-gates.sh` green (sentinel
+      `3fd24cb34606a3631e6cfe01e80da8fad719fb8b`), verified on origin.
 
 - **2026-07-30 (separate session, closing this thread out) — the real root cause of the SLOW cycle times this whole doc
   chases was found + fixed: the tradfi manifest consolidator's own chunk-count blowup, not anything specific to FRED's

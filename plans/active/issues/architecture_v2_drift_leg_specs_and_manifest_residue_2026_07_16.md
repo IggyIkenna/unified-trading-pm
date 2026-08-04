@@ -235,3 +235,6 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - bundles a strategy-domain delete-vs-re-leg decision with a
   generator/UI structural-skew investigation the doc says likely needs its own plan
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries — corrects the 2026-08-01 marker's stale count, the
+  list itself already carried 6) — all still resolve; covers the still-open UI-resync todo's exact source targets
+  (`ui-reference-data.json`, `generate_ui_reference_data.py`, `lifecycle.ts`).

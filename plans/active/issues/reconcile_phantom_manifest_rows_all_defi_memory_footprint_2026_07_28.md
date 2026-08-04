@@ -139,3 +139,6 @@ because it is currently blocking anything urgent.
   adopted; bounded machine-type/Cloud-Run sizing + a column-pruned read path
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 5 entries resolve on disk (the
+  heavy reconciler script + UTL manifest_writer + the proven-sized Cloud Run precedent .tf + codex VM-launcher SSOT
+  - related closeout plan) — no changes.

@@ -39,7 +39,13 @@ source: >-
   This content was a scope-creep section covering agent-orchestrator bootstrap/watchdog/memory-guardrail hardening,
   file-disjoint from the parent's CI-dashboard/fleet-git-health mission — moved verbatim, nothing summarized or dropped.
 last_updated: 2026-06-27
-context_scope: [/plans/active/monitoring_control_plane_master_2026_06_10.md, /plans/epics/observability_master.md]
+context_scope:
+  [
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    agent-orchestrator/scripts/bootstrap_vm.sh,
+    agent-orchestrator/server/worktree_clean_check/_resolve.py,
+    agent-orchestrator/scripts/refresh_env_from_sm.sh,
+  ]
 ---
 
 # Orchestrator e2e control-plane validation + VM-from-scratch hardening
@@ -459,3 +465,5 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   re-verified all 3 remaining open items against live doc text: a permission-blocked-by-design SM secret write, an
   operator-sanctioned dirty-worktree reset policy, and a `BLOCKED-CREDENTIALS`-tagged IAM grant with a filed approval
   request. All three remain genuinely operator-gated, no change since the 2026-07-30 verdict.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- was epic+plan-only; added the 3 real source files
+  behind the 3 still-open P0 items (SM secret sync script, dirty-worktree resolver, VM bootstrap script).

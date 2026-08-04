@@ -37,8 +37,8 @@ context_scope:
     /plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
     /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
     strategy-service/strategy_service/engine/strategies/v2/param_schema.py,
-    /codex/04-architecture/token-wrapping-and-collateral.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
+    strategy-service/strategy_service/portfolio_allocator/archetypes_rank.py,
   ]
 ---
 
@@ -215,4 +215,6 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the remaining Phase-C/D items
   are wizard/food-chain design work plus a dual-deposit cost constant explicitly flagged as pending operator
   calibration.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in archetypes_rank.py, the file the
+  remaining open P2 (dual-deposit cost calibration) todo actually touches.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).

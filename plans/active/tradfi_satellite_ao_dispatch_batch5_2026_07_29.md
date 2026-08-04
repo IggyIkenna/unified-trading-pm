@@ -86,12 +86,11 @@ context_scope:
 
 # TradFi satellite AO batch 5 — fresh audit extraction
 
-> **🟡 tradfi backfill VM launches are currently BLOCKED fleet-wide (2026-08-02).** The tradfi market-data
-> manifest-consolidator cron is paused (owning plan:
-> `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`), so every tradfi download-VM launch — including
-> todo 1's ES/MES re-run — self-deletes at boot (`exit_code=78`, OOM preflight) before doing any work. Do not relaunch a
-> tradfi download VM until that plan's cron-resume lands. Details:
-> `/plans/active/issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
+> **✅ RESOLVED 2026-08-02 (was: 🟡 tradfi backfill VM launches BLOCKED fleet-wide).** The tradfi market-data
+> manifest-consolidator cron (owning plan: `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`) was
+> resumed 2026-08-02, re-verified live 2026-08-03T19:33Z (`ENABLED`, index fresh) — tradfi download-VM launches work
+> normally again. Details (now archived):
+> `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
 
 > **Status: active — approved + dispatched 2026-07-30 (`5a6bbefc3`, "activate 9 fresh ag-closeout-audit dispatch
 > batches").** This pass originally ran on the scheduled daily worker as `status: draft` per the ag-closeout-audit
@@ -767,7 +766,7 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   24h preflight budget; (2) `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 (tradfi
   apply + resume todos) are both still `- [ ]` open, confirmed by direct read this session. **New since
   slot-6/8/15/slot-4's prior park**: a separate, freshly-filed issue doc,
-  `issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` (filed today by a
+  `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` (filed today by a
   `data_pipeline_failure` escalation, corroborated independently by a second escalation also run under this same slot
   number under a different task), proves the consequence is now ACTIVE FLEET-WIDE FAILURE, not just a soft blocker:
   every tradfi download-VM launch (any venue) self-deletes at boot with `exit_code=78` (shell-level OOM preflight in
@@ -778,9 +777,9 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   ES/MES fleet right now would hit the identical rc=78 self-delete before any capture — not a hypothetical, a
   confirmed-live mechanism. Declining again rather than attempting a launch guaranteed to fail or busy-waiting on a
   cross-plan gate this task cannot unilaterally resolve. **Next dispatch**: check
-  `issues/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`'s `[OPERATOR]` todo for
-  resolution (or `mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 flipping done) before attempting
-  any tradfi download-VM launch for this todo — until then every such launch will fail identically.
+  `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`'s `[OPERATOR]`
+  todo for resolution (or `mtds_available_at_cross_asset_backfill_2026_07_13.md` lines 305/314 flipping done) before
+  attempting any tradfi download-VM launch for this todo — until then every such launch will fail identically.
 
 - **2026-08-02T17:55Z (slot-15, data_engineering) — gate now cleared, ES/MES backfill VM launched, IN PROGRESS.**
   Re-verified live before attempting anything (not trusting the last decline's snapshot): the tradfi consolidator cron

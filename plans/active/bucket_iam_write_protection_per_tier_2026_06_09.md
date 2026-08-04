@@ -45,9 +45,9 @@ context_scope:
     /codex/05-infrastructure/bucket-isolation-model.md,
     /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+    deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
   ]
 ---
 
@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                              > (or any other role) without going through terraform at all. See
-                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                              > actually complete until that doc's P1/P2 also land.
+                                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                      > (or any other role) without going through terraform at all. See
+                                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -674,6 +674,8 @@ Two independent gates because Group A and Group B are at different stages:
   insufficient evidence to safely revoke either) and dispatched its P2 (terraform-import all 24 as-is) via the live
   blocked-queue.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the tier_sa_scope_gap issue (its P2
+  already flipped) for the `bucket_iam_per_tier_sa.tf` source path (the terraform declaring the actual SAs).
 - **slot-6 2026-08-02**: dispatched task `bucket_iam_write_protection_per_tier-018` (P2.2e, the
   `uts-shared- deployment-api` live-traffic cutover). Did NOT proceed — confirmed both gating docs are still
   `status: open` and the explicit downstream gate from `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s

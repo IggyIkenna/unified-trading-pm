@@ -51,8 +51,7 @@ context_scope:
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]
 ---
 
@@ -125,3 +124,5 @@ scope).
   as one combined todo citing this doc as its `Source:`. See the note added above the todos. Live blocker is batch5's
   `status: draft`, not this doc's classification.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: trimmed context_scope from 7 to 6 entries (dropped two generic dispatch-batch/closeout
+  provenance links) and added the `VENUES_BY_ASSET_GROUP` registry file the `YAHOO_FINANCE` todo would edit.

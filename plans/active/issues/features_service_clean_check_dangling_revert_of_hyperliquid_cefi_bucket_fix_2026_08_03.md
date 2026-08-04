@@ -132,15 +132,21 @@ problem with the fix that was never written down — which would be a genuine da
       gate, everywhere." Recommendation: yes, add a routine sweep (see new P3 follow-up todo below) — filed as separate
       tracked work rather than fixed inline here since it's a real agent-orchestrator server-code change, not a doc
       edit.
-- [ ] [BACKEND] P3. **Extend orchestrator worktree-cleanliness checks to detect stale `git stash list` entries** (repo:
-      agent-orchestrator). Per the audit finding directly above, neither `check_slot_clean()` nor any
-      `worktree_clean_check/` module inspects stash state today, for primary OR linked (`-clean-check`-style) worktrees
-      — a stash can sit indefinitely (confirmed: 12 entries, oldest from 2026-07-27) with zero visibility until an agent
-      stumbles onto it by accident during unrelated work, as this doc's own `## What I found` section did. Done when: a
-      periodic sweep or a wired-in gate surfaces aged/dangling stash entries (age + originating slot/task, parsed from
-      the slot-tagged message convention in `_stash.py`) across every slot's repos — including linked
-      `-clean-check`-style worktrees, confirmed structurally in-scope by the P3 audit above — so this class of finding
-      stops depending on an agent noticing by chance.
+- [x] ✅ [BACKEND] P3 (2026-08-03, slot-12). **Extend orchestrator worktree-cleanliness checks to detect stale
+      `git stash list` entries** — agent-orchestrator@d71f1d9. Per the audit finding directly above, neither
+      `check_slot_clean()` nor any `worktree_clean_check/` module inspected stash state, for primary OR linked
+      (`-clean-check`-style) worktrees. Added `server/worktree_clean_check/_stash_audit.py`
+      (`check_slot_stashes(slot_id, slot_dir)`, pure/DB-free): walks every immediate repo subdir of a slot dir (mirrors
+      `check_slot_clean`'s own walk, so linked worktrees are structurally covered), runs `git stash list` per repo,
+      flags a repo `is_stale` when count > 15 or oldest entry > 14 days (same split `stash-pile-detect.sh` measured),
+      and parses originating slot/task from BOTH slot-tagged conventions in use — `_stash.py`'s `slot-<N>-orphan-<ts>`
+      and the DONE-GATE `orchestrator-slot-<N>-<task_id>` form (this doc's own real stash tag). Wired into a new
+      standalone `StashAuditWatchdog` (`server/stash_audit_watchdog.py`, mirrors `OrphanRefVerifyWatchdog`'s skeleton)
+      that sweeps every configured slot hourly (`tuning.stash_audit_interval_seconds`, default 3600s) and logs one
+      `stash_pile_stale` activity row per stale repo — registered in `server.py` startup/shutdown alongside the other
+      watchdogs. 18 new unit tests (`tests/test_stash_audit.py`, `tests/test_stash_audit_watchdog.py`) against real git
+      subprocesses, including a linked-worktree scenario proving the shared-`.git` stash list is visible from both the
+      primary and the `-clean-check` worktree name. Full `quality-gates.sh` green (2289 passed, 0 failed).
 
 # Progress Log
 

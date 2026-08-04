@@ -57,13 +57,10 @@ last_updated: 2026-07-25
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/05-infrastructure/gcs-lifecycle-policies.md,
-    /codex/05-infrastructure/gcs-object-operations.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
+    deployment-api/deployment_api/deployment_api_config.py,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/config.py,
   ]
 ---
 
@@ -380,3 +377,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   - Full evidence trail inline on both todos above.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, trimmed from 8) — re-derived off the 2 genuinely
+  still-open todos (recon-bucket E2E chain P0, `ml-models-store` prod delete P1, both otherwise blocked) rather than the
+  whole original 6-todo spread; added 2 real source paths (`deployment_api_config.py`'s `ml_configs_store_bucket`
+  resolver, BLRS's `config.py` recon resolver).

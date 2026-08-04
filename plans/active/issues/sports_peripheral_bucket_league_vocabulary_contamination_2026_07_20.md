@@ -8,13 +8,19 @@ summary: >-
   carry non-canonical league values in a DIFFERENT vocabulary than the api-football display names the write-path fix
   addresses — ENGLAND_PREMIER_LEAGUE / LA_LIGA_2 / UNKNOWN rather than PREMIER_LEAGUE / EPL. features-sports-prd has 30
   such objects (contamination ongoing to 2026-07-11); instruments-store-sports-prd has 9,733 objects / 172 distinct
-  values across 6 pipeline_modes. Root cause is UNVERIFIED and the writer is untraced. Must NOT be folded into the
-  odds-tick relocation.
+  values across 6 pipeline_modes. **ROOT-CAUSED + FIXED 2026-08-04** (`unified-api-contracts@f3f1bbe0`): shared
+  normalizer `normalize_api_football_fixture()` built the league id from a raw country/name slug instead of the UAC
+  registry; `instruments-service`'s own write paths were already gated (hence its population is legacy residue, not
+  growing), `features-service`'s was not (hence the live leak). Write path closed for every consumer. The 9,733-object
+  historical migration remains open — the delete-safety gate is already cleared (30-day soft-delete retention, no
+  `[OPERATOR]` step needed), split 2026-08-04 into census+inspection (DONE — path-only rewrite confirmed, no
+  content-column rewrite needed) / build+dry-run / gated-apply (see Todos). Must NOT be folded into the odds-tick
+  relocation.
 status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [features-service, instruments-service, unified-trading-pm]
+repos: [features-service, instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [sports, canonical, league-id, contamination, data-correctness]
 related:
@@ -85,9 +91,80 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
 
 ## Todos
 
-- [ ] [DATA] P2. **Trace the writer emitting the `ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN` league vocabulary** —
-      per "Required work (not started)" item 1 (the `features-sports-prd` write is live as of 2026-07-11), then
-      root-cause + fix at the write path before migrating the 9,733 historical `instruments-store-sports-prd` objects.
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-12)** — traced the writer, root-caused, fixed at the write path.
+      `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
+      `normalize_api_football_fixture()` built `CanonicalLeague.league_id` via a bare `build_league_id(country, name)`
+      slug of the RAW api-football country name ("England" → `ENGLAND_PREMIER_LEAGUE`, "Argentina" →
+      `ARGENTINA_PRIMERA_NACIONAL`, "Brazil" → `BRAZIL_SERIE_A`) instead of the UAC league registry's canonical slug
+      ("EPL" etc.) — this is the SAME shared normalizer both `features-service` and `instruments-service` consume, so
+      every consumer inherited the leak. `instruments-service`'s own write paths (`_write_sports_fixture_venue` /
+      `_write_fixtures_per_league` / `_write_fixture_entity_per_league`) mask it behind a separate write-universe gate
+      (`_is_in_canonical_write_universe`, added ~2026-06-24/27) — which is why `instruments-store-sports-prd`'s 9,733
+      objects read as legacy pre-gate residue, not an actively-growing leak. `features-service`'s `_write_per_league`
+      has NO equivalent gate, so `features-sports-prd` was still live-leaking as of 2026-07-11 (the "start there" signal
+      this doc's own todo named). Checked every other sports provider adapter in both repos (soccerfootball_info,
+      footystats, transfermarkt, understat, betfair, open_meteo) — none use a country-prefixed convention natively;
+      confirmed this is a mis-normalization of the SAME api-football data, not a third-party adapter naming scheme.
+      **Fix** (`unified-api-contracts@f3f1bbe0`): new `_resolve_league_id()` mirrors instruments-service's own
+      `_canonical_league_id` two-pass, non-lossy design — registry-first via the numeric `api_football_id`
+      (authoritative, the same id `get_league_by_api_football_id` uses everywhere else), falling back to the raw
+      country/name slug ONLY when the league genuinely has no registry entry (non-lossy CF-7 passthrough, never drops or
+      blanks a field). Closes the leak at its true shared source for every consumer, not just the one ungated write
+      path. 5 new regression tests (`tests/unit/test_normalize_api_football_fixture_league_id.py`) lock in: a registered
+      league resolves via the registry not the raw slug; an unregistered league falls back non-lossily; a missing
+      `api_football_id` falls back non-lossily; a missing league yields a blank id (unchanged prior behavior). Full
+      existing `api_football`-related suite (95 tests) re-run clean, no regressions.
+- [x] ✅ [DATA] P2. ~~[OPERATOR] Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects~~ —
+      **SPLIT 2026-08-04 (slot 5)** into the 3 properly-scoped todos below after main authorized (per BLK-88a22681's
+      answer) building + dry-run-inspecting this session, with an explicit escape hatch to split into its own plan if
+      inspection revealed genuinely open design decisions beyond the sibling pattern. It did — see the 3 todos below for
+      the concrete reason (a corpus-scale census + a cross-entity resolution dependency the sibling never had), not
+      because a feared content-column rewrite materialized (it didn't — good news, see todo 1's finding). `[OPERATOR]`
+      tag is REMOVED from the split todos: the delete-safety §3a bucket-retention check already passed (30-day
+      soft-delete window, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a), so the actual `--apply`
+      needs no operator step — it's gated on dry-run review instead (todo 3).
+- [x] ✅ [DATA] P2. **Bounded historical census of `instruments-store-sports-prd`'s contaminated `league=` partitions +
+      content-shape inspection.** **DONE 2026-08-04 (slot 5)** — inspected 2 real objects
+      (`sports_reference/by_date/day=2026-06-20/pipeline_mode=batch_api_football/entity={fixtures,fixture_lineups}/league=ARGENTINA_PRIMERA_NACIONAL/`):
+      **content is CLEAN for both** — `fixtures` carries only the numeric `af_league_id` (no `league_id` string column
+      at all), `fixture_lineups` carries no league-related column whatsoever. This resolves the open design question
+      from the split above: the contamination is **PATH-ONLY** (the `league=<value>` GCS partition segment), not a
+      content-column rewrite, for every entity checked — a materially SIMPLER write side than the sibling script's
+      per-row reclassification (a pure object copy-to-new-path + delete, once the correct value is known). **New
+      complexity found (the actual reason for the split)**: (1) contamination spans at least 9 entity types under
+      `entity=` per `pipeline_mode` (`fixtures`, `fixture_lineups`, `fixture_events`, `fixture_stats`,
+      `fixtures_outcomes`, `fixtures_schedule`, `player_stats`, `standings`, `teams` — confirmed via a live listing of
+      one day) across (at least) 4 pipeline_modes (`batch_api_football`, `batch_footystats`,
+      `batch_soccer_football_info`, `batch_transfermarkt` — a live listing found these 4 on one sampled day; the issue's
+      original finding says 6 total) — **only `fixtures` carries the numeric `af_league_id` needed to registry-resolve
+      the canonical value** (`get_league_by_api_football_id`); the other 8 entity types have NO identifying field of
+      their own, so they must BORROW the resolution from the `fixtures` object for the SAME (day, pipeline_mode, raw
+      contaminated league value) key — a cross-entity dependency the odds-tick sibling never needed (its `sport_key` was
+      self-contained per row). (2) A full census (which (day, pipeline_mode, entity, contaminated-value) combinations
+      actually exist, going back to the 2020-06-06 sports data floor) requires walking `sports_reference/by_date/day=*/`
+      across years of history — this is corpus-scale, not the few-hundred- prefix walk a single dispatch should run
+      interactively; it needs a dedicated bounded VM walk (`/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O
+      rule), same class as the sanctioned Tier-2 reconciliation census work, not an ad-hoc `gcloud storage ls -r` from
+      this session. Did NOT attempt that walk — 1-2 targeted sample listings only (bounded, single-day, not
+      corpus-scale). (repo: instruments-service — inspection only, no code changed).
+- [ ] [DATA] P2. **Build the migration script + run its dry-run.** Depends on todo 1's findings (path-only rewrite;
+      `fixtures`-borrowed resolution for entities with no own numeric id) and a real census (either the VM walk todo 1
+      flagged, or — cheaper first cut — drive off the availability_index / any manifest structure that already records
+      per-(day,entity,league) shard rows for `instruments-store-sports-prd`, if one exists at that grain; check before
+      defaulting to a fresh walk). Mirror the sibling's mode structure (default dry-run / `--validate` against TEST /
+      `--apply-prod` gated behind `--confirm-prod-write`) and its no-clobber / CAS-safe / quarantine conventions
+      (`market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`).
+      Quarantine (never guess-map, never drop) any (day, pipeline_mode, contaminated-value) group where no sibling
+      `fixtures` object exists to borrow a resolution from. **Done when**: a dry-run report exists with per-
+      entity/per-pipeline_mode counts, the resolved canonical mapping for every found raw value, and the quarantine
+      population size — reviewable before any prod write. (repo: instruments-service / market-tick-data-service).
+- [ ] [DATA] P2. **Apply the migration to prod, gated on todo 2's dry-run review.** No `[OPERATOR]` step required
+      (delete-safety §3a bucket-retention check already cleared, see the split todo above) — gated on a human or a fresh
+      session reviewing todo 2's dry-run artifact first, per BLK-88a22681's answer (build+dry-run now, defer `--apply`
+      to a reviewed follow-up). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
+      carrying the country-prefixed vocabulary (excluding the quarantine population, tracked separately if non-empty).
+      (repo: instruments-service / market-tick-data-service). Cite todo 2's dry-run report path as evidence before
+      applying.
 
 ## Progress Log
 
@@ -100,3 +177,44 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   context-scout frontmatter backfill since); sole open todo bundles an unbounded root-cause trace with a 9,733-object
   GCS migration carrying no `[OPERATOR]` tag or delete-safety citation.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
+- **2026-08-04 (slot-12, data_engineering, dispatched via `sports_closeout_track_x_hygiene-003`)**: traced the writer
+  (Explore-agent investigation across features-service + instruments-service, confirmed by direct code read), root-
+  caused (shared UAC normalizer mis-slugging the raw country name instead of registry-resolving via the numeric
+  api_football_id), and shipped the write-path fix — `unified-api-contracts@f3f1bbe0`, 5 new regression tests, full
+  existing api_football suite (95 tests) re-run clean. Split the original bundled todo into DONE (trace+root-cause+fix)
+  and a new, properly-scoped `[OPERATOR]`-gated migration todo for the 9,733 historical objects — the split itself
+  resolves the na-eligibility-audit's own stated blocker ("bundles an unbounded root-cause trace with a ... migration
+  carrying no `[OPERATOR]` tag"), so a future audit pass should re-classify the migration todo once it's picked up. Did
+  NOT attempt the migration itself — out of AO scope without the delete-safety gate, per `task_template.md` finding O.
+- **2026-08-04 (slot 5, dispatched via `sports_closeout_track_x_hygiene-005`)**: ran the fresh delete-safety §3a
+  bucket-retention check — `instruments-store-sports-prd-central-element-323112` returns `2592000` (30 days), qualifying
+  for the reversibility-qualified agent-autonomous path (no operator step needed for the actual delete, once a script
+  exists). That resolves requirement 2 of the gate; requirement 1 (the script) does not exist yet and its design isn't
+  fully specified by this todo — the sibling `league_id_relocation/migrate_sports_league_id_casing_ 2026_07_21.py` this
+  todo points at as the pattern to mirror is 779 lines resolving several non-trivial questions (per-row vs per-path
+  reclassification, ROW-MIXED splitting, CAS-safe merge-on-write, quarantine for unmapped values) for a DIFFERENT,
+  narrower bucket/shape than `instruments-store-sports-prd`. Building an equivalent, correctly-designed migration for
+  9,733 objects across 172 distinct values / 6 pipeline_modes and safely applying it to prod in one dispatch is a
+  multi-hour undertaking with real judgment calls the todo doesn't resolve (e.g. does the league value need a
+  content-column rewrite or just a path-segment rename; what should happen to an object whose contaminated value has no
+  clean registry resolution). Did NOT attempt to build+ship+apply the migration — filed a `/blocked` question to the
+  operator with this finding + a recommendation (build+dry-run this session, defer the actual `--apply` to a follow-up
+  dispatch once dry-run is clean) rather than rushing a from-scratch prod-mutating script through in one turn. Checkbox
+  stays unchecked.
+- **2026-08-04 (slot 5, continued) — BLK-88a22681 answered**: main authorized building + dry-run-inspecting this session
+  (option B), with an explicit escape hatch to split into its own plan if inspection revealed open design decisions
+  beyond the sibling pattern. Inspected 2 real objects
+  (`day=2026-06-20/pipeline_mode=batch_api_football/entity={fixtures,fixture_lineups}/league=ARGENTINA_PRIMERA_NACIONAL/`)
+  — **content is clean for both** (only `af_league_id` numeric in `fixtures`; no league column at all in
+  `fixture_lineups`), definitively resolving the path-only-vs-content-column question the sibling script's own design
+  had to answer: **path-only**, a materially simpler write side than feared. But inspection also surfaced a live listing
+  showing contamination spans 9+ entity types × 4+ pipeline_modes, only ONE of which (`fixtures`) carries the numeric id
+  needed to registry-resolve a canonical value — every other entity type must borrow that resolution cross-entity, a
+  dependency the odds-tick sibling never had (its `sport_key` was self-contained per row). Combined with the census
+  itself needing a corpus-scale bounded VM walk (years of `sports_reference/by_date/` history back to the 2020-06-06
+  floor) rather than an interactive-session listing, this is the genuine "beyond the sibling pattern" trigger the
+  operator's answer anticipated — invoked the escape hatch: split the single `[OPERATOR]` todo into 3 properly-scoped
+  todos above (census+inspection — DONE this session; build+dry-run — next; gated apply — after that, no `[OPERATOR]`
+  step needed per the already-cleared §3a bucket check). Did NOT build the migration script or touch prod. `[OPERATOR]`
+  tag removed from the remaining todos (the delete-safety gate that tag existed for is already satisfied; what remains
+  is a design/build/review gate, tracked via the split, not an operator authorization gate).

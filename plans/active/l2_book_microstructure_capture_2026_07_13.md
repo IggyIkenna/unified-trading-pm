@@ -36,10 +36,11 @@ source: [v2_engine_venue_buildout_2026_06_15.md follow-up, Phase E1 finding 2026
 sequential: true
 context_scope:
   [
+    market-tick-data-service/market_tick_data_service/derived/book_microstructure_compute.py,
+    features-service/features_service/cefi/book_microstructure_feature_extractor.py,
+    /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
+    /plans/archive/issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md,
     /plans/active/v2_engine_venue_buildout_2026_06_15.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    /plans/epics/strategy_master.md,
   ]
 ---
 
@@ -427,3 +428,6 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   BLOCKED-DATA-CORRECTNESS on the dormant CeFi live-WS capture pipeline; no worker can discharge them until that data
   lands.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the real capture/extractor
+  source modules + the two blocking issue docs (both now ARCHIVED, corrected from the doc's own stale `issues/...`
+  active-relative links) that the 2 open BLOCKED-DATA-CORRECTNESS todos actually gate on.

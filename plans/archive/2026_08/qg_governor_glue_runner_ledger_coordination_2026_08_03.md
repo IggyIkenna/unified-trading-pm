@@ -8,7 +8,7 @@ summary: >-
   onto one physical host with no shared admission control. Confirmed live 2026-08-02 (10 repos, load average 42-43, one
   16-core/61GB host). This plan forks that flagged-but-unscoped gap (parent plan's 2026-08-02 entry, open P1 todo, block
   ticket BLK-7eedce54) into its own scoped fix — design, implement, validate, roll out.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -55,6 +55,20 @@ context_scope:
 ---
 
 # QG governor — cross-repo ledger coordination on GHA glue-runner hosts
+
+> **🟢 ARCHIVED 2026-08-03.** All todos across Phases 0-3 resolved and shipped
+> (`unified-trading-pm@fada7dc20`/`4247e957f`/`eb4cc8db1`/`5d0cc52a0`): `_qg_shared_root()` extended to collapse the GHA
+> glue-runner topology onto one host-shared ledger; live-validated on the real production host (6+ real concurrent repos
+> correctly coordinating, not just synthetic); a ~73min sustained soak (0 OOM, 0 false aborts, 0 ghost reservations, 11
+> distinct repos rotating through the ledger). Parent plan's 2026-08-02 fork todo closed back there. Codex-alignment
+> check: `/codex/06-coding-standards/quality-gates.md` already updated with the matching 🟢 banner — nothing further to
+> update. Two genuine follow-ons surfaced by this work did NOT evaporate with this archive — both migrated to real
+> tracked todos in the parent plan (`/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`): (1) AO
+> slot-worker QG runs and the glue-runner pools' ledger are still two SEPARATE populations on the same host, not yet
+> unified; (2) block ticket `BLK-7eedce54`'s underlying issue is resolved but its ticket-system status was never flipped
+> (no verified AO `/blocked` API access from this session). Moved to
+> `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`; corpus referrers updated in the
+> same commit.
 
 > **LOCAL / operator-driven plan** (`assigned_vm: NA`) — not AO-ingested. Forked out of
 > `qg_host_adaptive_resource_governor_2026_07_14.md`'s 2026-08-02 finding per that doc's own note: "a one-shot
@@ -157,32 +171,60 @@ No strategy is pre-selected — Phase 0 decides, with the actual verification ea
 
 ### Phase 2 — Live validation on the actual glue-runner topology
 
-- [ ] [INFRA] P1. On one glue-runner host, trigger ≥2 different repos' `quality-gates-v2` runs concurrently (or manually
+- [x] [INFRA] P1. On one glue-runner host, trigger ≥2 different repos' `quality-gates-v2` runs concurrently (or manually
       exercise `qg-host-governor.sh --status`/acquire calls from two repo checkouts on the same host if a live
       concurrent CI trigger isn't practical) and confirm both resolve to the SAME ledger directory with combined
-      reservations visible to both. Gate: a `--status` read from repo A showing repo B's live reservation.
-- [ ] [INFRA] P1. A sustained soak on the GHA topology specifically — the parent plan's 93-min soak only covered the
+      reservations visible to both. Gate: a `--status` read from repo A showing repo B's live reservation. — 2026-08-03:
+      done, exceeded the gate (see Progress Log) — the fix is already live in production use by 6 real concurrent repos,
+      not just the synthetic test pair.
+- [x] [INFRA] P1. A sustained soak on the GHA topology specifically — the parent plan's 93-min soak only covered the
       slot-worktree topology; this is a genuinely different failure surface (cross-repo, not cross-slot). Target a
       comparable duration (~90min+) with multiple real repos' CI landing on the same host, watching for 0 OOM, no false
       80% aborts, and admission actually gating once the combined reservation approaches budget. Gate: a dated soak
       summary in this plan's Progress Log with the same shape as the parent plan's 2026-07-14 soak entry (run count,
-      maxconc, OOM count, any ghost-reservation lingers).
+      maxconc, OOM count, any ghost-reservation lingers). — 2026-08-03: done, see Progress Log soak entry.
 
 ### Phase 3 — Rollout + close the loop
 
-- [ ] [INFRA] P1. Flip the glue-runner shared-root resolution live across the glue-runner fleet, coordinating timing so
+- [x] [INFRA] P1. Flip the glue-runner shared-root resolution live across the glue-runner fleet, coordinating timing so
       the cutover itself doesn't collide with whatever firefighting is active in
       `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (or its day-3 successor) at the time. Gate:
       `qg-host-governor.sh --status` on ≥3 different glue-runner hosts post-flip, each showing the new shared-root path
-      in use.
-- [ ] [INFRA] P2. Update `/codex/06-coding-standards/quality-gates.md` to note the glue-runner topology is now covered
+      in use. — 2026-08-03: **corrected + done** (gate text pre-dates this doc's own Phase-0 finding — "hosts" → "pools
+      on the one host"; per na-eligibility-audit hygiene nit, fixed here). There is no discrete "flip" to coordinate:
+      every job self-clones `unified-trading-pm@live-defi-rollout` fresh (`python-quality-gates-v2.yml`'s self-clone
+      step), so the fix propagates organically on each pool's next CI run — zero collision risk with the ongoing
+      firefighting since nothing is toggled. Swept all 24 pools' current checkouts: 14+ already show the fix (well past
+      the ≥3 gate — `ml-service`, `execution-service`(**), `ao`, `instruments-service`, `deployment-api`,
+      `deployment-service`, `features-service`, `fund-administration-service`, `ibkr-gateway-infra`,
+      `client-reporting-api`, `batch-live-reconciliation-service`, `alerting-service`, `market-tick-data-service` — most
+      have one `glue-N` slot fixed and a sibling slot still pre-fix, self-healing on that slot's next run); remaining
+      pools (`e2e-testing`, `execution-service`'s `glue-2`, `greeks-service`, `unified-trading-library`) pick it up on
+      their next CI run with no action needed. (** `execution-service`'s `glue-2` checkout was pre-fix at sweep time —
+      superseded by the live cross-pool test in Phase 2 part 1, which used its real `WORKSPACE_ROOT` regardless of which
+      commit its checkout happened to be on, since `_qg_shared_root()`'s behavior depends only on the path, not the
+      checkout content.)
+- [x] [INFRA] P2. Update `/codex/06-coding-standards/quality-gates.md` to note the glue-runner topology is now covered
       (mirrors the parent plan's own 🟢 LIVE + VALIDATED banner update pattern). Close the parent plan's 2026-08-02 todo
       (`_qg_shared_root()` glue-runner fix) by pointing it at this plan's completion, and close block ticket
-      `BLK-7eedce54`.
-- [ ] [INFRA] P2. Once live + soaked, check whether `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` and
+      `BLK-7eedce54`. — 2026-08-03: done, `unified-trading-pm@4247e957f`. Codex banner added (mirrors the parent's 🟢
+      pattern). Parent plan's 2026-08-02 todo flipped `[x]` with a closure note. `BLK-7eedce54`'s underlying issue is
+      resolved + documented; did NOT flip its status in the AO `/blocked` ticket system itself — no verified API access
+      from this interactive session (dashboard JWT / internal proxy auth not configured here). If the operator wants the
+      ticket-system record formally closed too, that needs either operator action or a session with AO API auth.
+- [x] [INFRA] P2. Once live + soaked, check whether `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` and
       its day-2 continuation can be marked resolved (or at minimum banner a material-improvement note with a
       before/after escalation-rate comparison) — this fix directly targets their root cause, so their own resolution
-      should follow, not be assumed automatically.
+      should follow, not be assumed automatically. — 2026-08-03: done, `unified-trading-pm@4247e957f`. **Banner-only,
+      NOT resolved** — the 2026-07-27 doc is at 995/1000 lines (no new entry added; that doc's own established pattern
+      routes continuations to the day-2 doc). Added a before/after material-improvement note to the day-2 doc: before =
+      10 repos with isolated ledgers, 0 shared admission (2026-08-02); after = 6+ real concurrent repos correctly
+      sharing one ledger, admission gating actually binding, 0 OOM (3 separate live spot-checks this session).
+      Explicitly scoped what this fix does NOT address, per a `~19:56Z` entry found in the day-2 doc describing a
+      STILL-ACTIVE, DIFFERENT root cause (runner-POOL starvation — a pool with zero available runner processes queues
+      forever; a capacity/count problem, not admission-coordination) — so neither doc should be marked resolved on this
+      fix alone. Also noted: AO slot-worker QG runs (a separate `.tabs`-scoped ledger population on the same host) are
+      still NOT unified with the glue-runner pools' ledger.
 
 ## Progress Log
 
@@ -271,3 +313,65 @@ gate text says "≥3 different glue-runner hosts" but this doc's own Phase-0 fin
 Phase 2→Phase 3 has a real dependency not expressed via `sequential`/`depends_on`.
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+
+### 2026-08-03 (later) — Phase 2 part 1: live cross-repo ledger sharing, confirmed in production (autonomous run, /autonomous)
+
+Addresses the na-eligibility-audit's hygiene nit above (Phase 3's "≥3 different glue-runner hosts" gate text is stale
+against this doc's own Phase-0 finding — fixed in Phase 3's todo text below, corrected to the one-host/multi-pool
+reality).
+
+**Method**: rather than wait on freshly-dispatched `quality-gates-v2` runs to reach their heavy phase (dispatched two —
+`ml-service` run `30805148327` completed success, `execution-service` run `30805151319` sat queued ~3h then got
+cancelled — self-hosted runner queue depth made this an unreliable clock to wait on), used the plan's own stated
+fallback: exercised `qg-host-governor.sh` directly on the live host via `ssm-run.sh` (root, no inbound SSH — see
+`scripts/self-hosted-runners/ssm-run.sh`), using the REAL per-repo job checkouts already on disk.
+
+**Result — exceeds the gate.** Both `ml-service`'s and `execution-service`'s real `WORKSPACE_ROOT` values (as
+`quality-gates.sh:42` derives them from their actual `_work/<repo>` dirs) resolve `_qg_shared_root()` to the identical
+`/opt/.qg-governor-glue-shared`. Added a real, held (`sleep 90`) reservation under `execution-service`'s
+`WORKSPACE_ROOT`, then switched to `ml-service`'s `WORKSPACE_ROOT` and read `_qg_ledger_reserved_mb`/`--status` — it
+showed the combined sum including the test reservation. More significantly, the SAME `--status` read surfaced **6
+genuinely live, already-running production reservations from 6 OTHER real repos** (`client-reporting-api`,
+`market-tick-data-service`, `deployment-api`, `deployment-service`, `batch-live-reconciliation-service`,
+`instruments-service`) — the fix is not just synthetically verified, it is **already coordinating real fleet CI
+traffic** the moment it landed, because every job freshly clones `unified-trading-pm` at `live-defi-rollout` HEAD
+(`.github/workflows/python-quality-gates-v2.yml`'s self-clone step, `git clone -b live-defi-rollout --depth=1`).
+Admission math checked out live too: `CPU slots (80%×8)=6, running heavy phases=7` — the combined-reservation view
+already exceeds the CPU-slot budget, exactly the cross-repo oversubscription this plan exists to catch (pre-fix, each of
+those 7 would have seen 0 others and admitted blind). Cleaned up the synthetic test reservation afterward (`reserved_mb`
+returned to the real 6-repo baseline, confirming no leak).
+
+### 2026-08-03 (later) — Phase 2 part 2: ~73min sustained soak on the GHA topology (autonomous run, /autonomous)
+
+Sampled `qg-host-governor.sh --status` + host vitals + `journalctl -k` OOM check every ~10min via `ssm-run.sh` (root, no
+inbound SSH), same shape as the parent plan's 2026-07-14 soak entry:
+
+- **Window**: 2026-08-03T20:28:20Z → 21:41:40Z (~73min; below the ~90min target — one sample mid-soak (below) cost real
+  time to diagnose+fix and the restart deliberately used a shorter remaining-sample count rather than re-extend further,
+  since the pattern across all 8 successful samples was already unambiguous and the fix has additionally been running
+  continuously in real production since it landed ~10h before this soak started, not freshly cold-started for this check
+  — least-bad tradeoff, documented per rule 1).
+- **Runs sampled**: 9 attempted, 8 succeeded, 1 failed on a tooling bug (not the fix under test) — sample 3/9 hardcoded
+  one specific repo's ephemeral `_work` checkout path, which the runner's own per-job cleanup had already wiped by the
+  time that sample fired; fixed immediately by making pool discovery dynamic (any currently-fixed checkout, found fresh
+  each cycle) for the remaining 6 samples (`v2-1` through `v2-6`).
+- **Distinct repos observed** rotating through the ONE shared ledger across the window: `client-reporting-api`,
+  `deployment-service`, `batch-live-reconciliation-service`, `instruments-service`, `unified-api-contracts`,
+  `features-service`, `ml-service`, `deployment-api`, `market-tick-data-service`, `market-data-processing-service`,
+  `alerting-service` (11 total) — direct evidence of sustained, continuous, correct cross-repo sharing, not a one-off
+  snapshot artifact.
+- **maxconc**: `running heavy phases` was 5-6 in every sample, consistently at or one below the CPU-slot budget
+  (`CPU slots (80%×8)=6`) — the CPU gate is the live-binding constraint throughout, exactly as the host's core count
+  predicts; `reserved_mb` ranged 6411-10573MB, always well inside the 44278MB RAM budget (RAM never came close to
+  binding on this host — consistent with 8 cores / 61GB skewing CPU-bound).
+- **OOM count: 0** across every sample where the check ran (8/8 successful samples, `journalctl -k --since -15min`).
+- **False 80%-valve aborts: 0** — `MemAvailable` stayed 33-51GiB throughout, never approaching the pressure-valve
+  threshold.
+- **Ghost-reservation lingers: 0** — reservations tracked to real, live, rotating PIDs the whole window (e.g.
+  `deployment-api` pid `714353` persisted correctly across `v2-1`→`v2-6`, a genuinely long-running held job, not a stale
+  row; other rows appeared/disappeared consistent with real jobs starting/finishing, never orphaned).
+- **Verdict**: matches the parent plan's own 93-min soak shape and outcome (0 OOM, clean gating) on a genuinely
+  different failure surface (cross-repo, not cross-slot). This plan's Phase 2 is fully done.
+
+**All phases done. Plan ready for archival** per the completion-and-archival discipline
+(`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — see the archival entry below.

@@ -48,8 +48,8 @@ locked_since:
 context_scope:
   [
     /codex/06-coding-standards/model-tier-selection.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     agent-orchestrator/server/accounts.py,
-    agent-orchestrator/docs/omniroute_cli_setup_guide.md,
     deployment-api/deployment_api/deployment_api_config.py,
     deployment-api/deployment_api/commentary/pipeline_uat.py,
   ]
@@ -298,3 +298,5 @@ under active consideration, and only once its 3 prerequisite research todos reso
   account into existence. Those 3 `[OPERATOR]`/`[REVIEW]` todos plus the remaining half of `[INFRA] P3` (the real pilot
   dispatch) are the only work left on this plan.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the setup guide for the multi-account
+  headless-auth codex SSOT this doc's own "Codex SSOTs" section names as the mechanism deliberately NOT reused.

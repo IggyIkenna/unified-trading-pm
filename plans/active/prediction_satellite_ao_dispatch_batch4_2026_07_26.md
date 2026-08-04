@@ -64,10 +64,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/epics/predictions_master.md,
+    /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/reconciliation-census-and-compute-tiers.md,
+    /codex/02-data/canonical-cutover-register.md,
+    market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py,
   ]
 ---
 
@@ -143,29 +144,51 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       `empty_confirmed`), a test/spot-check confirms `OUT_OF_COVERAGE_WINDOW_REASONS` already excludes these from the
       denominator (no `EMPTY_CONFIRMED_REASONS` enum change), and `quality-gates.sh` is green across all three repos.
 
-- [ ] [DATA] P2. **Verify END-TO-END MDPS prediction depth-history retention.** The raw live prediction book store is a
-      rolling-latest-window (does not retain multi-hour history by itself). Confirm (a) MDPS's prediction live-scan
-      cadence against the raw live-book flush window, and (b) that the PROCESSED prediction book/candle store actually
-      accumulates multi-hour history rather than only mirroring the rolling raw window — a bounded read/grep of the MDPS
-      scan config + a GCS-timespan check on the processed prediction store, with a stated pass/fail verdict. Repo:
-      market-data-processing-service (+ market-tick-data-service read-only for the raw-window comparison). Source:
-      `prediction_live_clob_depth_capture_2026_07_24.md` (P2 "Verify END-TO-END depth-history retention"). **Done
-      when**: a dated verdict is recorded (PASS = processed store demonstrably accumulates >1 flush-window of prediction
-      depth history, with the measured processed-store time span cited; or FAIL = a named retention gap + the specific
-      scan-cadence/flush-window mismatch), committed to that doc's Progress Log. Read-only verification — no data
-      mutation.
+- [x] ✅ [DATA] P2. **Verify END-TO-END MDPS prediction depth-history retention — DONE 2026-08-04 (slot-5), VERDICT:
+      FAIL.** Full evidence + verdict recorded in `prediction_live_clob_depth_capture_2026_07_24.md`'s Progress Log
+      (this todo's Done-when target): the raw flush path still overwrites per instrument (day+instrument-keyed, no
+      window key), AND the processed prediction candle/book store has zero `pipeline_mode=live_*` objects on every
+      sampled day (2026-06-23/24/26/28), including for `trades` which has a registered MDPS adapter. Follow-up fix work
+      filed as `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (3 todos) per the
+      findings-closure HARD RULE — this verification todo itself was read-only, no data mutation. Original todo text
+      preserved below for context (NOT a checkbox — do not re-derive as a backlog task).
 
-- [ ] [SCRIPT] P2. **cqg recent-window catalogue re-enumeration with the already-fixed classifier.** The cqg-partitioned
-      `instrument_availability` catalogue (instruments-store) is refreshed for 2026-06-23 only (34 groups verified);
-      re-enumerate the recent enumerated window (2026-06-20..22) with the fixed cqg classifier so those dates' catalogue
-      also carries real `canonical_question_group` values. This is an operational run of the ALREADY-FIXED classifier
-      over a bounded 3-day window (deep history is the bulk-tick-seed with no per-date catalogue — out of scope here).
-      This touches the IS cqg-catalogue enumeration module, DISTINCT from todo #1's adapter-lifecycle write path (no
-      file collision). Repo: instruments-service. Source: `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2
-      "cqg partition-completeness — recent-window catalogue re-enumeration"). **Done when**: the 2026-06-20..22 cqg
-      catalogue partitions are re-enumerated and a live read confirms each of those 3 dates now carries populated
-      `canonical_question_group` catalogue rows (count cited), with the run's evidence recorded in the source doc's
-      Progress Log.
+  > Original: The raw live prediction book store is a rolling-latest-window (does not retain multi-hour history by
+  > itself). Confirm (a) MDPS's prediction live-scan cadence against the raw live-book flush window, and (b) that the
+  > PROCESSED prediction book/candle store actually accumulates multi-hour history rather than only mirroring the
+  > rolling raw window — a bounded read/grep of the MDPS scan config + a GCS-timespan check on the processed prediction
+  > store, with a stated pass/fail verdict. Repo: market-data-processing-service (+ market-tick-data-service read-only
+  > for the raw-window comparison). Source: `prediction_live_clob_depth_capture_2026_07_24.md` (P2 "Verify END-TO-END
+  > depth-history retention"). Done when: a dated verdict is recorded (PASS = processed store demonstrably
+  > accumulates >1 flush-window of prediction depth history, with the measured processed-store time span cited; or FAIL
+  > = a named retention gap + the specific scan-cadence/flush-window mismatch), committed to that doc's Progress Log.
+  > Read-only verification — no data mutation.
+
+- [x] ✅ [SCRIPT] P2. **cqg recent-window catalogue re-enumeration with the already-fixed classifier — VERIFIED ALREADY
+      COMPLETE 2026-08-04 (slot 6), premise stale.** Live read of the prediction instruments-store
+      (`gs://instruments-store-pred-prd-central-element-323112/instrument_availability/by_date/canonical_question_group=*/day={D}/venue=*/`)
+      confirms all three target dates already carry the full real-cqg spread — **2026-06-20: 11,086 rows / 42 real cqg
+      groups; 2026-06-21: 12,052 rows / 42 groups; 2026-06-22: 9,986 rows / 40 groups** — vs the reference 2026-06-23
+      (15,330 rows / 41 groups). The premise ("refreshed for 2026-06-23 only") was stale: the same **2026-06-26 IS
+      enumeration VM run** (`instr-backfill-pred-20260621`) that wrote 2026-06-23 also enumerated 2026-06-20..22 with
+      the already-fixed classifier (catalogue objects created 2026-06-26 16:04–18:28 GMT, after the 2026-06-23 21:08Z
+      fix tarball); the target dates show the SAME ~22–29% OTHER-fraction profile as the verified-good baseline, so
+      OTHER is the expected unclassifiable residual, not a classifier failure. No code change and no re-run
+      (re-enumerating would only re-write byte-equivalent prod objects — data-engineering EFFICIENCY north-star).
+      Evidence recorded in `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s 2026-08-04 Progress Log entry (the
+      Done-when target); that doc's own cqg item flipped in the same commit. Closure mirrors this plan's todo #1
+      (premise-stale / already-shipped). Repo: none (verification-only, no mutation). Original text preserved below
+      (context only, not a re-derivable checkbox). **cqg recent-window catalogue re-enumeration with the already-fixed
+      classifier.** The cqg-partitioned `instrument_availability` catalogue (instruments-store) is refreshed for
+      2026-06-23 only (34 groups verified); re-enumerate the recent enumerated window (2026-06-20..22) with the fixed
+      cqg classifier so those dates' catalogue also carries real `canonical_question_group` values. This is an
+      operational run of the ALREADY-FIXED classifier over a bounded 3-day window (deep history is the bulk-tick-seed
+      with no per-date catalogue — out of scope here). This touches the IS cqg-catalogue enumeration module, DISTINCT
+      from todo #1's adapter-lifecycle write path (no file collision). Repo: instruments-service. Source:
+      `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2 "cqg partition-completeness — recent-window catalogue
+      re-enumeration"). **Done when**: the 2026-06-20..22 cqg catalogue partitions are re-enumerated and a live read
+      confirms each of those 3 dates now carries populated `canonical_question_group` catalogue rows (count cited), with
+      the run's evidence recorded in the source doc's Progress Log.
 
 - **[CODE] P1. Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
   population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b open; see below). Operator ruling 2026-07-25
@@ -613,6 +636,8 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `PAUSED`, the real unblock is `-001` actually landing (either the dispatch-order bug getting fixed for real, or a
   data_engineering worker being dispatched `-001` directly per that plan's own backlog entry).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in the source issue doc for the 4a-4c
+  rollup + the in-progress migration script (4b-i) + the Tier-2 SPOT VM codex SSOT (4b-ii).
 - **2026-08-01T09:2xZ (slot 7, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, resumed
   after `already_in_progress: true`)**: re-verified both blocker legs fresh, no change. Cron
   `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`userUpdateTime: 2026-07-31T13:45:51Z`,

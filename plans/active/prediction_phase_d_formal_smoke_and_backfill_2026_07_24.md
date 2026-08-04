@@ -61,9 +61,10 @@ source: >-
   `prediction_phase_ab_residuals_2026_07_24.md`.
 context_scope:
   [
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
-    /plans/epics/predictions_master.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/base_prediction_adapter.py,
   ]
 ---
 
@@ -191,3 +192,26 @@ context_scope:
   position — checkpoints feed the gate). Net: open-todo count 3 → 6. No engineering work executed in this pass — pure
   relocation + reconciliation of pre-existing tracked items.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the real gating dependency
+  (phase_ab_residuals) + the AO extract that duplicates 3 of 6 open todos + the MTDS adapter source (still-open `-test-`
+  catalogue-gating follow-up location).
+- **2026-08-04 (slot 6, data_engineering) — `data-pipeline-check-is` pre-Phase-B baseline (1 of 2) RUN.** Executed
+  `/data-pipeline-check-is --asset-group prediction --day 2026-08-02` (operator-supplied day, per the note above that
+  the skill refuses to invent one) as the dispatchable pre-Phase-B leg of this doc's `-is` 3x-cadence top-up todo
+  (`prediction_consolidated_native_ao_extract_2026_07_25.md` todo 2 — that plan's own checkbox is flipped for this
+  partial slice; this checkbox stays open pending the mid-migration leg, per its Done-when). **Result: partial pass.**
+  POLYMARKET force+skip both genuinely PASSED (skip-leg needed one retry after a shared-host `gcloud` identity race —
+  see below). POLYMARKET live-leg and every KALSHI leg (force x2 attempts, skip x2 attempts, live x1) FAILED, but all 6
+  failures independently confirmed via `gcloud compute operations list` as genuine SPOT preemption of the check-VM
+  itself (`compute.instances.preempted`), not a pipeline/code/data-correctness defect — corroborates the already-open
+  `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (preemption rate in `asia-northeast1-c` intensified from
+  ~1/6min to ~1/1-2min during this run, 06:07-06:23Z, hitting `expected-universe-v2-sports`/`tradfi-bf-cme-*`/these
+  `instr-backfill-pred-pchk-*` check-VMs concurrently). Stopped after 2 KALSHI force+skip attempts + 1 live-leg attempt
+  per that doc's "do not blind-loop-relaunch during an active storm" guidance (this is a P2 checkpoint, not a
+  hard-deadline gate). **Side finding**: the FIRST POLYMARKET skip-leg attempt failed with a
+  `compute.instances.create PERMISSION_DENIED` that was NOT a real IAM gap — diagnosed as a shared-host
+  `gcloud config set account` race (a different slot flipped the host-wide active identity mid-run); fixed for this
+  session via a slot-scoped named gcloud config (`CLOUDSDK_ACTIVE_CONFIG_NAME=slot6-work` pinned to
+  `unified-trading-sa`) rather than mutating shared state; second independent confirmation filed to
+  `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`. **Report**:
+  `/plans/audit/results/data_pipeline_e2e_check_is_2026_08_02.md` (+ sibling `.json`).

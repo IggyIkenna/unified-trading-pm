@@ -45,7 +45,7 @@ context_scope:
   [
     /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -78,3 +78,5 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the parent epic for the archival-ritual
+  codex SSOT this doc's own "standard 6-step ritual" todo names; code-free finalize gate, no source path applicable.

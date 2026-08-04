@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [agent-orchestrator, autospawn, dispatch, slot-skips, orphaned-todos, tracking-index]
 related:
   [
-    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     /plans/archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
     /plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     /plans/archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,

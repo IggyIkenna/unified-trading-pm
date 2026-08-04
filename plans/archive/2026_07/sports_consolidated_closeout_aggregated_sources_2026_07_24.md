@@ -234,7 +234,7 @@ drift_direction: advance-code
   - [`plans/archive/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`](/plans/archive/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md)
     — `status: resolved`, 1 residual:
     - **[VERIFY] P2.** BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning) — re-run task 007
-  - [`plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md`](/plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md)
+  - [`plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md`](/plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md)
     (3 open):
     - **[DATA] P1.** Add `"sports": 1800` to `AG_STALENESS_BUDGET_SEC`
     - **[DATA] P1.** Mirror the same into `_AG_STALENESS_BUDGET_SEC`

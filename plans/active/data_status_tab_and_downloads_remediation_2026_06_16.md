@@ -43,7 +43,8 @@ context_scope:
     /codex/06-coding-standards/ui-testing-layers.md,
     /plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md,
     /plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
-    /plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md,
+    deployment-ui/src/components/DataStatusTab.tsx,
+    deployment-api/deployment_api/services/data_status/reference_scope.py,
   ]
 ---
 
@@ -450,3 +451,5 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   requiring operator eyeball of every service × asset_group projected index before any TIER-2 `--apply`, and 3 UI todos
   blocked on a separate playwright-suite regression doc.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the DataStatusTab.tsx + reference_scope.py
+  source targets the remaining open UI/backend todos actually touch.

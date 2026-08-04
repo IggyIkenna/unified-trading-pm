@@ -56,6 +56,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
@@ -182,3 +183,5 @@ someone checks.
   gated on item 1. Independently corroborated by `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`'s own
   Deferred/operator-gated list (same conclusion, same reasoning). No reclassification.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added the parent fleet doc (was cited in
+  `related:` but missing from context_scope).

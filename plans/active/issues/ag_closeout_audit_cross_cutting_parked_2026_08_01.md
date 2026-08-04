@@ -246,3 +246,5 @@ member, not just a retag.
   (batched in `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`, `status: draft`). **Ledger**: 6 new parked
   findings this run, 6 entries written above (1-6) — balanced.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: re-confirmed context_scope (4 entries, unchanged) -- process/audit-of-docs register, no
+  code target; SKILL.md + conflict-check codex + the still-draft batch3 + linkage-gate issue remain the right reads.

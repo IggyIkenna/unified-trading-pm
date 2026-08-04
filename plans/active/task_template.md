@@ -31,6 +31,7 @@ context_scope:
     /plans/PLAN_FORMAT.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/dispatch.py,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -524,6 +525,9 @@ start.**
 ## Progress Log
 
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-03 (re-scout)**: refreshed context_scope (6 entries) -- added `dispatch.py`
+  (agent-orchestrator/server), the other module §4's prerequisite mechanics are verified against per the doc's own
+  summary, alongside the already-present `regen_backlog_from_plan.py`.
 - **2026-08-03 (interactive session)**: Added §2a ("Populate `context_scope` yourself at authoring time") — an author
   who runs the pre-task conflict-check grep for a new doc should capture that grep into `context_scope` immediately,
   including a fingerprint-based cross-reference pass (grep for the doc's own distinctive evidence literals, not just

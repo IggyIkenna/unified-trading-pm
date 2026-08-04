@@ -592,3 +592,7 @@ remain genuinely open content-level work, distinct from the path-migration infra
   (`candle_canonical_path_migration_execution_2026_07_24.md`) completed and archived 2026-07-28 — annotated in place
   with evidence; todo 9 itself stays open pending its own stated deliverable (a corpus-wide split count), not the P5
   gate. No `assigned_vm` change.
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
+  resolve; the two codex layout docs, the completed migration-execution plan, the still-open manifest-coverage-gap issue
+  doc, and the migration script remain the right minimal set for the genuinely open items (todo 3's TradFi quarantine
+  ruling, todo 9's split-brain count).

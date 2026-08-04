@@ -46,12 +46,7 @@ superseded_by:
 resolved_by:
 source: observed live during the data_pipeline_reconciliation_skill_2026_07_20 R2 rescue, 2026-07-22
 depends_on: []
-context_scope:
-  [
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    /codex/08-workflows/ci-cd-flow.md,
-    /plans/epics/infrastructure_master.md,
-  ]
+context_scope: [scripts/quickmerge.sh, /codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
 ---
 
 # unified-trading-library shared clone repeatedly reset to origin (2026-07-22)
@@ -234,3 +229,6 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
   operator scoping / sign-off before an AO batch can touch it" bucket, not conflict-gated — there is no competing claim
   to wait out via re-triage; it needs an explicit go-ahead on scope instead.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the generic epic pointer for
+  `scripts/quickmerge.sh` (the root-caused file — `cascade_dep_branch()` is the actual mechanism, per this doc's own
+  todos 1/7/8).

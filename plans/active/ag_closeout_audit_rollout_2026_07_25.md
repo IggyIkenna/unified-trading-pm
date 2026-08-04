@@ -55,8 +55,8 @@ context_scope:
     /cursor-configs/AUTONOMOUS_AGENT_RULES.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/task_template.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 
@@ -975,3 +975,6 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   for the ag-closeout-audit rollout; repeatedly gated by dated operator rulings on mass-flip safety after real
   half-landed-rename incidents; remaining item is a human-supervised re-verification, not a bounded fact.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped stale Round-1 pointers (sports template,
+  ci-cd-flow) for the Round-8 scope-widening triage + batch1 follow-on, matching current Deferred-work state; code-free
+  meta-audit doc, no source path.

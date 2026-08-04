@@ -245,6 +245,19 @@ exists per-launcher-family; the tee-wrapper's grep is agnostic to which layer wr
 proven via a local bash simulation with a child that self-`kill -9`s mid-run, then a second invocation reading
 `PROGRESS.json` back (same methodology as `deployment-service@3d99865`, cefi batch 2).
 
+**`HAD_FAILURE` was itself blind to PARTIAL payload loss within an otherwise-`CHUNK_RC=0` chunk (found + fixed
+2026-08-03,** `plans/archive/2026_08/mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`**).** A chunk
+where some but not all of that chunk's date-payloads failed (e.g. a transient manifest-consolidator-staleness guard
+mid-run) can still exit `0` if at least one payload succeeded — the whole-subprocess `CHUNK_RC` check alone never saw
+this, so the checkpoint kept advancing straight through ~28 consecutive lossy chunks in one real incident
+(`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260731-134654`, ~a third of 2020 silently under-captured despite
+`EXIT_STATUS=0`). Fix (`deployment-service@5478a92`): both `mtds_chunk_loop.sh` and `cefi_coverage_chunk_loop.sh`
+generators now also emit each chunk's expected day-count, tee the CLI subprocess's output, and parse its own
+`Batch complete: N results collected` line — `N < expected_days` is now treated the same as `CHUNK_RC≠0` for
+`HAD_FAILURE`/checkpoint-advancement purposes (`reason=PARTIAL_PAYLOAD_LOSS`, reusing the existing `CHUNK_FAILED:`
+greppable prefix). Regression-tested (`TestChunkLoopPartialPayloadLossGating`,
+`deployment-service/tests/unit/test_vm_launcher_scripts.py`).
+
 **Per-launcher-family conformance (as of the 2026-07-28 P2 fix):**
 
 | Family (VM name prefix)                                                                                         | Mechanism                                                                                                                                                 | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -257,6 +270,22 @@ proven via a local bash simulation with a child that self-`kill -9`s mid-run, th
 | `mtds-dex-swaps-backfill` (VM_TASK=defi-backfill), `af-backfill` (VM_TASK=sports-backfill/instruments-backfill) | generic single-shot `elif [ -n "$VM_TASK" ]` fallback in `setup-data-pipeline-vm.sh` (ONE CLI call over the whole date range, no shell chunk loop at all) | ⚠️ OPEN GAP — no chunk boundary exists to hang a marker on without restructuring this shared fallback into a chunked loop (out of scope for this fix; would need its own todo, scoped separately since it touches every VM_TASK that falls through to this generic branch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `instr-backfill-defi-targeted`, `canonical-migration-defi-relabel`                                              | Python `record_captured` (per-instrument/day capture) via `VM_BACKFILL_CMD`                                                                               | ✅ already conformant (pre-existing) — the generic UTL hook fires natively                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `canonical-migration-{cefi,defi,tradfi,prediction}-cdlap` (the `*-candle-apply` categories)                     | `migrate_candle_canonical_2026_07.py`'s own `_CHECKPOINT_BLOB_TPL` (`vm-logs/{vm}/MIGRATION_PROGRESS-shard{shard_index}.json`)                            | ✅ **accepted per-launcher naming exception** (documented 2026-08-01, `infra_satellite_ao_dispatch_batch1_2026_07_26.md`) — a REAL, working checkpoint, just not literally `PROGRESS.json` and not the date/monotonic schema `_gcs.read_progress_checkpoint` parses (it's a 0-based `last_processed_line_index` into one shard's deterministic object enumeration — there's no calendar date to extract). `read_progress_checkpoint` deliberately does NOT special-case it: resume already works WITHOUT that function's help, because `RelaunchPreemptedVm` relaunches the SAME `vm_name` (`VM_NAME_OVERRIDE`, captured in `LAUNCH_PARAMS.json`) and the migration script reads its OWN checkpoint keyed on that `vm_name` internally. The only observable effect is cosmetic — the `DP_VM_PREEMPTED`/`DP_VM_PREEMPTED_RECOVERED` finding never carries a `progress_checkpoint` detail for these VMs even though one exists on disk. See `_gcs.py::read_progress_checkpoint`'s docstring for the full reasoning. |
+
+## A launcher's OWN sequential retry loop MUST back off on a confirmed preemption (codified 2026-08-04)
+
+Distinct from the fleet-wide `RelaunchPreemptedVm` auto-recovery above: several launchers (e.g.
+`launch-expected-universe-v2-historical-backfill-vm.sh`'s gated historical chunk backfill) drive their OWN sequential
+launch → wait-for-terminal → check-exit-status → relaunch loop in-process, never going through the fleet monitor at all.
+**That loop's "confirmed preemption → retry the same window" branch MUST insert a backoff before relaunching — never a
+zero-delay `continue` straight back into another launch.** Found + fixed 2026-08-04
+(`plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` todo 4): a zero-backoff retry loop for the
+sports `expected-universe-v2-*` historical backfill (`e2-standard-4`/`asia-northeast1-c`) kept re-entering the SAME
+constrained SPOT pool at the instant it had just been reclaimed from, producing 48 VM launches in ~7h, most preempted
+within 1-3 min — real billing waste from the launcher's own design, not from SPOT capacity itself. Fix pattern: track
+consecutive-preemptions-of-this-chunk, back off with exponential growth capped at a few minutes, reset the streak the
+moment a launch actually reaches the workload (not just reaches TERMINATED) — `deployment-service@1861cbe` is the
+reference implementation. This is orthogonal to the PROGRESS-checkpoint contract below (that fixes WHAT a relaunch
+resumes from; this fixes WHEN a relaunch fires) — a launcher can need both.
 
 ## Coverage (2026-06-27 fleet-wide conversion)
 

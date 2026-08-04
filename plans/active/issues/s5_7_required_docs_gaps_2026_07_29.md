@@ -115,3 +115,7 @@ the dispatch-scope-eligibility ruling):
   per the doc's own text citing the dispatch-scope-eligibility ruling.
 
 - **context-scout 2026-08-03**: refreshed context_scope (2 entries, unchanged — still accurate).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified both entries resolve on disk (codex
+  documentation-standards SSOT + the parent Phase-5 audit plan). No source-code path added — this doc is a code-free
+  scoping-judgment recommendation (tiering S5.1's required-doc set by repo type), not an implementation fix, so no
+  source target applies. No changes.

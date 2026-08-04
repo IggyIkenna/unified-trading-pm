@@ -45,8 +45,8 @@ context_scope:
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     e2e-testing/scripts/defi/funding_ensemble_engine.py,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py,
     /plans/epics/strategy_master.md,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield,
   ]
 ---
 
@@ -334,3 +334,6 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
   asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED — DONE above' (UAC@487b9a9 +
   strategy-service@6b285fad) and is a stale open checkbox.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — fixed a duplicate `carry_and_yield/` entry
+  (with/without trailing slash counted as 2 slots) and added the UAC `architecture_v2/enums.py` source path (the
+  `CARRY_FUNDING_DISPERSION` archetype definition).

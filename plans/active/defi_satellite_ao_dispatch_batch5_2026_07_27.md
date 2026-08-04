@@ -336,3 +336,5 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   found fully superseded — its source doc was archived `status: resolved` on 2026-07-30 with the verdict recorded and
   the resolving fix shipped (`instruments-service@30fe4511`) — flipped `[x]` with the evidence and an honest
   2-of-5-venues-sampled scope note, so AO does not re-dispatch shipped work. Open todos: 5 → 4.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- unchanged, already minimal (code-free
+  dispatch-batch coordinator).

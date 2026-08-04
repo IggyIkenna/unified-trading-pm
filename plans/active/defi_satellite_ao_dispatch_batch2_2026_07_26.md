@@ -73,9 +73,7 @@ context_scope:
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
   ]
 ---
 
@@ -798,3 +796,6 @@ source issue doc directly as the successor reference.
   once per change). Done-criteria (a)/(b)/(c) all satisfied; (c) is the QG-green run itself.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- trimmed a lower-yield aggregated-sources +
+  batch1-finalize ref, kept the umbrella/finalize/skill/naming-SSOT/batch1-precedent set (code-free coordinator doc, no
+  single source-code target).

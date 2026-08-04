@@ -322,3 +322,6 @@ since a plan/issue doc recommending it is a leading indicator that catches the m
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `deployment-service/scripts/vm/launch-features-sharded-backfill.sh`, the target of the sole remaining open todo (5).
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (the
+  destructive/safe manifest functions + 2 codex delete-safety SSOTs + archived sibling doc + the 2 script call sites
+  this doc's todos fixed/target) — no changes.

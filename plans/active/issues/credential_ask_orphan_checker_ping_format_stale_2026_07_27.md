@@ -100,3 +100,4 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (4 entries).

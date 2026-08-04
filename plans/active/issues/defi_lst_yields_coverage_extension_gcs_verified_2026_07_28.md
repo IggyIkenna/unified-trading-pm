@@ -54,12 +54,10 @@ resolved_by:
 context_scope:
   [
     /plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
-    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /codex/02-data/pipeline-mode-partition.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
     features-service/features_service/onchain/cli/main.py,
     features-service/features_service/onchain/app/core/data_loader.py,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 ---
 
@@ -212,3 +210,6 @@ structural limitation.
   (skip-if-fresh now works correctly since the underlying write bug is fixed) — only genuinely-incomplete chunks would
   re-run.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 7) — trimmed the archived batch1 dispatch doc
+  and the naming-ssot codex (less load-bearing than the sibling writegate-fix issue, which carries the LIVE backfill
+  status the sole remaining [DATA] P1 todo needs to check before re-running).

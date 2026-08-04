@@ -123,3 +123,6 @@ context_scope:
 - 2026-07-26 (slot-2) — both todos closed per the per-todo detail above. `deployment-api@f919c87` (venue-prefix-
   exclusion fix). `SUSHISWAP` classic-vs-V3 remains the one genuinely open item in this doc.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-03**: re-verified context_scope, no content change (3 entries — the 2026-08-01 marker
+  undercounted; list already carries the origin plan, the batch2 doc that scoped SUSHISWAP out, and the real
+  `defi_venue_capabilities.py` registry source).

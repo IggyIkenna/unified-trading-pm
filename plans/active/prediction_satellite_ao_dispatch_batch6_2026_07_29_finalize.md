@@ -43,8 +43,9 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
-    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/epics/predictions_master.md,
+    /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -120,3 +121,6 @@ context_scope:
   false-progress flip. Whoever picks this up next: re-check batch6's own todo statuses first — do not repeat this
   reconciliation until it reads 14/14 `done` (or re-verify the gate_on_depends fix has landed and genuinely holds).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added the gate_on_depends wiring-gap tracking doc
+  (this plan's own Progress Log names it as the root cause the gate never held -- load-bearing, not previously scoped) +
+  the batch4-finalize sibling this plan's pattern mirrors.

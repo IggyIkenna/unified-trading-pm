@@ -65,13 +65,10 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/epics/instruments_master.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/04-architecture/shard-level-failure-isolation.md,
-    /codex/06-coding-standards/config-reloader-pattern.md,
     instruments-service/instruments_service/engine/orchestrator/prediction.py,
   ]
 ---
@@ -489,3 +486,6 @@ orchestrator-dispatched).
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- trimmed from 8 (dropped descoped-workstream-B
+  codex refs), added the batch6 plan (explicitly named in prose as the Phase-6 fix's source) + the root incident issue
+  doc.

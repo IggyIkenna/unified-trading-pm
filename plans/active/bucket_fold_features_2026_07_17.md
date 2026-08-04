@@ -52,10 +52,10 @@ context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/02-data/pipeline-mode-partition.md,
     /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
   ]
 ---
 
@@ -379,3 +379,5 @@ design's counts are 2026-07-13).
   should re-verify a clean `tofu plan` before flipping it, but the specific "waiting on deployment-service" blocker no
   longer holds. Doc stays `assigned_vm: NA` (HUMAN plan per the 2026-07-17 operator ruling; the residual is a small
   verification+flip step, not a fresh dispatch-eligible unit on its own).
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the UTL bucket_naming.py/registry.py
+  cutover-site source paths in place of a second archived design plan link.

@@ -37,9 +37,9 @@ context_scope:
   [
     /plans/epics/cefi_master.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
+    strategy-service/scripts/run_2yr_config_grid_backtest.py,
+    strategy-service/strategy_service/engine/strategies/v2/factory.py,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
-    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
   ]
 ---
 
@@ -197,3 +197,8 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   are a PERMANENT human-only hard-stop, re-confirmed by the operator 2026-07-28; `locked_by` set. Reached independently
   of the cefi tranche above; both agree.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the generic autonomous-recovery-matrix.md
+  and trading_agent_service_architecture_unlock.md codex/archive entries (least load-bearing for the two still-open P0
+  todos) and added the two source-code paths those open todos actually target: `run_2yr_config_grid_backtest.py` (needs
+  an `ML_DIRECTIONAL_CONTINUOUS` grid entry per the backtest-fidelity todo) and
+  `strategy_service/engine/strategies/v2/factory.py` (where the engine is wired, named in the shipped-todo evidence).

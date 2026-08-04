@@ -331,9 +331,27 @@ Recommended next steps, in priority order:
       decision — the operator already ruled the underlying data category. — already covered by
       `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14" — the same pre-floor-wipe
       population/machinery; see that doc for execution).
-- [ ] 2. [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures`
-      / `entity=fixture_stats` — a small, tractable per-league fan-out (reuse `migrate_sports_per_league.py`'s
-      per-fixture-league-join logic), not a delete. Re-run the sweep after to confirm these flip to `A_canonical`.
+- [x] ✅ 2. [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league
+      `entity=fixtures` / `entity=fixture_stats` — DONE 2026-08-03, `instruments-service@25796237`
+      (`scripts/migrate_sports_v2_postfloor_to_canonical_2026_08_03.py`, reuses `migrate_sports_per_league.py`'s
+      `af_fixture_id`->league join pattern; additive-only, idempotent — dedupes on `af_fixture_id`, canonical wins on
+      conflict, never touches/deletes the v2 source). **Live run (`--no-dry-run`) against prod: 0 rows added.**
+      Re-verified (not the July snapshot): canonical per-league `entity=fixtures`/`entity=fixture_stats` already holds
+      100% of this population's Prediction-tier (`get_prediction_leagues()`) rows for all 16 days — closed by normal
+      ongoing capture in the ~3.5 months since the July triage, independent of this migration. **New finding, not
+      previously known**: of the v2 rows, 5,028 belong to leagues OUTSIDE the Prediction-tier set and have **no
+      canonical per-league write target at all** under the current convention (canonical per-league partitioning is
+      scoped to `get_prediction_leagues()` only) — this is a distinct, unresolved population, tracked as new todo 7
+      below.
+- [ ] 7. [REVIEW] P3. **Policy decision: 5,028 non-Prediction-tier-league v2 legacy rows have no canonical per-league
+      write target** (found while executing todo 2, 2026-08-03) — canonical `entity=fixtures`/ `entity=fixture_stats`
+      per-league partitioning is scoped to UAC `get_prediction_leagues()` only, so these rows can never satisfy Part 1
+      (twin exists) of the delete-safety proof under the existing convention, regardless of any future migrate-forward
+      attempt. This is a genuine judgment call, not a mechanical migration: (a) accept as permanent legacy-only data
+      (matches the flat-legacy 28,100-row precedent — no delete, no migrate, leave as-is; the v2 tree already has zero
+      live readers/writers per § 4 Part 3/4), or (b) extend canonical per-league write scope to cover non-Prediction
+      leagues too (a real coverage/product decision, not this todo's scope). Until decided, these `sports_reference_v2/`
+      objects stay `no-migrate-first`.
 - [ ] 6. [DATA] P3. **Migrated from `/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`
       todo 5 on archival (2026-08-03).** Root-cause and retire whatever wrote 764
       `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
@@ -434,5 +452,10 @@ point, per this data_type/day/league key."
   self-verifying, so it needs no `[OPERATOR]` delete-safety gate. Conflict-check CLEAR: the
   `sports_satellite_ao_dispatch_batch2_2026_07_24.md` grep hit was an unrelated curated-universe todo, not this
   migrate-forward.
+- **worker slot-4 2026-08-03**: Executed todo 2. Live prod run added 0 rows — the Prediction-tier subset of this
+  population was already fully backfilled into canonical by normal ongoing capture since the July triage (not by this
+  script). Surfaced a new, previously-unknown residual: 5,028 non-Prediction-tier-league rows have no canonical
+  per-league write target under the current convention at all — filed as todo 7, a policy decision, not further
+  mechanical work. `instruments-service@25796237`.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.

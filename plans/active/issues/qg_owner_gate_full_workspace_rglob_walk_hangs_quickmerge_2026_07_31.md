@@ -205,3 +205,6 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
   incident. No new resolving evidence since the 2026-08-02 hold (no diff-proof run, no operator pick of option A/B/C).
   Staying skeptical of a "fully-scoped, AO-dispatchable" self-framing on live-dispatch-critical -path machinery per this
   skill's own guidance, rather than re-deriving a looser verdict on unchanged evidence.
+
+- **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 existing entries resolve on disk
+  and remain the minimal-correct set (codex QG SSOT + related plan + verified source script) — no changes.

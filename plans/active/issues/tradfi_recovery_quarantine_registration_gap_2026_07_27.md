@@ -45,7 +45,6 @@ context_scope:
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
     market-tick-data-service/market_tick_data_service/scripts/recover_tradfi_chain_manifest_registration_2026_07_22.py,
     market-tick-data-service/market_tick_data_service/scripts/register_tradfi_recovery_quarantine_manifest_2026_07_30.py,
-    /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
     /plans/epics/tradfi_master.md,
   ]
 ---
@@ -150,3 +149,5 @@ wound), but should be tracked rather than silently absorbed.
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: fixed a duplicate entry (`cme_combo_underlying_extraction_garbage_2026_07_19.md` was
+  listed twice) — deduped to 5 distinct entries, otherwise unchanged.

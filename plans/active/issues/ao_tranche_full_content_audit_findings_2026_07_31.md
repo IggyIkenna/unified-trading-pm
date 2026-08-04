@@ -155,3 +155,5 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries). Skipped one candidate entry —
   `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (already in `related:`) — per this run's explicit
   instruction not to read or touch that file (under active concurrent edit by a different session).
+- **context-scout 2026-08-03**: re-verified context_scope (4 entries, unchanged) — all still resolve; this is a
+  code-free tracker/audit-findings doc (no source-code target applies) so the codex+plan-doc list stands.

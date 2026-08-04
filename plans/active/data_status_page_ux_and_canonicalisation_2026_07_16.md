@@ -56,14 +56,12 @@ depends_on:
 source: operator request 2026-07-16 (data-status page review) + multi-agent audit workflow wf_872e8051-00a
 context_scope:
   [
+    /plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md,
+    /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/06-coding-standards/ui-testing-layers.md,
     unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
-    /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    instruments-service/docs/PREDICTION_INSTRUMENTS.md,
-    /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 ---
 
@@ -186,6 +184,11 @@ Verified against `deployment-api@c19edcc` (fresh-pulled to `origin/live-defi-rol
 verification, no code changed. Source: `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- this doc's every P-section
+  now reads shipped except P3's dedup pointer, so swapped the stale downloads-remediation ancestor +
+  PREDICTION_INSTRUMENTS.md for `instrument_record_schema_completeness_extra_forbid_2026_07_18.md`, the plan that
+  actually now owns the doc's one live remaining item (`InstrumentRecord extra='forbid'`) and was missing from the prior
+  list entirely.
 
 ## P1 — Honest Coverage: remaining hardening
 

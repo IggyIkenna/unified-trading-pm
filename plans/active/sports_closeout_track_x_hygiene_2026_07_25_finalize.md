@@ -44,7 +44,8 @@ context_scope:
   [
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -77,3 +78,6 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the merged `LEAGUE_ID_TO_TIER`/gap-analysis
+  tracking issue todo 2 must confirm Track V cites, and the archival-ritual codex SSOT in place of the parent epic;
+  code-free finalize gate, no source path applicable.

@@ -50,8 +50,9 @@ context_scope:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    instruments-service/instruments_service/reference_data/adapters/cefi/extended.py,
+    instruments-service/instruments_service/engine/orchestrator/process_fetch.py,
+    deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh,
   ]
 supersedes:
 superseded_by:
@@ -737,4 +738,6 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - G1 is an umbrella gate; the EXTENDED
   honest-absence item is an explicit raise-vs-fallback decision; and the `MANIFEST_ALLOW_STALE_FALLBACK` revert is gated
   on the (still-paused) cefi consolidator being healthy.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — added 3 real source paths (EXTENDED
+  honest-absence adapter, capture-path wiring target, the stale-fallback launcher finding) that the prior codex-only
+  list lacked.
