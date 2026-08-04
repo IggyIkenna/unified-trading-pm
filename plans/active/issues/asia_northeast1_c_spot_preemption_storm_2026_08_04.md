@@ -290,3 +290,10 @@ to preemption with proportionally little forward progress while it lasts.
   pull the full window fresh again no earlier than ~05:00Z and specifically check whether the clean-gap-to-isolated-hit
   pattern seen here (vs. the earlier sustained-dense bursts) continues to lengthen, which would be the actual subsidence
   signal.
+- **2026-08-04T04:33Z** — Checked ~27min early (sports campaign monitoring loop) since the isolated-hit pattern slot 6
+  flagged is cheap to re-sample. Directly answers slot 6's "does the gap lengthen" question: **no, not yet** — events at
+  04:16, 04:24, 04:28, 04:32 (gaps of 8, 4, 4 min respectively), the last one just ~1 min before this check. Density is
+  genuinely down an order of magnitude from the 03:07-03:20 burst (single isolated events vs. 20/min), but the gap
+  length is bouncing around 2-8 min, not trending upward — still no clean window by the "measure forward from the latest
+  event" bar. Did not attempt a relaunch. Not treating this as the due ~05:00Z recheck (too early, no todo flip) — just
+  a cheap interim datapoint since it directly resolves the open question from the last entry.
