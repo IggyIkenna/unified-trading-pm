@@ -403,12 +403,12 @@ not a mechanical column-list copy.
       (`tests/unit/test_manifest_reader_column_projection.py`) pinning the exact `columns=` call signature per site so a
       future edit can't silently drop back to a bare call. `quality-gates.sh` green (199s), shipped via quickmerge
       --agent.
-- [ ] [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
-      `smoke_matrix.py`), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
+- [x] ✅ [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
+      `smoke_matrix.py` — relocated to e2e-testing), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
       `strategy/backtest_from_wizard_config.py:192`), **unified-trading-pm**
       (`plans/audit/results/     available_at_fill_rate_audit_2026_07_13.py:51`,
-      `scripts/qg/honest_coverage_ratchet.py:66`): lower-urgency CI/audit-tooling call sites; project if convenient when
-      touching these files for other reasons, not worth a dedicated dispatch on their own.
+      `scripts/qg/honest_coverage_ratchet.py:66`): all projected to downstream column usage per direct read.
+      e2e-testing@460270b + unified-trading-pm@87c8aa2b7.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9)** — `unified-trading-pm@dbce7a24c`.
       **unified-trading-pm** — added `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk,
       production-code-only, mirrors `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern
