@@ -188,7 +188,8 @@ mechanical 6-step archival ritual (status stale vs. real completion, or a doc-sp
 work), both already flagged by a prior na-eligibility-audit pass. Not batch items; noted here for traceability only:
 
 - `issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md` — a verbatim Progress-Log
-  extraction appendix, zero checkboxes, zero prose todos. Ready to archive independent of its still-open parent.
+  extraction appendix, zero checkboxes, zero prose todos. **Archived 2026-08-04** (na-eligibility-audit, cefi tranche)
+  to `/plans/archive/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md`.
 - `issues/cefi_content_migration_shard17_default_bump_2026_07_31.md` — both todos independently re-verified complete (VM
   relaunch confirmed via telemetry; a codex runbook carve-out confirmed by direct read) even though `status:` itself was
   never flipped off `open`.
