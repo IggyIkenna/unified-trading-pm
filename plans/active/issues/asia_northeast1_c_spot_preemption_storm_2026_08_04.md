@@ -139,14 +139,35 @@ to preemption with proportionally little forward progress while it lasts.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Confirm whether `uts-prod-dp-exit-code-monitor`'s deployed Cloud Run image includes
-      `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179` (the af-backfill/af-audit prefix fix); if not,
-      trigger a redeploy (repo: deployment-service).
+- [x] ✅ [SCRIPT] P1. ~~Confirm whether `uts-prod-dp-exit-code-monitor`'s deployed Cloud Run image includes
+      `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`~~ — **CONFIRMED DEPLOYED 2026-08-04**:
+      `gcloud artifacts docker images list` shows a genuinely new `deployment-api` image digest (`sha256:1ba77ac3...`,
+      distinct from the prior `sha256:bc0bc256...` build) created **2026-08-04T00:50:50Z** — AFTER the fix commits
+      landed (`c301076` at 00:34:58Z, `c3594db` at 00:40:13Z). The job's `observedGeneration` bumped 121→122 in the same
+      window, and `uts-prod-dp-exit-code-monitor-f27xh` (execution at 00:55:01Z) ran `EXECUTION_SUCCEEDED` on the new
+      revision. The af-backfill/af-audit prefix fix is genuinely live. See "Additional finding" below for a SEPARATE,
+      still-open gap this uncovered.
+- [x] ✅ [SCRIPT] P2. ~~Once (1) is confirmed deployed, verify a real af-backfill preemption during this storm actually
+      triggers `RelaunchPreemptedVm` end-to-end~~ — **PARTIALLY CONFIRMED, NEW GAP FOUND 2026-08-04**: a real
+      af-backfill preemption occurred post-deploy (`af-backfill-20260804-004955`, preempted 00:51:21-32Z, ~10 min after
+      the fix went live) but STILL did not trigger `RelaunchPreemptedVm` — not because of the prefix bug (that's fixed),
+      but because the VM's ~1.5min lifetime never appeared in the monitor's OWN prior-tick census at all (see
+      "Additional finding" below). Converted into a new todo below rather than re-opening this one, since the prefix fix
+      itself IS verified working.
 - [ ] [SCRIPT] P2. Re-check `compute.instances.preempted` volume in `asia-northeast1-c` after several hours — confirm
       whether the storm has subsided; note the outcome in this doc's Progress Log (repo: deployment-service).
-- [ ] [SCRIPT] P2. Once (1) is confirmed deployed, verify a real af-backfill preemption during this storm actually
-      triggers `RelaunchPreemptedVm` end-to-end (not just that the VM is now visible to the classifier) (repo:
-      deployment-service).
+- [ ] [SCRIPT] P2. **NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
+      `terminated = [name for name in prior if     name not in running]` diff (`exit_code_fleet_monitor.py:565`)
+      requires a VM to have appeared in a PRIOR tick's `running` census before its disappearance can ever be detected. A
+      VM whose entire lifetime (launch → preemption) falls inside one ~5-min `dp_exit_code_monitor_cron` tick window is
+      structurally invisible — it never enters `prior`, so it can never show up as `terminated` on any later tick
+      either. Confirmed live: `af-backfill-20260804-004955` (launched 00:49:55Z, preempted 00:51:21-32Z, i.e. ~1.5min
+      total) appears in ZERO monitor log lines across the 00:50:42 and 00:55:50 ticks that bracket its lifetime — not
+      `verdict=`, not `reap_stale`, nothing. During an active preemption storm where VMs are dying in 1-2 minutes
+      (faster than the 5-min tick), this makes the tick-based census structurally blind to a growing share of
+      preemptions regardless of the prefix fix. Consider either (a) a shorter poll cadence during a detected storm, or
+      (b) driving `running_vms` from a source that captures sub-tick churn (e.g. a Pub/Sub `compute.instances.preempted`
+      audit-log sink instead of a periodic list-and-diff) (repo: deployment-service).
 
 ## Progress Log
 
@@ -154,3 +175,17 @@ to preemption with proportionally little forward progress while it lasts.
   than af-backfill (151 preemptions/5h across sports/tradfi/cefi, still ongoing). Did not attempt a further
   FIXTURE_STATS relaunch given the active storm — `skip-current-task`'d the sports campaign todo so it requeues once
   conditions improve.
+- **2026-08-04 (slot 5, continued)** — Dispatched todo 1 of this doc. Confirmed the af-backfill/af-audit prefix fix
+  (`c3594db647c25ae2656ba020e15d3f55a42bd179`) IS deployed to `uts-prod-dp-exit-code-monitor` (new image digest built
+  00:50:50Z, job generation 121→122, execution succeeded at 00:55:01Z — all after the fix commits at 00:34-00:40Z).
+  However, checking the monitor's actual logs across the tick before/after `af-backfill-20260804-004955`'s preemption
+  (00:50:42 and 00:55:50) found it in ZERO log lines — the prefix fix alone did not make this specific preemption
+  visible. Root-caused why: `exit_code_fleet_monitor.sweep()`'s
+  `terminated = [name for name in prior if name not in running]` diff can only detect a VM that was captured as
+  `running` in some earlier tick's persisted census (`load_census`/`write_census` via `CENSUS_BLOB`) — a VM whose full
+  lifetime (this one: ~1.5min, 00:49:55→00:51:21Z) fits entirely inside one ~5-min tick window never gets recorded as
+  `prior` before it's already gone, so it can never be diffed as `terminated` on any subsequent tick either. This is a
+  genuine, SEPARATE gap from the already-fixed prefix bug — filed as a new P2 todo above. Given the active storm is
+  producing VMs with 1-2 min lifetimes (faster than the 5-min tick), this gap is likely affecting more than just
+  af-backfill right now. Flipped todos 1 and 2 above (prefix fix confirmed deployed; the "verify end-to-end" check
+  surfaced this new gap instead of a clean pass).
