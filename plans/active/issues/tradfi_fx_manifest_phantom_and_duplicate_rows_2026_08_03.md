@@ -33,7 +33,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03
+last_updated: 2026-08-04
 parent_epic: tradfi_master
 priority: P2
 estimate_class: research
@@ -243,20 +243,26 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
       same day get two distinct non-blank-id rows (rebuild + idempotent re-run), while a genuine symbol-less bundle
       write still correctly stays blank. `unified-trading-library@64701222` (verified on origin; full `quality-gates.sh`
       green, sentinel-verified quickmerge). (repo: unified-trading-library)
-- [ ] [DATA] P2. **Quarantine or delete the 1,812 existing phantom rows** confirmed to have zero backing GCS object
-      (this todo's own evidence) — these are DIFFERENT rows from Defect 2's 1,958 collision candidates (those have a
-      real, GCS-content-verified backing object; these do not), so this is a separate cleanup pass. Since
-      `capture_status=captured` rows would be removed/re-flagged, the delete-safety 5-part proof pass applies
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) exactly as Defect 2's own todo already notes for its
-      population. Decide delete vs. a `capture_status=empty_confirmed`/`error_reason=PHANTOM_REBUILD_ARTIFACT`-style
-      flip (mirrors how the resolved LEAGUES finding and the sibling MDPS phantom-row finding were each handled) before
-      executing. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **INVESTIGATED 2026-08-04 (slot 13) — "1,812 confirmed phantom, zero backing" premise CONTRADICTED,
+      disposition changed from DELETE to RE-STAMP.** Built the delete script per this todo's own instruction and
+      pre-apply-verified it against the live corpus (per the delete-safety protocol's spirit — confirm before executing
+      an irreversible manifest mutation); found every one of the 1,967 candidate dates resolves to a REAL backing GCS
+      object once a second, previously-unprobed prefix (`pipeline_mode=batch_databento`) is also checked — content is
+      genuine Yahoo-sourced KRW-USD data, not a placeholder. **No delete was executed.** Full evidence + the corrected
+      re-stamp todo: `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`. This finding FOLDS
+      Defect 1 into Defect 2 below — see that doc's own re-stamp todo, which now supersedes both this todo and the dedup
+      todo immediately below. market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin). (repo:
+      market-tick-data-service)
 - [ ] [DATA] P2. Design + execute a de-duplication pass for the 1,958 FX rows spanning 664 dates with redundant
       per-shard-day manifest bookkeeping (up to 4 rows per date across pipeline_mode × instrument_type-blank variants).
-      Requires a decision on which row is canonical (recommend: the row whose content resolves cleanly, i.e. what this
-      script's `resolve_pair_for_shard` already determined) and a delete-safety 5-part proof pass before removing the
-      redundant rows (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) since this is a manifest-row delete,
-      not a re-stamp. (repo: market-tick-data-service)
+      **SUPERSEDED 2026-08-04 by the wider re-stamp todo in
+      `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`** — Defect 1's former 1,812 rows
+      folded into this same population (see the todo above), so the re-stamp + dedup should now be designed together
+      against the FULL ~2,787-row population, not just the originally-scoped 1,958. Requires a decision on which row is
+      canonical (recommend: the row whose content resolves cleanly, i.e. what this script's `resolve_pair_for_shard`
+      already determined) and a delete-safety 5-part proof pass before removing any genuinely-redundant rows
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) since a dedup pass is a manifest-row delete, not a
+      re-stamp. (repo: market-tick-data-service)
 - [ ] [DATA] P3. Once both of the above land, re-run `restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py --apply`
       (kept in place, not deleted, per its own lifecycle marker — its `Delete-when` condition explicitly requires
       dry-run affected-count == 0, which this pass did not reach) to close out the remainder of
@@ -285,3 +291,11 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
   re-run) of a per-instrument-grain corpus, while a genuine symbol-less bundle still stays blank.
   `unified-trading-library@64701222` (verified on origin). Follow-up todos 3 (quarantine the 1,812 phantom rows) and 4
   (dedup the 1,958 collision rows) remain open — this todo's own scope was the writer fix only.
+- **2026-08-04 (slot 13, data_engineering)**: picked up todo 3 ("quarantine or delete the 1,812 phantom rows"). Built
+  the delete script per the todo's instruction, then pre-apply-verified against the live corpus before running `--apply`
+  (no delete is ever safe to trust blind) and found the "1,812 confirmed phantom, zero backing" premise CONTRADICTED —
+  every one of the 1,967 candidate dates has a real backing GCS object once a second, previously-unprobed
+  `pipeline_mode=batch_databento` prefix is also checked; content is genuine Yahoo-sourced KRW-USD data. No delete
+  executed. Filed `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` with full evidence + a
+  corrected re-stamp (not delete) todo that now supersedes both todo 3 and todo 4 above.
+  market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin).
