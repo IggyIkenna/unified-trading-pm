@@ -8,7 +8,7 @@ summary: >-
   its own todo. tests/integration/test_instrument_retrieval.py::test_instruments_domain_separation raises
   BucketNamingError: Unknown cloud provider 'local'; expected one of ('gcp', 'aws') — an env/config value of "local" is
   reaching as_cloud(), which only accepts gcp/aws.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-data-processing-service@3a69c6d
 depends_on: []
 context_scope:
   [
@@ -44,6 +44,13 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/providers/cloud_data_provider.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** — status=resolved, its one todo done, archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-immediately rule. Real root cause was
+> test-pollution (a module-level `os.environ.setdefault("CLOUD_PROVIDER", "local")` in
+> `tests/unit/test_unified_deps_functional.py` leaking into MDPS's process-wide config singleton), not the
+> env-resolution fixture-narrowness this doc originally suspected — see the Progress Log + resolved-by commit for the
+> full trace. No further deferrals to migrate.
 
 # MDPS test_instruments_domain_separation: BucketNamingError on cloud provider "local" (2026-08-04)
 
