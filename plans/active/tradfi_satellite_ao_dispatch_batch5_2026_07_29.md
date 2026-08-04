@@ -276,13 +276,11 @@ ground to open up, and it did:
       changed — audit only per the todo's own scope. Evidence: `unified-trading-pm@64f366dfc`. Source:
       `/plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md`.
 
-- [ ] [TEST] P2. **Update 3 failing test assertions + 2 docstring examples to the now-canonical raw short-root
-      `underlying` form.** In `market-tick-data-service/tests/unit/test_databento_enrichment_combo_underlying.py`,
-      change expected `underlying` values from the old human-name form ("WTI-BZ", "UST-10Y") to the now-canonical raw
-      short-root form ("CL-BZ", "ZN") to match `unified-api-contracts@b9f4b6b9`'s deliberate behavior change. Repo:
-      market-tick-data-service. **Done when**: all 3 assertions + both docstring examples are updated, and
-      `quality-gates.sh` is green in market-tick-data-service. Source:
-      `issues/mtds_combo_underlying_tests_stale_vs_uac_raw_root_2026_07_28.md`.
+- [x] ✅ [TEST] P2. **Update 3 failing test assertions + 2 docstring examples to the now-canonical raw short-root
+      `underlying` form — `market-tick-data-service@4fdbcb0d`** (slot-16, 2026-07-28). Already shipped before this
+      dispatch — all 3 assertions use `"CL-BZ"`/`"ZN"`, docstring documents raw short-root convention, source issue doc
+      archived. Verified `4fdbcb0d` is ancestor of `origin/live-defi-rollout`. Source:
+      `issues/mtds_combo_underlying_tests_stale_vs_uac_raw_root_2026_07_28.md` (archived).
 
 - [ ] [DATA] P2. **Re-verify the shipped commodity-API header fix on a real GCP VM against the actual commodity
       family.** `features-service@d06919bf` (2026-07-28) has never been re-tested live against
