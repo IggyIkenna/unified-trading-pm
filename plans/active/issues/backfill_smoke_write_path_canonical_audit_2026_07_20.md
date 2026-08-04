@@ -319,3 +319,5 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   (both cover § 1's test-bucket-enforcement question, already fully DONE via todos 1/2/4/5); kept the codex + plan +
   source-file entries most load-bearing for the two still-open todos (3, 6 — canonical-grammar comment fixes and the
   `market_lifecycle`/`futures_contracts` scope decision).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
+  todo 3 stays redirected to the cross-cutting/infra tranche for extraction, todo 6 stays a genuine scope-decision call.

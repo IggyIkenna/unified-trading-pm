@@ -228,3 +228,5 @@ argument for that issue's Option A). Cross-linked from there.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a stale, unreferenced
   `utl_uac_skew_fleet_audit_2026_07_15.md` entry and added the two source scripts this doc's Progress Log names directly
   (the banned reclass script + the light-VM launcher that was edited/reverted 2026-07-29).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  sole checkbox stays deliberately-superseded/ruled-out, gated on the not-yet-run Track-2 backfill.

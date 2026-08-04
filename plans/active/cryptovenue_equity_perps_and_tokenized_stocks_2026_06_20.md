@@ -790,3 +790,6 @@ closed the tradfi manifest-completeness gate (KRX eu 378→0) but did NOT acquir
 `[DATA] P2` **BLOCKED-DATA** item is a different, still-open need (a live cash-equity twin for crypto-perp BASIS
 execution, not manifest completeness) — the cited issue doc is the closest precedent ruling (operator declined to source
 a vendor at that time), not a code successor; a fresh operator ask is needed if the basis trade is prioritized.
+
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 22
+  open items remain dominated by DESIGN/RESEARCH judgment calls, hedge-venue choice, and the BLOCKED-DATA vendor ask.

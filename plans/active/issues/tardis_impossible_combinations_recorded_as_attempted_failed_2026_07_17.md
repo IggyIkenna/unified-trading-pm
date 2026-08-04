@@ -193,3 +193,5 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in
   `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate
   todo must coordinate with) for the generic `cefi_master.md` epic pointer.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  operator-gated live-prod manifest reclass and the UAC-coordination-gated vendor-catalog task both remain open.

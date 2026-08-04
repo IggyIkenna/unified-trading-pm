@@ -127,3 +127,6 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
   launcher-deletion blast radius is exactly what the A/B/C ask covers
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the standing verdict (3
+  independent prior tranche audits); the unanswered operator A/B/C decision + todo 8's design-adjudication item still
+  anchor the whole doc NA.

@@ -489,3 +489,5 @@ orchestrator-dispatched).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- trimmed from 8 (dropped descoped-workstream-B
   codex refs), added the batch6 plan (explicitly named in prose as the Phase-6 fix's source) + the root incident issue
   doc.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — all 8 open items stay either
+  explicitly [DESCOPED-NOT-MVP] under a dated operator ruling or self-labelled operator/architect calls.

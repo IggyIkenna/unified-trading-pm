@@ -212,3 +212,9 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 | Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later |
 | Phase 3 (strategy-side wiring)           | Not started | Needs a design conversation on cap %/placement              |
 | `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out            |
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict
+  (unaffected by the intervening 2026-08-03 context-scout corpus sweep — no content change); Phase 1/2 shipped, the 2
+  remaining open todos (Phase 3 strategy-side wiring) stay deferred pending a design conversation on cap %/placement.

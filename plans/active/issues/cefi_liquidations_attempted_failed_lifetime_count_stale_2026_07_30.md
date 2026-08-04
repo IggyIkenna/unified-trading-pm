@@ -216,3 +216,5 @@ not lost if the bound expires unanswered.
   gated on that choice. Neither is worker-determinable.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
   still accurate.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict; the
+  [OPERATOR] A/B/C policy choice and its gated [DIAG] follow-up remain open.

@@ -149,3 +149,5 @@ an image for something that should not run again.
   on an unresolved scoping/judgment call ("still-relevant vs dead/superseded... a scoping/judgment call, not
   determinable by this investigation alone"); the second todo is conditional on that decision. Not worker-determinable.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-31 verdict;
+  both todos stay gated on the unresolved dead-vs-still-relevant scoping/judgment call.

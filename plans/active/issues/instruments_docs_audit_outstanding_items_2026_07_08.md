@@ -648,3 +648,6 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   operator calls, so the outcome is not determinable by a worker alone
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  sole meta-tracking todo over dozens of prose-only findings (incl. genuine operator-decision items) is still not
+  worker-determinable as a set.

@@ -610,3 +610,5 @@ longer has its own download button.
   marks genuinely contested + actively under concurrent investigation.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `mtds.py`, the source target for the
   still-open `[CODE] P1` "move `market_metadata` off the MTDS daily axis" todo).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; all
+  8 open items remain genuinely operator-gated design/judgment calls or explicitly deferred pending go-ahead.

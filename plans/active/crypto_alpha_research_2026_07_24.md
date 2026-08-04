@@ -607,3 +607,5 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   `e2e-testing/scripts/paper_trading/` (the standalone paper-trading POC dashboard named in the doc's own summary) + its
   `RECOVERY.md` remain the correct source targets alongside the parent plan + line-cap-remediation issue +
   strategy_master epic.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 23
+  open items stay [RESEARCH]/[STRATEGY]/[BUG]-in-research-harness work under the 2026-07-28 permanent hard-stop ruling.

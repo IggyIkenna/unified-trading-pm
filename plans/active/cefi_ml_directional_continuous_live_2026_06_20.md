@@ -202,3 +202,5 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   todos) and added the two source-code paths those open todos actually target: `run_2yr_config_grid_backtest.py` (needs
   an `ML_DIRECTIONAL_CONTINUOUS` grid entry per the backtest-fidelity todo) and
   `strategy_service/engine/strategies/v2/factory.py` (where the engine is wired, named in the shipped-todo evidence).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; all
+  3 open todos stay operator-only hard-stops or operator-scheduled/deferred research.
