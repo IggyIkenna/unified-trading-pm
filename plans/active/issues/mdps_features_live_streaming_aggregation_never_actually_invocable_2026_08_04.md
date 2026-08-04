@@ -275,11 +275,40 @@ OOM if left running). The named successor is this issue doc's Todos below.
       — no single VM RAM size makes 3,535 separate Python processes with full import overhead viable). This is a genuine
       architecture decision, not a lookup — needs operator sign-off before any CEFI/DeFi launch is re-attempted.
       Reference: this doc's Evidence section for the OOM proof + exact shard counts.
-- [ ] [DATA] P2. **Once the above land, re-pilot TradFi first (lowest risk, 14 shards)** with the same monitoring
-      approach this session used (serial-console OOM watch + full `run.log` fetch + GCS events-bucket check for real
-      `candle_computed`/`features_computed` output), then re-attempt CEFI only after TradFi is confirmed genuinely live
-      (persistent subscriber, not one-shot batch). Repo: deployment-service (+ market-data-processing-service,
-      features-service read-only verification).
+- [x] ✅ [DATA] P2. **Re-pilot TradFi first (lowest risk, 14 shards)** — PILOT COMPLETED 2026-08-04, slot-16 (infra). VM
+      `mdps-features-live-tradfi-20260804-192248` launched, all tarballs fresh, startup clean. **All 5 code fixes
+      VERIFIED WORKING**: (1) MDPS `MDPS_SHARD_SPEC` env-var bridge correctly produces
+      `['process', ..., '--operation', 'streaming-aggregation', '--shard-spec', 'tradfi:CME:ohlcv_1m', ...]` — ZERO
+      argparse crashes (was 100% crash before fix); (2) launcher env-var exec-dispatch bridge correctly sets
+      `MDPS_OPERATION`/`MDPS_SHARD_SPEC`; (3) commodity live/poll mode correctly loops at `poll_interval_seconds=300`
+      (was one-shot batch before fix); (4) UTL Pub/Sub fixes present in deployed tarball; (5) commodity asdict fix
+      present. No OOM (14 shards × ~265MB RSS on e2-standard-8 = ~3.7GB, well within 32GB). **However, 3 new blockers
+      prevent genuine live operation** — see new todos below. VM deleted after confirming all 14 MDPS workers blocked on
+      dependency check (zero useful output possible without upstream MTDS data). Evidence: full run.log captured via SSH
+      (`/tmp/vm-exec-9242.log`), serial console clean, heartbeat confirmed alive. — deployment-service@4f38f6e (launcher
+      tarball SHA; no new code to ship — all fixes were pre-existing in deployed tarballs).
+- [ ] [BACKEND] P1. **Fix MDPS dependency check to be live-mode-aware — skip GCS batch-data gate when `--mode live`.**
+      The dependency check in `ServiceBootstrap` (or the legacy `cli/parser.py` path) validates GCS raw-tick-data
+      existence for ALL 5 asset groups across the `--start-date`/`--end-date` range. For live streaming-aggregation,
+      this is wrong: MDPS subscribes to Pub/Sub `streaming.{ag}.candle_boundary_crossed` events (emitted by MTDS live),
+      not GCS batch data. The check blocked all 14 TradFi MDPS workers because MTDS raw tick data doesn't exist for
+      2026-08-04 on GCS — even though MTDS live would be emitting `candle_boundary_crossed` events in real time if it
+      were running. Additionally, the check validates ALL asset groups (cefi, defi, sports, prediction) regardless of
+      the worker's actual `--shard-spec` target AG — a TradFi worker shouldn't fail because CEFI data is missing. Fix:
+      when `mode=live`, either skip the GCS dependency check entirely (live data comes from Pub/Sub) or scope it to only
+      the target asset_group from `--shard-spec`. Repo: market-data-processing-service.
+- [ ] [INFRA] P1. **Provision Pub/Sub topics and subscriptions for TradFi asset group in prod.** The pilot confirmed 404
+      on: `tradfi-delta-one-features-ready-sub` (cross_instrument/delta_one input), `commodity-signals-ng`,
+      `commodity-signals-cl` (commodity output topics). These were never created because the mdps-features-live cluster
+      was never operationally launched for TradFi before. Also audit CEFI/DeFi Pub/Sub resources — they may have the
+      same gap. Repo: deployment-service (infra-as-code or manual `gcloud pubsub` provisioning).
+- [ ] [BACKEND] P2. **Fix `cross_instrument` `_run_message_loop` to catch Pub/Sub `NotFound` (and other non-retriable
+      errors) instead of crashing the async generator.** The UTL fix (8a89005a) catches `subscribe_once` failures in
+      `LiveDataSource.stream()`, but `cross_instrument/cli/handlers/live_handler.py`'s `_run_message_loop` calls
+      `subscribe_once` directly via `loop.run_in_executor` with a bare lambda — no catch for `NotFound`,
+      `PermissionDenied`, or other non-retriable errors. The `NotFound` on `tradfi-delta-one-features-ready-sub` crashed
+      the cross_instrument worker instead of logging + retrying. Either wrap the lambda in a try/except or switch to
+      `LiveDataSource.stream()` which already has the hardening. Repo: features-service.
 - [ ] [DATA] P3. **Note for `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` todo 4** (register a
       `CandleAdapterRegistry` entry for `(PREDICTION, book_snapshot_5)`): even once shipped, this adapter will never be
       invoked by the mdps-features-live path, since `mdps_mvp_universe('prediction')` returns zero shards structurally —
@@ -302,3 +331,17 @@ OOM if left running). The named successor is this issue doc's Todos below.
 - **2026-08-04 (slot-8, backend_engineer)**: shipped the `commodity.publish_signal` P3 todo (features-service@9305dce3)
   — `_serialise()` called `dataclasses.asdict()` on `CommoditySignal`, a Pydantic `BaseModel`; swapped to
   `signal.model_dump()` and fixed the two test files that assumed the old `asdict` import.
+- **2026-08-04 (slot-16, infra, re-pilot session)**: launched TradFi re-pilot VM
+  `mdps-features-live-tradfi-20260804-192248` (e2-standard-8, asia-northeast1-c). All 5 tarballs fresh. Startup
+  completed cleanly (exit 0). **All 5 code fixes verified working in production** — the argparse/env-var bridge (todos
+  1-2) correctly routes `--operation streaming-aggregation --shard-spec tradfi:CME:ohlcv_1m` through `ServiceBootstrap`
+  → `_build_legacy_argv()` with zero crashes (was 100% before fixes); commodity's live/poll loop runs at
+  `poll_interval_seconds=300` (was one-shot batch); UTL Pub/Sub fixes present in deployed tarball. No OOM (14 shards,
+  ~265MB RSS each, ~3.7GB total — well under 32GB on e2-standard-8). **However, 3 new blockers prevent genuine live
+  operation**: (1) MDPS dependency check validates GCS batch data across ALL 5 asset groups, blocking all 14 workers
+  because 2026-08-04 raw tick data doesn't exist on GCS — live mode should subscribe to Pub/Sub
+  `candle_boundary_crossed` events instead; (2) Pub/Sub topics/subscriptions for TradFi features were never provisioned
+  (404 on `tradfi-delta-one-features-ready-sub`, `commodity-signals-ng`, `commodity-signals-cl`); (3)
+  `cross_instrument`'s `_run_message_loop` calls `subscribe_once` via bare lambda without error handling — the UTL fix
+  protects `LiveDataSource.stream()` but cross_instrument bypasses it. VM deleted after confirming findings (zero useful
+  work possible without MTDS upstream data). 3 new actionable todos filed above. Todo 7 flipped ✅.
