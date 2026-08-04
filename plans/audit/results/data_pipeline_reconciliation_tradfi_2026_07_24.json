@@ -207,7 +207,7 @@
       },
       "is_new_finding": true,
       "escalated_to_operator": true,
-      "issue_doc": "plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
+      "issue_doc": "plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
     },
     "new_finding_source_mislabeling": {
       "finding_id": "G2",
@@ -245,7 +245,7 @@
       "root_cause_hypothesis_unverified": "2026-06-24 databento-first SOURCE_PRIORITY change reaching a code path lacking the per-venue _VENUE_SOURCE_EXCLUSIONS guard analogous to the already-fixed CBOE case",
       "is_new_finding": true,
       "escalated_to_operator": true,
-      "issue_doc": "plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
+      "issue_doc": "plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
     },
     "batch_massive_purge": {
       "status": "holding",

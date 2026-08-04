@@ -27,12 +27,13 @@ locked_since: 2026-05-06
 
 ## Deferred work — migrated to: `plans/active/master_to_live_defi_2026_05_23.md`,
 
-`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md` — successor: master_to_live_defi_2026_05_23,
-data_status_page_ux_and_canonicalisation_2026_07_16 (Cluster A — the 8-item per-service audit checklist — is the audit
-task definition itself, answered in full in this same document's Phase 0 report; closure independently confirmed at
-`master_to_live_defi_2026_05_23.md:2000` "Close shard-granularity propagation... DONE 2026-05-07". Cluster B — the
-5-item data-status/UI checklist — is actively continued by `data_status_page_ux_and_canonicalisation_2026_07_16.md`.
-NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+`plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` — successor:
+master_to_live_defi_2026_05_23, data_status_page_ux_and_canonicalisation_2026_07_16 (Cluster A — the 8-item per-service
+audit checklist — is the audit task definition itself, answered in full in this same document's Phase 0 report; closure
+independently confirmed at `master_to_live_defi_2026_05_23.md:2000` "Close shard-granularity propagation... DONE
+2026-05-07". Cluster B — the 5-item data-status/UI checklist — is actively continued by
+`data_status_page_ux_and_canonicalisation_2026_07_16.md`. NOTE: `locked_by: live-defi-rollout` was never cleared at
+archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # Shard-Granularity SSOT Propagation — Executor Handover
 

@@ -82,7 +82,7 @@ picture.
 > listed — open the file for the rest. Digests condensed 2026-07-24 so an AO worker can triage from this doc alone.
 
 - **Strategy/PnL/backtest axis**:
-  - [`plans/active/defi_strategy_pnl_axis_index_2026_07_24.md`](/plans/active/defi_strategy_pnl_axis_index_2026_07_24.md)
+  - [`plans/archive/2026_08/defi_strategy_pnl_axis_index_2026_07_24.md`](/plans/archive/2026_08/defi_strategy_pnl_axis_index_2026_07_24.md)
     — 0 own top-level todos (active entry-point index, not closed/archived — it references other plans instead of
     carrying its own checkboxes). Most of what it points to is already indexed elsewhere in this section
     (`lst_rate_honest_coverage_2026_07_21.md`,

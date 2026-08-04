@@ -210,7 +210,7 @@ Other: operator can type a custom answer
   NA-orphan-definition ruling) stays open — genuinely operator-gated, not guessed. Adopted the same interim "tooling
   reading" (A) as this doc's prior run for this session's own Phase 1 classification, labelled explicitly, not silently.
   Proceeding to a fresh Phase 0-3 pass over the corrected candidate set (see
-  `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_30.md` if drafted).
+  `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md`, the batch actually drafted the next day).
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
   unchanged). 2 SCRIPT todos are bounded script fixes with explicit done-whens; the one genuine judgment call is
   correctly `[OPERATOR]`-tagged (stays non-dispatchable). Conflict-check clear

@@ -634,7 +634,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument)
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + AAVE_V3 chain-axis question
     - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys
-  - [`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md`](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+  - [`plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md`](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
     - **[DATA] P3.** DECIDED (operator 2026-07-18) — `InstrumentRecord` silently swallows unknown kwargs,
       `extra='forbid'` fix
   - [`plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`](/plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md)

@@ -135,7 +135,7 @@ Widening before resolving this cliff would be strictly worse. Distribution by un
 
 Both are `doc_type: codex-ssot`, both `status: current`, both name the same topic in `authoritative_for:`:
 
-- `/codex/09-strategy/architecture-v2/naming-convention.md` —
+- `naming-convention.md` (formerly `codex/09-strategy/architecture-v2/`, deleted by the P0-B merge above) —
   `authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]`
 - `/codex/06-coding-standards/strategy-identity-versioning.md` —
   `authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]`

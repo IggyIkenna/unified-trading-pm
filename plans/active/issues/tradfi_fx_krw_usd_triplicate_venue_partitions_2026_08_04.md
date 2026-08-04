@@ -31,8 +31,8 @@ scope: [engineer, admin]
 tags: [tradfi, fx, venue, data-correctness, manifest, duplicate-rows, canonicalisation, distinct-values, delete-safety]
 related:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
-    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -60,8 +60,8 @@ source:
   session."
 context_scope:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
-    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,

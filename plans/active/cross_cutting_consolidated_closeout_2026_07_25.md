@@ -617,7 +617,7 @@ end-to-end for all 5 AGs.
 (Phase-2 true-catalogue/expected-universe source via instruments-service) ·
 [data_status_cell_grid_rearchitecture_2026_07_18.md](/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md)
 (bound/stream/precompute cell-grid rewrite to kill a deployment-api OOM reading the whole manifest) ·
-[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 (honest-coverage fix + P1-P8 UX/canonicalisation: instrument-type canonicalisation, catalogue explorer, cefi chain-axis
 drift, sports league-drilldown) ·
 [data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)

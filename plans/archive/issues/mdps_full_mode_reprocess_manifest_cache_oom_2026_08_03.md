@@ -15,7 +15,7 @@ summary: >-
   mode's manifest pre-flight) was NEVER previously exercised at this data scale — the original 4-shard sweep used
   `force` mode throughout, which skips the pre-flight lookup entirely (see `reprocess_sports_odds.py`'s `if not force
   and not dry_run:` guard around Pre-flight 2) — so this is a newly-discovered gap, not a regression.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -44,6 +44,9 @@ context_scope:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-08-04 (cicd wall agt-6af65b, archive-candidates gate)** — all todos closed; verification-only, no
+> new code needed.
 
 # MDPS full-mode reprocess OOM — manifest-cache reload under a long-running worker pool
 

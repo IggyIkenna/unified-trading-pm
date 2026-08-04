@@ -43,7 +43,7 @@ tags:
     regression,
     api-football,
   ]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 source:
   - Operator questions 2026-07-17 ("why isnt round populating how are we gonna get that retrospectively for each fixture

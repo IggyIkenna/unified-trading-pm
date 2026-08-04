@@ -23,7 +23,7 @@ related:
   [
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
   ]
 created: 2026-08-02

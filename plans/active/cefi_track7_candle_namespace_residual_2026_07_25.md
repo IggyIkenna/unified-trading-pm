@@ -53,7 +53,7 @@ context_scope:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+    /plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
     plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
   ]
 ---
@@ -115,7 +115,7 @@ context_scope:
 > delete may proceed via the standard protocol (dry-run, canonical VM/migration script, soft-delete-retention pre-check,
 > apply, verify-against-expected). Same open question as the sibling E4-E8 orphan-sweep applies here too — whether this
 > specific hard-stop-#2 delete may be agent-executed once qualified, or needs literal human hands, is unresolved — see
-> `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (this doc was one of the 4
+> `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (this doc was one of the 4
 > deletes that issue's "Hard-stop review" banner covers). Treated conservatively pending that ruling: human-execution
 > kept.
 
@@ -135,7 +135,7 @@ No new durable contract is created by this plan.
 
 - **2026-07-30 (rulings-closeout pass, separate session)** — re-verified this plan's gate state per a workspace-wide
   sweep closing out recorded operator rulings implying unshipped work. Confirmed unchanged, both gates still hold: (1)
-  `plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` is still `status: open`
+  `plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` is still `status: open`
   (re-read directly, no new resolution); (2) this plan's own `depends_on` prerequisite,
   `cefi_consolidated_native_ao_extract_2026_07_25.md`'s candidate-7 verify+backfill todo, is still literally `- [ ]`
   unchecked (line 157 of that doc, re-grepped directly). Neither gate cleared, so the delete was NOT executed. No action

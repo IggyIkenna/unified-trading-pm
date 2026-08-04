@@ -133,11 +133,11 @@ so nothing is lost even if the file is). Two tranches (`infra`, `gas-fee-split`)
 and shipped — do NOT re-run those two if resuming from the script (their branch names `ao-fix-infra` /
 `ao-fix-gas-fee-split` still exist as dangling local pointers, content already merged).
 
-- [x] [DOC] P1. **codex-fixes**: merge `/codex/09-strategy/architecture-v2/naming-convention.md` +
-      `/codex/06-coding-standards/strategy-identity-versioning.md` (both claimed `authoritative_for` "slot-label
-      grammar" and contradicted each other — 57 vs 18 archetype values, real ground truth needs re-verifying against
-      `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py`'s `StrategyArchetype`). Repoint
-      the dangling ref in `/codex/02-data/is-test-run-audit-2026-04-20.md:48` to the live
+- [x] [DOC] P1. **codex-fixes**: merge `naming-convention.md` (formerly `codex/09-strategy/architecture-v2/`, deleted by
+      this merge) into `/codex/06-coding-standards/strategy-identity-versioning.md` (both claimed `authoritative_for`
+      "slot-label grammar" and contradicted each other — 57 vs 18 archetype values, real ground truth needs re-verifying
+      against `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py`'s `StrategyArchetype`).
+      Repoint the dangling ref in `/codex/02-data/is-test-run-audit-2026-04-20.md:48` to the live
       `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`. Fix the P3-7 dead doctrine refs (4
       `.mdc`/`.cursor-rules` files) and the P3-8 unterminated-bold-span content bug in
       `perp_funding_data_semantics_and_cadence_2026_06_16.md:429`. Full instructions in the workflow script's

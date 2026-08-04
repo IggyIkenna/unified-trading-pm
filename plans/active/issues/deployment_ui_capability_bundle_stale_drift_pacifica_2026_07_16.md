@@ -317,7 +317,7 @@ GMX-freedom). All fixed and shipped this session, live-verified (tests green, `c
 - **UAC internal source** — `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`: hand-
   edited 9 cells (removed `gmx_v2` from `venue_ids`, dropped gmx-specific `representative_slot_labels`, flipped
   `LIQUIDATION_CAPTURE`/DEFI/perp from PARTIAL→BLOCKED since gmx_v2 was its sole venue — added a new `BL-12` block-list
-  entry, mirrored into `codex/09-strategy/architecture-v2/block-list.md` + `unified-trading-system-ui`'s
+  entry, mirrored into `/codex/09-strategy/architecture-v2/block-list.md` + `unified-trading-system-ui`'s
   `block-list.ts`), regenerated clean via `generate_archetype_capability_manifest.py --write`.
   `unified-api-contracts@5474716e`.
 - **Third instance** (UAC `openapi/capability-manifest.json` + reports) — full regen via

@@ -15,7 +15,7 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service, market-data-processing-service, unified-trading-library]
 scope: [engineer]
 tags: [sports, canonicalisation, instrument-type, uac-contract-fork, gcs-migration, odds]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-23
 parent_epic: sports_master
@@ -38,9 +38,9 @@ superseded_by: sports_consolidated_closeout_2026_07_19.md
 
 > **✅ ARCHIVED 2026-07-25** — the operator directed this fold-in back on 2026-07-23 (banner below) but the file was
 > never actually `git mv`'d to `plans/archive/`; done now as part of a dedicated archival-ritual sweep. All 10 todos
-> below were still open at fold-in time (never picked back up from this file, per the banner's own instruction) —
-> every one of them was extracted into `sports_consolidated_closeout_2026_07_19.md` Track C, so nothing is lost by
-> archiving this as historical record. Moved to `plans/archive/2026_07/` per the archival ritual.
+> below were still open at fold-in time (never picked back up from this file, per the banner's own instruction) — every
+> one of them was extracted into `sports_consolidated_closeout_2026_07_19.md` Track C, so nothing is lost by archiving
+> this as historical record. Moved to `plans/archive/2026_07/` per the archival ritual.
 
 > **🟡 SUPERSEDED 2026-07-23 — folded into `sports_consolidated_closeout_2026_07_19.md`.** This plan was one of 4
 > fold-in plans the operator directed to archive in this batch (`sports_manifest_canonicalisation_2026_06_01`,

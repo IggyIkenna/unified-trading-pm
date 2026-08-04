@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [data-status, sports, fixtures, catalogue, deployment-api, ux]
 related:
   [
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
@@ -46,7 +46,7 @@ source: >-
   3 open P10-B todos (below) are moved here verbatim, unedited; only frontmatter + this orienting header are new.
 context_scope:
   [
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     deployment-api/deployment_api/services/fixtures_browser.py,
     deployment-ui/src/components/FixturesBrowser.tsx,
     /codex/02-data/sports-2020-06-data-floor.md,
@@ -56,11 +56,11 @@ context_scope:
 # Sports fixtures browser — switch to the single-file catalogue source
 
 > **Human/LOCAL plan** (`assigned_vm: NA`) — forked 2026-07-24 out of
-> `/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md` (P10 / P10-B — Sports fixtures browser) as part
-> of the plan line-cap remediation. That parent plan retains ~2000 lines of shipped history (P1-P10, including the full
-> P10-B operator dialogue, the two corrections the operator forced, and the full-history rollup evidence) as the durable
-> record — read it for full context. This child carries forward only the 3 still-open P10-B todos, moved **verbatim**
-> from the parent — nothing summarized or rewritten.
+> `/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` (P10 / P10-B — Sports fixtures
+> browser) as part of the plan line-cap remediation. That parent plan retains ~2000 lines of shipped history (P1-P10,
+> including the full P10-B operator dialogue, the two corrections the operator forced, and the full-history rollup
+> evidence) as the durable record — read it for full context. This child carries forward only the 3 still-open P10-B
+> todos, moved **verbatim** from the parent — nothing summarized or rewritten.
 
 ## Codex SSOTs (this plan references, does not duplicate)
 

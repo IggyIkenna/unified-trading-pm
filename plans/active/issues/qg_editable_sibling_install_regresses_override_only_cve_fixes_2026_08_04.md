@@ -20,7 +20,7 @@ related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
-    /plans/active/ci_local_qg_parity_2026_06_08.md,
+    /plans/archive/2026_06/ci_local_qg_parity_2026_06_08.md,
   ]
 created: 2026-08-04
 author: slot-9
@@ -45,7 +45,7 @@ context_scope:
     scripts/quality-gates-base/base-service.sh,
     scripts/quality-gates.sh,
     /codex/06-coding-standards/quality-gates.md,
-    plans/active/ci_local_qg_parity_2026_06_08.md,
+    plans/archive/2026_06/ci_local_qg_parity_2026_06_08.md,
   ]
 ---
 

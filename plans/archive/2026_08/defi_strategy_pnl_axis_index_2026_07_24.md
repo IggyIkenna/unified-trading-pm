@@ -6,7 +6,7 @@ summary:
   defi_consolidated_closeout_2026_07_18.md's "Strategy/PnL/backtest-side DeFi tracking" section (folded in there
   2026-07-23, "no orphans") so that plan could come back under the 1000-line hard cap. This doc REFERENCES the source
   docs; it does not duplicate them — same pattern as the parent data/canonicalization close-out.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -66,6 +66,10 @@ context_scope:
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
   ]
 ---
+
+> **🟢 COMPLETE 2026-08-04 (cicd wall agt-6af65b, archive-candidates gate)** — sole todo flipped 2026-08-03
+> (`/na-eligibility-audit` reclassify pass, already shipped in `strategy-service@a90e85eb`); doc's own Progress Log
+> confirms zero remaining open scope as an index/entry-point doc.
 
 # DeFi strategy/PnL/backtest axis index — entry point for the strategy-service track
 

@@ -9,7 +9,7 @@ summary:
   browser + instrument-type canonicalisation (SPOT_ASSET already exists in UAC) + drilldown de-duplication + catalogue
   explorer + cefi chain-axis drift + sports league-drilldown consistency. Each point carries a self-contained design
   guide; operator decisions are all resolved.
-status: active
+status: complete
 nature: process
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are the
@@ -64,6 +64,12 @@ context_scope:
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 ---
+
+> **🟢 COMPLETE 2026-08-04 (cicd wall agt-6af65b, archive-candidates gate)** — all todos `[x]`, and this plan's own tail
+> confirms every P1-P8 item resolved (either shipped directly or already tracked/closed in a sibling doc:
+> `data_status_tab_and_downloads_remediation_2026_06_16.md`,
+> `plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`,
+> `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`). No open work orphaned.
 
 # Data-status page — honest-coverage fix + UX & canonicalisation follow-ups
 

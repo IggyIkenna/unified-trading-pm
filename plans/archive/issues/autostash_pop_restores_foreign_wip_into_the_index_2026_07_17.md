@@ -64,7 +64,7 @@ context_scope:
 `unified-trading-pm@1a59516af` was meant to add one new file. It shipped three:
 
 ```
-157  125   plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md   <- FOREIGN, real content
+157  125   plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md   <- FOREIGN, real content
 187    0   plans/active/issues/sports_fixture_round_..._2026_07_17.md            <- mine (intended)
 118    0   plans/active/issues/tradfi_instrument_type_migration_..._2026_07_17.md <- FOREIGN, new file
 ```

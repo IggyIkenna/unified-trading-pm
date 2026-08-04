@@ -21,7 +21,7 @@ repos:
   ]
 scope: [engineer]
 tags: [defi, identity, pool, shard-atom, instrument-id, uniqueness]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: defi_master

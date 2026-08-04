@@ -13,7 +13,7 @@ summary: |
   (`/api/builds/history`, `/api/fixtures/upcoming`) from `ImportError: artifactregistry_v1`, and `/api/vm-deployments`
   exceeds 90s. The comparison tool is promoted to `deployment-api/scripts/compare_live_mock_parity.py` — **re-run it;
   parity decays every time an endpoint is added to one side only**.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api/deployment-ui
@@ -57,6 +57,9 @@ context_scope:
     deployment-api/deployment_api/routes/_gcp_cloud_functions.py,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-04 (cicd wall agt-6af65b, archive-candidates gate)** — all todos closed; every todo in the doc
+> is confirmed done per its own Progress Log.
 
 # deployment-api mock mode has drifted from live
 

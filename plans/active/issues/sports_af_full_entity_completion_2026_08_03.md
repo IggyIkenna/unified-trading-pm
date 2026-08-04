@@ -26,7 +26,7 @@ tags: [sports, api-football, entity-completion, downgrade-planning, mvp-scope]
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /codex/02-data/mvp-scope-canonical.md,
   ]
 created: 2026-08-03
@@ -104,7 +104,7 @@ live-manifest + retirement-commit check) — **measurement artifact, LEAGUES is 
 2. **The shard atom never had a `league_id` axis to begin with** —
    `unified-api-contracts/.../canonical/domain/sports/gcs_paths.py:186` declares
    `"LEAGUES": SportsPathLayout.PER_DAY_BARE` (no `league=` path segment), and
-   `codex/02-data/sports-gcs-path-ssot.md:115` states outright that LEAGUES is "cross-league reference data where
+   `/codex/02-data/sports-gcs-path-ssot.md:115` states outright that LEAGUES is "cross-league reference data where
    `league_id` grouping has no meaning." A per-`(date, league_id)` denominator was categorically invalid for this entity
    — max theoretical shards was ~2,200 days, not 110,739. GCS confirms deletion too: sampled 5 dates across 2021–2026
    under `pipeline_mode=batch_api_football/`, zero `entity=leagues/` objects in any of them.

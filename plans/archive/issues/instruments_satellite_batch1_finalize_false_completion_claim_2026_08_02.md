@@ -13,7 +13,7 @@ summary: >-
   was never moved to `plans/archive/` at all (it's the exact doc the orchestrator dispatched my live task from). This is
   a confirmed false-progress incident, not a misreading on my part — evidenced via git log (no "flip item 4" commit ever
   exists for the parent) and the parent's own frontmatter (`status: active`, currently in `plans/active/`).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -54,6 +54,9 @@ source: >-
   Discovered while working instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 4
   (instruments_satellite_ao_dispatch_batch1-004), 2026-08-02.
 ---
+
+> **🟢 RESOLVED 2026-08-04 (cicd wall agt-6af65b, archive-candidates gate)** — both todos DONE with commit citations
+> (unified-trading-pm@65f653fd9, slot-16 8/8-pass audit).
 
 # Finalize twin's completion claim was false — the substance was never actually verified before archival
 

@@ -33,7 +33,7 @@ context_scope:
   [
     features-service/scripts/pipeline_e2e_check.py,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 ---

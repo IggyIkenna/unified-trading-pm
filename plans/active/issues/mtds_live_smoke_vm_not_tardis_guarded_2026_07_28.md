@@ -27,7 +27,7 @@ context_scope:
   [
     /plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md,
     /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
-    /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
+    /plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-mtds-live.sh,
   ]
@@ -82,7 +82,7 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 
 > **✅ SAME-FILE COLLISION RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep, operator ruling: only one doc's
 > todo claims the edit, the other cites it).** The doc this collided with —
-> `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
+> `/plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
 > (`assigned_vm: planning`) — has **already SHIPPED its half** (`deployment-service@2d6b01a`): the shared exemption
 > logic now lives in `tardis-concurrency-guard.sh` itself as `TARDIS_CAP_EXEMPT_VENUES` +
 > `tardis_venue_list_needs_guard()` (verified in live code today). So the two docs are no longer racing on the same
@@ -140,7 +140,7 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
       `plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md:149` (Source-cites this exact item as "P3 of 3");
       not closing here — that batch's own done-when includes flipping this checkbox once it ships. **Scope-fenced
       2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
-      `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
+      `/plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
       which is already **done** — read what it wrote and cross-link it rather than restating or editing it.
 
 No corruption confirmed this run (0 403s observed in the concurrent window) — this is a structural gap finding, not a

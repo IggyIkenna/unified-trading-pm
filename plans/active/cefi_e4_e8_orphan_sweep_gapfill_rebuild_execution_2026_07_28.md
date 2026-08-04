@@ -98,7 +98,7 @@ context_scope:
 > is more specific and more recent, **Phase B's actual apply is being treated as still requiring literal human hands**,
 > not agent execution — the operator's 2026-07-29 answer authorized the protocol/steps but did not name "hard-stop #2"
 > as an override target in the same turn (the bar this workspace's hard-stop rule requires), so it is not read as
-> crossing it. Filed as `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` for an
+> crossing it. Filed as `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` for an
 > explicit resolution. Phase A is unaffected — already `[DATA]` P0, dispatchable now.
 
 ## Already-shipped tooling (credit, not a flip)
@@ -123,12 +123,12 @@ step.
 > SSOT** and the others are gates or citations. The `[OPERATOR]` hard-stop on **Phase B was deliberately left exactly as
 > it is** (permanent human-only, delete-safety-protocol hard-stop #2); only the surrounding ownership was clarified.
 >
-> | Doc                                                                                      | Relationship to this plan                                                                                                                                                                                         |
-> | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `/plans/active/data_completion_cefi_2026_07_15.md`                                       | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
-> | `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
-> | `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
-> | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                      | **CITES** for sequencing only.                                                                                                                                                                                    |
+> | Doc                                                                                       | Relationship to this plan                                                                                                                                                                                         |
+> | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `/plans/active/data_completion_cefi_2026_07_15.md`                                        | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
+> | `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`            | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
+> | `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
+> | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                       | **CITES** for sequencing only.                                                                                                                                                                                    |
 >
 > Net: **only this plan's own todos execute.** Every other doc either gates a phase or cites it.
 
@@ -280,7 +280,7 @@ reconciliation only, per the finding's own recommended decision).
 Re-verified this doc's live-gate state per a workspace-wide sweep closing out recorded operator rulings implying
 unshipped work. Phase A remains correctly flipped done (already verified complete this session by an earlier pass,
 `canonical-migration-cefi-20260730-012546`). **Phase B remains correctly gated** — re-read
-`plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
+`plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
 unchanged, no new resolution. Per this sweep's own explicit constraint (do not resolve an open operator-only policy
 contradiction, do not execute a ~1.2M-object prod delete without an independently-verified §3a citation), Phase B was
 NOT executed and the hard-stop-2 contradiction was NOT adjudicated. No action taken; no changes needed.

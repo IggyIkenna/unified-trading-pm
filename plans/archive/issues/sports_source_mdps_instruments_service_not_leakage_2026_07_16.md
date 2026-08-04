@@ -18,7 +18,7 @@ stage: [meta]
 repos: [instruments-service, market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, manifest, data-correctness, source, honest-coverage]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-16
 parent_epic: deployment_and_user_management_master
 priority: P3

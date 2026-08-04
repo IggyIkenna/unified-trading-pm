@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -60,7 +60,7 @@ context_scope:
     features-service/features_service/delta_one/config.py,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
   ]
 resolved_by:
 ---

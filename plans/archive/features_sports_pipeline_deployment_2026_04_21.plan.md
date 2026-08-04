@@ -41,9 +41,9 @@ trigger-fire test and coverage audit are absorbed by the first plan's live-fire 
 (`features-sports-service` → `features-service-sports-job`); the FIXTURE_FEATURES coverage audit is superseded by the
 second plan's full 2015→present backfill with real per-league coverage proofs. One residual item — a literal UI
 screenshot confirming the SPORTS drilldown completion % — has no plan naming it explicitly; low-value, left for
-`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md`'s general sports-drilldown work to pick up
-incidentally. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]`
-cleanup.)
+`plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md`'s general sports-drilldown work to pick
+up incidentally. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator
+`[unlock-plan]` cleanup.)
 
 ## Context
 

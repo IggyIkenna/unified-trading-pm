@@ -22,7 +22,7 @@ stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer]
 tags: [pytest, flake, pathlib, xdist, python-3.13, ci, environment]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 parent_epic: instruments_master
 priority: P3

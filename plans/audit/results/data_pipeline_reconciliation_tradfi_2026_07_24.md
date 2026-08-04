@@ -466,7 +466,7 @@ findings from this run are escalated:
    history** (§3d) — a taxonomy-gap-class S3-only defect, real data is fine on disk, the manifest's own copy of the key
    is not.
 
-Filed: `plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.
+Filed: `plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.
 
 ---
 

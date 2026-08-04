@@ -24,7 +24,7 @@ codex_ssots:
 related_plans:
   - ../active/data_status_catalogue_true_source_phase2_2026_07_24.md
   - ../active/data_status_cell_grid_rearchitecture_2026_07_18.md
-  - ../active/data_status_page_ux_and_canonicalisation_2026_07_16.md
+  - ../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md
   - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
   - ../active/github_actions_operator_gated_followups_2026_07_17.md
   - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
@@ -117,7 +117,7 @@ operator-gated followups (D2/D3/D4 decisions, verification-pending items)
 **status**: active · **estimate**: 1.8 cal AI-days (class: design) **title**: Data-status catalogue explorer — Phase 2
 true-catalogue (expected-universe) source
 
-### [`data_status_page_ux_and_canonicalisation_2026_07_16`](../active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+### [`data_status_page_ux_and_canonicalisation_2026_07_16`](../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 
 **status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
 (shipped) + UX & canonicalisation follow-ups (P1–P8)

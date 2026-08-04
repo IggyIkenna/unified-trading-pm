@@ -26,7 +26,10 @@ repos:
 scope: [engineer, admin]
 tags: [defi, close-out, history, progress-log, audit, archive]
 related:
-  [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/defi_strategy_pnl_axis_index_2026_07_24.md]
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/defi_strategy_pnl_axis_index_2026_07_24.md,
+  ]
 created: "2026-07-24"
 last_updated: "2026-07-24"
 parent_epic: defi_master

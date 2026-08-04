@@ -331,7 +331,7 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
       `market-data-tick-sports-prd-central-element-323112` = 604800s — **both meet the ≥604800s finding-T/§3a
       threshold**. This clears ONE of the two conditions the 2026-07-27 re-check named. **NOT clearing the operator gate
       myself**: this is delete-safety hard-stop #2 (legacy-delete-after-copy), and per the still-open contradiction
-      filed in `plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (codex says
+      filed in `plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (codex says
       hard-stop #2 is §3a-qualifiable once Part 5's 100%-twin-coverage proof clears; a sibling CeFi plan explicitly
       reaffirmed "no carve-out... regardless of pre-checks" for the same hard-stop class), the reversibility-qualified
       path is not being treated as settled workspace-wide yet. Also unverified here: whether Part 5's PROOF (100%

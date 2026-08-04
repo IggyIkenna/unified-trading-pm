@@ -40,7 +40,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
-archive_exempt: true # archival routed through plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md's reconciliation, not standalone (see Progress Log)
+archive_exempt: true # archival routed through plans/archive/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md's reconciliation, not standalone (see Progress Log)
 locked_by:
 locked_since:
 supersedes:
@@ -286,5 +286,5 @@ checkbox found anywhere.
   (`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`) already archived itself 2026-07-29/30 claiming all
   5 were done + this parent was archived — BOTH claims were false at the time (this todo 4 was still open, and this
   parent plan was never actually moved to archive/, which is why it was still live and dispatchable today). See
-  `plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` for the full finding
+  `plans/archive/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` for the full finding
   — this plan's real archival + the source doc's real reconciliation are tracked there, not here.

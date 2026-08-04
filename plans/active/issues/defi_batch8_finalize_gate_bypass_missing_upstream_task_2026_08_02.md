@@ -43,7 +43,7 @@ related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
-    /plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md,
+    /plans/archive/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -109,7 +109,7 @@ source: >-
    doc checked) novel: the upstream's task is genuinely absent from the whole backlog, not merely mismatched on a
    directory-qualified path string.
 5. **Same false-progress shape as a same-day sibling incident**: this mirrors
-   [`/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`](/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md)
+   [`/plans/archive/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`](/plans/archive/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md)
    — a gated finalize twin's mechanics proceeding ahead of the substance they're supposed to gate on. That incident was
    a human/agent trusting a false "DONE" claim; this one is the dispatcher itself releasing gated work with nothing to
    verify against. Worth noting as the same failure _class_ recurring via a different mechanism, for whoever eventually

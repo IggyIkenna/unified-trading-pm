@@ -16,7 +16,7 @@ stage: [meta]
 repos: [deployment-ui, deployment-api, unified-api-contracts]
 scope: [engineer]
 tags: [data-status, deployment-ui, deployment-api, ux, fixtures, prediction, catalogue, sports]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 last_updated: 2026-07-18
 parent_epic: deployment_and_user_management_master

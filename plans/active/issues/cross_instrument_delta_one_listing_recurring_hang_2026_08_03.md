@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [infra, features-service, pipeline-e2e-check, cross-instrument, gcs-listing, hang, vm-reliability]
 related:
   [
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
   ]
 created: 2026-08-03
@@ -50,7 +50,7 @@ context_scope:
     features-service/scripts/pipeline_e2e_check.py,
     deployment-service/deployment_service/smoke_test_framework.py,
     /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
   ]
 resolved_by:
 ---

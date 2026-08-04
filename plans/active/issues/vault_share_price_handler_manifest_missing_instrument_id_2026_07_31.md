@@ -99,6 +99,11 @@ for this exact multi-instrument-per-group shape.
       asserting `record_captured` fires once per registry vault with a distinct non-blank `instrument_id`. Verification
       of the next NATURAL fresh capture (cron-produced manifest row with non-null `instrument_id`) is still outstanding
       — not yet observed live, since this fix only affects rows written going forward.
+- [ ] [DATA] P3. **Live confirmation (split out 2026-08-04 — was prose in the todo above, per the todos-not-prose
+      rule)**: after the next natural cron cycle (or a manual re-run) produces fresh vault_share_price_handler data,
+      confirm at least one manifest row per venue now carries a non-null `instrument_id` matching the written GCS
+      object's own `instrument_id` column. Flip this todo + archive the doc once confirmed. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
