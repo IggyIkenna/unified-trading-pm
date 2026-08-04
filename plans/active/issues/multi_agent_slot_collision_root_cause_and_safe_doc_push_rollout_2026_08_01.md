@@ -185,9 +185,9 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   `scripts/dev/safe-doc-push.sh` directly for doc-only batches rather than raw `git commit`/quickmerge, pending that
   operator decision.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
-- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the dominant `[OPERATOR] P1`
-  decision (make `safe-doc-push.sh` the CLAUDE.md-mandated default) remains undecided (confirmed zero "safe-doc-push"
-  mentions in the current CLAUDE.md); fixes 1/2 remain unimplemented (no `.agent-claim` heartbeat code found anywhere
-  in `scripts/`). The `[DOCS] P2` item is already extracted as a bounded, still-unshipped todo in
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the dominant `[OPERATOR] P1` decision
+  (make `safe-doc-push.sh` the CLAUDE.md-mandated default) remains undecided (confirmed zero "safe-doc-push" mentions in
+  the current CLAUDE.md); fixes 1/2 remain unimplemented (no `.agent-claim` heartbeat code found anywhere in
+  `scripts/`). The `[DOCS] P2` item is already extracted as a bounded, still-unshipped todo in
   `ao_satellite_ao_dispatch_batch5_2026_08_03.md`, and the whole doc is independently re-confirmed operator-gated in
   today's `batch6` Deferred list.
