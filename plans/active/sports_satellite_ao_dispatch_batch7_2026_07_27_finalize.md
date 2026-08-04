@@ -65,12 +65,12 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile source-doc checkboxes for all 4 batch-7 todos.** Each batch-7 todo ends with a `Source:`
-      line naming `sports_consolidated_closeout_2026_07_19.md`'s specific Track/section — flip the corresponding
-      checkbox there, citing the batch-7 commit(s) that shipped it. **Verify every cited commit/evidence actually exists
-      before citing it** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`, or for GCS operations, re-run
-      the stated census/verify step yourself rather than trusting the batch-7 todo's own claim — this doc family has a
-      real history of "immediate verify passed" claims that didn't hold, see
+- [x] ✅ [REVIEW] P1. **Reconcile source-doc checkboxes for all 4 batch-7 todos.** Each batch-7 todo ends with a
+      `Source:` line naming `sports_consolidated_closeout_2026_07_19.md`'s specific Track/section — flip the
+      corresponding checkbox there, citing the batch-7 commit(s) that shipped it. **Verify every cited commit/evidence
+      actually exists before citing it** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`, or for GCS
+      operations, re-run the stated census/verify step yourself rather than trusting the batch-7 todo's own claim — this
+      doc family has a real history of "immediate verify passed" claims that didn't hold, see
       `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`'s ROUND 2/3). For todo 4 (DIAG,
       decision 16), confirm an issue doc was actually filed (or an existing RE-TRIAGE section actually updated) with a
       real root-cause finding — not just "investigated, inconclusive" as a way to close the checkbox without the

@@ -590,11 +590,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `sports_canonical_migrated_odds_mistamped_footystats` has no standalone issue doc — it's the footystats
       legacy-bundle mislabel already tracked as its own Track C todo above (venue vocabulary cleanup, `venue=ODDS_API`→
       `FOOTYSTATS`, 42,476 rows). **Done when**: the cutover runbook is corrected and cites this doc.
-- [ ] [DIAG] P2. **NEW 2026-07-23 (decision 16) — investigate 2 unfiled loose ends from the OR-1 investigation.** (1)
-      standings/teams season-2026 data being written under historical `day=` partitions across ~3,050 days in both
-      buckets; (2) an unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22. Root cause
-      unknown for both — operator decision: investigate now rather than deferring, since both are currently unowned and
-      could be actively recurring. Detail: see the OR-1/player_stats-union issue doc's own RE-TRIAGE (2026-07-23).
+- [x] ✅ [DIAG] P2. **NEW 2026-07-23 (decision 16) — DONE 2026-08-04, `unified-trading-pm@09ce04535`** (batch7 todo 4).
+      Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
+      emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
+      (path-template mismatch). Issue doc + 3 follow-up todos:
+      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
 - [ ] [DATA] P1. **Prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows** (NEW 2026-07-24,
       folded in from archived `sports_master_closeout_2026_07_21.md`). The already-deleted 6,110-object subset is now
       PHANTOM (drift, not a coverage gap — the real data is still covered by the `SOCCER_*` uppercase twins). Clean via
@@ -723,11 +723,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       returns 0 hits in both — the `odds_movement_home/_draw/_away` hits in `features-service` are a different,
       unrelated FEATURE COLUMN concept, confirmed false-positive by the exact-literal check. Per the operator ruling
       this todo cites: nothing downstream needs them, so retirement (out of this todo's scope) is unblocked.
-- [ ] [CODE] P1. **RESTORED 2026-07-24** (dropped with no surviving checkbox in a prior line-cap trim) — canonicalise
-      `BOOKMAKER_LEAGUE_COVERAGE` (`unified-api-contracts`, keyed on RAW league names while the sports v2 sentinel calls
-      it with a CANONICAL id — a standing coverage false-negative). Fix: regenerate the registry JSON from
-      `ODDS_API_DISPLAY_TO_CANONICAL` or re-run `refresh_sports_bookmaker_league_coverage_2026_06_21.py`. Detail:
-      archive history doc's "Newly-actionable todos" section.
+- [x] ✅ [CODE] P1. **RESTORED 2026-07-24, SHIPPED 2026-07-27 — `unified-api-contracts@804858c9`** (batch7 todo 3). 25
+      leagues double-keyed (358/1129 pairs); `canonicalize_odds_api_league_id()` + 10 regression tests; JSON regenerated
+      1129→771 deduped.
 - [ ] [CODE] P2. **NEW 2026-07-23 (decision 12) — design + build the missing cross-object-CAS safety mechanism** for the
       1,066,231-row manifest purge/reclassify. Root-cause fix shipped, all 4 related operator decisions already ruled —
       the ONLY remaining blocker is that this safety tooling doesn't exist yet (harder than the league_id migration's
