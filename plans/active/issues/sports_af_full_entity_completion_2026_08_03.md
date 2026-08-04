@@ -349,3 +349,16 @@ are genuinely in scope for the operator's "no exceptions" directive.
   explicitly instructed worker) confirms FIXTURE_STATS convergence and flips the condition true. Did not attempt to also
   fix FIXTURE_STATS's own lack-of-a-retry-mechanism (out of scope for a park action) — flagged as a residual gap in the
   todo above instead. `skip-current-task`'d (reason_code=GATED) to release the slot per the now-parked state.
+- **2026-08-04T05:38Z** — Working the sports campaign monitoring loop (independent of the AO park, per the standing
+  directive). `asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s slot-5 entry (04:44Z-05:16Z) found the real
+  signal: the original cross-cutting storm (3 asset groups) genuinely subsided; what continues is a narrower pattern
+  confined to `expected-universe-v2-sports-*` VMs specifically — **af-backfill itself has been preemption-free since
+  01:21:48Z**. Independently re-verified via
+  `gcloud logging read 'protoPayload.methodName="compute.instances.preempted" ... AND (protoPayload.resourceName:"af-backfill" OR protoPayload.resourceName:"af-audit")' --freshness=6h`:
+  confirmed zero af-backfill/af-audit events since 01:21:48Z — over 4h clean at check time (05:38Z). Singleton lock
+  free. Relaunched FIXTURE_STATS as `af-backfill-20260804-063845` (`--entity FIXTURE_STATS 2020-06-06 2026-08-04`, no
+  `--force`) — confirmed RUNNING at launch. This is the 9th launch attempt today; unlike the prior 8, this one is backed
+  by a genuine multi-hour clean window specific to this VM family, not just a lull in the aggregate zone rate. Note:
+  launcher warned of 2 stale code tarballs (instruments-service, deployment-service) — not republished before this
+  launch (time-sensitive to catch the clean window; the FIXTURE_STATS fetch path itself hasn't changed since the
+  tarballs were built, so this is a low-risk gap, not blocking). Monitoring for a clean, non-preempted run.
