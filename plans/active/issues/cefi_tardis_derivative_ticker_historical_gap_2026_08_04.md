@@ -78,3 +78,9 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   single-VM sequential backfill (~94 days × 8+ venues) — monitoring via bounded background watchdogs (~10 min cadence,
   reading `run.log` day markers + VM status) rather than continuous polling, per the async-wait-discipline HARD RULE.
   Will verify via manifest row counts once the VM shuts down (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo.
+- **slot-4 2026-08-04 ~06:15Z**: Picked up this task (`already_in_progress: true`, resume dispatch). VM
+  `cefi-fwd-20260804-021235` confirmed still `RUNNING`, actively writing real `derivative_ticker` shards (e.g.
+  `COINBASE-FUTURES:PERPETUAL:TSM-USD@LIN.parquet`, 265027 rows) at day=2026-05-27 (of the 2026-05-01→2026-08-02 range),
+  RSS ~4.9GB/19% mem, healthy. Armed a 25-min background watchdog (day-marker + VM-status + error-signature poll) rather
+  than continuous polling. Will verify via manifest row counts once the VM reaches its
+  `[[VM_PROGRESS]] last_completed_date=2026-08-02` marker / shuts down, then flip the todo + `/done`.
