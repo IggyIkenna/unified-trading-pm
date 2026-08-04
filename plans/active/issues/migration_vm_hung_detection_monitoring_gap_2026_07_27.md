@@ -409,22 +409,25 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       direct code read of the day-completion accounting logic and by confirming the consuming
       `read_progress_checkpoint()`/`RelaunchPreemptedVm` machinery is already live and unconditional on this script's
       own changes.
-- [ ] [HUMAN] P3. **Close the tracking gap todo 5's audit left open**: two items were explicitly flagged "left open" in
-      todo 5's own text but never converted into a trackable todo or issue doc (caught during this doc's 2026-07-27
-      reconciliation pass — see Resolution section below). (a) **Individually VM_TASK-verify each of the ~35 unverified
-      one-off/recon/audit/validation-named launchers** todo 5 identified (e.g. `launch-orphan-sweep-vm.sh`,
-      `launch-manifest-recon-*-vm.sh`, `launch-sports-full-sweep-vm.sh`, `launch-mtds-gas-fees-backfill-vm.sh`) against
-      whether each routes through the same Class-A `setup-data-pipeline-vm.sh` path and is safe to add to
-      `_is_backfill_vm()`'s naming match — checking each for a fleet-naming collision against a legitimately-continuous
-      VM name per the parent doc's blast-radius rule — before broadening the heuristic. (b) **Fix the confirmed active
-      mis-route `launch-batch-live-recon-cron-vm.sh`** (`VM_NAME="batch-live-recon-${TARGET_DATE//\-/}-${RUN_TS}"`,
-      re-confirmed this session by direct grep — the literal `-live-` substring trips `_is_backfill_vm()`'s early-out to
-      `False` even though it's a batch reconciliation cron, not a live-capture VM) — needs either a narrower early-out
-      condition (e.g. requiring `-live-` to NOT be immediately preceded by `batch`) or an explicit inclusion carve-out.
-      Done when: each of the ~35 launchers has an individually-verified verdict recorded (added to `_is_backfill_vm()`
-      or explicitly rejected with reasoning), and `launch-batch-live-recon-cron-vm.sh` routes to the correct
-      (backfill/run-log- freshness) liveness signal without regressing any genuinely-live VM whose name legitimately
-      contains `-live-`.
+- [x] ✅ [HUMAN] P3. **Close the tracking gap todo 5's audit left open** — deployment-service@9c4bfef (2026-08-04). (a)
+      **Individually VM_TASK-verified each of the ~35 unverified launchers** from todo 5's audit. All 113
+      `launch-*-vm.sh` scripts under `deployment-service/scripts/vm/` were re-checked against `_is_backfill_vm()`'s
+      matching rules and against Class-A (`setup-data-pipeline-vm.sh`) vs Class-B (`launcher_common.sh`) startup-script
+      routing. 12 launchers with static/deterministic VM_NAME prefixes were added to the `startswith` tuple:
+      `mtds-migrate-perp-funding-restamp`, `blank-reason-recon`, `defi-phantom-recon`, `expected-universe-v2`,
+      `measure-honest-coverage`, `fill-missing-player-stats`, `mtds-lending-indices`, `mtds-lst-rates`,
+      `mtds-pyth-archive`, `mtds-vault-share-price`, `features-sfi-progressive`, `mtds-gas-fees`. Launchers with
+      runtime-variable prefixes (`${VM_PREFIX}`, `${SINGLETON_PREFIX}`, `$1`/`$2`) were individually checked but
+      deliberately NOT added — their actual prefix is unknowable statically and a heuristic guess risks a naming
+      collision with a legitimately-live VM. Standing-infra, already-excluded live/paper/continuous, and already-matched
+      `*-backfill-*`/`-bf-` launchers were verified unchanged. (b) **Fixed the batch-live-recon mis-route**:
+      `batch-live-recon` is now checked BEFORE the `-live-` early-out in `_is_backfill_vm()` (returns `True` — it's a
+      nightly T+1 batch reconciliation cron, not a live-capture VM). Genuinely-live VMs with `-live-` in their name are
+      still correctly excluded (regression-tested). New test: `test_is_backfill_vm_todo7_close_tracking_gap`. Full
+      `quality-gates.sh` green. Done: each of the ~35 launchers has an individually-verified verdict recorded (added to
+      `_is_backfill_vm()` or explicitly rejected with reasoning), and `launch-batch-live-recon-cron-vm.sh` routes to the
+      correct (backfill/run-log- freshness) liveness signal without regressing any genuinely-live VM whose name
+      legitimately contains `-live-`.
 - [x] [SCRIPT] P2. **A genuinely NEW instance of this exact bug class, live-observed 2026-07-29**:
       `launch-cefi-funding-timestamp-fix-vm.sh` (built during a later session, after this doc's todo 5 audit had already
       run — not one of the ~35 unverified launchers, a brand-new one) hit the identical Gap-2 failure mode. A
