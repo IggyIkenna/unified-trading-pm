@@ -259,11 +259,12 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated (VM-run), merged
         into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy objects deleted only
         after verification.
-  - [ ] [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
-        `non-canonical-path-inventory.md`.** 4a's writer-root fix (title/slug/event_slug now flow to new canonical
-        writes) is registerable now; the raw-object migration disposition (4b-i shapes #3/#3b, 4b-ii shape #4) must be
-        added/updated once each actually executes — don't mark the `prediction_trades`/shape-#4 rows
-        `yes-twin-confirmed` until they are. Repo: unified-trading-pm.
+  - [x] ✅ [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
+        `non-canonical-path-inventory.md` — unified-trading-pm@cb59926c6.** 4a's writer-root fix (title/slug/event_slug
+        now flow to new canonical writes) ALREADY registered in §6e by 4a's ship; this task updated §6e's historical
+        backfill state (4b-i at 299/348, 4b-ii enumeration complete with corpus-wide stats, 4b-iii pending) and
+        non-canonical-path-inventory.md row 22 (shape #4 extent now known, 4b-i/4b-ii/4b-iii status). Raw-object
+        migration disposition stays `no-migrate-first` — not `yes-twin-confirmed` until migrations actually execute.
 
 ## Deferred — gated on a sibling todo landing (NOT dispatched speculatively)
 
