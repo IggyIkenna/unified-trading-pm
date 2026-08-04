@@ -224,12 +224,26 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `--operation streaming-aggregation --shard-spec     tradfi:CME:ohlcv_1m` reached the legacy parser with no
       argparse crash, only failing later on the expected missing-`GCP_PROJECT_ID` local-env gap; full quality-gates.sh
       green on this SHA).
-- [ ] [BACKEND] P1. **Root-cause and fix the features-service `--mode live` calendar/commodity path running as a
+- [x] ✅ [BACKEND] P1. **Root-cause and fix the features-service `--mode live` calendar/commodity path running as a
       one-shot batch job instead of a persistent stream subscriber.** `Batch processing complete` /
       `exiting with code 1` after ~15-70s directly contradicts the "operationally launch a live consumer" premise —
       determine whether `calendar`/`commodity`'s live wiring was ever actually implemented as a subscribe-loop (per
       `features_service/common/live_cross_cutting.py`) or whether it silently falls back to the batch entrypoint when
-      `--mode live` is passed without a supporting subscribe loop. Repo: features-service.
+      `--mode live` is passed without a supporting subscribe loop. Repo: features-service. — features-service@aa5633f2:
+      TWO independent root causes, one per family (both failure modes named in the todo were real, split across
+      families). **calendar**: `cli/main.py`'s `main_service_cli()` — the real `python -m features_service.calendar`
+      ServiceBootstrap entry point — wires ONLY `CalendarBatchModeHandler` for the "compute" operation, and its `run()`
+      ignored `self.args.mode` entirely, always calling `run_batch()`; the already-implemented `LiveHandler` subscribe
+      loop (genuine `async for record in self._source.stream()`) was reachable only via the separate legacy
+      `batch_handler.py::main()` CLI, never via `__main__.py` → `main_service_cli()`. Fixed by making
+      `CalendarBatchModeHandler.run()` dispatch on `self.args.mode` (mirrors commodity/volatility's ComputeHandler
+      pattern). **commodity**: dispatch was already correct (`ComputeHandler.run()` does branch on mode), but
+      `LiveHandler.run()` itself was never implemented as a subscribe/poll loop — it ran exactly ONE pass over
+      `enabled_commodities` and returned, a one-shot batch computation despite being reached via the live branch.
+      Commodity signals have no candle/tick event to subscribe to (slow-moving external sources — weather, EIA, CFTC,
+      spot prices), so fixed by making `run()` loop every `config.live_poll_interval_seconds` (new field, default 300s)
+      until SIGTERM/SIGINT via `GracefulShutdownHandler`, 1s-sliced sleep for signal responsiveness. Regression tests
+      added/updated for both dispatch paths + the poll-loop shutdown contract; full quality-gates.sh green on this SHA.
 - [x] ✅ [BACKEND] P2. **Fix the `delta_one` live subscriber's unhandled Pub/Sub `subscribe_once` traceback**
       (`unified_trading_library/cloud_interface/providers/gcp.py:592`, surfaced via
       `features-service --feature-family delta_one --mode live`) — full traceback captured in this session's
@@ -276,3 +290,6 @@ OOM if left running). The named successor is this issue doc's Todos below.
   bridges `MDPS_OPERATION`/`MDPS_SHARD_SPEC` via env vars instead of positional/flag argv, matching the real
   `ServiceBootstrap` entry-point contract landed by todo 1. Verified locally (no VM) against a real MDPS checkout —
   `MDPS legacy argv` log confirmed the shard-spec + operation reached the legacy parser correctly, no argparse crash.
+- **2026-08-04 (slot-3, backend_engineer)**: shipped todo 3 (features-service@aa5633f2) — fixed calendar's dead
+  mode-dispatch (LiveHandler was unreachable from the real ServiceBootstrap entry point) and commodity's LiveHandler
+  (never implemented as a loop — one-shot pass masquerading as live). See todo 3 above for full root-cause detail.
