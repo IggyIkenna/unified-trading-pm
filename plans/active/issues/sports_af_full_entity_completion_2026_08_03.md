@@ -459,3 +459,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-04T10:47Z** — `af-backfill-20260804-102139` preempted after only ~3 min (09:22:37Z→09:25:41Z) — too short to
   reach the actual fetch phase (boot+init eats most of a short window). Re-census confirmed zero movement: still exactly
   1,006/42,369 needed. Relaunched as `af-backfill-20260804-105027`, confirmed RUNNING.
+- **2026-08-04T11:14Z** — `af-backfill-20260804-105027` also preempted quickly (~2.7 min, 09:51:15Z→09:53:56Z) — the
+  second consecutive very-short PLAYER_STATS attempt, still zero movement (re-censused: still exactly 1,006/42,369). Two
+  identical short-preemption outcomes in a row for the same entity is a mild signal worth heeding rather than a third
+  blind retry — switched the singleton lock to FIXTURE_STATS instead (`af-backfill-20260804-111838`, 15th attempt,
+  confirmed RUNNING) to see if the pattern is PLAYER_STATS-specific bad luck or general right now. Will return to
+  PLAYER_STATS next tick regardless — it's still the closest-to-done entity and worth another try once this
+  FIXTURE_STATS run either converges meaningfully or gets preempted itself.
