@@ -585,3 +585,21 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
     shipped this session (PM plan-doc edit only).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the two shipped-fix source modules
   (alerting-service static-backlog notifier, deployment-service staleness monitor) for two secondary related docs.
+- **2026-08-04 (data_pipeline_failure escalation worker, agt-a76cf2, slot 4) — first dispatch for `(cefi, trades)`
+  specifically in this doc's Progress Log (the `trades` row of this doc's own original table).** DP-FETCH-009 CRITICAL
+  page: 263,836 attempted_failed of 1,172,762 attempted, ratio 22.5% (down from this doc's 2026-07-23 baseline of
+  308,113/1,071,844 = 28.7% — ratio has fallen, consistent with the already-documented partial recovery/fixes, not a
+  regression). The alert body already carried the `attempted_failed_staleness.py` verdict — "STATIC BACKLOG — only 93
+  attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked
+  backlog, not a fresh regression." Per established precedent in this doc (see the 2026-08-01/08-03 entries for the
+  sibling `derivative_ticker`/`book_snapshot_5` cells), skipped a fresh live manifest read and instead verified the
+  referenced fix commits are still live in `market-tick-data-service`:
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` = true for `2ddc6d4a` (DERIBIT-combo
+  `is_deribit_combo_symbol_shape` guard-widen — the `expiry_date` writer-validation fix that also covers `trades`, per
+  this doc's own § "New, smaller finding" section) and `6a067cf1`/`6c6fab03` (the aiodns-resolver hard-fail fixes named
+  in `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`, applicable workspace-wide across cefi
+  data_types). All three still ancestors of `origin/live-defi-rollout`. No new failure class, no code fix required.
+  Session cost: two file reads + a git-ancestor batch check (3 commits) + this Progress Log append, no GCS read, no code
+  shipped. Cross-linked from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — this is a THIRD
+  distinct `(asset_group, data_type)` cell (after `derivative_ticker` and `book_snapshot_5`) now exhibiting the same
+  repeat-dispatch waste that doc's still-open Option A/B/C would close.
