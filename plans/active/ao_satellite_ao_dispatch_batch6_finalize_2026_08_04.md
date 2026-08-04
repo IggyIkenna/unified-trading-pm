@@ -63,12 +63,11 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the
-      10 todos in `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, re-run `git show --stat <sha>` for
-      every cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each
-      todo's own stated done-when check where it is a command. **Done when**: all 10 verified, and any claim whose
-      evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy
-      stated.
+- [ ] [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the 10
+      todos in `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, re-run `git show --stat <sha>` for every
+      cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
+      own stated done-when check where it is a command. **Done when**: all 10 verified, and any claim whose evidence
+      does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       6 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `ao_open_issues_consolidated_close_out_2026_07_17.md` (Phase-8 items 5+6 only),
@@ -78,24 +77,24 @@ source: >-
       `wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its 2 remaining items),
       `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (all 3 items — 1st+3rd combined,
       2nd separate), `fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (its sole item), and
-      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item only). **Done when**: every one of
-      those flips is committed with the `docs(plans):` prefix and cites the real commit sha.
+      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item only). **Done when**: every one of those
+      flips is committed with the `docs(plans):` prefix and cites the real commit sha.
 - [ ] [INFRA] P0. **Re-check whether any of the 45 declined-orphan docs' NAMED gate has cleared since 2026-08-04, and
       spin any newly-conflict-clear items into batch 7** — walk the batch's own "Deferred — the 45 declined orphans"
       section category by category: has any operator-gated design fork been ruled since? Has any credential/host-access
       gap closed? Has the 3 conditionally-gated orthogonality-sweep items (`orphaned_wip_slot12_slot8_recovery`'s 2nd/
       3rd items, gated on main's confirmation) been resolved? Per this skill's iterative-drain methodology, re-check the
       SPECIFIC named gate on each, don't re-derive the classification from scratch. **Done when**: each of the 45 (+3
-      conditional) is marked cleared-and-moved (naming the new batch-7 plan/todo) or still-gated with the current
-      reason — no entry left unstated.
+      conditional) is marked cleared-and-moved (naming the new batch-7 plan/todo) or still-gated with the current reason
+      — no entry left unstated.
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
       re-check all 8 source docs named in todo 2 above for whether their OTHER (non-batched) items are also closed —
-      several (e.g. `ao_open_issues_consolidated_close_out_2026_07_17.md`, `boot_composer_misroutes...`) have
-      additional open items NOT covered by this batch and must NOT be archived if so. Run the standard 6-step archival
-      ritual (migrate any DEFERRED item → banner → codex-alignment check → fix every referrer's path corpus-wide →
-      clear the lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/` returns only the
-      archived copy's own path for each archived doc, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports
-      zero NEW hard failures (compare against the baseline recorded at this finalize plan's authoring time).
+      several (e.g. `ao_open_issues_consolidated_close_out_2026_07_17.md`, `boot_composer_misroutes...`) have additional
+      open items NOT covered by this batch and must NOT be archived if so. Run the standard 6-step archival ritual
+      (migrate any DEFERRED item → banner → codex-alignment check → fix every referrer's path corpus-wide → clear the
+      lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/` returns only the archived
+      copy's own path for each archived doc, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero NEW
+      hard failures (compare against the baseline recorded at this finalize plan's authoring time).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, migrate any still-open Deferred item into batch 7
       (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`,

@@ -36,8 +36,8 @@ assigned_vm: NA
 execution_scope: local-only
 resolved_by:
   "/ag-closeout-audit ao, 2026-08-04 — both remaining checkboxes (line 490, 494) were pure status-drift, independently
-  re-verified against agent-orchestrator@3abe56c (2026-07-29) and unified-trading-pm@7a3cc1289 (2026-07-24). No new
-  work landed; this closure is a stale-checkbox correction only."
+  re-verified against agent-orchestrator@3abe56c (2026-07-29) and unified-trading-pm@7a3cc1289 (2026-07-24). No new work
+  landed; this closure is a stale-checkbox correction only."
 locked_by:
 locked_since:
 estimate_class: design
@@ -498,9 +498,9 @@ post-pivot re-sweep.
       scripts. One new gap surfaced in the process: that relaunch tool doesn't re-provision the self-hosted GitHub
       Actions "glue" runner pool also hosted on this VM — separately tracked, not resolved here.
 - [x] ✅ [REVIEW] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
-      `agent-orchestrator@3abe56c` (2026-07-29): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s agent-orchestrator
-      line now reads "REOPENED 2026-07-24... RE-CLOSED 2026-07-29 (slot-11, fresh audit against current single-VM/
-      Path-B code) — agent-orchestrator@3abe56c" — both halves of the gate (explicit reopen AND re-verification date)
+      `agent-orchestrator@3abe56c` (2026-07-29): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s agent-orchestrator line
+      now reads "REOPENED 2026-07-24... RE-CLOSED 2026-07-29 (slot-11, fresh audit against current single-VM/ Path-B
+      code) — agent-orchestrator@3abe56c" — both halves of the gate (explicit reopen AND re-verification date)
       satisfied. Checkbox lagged reality by ~6 days.
 - [x] ✅ [DOCS] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
       `unified-trading-pm@7a3cc1289` (2026-07-24): `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s
