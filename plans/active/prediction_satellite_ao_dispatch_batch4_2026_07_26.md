@@ -242,22 +242,23 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         not smoke-test green"). Repo: market-tick-data-service. **Done when**: all 348 dates' shape#3/#3b objects are
         enriched into their canonical twins (verified via readback) and deleted (verified via
         `gcs_describe_object(...) is None`), 0 anomalies outstanding.
-  - [ ] [SCRIPT] P2. **4b-ii — shape #4's corpus-wide extent (Tier-2 SPOT-VM single walk, separately dispatched).**
-        Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE for 4b-i — its
-        corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY `day=2025-04-11` sample
-        only, live-confirmed exactly 158 objects for that one day, not a corpus total). Enumerating every day shape #4
-        exists on IS a new whole-corpus walk (review-blocking per CLAUDE.md single-walk discipline) — it must run as the
-        ONE sanctioned Tier-2 SPOT VM single walk per `/codex/02-data/reconciliation-census-and-compute-tiers.md`.
-        **Re-tagged off `[OPERATOR]` (2026-07-28)**: the safe-idempotent justification per CLAUDE.md's VM-launch-gating
-        OR-clause is stated directly — this walk is a READ-ONLY enumeration (no GCS mutation), cheaply re-run on
-        preemption (idempotent re-listing, no partial-state risk), so it launches via the standard Tier-2 SPOT VM
-        single-walk mechanism without a separate operator sign-off. Once the corpus-wide extent is known, the merge
-        logic is the SAME read-transform-write-per-cell pattern as 4b-i's shipped script (shape #4 already carries
-        `title`/`slug`/ `eventSlug` per the issue doc's content-verify — the merge direction may in fact be shape#4 ->
-        shape#1, richer source into the (possibly still-bare) canonical twin, mirroring 4b-i's alias-aware additive-only
-        approach). Repo: market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated
-        (VM-run), merged into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy
-        objects deleted only after verification.
+  - [x] ✅ [SCRIPT] P2. **4b-ii ENUMERATION COMPLETE 2026-08-04 (slot-15) — shape #4's corpus-wide extent enumerated;
+        merge+delete follow.** Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE
+        for 4b-i — its corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY
+        `day=2025-04-11` sample only, live-confirmed exactly 158 objects for that one day, not a corpus total).
+        Enumerating every day shape #4 exists on IS a new whole-corpus walk (review-blocking per CLAUDE.md single-walk
+        discipline) — it must run as the ONE sanctioned Tier-2 SPOT VM single walk per
+        `/codex/02-data/reconciliation-census-and-compute-tiers.md`. **Re-tagged off `[OPERATOR]` (2026-07-28)**: the
+        safe-idempotent justification per CLAUDE.md's VM-launch-gating OR-clause is stated directly — this walk is a
+        READ-ONLY enumeration (no GCS mutation), cheaply re-run on preemption (idempotent re-listing, no partial-state
+        risk), so it launches via the standard Tier-2 SPOT VM single-walk mechanism without a separate operator
+        sign-off. Once the corpus-wide extent is known, the merge logic is the SAME read-transform-write-per-cell
+        pattern as 4b-i's shipped script (shape #4 already carries `title`/`slug`/ `eventSlug` per the issue doc's
+        content-verify — the merge direction may in fact be shape#4 -> shape#1, richer source into the (possibly
+        still-bare) canonical twin, mirroring 4b-i's alias-aware additive-only approach). Repo:
+        market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated (VM-run), merged
+        into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy objects deleted only
+        after verification.
   - [ ] [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
         `non-canonical-path-inventory.md`.** 4a's writer-root fix (title/slug/event_slug now flow to new canonical
         writes) is registerable now; the raw-object migration disposition (4b-i shapes #3/#3b, 4b-ii shape #4) must be
@@ -665,6 +666,30 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   chunk run. No change to this todo's action: not touching the cron, not re-scavenging the checkpoint (already durably
   merged at the GCS path above). Released via `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**:
   same as the prior entries — check `-001`/`-006` status fresh before assuming the block persists.
+- **2026-08-04T21:0xZ (slot 15, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-024`)**: 4b-ii
+  enumeration COMPLETE. Built + shipped `market-tick-data-service@e46fb943`
+  (`scripts/enumerate_shape4_prediction_trades_2026_08_04.py`, read-only GCS listing, manifest-based day discovery,
+  per-day prefix listing). **Key finding**: the issue doc's original path shapes (under bucket root) are STALE — the
+  raw-tick estate was migrated under `raw_tick_data/by_date/day=.../pipeline_mode=.../asset_group=prediction/` between
+  2026-07-24 and 2026-08-04. Shape #4 now lives at:
+  `raw_tick_data/by_date/day={date}/pipeline_mode=batch_polymarket_clob/asset_group=prediction/data_source=POLYMARKET_CLOB/...`
+  (canonical prefix wrapping the original 10-segment tree). **Corpus-wide extent**: **348 days** (2025-03-14 →
+  2026-04-14, matching 4b-i's range exactly), **1,126,358 total objects**, **563,173 unique condition_ids**, **100% of
+  days have canonical flat twins** (shapes #4 and #1 coexist for every day). **13 market categories** (CRYPTO_PRICE
+  502k, MISC 418k, SPORTS_OTHER 104k, WEATHER 44k, SPORTS_FOOTBALL 23k, POLITICS_US 13k, TECH 12k, ...), **93
+  underlyings** (UNKNOWN 418k, BTC 122k, ETH 116k, SOL 94k, XRP 92k, NBA 80k, ...), **4 market types** (binary 1M,
+  range_bracket 126k, ranked 530, categorical 168), **8 resolution periods** (event 524k, yearly 383k, monthly 208k,
+  weekly 9k, ...). **0 errors**. Results durably uploaded to
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/shape4_corpus_enumeration_2026_08_04.jsonl` (348 lines) +
+  `shape4_corpus_summary_2026_08_04.json`. **Merge+delete are separate follow-on work** — the merge direction is shape
+  #4 → canonical shape #1 (shape #4 carries richer `title`/`slug`/`eventSlug` metadata, 24 cols vs canonical 22),
+  mirroring 4b-i's alias-aware additive-only approach in `migrate_prediction_trades_legacy_bundle_2026_07_28.py`. Filed
+  as a new sub-item below.
+- **[DATA] P2. 4b-iii — merge shape #4 into canonical + delete legacy objects.** Gated on 4b-i completing (both
+  migrations share the same canonical target; concurrent writes would race). Once 4b-i's enrichment+delete lands, apply
+  the same read-transform-write-per-cell pattern to enrich canonical shape #1 objects with `title`/`slug`/ `event_slug`
+  from their shape #4 twins (1,126,358 objects, 348 days, 100% twin coverage confirmed by 4b-ii's enumeration), then
+  delete the now-redundant shape #4 legacy objects after content verification. Repo: market-tick-data-service.
 - **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
   blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
   (`gcloud scheduler jobs describe`, `unified-trading-sa` account). `GET /api/backlog`:

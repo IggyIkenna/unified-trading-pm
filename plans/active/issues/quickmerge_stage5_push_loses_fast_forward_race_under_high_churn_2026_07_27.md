@@ -132,31 +132,20 @@ context_scope:
       verbatim. Re-confirmed still present after a session restart mid-task (unrelated tmux/session death, not a revert)
       before flipping this checkbox. Repo: unified-trading-pm (no code changed by this todo — verification + checkbox
       only).
-- [ ] [INFRA] P3. **Surface push-churn as a named condition** (mirroring the existing repo-blocker mechanism in
-      `unified-trading-pm/agents/worker.md` § 4b, which already exists for `qg_red` on a repo) so a worker hitting this
-      doesn't have to self-diagnose it as a mystery repeated failure — a `push_race` repo-blocker kind that lets the
-      backend own the retry-and-notify loop instead of the calling agent burning its own turns on blind retries. **Done
-      when**: a worker hitting 3+ consecutive Stage-5 push failures on the same repo can declare this condition and get
-      notified when a push window opens, instead of re-invoking quickmerge manually. **PARTIAL PROGRESS 2026-07-30
-      (autonomous marathon session) — a real prerequisite bug found + fixed, full feature still open.** Investigated
-      `agent-orchestrator/server/state_store/repo_blockers.py` + `routes/repo_blockers.py` (the backend this todo would
-      reuse): `declare_repo_blocker(kind=...)` already accepts an arbitrary `kind` string (no schema/enum change needed
-      to declare a `push_race` blocker) — BUT `repo_blocker_condition_name(repo)` derived the gating prerequisite name
-      from `repo` ONLY, ignoring `kind`, so declaring ANY non-`qg_red` kind for a repo would have flipped the SAME
-      `repo-<repo>-qg-green` prerequisite that `qg_red`-gated tasks depend on — a real collision that would have
-      incorrectly held back unrelated work for a reason (a push race) that has nothing to do with the repo's actual
-      quality-gate health. Fixed this landmine (backward-compatible: `kind="qg_red"` still returns the exact original
-      string; any other kind gets its own `repo-<repo>-<kind>-green` name) —
-      `agent-orchestrator@(pending commit, see     Progress Log)`, `tests/test_repo_blockers.py` 7/7 still green. **NOT
-      done**: (1) `RepoHealthWatcher.tick_once()` only polls/resolves `kind == "qg_red"` blockers via CI-green state —
-      there is no equivalent "push window open" signal to poll for a `push_race` kind (CI-green is a real, checkable
-      repo state; a push race is a point-in-time contention event with no persistent state to observe), so genuine
-      backend auto-resolution needs a NEW polling mechanism, not a mirror of the existing one — an open design question,
-      not a mechanical extension. (2) No caller anywhere yet declares `kind="push_race"` (quickmerge.sh doesn't
-      detect+declare it; no worker.md documentation for it, unlike qg_red's documented § 4b pattern). Leaving the todo
-      open — the collision-safety fix is real, necessary groundwork (any future attempt to reuse this mechanism for a
-      non-qg_red kind needed it regardless), but the actual declare-on-3-failures wiring + resolution mechanism is
-      genuine design work, not a bounded mirror-the-pattern task.
+- [x] ✅ [INFRA] P3. **Surface push-churn as a named condition** — agent-orchestrator@ed9e3aa,
+      unified-trading-pm@4b2d9c8bf. **DONE 2026-08-04 (slot-12, infra).** Completed the feature end-to-end: (1)
+      `RepoHealthWatcher.tick_once()` now resolves `push_race` blockers via time-based cooldown
+      (`push_race_cooldown_seconds`, default 120s, configurable in `TuningDefaults`) — push-churn windows are transient
+      with no persistent CI-state analog to poll, so a cooldown is the correct resolution mechanism. Source
+      `watcher_cooldown` distinguishes it from `watcher_green` (qg_red's CI poll). (2) `resolve_repo_blocker` message is
+      kind-aware: push_race waiters get "push window likely open" + retry quickmerge instructions instead of "GREEN
+      again". (3) Routes skip CI escalation for non-`qg_red` kinds (push_race has no CI failure to fix). (4) Worker.md §
+      4b now documents the push_race pattern alongside qg_red: declare via `POST /api/repo-blockers` with
+      `kind: "push_race"`, `escalate: false`, wait on the cooldown-based backend resolution. (5) 6 new tests (13/13
+      green): condition-name scoping, qg_red/push_race dedup, cooldown resolution, fresh-blocker stays open, cooldown=0
+      disables, kind-specific resolve message. The prerequisite collision-safety fix (kind-parameterized
+      `repo_blocker_condition_name`) was already in place from the 2026-07-30 marathon session — this session finished
+      the watcher resolution + documentation + plumbing.
 - [x] ✅ [INFRA] P2. **DONE 2026-07-31 (slot-2, infra).** **Exempt an in-progress merge from `check-branch-drift.sh`**
       (finding #4). Added a `MERGE_HEAD` guard right after the existing `SKIP_BRANCH_DRIFT` / CI early-exits:
       `git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0`, with a comment scoping why it's safe (a merge commit

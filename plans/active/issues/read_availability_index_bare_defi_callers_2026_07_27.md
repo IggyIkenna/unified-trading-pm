@@ -403,12 +403,12 @@ not a mechanical column-list copy.
       (`tests/unit/test_manifest_reader_column_projection.py`) pinning the exact `columns=` call signature per site so a
       future edit can't silently drop back to a bare call. `quality-gates.sh` green (199s), shipped via quickmerge
       --agent.
-- [ ] [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
-      `smoke_matrix.py`), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
+- [x] ✅ [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
+      `smoke_matrix.py` — relocated to e2e-testing), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
       `strategy/backtest_from_wizard_config.py:192`), **unified-trading-pm**
       (`plans/audit/results/     available_at_fill_rate_audit_2026_07_13.py:51`,
-      `scripts/qg/honest_coverage_ratchet.py:66`): lower-urgency CI/audit-tooling call sites; project if convenient when
-      touching these files for other reasons, not worth a dedicated dispatch on their own.
+      `scripts/qg/honest_coverage_ratchet.py:66`): all projected to downstream column usage per direct read.
+      e2e-testing@460270b + unified-trading-pm@87c8aa2b7.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9)** — `unified-trading-pm@dbce7a24c`.
       **unified-trading-pm** — added `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk,
       production-code-only, mirrors `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern
@@ -421,20 +421,18 @@ not a mechanical column-list copy.
       the 24 baselined WARNs enumerated in the yaml, `0 new occurrences`, confirming the baseline still matches reality
       after the intervening commits since bootstrap. This closes the "no enforcing gate exists" gap — a NEW bare call
       site now fails CI instead of landing silently.
-- [ ] [SCRIPT] P3. **features-service** — investigate whether
-      `features_service/volatility/core/orchestration_service.py`'s `VolatilityFeaturesOrchestrator` class is dead code:
-      it defines a near-identical (but simpler, no `asset_group`/ `pipeline_mode` derivation) twin of
-      `features_service/volatility/engine/orchestrator.py`'s class of the SAME name. Grepped the whole repo (excluding
-      tests/`__pycache__`): nothing outside its own file + `core/__init__.py`'s re-export imports it — every sibling
-      caller (`cli/handlers/batch_handler.py`, `engine/feature_group_service.py`, etc.) imports
-      `data_loader`/`feature_writer`/`dependency_checker` from `core/`, never `orchestration_service`. Found while
-      fixing todo above (2026-07-30, slot-3) — this file's `_list_chain_files` had ZERO existing test coverage,
-      consistent with genuinely-unreferenced code. Not deleted here (out of scope for a column-projection fix, and
-      grep-based "unused" is not proof — `FeatureProcessingResult` in this same file WAS deliberately collapsed to a
-      cross-import from `engine/orchestrator.py` back in 2026-05-11 per `features_service_qg_cleanup` Phase 1.2e, so the
-      class itself may be a leftover the same cleanup missed). **Done when**: confirmed genuinely dead (no dynamic
-      import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
-      caller and this todo is closed as not-applicable.
+- [x] ✅ [SCRIPT] P3. **features-service** — `features-service@c8627c64`. **features-service** — investigated and
+      CONFIRMED DEAD: `features_service/volatility/core/orchestration_service.py`'s `VolatilityFeaturesOrchestrator`
+      class is dead code — a near-identical but simpler twin of `engine/orchestrator.py`'s class of the SAME name, left
+      over from the 2026-05-11 `features_service_qg_cleanup` Phase 1.2e collapse. Exhaustive grep (excluding tests/docs/
+      `__pycache__`): ZERO production imports of `VolatilityFeaturesOrchestrator` from `core.orchestration_service` (or
+      via `core/__init__.py`'s re-export — zero imports of `from features_service.volatility.core import` at all). The
+      only production consumer, `service.py:19`, imports from `engine.orchestrator`. No dynamic imports, no
+      plugin-registry references, no CLI entry-point references beyond static grep. Deleted
+      `core/orchestration_service.py` (401 lines), `core/__init__.py` (13 lines, only re-exported from the dead file),
+      `tests/unit/test_core_orchestration_service.py` (72 lines, tested dead code). Updated
+      `engine/orchestrator.py:76-78` docstring to reference the deletion. `quality-gates.sh` green (18,258 passed, 209
+      skipped), shipped via quickmerge --agent.
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-08-03 (slot-6)** — `instruments-service@a325da86`. **instruments-service** — 3 NEW
       bare `read_availability_index(bucket)` call sites in `instruments_service/cli/main.py` (lines 82
