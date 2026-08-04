@@ -183,6 +183,21 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 - [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
       form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
       market-tick-data-service, unified-api-contracts)
+- [ ] [OPERATOR] P2. Authorize + launch a fresh, narrow post-fix Pyth `oracle_prices` verification collection VM
+      covering the regression window (2026-07-15..present, superset of the 2026-07-19..2026-08-01 BTC/ETH/INF gap) — the
+      plan's `[DATA] P2` re-verify todo (`defi_satellite_ao_dispatch_batch3_2026_07_26.md`) cannot ever complete without
+      this: 3 independent dispatches (slot-12 2026-08-03, slot-11 2026-08-03, slot-11 2026-08-04T01:50Z) all confirmed
+      zero post-fix collection has run and all 3 declined to self-launch, citing
+      `deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`'s own header ("DO NOT LAUNCH without operator
+      [ack]" — a caution from its origin plan `solana_lst_native_staking_adapters_2026_05_14.md` Phase 4, written for a
+      7+ month backfill window, not this ~3-week verification window). Safe-idempotent case for the operator's
+      consideration: SPOT, idempotent re-fetch (`MANIFEST_PER_VM_SHARDS=true` + last-writer-wins consolidation — same
+      pattern as the 3 Pyth VMs that already ran cleanly to `exit_code=0` this same week), and the code fix + operator
+      ruling this verifies (`instruments-service@dec90cc0`, `market-tick-data-service@cd017a1c`, direction 1 "extend")
+      are already both landed. Once launched + confirmed `EXIT_STATUS=0`, re-dispatch `[DATA] P2` to run its same
+      bounded manifest read. Repo: deployment-service (VM launch only, no code change). Source: split off after 3
+      consecutive re-verify dispatches hit the identical unmet-precondition dead-end
+      (`defi_satellite_ao_dispatch_batch3-015`, 2026-08-04).
 - [x] ✅ [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss) → instruments-service@dec90cc0 (2026-08-03,
       slot-8). Rebased my local commit onto slot-6's `a325da86` (which cleared repo-blocker `RB-48c5820b` — the
       unrelated STEP 5.106 gate failure this fix was blocked behind), re-ran `quality-gates.sh` clean, verified
@@ -316,3 +331,15 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   someone (operator, or a differently-scoped todo) actually launches a post-fix Pyth collection VM — recommend the next
   dispatch check `gcloud compute instances list --filter="name~'pyth'"` for a NEW VM before repeating this identical
   manifest read a 3rd time.
+- **2026-08-04 (slot-5, data_engineering craft, dispatched via `defi_satellite_ao_dispatch_batch3-015`, 3rd re-verify
+  dispatch)**: Followed slot-11's own recommendation before repeating the manifest read a 3rd time — checked for a NEW
+  Pyth VM first: `gcloud compute instances list --filter="name~'pyth'"` returns zero instances (any status), and a
+  `compute.instances.insert` audit-log sweep (`--freshness=2d`) shows the same 6 insert events as slot-11 already
+  verified, latest `2026-08-03T09:31:36Z` (`pyth-lst-backfill-20260803-093121`) — zero new launches since slot-11's
+  2026-08-04T01:50Z check. Precondition still unmet; did not repeat the manifest read (no new data to find). Instead of
+  a 4th identical dead-end dispatch, closed the actual gap: 3 consecutive slots independently declined to self-launch
+  the verification VM (citing the same launcher header) but none of them turned that into trackable work — added the
+  `[OPERATOR] P2` todo above so the launch decision has an explicit, dispatchable-to-a-human home instead of being
+  rediscovered from Progress Log prose on every future dispatch. **Checkbox stays UNFLIPPED** on `[DATA] P2` (plan) —
+  released via `/skip-current-task` (reason_code=GATED). Recommend no further re-dispatch of the plan's `[DATA] P2`
+  until the new `[OPERATOR] P2` todo here is actioned and a fresh Pyth VM reaches `EXIT_STATUS=0`.
