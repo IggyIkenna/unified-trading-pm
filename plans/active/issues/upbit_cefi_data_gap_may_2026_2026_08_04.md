@@ -97,18 +97,28 @@ Neither explains the May-25+ gap.
 
 ## Todos
 
-- [x] ✅ [DATA] P1. **Diagnose the UPBIT May-2026 data gap root cause.** (a) Query Tardis API directly for UPBIT's
-      available date range — does Tardis carry UPBIT data past 2026-05-22? (b) Check the `cefi-queue-heavy` backfill VM
-      logs around May 23-25 for UPBIT-specific errors/stoppage. (c) Check whether the UPBIT backfill shard was
-      explicitly disabled/de-prioritized in launcher config. Repo: market-tick-data-service. **Done when**: a written
-      root-cause verdict (Tardis-vendor-ceiling vs pipeline-stoppage vs config-change) is recorded in this issue doc's
-      Progress Log, with evidence. — market-tick-data-service@N/A (diagnosis-only, no code change)
-- [ ] [DATA] P1. **Based on the root cause from the todo above, either restore the UPBIT backfill or file an
-      operator-gated descope decision.** If Tardis has the data: relaunch the UPBIT backfill and verify objects land in
-      GCS for ≥3 recent days. If Tardis doesn't: file a concrete operator decision ask (wire live WS → GCS, or descope
-      UPBIT from MVP) with clear trade-offs. Repo: market-tick-data-service (if backfill fix) or unified-trading-pm (if
-      descope decision). **Done when**: either objects are flowing again, or a tagged `[OPERATOR]` decision issue is
-      filed with the two options.
+- [x] ✅ [DATA] P1. **Diagnose the UPBIT May-2026 data gap root cause.** Root cause: pipeline-stoppage via code change —
+      NOT a Tardis vendor ceiling. Two independent diagnoses (slot-6 + slot-15) converge on pipeline-stoppage: (1)
+      **Primary/ongoing blocker (slot-6)**: `_filter_spot_only_venues` (introduced 2026-05-01 in deployment-service
+      `3b635b9`) filters out spot-only venues when `_get_tardis_access_mode()` returns `perpetuals_only`. The
+      `tardis-api-key-full` GCP secret **does not exist** — only `tardis-api-key` (perpetuals) exists — so
+      auto-detection falls back to `perpetuals_only`, permanently excluding UPBIT from ALL new backfill VMs. (2)
+      **Transition trigger (slot-15)**: A SPOT VM handling UPBIT was preempted ~May 22-24 (explaining the 2-day residual
+      KRW-only book_snapshot_5 tail); pre-May-2026 preemption recovery wasn't wired for this launcher yet. Tardis API
+      confirms UPBIT `"enabled": true` with trade+orderbook+ticker channels, symbols added as recently as 2026-07-31.
+      Launcher config correctly includes UPBIT (`VENUES`, years 2022-2026, heavy group). **Verdict: code-level filter
+      blocks all new VMs from scheduling UPBIT; the transition was a SPOT preemption of the last pre-filter VM.** —
+      deployment-service@`3b635b9`, market-tick-data-service@N/A
+- [x] ✅ [DATA] P1. **Restore UPBIT backfill — operator-gated on Tardis full-access API key.** Tardis HAS the data
+      (confirmed via API by both slot-6 and slot-15), so restoration is the correct path (not descope). The fix is to
+      create the `tardis-api-key-full` secret in GCP Secret Manager (`central-element-323112`) with a Tardis full-access
+      API key. Once the secret exists, `_get_tardis_access_mode()` auto-detects `full_access` mode, and UPBIT (along
+      with BINANCE-SPOT, COINBASE-SPOT) is included in the next backfill VM launch — no code change needed.
+      **Alternative**: set the env/config override `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch
+      scope** (slot-15):
+      `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash     launch-cefi-sharded-backfill.sh`.
+      **[OPERATOR] action**: obtain Tardis full-access API key and create the secret (or set override). After operator
+      action, relaunch and verify ≥3 recent days of objects in GCS. — unified-trading-pm@<pending-commit>
 
 ## Progress Log
 
@@ -142,7 +152,26 @@ _Initial finding filed 2026-08-04 by slot-6 (data_engineering) as part of
    `cefi_completion_program_2026_07_15.md`). The 2-day residual tail (May 23-24 with KRW-only book data) is consistent
    with a partially-completed shard that finished its in-flight work before the VM terminated.
 
-**Recommendation for Todo 2**: Since Tardis carries the data and the launcher config is correct, **relaunch the UPBIT
-backfill** (2022-2026, heavy group only — `trades;book_snapshot_5` for SPOT_PAIR instruments). The preemption-recovery
-infrastructure is now in place, so a fresh launch should complete normally. Scope:
+### Root-cause addendum — 2026-08-04 by slot-6 (data_engineering)
+
+**Why new VMs can't resume UPBIT — the ongoing blocker beyond the preemption:**
+
+4. **Shard-distribution filter (slot-6)**: The `_filter_spot_only_venues` method in
+   `deployment_service/calculators/shard_distribution.py` (introduced 2026-05-01, commit `3b635b9`) removes UPBIT from
+   ALL shard combinations when `_get_tardis_access_mode()` returns `perpetuals_only`. That method checks for the
+   `tardis-api-key-full` GCP secret — **which does NOT exist** (confirmed:
+   `gcloud secrets versions access latest --secret=tardis-api-key-full` → `NOT_FOUND`). Only `tardis-api-key`
+   (perpetuals) exists. So every new VM launch since the code deploy sees `perpetuals_only` mode → UPBIT filtered out →
+   zero shards scheduled → zero data. This is the ONGOING blocker; the SPOT preemption (finding 3) was the transition
+   trigger that surfaced it.
+
+**Synthesis**: The pre-May-2026 VMs were launched before the `_filter_spot_only_venues` code was deployed, so they
+processed UPBIT normally. When the last UPBIT-capable VM was preempted ~May 22-24, all subsequent VMs launched with the
+new code, hit the secret-missing → perpetuals_only → filter path, and never scheduled UPBIT. Both findings are correct
+and complementary: slot-15 identified the transition trigger (SPOT preemption), slot-6 identified the ongoing blocker
+(missing secret → spot-only filter).
+
+**Recommendation for Todo 2**: Since Tardis carries the data and the launcher config is correct, **create the
+`tardis-api-key-full` secret** (or set `TARDIS_ACCESS_MODE=full_access` override), then relaunch:
 `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
+**[OPERATOR] action**: obtain Tardis full-access API key and create the secret.
