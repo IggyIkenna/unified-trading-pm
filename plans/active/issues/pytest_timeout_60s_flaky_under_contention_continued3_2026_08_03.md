@@ -41,7 +41,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-04T07:10Z
+last_updated: 2026-08-04T07:15Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -315,3 +315,40 @@ here.
   one) — further corroborates todo 1 (capacity-side root cause, not a per-repo timeout raise) and todo 2's
   operator-flagged missing cooldown/dedup guard (this escalation fired ~52min after the PR that would have satisfied it
   had already merged).
+
+- **2026-08-04 ~07:03-07:15Z (`cicd` escalation `agt-5ea4c7`, slot 6, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=934`) — 6th same-doc-chain occurrence for `features-service` (2nd for this repo — see `agt-edf42f` above);
+  already self-resolved before investigation, no code action needed**: escalation cited failing run `30840835293`
+  (`QG slice (tests)` job `91777237040`) — `pytest-timeout` (thread-dumper, `timeout_method="thread"`) fired mid
+  `tests/delta_one/unit/test_cli_parser.py`, dumping MainThread's stack inside `_pytest/skipping.py`'s
+  `evaluate_xfail_marks`/`iter_markers` (a call path with no plausible multi-minute hang mechanism — plain marker lookup
+  on a fixture-free argparse test file, no I/O/sleep/regex), then `QG selector 'tests' FAILED (leg=tests, exit=1)`. Read
+  the flagged file (`tests/delta_one/unit/test_cli_parser.py`, 29 tests) and the module under test
+  (`features_service/delta_one/cli/parser.py`) end-to-end before touching anything — pure argparse/dataclass validation
+  logic, no fixtures, no subprocess, no blocking call anywhere in either file; ruled out a code-level hang mechanism by
+  inspection rather than local repro alone. Checked the PR directly rather than trusting the escalation's staleness:
+  `gh pr view 934` → already **`MERGED`**, `mergedAt=2026-08-03T18:20:32Z`; the escalating run's own `createdAt` =
+  `2026-08-03T18:20:35Z` — **3 seconds after** the merge — the exact "run started right as/after the PR that would have
+  satisfied it already merged" pattern this doc-chain documents repeatedly (this run was the PR's own confirmatory
+  check, which then took ~3h wall-clock under contention and failed too late to matter — mergedAt precedes it, so
+  something else already satisfied the required check). Verified the merge commit (`e6dfb41f`) is an ancestor of current
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor` → yes) — nothing outstanding to ship for PR#934. Checked
+  live gate state instead of stopping at the PR check:
+  `gh run list --workflow quality-gates-v2.yml --branch live-defi-rollout` shows the familiar alternating
+  success/failure/cancelled pattern all day, but the most recent COMPLETED run (`30877012874`, `04:12:57Z`, 20m7s) =
+  `success` — already the `agt-edf42f` re-fire logged immediately above this entry — with a fresh `workflow_dispatch`
+  run (`30885649017`) already `in_progress` at investigation time against current HEAD; not blocked on waiting for it
+  given the PR-merge + local-inspection findings already independently confirm no defect, and a same-repo re-fire
+  already went green 3h ago. Host state at investigation time: `uptime` load average 22.8 (vs.
+  `qg-host-governor.sh --status` showing zero live reservations) — the same governor-blind-to-actual-load signature
+  `ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md` flagged, corroborating todo 1 rather than adding a new angle.
+  `GET /api/repo-blockers` → only `RB-e7d79260` open (`market-tick-data-service`, unrelated CVE gate) — nothing to
+  fast-path for `features-service`. **Disposition: no code or workflow change made or needed** — the wall was already
+  fully cleared (PR merged before its own confirmatory check even started, LDR green at a later HEAD via the
+  immediately-preceding entry's re-fire, a further re-fire already in flight). `AUTHORING_SLOT` was not supplied in this
+  escalation's boot vars — treated as a non-numbered sentinel per `cicd.md`'s `^[0-9]+$` check, skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead beyond this doc's own commit; no code changes made).
+  This is now the **2nd occurrence for `features-service`** and **6th for the whole doc-chain** — further corroborates
+  todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement check, this escalation
+  fired ~7h after `agt-edf42f` already re-fired the identical repo's identical wall class green).
