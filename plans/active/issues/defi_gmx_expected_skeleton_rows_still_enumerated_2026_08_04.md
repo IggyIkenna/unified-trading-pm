@@ -135,9 +135,15 @@ under critical context pressure.
       they will not reappear. **DONE**: bounded DuckDB pruning script (ANALYSIS_MEM_CAP=12G, file-based I/O); rows
       42,192,496→42,192,492 (4 removed); captured count preserved at 26,448,553; targeted verification confirms 0
       venue=GMX rows remain in gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet.
-- [ ] [DIAG] P2. Check whether DRIFT/PACIFICA (removed 2026-07-16, per
-      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) have the same class of surviving catalogue
-      residue — same root-cause family as this finding, not yet checked.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-04.** Checked DRIFT/PACIFICA (removed 2026-07-16, per
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) for surviving catalogue residue — **CLEAN:**
+      (a) DeFi availability manifest
+      (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, bounded
+      column-projected read via UTL `read_availability_index`): 0 rows with `venue=DRIFT` or `venue=PACIFICA`. (b)
+      Instrument catalogue (`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, full read via
+      UTL `get_storage_client`, 79,002 rows): 0 rows with `venue=DRIFT` or `venue=PACIFICA`. Unlike GMX (whose
+      2026-07-25 source-code-only removal left a catalogue entry → stale manifest skeleton), the 2026-07-16
+      DRIFT/PACIFICA removal was more thorough (11 repos) and no residue survived. No further action needed.
 
 ## Progress Log
 
@@ -182,3 +188,11 @@ under critical context pressure.
   companion finalize plan authored — `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule per
   `cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 3 (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`, not `plans/active/issues/*.md`); ordinary archival applies once this doc's own todos close.
+- **slot-12 data_engineering 2026-08-04** (dispatch `defi_gmx_expected_skeleton_rows_still_enumerated-003`): **[DIAG] P2
+  COMPLETE.** Checked both surfaces (bounded live reads, not corpus walks) — (a) DeFi availability manifest via UTL
+  `read_availability_index` with column projection: 0 rows `venue∈{DRIFT,PACIFICA}`; (b) instrument catalogue
+  (`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, 79,002 rows, full read via UTL
+  `get_storage_client`): 0 rows `venue∈{DRIFT,PACIFICA}`. Verdict: CLEAN — unlike GMX (whose 2026-07-25 source-code-only
+  removal left catalogue residue → stale manifest skeleton), the 2026-07-16 DRIFT/PACIFICA removal was more thorough (11
+  repos) and no residue survived. No further action needed. All todos in this doc are now done; doc is archival-eligible
+  (no `locked_by`, all checkboxes flipped).
