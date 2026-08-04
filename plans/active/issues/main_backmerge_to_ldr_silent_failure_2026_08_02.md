@@ -186,7 +186,7 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
       `workflow_dispatch` runs (`30756289836`, `30756315282`) after the conflict resolved — both `success` (`noop`,
       nothing left to merge), giving 3 consecutive clean runs total since the fix (real trigger `30755035830` + 2
       manual), satisfying this doc's original "3 consecutive successful runs" bar.
-- [ ] [INFRA] P3. **Roll the todo-3 silent-failure defense-in-depth out fleet-wide**: port the `trap ... ERR` +
+- [x] ✅ [INFRA] P3. **Roll the todo-3 silent-failure defense-in-depth out fleet-wide**: port the `trap ... ERR` +
       job-level `outputs:` + dedicated `notify-failure` job (added to PM's own
       `.github/workflows/main-backmerge-to-ldr.yml` in todo 3 above) into the canonical template at
       `unified-trading-pm/scripts/workflow-templates/main-backmerge-to-ldr.yml`, then run
@@ -194,8 +194,8 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
       currently byte-identical to PM's pre-todo-3 copy except `runs-on`, confirmed via diff 2026-08-02 — gets the same
       protection instead of carrying the identical silent-failure risk. Repo: unified-trading-pm (template) + fleet-wide
       rollout verification (every repo in `scripts/quality_gates/workflow_template_drift_baseline.json`'s
-      `main-backmerge-to-ldr.yml` entries). Left as a separate follow-up rather than folded into todo 3 because todo 3's
-      own stated scope was PM-only and a 20+-repo template rollout is a materially bigger, separately-reviewable change.
+      `main-backmerge-to-ldr.yml` entries). — unified-trading-pm@ccaeed817 (template already ported by slot-6 in
+      todo 3) + 24 repos fleet-wide (rollout verified: trap=3, notify-failure=3, outputs=1 in every copy; all ahead=0)
 
 ## Progress Log
 
