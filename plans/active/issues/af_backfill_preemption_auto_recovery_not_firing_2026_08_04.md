@@ -1,0 +1,155 @@
+---
+doc_type: issue
+title: af-backfill-* SPOT preemption auto-recovery not firing within its 5-min cadence — 2x same-day recurrence
+summary: >-
+  Confirmed twice in one day (2026-08-03/04): the FIXTURE_STATS `af-backfill-*` VM was SPOT-preempted and no successor
+  VM was auto-launched by `exit_code_fleet_monitor`'s PREEMPTED `auto_recover` actuator
+  (`relaunch_backfill_vm.RelaunchPreemptedVm`) within multiple ticks of its 5-minute Cloud Scheduler cadence
+  (`dp_exit_code_monitor_cron`, `*/5 * * * *`). Both times a human/agent had to manually relaunch. The wiring LOOKS
+  correct on inspection (`af-backfill-` prefix registered in `launcher_registry.py`, `lc_write_launch_params` persists
+  resume env, PREEMPTED relaunch budget is 48/day — nowhere near exhausted by 1-2 events), so this reads as a genuine
+  runtime gap, not a missing-config issue. Root cause NOT YET DIAGNOSED — filing so it is tracked instead of silently
+  re-discovered a third time (the gating doc below already flagged this twice as "out of scope, not chased further").
+status: open
+nature: issue
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer]
+tags: [vm-preemption, billing-waste, auto-recovery, sports, api-football, big-finding]
+related:
+  [
+    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
+created: 2026-08-04
+priority: P1
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+sequential: false
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+source:
+  [
+    "sports_af_full_entity_completion-003 (slot 6), 2026-08-04 — found while re-verifying the FIXTURE_LINEUPS launch
+    gate",
+  ]
+drift_direction: advance-code
+context_scope:
+  [
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+  ]
+---
+
+# af-backfill-* SPOT preemption auto-recovery not firing
+
+## What I found
+
+Working `sports_af_full_entity_completion-003` (launch FIXTURE_LINEUPS after FIXTURE_STATS converges), re-verified the
+gate before launching (per the recurring-risk note already in the gating doc): FIXTURE_STATS had not converged
+(125/68,409 non-MVP shards captured — essentially flat). Checked why: the FIXTURE_STATS VM slot 4 had relaunched ~6
+hours earlier (`af-backfill-20260804-001203`, launched 2026-08-04T00:12:03Z) was **gone entirely** —
+`gcloud compute instances list` shows no trace of it at all (not even TERMINATED — the launcher sets
+`--instance-termination-action=DELETE`, so a preempted instance self-deletes rather than parking).
+
+Confirmed via audit log:
+
+```
+gcloud logging read 'protoPayload.methodName="compute.instances.preempted" ...'
+2026-08-04T00:18:31Z  .../instances/af-backfill-20260804-001203
+2026-08-04T00:18:20Z  .../instances/af-backfill-20260804-001203
+```
+
+So this VM ran only ~6 minutes before being preempted. By the time I checked (~2026-08-04T00:25-00:30Z, i.e. 1-2 ticks
+past the `*/5 * * * *` `dp_exit_code_monitor_cron` schedule), **no successor VM had been launched.** This is the
+**second** occurrence of the exact same shape for the exact same entity in under 24h — the gating doc's own Progress Log
+(`sports_af_full_entity_completion_2026_08_03.md`) already records a first instance: `af-backfill-20260803-233053`
+preempted 2026-08-03T23:47-48Z, also never auto-recovered, manually relaunched by a worker ~25 min later
+(2026-08-04T00:12Z, itself now also preempted per above).
+
+**Ruled out as the cause** (so a future investigator doesn't re-check these):
+
+- **Registry wiring**: `launcher_registry.py:301` — `"af-backfill-": "launch-api-football-backfill-vm.sh"` is present
+  and correct.
+- **Relaunch budget**: PREEMPTED relaunches use `_MAX_PREEMPTION_RELAUNCHES_PER_DAY = 48` (`relaunch_backfill_vm.py`) —
+  nowhere near exhausted by 1-2 events/day. (Not the separate, much stricter OOM budget of 2/day — different namespace,
+  confirmed by reading the code.)
+- **Resume-env persistence**: `launch-api-football-backfill-vm.sh:502-517` calls `lc_write_launch_params` with
+  `RESUME_ENTITY`/`RESUME_START_DATE`/`RESUME_END_DATE` on every launch, so the relaunch actuator has what it needs to
+  replay a resume.
+- **Scheduler cadence**: `data_pipeline_fleet_monitor_scheduler.tf:216` — `dp_exit_code_monitor_cron` runs
+  `*/5 * * * *`. 1-2 ticks elapsed with no action.
+
+**Not yet checked** (genuinely unknown, needs the next investigator):
+
+1. Whether `dp_exit_code_monitor_cron`'s Cloud Run Job invocations are actually succeeding (vs silently erroring — the
+   monitor's own docstring notes a "never-raises" broad-except pattern around its GCS/compute I/O, flagged separately in
+   `QUALITY_GATE_BYPASS_AUDIT.md` §2.19 — worth checking Cloud Run job execution logs/history for this specific job
+   around 2026-08-03T23:50Z and 2026-08-04T00:20Z for silent failures).
+2. Whether the PREEMPTED durable signal blob (written by the VM's own `shutdown-script` in the ~30s GCE preemption
+   warning window) is actually landing in GCS before `--instance-termination-action=DELETE` tears the VM down — a race
+   between the shutdown-script write and the delete could mean the monitor's census-diff never sees a `PREEMPTED` marker
+   at all, silently falling through to a different (or no) classification branch.
+3. Whether the monitor's per-tick census snapshot happened to run in the ~6min window the VM was alive, or whether a VM
+   that lives <5min (one scheduler tick) is invisible to the prior-tick/this-tick diff entirely
+   (`af-backfill-20260804-001203` ran ~6 min — right at the edge of one 5-min tick, plausible that it was never captured
+   as "RUNNING" in a prior census snapshot before it was already gone, in which case the "present in PRIOR census but
+   GONE this tick" diff condition the monitor relies on never fires).
+
+Hypothesis (3) is the most promising thread — a VM whose full lifetime is shorter than the monitor's poll cadence would
+be structurally invisible to a diff-based detector, which would explain BOTH occurrences (both VMs died in ~6-17
+minutes, well under or barely past one 5-min tick).
+
+## Why it matters
+
+- **Billing waste**: every preempted VM that silently dies burns SPOT compute for zero net progress until a human
+  happens to notice and relaunch.
+- **Business-goal-critical**: the operator's explicit ask (`sports_af_full_entity_completion_2026_08_03.md`) is full AF
+  entity completion so the API-Football subscription tier can be downgraded — a stalled-and-unnoticed campaign directly
+  delays that. FIXTURE_STATS has now lost ~25-30+ min of runway twice in one day to this gap alone.
+- **Pattern repeats across asset groups**: `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` documents the
+  same failure shape (SPOT VM preempted, wrote no checkpoint, sat dead ~2 days) for a different launcher family — this
+  may not be an af-backfill-specific bug but a shared gap in the exit-code/preemption monitor's detection window.
+
+## Recommended decision
+
+Someone with Cloud Run Jobs execution-log access should check hypothesis (1) and (2)/(3) above directly (execution
+history for `dp_exit_code_monitor_cron` around the two preemption timestamps, and the raw GCS object listing under
+`vm-logs/af-backfill-20260803-233053/` and `vm-logs/af-backfill-20260804-001203/` for whether a `PREEMPTED` blob was
+ever written) before attempting a code fix — the three "not yet checked" items above are diagnostic reads, not code
+changes, and should resolve which of them is the real cause.
+
+## Todos
+
+- [ ] [SCRIPT] P1. Check Cloud Run Jobs execution history for `dp_exit_code_monitor_cron` covering
+      2026-08-03T23:45-00:05Z and 2026-08-04T00:15-00:35Z — did the job run, and did it error (repo:
+      deployment-service).
+- [ ] [SCRIPT] P1. Read the raw GCS objects under
+      `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260803-233053/` and
+      `.../af-backfill-20260804-001203/` — confirm whether a `PREEMPTED` signal blob was ever written, and its timestamp
+      relative to the instance-delete audit-log event (repo: deployment-service).
+- [ ] [SCRIPT] P1. If hypothesis (3) (sub-5-min-tick VM lifetime invisible to the census diff) is confirmed, fix
+      `exit_code_fleet_monitor`'s detection to not rely purely on prior-tick/this-tick presence diff for very
+      short-lived VMs — e.g. also read the durable `PREEMPTED` blob directly for any known-launched VM not currently
+      RUNNING, regardless of whether it appeared in a prior census (repo: deployment-service).
+- [ ] [SCRIPT] P2. Once root-caused, re-check whether the same gap affects other `VM_PREFIX_TO_BUCKET` families beyond
+      `af-backfill-*` (cross-reference against `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s incident
+      — same shape, different launcher) (repo: deployment-service).
+
+## Progress Log
+
+- **2026-08-04 (slot 6)** — Filed while working `sports_af_full_entity_completion-003`. Manually relaunched
+  FIXTURE_STATS as `af-backfill-20260804-002608` (safe idempotent resume, no `--force`) to keep the sports campaign
+  moving; did NOT chase the auto-recovery root cause further in that task (out of its scope) — filed here instead so
+  it's tracked rather than re-discovered a third time.

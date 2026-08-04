@@ -233,3 +233,24 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `sequential:true`) is still not implemented — a future worker will hit this same trap a third time until it is; not
   fixed in this session (outside this task's scope, flagging again for whoever next touches plan authoring for this
   campaign).
+- **2026-08-04 (slot 6)** — Dispatched `sports_af_full_entity_completion-003` a third time. Re-verified the gate per the
+  standing risk note: singleton lock FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING), but FIXTURE_STATS still NOT
+  converged — re-ran `census_fixture_stats_lineups_widening_volume_2026_07_31.py`: 125/68,409 non-MVP shards captured
+  (0.18%), essentially unchanged from slot 4's check. Root cause: slot 4's relaunch (`af-backfill-20260804-001203`,
+  launched 00:12:03Z) was **SPOT-preempted again ~6 min later** (audit log: `compute.instances.preempted` at
+  00:18:20-31Z) — the **second same-day preemption of the same entity's backfill**, and again with **no auto-recovery**:
+  `dp_exit_code_monitor_cron` runs `*/5 * * * *`, so 1-2 ticks had already elapsed with no successor VM launched by the
+  time I checked (~00:25-00:30Z). Investigated whether this is a config gap (it isn't — `af-backfill-` is correctly
+  registered in `launcher_registry.py`, the PREEMPTED relaunch budget is 48/day and nowhere near exhausted, resume-env
+  is correctly persisted via `lc_write_launch_params`) and filed the recurring-pattern finding as its own issue doc
+  since it's a genuine infra gap outside this campaign's scope:
+  `/plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` (leading hypothesis: a VM whose
+  full lifetime is shorter than one 5-min monitor tick may be structurally invisible to the monitor's
+  prior-tick/this-tick census diff — both preempted VMs today died in ~6-17 min). **Action taken**: relaunched
+  FIXTURE_STATS again as `af-backfill-20260804-002608` (same safe idempotent resume, no `--force`) — verified healthy at
+  boot (serial console: dependencies installed, task launched PID 8317, `=== VM setup complete ===` exit 0) and
+  confirmed genuine fetch activity in `run.log` shortly after. **FIXTURE_LINEUPS remains blocked** — gate still unmet;
+  did NOT launch it. `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once
+  FIXTURE_STATS genuinely converges. Given this is now 2 preemptions in <24h with 2 manual relaunches, the durable
+  convergence-gate fix (flagged twice above, still not implemented) and the new auto-recovery issue doc are both now
+  higher-priority than before — a fourth dispatch of this same todo without either fix landing is a near-certainty.
