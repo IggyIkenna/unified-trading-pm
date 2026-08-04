@@ -119,6 +119,13 @@ shipped nor archived-unshipped, so the "re-open as RECLASSIFY" trigger has NOT f
 the last marker is the 2026-08-01 context-scout `context_scope` backfill (metadata only). Citation fix applied to the
 open checkbox above this run so a future pass does not re-flag the same content as an unaddressed orphan.
 
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA-STALE, unchanged.** Re-walked full
+git history past the 2026-08-02 marker via `git log --follow -p`: exactly 2 commits, both mechanical (a
+reference-path-format normalization touching only the leading-slash form of one codex path, and a context-scout rescout)
+— zero content change. Live re-verified the holding condition: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` still
+exists, is still `status: draft`, and its `[DOC] P2` todo still cites this doc verbatim as Source. The "re-open as
+RECLASSIFY" trigger has not fired.
+
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).

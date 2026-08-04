@@ -131,6 +131,15 @@ as D4-10 and escalated the TRUE blocker to the operator as an authority/scope qu
 the shared, fleet-wide `base-service.sh` be its own AO-dispatched or human plan?") — still unanswered anywhere in the
 corpus. Both todos stay KEEP-NA on that unresolved escalation, not the stale E1 citation.
 
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — 3rd consecutive pass.**
+Independently re-ran the doc's own core factual claim
+(`grep -rn "bats" scripts/quality-gates.sh scripts/quality-gates-base/base-service.sh` plus the CI workflow) — still
+zero hits, coverage gap still real, not ARCHIVE-eligible. `ci_satellite_ao_dispatch_batch4_2026_07_31.md` is still
+`status: draft` and D4-10's operator authority/scope question is still unanswered anywhere in the corpus (checked the
+newer `batch5_2026_08_02.md`, which explicitly re-confirmed batch4 remains D4-10's home rather than re-adopting it).
+Fails RECLASSIFY on its own merits regardless: a multi-file change to the 3880-line shared fleet `base-service.sh`
+framework is exactly the live-dispatch-critical-path class that stays NA even bundled as one todo.
+
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) — swapped the stale archived

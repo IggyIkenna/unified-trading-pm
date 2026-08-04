@@ -207,6 +207,14 @@ judgment call). Independently corroborated by the sibling `/ag-closeout-audit ci
 batch1's earlier "blocked on AWS credits" framing is now stale (the S3 backend is up; the real blocker is the rulings
 table). No reclassification, no stale items to close.
 
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — unchanged.** Traced full git
+history past the 2026-07-31 marker: 3 subsequent commits, all `context_scope` frontmatter + Progress Log additions by
+the context-scout skill, zero touches to the banner, the D1-D4 rulings table, or the 3 todos. No operator ruling on
+D1-D4 has landed anywhere in the corpus. Independently corroborated by a separate mega-session doc
+(`ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`) that closed its own dependent todo
+2026-08-01 citing this exact doc's banner as evidence nothing was ever written to real S3 state. Still 3/3 open, still
+correctly NA.
+
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (3 entries).

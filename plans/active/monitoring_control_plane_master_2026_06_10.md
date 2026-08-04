@@ -702,6 +702,13 @@ the last pass). Re-confirmed E13/E14 citations are real; independently re-verifi
 needs-a-scoping-pass conclusion. No RECLASSIFY candidates — all 3 remaining items need either a `[UI]`-capable role or
 an unresolved scoping/design call.
 
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — 3rd consecutive pass,
+unchanged.** Only 2 commits touched this doc since the 2026-08-01 marker, both `context_scope`/Progress-Log-only
+(verified via `git show` — zero checkbox/content changes). Still 3/3 open items, still role-mismatch (E13) / needs-a-
+design-pass (E14) gated per the same independently-corroborated citation chain (batch2 archived + its finalize, batch4,
+and this doc's own verdict history). This is among the most thoroughly cross-verified KEEP-NA verdicts in the corpus — 4
+separate citation trails across 3 audit passes all agree.
+
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
