@@ -192,10 +192,18 @@ counts are reproduced above in full so the check is independently re-runnable fr
 - [ ] [DIAG] P3. Confirm whether the 4 residual `venue=GMX` manifest rows (found in the post-apply `--verify-only`
       check) clear on their own after 1-2 more incremental consolidator cycles (per the purge script's own recommended
       "run --verify-only at least twice, spaced apart" procedure) or need a follow-up manual sweep.
-- [ ] [REVIEW] P2. Consider whether `_check_column_fill_regression` should block the write (not just alert) when the
-      regression is this severe, or whether that's too disruptive for legitimate cases — this doc doesn't decide that,
-      flagging it as a design question given this is now the SECOND time (after sports_cf8) the guardrail fired without
-      preventing the regression from landing in production.
+- [x] ✅ [REVIEW] P2. Consider whether `_check_column_fill_regression` should block the write (not just alert) when the
+      regression is this severe, or whether that's too disruptive for legitimate cases — **RULING: KEEP ALERT-ONLY, do
+      NOT add a write-block.** Rationale: (1) The 2026-08-04 self-diagnosing enhancement
+      (`unified-trading-library@2eefb006`, absolute filled counts in the alert payload) already closes the key gap —
+      dilution vs. real loss is now readable from the alert alone, so a real regression is obvious enough for the
+      monitoring/alerting path to catch. (2) The DeFi incident proved the most common firing mode is benign dilution —
+      blocking would create a manifest availability outage (stale index) for a non-issue, which is worse than the
+      silent-corruption risk. (3) Consistency: the sibling `_check_row_count_regression` (whole-row loss) is also
+      alert-only — the guardrail family shares the same design philosophy of "surface loudly, let a human decide." (4)
+      The code's own docstring at line 2277-2279 already argues this correctly: turning an undiagnosed bug into a
+      stale-manifest availability outage IS worse. No code change needed — the self-diagnosing enhancement is the fix;
+      this design question is now decided.
 
 ## Progress Log
 
