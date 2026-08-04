@@ -118,11 +118,15 @@ concrete, currently-failing symptom; the classification question is the census a
 - [ ] [DIAG] P2. Root-cause the 3 zero-object gap days inside the KALSHI_PERP defi capture window (2026-07-17,
       2026-07-20, 2026-07-21) — check the collector's run logs/cron history for those UTC days to determine whether each
       is a transient fetch failure (worth a `record_failed`/backfill) or an intentional pause, and whether the gap is
-      visible anywhere downstream today. Repo: market-tick-data-service.
+      visible anywhere downstream today. Repo: market-tick-data-service. **(see
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md:310` — extracted/dispatched there as a combined todo, still open
+      as of 2026-08-04; not independent unassigned work.)**
 - [ ] [DIAG] P2. Root-cause the daily `_migrated_kalshi_perp_<timestamp>.parquet` marker object written into the live
       KALSHI_PERP venue prefix (2026-05-29 through 2026-07-16, 57 instances, then stops) — identify which migration/
       backfill script wrote it, confirm it is inert (no reader depends on it) or needs cleanup, and whether its abrupt
-      stop on 2026-07-17 is related to the gap-day finding above. Repo: market-tick-data-service.
+      stop on 2026-07-17 is related to the gap-day finding above. Repo: market-tick-data-service. **(see
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md:310` — extracted/dispatched there as a combined todo, still open
+      as of 2026-08-04; not independent unassigned work.)**
 
 ## Codex SSOTs
 
@@ -144,3 +148,10 @@ concrete, currently-failing symptom; the classification question is the census a
   (`defi_satellite_ao_dispatch_batch6_2026_07_30.md:310`), so flipping this doc would dispatch a duplicate.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate against the doc's central open
   (a)/(b)/(c) operator decision and the 2 secondary `[DIAG]` todos.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA-STALE (already-duplicated) — the 2
+  `[DIAG] P2` checkboxes are extracted verbatim (combined into one todo) in the ACTIVE `assigned_vm: planning` doc
+  `defi_satellite_ao_dispatch_batch6_2026_07_30.md:310` (still open as of today), which explicitly cites this issue doc
+  as its source; the checkboxes were never flipped to point to that extraction. Fixed the citation on both checkboxes
+  above (not reclassified — flipping `assigned_vm` here would dispatch a duplicate). The doc's central prose-only
+  (a)/(b)/(c) operator-design decision on the 567 already-written manifest-absent objects remains genuine NA judgment
+  work, unchanged. Doc stays `assigned_vm: NA`.

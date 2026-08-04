@@ -37,8 +37,8 @@ related:
 created: "2026-08-04"
 last_updated: "2026-08-04"
 parent_epic: defi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -111,9 +111,16 @@ under critical context pressure.
 - [ ] [DIAG] P1. Locate the actual IS instrument-catalogue artifact (bucket + object path, or code path if it's not
       GCS-backed) that `enumerate_expected_universe.py`'s Layer-1 skeleton-builder reads for the DEFI asset group, and
       confirm whether it still lists a GMX pool instrument.
-- [ ] [DATA] P1. (Gated on the above.) If confirmed, prune the stale GMX catalogue entry (or rebuild the catalogue from
-      current source, whichever this workspace's established catalogue-maintenance convention is) and re-run the
+- [ ] [OPERATOR] P1. (Gated on the above.) If confirmed, prune the stale GMX catalogue entry (or rebuild the catalogue
+      from current source, whichever this workspace's established catalogue-maintenance convention is) and re-run the
       honest-coverage `--asset-group defi` measurement to confirm the 4 `expected_unattempted` rows stop reappearing.
+      **Tagged `[OPERATOR]` (na-eligibility-audit 2026-08-04, finding O path (b)): the exact artifact/mechanism this
+      mutates is still unknown until the [DIAG] P1 todo above locates it — cannot state a safe-idempotent/
+      reversibility-verified justification (finding O path (a)/(c)) before that's known.** Once [DIAG] P1 lands, the
+      executing worker must either (i) cite a fresh `gcs_bucket_soft_delete_retention_seconds()` check ≥604800s per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a if this resolves to a reversible GCS object
+      mutation (finding T — then this tag may be dropped to `[DATA]` before execution), or (ii) get explicit operator
+      authorization first if it's a whole-artifact rebuild or fails that check.
 - [ ] [DIAG] P2. Check whether DRIFT/PACIFICA (removed 2026-07-16, per
       `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) have the same class of surviving catalogue
       residue — same root-cause family as this finding, not yet checked.
@@ -127,3 +134,17 @@ under critical context pressure.
   `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`'s Progress Log — that claim was accurate for the
   generated-bundle + source-registry surfaces it was scoped to, but this manifest-skeleton surface was not checked at
   the time and is not clean. Not resolved this session — context budget exhausted; filed for a fresh follow-up.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): **RECLASSIFY, conflict-check CLEAR.** All 3
+  open todos are bounded locate/confirm/fix/re-verify tasks over the IS instrument-catalogue + honest-coverage manifest
+  with objectively checkable done-states, never previously assessed for AO eligibility (simply defaulted to NA at filing
+  time). Conflict-check against all 16 active `defi_master` `assigned_vm:planning` docs (+finalize twins) and
+  `defi_consolidated_closeout_2026_07_18.md` found zero verbatim/near-verbatim duplicate claim —
+  `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s catalogue-expansion todo is a different, additive-only direction
+  (widens the catalogue, never prunes) and structurally cannot have already fixed this. Flipped
+  `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. Retagged the `[DATA] P1`
+  prune/rebuild todo to `[OPERATOR] P1` per finding O path (b) — the exact mutation mechanism is unknown until the
+  `[DIAG] P1` todo locates the artifact, so no safe-idempotent/reversibility-verified justification (path (a)/(c)) can
+  be stated yet; the executing worker resolves the tag once `[DIAG] P1` lands (see inline note on that todo). No
+  companion finalize plan authored — `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule per
+  `cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 3 (`check_finalize_plan_coverage.py` only globs
+  `plans/active/*.md`, not `plans/active/issues/*.md`); ordinary archival applies once this doc's own todos close.

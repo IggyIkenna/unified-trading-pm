@@ -218,3 +218,6 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in archetypes_rank.py, the file the
   remaining open P2 (dual-deposit cost calibration) todo actually touches.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — 3 of 4 open items remain
+  genuine operator/design-judgment work (one explicitly cross-referenced elsewhere as an operator product-decision); the
+  4th (P3 test-flake fix) is too small to justify splitting the doc. Doc stays `assigned_vm: NA`.

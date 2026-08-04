@@ -142,3 +142,8 @@ context_scope:
   emits the bare legacy forms" finding independently. Did not duplicate the DIAG/DATA todos above (correctly scoped,
   already gated on real content-verification per the R5 precedent this doc cites) — flipped only the REVIEW P3 todo,
   which was already shipped (`unified-api-contracts@ab4693de`) but left unchecked.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — the 3 open items are a
+  diagnostic pair (rate_indices canonical-target check, sample-based content-equivalence comparison) feeding a
+  DATA-migration item gated on their outcome and likely needing delete-safety/[OPERATOR] handling; the
+  content-equivalence judgment call is the exact risk class this doc's own cited R5 precedent shows can be wrong, so it
+  stays genuine-caution NA rather than a clean mechanical RECLASSIFY. Doc stays `assigned_vm: NA`.

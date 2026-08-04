@@ -216,3 +216,6 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   recognized deployed-service context"), and the per-slot RSS-ceiling item is self- flagged "Out of scope to
   design/implement here — flagging the pattern". Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
+  both remaining open items are self-flagged, undecided design forks (ManifestWriter safety-check warn-vs-refuse choice;
+  per-slot RSS ceiling explicitly out of scope to design here). Doc stays `assigned_vm: NA`.

@@ -174,3 +174,6 @@ vault-share-price collector) end-to-end:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 6) — dropped the archived batch1 dispatch doc
   (its only cited todo, #3, is already shipped); remaining set covers the two still-open items (todo 4 [DECISION], todo
   5 register-append).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  todo 4 remains an explicit `[DECISION]` on adding a second SOURCE_PRIORITY source (multi-source cell + backfill on
+  7,476 existing rows); todo 5 is a minor P3 that doesn't outweigh it. Doc stays `assigned_vm: NA`.

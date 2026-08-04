@@ -151,6 +151,11 @@ rg -n '"venue:drift"|"collateral:drift"|"venue": "drift"' deployment-ui/src/data
 Same class, different repo/file. Found by the fleet-wide closing grep AFTER two surgical enum fixes to this very file
 had already shipped — a caution that "I fixed that file" != "that file is clean".
 
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  the sole remaining open item (resync the prospectus generator) is still genuinely judgment-gated: the generator has
+  drifted from committed files on multiple unrelated axes and no worker can determine a done-state without a human
+  design decision on which side is authoritative. Doc stays `assigned_vm: NA`.
+
 **Fixed + shipped (safe, surgical — enum MIRRORS of UAC, verified against the live enums):**
 
 - `unified-trading-system-ui@70ca4b8c` — dropped `KILL_PER_TREASURY_SUB_ACCOUNT_DRIFT` from the mirrored `KillSwitchId`

@@ -155,3 +155,8 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   shipped (`market-tick-data-service@c38e1b3f`) and what remains is "a real data-capture operation, not a code check",
   left for whoever schedules the run.
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
+  re-read end to end; content unchanged. `locked_by: live-defi-rollout` still set, sole open item remains the
+  genesis-to-present multi-year production capture backfill against live GCS with no VM-launch gating on the todo — a
+  real data-capture operation left for whoever schedules the run, not a worker-determinable mechanical task. Doc stays
+  `assigned_vm: NA`.

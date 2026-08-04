@@ -258,3 +258,6 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
   doc's sole remaining scope, the delete-the-legacy-copies decision); the fold script that executed the work
   (`fold_legacy_composite_venue_objects_2026_07_31.py`) was a one-off, already deleted post-run per the script-homes
   lifecycle convention, so not addable.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
+  the sole remaining `[PM] P2` item is still gated on an operator plan-destination decision plus a PROD-bucket delete
+  that is human-only unless reversibility-qualified. Doc stays `assigned_vm: NA`.

@@ -238,3 +238,6 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries — corrects the 2026-08-01 marker's stale count, the
   list itself already carried 6) — all still resolve; covers the still-open UI-resync todo's exact source targets
   (`ui-reference-data.json`, `generate_ui_reference_data.py`, `lifecycle.ts`).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  the sole todo still bundles a strategy-domain delete-vs-re-leg judgment call with an open-ended generator/UI
+  structural-skew investigation the doc itself says likely needs its own plan. Doc stays `assigned_vm: NA`.

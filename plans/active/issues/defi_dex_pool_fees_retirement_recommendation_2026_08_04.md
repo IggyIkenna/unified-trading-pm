@@ -128,3 +128,7 @@ cost is engineered from gas units × static per-tx complexity, not a separately-
   (my initial plan was "add to canonical registry" — operator explicitly overrode this with the static-fee/
   engineer-don't-backfill principle). Not executed — DIAG todo needed before any strategy-layer code change, per this
   workspace's own precedent for live-reader-adjacent changes.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — of the 3 open todos only the
+  first (DIAG schema/column verification) is arguably bounded; the other two (DESIGN repoint of a live strategy-layer
+  read path + operator DECISION on legacy-object disposition) are genuine judgment/operator-gated work gated on that
+  first step, so not essentially all remaining work qualifies for reclassification. Doc stays `assigned_vm: NA`.

@@ -150,3 +150,6 @@ than acted on:
   extraction itself is unaffected and stands: batch8 + its gated finalize twin were created normally.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the two
   prior over-cap-blocks-edit instances, the over-cap doc itself, and `check_line_caps.sh`).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — all 3 open todos are gated on
+  an explicit `[OPERATOR]` BLOCKED-OPERATOR-DECISION policy call (A/B/C/D on the line-cap hard-gate exception); nothing
+  here is worker-determinable absent the operator's ruling. Doc stays `assigned_vm: NA`.

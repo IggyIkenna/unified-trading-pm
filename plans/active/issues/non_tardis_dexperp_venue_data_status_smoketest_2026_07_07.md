@@ -531,3 +531,7 @@ Two secondary findings:
     `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`.
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  of 3 open P3 todos, 1 (HYPERLIQUID k-prefix coin-case) is still deferred pending a genuine canonical-vs-native
+  coin-case design decision; the other 2 are operator-ruled/AO-ready but since not ALL remaining work qualifies, the doc
+  stays NA as a whole per the mixed-eligibility rule. Doc stays `assigned_vm: NA`.
