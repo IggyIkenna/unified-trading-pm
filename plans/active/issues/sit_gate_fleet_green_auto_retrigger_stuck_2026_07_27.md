@@ -136,15 +136,14 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
     `scripts/quality-gates-base/tests/test-sit-fleet-green-auto-retrigger.sh` (extracts the real function body, dedents
     it per the established `textwrap.dedent` technique, proves red+no-run-in-flight dispatches, red+in-flight debounces,
     green never dispatches, and dry-run never calls `curl`) — 6/6 pass.
-  - [ ] [INFRA] P3. Separately: investigate why 4 `ci-status-update` dispatches timed out in the same
+  - [x] ✅ [INFRA] P3. Separately: investigate why 4 `ci-status-update` dispatches timed out in the same
         `full-workspace-sit` run (repo: system-integration-tests or unified-trading-pm, wherever `ci-status-update`
         lives) — if this is a recurring flake (not a one-off), it's worth a retry-with-backoff inside
         `cross-repo-invariants` rather than failing the whole SIT run on a downstream write timeout for repos that
         otherwise passed. **Confirmed recurring 2026-07-28** (see Recurrence section) — 5/6 "timeout" runs in that
         occurrence had actually completed `success` within 129-307s, all past the stamp-verification loop's fixed 90s
-        poll budget in `cross-repo-invariants`'s job (repo: system-integration-tests). Fix: widen the poll budget (e.g.
-        `seq 1 18` → cover ≥310s observed worst-case, or make it adaptive) rather than retry-with-backoff alone — the
-        runs ARE succeeding, the gate is just not waiting long enough to see it.
+        poll budget in `cross-repo-invariants`'s job (repo: system-integration-tests). Fix: widened poll budget from 90s
+        (18×5s) to 320s (64×5s) to cover ≥310s observed worst-case — system-integration-tests@69b93bc
 
 ## Codex SSOTs
 
