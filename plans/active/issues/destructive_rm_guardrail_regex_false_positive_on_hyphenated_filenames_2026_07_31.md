@@ -124,10 +124,13 @@ substrings inside a path or an unrelated flag's spelling can no longer match, wh
       `(?<=\s)` before the leading `-` and a trailing `\b` after the letter run
       (`-[A-Za-z]*[rR][A-Za-z]*\b|--recursive\b`); added the two negative cases plus `rm --recursive dir`/`rm dir -r` to
       the BLOCKED list; full 48-test suite green + repo QG green.
-- [ ] [INFRA] P3. Audit the other `[A-Za-z]*[rR]`/`[A-Za-z]*[fdx]`-shaped patterns in the same `_DESTRUCTIVE` list
+- [x] ✅ [INFRA] P3. Audit the other `[A-Za-z]*[rR]`/`[A-Za-z]*[fdx]`-shaped patterns in the same `_DESTRUCTIVE` list
       (`git clean -f/-d/-x` at line 80 uses the same unanchored shape) for the identical false-positive class; tighten
       or confirm each is already narrow enough (the `chmod -R`/`chown -R` patterns at lines 87-88 use a stricter `-R\b`
-      and are lower priority to re-check first). Repo: agent-orchestrator.
+      and are lower priority to re-check first). Repo: agent-orchestrator. — agent-orchestrator@c23eac2. Fixed git-clean
+      pattern (unanchored `-[A-Za-z]*[fdx]` → anchored `(?<=\s)(-[A-Za-z]*[fdx][A-Za-z]*\b)`); tightened chmod/chown -R
+      and truncate -s with same `(?<=\s)` flag-token anchor. Added 6 negative test cases covering each fixed pattern.
+      Full 2339-test suite + QG green.
 
 ## Progress Log
 
