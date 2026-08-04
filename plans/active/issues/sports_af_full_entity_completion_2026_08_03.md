@@ -493,3 +493,11 @@ are genuinely in scope for the operator's "no exceptions" directive.
   @579421bf, i.e. the census-fix commit) — not republished: the backfill VM runs the AF fetch/writer path, not the
   standalone census scripts the fix touched, so this is not expected to affect this run's correctness; noting it in case
   a future launch on this VM needs newer instruments-service code for an unrelated reason.
+- **2026-08-04T13:09Z** — `-124609` also landed short (~4.6min, 11:47:36Z→11:52:13Z preempted; only 1st FIXTURE_STATS
+  attempt this switch, not yet 2-in-a-row). Zone-wide preemption count jumped 13→31 events/60min — checked the actual
+  event list rather than just the count: the increase is a dense burst of `tradfi-bf-*` preemptions (16 events across 8
+  VM names in a ~4min window, 12:03-12:07Z), a **different machine-type pool** (`e2-highmem-16`, a large concurrent
+  tradfi backfill fleet launch) from ours (`e2-standard-8`) — not evidence our own pool is under fresh pressure, just a
+  separate fleet's contention sharing the same zone. Not investigated further (out of this campaign's scope; the
+  resolved `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` doc is the right home if anyone picks that up).
+  Relaunched FIXTURE_STATS once more (`af-backfill-20260804-130914`), confirmed RUNNING.
