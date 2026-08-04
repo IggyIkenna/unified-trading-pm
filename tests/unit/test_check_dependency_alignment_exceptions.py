@@ -55,10 +55,11 @@ def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
     ):
         assert exceptions[(repo, "fastapi")] == "fastapi>=0.115.0,<0.138.0"
 
-    # CVE-2026-69247 cryptography sweep (2026-08-04): mid-sweep + adjacent-CVE divergences.
-    assert exceptions[("system-integration-tests", "cryptography")] == "cryptography>=47.0.0,<50.0.0"
+    # CVE-2026-59881/-69243/-69244 aiohttp cluster (2026-08-04): repos ahead of the canonical
+    # aiohttp>=3.14.1,<4.0.0 floor, which stays put pending its own separate fleet sweep.
     assert exceptions[("unified-trading-library", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
     assert exceptions[("market-tick-data-service", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
+    assert exceptions[("unified-trading-pm", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
 
 
 def test_missing_file_returns_empty_dict(tmp_path: Path) -> None:
