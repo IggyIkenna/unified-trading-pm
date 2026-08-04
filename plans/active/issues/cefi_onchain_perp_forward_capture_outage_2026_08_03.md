@@ -55,11 +55,10 @@ context_scope:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
-    deployment-service/scripts/vm/launch-aster-forward-poll.sh,
-    deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh,
-    deployment-service/deployment_service/vm_prefix_registry.py,
-    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py,
-    market-tick-data-service/market_tick_data_service/raw_tick_hive.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    agents/data_engineering.md,
+    /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
   ]
 ---
 
@@ -192,3 +191,7 @@ finding, just not caught by any existing gate because no gate watches this speci
   venue-specific match first, then `internal` bucket, matching the todo's own suggested "general bucket" framing.
   Shipped `unified-api-contracts@4dfe960a`, full `quality-gates.sh` green, verified on origin. backfill) are untouched —
   out of scope for this task.
+- **context-scout 2026-08-04**: refreshed context_scope (6 entries) — 2 of 4 todos closed since the prior scout, so
+  trimmed to the 2 still-open items (zombie-VM investigation, HL gap backfill); added a confirmed fingerprint match
+  (`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`, both docs independently record the exact
+  literal `UpstreamTimestampBiasError` tied to ASTER).

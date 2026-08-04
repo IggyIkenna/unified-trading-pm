@@ -29,6 +29,15 @@ related:
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /codex/02-data/mvp-scope-canonical.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md,
+    instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
+    instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py,
+  ]
 created: 2026-08-03
 priority: P1
 parent_epic: sports_master
@@ -308,3 +317,4 @@ are genuinely in scope for the operator's "no exceptions" directive.
   again. Recommend the next dispatch check both the storm doc's "re-check after several hours" todo (not yet due — only
   ~15-20 min of storm-doc-tracked time has elapsed since it was filed) and this doc's new durable-gate-fix todo before
   repeating the same manual check a 7th time.
+- **context-scout 2026-08-04**: populated context_scope (6 entries).

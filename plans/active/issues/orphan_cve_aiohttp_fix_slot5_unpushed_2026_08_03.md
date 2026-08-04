@@ -26,6 +26,13 @@ repos: [unified-trading-library]
 scope: [admin]
 tags: [orphan-rescue, cve, security, deps, aiohttp, per-tab-worktrees, wip-preserve, git-health]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-library/pyproject.toml,
+    unified-trading-library/uv.lock,
+  ]
 created: 2026-08-03
 parent_epic: agent_operating_framework_master
 priority: P1
@@ -88,3 +95,4 @@ Hence this durable issue so a worker picks it up cleanly.
   orphan (not-on-LDR via `merge-base --is-ancestor`). Zero-loss (wip-preserved), so no emergency, but it's a live
   security fix sitting unshipped — flagged P1 for the next available worker cycle over routine cleanup, per review's
   recommendation. Main did NOT push it (main never pushes code; deps go via quickmerge dep gates).
+- **context-scout 2026-08-04**: populated context_scope (4 entries).

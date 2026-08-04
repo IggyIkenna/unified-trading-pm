@@ -25,6 +25,14 @@ repos: [unified-trading-library, unified-api-contracts, deployment-service, mark
 scope: [admin]
 tags: [orphan-rescue, per-tab-worktrees, wip-preserve, git-health, worktree-health]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/quickmerge-architecture.md,
+    unified-trading-library/unified_trading_library/point_in_time.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+  ]
 created: 2026-08-04
 parent_epic: agent_operating_framework_master
 priority: P2
@@ -99,3 +107,4 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   state), repeated AutoSpawn respawns will keep stranding it, not fix it. **The 2nd todo's gate is therefore SATISFIED**
   — a worker should now reconcile bd0e231f per that todo (fresh successful QG to mint the missing `.qg_last_passed_sha`
   sentinel, then quickmerge). Still zero-loss (wip-preserved).
+- **context-scout 2026-08-04**: populated context_scope (5 entries).

@@ -27,6 +27,15 @@ related:
 created: 2026-08-03
 priority: P2
 parent_epic: infrastructure_master
+context_scope:
+  [
+    /codex/06-coding-standards/dependency-management.md,
+    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+    /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
+    workspace-constraints.toml,
+    scripts/propagation/propagate-canonical-versions.py,
+    scripts/manifest/check-dependency-alignment.py,
+  ]
 assigned_vm: NA
 execution_scope: local-only
 sequential: true
@@ -85,3 +94,7 @@ whenever infra/dependency-hygiene work is next in queue; no urgency to interrupt
 same day) covers a dead slot's unpushed `unified-trading-library` aiohttp bump to `>=3.14.3` closing 3 different, real,
 currently-unpatched CVEs (2026-59881/69243/69244) — that rescue is P1 and should happen first; once it lands,
 unified-trading-library resolves off this doc's 16-repo mismatch list, leaving 15.
+
+## Progress Log
+
+- **context-scout 2026-08-04**: populated context_scope (6 entries).

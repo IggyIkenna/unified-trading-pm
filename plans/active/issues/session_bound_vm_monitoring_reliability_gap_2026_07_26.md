@@ -51,6 +51,7 @@ context_scope:
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
+    /plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md,
   ]
 depends_on: []
 ---
@@ -120,3 +121,6 @@ in the same way and at the same time when they're the same physical connection.
   marker is not a reliable fleet-wide signal; a mitigation (write earlier/more defensively, or make the monitor rely on
   the Compute Operations API `preemption_op_checker` fallback rather than the in-guest blob) is warranted. Cross-ref:
   `/plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
+- **context-scout 2026-08-04**: added `af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` to context_scope
+  (now 6 entries) — confirmed fingerprint match (both VM names `af-backfill-20260803-233053`/`af-backfill-20260804-001203`
+  independently recorded in both docs), per this skill's step-4a cross-reference rule.

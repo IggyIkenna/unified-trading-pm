@@ -67,12 +67,11 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md,
-    instruments-service/scripts/migration_orphan_sweep.py,
-    instruments-service/scripts/backfill_orphan_class_e.py,
-    features-service/features_service/cefi/calculators/perp_funding_corpus.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
 

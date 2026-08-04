@@ -44,11 +44,11 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
-    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
-    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
-    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
-    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+    /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    deployment-service/deployment_service/data_pipeline_monitors/cli.py,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+    deployment-service/tests/unit/test_data_pipeline_monitors_cli.py,
   ]
 ---
 
@@ -212,3 +212,6 @@ changes, and should resolve which of them is the real cause.
   `/plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md` ("Audit whether the `PREEMPTED`
   marker's shutdown-script grace period is survivable in practice"); appended these two datapoints as evidence to that
   doc's Progress Log for the auditor.
+- **context-scout 2026-08-04**: refreshed context_scope (5 entries — replaced the prior list, which targeted the
+  now-ruled-out hypotheses, with the actual fix location (`cli.py`) + the confirmed fingerprint-matched sibling doc
+  (`session_bound_vm_monitoring_reliability_gap_2026_07_26.md`, same VM names independently corroborated in both).
