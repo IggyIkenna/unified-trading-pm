@@ -287,3 +287,39 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
      reached. This todo (`[DATA] P2. Launch + verify the real production run of job (2)'s new script`) stays
      open/in-progress; will flip once all 7 chunks TERMINATE clean and the post-run cell-seeding ratio re-check (same
      method as this issue's own read-only measurement) is done.
+- **data_engineering worker (slot 14) 2026-08-04 (continued)**: found + fixed a 4th real bug and filed a 5th (separate
+  issue doc, cross-cutting — not part of the numbered fix list since it's an environment issue, not a launcher-code
+  bug): 4. **deployment-service@16e8de3 + @e7c9510** — the shared-host `gcloud` active identity (`~/.config/gcloud` is
+  HOST-WIDE, not per-slot — see `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern") got
+  clobbered by a sibling slot's `gcloud config set account` call THREE separate times during this run, each time
+  aborting the backfill with `PERMISSION_DENIED` on `compute.instances.create` (caught cleanly each time only because of
+  fix 2 above — the error surfaced instead of dying silently). Both `launch-expected-universe-v2-vm.sh` and the
+  historical-backfill wrapper now
+  `export CLOUDSDK_CORE_ACCOUNT=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (overridable) at the
+  top of the script, pinning the identity per-invocation without touching the shared config file. Verified live:
+  launched successfully with the shared active account deliberately set to a DIFFERENT, unprivileged identity, and
+  confirmed the shared config was left untouched afterward. 16/16 shell tests pass (added a test asserting the pin, plus
+  fixed 2 pre-existing hardcoded rolling-boundary date literals that broke when the wall-clock date rolled over
+  2026-08-03->2026-08-04 mid-session — both now computed dynamically).
+  - Filed **`plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`** (P2,
+    cross-cutting) recommending the broader fix (audit ALL `deployment-service/scripts/vm/` launchers for the same
+    ambient-identity dependency, or give each slot its own named gcloud configuration) — only the 2 scripts this
+    backfill actually touches were fixed here; the rest of the launcher family is that issue's own follow-up scope, not
+    absorbed into this todo.
+  - **Live status as of this entry**: backfill relaunched with all 4 fixes (5th relaunch overall, background task still
+    running in-session). Chunk 1/7 re-confirmed `EXIT_STATUS=0` (idempotent no-op, already fully seeded). Chunk 2/7
+    (2021-01-01..2021-12-31) is on its ~8th cumulative retry attempt across relaunches (present-set has grown from 6.1M
+    rows post-chunk-1 to 8.8M+ mid-chunk-2, confirmed via `Manifest present-set`/`Augmented manifest sets` log lines) —
+    converging correctly, no error signal, well within `MAX_CHUNK_ATTEMPTS=50` per invocation. The elevated SPOT
+    preemption rate observed throughout this session (roughly 5-6 preemptions across ~20 total launch attempts) is NOT
+    this campaign's own issue — a sibling slot independently confirmed a fleet-wide, ongoing `asia-northeast1-c` SPOT
+    preemption storm (151 preemptions/5h across sports/tradfi/cefi simultaneously) and filed
+    `plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` as its own P1/big-finding; every
+    preemption hitting THIS backfill was correctly absorbed by fix 3, so this campaign stays unblocked regardless of
+    that storm's own resolution timeline. **If this todo is picked up cold by a fresh session**: check
+    `gcloud compute instances list --filter='name~"expected-universe-v2-sports-"'` for a currently-RUNNING VM first
+    (idempotent-safe either way, but tells you whether a relaunch is needed or one is already in flight); the per-VM
+    shards + main manifest already hold real progress from this session, so a fresh
+    `bash launch-expected-universe-v2-historical-backfill-vm.sh sports` naturally resumes rather than restarting. Not
+    yet reached: rest of chunk 2, chunks 3-7 (2022-01-01 through the then-current rolling boundary), and the final
+    post-run cell-seeding ratio re-check that this todo's done-when requires.
