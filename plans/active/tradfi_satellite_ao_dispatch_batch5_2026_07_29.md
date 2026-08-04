@@ -248,16 +248,16 @@ ground to open up, and it did:
       `market-tick-data-service` code verified (adapter registry has no live Yahoo adapter entry;
       `write_canonical_shard()` has no confirmed caller).
 
-- [ ] [SCRIPT] P2. **Write a register-phase script + investigate quarantine staleness — combined into ONE todo because
-      both edit the same issue doc.** (1) Write a register-phase script (mirroring
-      `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s register phase) that additively registers manifest
-      rows for the ~428 content-recovered-but-unregistered combo/chain cells from run `20260720-120911`, confirmed via
-      targeted (non-corpus-walk) `gcs_describe_object` checks. (2) Investigate what pruned/reused
-      `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 (0/98,256 of this run's quarantine targets still
-      exist; only 9 unrelated day=2026-01-* prefixes remain). Repo: market-tick-data-service. **Done when**: every
-      reachable canonical bundle target that exists on GCS and has no manifest row is registered (count reported against
-      the ~428 upper bound), and item 2's root cause is identified or explicitly documented as unable-to-determine.
-      Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`.
+- [x] ✅ [SCRIPT] P2. **Write a register-phase script + investigate quarantine staleness** — `unified-trading-pm@<sha>`
+      (doc-only: investigation findings recorded in issue doc). (1) Register-phase script: shipped independently by a
+      prior worker — `market-tick-data-service@c1e1de71` (`register_tradfi_recovery_quarantine_manifest_2026_07_30.py`,
+      13 unit tests, QG green), dry-run + apply already completed (248 rows registered into prod manifest). (2)
+      Quarantine staleness investigation: completed 2026-08-04 (slot 14) — root cause documented as UNABLE TO DETERMINE
+      from committed evidence. No committed script deletes from `_quarantine/raw_tick_data/`. Latent `_rel()` bug in
+      `migrate_tradfi_canonical_2026_07.py` strips `_quarantine/` prefix but causes source-not-found errors, not
+      deletions (full code trace in issue doc Progress Log). Most plausible: manual operator cleanup or uncommitted
+      one-off script. Issue doc todo 3 flipped, full findings in Progress Log. Source:
+      `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`.
 
 - [ ] [TRADFI] P3. **Implement the pyarrow per-symbol-writer fan-out fix the 2026-07-27 memray repro identified as the
       real OOM mechanism** — batch multiple low-volume symbols onto a shared `pq.ParquetWriter`, or cap/eagerly-flush
