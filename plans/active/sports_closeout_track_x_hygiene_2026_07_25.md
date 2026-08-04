@@ -109,15 +109,34 @@ context_scope:
       plan's own golden-window audit only, not this closeout's canonical form — no unflagged "raw string is canonical"
       claim remains in either doc. Execution (building `LEAGUE_ID_TO_TIER` / extending `EXPECTED_BOOKMAKER_MARKET_SETS`)
       stays with the bookmaker plan's own P1 todos, unchanged — this todo was tracking reconciliation only.
-- [ ] [DATA] P2. **Root-cause + fix + migrate the peripheral-bucket league-vocabulary contamination** — a SECOND,
-      DISTINCT non-canonical league vocabulary (country-prefixed `ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN`, not the
-      api-football-display-name axis the league_id relocation fixes) found in `features-sports-prd` (30 objects, live to
-      2026-07-11) + `instruments-store-sports-prd` (9,733 objects / 172 values). Identify the writer producing this
-      vocabulary, fix it at the write path, then migrate the existing contaminated objects to the correct vocabulary.
-      MUST NOT be folded into the league_id relocation (different population, different writer). Detail:
-      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: instruments-service /
-      market-tick-data-service). **Done when**: the writer is identified and fixed, and a fresh census of both buckets
-      returns 0 objects carrying the contaminated vocabulary.
+- [ ] [DATA] P2. **PARTIALLY DONE 2026-08-04 (slot-12) — root-cause + write-path fix SHIPPED; the historical migration
+      is deliberately NOT done and stays open (needs an `[OPERATOR]`/delete-safety gate).** Traced the writer:
+      `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
+      `normalize_api_football_fixture()` built `CanonicalLeague.league_id` from a bare `build_league_id(country, name)`
+      slug of the RAW api-football country name ("England" → `ENGLAND_PREMIER_LEAGUE`) instead of the UAC league
+      registry's canonical slug ("EPL") — a different, ungoverned vocabulary from every other sports write path.
+      `instruments-service` masks this behind its own separate `_is_in_canonical_write_universe` write-universe gate
+      (added ~2026-06-24/27), which is why `instruments-store-sports-prd`'s 9,733 objects read as legacy residue, not an
+      actively-growing leak; `features-service`'s `_write_per_league` has no equivalent gate, so `features-sports-prd`
+      was still live-leaking as of 2026-07-11 — confirmed the ROOT CAUSE, not a third-party-adapter naming convention
+      (checked every other sports adapter in both repos). **Fixed** (`unified-api-contracts@f3f1bbe0`): new
+      `_resolve_league_id()` mirrors instruments-service's own `_canonical_league_id` two-pass, non-lossy design —
+      registry-first via the numeric `api_football_id` (authoritative), falling back to the raw country/name slug only
+      when the league genuinely has no registry entry. Closes the leak at its TRUE shared source for every consumer of
+      `normalize_api_football_fixture`, not just the one write path that happened to lack a gate — 5 new regression
+      tests lock in the fix (registered-league resolves via registry / non-lossy unregistered fallback / blank-league
+      no-op). **NOT done, deliberately**: migrating the 9,733 existing `instruments-store-sports-prd` objects. The issue
+      doc's own `na-eligibility-audit` passes (2026-07-30, 2026-08-01) already ruled this exact migration `KEEP-NA` — "a
+      GCS data migration is the dispatch atom here, so it needs an `[OPERATOR]`/delete-safety gate rather than a bare
+      flip" — and that reasoning still holds; an AO worker performing an ungated bulk historical-data migration would
+      violate `task_template.md` finding O. This todo's own "Done when" (0 contaminated objects in a fresh census) is
+      therefore NOT met yet — do not flip this checkbox to done until the migration lands. DISTINCT, DISTINCT from the
+      api-football-display-name axis the league_id relocation fixes (different population, different writer) — MUST NOT
+      be folded into that relocation, unchanged from the original scoping. Detail:
+      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` (updated with the same evidence +
+      a new, properly-scoped `[OPERATOR]`-gated migration todo). (repo: unified-api-contracts). **Done when** (revised,
+      migration-only remainder): the 9,733-object `instruments-store-sports-prd` migration lands under the delete-safety
+      protocol and a fresh census returns 0 contaminated objects across both buckets.
 - [ ] [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** (1)
       `deployment-service` — 3 launcher `START_DATE` clamp hardening edits + a new
       `launch-sports-league-id-relocation-vm.sh` launcher, in worktree `deployment-service-sports-wt`. (2)
@@ -144,3 +163,10 @@ review-blocking.
   "relocation executor" the ship-parked-changes todo's shard-filter targets); the launcher script named in that same
   todo (`launch-sports-league-id-relocation-vm.sh`) does not resolve on disk yet (unshipped, sitting in a worktree) so
   was not added.
+- **2026-08-04 (slot-12, data_engineering)**: worked the peripheral-bucket league-vocabulary-contamination todo — traced
+  the writer + root-caused + shipped the write-path fix (`unified-api-contracts@f3f1bbe0`), but deliberately did NOT do
+  the 9,733-object historical migration (needs an `[OPERATOR]`/delete-safety gate the original todo lacked; see the
+  issue doc's own repeated na-eligibility-audit finding). Checkbox left unchecked — the todo's "Done when" isn't met
+  until that migration lands; see the issue doc
+  (`issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`) for the full evidence and the new,
+  properly-scoped migration todo split out from the original bundled one.
