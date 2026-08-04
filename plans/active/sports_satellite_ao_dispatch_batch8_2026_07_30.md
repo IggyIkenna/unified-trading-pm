@@ -42,7 +42,7 @@ related:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
     /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

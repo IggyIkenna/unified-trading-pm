@@ -450,7 +450,7 @@ by hand._
   — Gated closeout for sports_legacy_fixtures_path_migration_2026_07_24.md, reclassified `assigned_vm: NA -> planning`
   (plus `execution_scope: local-only -> orchestrator-agent` and `sequential: true`) on 2026-08-02 per the operator
   ruling of…
-- [`sports_live_availability_and_source_latency_2026_07_24`](./sports_live_availability_and_source_latency_2026_07_24.md)
+- [`sports_live_availability_and_source_latency_2026_07_24`](../archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md)
   — Sports-specific live/forward data-availability matrix (per data_type x source: availability phase, live
   timestamp/cadence, live feed status, gap + cheap-source recommendation) and the companion source-latency validation
   (empirical p95-lag…

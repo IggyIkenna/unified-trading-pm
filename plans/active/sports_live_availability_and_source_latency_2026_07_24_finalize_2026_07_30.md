@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -49,7 +49,7 @@ source: >-
   second-source wiring or the live-connector resume confirmation.
 context_scope:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
