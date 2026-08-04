@@ -168,7 +168,7 @@ counts are reproduced above in full so the check is independently re-runnable fr
 ## Todos
 
 - [x] ✅ [DIAG] P1. Root-cause why these exact 11 columns regressed together with identical before/after percentages —
-      unified-trading-pm@(this commit). **Verdict: candidate (b), legitimate dilution, NOT a bug** — see "## Root cause
+      unified-trading-pm@6c84ffaa8. **Verdict: candidate (b), legitimate dilution, NOT a bug** — see "## Root cause
       (2026-08-04, slot-8 DIAG)" above for the full evidence (atomic all-or-nothing per-row fill, 100% of a 2,226-row
       pre-merge-filled sample still filled post-merge, and an exact anti-join reconstruction: pre-existing keys stayed
       at 73.92%, net-new keys (1,273,231 rows, 0.60% filled) diluted the aggregate to exactly 71.71%, matching the
