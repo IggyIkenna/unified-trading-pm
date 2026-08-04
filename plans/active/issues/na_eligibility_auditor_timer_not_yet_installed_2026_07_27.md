@@ -103,14 +103,12 @@ and it's still only provable by the timer's own first real fire.
       pure install-verification step); the natural next-day fire is the intended first real test. Distinct from the item
       above: this verifies the DISPATCH WIRING (timer → opus worker → lifecycle-complete), not the skill's own logic
       (already proven above). — unified-trading-pm@<SHA>
-- [ ] [SCRIPT] P2. **Re-tune `na_eligibility_auditor`'s per-tranche timeout budget** — the timer's FIRST real fire
-      (2026-07-28 07:00 UTC, confirming the item above's answer is "no, not yet") hit `Active: failed`: a curl
-      `TIMEOUT`/`HTTP:000` past its own `--max-time 2400`/`TimeoutStartSec=2450` on multiple tranches. That budget was
-      carried over unmeasured from the 2026-07-26 sharding change (the dispatch script's own comment already flagged "no
-      measurement of a single-tranche run exists yet"). Now that `ScheduledJobRunRow` durably records per-tranche
-      start/finish timing (`agent-orchestrator`, shipped 2026-07-28 — see
-      `/plans/archive/issues/ao_scheduled_job_observability_and_slack_alerting_2026_07_28.md`), bump the timeout (or
-      diagnose why a single tranche exceeds 40 min) once a few more real data points land in that table.
+- [x] ✅ [SCRIPT] P2. **Re-tune `na_eligibility_auditor`'s per-tranche timeout budget** — agent-orchestrator@17939c3 —
+      raised `--max-time` 2400→7200s (2h per tranche) and `TimeoutStartSec` 2450→21600s (6h total, covering 3 sequential
+      batches at ~2h worst-case each), calibrated against real measured single-tranche runtimes (6.5–64.9min via
+      `ScheduledJobRunRow`). Also applied to sibling `ag-closeout-auditor` timer. The first-fire timeout failure
+      (2026-07-28 curl `TIMEOUT`/`HTTP:000` past unmeasured 2400s budget) is resolved — the old ceiling was below
+      several observed runtimes; the new 2h-per-tranche ceiling covers the known distribution with margin.
 
 This is an infra/VM-access action (installing a systemd unit on the shared central VM) rather than a repo-code change,
 which is why it's tracked here instead of folded into the code commits above.
