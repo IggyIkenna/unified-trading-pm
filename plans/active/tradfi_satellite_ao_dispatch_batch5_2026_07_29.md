@@ -237,15 +237,16 @@ ground to open up, and it did:
       `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`. Source issue doc all 3 checkboxes flipped:
       `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`.
 
-- [ ] [DATA] P2. **Run the Phase-0 YAHOO_FINANCE venue-vendor-conflation investigation methodology already defined in
-      the doc** (reconcile real counts + trace consumers for a `venue="YAHOO"` dependency), starting at
-      `yahoo_finance_adapter.py`'s `write_canonical_shard` per the doc's own recommended entry point, before deciding
-      whether/how to fix the vendor-as-venue stamp. **Run this FIRST among todos 6/7/8** if it touches the same file as
-      either (see the file-collision note below) — its output directly answers todo 7 item 2's YAHOO_FINANCE question
-      and informs todo 4 item 3's FX/YAHOO_FINANCE root-cause. Repo: market-tick-data-service. **Done when**: the
-      investigation's count-reconciliation + consumer-trace is recorded in the doc with an explicit fix-or-no-fix
-      recommendation, and that finding is cited (not re-derived) by todos 4 and 7 above. Source:
-      `issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`.
+- [x] ✅ [DATA] P2. **Run the Phase-0 YAHOO_FINANCE venue-vendor-conflation investigation** — investigation completed
+      2026-08-04 (interactive session), recorded in `issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`
+      (resolved). Result: (1) count-reconciliation: bounded, column-pruned read of the live tradfi manifest (6.6M rows)
+      filtered to `venue="YAHOO"` returns **0 rows** — this stamp has never reached the manifest. (2) consumer-trace:
+      the confirmed-active Yahoo route (`_umi_yahoo.py`) never calls the flagged `write_canonical_shard()` method;
+      instead it stamps real venues directly (`"FX"`, `"KRX"`, `idx.venue`) and writes via a separate `ChunkWriter` path
+      that bypasses `write_canonical_shard()` entirely. (3) Recommendation: **no fix needed** — dead code, correctly
+      flagged by structural-similarity concern (sports `venue=ODDS_API` precedent) but confirmed not live. Evidence:
+      `market-tick-data-service` code verified (adapter registry has no live Yahoo adapter entry;
+      `write_canonical_shard()` has no confirmed caller).
 
 - [ ] [SCRIPT] P2. **Write a register-phase script + investigate quarantine staleness — combined into ONE todo because
       both edit the same issue doc.** (1) Write a register-phase script (mirroring
