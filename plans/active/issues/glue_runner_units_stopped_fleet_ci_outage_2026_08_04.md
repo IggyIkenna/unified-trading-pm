@@ -112,6 +112,26 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       run also left QUEUED. Did not independently re-verify the UAC/instruments-service run IDs named above (they were
       slot-11/main's runs, may have timed out/been superseded by now) — whoever next touches this repo should confirm
       UAC's `ci_status` and the Tier-A drain completed, not just that the runners are active again.
+- [x] ✅ [DIAG] P1. **Root-cause investigation, 2026-08-04 (same session), inconclusive after exhausting every checkable
+      channel — closing a related gap instead of leaving this as a dead end.** Confirmed via `journalctl`
+      (`StartLimitIntervalSec=0`/`Restart=always` on every `github-glue-runner-*` unit — "never give up restarting" by
+      design) that an EXPLICIT stop request (not a crash, not self-inflicted rate-limiting) is the only thing that can
+      explain the outage — `Restart=always` only stands down on a deliberate `systemctl stop`/equivalent. Checked every
+      channel that could have issued it, all NEGATIVE: (1) SSH — `last -F` shows no login within 2 weeks of the
+      incident; (2) SSM Run Command — `aws ssm list-commands` shows one command that day, ~9h before the incident, none
+      in-window (success or failed); (3) SSM Session Manager (interactive) —
+      `aws ssm describe-sessions --state     History` shows zero sessions that day; (4) host crontab / `/etc/cron.d` —
+      no job resembling a targeted stop; (5) the `github-glue-slot-refresh-*` timers (a DIFFERENT, unrelated mechanism —
+      periodic `git pull` of the runner's repo mirror, `Type=oneshot`/`Restart=no`, no stop capability) fired ~1min
+      AFTER the incident window, ruled out on both mechanism and timing; (6) `systemd-oomd` — confirmed `inactive` on
+      this host; (7) kernel OOM / memory pressure — zero `oom`/`killed process` lines in `journalctl -k`/`dmesg` for the
+      window, and `sar -r` shows the host at 15-18% memory used at the time (comfortable, not under pressure). No
+      `auditd` was installed, so the actual `systemctl stop` invocation's calling UID/process could not be attributed
+      after the fact — that IS the real, fixable gap. **Installed `auditd` + `audispd-plugins` on the planning VM via
+      SSM** with a watch rule on `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`),
+      verified `active` + rule loaded (`auditctl -l`). This does not explain THIS incident, but any recurrence is now
+      attributable via `ausearch -k     systemctl_exec`. Leaving this specific incident's trigger formally unknown
+      rather than guessing.
 - [ ] [INFRA] P2. **Close the monitoring gap.** The glue-runner-crash-loop-watchdog only flags units actively
       crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always suppressed by an
       explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
@@ -147,3 +167,10 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   doc's `status` stays `open` until that lands. Also note for whoever picks up P2: three units stopping within the same
   ~30s window, each cancelling an in-flight job, is a pattern worth alerting on directly (not just "any one unit
   inactive too long") — a coordinated multi-unit stop is a stronger signal than an isolated one.
+- **2026-08-04 (interactive session, same continuation, on operator direction "fix the root of these blockages too")** —
+  Spent 7 SSM round-trips trying to attribute the actual stop trigger; came up empty on every channel (see the new
+  `[DIAG] P1` todo above for the full checklist). Converted the dead end into a real hardening: installed `auditd` on
+  the planning VM with a watch on `systemctl` exec, so a repeat incident is attributable within minutes instead of
+  requiring this kind of after-the-fact archaeology. P2 (extending the crash-loop watchdog to catch a cleanly-`inactive`
+  unit, not just a crash-looping one) remains the one open item — still correctly scoped to `agent-orchestrator`, not
+  something to bolt onto this session's host-level access.
