@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.91.0",
       "codebase_health": {
         "coverage_pct": null,
@@ -1109,7 +1109,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.91.0",
       "codebase_health": {
         "large_file_count": 0,
