@@ -250,7 +250,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       this one test) remains genuinely open — but with the only 2 confirmed recurrences both explained by this one
       now-fixed anti-pattern, there is no remaining evidence for that broader claim. Re-open with a NEW todo (do not
       reuse this one) if a DIFFERENT test on this runner recurs post-fix.
-- [ ] 5. [INFRA] P3. **NEW 2026-07-30.** Per todo 4's own re-open condition: a DIFFERENT test on
+- [x] ✅ 5. [INFRA] P3. **NEW 2026-07-30.** Per todo 4's own re-open condition: a DIFFERENT test on
       `github-glue-runners-instruments-service` recurred post-fix —
       `test_orchestrator_sports_pipeline.py::TestCF11PerFixtureEntityFailurePath::test_partial_failure_with_league_map_produces_per_league_record_failed`
       hit `Failed: Timeout (>150.0s)` on promotion PR #1038 (run `30582690478`, started `21:16:56Z`), isolated re-run
