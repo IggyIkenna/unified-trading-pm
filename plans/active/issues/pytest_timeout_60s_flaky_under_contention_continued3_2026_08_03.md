@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-pm, instruments-service, market-data-processing-service]
+repos: [unified-trading-pm, instruments-service, market-data-processing-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
 related:
@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03T23:12Z
+last_updated: 2026-08-04T04:23Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -51,7 +51,7 @@ superseded_by:
 resolved_by:
 source:
   "cicd-role escalation agt-f90886 (WALL_TYPE=ldr_qg_failure, REPO=instruments-service, slot 8) — split of continued2 at
-  its line cap"
+  its line cap; also agt-edf42f (WALL_TYPE=ldr_qg_failure, REPO=features-service, slot 4)"
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
@@ -59,6 +59,7 @@ context_scope:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
     instruments-service/scripts/quality-gates.sh,
+    features-service/scripts/quality-gates.sh,
   ]
 ---
 
@@ -195,3 +196,31 @@ here.
   `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot) — skipped the authoring-slot ping per `cicd.md`'s
   `^[0-9]+$` check. Slot left clean (`market-data-processing-service` + `unified-trading-pm` both on
   `live-defi-rollout`, no code changes, only this doc entry).
+
+- **2026-08-04 ~04:03-04:26Z (`cicd` escalation `agt-edf42f`, slot 4, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=0`) — new repo for this doc-chain (4th); disposition: already resolved via re-fire, no code action
+  needed**: failing run `30873653061` (`QG slice (tests)` job, 49m14s) hit the same signature class again —
+  `pytest-timeout` fired inside
+  `tests/delta_one/unit/test_feature_groups/test_technical_indicators.py:: TestTechnicalIndicatorsCalculate::test_bollinger_bands_columns`
+  mid-`pd.concat`/`shift` on a 50-row synthetic candle fixture
+  (`Insufficient data for reliable features. Has 50 candles...` warning immediately preceding the stack dump), then
+  reported `QG selector 'tests' FAILED (leg=tests, exit=1)`. Ran a full local reproduction BEFORE touching any code:
+  `bash scripts/quality-gates.sh` (backgrounded per `cicd.md`'s mandatory pattern) on unchanged `live-defi-rollout` HEAD
+  (`383d8548`) passed the ENTIRE suite — `18245 passed, 209 skipped` in 263.7s, zero failures; the specific CI-flagged
+  test in isolation passed in `0.70s` (`1 passed in 0.70s`). The gate's own TYPE CHECK step separately hit `exit=143` at
+  its already-raised `PYRIGHT_TIMEOUT=300` local default in this same repro run (host load average was 16.6 on 16 cores
+  from 3+ concurrent slot QG runs at the time) — considered raising `PYRIGHT_TIMEOUT` further (this repo's own
+  `quality-gates.sh` comments cite that exact philosophy, and other repos run 900-1200s), but a bare unwrapped
+  `basedpyright features_service/` timed independently at `29s` once host contention eased, and this doc-chain's own
+  todo 1 already rules a per-repo timeout raise out as the wrong fix for this bug class (capacity-side, not per-repo) —
+  so no timeout change made. Checked the actual CI failure signature directly (`gh run view --log-failed` / `--log`)
+  rather than trusting a local-only repro: confirmed `qg_red_reason: "pytest"` (the `tests` slice, matching the local
+  finding), not `typecheck`. Checked runner state: `gh api repos/IggyIkenna/features-service/actions/runners` showed 2
+  self-hosted `glue` runners, one ( `glue-ip-172-31-3-59-1`) idle (`busy=false`) at investigation time. Re-triggered
+  `quality-gates-v2` on unchanged LDR HEAD (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`, run
+  `30877012874`) rather than declare done via local-repro-only, per this doc-chain's established
+  `main_ci_red`/`ldr_qg_failure` practice — the re-fire went **green in 20m7s** (`success`), confirming the tree content
+  was never the problem. Checked `GET /api/repo-blockers` — none open for `features-service` to fast-path.
+  **Disposition: no code or workflow change made or needed.** `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real
+  numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping. Slot left clean (`features-service`
+  on `live-defi-rollout`, 0 commits ahead, no code changes made).
