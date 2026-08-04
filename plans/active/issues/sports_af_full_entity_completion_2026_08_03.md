@@ -28,6 +28,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /codex/02-data/mvp-scope-canonical.md,
+    /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 created: 2026-08-03
 priority: P1
@@ -449,25 +450,58 @@ are genuinely in scope for the operator's "no exceptions" directive.
   are very likely substantial overstatements. FIXTURE_STATS VM relaunched again (13th attempt,
   `af-backfill-20260804-093140`) after two more short preemptions (12th attempt `-091624` ~5.4min); this remains a
   separate, already-understood SPOT-variance issue, not blocked on the census fix.
-- **2026-08-04T10:21Z** — FIXTURE_STATS's 14th attempt (`af-backfill-20260804-094312`) survived ~13.5 min
-  (08:44:25Z→08:57:55Z) before preemption — decent, consistent with the fix helping overall even with continued
-  variance. With the singleton lock free, prioritized PLAYER_STATS per its corrected near-complete status (1,006/42,369
-  needed, 97.6% done) — launched `af-backfill-20260804-102139` (`--entity PLAYER_STATS 2020-06-06 2026-08-04`),
-  confirmed RUNNING. Given the tiny remaining volume this should converge quickly if it survives even a modest window;
-  will re-census once it's had meaningful runtime. FIXTURE_STATS/FIXTURE_LINEUPS resume once this completes or the
-  singleton lock frees up again.
-- **2026-08-04T10:47Z** — `af-backfill-20260804-102139` preempted after only ~3 min (09:22:37Z→09:25:41Z) — too short to
-  reach the actual fetch phase (boot+init eats most of a short window). Re-census confirmed zero movement: still exactly
-  1,006/42,369 needed. Relaunched as `af-backfill-20260804-105027`, confirmed RUNNING.
-- **2026-08-04T11:14Z** — `af-backfill-20260804-105027` also preempted quickly (~2.7 min, 09:51:15Z→09:53:56Z) — the
-  second consecutive very-short PLAYER_STATS attempt, still zero movement (re-censused: still exactly 1,006/42,369). Two
-  identical short-preemption outcomes in a row for the same entity is a mild signal worth heeding rather than a third
-  blind retry — switched the singleton lock to FIXTURE_STATS instead (`af-backfill-20260804-111838`, 15th attempt,
-  confirmed RUNNING) to see if the pattern is PLAYER_STATS-specific bad luck or general right now. Will return to
-  PLAYER_STATS next tick regardless — it's still the closest-to-done entity and worth another try once this
-  FIXTURE_STATS run either converges meaningfully or gets preempted itself.
-- **2026-08-04T11:42Z** — FIXTURE_STATS's 15th attempt also preempted quickly (~4.3min, 10:19:22Z→10:23:40Z), confirming
-  this is general SPOT variance right now, not PLAYER_STATS-specific bad luck. Per the alternating strategy, switched
-  back to PLAYER_STATS (3rd attempt, `af-backfill-20260804-114310`), confirmed RUNNING. Both entities' recent attempts
-  are landing in the 3-14 min range — real but partial progress is plausible even from short runs once one lands mid-
-  fetch-phase rather than during boot; will re-census whichever entity gets the next longer run.
+- **2026-08-04T09:00Z-11:42Z (condensed)** — Attempts 14-15 alternated FIXTURE_STATS/PLAYER_STATS, landing in the 3-14
+  min range each time (best: attempt 14 survived ~13.5min). PLAYER_STATS's first 2 tries this window (`-102139` ~3min,
+  `-105027` ~2.7min) showed zero census movement — established the alternating-on-2-consecutive-shorts strategy used for
+  the rest of the session. Full blow-by-blow superseded by the summary table + later entries below.
+- **2026-08-04T12:12Z** — PLAYER_STATS's 3rd attempt ran ~9 min (10:43:55Z→10:52:56Z) — best PLAYER_STATS run yet, and
+  **real confirmed progress**: re-census shows PLAYER_STATS dropped 1,006→998 needed (8 shards resolved). First genuine
+  forward movement on PLAYER_STATS today. Given real progress, relaunched PLAYER_STATS again immediately (favoring it
+  over the strict alternation) — first attempt hit a genuine **STOCKOUT** (not a preemption):
+  `does not have enough resources available... 'NULL:0/NULL:0/NULL:0 (state:STOCKOUT...)'` for `e2-standard-8` in
+  `asia-northeast1-c` (error suggested `asia-northeast1-b`/`asia-northeast1-a` as alternatives — the launcher hardcodes
+  the zone, no CLI override available, not changed given this is a shared-launcher zone choice outside this task's scope
+  to unilaterally alter). Retried once — succeeded (`af-backfill-20260804-121224`, RUNNING), confirming the stockout was
+  momentary, not sustained. This STOCKOUT (as distinct from a post-launch preemption) is a genuinely new data point for
+  the zone's capacity pressure — worth a mention if anyone picks up the residual `expected-universe-v2-sports`
+  investigation again, though not pursued further here.
+- **2026-08-04T12:37Z** — Two more short attempts (`-121224` ~51s, `-121839` ~2.3min). Checked the broader zone-wide
+  preemption rate to rule out a resurging storm before continuing to just relaunch blindly: only 13 events in the
+  trailing 60min, no dense clustering — confirms this is still the same low, sustained background rate already
+  documented (not a new crisis). Relaunched PLAYER_STATS again (`af-backfill-20260804-123759`), confirmed RUNNING.
+- **2026-08-04T12:46Z** — `-123759` also landed short (~3.6min, 11:39:06Z→11:42:45Z preempted). That's 2 consecutive
+  short PLAYER_STATS preemptions since the last confirmed-progress run, so per the alternating strategy switched the
+  singleton lock to FIXTURE_STATS rather than a 3rd blind PLAYER_STATS retry — launched `af-backfill-20260804-124609`,
+  confirmed RUNNING. Launch emitted a stale-tarball warning for instruments-service (tarball @87682dd98 vs repo
+  @579421bf, i.e. the census-fix commit) — not republished: the backfill VM runs the AF fetch/writer path, not the
+  standalone census scripts the fix touched, so this is not expected to affect this run's correctness; noting it in case
+  a future launch on this VM needs newer instruments-service code for an unrelated reason.
+- **2026-08-04T13:09Z** — `-124609` also landed short (~4.6min, 11:47:36Z→11:52:13Z preempted; only 1st FIXTURE_STATS
+  attempt this switch, not yet 2-in-a-row). Zone-wide preemption count jumped 13→31 events/60min — checked the actual
+  event list rather than just the count: the increase is a dense burst of `tradfi-bf-*` preemptions (16 events across 8
+  VM names in a ~4min window, 12:03-12:07Z), a **different machine-type pool** (`e2-highmem-16`, a large concurrent
+  tradfi backfill fleet launch) from ours (`e2-standard-8`) — not evidence our own pool is under fresh pressure, just a
+  separate fleet's contention sharing the same zone. Not investigated further (out of this campaign's scope; the
+  resolved `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` doc is the right home if anyone picks that up).
+  Relaunched FIXTURE_STATS once more (`af-backfill-20260804-130914`), confirmed RUNNING.
+- **2026-08-04T13:29Z-13:37Z** — `-130914` ran a genuinely decent ~11min but an immediate re-census showed exactly zero
+  movement. Initially attributed this to ordinary consolidator lag (per-VM shard writes confirmed real via run.log,
+  mechanism seemed to just need time to fold in). **Superseded by the 2026-08-04T13:37Z finding below** — it's not lag,
+  the consolidator is genuinely frozen. Relaunched FIXTURE_STATS regardless (`-132909`, then `-133748`) since the
+  underlying per-fixture data writes are durable independent of this.
+- **2026-08-04T13:37Z — MAJOR FINDING, separate issue doc filed.** After `-133748` ran 22+ min with the consolidator
+  STILL showing zero canonical movement, dug into the actual `uts-prod-manifest-consolidator-instruments-sports` Cloud
+  Run job execution logs (not just scheduler health). **The consolidator's canonical `rows_out` has been frozen at
+  exactly 9,239,513 for 5+ hours (2026-08-04T08:06Z→13:08Z+), across ~35+ successful merges**, despite processing 3-15
+  shards and 187-2,000,000 `dedup_dropped` rows every single cycle — the arithmetic
+  (`dedup_dropped = rows_in - rows_out`) holds exactly every time, meaning every row entering the merge across the
+  ENTIRE sports-prd bucket (not just AF — enrichment crons, fixtures schedules, other backfills all write here) is being
+  classified as a duplicate and dropped, not merged in. This is NOT the previously-resolved staleness/loud-fail issue —
+  this consolidator reports `success=True error=-` every cycle, believing it's working normally; the existing liveness
+  watchdog only checks heartbeat age, not output growth, so it wouldn't catch this. Filed
+  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` with full evidence/repro steps — out of this
+  campaign's scope to root-cause (needs someone with context on `manifest_consolidator.py`'s merge/dedup logic).
+  **Practical implication for this campaign**: keep launching backfills (real data keeps accumulating durably, confirmed
+  independent of this bug), but census-confirmed convergence cannot be truthfully declared for ANY entity in this doc
+  while the consolidator stays frozen — treat every "needed" figure in this doc as a stale floor, not current truth,
+  until that issue resolves. Relaunched FIXTURE_STATS again regardless.

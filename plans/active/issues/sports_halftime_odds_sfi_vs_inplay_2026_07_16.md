@@ -61,7 +61,7 @@ tags:
   ]
 related:
   [
-    ./mdt_legacy_canonical_row_gap_2026_07_16.md,
+    ../../archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     ../sports_legacy_bucket_cutover_2026_07_16.md,
     ./sports_odds_stale_fixture_reinjection_2026_07_14.md,
     ./sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md,
@@ -104,7 +104,7 @@ source:
   [
     'operator question 2026-07-16 — "we want helf time odds is there knowledge of this from sfi derived half time?"',
     "OR-5b(c) — disposition of the 746,928 post-kickoff / in-play rows",
-    "./mdt_legacy_canonical_row_gap_2026_07_16.md",
+    "../../archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md",
   ]
 ---
 

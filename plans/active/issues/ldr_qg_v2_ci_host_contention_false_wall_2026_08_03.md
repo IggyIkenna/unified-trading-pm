@@ -19,7 +19,7 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, agent-orchestrator, unified-trading-pm]
+repos: [deployment-service, market-tick-data-service, agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infra, quality-gates, host-contention, ci, self-hosted-runner, glue-runner, false-positive, ldr_qg_failure]
 related:
@@ -165,3 +165,40 @@ and just burn more contended compute.
   are all genuinely investigative/judgment calls, not bounded worker-determinable facts — correctly homed NA even if
   converted to checkboxes. Not in `/ag-closeout-audit ao`'s batch6 (no actionable content to extract), consistent with
   this verdict.
+
+- **cicd 2026-08-04 (escalation agt-652032, slot 7, wall_type=main_ci_red)**: SECOND confirmed instance, this time with
+  real (not just visibility-gap) impact — `market-tick-data-service` `quality-gates-v2` RED on `main` while
+  `live-defi-rollout` is genuinely green. Root-caused as the identical mechanism: `main` had a stale
+  `_MTDS_TYPE_IGNORE_BASELINE=658` (the repo-local STEP 5.95 freeze-and-shrink ratchet in
+  `market-tick-data-service/scripts/quality-gates.sh`, see the sibling now-archived
+  `mtds_type_ignore_ratchet_regression_2026_08_03.md`) while LDR already carries the bump to 659 at
+  `market-tick-data-service@840c816d` (verified `git merge-base --is-ancestor 840c816d origin/main` → NO,
+  `...origin/live-defi-rollout` → YES). LDR is **973 commits ahead of main** and NOT promoting: the PM fleet workflow
+  `ldr-to-main-promote-fleet.yml` (runs every 15 min) logs, every tick,
+  `GATE BLOCK market-tick-data-service: ci_status=FAILING (cached='FAILING', live='FAILING') — LDR CI is red; fix before LDR→main`
+  — so no new promote PR is even being opened (the last one, #819, merged 2026-08-03T20:19, then its own post-merge
+  push-triggered `quality-gates-v2` hit the stale-baseline red before `840c816d` had landed). The `ci_status=FAILING`
+  gating this is itself the false-red from this issue's root cause, not a real LDR break: checked the
+  currently-`in_progress` LDR `quality-gates-v2` run (30898680083, started 09:58:55) at the job-step level —
+  `Run quality gates (leg checks)` step **already completed with `conclusion: success`** at 10:47:33, but the job has
+  been wedged on the unrelated `Post Cache uv package cache` housekeeping step for 50+ minutes with no sign of
+  progressing (matches this doc's §1 "shutdown signal" / hung-job pattern — a prior sibling run, 30894289340, died with
+  `The runner has received a shutdown signal` at 92% through a cache download). Host `uptime` at investigation time:
+  load average 20.80/21.41/18.89 on 8 physical cores; `qg-host-governor.sh --status` still reports
+  `reserved: 0MB, live reservations: none` — confirms this doc's open question #1 (CI glue-runner not participating in
+  the governor ledger) is still unresolved and still the live mechanism keeping the host's real load invisible to the
+  reservation system. Both `glue` runners for this repo report `busy:true`. **What I did**: verified the fix is
+  genuinely on LDR (no code change needed — mirrors this doc's own precedent of not touching correct code); did NOT
+  force-retrigger `quality-gates-v2` given the host is visibly still contended and a retrigger would very likely just
+  queue behind/repeat the hang (same reasoning as the original filing's §"What I did NOT do"); did NOT open a
+  `repo-blocker` — `GET /api/repo-blockers` returns none open, and this wall does not block `quickmerge` Pass-1/Pass-2
+  QG (those run against LDR content, which is fine) — it only stalls the LDR→main promotion cadence, so no worker is
+  actively blocked, just main's staleness is growing. Skipped pinging the authoring slot (`AUTHORING_SLOT=ci-reconcile`,
+  the literal non-numeric sentinel from `server/ci_reconcile.py`'s self-detected bare-LDR wall — no real originator to
+  notify, per `agents/cicd.md`'s skip rule). **New signal for whoever has host-capacity/governor context**: unlike the
+  original deployment-service instance (moot by the time it was investigated — the promotion had already gone through
+  some other path), this one is NOT self-healing via merge — `market-tick-data-service` has now been stuck un-promotable
+  for hours and the gap is only growing, since the fleet gate's `ci_status` pre-check means a red LDR CI reading blocks
+  promotion attempts from even being opened, independent of whether any specific promotion PR's checks would pass. If
+  the CI-glue-runner/governor integration gap (open question #1) is the root fix, this is now a second data point that
+  it is actively costing real promotion cadence, not just visibility.

@@ -41,7 +41,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-04T07:15Z
+last_updated: 2026-08-04T13:00Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -60,7 +60,8 @@ resolved_by:
 source:
   "cicd-role escalation agt-f90886 (WALL_TYPE=ldr_qg_failure, REPO=instruments-service, slot 8) — split of continued2 at
   its line cap; also agt-edf42f (WALL_TYPE=ldr_qg_failure, REPO=features-service, slot 4); also agt-933d8f
-  (WALL_TYPE=main_ci_red, REPO=alerting-service, slot 8)"
+  (WALL_TYPE=main_ci_red, REPO=alerting-service, slot 8); also agt-1efedf (WALL_TYPE=ldr_qg_failure,
+  REPO=features-service, pr_number=936, slot 4)"
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
@@ -352,6 +353,118 @@ here.
   This is now the **2nd occurrence for `features-service`** and **6th for the whole doc-chain** — further corroborates
   todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement check, this escalation
   fired ~7h after `agt-edf42f` already re-fired the identical repo's identical wall class green).
+
+- **2026-08-04 ~09:45-10:05Z (`cicd` escalation `agt-58f46b`, slot 4, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=935`) — 3rd occurrence for `features-service` (7th for the whole doc-chain), SAME test file as
+  `agt-5ea4c7`'s PR#934 entry immediately above; already self-resolved before investigation, no code action needed**:
+  escalation cited failing run `30858945592` (`QG slice (tests)` job `91836443052`) — `pytest-timeout` (thread-dumper)
+  fired mid `tests/delta_one/unit/test_cli_parser.py`, dumping MainThread's stack inside `_pytest/skipping.py`'s
+  `evaluate_xfail_marks` → `stash.get()` — the IDENTICAL call path, identical file, identical
+  no-plausible-hang-mechanism signature `agt-5ea4c7` already root-caused for this repo 2.5h earlier, then
+  `QG selector 'tests' FAILED (leg=tests, exit=1)`. Independently re-read both the test file (29 tests, pure argparse)
+  and `features_service/delta_one/cli/parser.py` (the module under test — `valid_date`/`add_delta_one_extra_args`/
+  `validate_args`, zero I/O, zero blocking calls, zero fixtures) before touching anything — confirms `agt-5ea4c7`'s
+  finding rather than assuming it: no credible code-level hang mechanism in either file. Checked the PR directly rather
+  than trusting the escalation's staleness: `gh pr view 935` → already **`MERGED`**, `mergedAt=2026-08-03T22:31:08Z`;
+  the escalating run's own `createdAt` = `2026-08-03T22:31:05Z` — **3 seconds BEFORE** the merge, the same
+  "confirmatory-check-still-running-when-PR-self-merges" pattern this doc-chain documents repeatedly. Went one step
+  further than a bare merge-timestamp check: found the run that actually SATISFIED the required check —
+  `gh run list --workflow quality-gates-v2.yml` for the same headSha (`5275fef1d6ed`) shows an EARLIER completed run
+  (`30857768146`, `createdAt=22:12:34Z`, `conclusion=success`) that finished ~19 minutes before the later,
+  escalation-flagged run (`30858945592`, `createdAt=22:31:05Z`) even started — i.e. two `quality-gates-v2` runs fired
+  for the identical commit (ordinary `pull_request`-sync trigger + a later re-check/supersede trigger), the first went
+  green and gated the merge, the second is the redundant one that hit host contention and failed ~16 minutes AFTER the
+  PR had already merged on the first green run. Verified the merge commit (`aa175f1d`) is an ancestor of BOTH
+  `origin/main` and `origin/live-defi-rollout` (`git merge-base --is-ancestor` → yes/yes) — nothing outstanding to ship
+  for PR#935. Checked live gate state instead of stopping at the PR check: current LDR HEAD (`85e72625`) is many commits
+  past this merge; a `workflow_dispatch` run already `in_progress` against that exact current HEAD (`30897598328`,
+  `QG slice (tests)` job running since `10:58:21Z`, ~52min elapsed at investigation time) — did NOT re-trigger a
+  duplicate, one is already in flight against the true current tree. Checked runner state before concluding this was
+  "just waiting": `gh api .../actions/runners` shows `features-service` has exactly ONE self-hosted runner
+  (`glue-ip-172-31-3-59-1`, `busy=true`) — the same single-runner-per-repo topology `agt-88658c`'s `deployment-service`
+  entry flagged as a second, distinct contributing mechanism (queue-starvation, not just the xdist/timeout signature
+  itself). Host `uptime` at investigation time: load average 19.73/19.64/18.96 — `qg-host-governor.sh` is not present in
+  this repo's `scripts/quality-gates-base/` (a per-repo layout difference, not investigated further — out of scope for a
+  one-shot wall-clearing session), so could not directly reproduce the governor-blind-to-load check other entries ran,
+  but the load level itself is consistent with the same contention class. `GET /api/repo-blockers` → `{"open": []}` —
+  nothing to fast-path for `features-service`. **Disposition: no code or workflow change made or needed** — the wall was
+  already fully cleared (PR merged via an earlier green run of the same commit, LDR green-in-flight at a much later
+  HEAD, no repo-blocker). `AUTHORING_SLOT=ci` (sentinel, fails `cicd.md`'s `^[0-9]+$` check) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`features-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond this doc's own commit; no code
+  changes made in either repo). This is now the **3rd occurrence for `features-service`** (all three:
+  `test_cli_parser.py` ×2, `test_technical_indicators.py` ×1) and **7th for the whole doc-chain** — further corroborates
+  todo 1 (capacity-side root cause, not a per-repo timeout raise) and the new single-runner-topology angle `agt-88658c`
+  first surfaced (now observed on a SECOND repo).
+
+- **2026-08-04 ~12:39-12:50Z (`cicd` escalation `agt-1efedf`, slot 4, `features-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=936`) — 4th occurrence for `features-service` (8th for the whole doc-chain), SAME test file as
+  `agt-5ea4c7`/`agt-58f46b`'s two entries above; already self-resolved before investigation, no code action needed**:
+  escalation cited failing run `30866617062` (`QG slice (tests)` job `91859800925`) — `pytest-timeout`
+  (`timeout_method="thread"`) fired mid `tests/delta_one/unit/test_cli_parser.py`, dumping MainThread's stack inside
+  `_pytest/skipping.py`'s `evaluate_xfail_marks` → `stash.get()` — the IDENTICAL call path/file/signature this doc-chain
+  has now root-caused 3 separate times for this exact file. Checked the PR directly rather than trusting the
+  escalation's staleness: `gh pr view 936` → already **`MERGED`**, `mergedAt=2026-08-04T00:46:11Z`; the escalating run's
+  own `createdAt` = `00:46:07Z` — **4 seconds BEFORE** the merge, the same
+  "confirmatory-check-still-running-when-PR-self-merges" pattern this doc-chain documents repeatedly. Verified nothing
+  outstanding to ship: PR#936's merge commit (`612a3947`) is an ancestor of `origin/main`, and its head content
+  (`02360ee5`) is an ancestor of `origin/live-defi-rollout` (both `git merge-base --is-ancestor` → yes) — the LDR
+  backmerge already carries this content. Ran a local isolation repro before declaring done rather than relying on the
+  doc-chain's prior same-file findings alone: `tests/delta_one/unit/test_cli_parser.py` (29 tests, pure argparse, zero
+  I/O/fixtures) — **29 passed in 2.73s, zero hang** (hit an unrelated tooling snag first — `uv run pytest <file>` on its
+  own raised `ImportError: No module named 'tests._native_lib_early_preimport'`, a `-p` plugin-resolution quirk when
+  invoking a single-file path directly rather than via `scripts/quality-gates.sh`'s own invocation, not a repo defect;
+  resolved with `PYTHONPATH=.`). Checked live gate state: current LDR HEAD (`2f27addc`) already has a fresh
+  `quality-gates-v2` `workflow_dispatch` run `queued` (`30910052434`) at investigation time — did not trigger a
+  duplicate. Host `uptime` load average at investigation time: `25.59/21.94/20.05` on a shared multi-slot host —
+  consistent with the same contention class every prior entry documents. Noted, out of scope for this `ldr_qg_failure`
+  wall (a separate `main_ci_red` symptom, per this doc-chain's established scoping): current `main` HEAD (`6a1460f0`, a
+  LATER LDR→main promote than PR#936's own merge) has its own most-recent completed `quality-gates-v2` (`30892320551`,
+  `08:31:35Z`) = `failure` — left for whoever next triages `features-service` `main` health or the next `main_ci_red`
+  escalation. `GET /api/repo-blockers` → `{"open": []}` — nothing to fast-path for `features-service`. **Disposition: no
+  code or workflow change made or needed** — the wall was already fully cleared (PR merged 4s after its own confirmatory
+  check started, LDR green-in-flight via an already-queued run, local repro clean). `AUTHORING_SLOT=ci` (sentinel, fails
+  `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the
+  FYI). Slot left clean (`features-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of
+  origin beyond this doc's own commit; no code changes made in either repo). This is now the **4th occurrence for
+  `features-service`** (`test_cli_parser.py` ×3, `test_technical_indicators.py` ×1) and **8th for the whole doc-chain**
+  — further corroborates todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement
+  check — this is the THIRD `features-service` occurrence where the escalating run's `createdAt` sits within
+  single-digit seconds of the PR's own `mergedAt`).
+
+- **2026-08-04 ~12:47-13:00Z (`cicd` escalation `agt-43f424`, slot 7, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1072`) — 4th occurrence for `instruments-service` (9th for the whole doc-chain), but a NEW signature within
+  the family: `checks`/`typecheck` (basedpyright) timeout, not `tests`/`pytest-timeout`; already self-resolved before
+  investigation, no code action needed**: escalation cited failing run `30868240796` (`QG slice (checks)` job
+  `91864635465`) — NOT the pytest-xdist signature every prior entry in this doc-chain documents. The `[4/6] TYPE CHECK`
+  phase itself timed out: `qg-governor` held the job in `WAIT_CPU` for 884s before admitting it
+  (`reserved 3657MB (ADMIT) after 884s`), then basedpyright ran from admission to
+  `❌ Type check FAILED/timeout (exit=124)` in exactly ~120.5s — i.e. it hit `PYRIGHT_TIMEOUT`'s 120s default budget
+  under live host contention, not a code-level type error (no basedpyright diagnostic output precedes the timeout line).
+  Checked the PR directly rather than trusting the escalation's staleness: `gh pr view 1072` → already **`MERGED`**,
+  `mergedAt=2026-08-04T01:16:25Z`; the escalating run's own `createdAt` = `01:16:26Z` — **1 second AFTER** the merge,
+  the tightest margin logged in this doc-chain yet (the confirmatory check was still queued/running when the PR
+  self-merged on an earlier signal). Verified nothing outstanding to ship: PR#1072's merge commit (`ebebd2e1`) is an
+  ancestor of BOTH `origin/main` and `origin/live-defi-rollout` (`git merge-base --is-ancestor` → yes/yes). Checked live
+  gate state instead of stopping at the PR check: LDR's own next completed `quality-gates-v2` (`30873658868`,
+  `03:04:09Z`, ~1h48m after the incident) = `success`; a later `workflow_dispatch` run against current LDR HEAD
+  (`96ea6c4b`) was `in_progress` at investigation time (`30906285537`, started `11:47:34Z`) with its `QG slice (checks)`
+  job (the exact job class that failed originally) already completed **`success` in 14m48s** — direct evidence the
+  typecheck leg passes fine on the current tree once actually scheduled; its `QG slice (tests)` job was still running at
+  ~60min elapsed (long but not itself a failure). Host state at investigation time: `uptime` load average
+  20.19/21.42/20.10 on an 8-core host, while `qg-host-governor.sh --status` showed `running heavy phases: 0` /
+  `live reservations: none` — the same governor-blind-to-actual-load signature todo 1 already flagged, now corroborated
+  for the `checks`/typecheck selector in addition to the `tests` selector every other entry covers (the governor's own
+  ledger and real host load diverge regardless of which QG leg is asking). `GET /api/repo-blockers` → `{"open": []}` —
+  nothing to fast-path for `instruments-service`. **Disposition: no code or workflow change made or needed** — the wall
+  was already fully cleared (PR merged 1s before its own confirmatory check began, LDR green ~1h48m later, current-HEAD
+  checks-leg green again now). `AUTHORING_SLOT=ci` (sentinel, fails `cicd.md`'s `^[0-9]+$` check) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`instruments-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, no code changes made in either repo — only this doc's own commit).
+  This is now the **4th occurrence for `instruments-service`** (3× `tests`/pytest-timeout, 1× `checks`/typecheck-timeout
+  — same capacity-side root cause, different QG selector) and **9th for the whole doc-chain**; extends todo 1's scope
+  (`PYRIGHT_TIMEOUT`, not just `pytest --timeout`, is exposed to the same governor-admission-vs-real-load gap) and
+  further corroborates todo 2 (single-digit-second merge/escalation race, now observed at 1s — the tightest yet).
 
 ## na-eligibility-audit verdict
 

@@ -240,15 +240,11 @@ gap**, not a delete-safety question:
       EXTENDED-STARKNET/LIGHTER-ZKSYNC rows from the defi instrument catalogue
       (`instruments-service/scripts/purge_defi_catalogue_cefi_reclassified_venues_2026_08_04.py --apply`),
       snapshot-first, live-verified 0 remaining. See Progress Log for the shipped commit SHA.
-- [ ] [DIAG] P2. **NEW 2026-08-04, BLAZESTAKE.** Operator/design decision: who owns producing `SOLBLAZE-SOLANA` LST-rate
-      data going forward? The legacy `batch_onchain_subgraph`/`batch_defillama` writer (venue=BLAZESTAKE, real captured
-      data through 2026-07-31) stopped sometime 2026-07-20→2026-08-01 with no working canonical replacement —
-      `lst_solblaze_adapter.py` (venue=SOLBLAZE-SOLANA) has zero captured manifest rows. Options: (a) diagnose why
-      `lst_solblaze_adapter.py` isn't producing data (is it scheduled? erroring silently? never actually deployed?), (b)
-      revive/redirect the legacy writer's logic under the canonical venue name, (c) confirm this is an intentional pause
-      pending something else. Not scoped as a bounded/deterministic todo — needs a human call on approach before it can
-      be split into an AO-eligible follow-up. Target repos: market-tick-data-service (adapter diagnosis),
-      instruments-service (if a scheduling/registration gap).
+- [x] ✅ [DIAG] P2. **BLAZESTAKE — DIAGNOSED 2026-08-04 (slot 10).** Two independent write paths exist, NEITHER
+      producing data today. Operator decision needed; see Progress Log for the full diagnostic breakdown (Options
+      A/B/C). **RULED OUT (c):** the legacy handler is still imported + wired in the active `lst_rates_handler.py` →
+      `fetch_solana_lst_rates` call chain — it was NOT intentionally removed; its stop is a live gap, not a design
+      pause. **Options narrowed to (a) or (b) below.**
 - [ ] [DATA] P3. Low-priority hygiene follow-up (not required for correctness — see EXTENDED/LIGHTER section above): the
       4,980 (EXTENDED) + 5,976 (LIGHTER) already-materialised `expected_unattempted` MTDS-manifest rows are inert
       placeholders (zero captured data) that could be cleaned up in a future manifest-row purge pass, mirroring
@@ -275,3 +271,79 @@ gap**, not a delete-safety question:
   finding, not fixed (genuinely needs an operator/design call on ownership, not a bounded execution). Priority raised
   P3→P2 given confirmed live-data-correctness content (a currently-firing daily-reseed bug for 2 venues, now fixed, plus
   a genuine live data gap for a 3rd).
+- **worker slot 10, 2026-08-04 (dispatched for the Blazestake DIAG todo)**: completed the full diagnostic read of both
+  write paths (code-only, bounded reads — no corpus walk). Findings below.
+
+### Blazestake SOLBLAZE-SOLANA — full diagnostic (slot 10, 2026-08-04)
+
+**Two independent data-producing systems exist. Neither is producing data today.**
+
+#### System 1 — Legacy `lst_rates_handler.py` (the actual historical producer)
+
+- **Call chain**: `lst_rates_handler.py:345` → `_fetch_solana_rows` → `_fetch_solana_lst_rates` (wrapper at
+  `lst_rates_handler.py:730`) → `solana_lst_archival.fetch_solana_lst_rates` → `_fetch_bsol_rate` (4-tier fallback)
+- **4-tier fetch for bSOL/SOL rate**: Tier 1 Alchemy `getAccountInfo` on `BLAZESTAKE_STAKE_POOL_ACCOUNT`
+  (`stk9ApL5HeVAwPLr3TLhDXdZS8ptVu7zp6ov84HpwHA`, SPL stake-pool layout decode) → Tier 2 The Graph subgraph → Tier 3
+  REST `/api/v1/stats` → Tier 4 DeFiLlama historical price ratio (market-price proxy, not genuine on-chain data)
+- **Write path**: Rows grouped by `(protocol, chain)` in `_lst_rates_write.py:67-73` → `write_defi_rows(venue=protocol)`
+  where `protocol="blazestake"` → **venue in manifest + GCS path = `"blazestake"` (lowercase, non-canonical)**
+- **Data type**: `lst_rates` (exchange rate bSOL/SOL) — NOT oracle_prices
+- **Pipeline mode**: `batch_onchain_subgraph` (Tier 1-3) or `batch_defillama` (Tier 4 DeFiLlama fallback)
+- **Historical data**: 1,402 manifest rows, `date` 2022-12-14→2026-07-31, 100% `capture_status=captured`
+- **Current status**: STOPPED. Last captured date 2026-07-31; no data for 2026-08-01, 2026-08-03, 2026-08-04. Handler
+  code is still actively imported + wired (`lst_rates_handler.py` line 60 imports `fetch_solana_lst_rates`; called at
+  line 345 inside `_fetch_solana_rows` at line 515) — this is NOT an intentional removal (rules out option c).
+- **Why it stopped**: not determined (scheduler configs live in deployment-service Terraform, not readable in-slot).
+  Likely a Cloud Run cron job failure, API key expiry, or RPC endpoint change — the 4 tiers all depend on external
+  services (Alchemy, The Graph, stake.solblaze.org, DefiLlama).
+
+#### System 2 — Canonical `SolblazeAdapter` (`lst_solblaze_adapter.py`)
+
+- **Registered**: MTDS factory `factory.py:180` → `"solblaze": ("defi", SolblazeAdapter)`; IS `defi.py:206` →
+  `"SOLBLAZE-SOLANA"` in `_build_defi_venues()` live-venue set; UAC `defi_venues.py:624` → `"SOLBLAZE-SOLANA": "live"`
+- **Venue**: `self.venue = "SOLBLAZE-SOLANA"` (canonical — correct)
+- **Data type produced**: `oracle_prices` (via `_default_data_types()` returning `["oracle_prices"]`) — USD price of
+  bSOL from DeFiLlama, NOT an LST exchange rate. This is a DIFFERENT data product than the legacy handler's `lst_rates`.
+- **Data source**: DeFiLlama coins API only (`https://coins.llama.fi/prices/historical/{timestamp}/solana:<mint>`),
+  public, no auth. Single-source — no fallback tiers.
+- **Manifest rows**: **ZERO** captured rows under `asset_group=defi` for venue `SOLBLAZE-SOLANA`
+- **Current status**: Adapter code exists and is correctly registered at all 3 layers (UAC, IS, MTDS factory), but has
+  apparently never been scheduled/deployed to production — no Terraform scheduler config found in-slot, and zero
+  captured manifest rows confirm it has never run.
+
+#### Key structural observations
+
+1. **Different data types — not interchangeable**: Legacy produces `lst_rates` (exchange rate); canonical adapter
+   produces `oracle_prices` (USD price). Both are legitimate data products but they serve different downstream
+   consumers. If the canonical adapter is chosen as the replacement, the data_type mismatch must be resolved explicitly.
+2. **Different venue names**: Legacy writes `venue="blazestake"`; canonical writes `venue="SOLBLAZE-SOLANA"`. The legacy
+   name is non-canonical per UAC registry (alias at `defi_venues.py:385-386`, DF-4 fix). Any restart/revival of the
+   legacy path should rename to the canonical venue.
+3. **Different robustness**: Legacy has 4-tier fallback; canonical adapter has 1 source. Legacy is more resilient.
+4. **No live strategy dependency**: Confirmed `YIELD_STAKING_SIMPLE_LST_ASSET` in `paper_universe.py:162` only maps 5
+   protocols (lido/rocketpool/etherfi/jito/marinade) — solblaze/blazestake is absent. No live strategy is currently
+   broken by this gap.
+5. **Features-service**: No solblaze/blazestake references found — no downstream computed-feature dependency either.
+
+#### Options (operator decision required)
+
+**Option A — Restart the legacy handler under the canonical venue name (recommended — fastest, lowest risk)**
+
+- The legacy `lst_rates_handler.py` already works end-to-end and has 2.5 years of proven production data
+- Fix: (1) diagnose why it stopped (check Cloud Run scheduler, Alchemy/The Graph API keys, RPC endpoint health), (2)
+  rename `protocol="blazestake"` → `"SOLBLAZE-SOLANA"` in `solana_lst_archival.py` and the freshness-check
+  `venue="SOLBLAZE"` → `venue="SOLBLAZE-SOLANA"` (currently at line 736), (3) restart
+- Data type stays `lst_rates`; pipeline mode stays `batch_onchain_subgraph`
+- This gets data flowing again fastest (~1-2 hours of investigation + 1-line rename)
+- Repos: market-tick-data-service
+
+**Option B — Deploy the canonical SolblazeAdapter as the production writer**
+
+- The adapter is correctly registered but has never been deployed; needs: (1) a Terraform scheduler entry in
+  deployment-service, (2) end-to-end verification, (3) a decision on data_type — keep `oracle_prices` (new data product)
+  or switch to `lst_rates` (replace legacy), (4) historical backfill for the gap since 2026-08-01
+- Cleaner long-term but more work (~1-3 days) and single-source (DeFiLlama only — less resilient than legacy)
+- Repos: market-tick-data-service, deployment-service
+
+**Option C — RULED OUT**: the legacy handler is still actively imported and wired in `lst_rates_handler.py` (lines 60,
+345, 515) — this was NOT an intentional removal. The gap is real, not a design pause.

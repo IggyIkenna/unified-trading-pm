@@ -27,7 +27,7 @@ related:
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-04" # todo 1 (reconcile-checkboxes REVIEW pass) DONE — all 5 extract-batch updates verified at new homes; checkbox flipped. Prior: 2026-07-25 same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
+last_updated: "2026-08-04" # todo 2 (re-check 2 deferred native todos) DONE — (a) Phase B not landed, merged reconciliation-cadence todo deferred with re-check note; (b) PII/trader-identity RULED 2026-07-28 excluded, A2c [x] DONE 2026-07-30, no new todo. Prior: todo 1 (reconcile-checkboxes REVIEW pass) DONE — all 5 extract-batch updates verified at new homes; checkbox flipped. Prior: 2026-07-25 same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -84,8 +84,8 @@ context_scope:
       landed by that todo's own execution). **Done when**: all 5 extract-batch todos have a corresponding, verified
       update at their respective new homes (checkbox flip for the 2 full ones, Progress Log note for the 3 partial ones)
       plus the parent's Distinct-Values-section update, citing the extract-batch's commit SHA(s) as evidence.
-- [ ] [REVIEW] P2. **Re-check the 2 deferred native todos.** (a) The former P3 "Duplicate note" — **corrected
-      2026-07-25**: this is no longer a separate parent-doc item; it merged into
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-04 (slot-15, review). Re-check the 2 deferred native todos.** (a) The former P3
+      "Duplicate note" — **corrected 2026-07-25**: this is no longer a separate parent-doc item; it merged into
       `prediction_phase_ab_residuals_2026_07_24.md`'s reconciliation-cadence todo (Phase B section). Re-check whether
       Phase B (the canonicalisation migration) has landed since this extract was drafted — if yes, dispatch a new
       bounded todo (post-Phase-B `/data-pipeline-reconciliation prediction` run, diffed against the 2026-07-20 baseline)
@@ -101,7 +101,19 @@ context_scope:
       is now ruled too, the schema-design step becomes bounded — draft a new AO-eligible todo against the ruling's
       specific field list (plus `[OPERATOR]` + delete-safety-protocol citation for the migration step, per
       `task_template.md` finding O); if not yet ruled, leave it deferred. **Done when**: both (a) and (b) have an
-      explicit current-state note (still gated / newly dispatchable, with a new todo/plan created if so).
+      explicit current-state note (still gated / newly dispatchable, with a new todo/plan created if so). **Current
+      state (2026-08-04, slot-15 re-check):** (a) Phase B has **NOT landed** — the Phase-B enumeration-driven manifest
+      migration (`[DATA] P0` in `prediction_phase_ab_residuals_2026_07_24.md`) is still held (operator-held `--apply`,
+      dry-run only as of 2026-07-19); the merged reconciliation-cadence todo (`[DATA] P2`) remains OPEN and deferred;
+      predating-run confirmed-absent + 2nd pass already cited (per the 2026-08-04 slot-4 Progress Log entry in
+      `prediction_phase_ab_residuals_2026_07_24.md`); 3rd/final post-Phase-B pass still genuinely blocked. No new
+      bounded todo dispatched. Leave deferred — re-check once Phase B `--apply` runs. (b) Trader-identity / PII fields
+      sub-question **RULED 2026-07-28** — EXCLUDED from canonical `trades` schema permanently (corpus-wide grep of
+      `proxy_wallet`/`pseudonym`/`profile_image`/`name` returned zero downstream consumers outside MTDS's own writer,
+      which already drops them at ingest; no consumer exists today → lower-risk branch, no new schema fields). The A2c
+      checkbox in `prediction_phase_ab_residuals_2026_07_24.md` is `[x]` DONE (2026-07-30 reconciliation); issue doc
+      `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` is
+      `status: resolved` and archived. No new bounded todo needed — if a genuine future consumer emerges, re-open then.
 - [ ] [DOC] P2. **Archive `prediction_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual
       (per CLAUDE.md's plan-archival rule): confirm the Deferred section above has nothing left unaddressed (todo 2
       should have already resolved what it could) → add the archive banner → run the codex-alignment check → grep the

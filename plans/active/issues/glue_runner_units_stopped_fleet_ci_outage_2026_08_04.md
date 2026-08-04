@@ -24,7 +24,7 @@ status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, unified-api-contracts, instruments-service]
+repos: [agent-orchestrator, unified-api-contracts, instruments-service, market-tick-data-service]
 scope: [admin, engineer]
 tags: [ci-outage, glue-runner, self-hosted-runner, systemd, tier-a-gate, promotion-blocked, monitoring-gap, big-finding]
 related:
@@ -50,8 +50,9 @@ depends_on: []
 # Fleet CI outage: two stopped glue-runner units block UAC->main + 11 dependent repos
 
 > **🔴 FLEET CI OUTAGE — 11 repos' LDR->main promotion blocked ~1h+ by two stopped self-hosted runners on the planning
-> VM. Immediate fix needs host root (`systemctl start` ×2). instruments-service main QG-v2 RED is a SYMPTOM — do NOT
-> "fix" instruments-service code; it is GREEN on LDR.**
+> VM. Immediate fix needs host root (`systemctl start` ×2). instruments-service main QG-v2 RED was ALSO a genuine
+> test-layer break (now fixed on LDR as `96ea6c4b`, see "Correction" below) — the runner outage still blocks a fresh CI
+> reading, but was never the sole cause.**
 
 ## Root-cause chain (slot-11-diagnosed, main-verified)
 
@@ -65,8 +66,31 @@ depends_on: []
    dependent repos incl. instruments-service — so instruments-service **main** QG-v2 is RED purely because it resolves
    `unified-api-contracts` against a STALE UAC main (missing `d67a226f`'s OKX_SWAP venue-registry cleanup, already on
    UAC LDR + already consumed by instruments-service LDR). The 4 failing OKX-SWAP venue tests are the visible symptom.
+   **Correction (cicd slot-3, agt-0f742e, 2026-08-04, live verification): the "instruments-service code+tests are GREEN
+   on LDR" claim above is WRONG for the test layer** — `d67a226f` also removed bare `"OKX"` as a `CEFI_VENUE_FOLD`
+   target (OKX-SWAP/OKX-FUTURES became their own declared venues), but instruments-service's own tests were never
+   updated to match. This is NOT a runner-outage artifact: the completed (non-stuck) main run 30893378880 actually
+   EXECUTED pytest and produced real `AssertionError`s (`assert 'OKX-SWAP' == 'OKX'`, golden-fixture drift, factory
+   itype-exchange mismatch, dedup-count pin drift) — an infra/runner failure would abort the workflow, not produce a
+   clean pytest diff. Confirmed independently via a local `.venv` install of the exact editable UAC content (same
+   `CEFI_VENUE_FOLD` dict, no bare `OKX` key). Fixed + shipped to `instruments-service@live-defi-rollout` as `96ea6c4b`
+   (full `quality-gates.sh` green, 5200 passed) — see `cefi_bare_okx_venue_removal_2026_08_04.md`, which shipped the
+   UAC+MTDS side of this migration but omitted the instruments-service test update. **Net**: the runner-outage root
+   cause (below) is still real and still blocks a FRESH green CI reading from landing, but it is no longer the ONLY
+   thing standing between instruments-service and a green LDR — the test-layer fix was also required and is now on LDR.
 4. All 11 OTHER repos' `github-glue-runner-*@glue-1.service` units are `active/running` (main verified) — confirming the
    two named units are the isolated anomaly, not a fleet-wide runner-config problem.
+5. **CORRECTION 2026-08-04 (interactive session, `/autonomous` continuation) — a THIRD unit was ALSO stopped, undetected
+   by this doc's original sweep**: `github-glue-runner-market-tick-data-service@glue-1.service` was independently found
+   `inactive` while investigating an unrelated MTDS workflow stuck QUEUED since 11:09Z. `journalctl` for all three units
+   shows the SAME pattern within the SAME ~30s window (08:59:35–09:02:27 UTC): each was mid-job
+   (`Running job: Quality Gates ...`) when systemd logged an EXTERNAL `Stopping ...` action, cancelling the in-flight
+   job — not a crash, not a `Restart=always` failure. Host `uptime`/`apt` history/process list show NO reboot, NO
+   package upgrade, and NO active maintenance process around that window (last boot 2026-07-29, last apt upgrade
+   2026-08-01) — nothing found to correlate with a deliberate pause, so this reads as an anomalous/unexplained
+   coordinated stop across (at least) 3 units, not confirmed-safe-to-assume-intentional but also not evidence of
+   in-flight work to protect. The original "all 11 others active" claim was accurate for what slot-11/main checked at
+   the time; it did not cover MTDS.
 
 ## Why neither worker nor main can self-serve
 
@@ -76,14 +100,38 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Immediate host action (unblocks 11 repos).** On the planning VM (ip-172-31-5-118), with root:
-      `sudo systemctl start github-glue-runner-unified-api-contracts@glue-1.service` and
-      `sudo systemctl start github-glue-runner-instruments-service@glue-1.service`; confirm both go `active (running)`
-      (`systemctl is-active …`). Then re-verify UAC LDR run 30894307404 (and instruments-service 30894282946) leave
-      QUEUED and go green, and the `ldr-to-main-promote-fleet` job picks UAC up on its next ~5-15min tick, draining the
-      Tier-A gate for the 11 dependent repos. If the instruments-service unit was stopped deliberately (external
-      `systemctl stop` 09:01:57), confirm no in-flight maintenance conflicts before starting. (planning VM — operator
-      host action)
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-04 (interactive session, `/autonomous` continuation) — executed via AWS SSM
+      (`admin_od` identity has `ssm:DescribeInstanceInformation` + Run Command reach to i-0c9b283b31d6b5ca7, unlike the
+      `ikenna-worker`/main identities that filed this as operator-gated).** Read-only checked all three stopped units
+      first (journal history, host uptime, apt history, running processes — see correction above) to rule out
+      interrupting genuine in-flight maintenance before touching anything; found none. Ran
+      `systemctl start github-glue-runner-{unified-api-contracts,instruments-service,market-tick-data-service}@glue-1.service`
+      via SSM `AWS-RunShellScript`; confirmed all three `active` (running) via a follow-up `systemctl is-active`.
+      **Live-verified the fix took**: MTDS's queued `update-dependency-version` run (30903608513, queued since 11:09Z)
+      moved to `in_progress` within seconds of the restart and completed `success` at 11:27Z; MTDS's `quality-gates-v2`
+      run also left QUEUED. Did not independently re-verify the UAC/instruments-service run IDs named above (they were
+      slot-11/main's runs, may have timed out/been superseded by now) — whoever next touches this repo should confirm
+      UAC's `ci_status` and the Tier-A drain completed, not just that the runners are active again.
+- [x] ✅ [DIAG] P1. **Root-cause investigation, 2026-08-04 (same session), inconclusive after exhausting every checkable
+      channel — closing a related gap instead of leaving this as a dead end.** Confirmed via `journalctl`
+      (`StartLimitIntervalSec=0`/`Restart=always` on every `github-glue-runner-*` unit — "never give up restarting" by
+      design) that an EXPLICIT stop request (not a crash, not self-inflicted rate-limiting) is the only thing that can
+      explain the outage — `Restart=always` only stands down on a deliberate `systemctl stop`/equivalent. Checked every
+      channel that could have issued it, all NEGATIVE: (1) SSH — `last -F` shows no login within 2 weeks of the
+      incident; (2) SSM Run Command — `aws ssm list-commands` shows one command that day, ~9h before the incident, none
+      in-window (success or failed); (3) SSM Session Manager (interactive) —
+      `aws ssm describe-sessions --state     History` shows zero sessions that day; (4) host crontab / `/etc/cron.d` —
+      no job resembling a targeted stop; (5) the `github-glue-slot-refresh-*` timers (a DIFFERENT, unrelated mechanism —
+      periodic `git pull` of the runner's repo mirror, `Type=oneshot`/`Restart=no`, no stop capability) fired ~1min
+      AFTER the incident window, ruled out on both mechanism and timing; (6) `systemd-oomd` — confirmed `inactive` on
+      this host; (7) kernel OOM / memory pressure — zero `oom`/`killed process` lines in `journalctl -k`/`dmesg` for the
+      window, and `sar -r` shows the host at 15-18% memory used at the time (comfortable, not under pressure). No
+      `auditd` was installed, so the actual `systemctl stop` invocation's calling UID/process could not be attributed
+      after the fact — that IS the real, fixable gap. **Installed `auditd` + `audispd-plugins` on the planning VM via
+      SSM** with a watch rule on `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`),
+      verified `active` + rule loaded (`auditctl -l`). This does not explain THIS incident, but any recurrence is now
+      attributable via `ausearch -k     systemctl_exec`. Leaving this specific incident's trigger formally unknown
+      rather than guessing.
 - [ ] [INFRA] P2. **Close the monitoring gap.** The glue-runner-crash-loop-watchdog only flags units actively
       crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always suppressed by an
       explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
@@ -99,3 +147,30 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   so cannot self-serve. Answered the blocked question (Option A — operator host restart; disposition partial, the fix is
   operator-executed) and told slot-11 to stand down (fully diagnosed, nothing more it can do). This is a big finding
   (fleet CI outage, 11 repos, CI-critical path) — routed to the operator via this P1 issue doc's `[OPERATOR]` todo.
+- **2026-08-04 (cicd slot-3, agt-0f742e, escalation `main_ci_red`)** — Dispatched to fix instruments-service main
+  quality-gates-v2 RED. Found the "GREEN on LDR" claim above was incomplete: the completed (non-stuck) main run
+  30893378880 shows real pytest `AssertionError`s from `d67a226f`'s bare-`OKX` fold removal never being reflected in
+  instruments-service's own tests (`_canon_venue` fold assertions, the cefi expected-universe golden, the bare-OKX
+  itype-exchange gather, a dedup'd-target-count pin). Fixed all 4, regenerated the golden fixture, verified full
+  `quality-gates.sh` green locally (5200 passed, 6 skipped), shipped to `live-defi-rollout` as `96ea6c4b` (verified
+  ancestor-of-origin). Added the "Correction" note above rather than leaving the incomplete diagnosis to stand. Did NOT
+  touch the glue-runner infra (operator-gated, out of scope for this role, already correctly filed as the P1
+  `[OPERATOR]` todo below).
+- **2026-08-04 (interactive session, `/autonomous` continuation)** — Hit this same outage independently while chasing an
+  unrelated stuck MTDS workflow (`update-dependency-version`, queued 10+ min). Found a THIRD stopped unit
+  (`market-tick-data-service`) this doc's original sweep missed. Had SSM reach to the planning VM via the interactive
+  session's own `admin_od` AWS identity — a capability the filing identities explicitly lacked — so executed the P1 fix
+  directly rather than re-escalating: read-only diagnosis (journal, uptime, apt history, `ps`) found no evidence of
+  legitimate in-flight maintenance around the 09:01-09:02Z stop window, then `systemctl start` on all three units,
+  confirmed `active`, confirmed the MTDS workflow immediately picked up a runner and completed. **P1 done. P2
+  (monitoring-gap hardening in agent-orchestrator) is NOT done** — left open as the genuine remaining follow-up; this
+  doc's `status` stays `open` until that lands. Also note for whoever picks up P2: three units stopping within the same
+  ~30s window, each cancelling an in-flight job, is a pattern worth alerting on directly (not just "any one unit
+  inactive too long") — a coordinated multi-unit stop is a stronger signal than an isolated one.
+- **2026-08-04 (interactive session, same continuation, on operator direction "fix the root of these blockages too")** —
+  Spent 7 SSM round-trips trying to attribute the actual stop trigger; came up empty on every channel (see the new
+  `[DIAG] P1` todo above for the full checklist). Converted the dead end into a real hardening: installed `auditd` on
+  the planning VM with a watch on `systemctl` exec, so a repeat incident is attributable within minutes instead of
+  requiring this kind of after-the-fact archaeology. P2 (extending the crash-loop watchdog to catch a cleanly-`inactive`
+  unit, not just a crash-looping one) remains the one open item — still correctly scoped to `agent-orchestrator`, not
+  something to bolt onto this session's host-level access.

@@ -74,7 +74,7 @@ depends_on: []
       repo for the literal `RULES.md §4.5` / `RULES.md 4.5` / `Findings Closure` strings to catch every landing site;
       done-when: no code/test/comment cites a non-existent RULES.md §4.5 for the author rule. Repo: unified-trading-pm.
       — unified-trading-pm@9eddba7f7.
-- [ ] [SCRIPT] P3. **Reconcile the SSOT to match worker.md §4.5's existing HARD RULE (default = option a, the
+- [x] ✅ [SCRIPT] P3. **Reconcile the SSOT to match worker.md §4.5's existing HARD RULE (default = option a, the
       correctness-preserving path).** Add `author` to the issue spec so the schema enforces what worker.md already
       mandates: (i) add `author` to `scripts/docs/docspec.py` `PER_TYPE["issue"]` (required, matching worker.md §4.5 —
       or elective/Req.O if a same-file precedent for other doc types shows author is conventionally elective, worker's
@@ -86,7 +86,13 @@ depends_on: []
       §4.5's wording to not require author — if you find positive evidence `author` was deliberately excluded from the
       schema** (e.g. a codex/plan note); absent that, worker.md's HARD RULE is authoritative and the schema is simply
       stale. done-when: docspec.py + the schema doc + worker.md §4.5 agree on whether issue docs carry `author`, QG
-      green. Repo: unified-trading-pm.
+      green. Repo: unified-trading-pm. — unified-trading-pm@<sha>.
+- [ ] [DOC] P3. **Backfill `author` on the 438 existing issue docs that lack it.** Only 6 of 444 issue docs carry
+      `author` today (2026-08-04); the schema now recognizes it as elective (validated when present, no gate break when
+      absent). worker.md §4.5 mandates it for new issue docs. Run a scripted backfill pass over
+      `plans/active/issues/*.md` to populate `author` from each doc's git-log author or the Progress Log's most recent
+      entry, defaulting to `unknown` where neither source exists. done-when: ≥90% of issue docs carry `author`, QG green
+      (no new violations — elective fields don't gate). Repo: unified-trading-pm.
 
 ## Notes
 
@@ -113,3 +119,11 @@ depends_on: []
   pre-existing unrelated issue docs and the immutable `ebc2075b9` commit message itself, out of this todo's scope. QG
   green (sentinel `9eddba7f7`), shipped via quickmerge — unified-trading-pm@9eddba7f7. Todo 2 (the SSOT reconciliation)
   remains open, untouched.
+- **2026-08-04 (slot-11)** — Todo 2 done. Reconciled the SSOT: added `author` (Elective, `Req.E`) to
+  `scripts/docs/docspec.py` `PER_TYPE["issue"]` and the corresponding `author` (elective) entry to the issue row in
+  `codex/11-project-management/doc-frontmatter-schema.md` §3 table + a note explaining the tier choice. Option (a)
+  confirmed — no evidence of deliberate exclusion found (grep of codex/ + plans/ for exclusion rationale returned zero
+  hits). Elective (not Required): only 6 of 444 existing issue docs carry `author`; Required would have red-lit 438
+  docs. Filed a P3 backfill todo for the existing corpus. All three sources now agree: worker.md §4.5 mandates `author`
+  on new issue docs, docspec.py validates it when present (elective, no gate break on absent), schema doc documents the
+  contract. QG green.

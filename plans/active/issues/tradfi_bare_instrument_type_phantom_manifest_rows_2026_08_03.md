@@ -12,7 +12,7 @@ summary: >-
   (unified-api-contracts market_data_categories.py TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE, root cause not
   confirmed); this extends that finding to OPTION/FUTURE/COMBO (same batch, same signature) and also found that
   frozenset is NOT actually wired into deployment-api's _ACCEPTED_EXCEPTIONS despite its own comment claiming it is.
-status: resolved
+status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -37,7 +37,7 @@ estimate_calibrated_ai_days: 1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by: deployment-api@7988451
+resolved_by:
 locked_by:
 locked_since:
 supersedes:
@@ -296,7 +296,7 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
 - [x] ✅ [SCRIPT] P2. **ROOT-CAUSED 2026-08-03 (slot 8) — writer SERVICE + code MECHANISM confirmed; exact upstream
       trigger not fully traced, see caveat below.** market-tick-data-service@(no code change — see § "Root-cause
       diagnosis" below).
-- [x] ✅ [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
+- [x] ⚠️ [DATA] P2. Once root-caused (or if root-cause remains elusive after the above), extend
       `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s
       `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` frozenset to add `"OPTION"`, `"FUTURE"`, `"COMBO"`,
       `"EQUITY"`, `"ETF"`, `"INDEX"` alongside the existing `"UD"` (all 6 confirmed same evidenced phantom signature —
@@ -305,7 +305,15 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       and a false `capture_status=captured` claim) rather than quarantined, do that instead. Do not delete manifest rows
       without a fresh delete-safety 5-part-proof pass regardless of how confident this doc's evidence looks. (repo:
       unified-api-contracts) — ✅ 2026-08-03, slot 9: `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` extended to
-      all 6 values (quarantine, not delete) — unified-api-contracts@d1495b35
+      all 6 values (quarantine, not delete) — unified-api-contracts@d1495b35. **⚠️ REVERTED 2026-08-04 (operator live
+      regression report — deployment-ui's distinct-values panel stopped showing `FUTURE`/`OPTION` for tradfi at all)**:
+      `_ACCEPTED_EXCEPTIONS` filters by raw VALUE across the whole axis, not per-row — quarantining the string
+      `"OPTION"` hid EVERY row with `instrument_type=OPTION` from the panel, including the millions of legitimate
+      captured rows, not just the 13,923 phantom ones. Unlike `UD` (whose entire population IS the residue), these 6 are
+      real, heavily-populated `InstrumentType` enum members — quarantining the value was the wrong tool for a row-level
+      defect. Reverted to `{"UD"}` only via `unified-api-contracts@86a35fdb`. The 13,923 phantom rows themselves are
+      UNCHANGED by this revert (still `capture_status=captured` with zero backing GCS object) — see new todo below for
+      the row-level fix this should have been from the start.
 - [x] ✅ [CODE] P3. **Already fixed — citation flip only (verified 2026-08-04).**
       `_ACCEPTED_EXCEPTIONS[("instrument_types",     "tradfi")]` in
       `deployment-api/deployment_api/routes/data_status/_distinct_values.py` (lines 225-227) already ORs in
@@ -315,6 +323,16 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       2026-08-03), independently of this doc. Verified live on `origin/live-defi-rollout`, working tree clean. No code
       change needed — this todo's own diagnosis (the wiring gap) was already closed by unrelated work before this
       session found it. (repo: deployment-api)
+- [ ] [DATA] P2. **NEW 2026-08-04.** Fix the 13,923 phantom rows (venue∈{CME,ICE,NASDAQ,NYSE,CBOE},
+      instrument_type∈{UD,OPTION,FUTURE,COMBO,EQUITY,ETF,INDEX}, `written_at` in
+      `2026-07-27T16:46:31Z..2026-07-27T16:46:41Z`, `instrument_id IS NULL AND underlying IS NULL`) at the ROW level — a
+      delete-safety-gated manifest CAS write scoped to this exact signature (fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check + snapshot-first, mirroring the pattern already used for the
+      ESM0/SPOT/YAHOO_FINANCE purge this same day), not an axis-value quarantine (which the doc above's REVERTED entry
+      shows breaks the distinct-values panel for the axis's legitimate population). Root cause already traced
+      (`market-data-processing-service/.../canonical_writer.py::write_candle_parquet`'s aggregated-write path omitting
+      `instrument_id`/`underlying`) — this todo is the row-level remediation, not further investigation. (repo:
+      market-tick-data-service or market-data-processing-service, whichever owns the manifest CAS write path)
 
 ## Progress Log
 
@@ -349,3 +367,17 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
 - **2026-08-04 (interactive session)**: closed the final open todo (4, deployment-api wiring gap) — found already fixed
   by unrelated work (`deployment-api@7988451`, 2026-08-03) that landed 6 accepted-exception entries including this
   frozenset. All 4 todos now done — flipped `status: resolved`.
+- **2026-08-04 (interactive session, same day, later — operator live regression report)**: **REOPENED.** Operator
+  observed deployment-ui's tradfi distinct-values panel showing only 3 instrument_types (`BOND`, `SPOT_PAIR`, `UNKNOWN`)
+  — `FUTURE`/`OPTION`/`COMBO`/`EQUITY`/`ETF`/`INDEX` had vanished entirely. Root-caused to todo 3's own fix:
+  `_ACCEPTED_EXCEPTIONS` filters by raw axis VALUE, not per-row, so quarantining `"OPTION"` etc. to silence 13,923
+  phantom rows also hid every one of the millions of LEGITIMATE `OPTION` rows from the panel. Reverted the frozenset to
+  `{"UD"}` only (`unified-api-contracts@86a35fdb`) — `UD` is the one value with genuinely zero legitimate population, so
+  it's the only one safe to blanket-hide this way. The underlying 13,923 phantom rows are untouched by this revert
+  (still real data-correctness defects, `capture_status=captured` with no backing GCS object) — added a new todo above
+  for the proper row-level fix. `status` back to `open` pending that todo. Verified the live `coverage.json` rollup
+  itself was never the problem (already had the full BOND/COMBO/EQUITY/ETF/FUTURE/INDEX/OPTION/SPOT_PAIR/UD population
+  correctly) — this was purely a deployment-api read-time filtering bug, so no honest-coverage VM re-trigger is needed;
+  the fix takes effect once deployment-api's own Docker image rebuilds against the new UAC version and redeploys (same
+  publish→redeploy pipeline as the day's earlier tradfi fixes — see
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` for the CI-congestion context that also gates this).

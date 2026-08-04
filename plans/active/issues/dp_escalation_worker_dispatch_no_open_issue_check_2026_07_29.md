@@ -352,3 +352,15 @@ regression) is worse.**
   cells, which is a stronger argument for Option A (dedup by "OPEN issue doc already covers this signature") since B/C's
   cost-benefit reasoning assumed a small, closed set of repeat conditions, not an expanding one. Still awaiting the
   operator/design decision on Option A/B/C.
+- **2026-08-04 (data_pipeline_failure escalation worker, agt-a76cf2, slot 9) — `(cefi, trades)` now at its 2nd dispatch,
+  and this time the SAME escalation_id (`agt-a76cf2`) as the slot-4 session that ran moments earlier.** Sixth confirmed
+  exact-duplicate-escalation_id case overall (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f`
+  2026-07-31, `agt-e11908` 2026-08-03 — all four prior `(cefi, book_snapshot_5)`) and the second one for
+  `(cefi, trades)` — the literal same escalation event dispatched to two different slots (slot 4, then slot 9) with
+  byte-identical alert numbers (263,836/1,172,762 attempted_failed, 22.5%). Not addressed by the materiality fix (that
+  changes classification/paging severity for a condition, it cannot deduplicate two dispatches of the identical event) —
+  squarely this doc's own Option A/B/C territory. Session cost: two file reads + a git-ancestor batch check (3 commits,
+  all still ancestors of `origin/live-defi-rollout`) + two Progress Log appends, no GCS read, no code change. Combined
+  across all three tracked conditions ((cefi, derivative_ticker) 12th+, (cefi, book_snapshot_5) 20th+, (cefi, trades)
+  2nd), this backlog family has now consumed 34+ full orchestrator-agent dispatches — still awaiting the operator/design
+  decision on Option A/B/C. Full writeup in `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s own Progress Log.

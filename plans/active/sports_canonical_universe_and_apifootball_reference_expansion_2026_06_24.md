@@ -211,11 +211,19 @@ satisfies every requirement:
       mapping, fixture/player canonical ids, annual footystats-id rotation via `check_footystats_season_drift.py`); 2
       genuine gaps closed (`LeagueDefinition.is_cup` added; `is_sports_structural_gap()` wired into
       `get_expected_leagues_for_source()`). 4 new regression tests, `quality-gates.sh` green.
-- [ ] [DATA] P1. **Define the curated ~300-league reference set** (94 + below-division + continental cups + majors) +
-      widen the write-gate to it.
-- [ ] [DATA] P2. **Curated-universe backfill** (API-Football fixtures + enrichment, 2019→, burn ~6M over weeks; gated +
-      honest-empty for no-enrichment leagues).
-- [ ] [DATA] P2. **DROP residual out-of-curated rows** (snapshot-first) once the curated set is backfilled.
+- [x] ✅ [DATA] P1. **Define the curated ~300-league reference set** (94 + below-division + continental cups + majors) +
+      widen the write-gate to it. — CLOSED via `sports_satellite_ao_dispatch_batch2_2026_07_24.md` (batch-2 combined
+      todo): continental-majors slice shipped (`unified-api-contracts@7b13196e`); domestic-selection slice decomposed
+      into 11 confederation-batch todos, all landed; final residual drop `instruments-service@0877f849` (2026-08-04,
+      slot 16).
+- [x] ✅ [DATA] P2. **Curated-universe backfill** (API-Football fixtures + enrichment, 2019→, burn ~6M over weeks;
+      gated + honest-empty for no-enrichment leagues). — CLOSED via `sports_satellite_ao_dispatch_batch2_2026_07_24.md`
+      (batch-2 combined todo): fixtures backfill verified complete 2026-07-28 (`af-backfill-20260728-091755`, all 25/25
+      chunks clean, exit_code=0); enrichment gated on the curated-universe expansion (above).
+- [x] ✅ [DATA] P2. **DROP residual out-of-curated rows** (snapshot-first) once the curated set is backfilled. — CLOSED
+      via `sports_satellite_ao_dispatch_batch2_2026_07_24.md` (batch-2 combined todo): `instruments-service@0877f849`
+      (2026-08-04, slot 16), snapshot-first drop of 8,937 rows; full evidence in
+      `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md`.
 - [x] ✅ [SCRIPT] P3. Delete superseded-buggy `instruments-service/scripts/backfill_fixture_lineups_blank_reason.py`
       (env-less bucket + direct google.cloud SDK) — instruments-service@a4b1bd0
 

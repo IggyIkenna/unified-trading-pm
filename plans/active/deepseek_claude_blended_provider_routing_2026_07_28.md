@@ -480,10 +480,10 @@ this plan. `/autonomous` dispatch from earlier this session complete: all 4 loca
 - Evidence: `agent-orchestrator@ac70068` on `live-defi-rollout`, `ahead=0`. 1 file, +85. QG green (full suite still
   green; the new tests run within `test_regen_backlog_from_plan.py`'s own 168-test file, all passing).
 
-**Remaining on this plan — none locally doable.** `[INFRA] P0` (register the DeepSeek account on the real VM),
-`[REVIEW] P2` (one-week pilot comparison), and `[REVIEW] P1` (re-run pilot against the redesigned policy) all need real
-orchestrator-VM access, elapsed real-world time, or genuine Claude-account headroom respectively — none are buildable or
-verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
+**Remaining on this plan — none locally doable.** `[INFRA] P0` (register the DeepSeek account on the real VM) is now ✅
+DONE (2026-08-04). `[REVIEW] P2` (one-week pilot comparison) and `[REVIEW] P1` (re-run pilot against the redesigned
+policy) remain open — both need elapsed real-world time or genuine Claude-account headroom respectively, neither
+buildable or verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
@@ -542,6 +542,79 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
   files hosting select_account_for_spawn/_pick_headroom_account/_resume_pass and the deepseek_route_fraction tuning
   knob.
 
+**2026-08-04 — `[INFRA] P0` VM-side registration ✅ COMPLETE. AUTH_OK verified, restart executed (operator-confirmed),
+`/api/accounts` confirms the DB sync. Checkbox flipped above.**
+
+- **What's actually done, on the REAL planning VM** (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`, EIP `13.113.200.22`), via
+  AWS SSM `send-command` (`AWS-RunShellScript`) — no SSH, no inbound firewall change, every call audited in CloudTrail,
+  same sanctioned pattern as `check-ao-backlog-status.sh`:
+  1. Read-only recon FIRST (before any write): confirmed repo root
+     `/home/ubuntu/unified-trading-system-repos/agent-orchestrator`, confirmed `accounts.json` had exactly the 6
+     existing Ikenna sub-accounts (no deepseek entry), confirmed `~/.claude-accounts/` is `ubuntu:ubuntu` mode 700 with
+     sibling `.env` files at mode 600, confirmed `orchestrator.service` was `active (running)` with ~15 live tmux worker
+     slots doing real work (real `gh` polling, real git pushes) — i.e. this is a genuinely live production instance, not
+     idle.
+  2. Wrote `/home/ubuntu/.claude-accounts/deepseek-v4-pro.env` on the VM — same content as this operator's local
+     `~/.claude-accounts/deepseek-v4-pro.env` (the same key already verified working and already pushed to the creds
+     buckets earlier in this plan's history), mode 600, owned `ubuntu:ubuntu`. Deployed via a base64'd Python script
+     over the SSM command channel (avoids shell-quoting the API key directly into a command string).
+  3. Appended a `deepseek-v4-pro` entry to `accounts.json` on the VM:
+     `{"id": "deepseek-v4-pro", "label": "DeepSeek V4 Pro", "tier": "api", "provider": "deepseek", "weekly_msg_limit": 0, "primary_email": null, "oauth_token_env_file": "~/.claude-accounts/deepseek-v4-pro.env"}`
+     — no `operator` field (deliberately: unlike the 6 personal sub-accounts, this is a shared fleet-wide key, and
+     `config.host_operator()`'s resolution order checks `ORCHESTRATOR_OPERATOR`/`ORCHESTRATOR_VM_ID`/`slot_operator`
+     before ever falling back to `account.operator` — hardcoding one there would misattribute every DeepSeek-routed
+     slot's branch/commit identity). The write used a small idempotent Python script (load → check `deepseek-v4-pro` not
+     already present → append → re-dump with `indent=2`, matching the file's existing style) rather than a fragile
+     sed/shell edit — safe to re-run, verified: re-running now would just print "already in accounts.json -- no-op".
+  4. **Verified for real**: `claude -p 'reply AUTH_OK'` run as the `ubuntu` user (matching the actual runtime identity —
+     SSM defaults to root, `HOME` unset there, so `~` expansion would have resolved wrong; used
+     `sudo -u ubuntu bash -c '...'` from the repo's own working directory) sourcing the new env file returned
+     **`AUTH_OK`**. This is the plan's own literal "Done when" — met.
+- **Real, load-bearing finding: `accounts.json` → `AccountRow` (the DB table `/api/accounts` reads) syncs ONLY once, at
+  server boot (`bootstrap.initialise()` → `sync_accounts_to_db()`, the ONE call site — grepped, confirmed, not assumed).
+  There is no periodic or on-demand accounts-resync loop (unlike `PlanRegenLoop` for the backlog).** Read-only-checked
+  the LIVE `/api/accounts` endpoint after the write above — it does NOT yet list `deepseek-v4-pro`, confirming this gap
+  is real, not theoretical, on this exact instance right now.
+  - **This does NOT block real dispatch.** Verified by reading the actual code, not assumed: `_pick_headroom_account()`
+    and `account_is_usable()` both do a plain `session.get(AccountUsageRow, acc.id)` / check-for-`None` pattern that
+    already treats a missing DB row as "healthy, has headroom" — this is explicitly by design for exactly the DeepSeek
+    case (`_pick_headroom_account()`'s own docstring: "it degenerates gracefully because a DeepSeek account's
+    five_hour_pct/weekly_pct are never populated... no separate picker needed"). `select_account_for_spawn()` reads
+    `accounts.json` fresh via `load_accounts()` on every call, not through the DB row at all. **DeepSeek is already
+    eligible for real automatic dispatch on this VM right now, with zero further action** — the gap is purely dashboard
+    visibility (the provider badge shipped earlier this plan, usage-report/rate-limit endpoints that 404 via
+    `ss.get_account()` on an unknown-to-DB id) until the next sync.
+  - **A restart would close this gap and is SAFE for the live fleet** — verified by reading the actual
+    `orchestrator.service` unit file on the VM (not assumed): `KillMode=process` (not `mixed`/control-group) is
+    explicitly set, with an inline comment citing a real prior incident (2026-05-20: `KillMode=mixed` once caused
+    `systemctl restart` to SIGKILL the entire cgroup, including all live tmux/claude worker sessions). With
+    `KillMode=process`, a restart only signals the uvicorn main PID; tmux/claude workers "survive a backend restart and
+    keep polling" per the unit file's own words. This is also the SAME restart `ao-self-pull.sh` already performs
+    routinely on every FF pull that changes `HEAD` — not an exceptional action on this fleet.
+  - **Restart executed 2026-08-04, operator-confirmed after an initial pause.** The command was first queued, the
+    operator interrupted that tool call to ask a clarifying question ("which plan are you using?"), and it was re-queued
+    and run only after the operator explicitly said to continue in a later turn. Result, verified via SSM (not assumed):
+    - `systemctl is-active orchestrator` → `active`.
+    - Fleet survived exactly as predicted from `KillMode=process`: `tmux list-sessions` showed all 10 pre-restart
+      sessions present post-restart (`orch-agent-main` + 9 worker slots) — zero worker loss.
+    - `curl localhost:8765/api/mode` → `http_200`; `journalctl -u orchestrator` tail showed normal steady-state traffic
+      resuming immediately (slot heartbeats, `/api/state`/`/api/accounts` 200s, watchdog ticks) — no crash loop, no
+      restart storm.
+    - `curl localhost:8765/api/accounts` now includes
+      `"deepseek-v4-pro","label":"DeepSeek V4 Pro","tier":"api","provider":"deepseek",...,"status":"healthy"` — confirms
+      the `AccountRow` DB sync closed the dashboard-visibility gap described above. `used_by_slots` was empty at
+      verification time (no DeepSeek spawn had happened yet) — expected, not a fault.
+- **Not yet done, separate from the above (operator's own stated next step, not started)**: the operator said the
+  DeepSeek key is also in Google Secret Manager and wants THAT to be the actual source of truth going forward — "for now
+  use the key we have available on this pc, I will tell you the env-var name in some time." The env file deployed above
+  uses the LOCAL key (same one already in the creds buckets), not a GSM-sourced one. When the operator supplies the GSM
+  secret name, re-source the env file from GSM (rotate the `ANTHROPIC_AUTH_TOKEN` value) rather than treating this as
+  already-final. No GSM secret name has been given yet — do not guess one.
+- **No repo commit for this todo's own work** — `accounts.json` and `~/.claude-accounts/*.env` are both
+  operator-config/secret, deliberately NOT git-tracked (per this plan's own established convention: "accounts.json is
+  gitignored so code merge alone doesn't activate anything"). This Progress Log entry (+ the eventual checkbox flip) IS
+  the durable record; there is no `agent-orchestrator@<sha>` for this specific todo.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -558,9 +631,43 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
   - **Step 5 (quickmerge)**: ✅ **SHIPPED** — `agent-orchestrator@7076283` on `live-defi-rollout`, ahead=0. 10 files,
     +918/-41 lines. `ao-self-pull.sh` will auto-deploy to the planning VM within ~15 min. Code merge does NOT activate
     DeepSeek — `accounts.json` is gitignored, and `has_deepseek` remains False on the real VM until step 6.
-  - **Step 6 (register on real VM)**: **Next** — add `deepseek-v4-pro` to the production VM's
-    `data/config/accounts.json`.
-  - **Step 7 (monitor)**: After step 6 — watch first real DeepSeek fleet spawns.
+  - **Step 6 (register on real VM)**: ✅ Done 2026-08-04 — `deepseek-v4-pro` added to the production VM's
+    `data/config/accounts.json`, `AUTH_OK` verified, `orchestrator.service` restarted, `/api/accounts` confirms
+    `status: healthy`. See Progress Log 2026-08-04.
+  - **Step 7 (monitor)**: **Next** — watch for the first real DeepSeek fleet spawn (`used_by_slots` was empty at step-6
+    verification time). Not yet a tracked todo on this plan; add one if a follow-up check is needed.
+
+**2026-08-04 (later, separate interactive session, slot-2) — sandboxed DeepSeek pilot, 3 tasks via real
+`tmux_spawn.spawn()`. Reconciliation note + one new finding, not a repeat of Step 6 above.**
+
+- **Reconciliation**: this session was asked (fresh, no prior context on this plan) to register the same DeepSeek key
+  and pilot it. By the time it pulled `unified-trading-pm` (31 commits behind) the VM-side registration above was
+  already merged same-day. It had already registered `deepseek-v4-pro` **locally in its own dev checkout only**
+  (`agent-orchestrator/data/config/accounts.json`, gitignored — this checkout doesn't run a live orchestrator server, so
+  this had zero effect on the real fleet) before discovering the redundancy. Flagging for anyone reading
+  chronologically: that local registration is inert/duplicate, kept only because the pilot evidence below is new.
+- **Shared-balance flag**: this is the SAME key now live on the production VM as the default for ~80% of sonnet-tier
+  fleet dispatch. Balance read `$5.00` before this pilot and `$4.93` after — exactly the pilot's own $0.07 spend,
+  consistent with `used_by_slots` still being empty at last VM-side check (no live production DeepSeek spawn had drawn
+  on it yet at the time of this entry). This is a shared, actively-consumable resource going forward, not an isolated
+  test account — a future local check against this key should re-read the live balance immediately before and after,
+  since real production spend can land on it with zero warning to a local session.
+- **Pilot**: 3 real tmux sessions via `tmux_spawn.spawn()` (the same call the production spawn path uses), each in an
+  isolated scratch git repo (deliberately NOT the real trading-system repos, given `--dangerously-skip-permissions` + an
+  unvetted-for-this-workspace model) seeded with a real copy of CLAUDE.md, one task per difficulty (simple/medium/hard).
+  - Boot mechanics clean on all 3 — onboarding seed skipped the wizard, bypass-permissions warning auto-dismissed,
+    confirmed hitting `api.deepseek.com/anthropic`.
+  - CLAUDE.md compliance strong on all 3 — accurate rule summaries, correct implementations (independently re-verified
+    by re-running pytest, not trusting the agent's own claim), and on the hard task it correctly inferred and applied
+    the exact `ikennaigboaka [slot-N·host]` commit-attribution format unprompted, and correctly reasoned that
+    quickmerge/CI rules don't apply to a throwaway sandbox rather than inventing nonexistent tooling.
+  - **New finding, not previously tracked on this plan: `/pre-compact` (and likely Skill-tool invocation generally) does
+    not work under a DeepSeek-backed session.** Asked to invoke `/pre-compact` mid-task, the model reasoned it had no
+    way to invoke a slash command from within its own tool-use turn, shelled out to a _nested_ `claude /pre-compact`
+    subprocess (hung the full 2-minute bash timeout — no TTY), then fell back to describing what it believes
+    `/pre-compact` does from general knowledge — clearly labeled as such, not presented as real output, so not a silent
+    hallucination, but the skill never actually ran. Not isolated whether this is a DeepSeek reasoning gap specifically
+    or a harness-level thing (Skill-tool exposure to tmux-spawned interactive workers generally) — see new todo below.
 
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 
@@ -616,12 +723,14 @@ default from an external reference.
       `_mark_auth_failed_db` call for it. Done when: a `provider: "deepseek"` test account survives several consecutive
       poller ticks without being marked `auth_failed`. — `agent-orchestrator@7076283`, covered by
       `test_deepseek_provider_routing.py`.
-- [ ] [INFRA] P0. Register the DeepSeek account end to end: create `~/.claude-accounts/deepseek-v4-pro.env`
+- [x] [INFRA] P0. ✅ Register the DeepSeek account end to end: create `~/.claude-accounts/deepseek-v4-pro.env`
       (`ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL=deepseek-v4-pro`, explicit
       `unset CLAUDE_CODE_OAUTH_TOKEN`), add the matching `accounts.json` entry with `provider: "deepseek"`, and push the
       env file to both creds buckets so `CredsEnvPoller` distributes it fleet-wide. Done when:
-      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`. — Local env +
-      creds buckets done. VM-side registration = rollout step 6 (next).
+      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`. — Done
+      2026-08-04: env file + `accounts.json` entry deployed to the real planning VM (`i-0c9b283b31d6b5ca7`) via SSM,
+      `AUTH_OK` verified, `orchestrator.service` restarted (operator-confirmed) to sync into `AccountRow`,
+      `/api/accounts` now lists `deepseek-v4-pro` with `status: healthy`. See Progress Log 2026-08-04 for full detail.
 - [x] [INFRA] P0. ✅ Implement `select_account_for_spawn()` — **redesigned 2026-07-29** per operator ruling, superseding
       the original eligibility/split/health-gate description (see Progress Log for the full design): DeepSeek is now the
       DEFAULT for sonnet-tier work (not a minority experiment), opus/fable is a HARD pin with no DeepSeek fallback ever
@@ -681,6 +790,16 @@ default from an external reference.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Touches
   agent-orchestrator's own live routing/billing/credential infra; repeated dated operator holds + 2 documented real
   safety incidents from testing this code; highest-stakes remaining items need operator-supervised rollout.
+- [ ] [REVIEW] P2. Investigate whether DeepSeek-backed sessions can invoke Claude Code Skills (e.g. `/pre-compact`) at
+      all — a 2026-08-04 sandboxed pilot found a DeepSeek worker asked to invoke `/pre-compact` had no working mechanism
+      to do so (attempted a nested `claude` subprocess shell-out instead, which hung on the missing TTY), and fell back
+      to describing the skill from general knowledge rather than running it. Matters because Tier 1/2
+      `context_lifecycle.py` proactive-compact guidance assumes the agent can act on a `/pre-compact` → `/compact` nudge
+      — if DeepSeek workers structurally can't, long-running DeepSeek main/review-loop agents may silently accumulate
+      context forever with no working escape hatch. Done when: confirmed whether the Skill-invocation path is exposed to
+      tmux-spawned interactive sessions at all (Claude-backed or DeepSeek-backed — isolate which side the gap is on),
+      and if it is, why the DeepSeek session didn't find/use it. See Progress Log 2026-08-04 (later entry) for the full
+      pilot writeup.
 
 ### Phase 2 todos (2026-07-30, added — none of the above touched or re-ordered)
 
@@ -734,3 +853,34 @@ default from an external reference.
       further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
       business decision, tagged `[OPERATOR]` per the business/spend-judgment carve-out, not something to build
       speculatively ahead of that decision.
+- [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (operator ask, 2026-08-04, after
+      `[INFRA] P0`'s VM-side registration shipped) — confirmed via DeepSeek's own API docs
+      (`https://api-docs.deepseek.com/api/get-user-balance/`) that `GET /user/balance` exposes only a REMAINING-balance
+      snapshot (`total_balance`/`granted_balance`/`topped_up_balance`), never a spend/usage-history endpoint — so this
+      can only ever show "available", never "used vs available" (operator explicitly chose the available-balance-only
+      design over an auto-tracked-cumulative-spend or manual-funded-amount alternative). Done when: the dashboard shows
+      a live DeepSeek balance sourced from a real poller, not a stub. — New `DeepSeekBalancePoller`
+      (`server/deepseek_balance_poller.py`, 30-min cadence, deliberately separate loop from the Anthropic `UsagePoller`
+      since DeepSeek accounts carry no `CLAUDE_CODE_OAUTH_TOKEN`/5h-weekly-cap concept) + `server/deepseek_balance.py`
+      (`fetch_deepseek_balance`, USD-preferring currency selection); `usage_tracker.py`'s `CLAUDE_CODE_OAUTH_TOKEN`-only
+      env-file reader generalized to `read_env_var_from_file(env_file, var_name)` so the new poller can read
+      `ANTHROPIC_AUTH_TOKEN` without a new parser; `AccountUsageRow`/`AccountView` gained
+      `balance_usd`/`balance_currency`/`balance_is_available`/`balance_checked_at` (additive, non-deepseek accounts stay
+      null); dashboard's `AccountRow` renders a `DeepSeekBalanceLine` in place of the Anthropic weekly/5-hour bars for
+      `provider === "deepseek"`. 27 new backend unit tests + full existing suite green (2322 passed) +
+      `basedpyright`/`tsc`/`vitest` (173 passed) all clean. — `agent-orchestrator@8cc6a4f` on `live-defi-rollout`,
+      `ahead=0`.
+- [x] [UI] P1. ✅ Operator-directed account pause/resume via the dashboard (bundled into the same session/commit as the
+      DeepSeek balance todo above, same operator ask). Reuses the PRE-EXISTING `account_status="disabled"` lifecycle
+      state (`AccountStatus.disabled` already existed in the enum and `account_is_usable()` already excluded it — this
+      todo is the first thing to actually SET it operator-side; nothing previously did). New
+      `state_store.disable_account` / `enable_account` (deliberately distinct from the poller-detected, auto-clearing
+      `auth_failed`/`rate_limited` marks — "disabled" is sticky, only `enable_account` clears it, and neither the
+      usage-poller success path nor the fast-reprobe loop can silently re-enable one) +
+      `POST /api/accounts/{id}/disable` / `/enable` routes (disable fans out
+      `rotate_all_slots_off_account(..., reason=RotationReason.operator_directed)` so any slot already running on a
+      paused account moves off immediately, not just future spawns). Dashboard: a Pause/Resume button per account card,
+      a "Paused" badge, and a dedicated muted dot color (`statusToClass` gained a `disabled -> "paused"` case —
+      previously shared "stale" with rate_limited/auth_failed, which would have read as an error rather than a
+      deliberate operator action). Works identically for Claude and DeepSeek accounts (provider-agnostic — it's the same
+      `account_status` column every other lifecycle mark already uses). — same commit, `agent-orchestrator@8cc6a4f`.

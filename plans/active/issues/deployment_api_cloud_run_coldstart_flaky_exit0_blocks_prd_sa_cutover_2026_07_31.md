@@ -190,3 +190,31 @@ this service relative to its documented, measured requirement.
   failed. No code shipped — live verification only. (repo: deployment-service, deployment-api)
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — still the right minimal set (SIGABRT
   crash-loop doc, the gating bucket-IAM plan, and the fixed `deploy-shared.sh`).
+- **2026-08-04 (interactive session, operator-directed, unrelated sports distinct-values fix session)** — hit this EXACT
+  failure signature live while shipping an unrelated deployment-api-adjacent fix: found production traffic had been
+  stuck 100% on `00374-4pd` (pre-`uts-prd-sa`, 2026-07-31T18:39) for ~4 days — every `deploy-shared.sh` run since then
+  (dozens of `image-build-gate`-triggered builds) had produced a real, healthy-looking new revision that never actually
+  received traffic. Root cause now clear from this session's evidence: it is not a stale/forgotten manual pin — it is
+  THIS doc's cold-start bug firing on every single automatic cutover attempt since 07-31, silently, with nobody noticing
+  because `deploy-shared.sh`'s `gcloud run deploy` step reports "has been deployed and is serving 100 percent of
+  traffic" even when (per this session's direct observation) the actual `status.traffic` stayed on the OLD revision and
+  the NEW one went straight to `Retired` (`Container called exit(0)` / `STARTUP TCP probe failed`, ~30s in — same as
+  every prior entry here). Ran `deploy-shared.sh` fresh this session (new revision `00430-dcr`, `uts-prd-sa`, 16Gi/4cpu,
+  image `sha256:e805764...`): reproduced the failure exactly as described (`00430-dcr` → `Retired`, traffic never
+  moved). **Recovery that worked**: a plain follow-up `gcloud run services update-traffic --to-revisions=00430- dcr=100`
+  (no tag-verify dance, no retry loop — one direct attempt) succeeded immediately and is now confirmed serving real
+  production traffic correctly (multiple live 200s across `/api/health`, `/api/data-status/distinct-values/sports`,
+  `/api/data-status/distinct-values/defi`, minutes apart, no further failures observed). **Net new data point**: the
+  failure is real and still reproduces on a fresh deploy (does NOT contradict this doc's open status), but a manual
+  `update-traffic` retry immediately after the automatic cutover silently no-ops is a reliable, low-cost recovery — NOT
+  the same as the P3 todo's "3-5 fresh cold-start tag-verify" gate (skipped here under time pressure + explicit operator
+  go-ahead to unblock a 4-day-stuck pipeline, not a claim the SIGABRT root cause is resolved). **Interim operational
+  takeaway for anyone running `deploy-shared.sh`**: never trust its own "serving 100 percent" output — always
+  independently confirm via
+  `gcloud run services describe --format='value(status.traffic[].revisionName,status. traffic[].percent)'` and retry
+  `update-traffic` explicitly if the new revision isn't actually receiving traffic. Production is now confirmed on
+  `uts-prd-sa` (P3's own goal) but NOT via the gated path this todo specifies — leaving P3 open (SIGABRT root cause
+  still unresolved; this was a forced/manual cutover under time pressure, not a clean resolution) rather than marking it
+  done. Also left the stale `prd-sa-precutover` tag on the now-dead `00417-7fh` untouched (0% traffic, not mine to clean
+  up, may still be evidence someone else wants). No code shipped against this doc's own scope — evidence + operational
+  note only. (repo: deployment-service, deployment-api)

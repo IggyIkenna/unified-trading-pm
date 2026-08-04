@@ -122,3 +122,9 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   to GCS not local disk, not a blocking concern). 4/18 venues get 404 on IS instrument-store for June dates
   (BINANCE-FUTURES/BYBIT/BINANCE-DELIVERY/OKX) — shard-level failure isolated, pipeline continues. Armed 20-min
   `run_in_background` watchdog. Will monitor and verify manifest + run `run_cefi_perp_funding_corpus.py` once VM stops.
+- **slot-6 2026-08-04 ~12:15Z**: Picked up on resume dispatch. VM `cefi-fwd-20260804-021235` still `RUNNING`, now at
+  day=2026-07-06 (12:09Z `PIPELINE_HEARTBEAT`), RSS ~5.3GB (27.7GB Tardis peak), log actively writing real
+  `derivative_ticker` shards (e.g. `COINBASE-FUTURES:PERPETUAL:TSM-USD@LIN.parquet`, 217666 rows). Pace ~9-10 min/day
+  from prior observations, ~27 days remaining → ~4.3h to completion (ETA ~16:30Z). No traceback, no crashloop. Disk 89%.
+  Armed bounded (~12h-cap, 20-min-interval) `run_in_background` watchdog polling VM status until non-`RUNNING`; will
+  verify via manifest row counts once VM shuts down, then flip todo + `/done`.

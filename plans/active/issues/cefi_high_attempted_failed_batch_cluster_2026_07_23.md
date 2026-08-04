@@ -603,3 +603,16 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   shipped. Cross-linked from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — this is a THIRD
   distinct `(asset_group, data_type)` cell (after `derivative_ticker` and `book_snapshot_5`) now exhibiting the same
   repeat-dispatch waste that doc's still-open Option A/B/C would close.
+- **2026-08-04 (data_pipeline_failure escalation worker, agt-a76cf2, slot 9) — SAME escalation_id (`agt-a76cf2`) as the
+  entry directly above, dispatched to a second slot.** Sixth confirmed exact-duplicate-escalation_id case overall (after
+  `agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f` 2026-07-31, `agt-e11908` 2026-08-03 — all four prior
+  ones `(cefi, book_snapshot_5)`) and the second one for `(cefi, trades)` — the literal same escalation event dispatched
+  to two different slots (slot 4, then slot 9) with byte-identical alert numbers (263,836/1,172,762 attempted_failed,
+  22.5%). Not addressed by the materiality fix (that changes classification/paging severity for a condition, it cannot
+  deduplicate two dispatches of the identical event) — squarely
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A/B/C territory. Re-verified the same three
+  `market-tick-data-service` fix commits (`2ddc6d4a`, `6a067cf1`, `6c6fab03`) are still ancestors of
+  `origin/live-defi-rollout` — unchanged from the slot-4 session moments earlier. No fresh manifest read (nothing could
+  have changed in the intervening minutes), no code change. Session cost: two file reads + a git-ancestor batch check +
+  two Progress Log appends. Combined across all three tracked conditions, this backlog family has now consumed 34+ full
+  orchestrator-agent dispatches. Cross-linked from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`.
