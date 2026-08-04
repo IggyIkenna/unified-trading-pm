@@ -232,14 +232,22 @@ list?) before executing autonomously — flagging for operator awareness rather 
       See Progress Log entry above: NOT inert in general (the axis is a direct enumerator input, unlike the venue axis)
       but IS inert specifically for HYPERLIQUID/CeFi combos, since they enumerate under
       `DATA_TYPES_BY_ASSET_GROUP["cefi"]`, a separate dict key.
-- [ ] [CODE] P2. (Gated on the verify above.) Register `perp_daily_ctx` under `DATA_TYPES_BY_ASSET_GROUP["defi"]` ONLY
-      (confirmed inert for HYPERLIQUID/CeFi combos, no operator sign-off needed for THIS specific registration — see
-      Progress Log) as its own canonical data_type + SchemaContract (mirror `DEFI_PERPETUAL_PERP_FUNDING`); add manifest
-      writes to both ad-hoc writers, unchanged schema; backfill manifest rows for the existing historical shard tuples.
-      Repos: unified-api-contracts, market-tick-data-service, features-service, unified-trading-pm (manifest backfill
-      script). **na-eligibility-audit 2026-08-01: KEEP-NA-STALE-DUPLICATE — already extracted verbatim into
+- [x] ✅ [CODE] P2. (Gated on the verify above.) **DONE 2026-08-04 — closed by citation, landed via
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s todo -010** (per this item's own note below: "close this
+      checkbox by citation once batch6's todo lands"). Register `perp_daily_ctx` under
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]` ONLY (confirmed inert for HYPERLIQUID/CeFi combos, no operator sign-off needed
+      for THIS specific registration — see Progress Log) as its own canonical data_type + SchemaContract (mirror
+      `DEFI_PERPETUAL_PERP_FUNDING`); add manifest writes to both ad-hoc writers, unchanged schema; backfill manifest
+      rows for the existing historical shard tuples. Repos: unified-api-contracts, market-tick-data-service,
+      features-service, unified-trading-pm (manifest backfill script). **na-eligibility-audit 2026-08-01:
+      KEEP-NA-STALE-DUPLICATE — already extracted verbatim into
       `defi_satellite_ao_dispatch_batch6_2026_07_30.md:363-371` (status: active, `assigned_vm: planning`, cites this doc
       as source). Not reclassified — track completion there; close this checkbox by citation once batch6's todo lands.**
+      Evidence: `unified-api-contracts@17b1cf21`, `features-service@c678f0fd`,
+      `unified-trading-pm/scripts/migration/register_perp_daily_ctx_manifest_backfill_2026_08_04.py` (1,158 manifest
+      rows registered against prod, verified via direct per-VM-shard read). Full detail in batch6's Progress Log entry
+      for this todo. The MTDS HL mark-price backfill script's writer-half was confirmed moot (dead target bucket, per
+      fact #4 above) rather than forced — matches this doc's own established finding, not a new decision.
 - [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
       view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
@@ -253,6 +261,52 @@ above.
 
 ## Progress Log
 
+- **2026-08-04 (data_engineering, executing `defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo -010)**: Shipped the
+  [CODE] P2 safe-alternative in full.
+  1. **UAC registration** (`unified-api-contracts@17b1cf21`): `perp_daily_ctx` added to
+     `DATA_TYPES_BY_ASSET_GROUP["defi"]`; new `DEFI_PERPETUAL_PERP_DAILY_CTX` SchemaContract (mirrors
+     `DEFI_PERPETUAL_PERP_FUNDING`'s 4 common columns + `mark_price`/`day_ntl_vlm`/`open_interest`, the latter two
+     nullable since the CeFi writer never populates them); `NEEDS_CANDLE_PROCESSING["perp_daily_ctx"]=False` (a
+     pre-existing test parametrized over every `DATA_TYPES_BY_ASSET_GROUP["defi"]` entry required this).
+  2. **Writer fix** (`features-service@c678f0fd`): real `ManifestWriter.add()` call added to `perp_funding_corpus.py`'s
+     `perp_daily_ctx` write path — best-effort (a manifest-write failure never blocks the real parquet write, which has
+     already succeeded by the time it runs), zero row-schema change. 2 new unit tests.
+  3. **MTDS HL mark-price backfill script**
+     (`market-tick-data-service/scripts/ backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`): confirmed still
+     present in the repo, but deliberately NOT touched — re-verified this session that its target bucket
+     (`perp-funding-{project}`) is still gone (this doc's own fact #4), so its writer-half of the todo is moot, not
+     skipped.
+  4. **Historical backfill**
+     (`unified-trading-pm/scripts/migration/ register_perp_daily_ctx_manifest_backfill_2026_08_04.py`, committed for
+     audit trail): bounded, exact-prefix GCS discovery (never a whole-day/whole-corpus listing — a naive `day={D}/`
+     prefix returns 5,000-26,000 objects across every asset_group/venue/data_type for that day, so this script lists the
+     FULLY-QUALIFIED per-(day,venue) prefix instead, O(1) per call). Found the HYPERLIQUID `perp_daily_ctx` corpus spans
+     EXACTLY 2023-05-20..2026-06-01 with zero gap days (1,109 calendar days — an EXACT match to this doc's own "1,109
+     objects" figure once you realize that figure was counting shard-days, not the underlying ~22-to-230-per-day
+     per-coin files this session found via direct content reads: the real object population is 169,412 HL files, one row
+     each, plus a `_migrated_hyperliquid_*` consolidation-marker file per day that duplicates that same day's rows and
+     was excluded from counting/registration to avoid double-counting). The 7 CeFi Tardis venues' 2026-05-16..22 window
+     added another 49 `(day, venue)` rows (7 venues × 7 days), matching the "98 objs" residual-gap figure once split
+     evenly between `perp_funding` and `perp_daily_ctx`. **Dry-run then `--apply` both run against prod**
+     (`market-data-tick-defi-prd-central-element-323112`) — registered 1,158 `(day, venue)` manifest rows covering
+     169,461 real objects, 0 failures. Verified via a direct per-VM-shard read
+     (`_index/per_vm/local-64151-459f.parquet`): all 1,158 rows `capture_status=captured` with correct `row_count`s (21
+     for the earliest day, 230 for the latest — matches the real per-day coin counts). Ran the manifest consolidator
+     afterward — it hit a transient network `IncompleteRead` downloading the ~1.7GB canonical index and fell back to a
+     shards-only computation it did NOT persist back to canonical (confirmed via blob metadata: the canonical index's
+     `last_modified` timestamp predates this consolidator run, size unchanged — no data loss, no partial-write risk).
+     The per-VM-shard reader fallback already surfaces the captured rows to any caller regardless of consolidator
+     completion, per the established `defi_fold_manifest_registration_pending_2026_07_21.md` precedent, so this doesn't
+     block closing out; a future consolidator run (standing cron or a follow-up session) will complete the merge
+     normally. **Separate, real finding surfaced while verifying (out of this todo's scope, flagging per the
+     data-correctness heartbeat rule)**: the HYPERLIQUID `perp_daily_ctx` corpus stops abruptly after 2026-06-01 — no
+     objects exist for any day on/after 2026-06-02, and neither the retired backfill script (dead bucket) nor the live
+     `perp_funding_handler.py` (confirmed, via direct grep, to never write `perp_daily_ctx` at all — only
+     `perp_funding`) currently produces it. `CanonicalPerpFundingProvider` will silently return `mark_price=None` for HL
+     going forward from that date (honest-absence by design, not a crash, but a real forward coverage gap for the
+     funding-driven archetypes' mark price). Filed as its own tracked follow-up:
+     `issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` (out of this todo's own scope, so not
+     resolved here).
 - **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-DUPLICATE — re-verified: the [CODE] P2 half's AO-readiness (flagged
   2026-07-30) has since been realized via `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s verbatim extraction (same
   date, 2026-07-30) — see inline note above. Not reclassified (already dispatched elsewhere). The [OPERATOR-DECISION] P3
