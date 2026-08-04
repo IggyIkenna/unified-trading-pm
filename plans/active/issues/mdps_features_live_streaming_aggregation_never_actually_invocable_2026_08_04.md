@@ -316,7 +316,9 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `cefi-delta-one-features-ready-sub`, `cefi-cross-instrument-features-ready`, `defi-delta-one-features-ready-sub`,
       `defi-cross-instrument-features-ready` to close the same gap proactively. All resources created in
       `central-element-323112` (prod) via `unified-trading-sa`. Zero-cost when idle.
-- [ ] [BACKEND] P2. **Fix `cross_instrument` `_run_message_loop` to catch Pub/Sub `NotFound` (and other non-retriable
+- [x] ✅ [BACKEND] P2. **Fix `cross_instrument` `_run_message_loop` to catch Pub/Sub `NotFound` (and other non-retriable
+      — features-service@cf1cdce4 (wrapped bare `subscribe_once` lambda in try/except Exception, mirrors UTL
+      `LiveDataSource.stream()`; regression test `test_run_message_loop_recovers_from_pull_failure` added; QG green)
       errors) instead of crashing the async generator.** The UTL fix (8a89005a) catches `subscribe_once` failures in
       `LiveDataSource.stream()`, but `cross_instrument/cli/handlers/live_handler.py`'s `_run_message_loop` calls
       `subscribe_once` directly via `loop.run_in_executor` with a bare lambda — no catch for `NotFound`,
@@ -359,12 +361,17 @@ OOM if left running). The named successor is this issue doc's Todos below.
   `cross_instrument`'s `_run_message_loop` calls `subscribe_once` via bare lambda without error handling — the UTL fix
   protects `LiveDataSource.stream()` but cross_instrument bypasses it. VM deleted after confirming findings (zero useful
   work possible without MTDS upstream data). 3 new actionable todos filed above. Todo 7 flipped ✅.
-- **2026-08-04 (slot-14, infra)**: shipped todo 8 (INFRA P1 Pub/Sub provisioning). **TradFi**: created topics
-  `commodity-signals-ng`, `commodity-signals-cl`, `tradfi-cross-instrument-features-ready` + subscription
-  `tradfi-delta-one-features-ready-sub` → `features-delta-one-ready`. **Audit finding**: CEFI was covered by the
-  pre-existing flat-named `features-delta-one-ready-sub` / `features-cross-instrument-ready-sub` (no `cefi-` prefix),
-  but the per-asset-group convention used by `cross_instrument/cli/handlers/live_handler.py` expects
-  `{ag}-delta-one-features-ready-sub` — created `cefi-delta-one-features-ready-sub`,
-  `cefi-cross-instrument-features-ready`, `defi-delta-one-features-ready-sub`, `defi-cross-instrument-features-ready` to
-  close the same gap proactively across all 3 asset groups. All resources in `central-element-323112` (prod) via
-  `unified-trading-sa`. Zero-cost when idle — unblocks the next TradFi re-pilot on the Pub/Sub front.
+- **2026-08-04 (slot-14, infra→backend_engineer)**: shipped todo 10 (features-service@cf1cdce4) — wrapped the bare
+  `subscribe_once` lambda in `_run_message_loop` with try/except Exception, mirroring the identical fix in
+  `UTL/feature_service_base/live_source.py::LiveDataSource.stream()`. One failed pull (NotFound, PermissionDenied,
+  transient gRPC error) is now logged + skipped rather than crashing the async generator. Regression test
+  `test_run_message_loop_recovers_from_pull_failure` verifies the loop logs + continues after a subscribe_once failure.
+  Full quality-gates.sh green on this SHA. `commodity-signals-ng`, `commodity-signals-cl`,
+  `tradfi-cross-instrument-features-ready` + subscription `tradfi-delta-one-features-ready-sub` →
+  `features-delta-one-ready`. **Audit finding**: CEFI was covered by the pre-existing flat-named
+  `features-delta-one-ready-sub` / `features-cross-instrument-ready-sub` (no `cefi-` prefix), but the per-asset-group
+  convention used by `cross_instrument/cli/handlers/live_handler.py` expects `{ag}-delta-one-features-ready-sub` —
+  created `cefi-delta-one-features-ready-sub`, `cefi-cross-instrument-features-ready`,
+  `defi-delta-one-features-ready-sub`, `defi-cross-instrument-features-ready` to close the same gap proactively across
+  all 3 asset groups. All resources in `central-element-323112` (prod) via `unified-trading-sa`. Zero-cost when idle —
+  unblocks the next TradFi re-pilot on the Pub/Sub front.
