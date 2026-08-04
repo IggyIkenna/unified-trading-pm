@@ -285,6 +285,53 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-04 (slot-5, data_engineering, dispatched via `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 2)
+  — "Verify END-TO-END depth-history retention" — VERDICT: FAIL.** Read-only verification, no data mutation. Two
+  independent, compounding gaps found (worse than the 2026-06-24 concern anticipated):
+  1. **Raw flush window is still overwrite-prone, contra the "RESOLVED... retired" note above.** `LiveWebsocketTickSink`
+     was RESTORED as the default sink 2026-06-26 (`market-tick-data-service@3043f2dc`, see that dated entry below) to
+     fix a worse InMemoryTransport data-loss bug — this reverted the brief `LiveEventFacadeSink` event-time-keying.
+     Confirmed at HEAD (2026-08-04): `live_tick_blob_path()`
+     (`market_tick_data_service/live/websocket_runner.py:95-145`) builds
+     `raw_tick_data/by_date/day={D}/pipeline_mode={live_mode}/.../data_type={dt}/{instrument_id}.parquet` — keyed by
+     day+instrument ONLY, no window/period key — so every window flush for the same instrument overwrites the prior one.
+     Live-sampled evidence:
+     `gs://market-data-tick-pred-prd-central-element-323112/raw_tick_data/by_date/day=2026-06-28/pipeline_mode=live_kalshi/.../data_type=book_snapshot_5/KALSHI:PREDICTION_MARKET:FEDHIKE-26DEC31.parquet`
+     — single object, mtime `2026-06-29T04:42:21Z`, 11 rows spanning only `2026-06-29T04:25:23Z`–`04:41:09Z` (~16 min),
+     last row's `ts_ms` matching the mtime — consistent with rolling-overwrite, not accumulation (note: content
+     timestamps fall on 06-29 despite the day=2026-06-28 partition key — a separate launch-day-vs-event-day artifact).
+  2. **The processed prediction candle/book store has ZERO objects for live-mode data, on every sampled day.** Bounded
+     (non-corpus-wide) `gcloud storage ls` on
+     `market-data-tick-pred-prd-central-element-323112/processed_candles/by_date/day={D}/` for 2026-06-23, 2026-06-24,
+     2026-06-26, 2026-06-28 — all four confirmed via the sibling `raw_tick_data/` prefix to have live raw data present
+     (both KALSHI and POLYMARKET_CLOB pipeline_modes, both `trades` and `book_snapshot_5` data_types) — returns **zero
+     processed-candle objects for every one of the four days**. The only processed output that exists in this bucket
+     recently (checked 2026-07-25, 2026-07-26, 2026-08-02, 2026-08-03) is `pipeline_mode=batch_kalshi` (from the daily
+     6am UTC batch cron, `deployment-service/configs/clusters/prediction.yaml`). So the durable "processed store" this
+     doc's own design-intent note (above, "durable history is MDPS's processed output, NOT the rolling raw bucket")
+     relies on for depth-history durability **does not exist at all** for live-mode prediction data on any sampled day —
+     not "insufficient multi-hour history", genuinely none.
+  3. **A structural cause compounding #2 (code-level, confirmed via exhaustive grep at HEAD, unified-api-contracts +
+     market-data-processing-service):** MDPS's `CandleAdapterRegistry` has exactly one PREDICTION registration —
+     `(PREDICTION, "trades")` → `PredictionTradesAdapter`
+     (`market_data_processing_service/app/adapters/prediction/trades_adapter.py:62`). No
+     `(PREDICTION, "book_snapshot_5")` adapter exists. Yet the global
+     `NEEDS_CANDLE_PROCESSING["book_snapshot_5"] = True` (`unified_api_contracts/registry/market_data_categories.py:947`
+     — shared across CeFi/DeFi/Prediction, comment confirms "Prediction — uses canonical trades / book_snapshot_5, same
+     keys as CeFi"). This routes prediction `book_snapshot_5` into `orchestration_service.py:653`'s
+     `"⚠️ No adapter for %s/%s"` WARNING branch on every scan — a silent (log-only, never a hard failure), permanent
+     skip. This alone explains why `book_snapshot_5` never reaches a processed store; it does NOT explain why `trades`
+     (which DOES have a registered adapter) is also absent from `processed_candles` for every sampled live day — that
+     half of finding #2 needs separate root-causing (most likely: the MDPS live-mode continuous scan process for
+     prediction was never deployed/launched against `pipeline_mode=live_*` prefixes, but this verification did not
+     confirm which).
+  - **Filed as a big finding** (data-correctness, silent, production-live, confirmed via live GCS read) per CLAUDE.md's
+    findings-triage rule: `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (3
+    actionable follow-up todos — root-cause the empty-live-scan half of #2, register or deliberately bypass the missing
+    book_snapshot_5 adapter, and re-verify multi-hour accumulation once fixed).
+  - **Done-when satisfied** for `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 2 (this todo's own checkbox
+    there flipped, citing this entry).
+
 - **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **1 stale item cited** — 2 open,
   unchanged in count. The only commit to this file since the 2026-07-30 marker (`1ab67de59`) dropped the inherited
   `cefi` tag per the operator's 2026-07-30 option-A ruling; no content moved. New this run, found by the Phase-2
@@ -379,7 +426,15 @@ crypto set).
       event-time-keyed not launch-time-keyed. The launch-day issue only affects VMs launched BEFORE 3b956b70;
       newly-launched VMs are clean. The `cross_venue_arb_runner.py` `scan_days=3` workaround remains for the transition
       period. Warm GCS materialization is pending Cloud Storage subscription provisioning (BLOCKED-CREDENTIALS) but that
-      is tracked separately; the code is correct.
+      is tracked separately; the code is correct. **CORRECTION (2026-08-04, live re-check — see the
+      depth-history-retention verdict below):** this "retired" claim is STALE. The 2026-06-26 Progress Log entry below
+      (same file) shows `LiveWebsocketTickSink` was RESTORED as `_make_default_sink()`'s default
+      (`market-tick-data-service@3043f2dc`) to fix a worse bug (`LiveEventFacadeSink` was silently routing ticks to
+      `InMemoryTransport` instead of GCS). At HEAD today, `live_tick_blob_path()` (`websocket_runner.py:95-145`) is
+      confirmed still day+instrument-keyed (`{file_name}.parquet`, no `period_start`/`period_end` in the path) — NOT
+      event-time-keyed. The launch-day partitioning defect this checkbox tracked may still be moot for other reasons,
+      but "the code is correct" no longer holds for the event-time-keying claim specifically; do not cite this note as
+      evidence the raw path is window-safe.
 
 - [x] ✅ [SCRIPT] P0. **DATA-CORRECTNESS: prediction `data_type=trades` parquets contain BOOK-STATE rows — FIXED
       market-tick-data-service@ef01a055 (2026-06-24).** ROOT CAUSE: the live WS connector registry is venue-keyed and

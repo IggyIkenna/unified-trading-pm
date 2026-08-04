@@ -144,17 +144,25 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       `empty_confirmed`), a test/spot-check confirms `OUT_OF_COVERAGE_WINDOW_REASONS` already excludes these from the
       denominator (no `EMPTY_CONFIRMED_REASONS` enum change), and `quality-gates.sh` is green across all three repos.
 
-- [ ] [DATA] P2. **Verify END-TO-END MDPS prediction depth-history retention.** The raw live prediction book store is a
-      rolling-latest-window (does not retain multi-hour history by itself). Confirm (a) MDPS's prediction live-scan
-      cadence against the raw live-book flush window, and (b) that the PROCESSED prediction book/candle store actually
-      accumulates multi-hour history rather than only mirroring the rolling raw window — a bounded read/grep of the MDPS
-      scan config + a GCS-timespan check on the processed prediction store, with a stated pass/fail verdict. Repo:
-      market-data-processing-service (+ market-tick-data-service read-only for the raw-window comparison). Source:
-      `prediction_live_clob_depth_capture_2026_07_24.md` (P2 "Verify END-TO-END depth-history retention"). **Done
-      when**: a dated verdict is recorded (PASS = processed store demonstrably accumulates >1 flush-window of prediction
-      depth history, with the measured processed-store time span cited; or FAIL = a named retention gap + the specific
-      scan-cadence/flush-window mismatch), committed to that doc's Progress Log. Read-only verification — no data
-      mutation.
+- [x] ✅ [DATA] P2. **Verify END-TO-END MDPS prediction depth-history retention — DONE 2026-08-04 (slot-5), VERDICT:
+      FAIL.** Full evidence + verdict recorded in `prediction_live_clob_depth_capture_2026_07_24.md`'s Progress Log
+      (this todo's Done-when target): the raw flush path still overwrites per instrument (day+instrument-keyed, no
+      window key), AND the processed prediction candle/book store has zero `pipeline_mode=live_*` objects on every
+      sampled day (2026-06-23/24/26/28), including for `trades` which has a registered MDPS adapter. Follow-up fix work
+      filed as `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (3 todos) per the
+      findings-closure HARD RULE — this verification todo itself was read-only, no data mutation. Original todo text
+      preserved below for context (NOT a checkbox — do not re-derive as a backlog task).
+
+  > Original: The raw live prediction book store is a rolling-latest-window (does not retain multi-hour history by
+  > itself). Confirm (a) MDPS's prediction live-scan cadence against the raw live-book flush window, and (b) that the
+  > PROCESSED prediction book/candle store actually accumulates multi-hour history rather than only mirroring the
+  > rolling raw window — a bounded read/grep of the MDPS scan config + a GCS-timespan check on the processed prediction
+  > store, with a stated pass/fail verdict. Repo: market-data-processing-service (+ market-tick-data-service read-only
+  > for the raw-window comparison). Source: `prediction_live_clob_depth_capture_2026_07_24.md` (P2 "Verify END-TO-END
+  > depth-history retention"). Done when: a dated verdict is recorded (PASS = processed store demonstrably
+  > accumulates >1 flush-window of prediction depth history, with the measured processed-store time span cited; or FAIL
+  > = a named retention gap + the specific scan-cadence/flush-window mismatch), committed to that doc's Progress Log.
+  > Read-only verification — no data mutation.
 
 - [ ] [SCRIPT] P2. **cqg recent-window catalogue re-enumeration with the already-fixed classifier.** The cqg-partitioned
       `instrument_availability` catalogue (instruments-store) is refreshed for 2026-06-23 only (34 groups verified);
