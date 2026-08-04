@@ -194,14 +194,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - **Fixtures entity split**: `entity=fixtures_schedule` (schedule fields incl. `round`) + `entity=fixtures_outcomes`
   (scores/status), under `pipeline_mode=batch_api_football/`. The legacy bare `entity=fixtures/` is FROZEN (last real
   write 2026-05-23) and must not be read or written. **The manifest `data_type` must record the split entities, not the
-  `"FIXTURES"` umbrella** (§ C1). **NOTE (2026-07-23): this freeze is currently violated by at least 3 live artifacts**
-  — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of 07-17),
-  `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (shipped `_read_fixtures_entity_with_schedule_fallback`,
-  an active fallback READ of the frozen path, `instruments-service@e1524d21`), and
-  `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
-  `entity={fixtures,teams, injuries}/` under a different namespace). See Track S/E's new todos below — these are being
-  reconciled, not silently left contradicting this rule. **SECOND CROSS-LINK (2026-07-25,
-  `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
+  `"FIXTURES"` umbrella** (§ C1). **✅ RESOLVED for reads (2026-08-04): the freeze is now TRUE — no live reads of the
+  legacy bare `entity=fixtures/` path remain.** The read fallback `_read_fixtures_entity_with_schedule_fallback` and its
+  4 call sites in `sports_fixtures.py` were removed (`instruments-service@333c35d2`,
+  `/plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md` todo 5); a full Phase-1 census across all 2,319
+  post-floor dates confirmed the fallback was never load-bearing (0 dates where canonical `fixtures_schedule/` was empty
+  and legacy `fixtures/` had real data). The two remaining write-side artifacts from the original 2026-07-23 NOTE are
+  still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of 07-17)
+  and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
+  `entity={fixtures,teams, injuries}/` under a different namespace) — tracked via Track S/E's todos below. **SECOND
+  CROSS-LINK (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
   `sports_catalog_league_grain_only_scope_2026_07_08.md` also independently designs a manifest-schema extension for
   per-fixture-grain capture tracking (its own todos), a parallel, independently-designed fixture-grain redesign running
   alongside this closeout's own fixture-grain entity-split work (Track E), with neither doc aware of the other until
