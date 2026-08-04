@@ -658,8 +658,8 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       Repo: alerting-service (investigation only, zero-diff). Source:
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 
-- [x] ✅ [INFRA] P3. **DONE 2026-08-04 — `unified-trading-pm@<pending-sha>`.** Smoke-test the stash-pile classifier
-      before anyone trusts its auto-drop classes (dry-run only, no `--apply`). Ran
+- [x] ✅ [INFRA] P3. **DONE 2026-08-04 — `unified-trading-pm@1fa747856`.** Smoke-test the stash-pile classifier before
+      anyone trusts its auto-drop classes (dry-run only, no `--apply`). Ran
       `bash scripts/dev/audit-stash-pile.sh --repo unified-trading-pm` (dry-run, nothing dropped/popped/applied) against
       the host's shared root-clone stash pile — **76 stashes** (grown from the 31 the parent plan measured against),
       classifying to **1 `redundant`** / 0 `empty` / 0 `foreign-park` / 75 `genuine-WIP`. The done-when's "≥3
