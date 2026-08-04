@@ -128,7 +128,7 @@ currently nothing at all.
       definitive root cause is recorded (worker never deployed / deployed but erroring / deployed but scanning the wrong
       prefix) with evidence, in this doc's Progress Log. — **VERDICT: worker never deployed, fleet-wide (not
       prediction-specific)** — full evidence + 2 new follow-up todos in the 2026-08-04 Progress Log entry below.
-- [ ] [BACKEND] P2. **Fix the MDPS `--mode live --operation timer-candles` CLI dispatch — currently crashes for EVERY
+- [x] ✅ [BACKEND] P2. **Fix the MDPS `--mode live --operation timer-candles` CLI dispatch — currently crashes for EVERY
       asset_group if invoked, confirmed live.** `market_data_processing_service/cli/parser.py:71-74`
       (`_mode_dispatch_handler`) does `live_handler_cls()` (zero args) then `handler.run(args)` (passes an
       `argparse.Namespace`), but the real `LiveModeHandler.__init__(self, config: MarketDataProcessingServiceConfig)`
@@ -146,7 +146,20 @@ currently nothing at all.
       `args` instead of passing `args` itself: (2) either default `categories` to `list(MarketAssetGroup)` or make the
       omission an explicit, documented choice (comment) rather than a silent gap. Repo: market-data-processing-service.
       Done when: QG-green with the new dispatch-path regression test, and PREDICTION is reachable via
-      `--mode live --operation timer-candles` with no `--categories` override.
+      `--mode live --operation timer-candles` with no `--categories` override. — **DONE 2026-08-04 (slot-11,
+      backend_engineer)**: `market-data-processing-service@558b5b7`. `_mode_dispatch_handler` now constructs
+      `get_service_config()` and calls `live_handler_cls(config)`, then
+      `handler.run(interval=..., categories=...,     venues=..., timeframes=...)` — all four derived from `args` (added
+      a new `--interval` CLI flag; venues/timeframes reuse the existing `--venues`/`--timeframes` flags; categories
+      reuse `get_categories_from_args()`, the same helper the batch path already uses, so an omitted
+      `--CEFI/.../--PREDICTION` filter resolves to every `MarketAssetGroup`). Also fixed `LiveModeHandler.run()`'s own
+      categories default from `["CEFI", "TRADFI", "DEFI"]` to `list(MarketAssetGroup)` so any other caller gets full
+      coverage too. Added `test_live_mode_dispatch_constructs_real_live_mode_handler_with_config` — exercises the REAL
+      `LiveModeHandler` class (not a fully-mocked stand-in) through the real dispatch path, so the
+      construction/call-signature mismatch can't silently regress; updated the two pre-existing fully-mocked dispatch
+      tests to assert the new call contract. Evidence: `bash scripts/quality-gates.sh` full run green (2342 passed, 0
+      skipped-relevant, sentinel `.qg_last_passed_sha=558b5b788d2ab8ca9164f6c6683b9b792d06c034`); verified `558b5b7` is
+      an ancestor of `origin/live-defi-rollout` post-quickmerge.
 - [ ] [OPS] P2. **Operationally launch (or explicitly decide not to) the `mdps-features-live-{asset_group}` VM cluster —
       currently launched for NO asset_group, fleet-wide, not just prediction.**
       `deployment-service/scripts/vm/     launch-mdps-features-live.sh --asset-group <cefi|defi|tradfi|sports|prediction>`
