@@ -374,3 +374,18 @@ are genuinely in scope for the operator's "no exceptions" directive.
   history isn't sufficient evidence on its own for this `e2-standard-8` entity. **Did not immediately relaunch again** —
   the residual pattern needs to show genuine subsidence (not just af-backfill's own trailing history) before the next
   attempt. FIXTURE_STATS remains at 125/68,284 non-MVP shards (0.18%), unchanged — 9 attempts today, zero net progress.
+- **2026-08-04T06:36Z — strategy shift, 10th relaunch.** `asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s
+  slot-6 entry (06:07-06:10Z) extended the residual-pattern scope further: it now spans 3+ VM families
+  (`expected-universe-v2-sports`, `tradfi-bf-cme-ohlcv-1m-*`, `instr-backfill-pred-pchk-*`) across 2 machine types
+  (`e2-standard-8` AND `e2-standard-4`) and a 4th asset group (prediction) — a genuinely zone-wide, low-intensity (~1
+  event/6min), persistent background rate, NOT a single-launcher-specific problem waiting to clear. **This changes the
+  calculus**: waiting for "the whole zone quiet across every VM family for 30-60min" may not resolve for a long time if
+  this is a standing background rate rather than a transient storm, and 9 attempts of "wait for evidence, then get
+  unlucky anyway" hasn't produced net progress either way. Given (a) the af-backfill launcher is idempotent (skip-aware
+  re-fetch, confirmed working correctly across every prior attempt today) and (b) the sub-tick auto-recovery fix
+  (`deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`, confirmed shipped + deployed) should now catch and
+  auto-relaunch a fast preemption without requiring a human/agent to notice and manually re-launch every time — the more
+  practical posture is to accept the residual background risk and relaunch now, letting auto-recovery absorb further
+  preemptions if any land, rather than continuing to gate on an increasingly-unlikely "fully clean zone" signal.
+  Relaunched as `af-backfill-20260804-073723`, confirmed RUNNING. Will monitor for either genuine progress or
+  auto-recovery actually firing on a future preemption (a live test of the fix, useful either way).
