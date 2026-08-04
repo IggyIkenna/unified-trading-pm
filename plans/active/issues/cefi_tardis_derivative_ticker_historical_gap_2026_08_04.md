@@ -95,3 +95,14 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   self-service). Re-armed a 25-min background watchdog with the account-set baked into the same call. Will verify via
   manifest row counts once the VM reaches its `[[VM_PROGRESS]] last_completed_date=2026-08-02` marker / shuts down, then
   flip the todo + `/done`.
+- **slot-12 2026-08-04 ~07:43Z**: Picked up this task again (`already_in_progress: true`, resume dispatch). VM
+  `cefi-fwd-20260804-021235` confirmed still `RUNNING`, now processing day=2026-06-06/2026-06-07 (of the
+  2026-05-01→2026-08-02 range), RSS ~5.5-8.5GB, `run.log` actively growing with per-minute
+  `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE` cadence — healthy, ~37 days progressed in ~5.5h runtime (~6.7 days/hour), so
+  ~8+ hours likely remain. One 404-on-instrument-store shard failure observed for 4/19 venues on date=2026-06-06
+  (`BINANCE-FUTURES`/`BYBIT`/`BINANCE-DELIVERY`/`OKX`) — correctly classified as `record_failed` (partial manifest
+  written for the completed venues, not a silent zero), not a crash; the pipeline continues past it per its shard-level
+  failure isolation. No traceback/crashloop signature. Armed a bounded (16h-cap, 20-min-interval) `run_in_background`
+  watchdog polling VM status until non-`RUNNING`, rather than continuous polling, per the async-wait-discipline HARD
+  RULE. Will verify via manifest row counts once the VM reaches its final day / shuts down
+  (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo + `/done`.
