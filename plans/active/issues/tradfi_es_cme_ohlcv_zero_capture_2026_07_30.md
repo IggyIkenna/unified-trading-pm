@@ -311,20 +311,29 @@ root-cause fix.
       infra bugs above stopped blocking it. The canonical-index query scoped to `instrument_id=ES.FUT` still shows 0
       real rows for this run — see the next todo, this is the reason why (a tagging gap, not a capture failure).
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s P0 todo can now cite this evidence.
-- [ ] [CODE] P2. **Fix the blank-`instrument_id` write for CME futures-chain bundle captures — now confirmed a LIVE,
-      currently-reproducing bug (not a separate historical process as the first correction banner above guessed).**
-      `ES.FUT` is a `futures_chain` bundle; `databento_enrichment.py::download_batch_df` → `_fetch_and_stream_chunks`
-      writes each real per-contract capture with NO `instrument_id` stamped, while a separate write correctly tags the
-      non-tradeable parent symbol `ES.FUT` itself as a genuine zero-row (`SOURCE_RETURNED_ZERO`) — this is exactly why
-      the original manifest-count check (scoped to `instrument_id=ES.FUT` exactly) found 100% zero-row rows: it was
-      reading the right key for the wrong half of the data. Fix: stamp a real per-contract `instrument_id` (or a
-      canonical bundle-child id) on these writes instead of leaving it blank. Once fixed, re-verify whether
-      `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script can backfill-reconcile the 28,307+111
-      pre-existing blank-`instrument_id` rows (the first correction banner's finding) into the same canonical form.
-      Repo: market-tick-data-service.
+- [x] ✅ [CODE] P2. **DONE 2026-08-04 — root cause was one level deeper than the write-site hypothesis above, real write
+      site was the MANIFEST bookkeeping, not `databento_enrichment.py`.** Traced the actual blank-write:
+      `databento_enrichment.py::_enrich_with_canonical_ids` already stamps a correct per-row `instrument_id` on every
+      DataFrame row (verified — `build_instrument_id` with `expiry_date` succeeds for every surviving dated contract).
+      The blank came from `venue_fetch.py::_record_venue_shard_counts`, which unconditionally hardcoded
+      `instrument_id_for_manifest = ""` for every `is_derivative` (futures_chain/options_chain) manifest shard — correct
+      for bulk data_types like `trades` (genuinely one blob spanning many contracts, regression-tested, untouched) but
+      wrong for `ohlcv_1m`/`ohlcv_1s`, which UAC's own `_PER_INSTRUMENT_SHARD_DATA_TYPES` registry already declares
+      per-contract. Fix: new `_tradfi_manifest_shard._resolve_chain_bundle_manifest_id` stamps a canonical
+      per-(venue,underlying) bundle id (e.g. `CME:FUTURE:SP500` via `build_instrument_id(passthrough=True)`) for TradFi
+      chain-bundle OHLCV shards only; every other chain-bundle data_type/venue is unaffected. 3 new regression tests +
+      all 9924 existing tests green, `quality-gates.sh` clean. Shipped `market-tick-data-service@65beaeaf` (+
+      `d22d3604`, a follow-up file-size-ratchet trim). Repo: market-tick-data-service. **Scope note**: this fixes NEW
+      captures going forward only — the 28,307+111 pre-existing blank-`instrument_id` rows the first correction banner
+      found are NOT backfilled by this change; tracked as a new todo below.
+- [ ] [DATA] P3. Re-verify whether `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script can
+      backfill-reconcile the 28,307+111 pre-existing blank-`instrument_id` OHLCV manifest rows (the first correction
+      banner's finding, written before the P2 fix above) into the same canonical bundle-id form
+      `_resolve_chain_bundle_manifest_id` now stamps going forward. Repo: market-tick-data-service.
 - [ ] [DATA] P3. Now that the fix is proven for ES, determine whether the other "in flight" CME roots
       (CL/GC/HG/NG/NQ/SI) hit the same two infra bugs (both now fixed fleet-wide) or the same blank-instrument_id
-      tagging gap (still open) — check before assuming any of them need further work. Repo: instruments-service.
+      tagging gap (now fixed by the P2 todo above) — check before assuming any of them need further work. Repo:
+      instruments-service.
 
 ## Progress Log
 
@@ -333,3 +342,9 @@ root-cause fix.
 - **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (5 entries) —
   `databento_enrichment.py` already listed is confirmed the exact write site the remaining P2 blank-`instrument_id` todo
   targets.
+- **slot-3 worker 2026-08-04**: P2 shipped `market-tick-data-service@65beaeaf`+`d22d3604` — real write site was
+  `venue_fetch.py::_record_venue_shard_counts`, not `databento_enrichment.py` (see the flipped todo above for the
+  corrected root cause). Hit + resolved an unrelated repo-wide `quality-gates.sh` blocker along the way (pip-audit CVE
+  in pinned `cryptography` — filed `mtds_cryptography_pip_audit_cve_qg_red_2026_08_03.md`, repo-blocker `RB-e7d79260`;
+  fix landed upstream as `market-tick-data-service@f4c16feb` while waiting). Added a new P3 backfill-reconciliation todo
+  for the pre-existing 28,307+111 blank rows this fix does not retroactively touch.
