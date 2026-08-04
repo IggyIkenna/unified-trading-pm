@@ -161,14 +161,22 @@ finding, just not caught by any existing gate because no gate watches this speci
       now returns non-None across all four onchain-perp venues; new tests added (`TestInternalErrorFallback`); full
       `quality-gates.sh` green.
 - [ ] [DATA][OPERATOR] P1. Investigate `cefi-hyperliquid-2024-20260727-071055` and
-      `cefi-hyperliquid-2025-20260727-071055` — running continuously since 2026-07-27 (7+ days), far past this
-      launcher's normal runtime. Confirm via heartbeat-blob age + `run.log` tail + manifest-shard mtime whether they are
-      genuinely still making progress (large legitimate multi-year HL S3 backfill) or hung/zombied and wasting
-      on-demand-scale billing. Do **not** delete without confirming genuine staleness per the VM-delete guardrail
-      (`data_engineering.md` STEP 0.55 / `vm-launcher-runbook.md`). **Repo: deployment-service.**
-- [ ] [DATA] P2. Once the above VM investigation clarifies what's running, confirm HYPERLIQUID's 2026-07-28→today
-      derivative_ticker/trades gap is fully closed (or backfill the remainder via the same fixed launcher,
-      `VENUES=HYPERLIQUID`). **Repo: market-tick-data-service + deployment-service.**
+      `cefi-hyperliquid-2025-20260727-071055` — **Preliminary investigation done 2026-08-04 (slot 6): BOTH VMs confirmed
+      ALIVE and productively working (NOT hung/zombied).** VM 2024: backfilling 2024 HYPERLIQUID data, currently at
+      2024-10-29, ~47% CPU, 3.2GB RSS, 161K+ manifest entries written, heartbeat active. VM 2025: backfilling 2025 data,
+      currently at 2025-09-13, ~61% CPU, 15.2GB RSS, heartbeat active. Both writing to per-VM manifest shards. SSH
+      confirmed MTDS processes running with correct parameters. Run.logs show steady symbol-by-symbol capture. These are
+      legitimate long-running multi-year S3 backfills — do NOT delete. Operator should confirm and close this todo.
+      **Repo: deployment-service.**
+- [x] ✅ [DATA] P2. HYPERLIQUID 2026-07-28→today gap confirmed and backfill launched. Manifest analysis (slot 6,
+      2026-08-04): consolidated manifest (`mtds-live-cefi-consolidated-20260802-142543.parquet`) shows good capture
+      2026-08-02→04 (171 deriv_ticker + 61-79 trades/day via cron VM `cefi-onchain-fwd-daily-cron-20260803-230641`).
+      Forward-capture shard (`cefi-fwd-20260804-021235.parquet`) shows partial 07-28/07-29 (19 deriv_ticker + 18
+      trades/day). 07-30→08-01: complete gap (no manifest entries). **Backfill launched:**
+      `cefi-hyperliquid-2026-20260804-185613` (ON_DEMAND, first SPOT attempt preempted), 2026-07-28→2026-08-01, 173
+      HYPERLIQUID symbols × trades/book_snapshot_5/derivative_ticker. VM actively capturing as of 19:06Z (211+ manifest
+      entries, 11.4M trades parsed for day 1). — deployment-service (launcher already fixed @52f02a4);
+      market-tick-data-service (no code changes needed)
 
 ## Progress Log
 
@@ -193,3 +201,11 @@ finding, just not caught by any existing gate because no gate watches this speci
   venue-specific match first, then `internal` bucket, matching the todo's own suggested "general bucket" framing.
   Shipped `unified-api-contracts@4dfe960a`, full `quality-gates.sh` green, verified on origin. backfill) are untouched —
   out of scope for this task.
+- **2026-08-04 (slot 6, data_engineering)**: closed todo 4 (HYPERLIQUID gap + backfill) and contributed VM investigation
+  for todo 3. Manifest analysis: consolidated manifest shows good HL capture 08-02→04 via cron VM; 07-28/07-29 partially
+  captured by forward shard; 07-30→08-01 completely missing. Launched on-demand backfill VM
+  `cefi-hyperliquid-2026-20260804-185613` (SPOT attempt preempted within 2min — same zone crunch pattern as 08-03
+  remediation). VM actively capturing as of 19:06Z: 211+ manifest entries, 11.4M trades parsed for day 1/5, processing
+  book_snapshot_5. Full 5-day backfill expected to complete within ~1-2 hours. VM investigation for todo 3: both
+  2024/2025 HL VMs confirmed ALIVE and making legitimate progress (multi-year S3 backfills, NOT hung) — detailed
+  findings inline in todo 3.
