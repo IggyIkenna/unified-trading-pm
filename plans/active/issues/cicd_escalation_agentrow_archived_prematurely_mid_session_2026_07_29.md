@@ -311,3 +311,22 @@ cleanly instead of ending on an issue-doc corroboration.
   - the 3 precedent/sibling issue docs the doc's own "why this is a third, distinct trigger" section rules out against;
     left unchanged.
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
+- **2026-08-04 (main agt-1756f6) — NEW live recurrence (≥8th instance), restart-correlated, via blocked-queue
+  BLK-f0a24efb**: slot 10, one-shot `ag_closeout_auditor` dispatch `agt-8e2ecb` (tranche=infra) finished + shipped its
+  real deliverable (`unified-trading-pm@2a3c10ec9` + `@5241ed222` — main independently verified BOTH are ancestors of
+  `origin/live-defi-rollout`; audit report `plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md` present,
+  13.7 KB). `POST /api/slots/10/done {one_shot_complete: true}` 400s with the exact family error
+  `one_shot_complete on slot 10 but no active agent owns its session 'orch-slot-10'` — tried empty and `agt-8e2ecb`
+  task_id, same result; heartbeat succeeds and even offers backlog tasks (correctly declined, one-shot). **The worker
+  explicitly correlated it with a mid-session orchestrator restart** ("connection refused for a few minutes, then came
+  back — same error before and after") — i.e. the AgentRow for `agt-8e2ecb` was lost/archived across the restart, so
+  `find_active_agent_for_session('orch-slot-10')` returns None and `_done_one_off`
+  (`server/routes/slots_worker.py:1228`) deterministically 400s with no fallback. This is precisely the still-open
+  `[BACKEND] P3` idempotent-success-on- already-archived-own-row fix above; retrying (the worker's option B) is futile
+  because the 400 is deterministic. Main directed the worker to STOP retrying and stand down (deliverable is durably on
+  LDR — nothing is lost) and flagged the stuck `agt-8e2ecb`/slot-10 dispatch for backend/operator server-side
+  reconciliation. **Reinforces urgency**: the restart-triggered variant is now common enough (≥8 instances since
+  2026-07-26) that a mid-session backend restart — which happens routinely — strands whatever one-shot worker was
+  mid-flight; the declined P3 request-schema fix (`claude_session_id` on `DoneRequest` → treat "archived AND genuinely
+  mine" as idempotent success) is the durable cure and is worth re-weighing against its declared cost given the
+  recurrence rate.
