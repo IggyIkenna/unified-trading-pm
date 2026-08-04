@@ -104,9 +104,8 @@ ASIAN_HANDICAP/OVER_UNDER/MATCH_ODDS/SPORT set had already been correctly writte
 production just never received it. Confirmed via direct Cloud Run inspection: every revision built since 07-31
 (`00375`..`00428`) was either never traffic-routed, or (from `00419` onward) was a recurring `IAM-FIX-RETEST` diagnostic
 probe (`python3 -c "..."` command override, no real app) deployed repeatedly onto this SAME production service —
-unrelated to this investigation, cross-referencing
-`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_ cutover_2026_07_31.md` (same doc this session added fresh
-evidence to: the freeze wasn't a forgotten manual pin, it was that doc's cold-start bug silently no-op'ing every
+unrelated to this investigation, cross-referencing the cold-start deploy issue linked above (same doc this session added
+fresh evidence to: the freeze wasn't a forgotten manual pin, it was that doc's cold-start bug silently no-op'ing every
 automatic cutover attempt for 4 days straight). Recovered by building fresh (`deploy-shared.sh`) and manually forcing
 `gcloud run services update-traffic` after the automatic cutover again silently failed — see that doc's Progress Log for
 the full blow-by-blow. Confirmed live and stable afterward (multiple 200s across `/api/health` + two `distinct-values`
