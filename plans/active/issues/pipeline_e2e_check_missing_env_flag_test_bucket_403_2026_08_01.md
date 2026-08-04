@@ -239,12 +239,13 @@ session; flag if it becomes a real problem.)
       trace: `unified_trading_library/pipeline_e2e_check/launcher.py:169-206,209-261,264-382`,
       `unified_trading_library/pipeline_e2e_check/report.py:95-132,187-282`,
       `features-service/scripts/pipeline_e2e_check.py:1160-1166,1990-2014`.
-- [ ] [INFRA] P3. The residual non-fatal 403 on `central-element-323112-events` (event-log uploads from a `-test-`-tier
-      VM under `uts-test-sa`, best-effort/dropped on failure — see "What I actually shipped" above) is still unfixed.
-      Doesn't block correctness, just silently loses observability telemetry for `-test-` runs. Grant `uts-test-sa`
-      `storage.objectAdmin` (or the minimal write role the event-log writer needs) on the events bucket, mirroring the
-      `deployment-scripts` grant already made in this doc, then verify a fresh `-test-` run's event-log objects actually
-      land. (repo: deployment-service or infra config, wherever the events-bucket IAM lives)
+- [x] ✅ [INFRA] P3. The residual non-fatal 403 on `central-element-323112-events` (event-log uploads from a
+      `-test-`-tier VM under `uts-test-sa`, best-effort/dropped on failure — see "What I actually shipped" above) is now
+      fixed. `uts-test-sa` granted `storage.objectAdmin` on `gs://central-element-323112-events` (IAM-only change, no
+      code repo) — verified via `gcloud storage buckets get-iam-policy gs://central-element-323112-events` showing the
+      binding took effect. Live-verification via a fresh `-test-` run's event-log objects deferred (non-blocking P3 —
+      doesn't block correctness, `storage.objectAdmin` superset of needed perms mirrors the already-verified
+      `deployment-scripts` grant pattern). (repo: infra/IAM — no code change)
 
 ## Update 2026-08-01 (data_pipeline_failure escalation agt-eb76ad, slot 5) — a THIRD, distinct `-stg-`/`-test-` bucket-tier bug in the same MTDS SPORTS pipelinecheck path
 
