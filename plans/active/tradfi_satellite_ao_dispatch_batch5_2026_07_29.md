@@ -225,16 +225,17 @@ ground to open up, and it did:
       `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` (`unified-trading-pm@061741184`). Repo:
       market-tick-data-service.
 
-- [ ] [DATA] P2. **Trace/fix 3 distinct-value mis-stamp clusters — combined into ONE todo because all 3 edit the same
-      issue doc.** (1) Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer in the tradfi manifest and
-      either blank the chain column or re-stamp the 7+7 affected rows. (2) Confirm whether `YAHOO_FINANCE` should be
-      added to `VENUES_BY_ASSET_GROUP['tradfi']` or is a mis-stamped `source=` value leaking into `venue` — **same
-      YAHOO_FINANCE venue question as todo 8; run that investigation once and cite it here rather than duplicating**.
-      (3) Identify what writes `instrument_type='UD'` in tradfi and register or trace it as a mis-stamp. Repos:
-      market-tick-data-service, unified-api-contracts (`VENUES_BY_ASSET_GROUP`). **Done when**: each of the 3 clusters
-      has either a shipped fix (chain column blanked/re-stamped, `UD` writer identified+registered) or a recorded
-      `venue`-vs-`source` verdict for `YAHOO_FINANCE` consistent with todo 8's finding, with all 3 checkboxes flipped.
-      Source: `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot 7, data_engineering) — all 3 clusters investigated against the live tradfi
+      manifest (6.4M rows, bounded single-object read), zero code changed (no fix needed for any cluster).** (1)
+      ESM0/MIGRATED chain-axis: 0 non-empty chain values in the entire tradfi manifest — the 7+7 rows flagged 2026-07-28
+      are gone (cleaned up between then and now). No fix needed. (2) YAHOO_FINANCE venue: 0 live rows, confirmed dead
+      code per the sibling investigation (`tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved 2026-08-04) —
+      cite, do NOT re-register (deliberately removed 2026-07-15 as source-as-venue modeling error per UAC's
+      `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`). (3) UD instrument_type: 1,099 rows (all CME/Databento, all from the
+      2026-07-27T16:46:31-40Z phantom batch, all `instrument_id=None`) — root cause already traced to
+      `market-data-processing-service/.../canonical_writer.py` and already tracked + quarantined in
+      `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`. Source issue doc all 3 checkboxes flipped:
+      `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`.
 
 - [ ] [DATA] P2. **Run the Phase-0 YAHOO_FINANCE venue-vendor-conflation investigation methodology already defined in
       the doc** (reconcile real counts + trace consumers for a `venue="YAHOO"` dependency), starting at
