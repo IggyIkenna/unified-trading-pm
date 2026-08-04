@@ -157,7 +157,7 @@ items explicitly "FENCED" to another named agent/live process).
       `git diff b1028e6 HEAD -- <4 files>` is empty, proving nothing was left uncommitted; (4) all 3 previously-cited
       dirty deps (unified-trading-library, unified-api-contracts, deployment-service) are clean on fresh-pull. No new
       commit was possible or needed — the "land via quickmerge" step had already happened.
-- [ ] [DATA] P2. **Confirm UPBIT's live-wiring status in the cefi manifest.** UPBIT is codex-MVP
+- [x] ✅ [DATA] P2. **Confirm UPBIT's live-wiring status in the cefi manifest.** UPBIT is codex-MVP
       (`/codex/02-data/mvp-scope-canonical.md`) but has zero mentions anywhere in the parent plan's audit trail. Query
       the live cefi manifest for `venue=UPBIT` captured-row counts and check for any open backfill/issue doc. Repo:
       instruments-service (read-only). **Done when**: a recorded row count + PASS/FAIL verdict against the MVP
@@ -480,6 +480,45 @@ information here. A genuinely clean baseline follow-up is already queued on that
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — trimmed 7→6 (dropped the aggregated-sources
   index + vm-launcher-runbook.md codex doc), added the `_cefi_canonical_resolver_migration_2026_07_18.py` source path
   (the shared resolve_canonical script Track-8 todos build on).
+
+### 2026-08-04 (slot-6, `data_engineering`) — Todo 6 (UPBIT live-wiring status confirm)
+
+**Verdict: FAIL against MVP definition — 2.5+ month data gap with no open tracking issue.**
+
+UPBIT is codex-MVP (`MVP_SCOPE.cefi.venues`, `/codex/02-data/mvp-scope-canonical.md` § CeFi venues row: SPOT_PAIR
+spot-without-perp carve-out via `STAKING_SPOT_EXCEPTION`) but has zero mentions in the parent
+`cefi_consolidated_closeout_2026_07_18.md` audit trail, and the live GCS estate reveals a gap the audit surface hasn't
+caught.
+
+**Live-manifest query (read-only, instruments-service GCS buckets):**
+
+- **IS catalogue** (`instruments-store-cefi-prd`/`instrument_availability/by_date/day=2026-08-03/`): 488 active UPBIT
+  instruments, all `SPOT_PAIR`, 308 base assets across 2 quote assets (KRW, USDT). `status=active` on all.
+- **MTDS tick data** (`market-data-tick-cefi-prd`/`raw_tick_data/by_date/`):
+  - Pipeline mode: `batch_tardis` only (Tardis-sourced historical backfill — no live/forward pipeline mode).
+  - Data types captured: `trades` (~263/day) + `book_snapshot_5` (~345/day) = ~608 parquet objects/day. `funding_rate`
+    and `derivative_ticker` not applicable (spot-only venue). Per MVP data_type cut: trades ✅, book_snapshot_5 ✅ —
+    both captured when the pipeline was running.
+  - **Coverage period**: 2021-03-03 through 2026-05-22 (~5.2 years, ~600 objects/day).
+  - **May 23–24, 2026**: Dramatic drop to 36 objects/day — KRW-pair `book_snapshot_5` ONLY (BTC-KRW, ETH-KRW, DOT-KRW,
+    etc.). No `trades` objects, no USDT pairs.
+  - **May 25, 2026 → present (2026-08-04)**: **ZERO objects**. Complete data gap for 72+ days.
+  - **Live connectors exist in code** (`upbit_spot_ws.py`, `upbit_book_ws.py`, `upbit_adapter.py`) but produce no GCS
+    objects — the Tardis backfill is the sole data source, and it stopped.
+  - **No `pipeline_mode=batch_live_*`** for UPBIT on any checked day post-cutoff (verified May 20/June 1/ July 1/Aug 1
+    2026).
+
+**Known historical issues** (both resolved, `cefi_venue_backfill_coverage_remediation_2026_05_27.md`): UPBIT Tardis CSV
+type mismatch (ArrowInvalid float-in-int-column) ✅ fixed; cross-date memory accumulation (~78 GB) ✅ fixed. Neither
+explains the May-25+ gap.
+
+**No open issue doc or backfill plan** tracks this gap. The parent plan's audit trail (the
+`cefi_consolidated_closeout_2026_07_18.md` table) has zero UPBIT mentions. The `cefi_master.md` epic expects UPBIT at
+"trades/book_snapshot_5, 450 each" — the actual on-disk estate was meeting that bar until May 25, then fell to zero.
+
+**Filed**: `issues/upbit_cefi_data_gap_may_2026_2026_08_04.md` — captures the gap, the measured GCS evidence, and a P1
+follow-up todo to diagnose the root cause (Tardis vendor-side data availability ceiling vs pipeline/VM stoppage) and
+either restore the backfill or explicitly descope UPBIT from MVP with an operator ruling.
 
 ## Reconciliation
 
