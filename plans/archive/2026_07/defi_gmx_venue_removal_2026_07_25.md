@@ -411,6 +411,19 @@ changelog/docstring comment describing the historical removal itself (never insi
     timestamp, and `_purge_backups/ 2026_07_25_gmx_venue_removal/` for backup objects, as evidence of how far it got).
     Do not leave the cron paused indefinitely — it is the ONLY consolidator for the entire DeFi market-data bucket, not
     GMX-specific.
+  - **✅ COMPLETED 2026-08-04.** `--apply` ran to completion: 90/90 GCS objects backed up + verified-deleted; CAS
+    manifest rewrite dropped 660 `venue=GMX` rows (40,862,959 → 40,862,299); force-consolidate ran (per the script's own
+    step 3e) and wrote a new consolidated index (42,135,529 rows, `03:15:40`). Cron RESUMED + confirmed `ENABLED`. A
+    first `--verify-only` pass found 0 remaining GCS objects but 4 residual `venue=GMX` manifest rows (plausible
+    resurrection-window artifact — the script's own docstring recommends ≥4 verify cycles spaced apart; only 1 run so
+    far, not yet confirmed clear). **This run is very likely the FIRST time this purge actually executed** — this doc's
+    own 2026-07-25 completion banner (top of this file) claims "5,374 venue=GMX manifest rows dropped, zero objects
+    remain," but this session's live `--dry-run` found 90 objects/165 days still present BEFORE this run — that banner's
+    claim does not hold up against direct evidence and was very likely inaccurate/premature, not a regression of a real
+    prior purge. **Separately, and more importantly**: the force-consolidate's from-scratch full-merge (forced because
+    the CAS rewrite strips `consolidator_content_write_at`) triggered a CRITICAL `MANIFEST_COLUMN_FILL_REGRESSION` on 11
+    unrelated columns (73.92%→71.71%) — NOT part of this GMX task, filed as its own big-finding issue doc:
+    `plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
 
 ## Codex SSOTs
 

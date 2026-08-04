@@ -928,3 +928,8 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
 - **context-scout 2026-08-03 (re-verify)**: corrected that same entry's path — the script lives at
   `market-tick-data-service/scripts/...`, not nested under `market_tick_data_service/scripts/` as previously written (a
   non-existent path); re-verified all 5 entries resolve on disk.
+- **interactive session 2026-08-04 (autonomous)**: the general `_check_column_fill_regression` guardrail this doc's own
+  todo shipped (`unified-trading-library@2e132bb2`) fired CRITICAL on the DEFI bucket for the first time (11 columns,
+  73.92%→71.71%, triggered by a GMX-purge-forced full-merge) — a NEW, not-yet-root-caused manifestation, distinct from
+  this doc's own already-fixed `available_at` serializer bug. Filed separately (this doc is near its 1000-line cap):
+  `defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
