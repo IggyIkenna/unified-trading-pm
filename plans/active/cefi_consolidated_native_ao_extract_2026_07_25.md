@@ -272,7 +272,7 @@ items explicitly "FENCED" to another named agent/live process).
       `cefi_consolidated_closeout_2026_07_18.md` (execution-log carryover, LIGHTER-ZKSYNC map item);
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Findings 8/10, prior Range A/B/C work this
       todo built on).
-- [ ] [DATA] P2. **Re-run the CeFi instrument catalogue rollup to resolve the 33 BITGET-FUTURES CME-letter-month gap
+- [x] ✅ [DATA] P2. **Re-run the CeFi instrument catalogue rollup to resolve the 33 BITGET-FUTURES CME-letter-month gap
       rows** (`BTCUSDH26`-style dated futures currently at 0 catalogue rows against on-disk data that exists) — per the
       parent doc's own Deferred-work table item 5: the gap-measurement script is already shipped
       (`instruments-service@f6f16785`, live-measured 211 gap rows: OKX-SPOT 174, COINBASE-SPOT 4, BITGET-FUTURES 33),
@@ -280,12 +280,10 @@ items explicitly "FENCED" to another named agent/live process).
       need an operator decision on widening UAC's `_CEFI_VENUE_QUOTE_EXTENSIONS` and stay out of scope here. Repo:
       instruments-service. **Done when**: a fresh run of the gap-measurement script (`instruments-service@f6f16785`)
       shows the BITGET-FUTURES CME-letter-month gap count at 0 (or explains any residual), cited with before/after row
-      counts in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Deferred-work table
-      item 5) — this exact candidate was previously identified and EXCLUDED from
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` because its only citable source at the time was the
-      too-large/risky `cefi_4surface_migration_execution_log_2026_07_24.md`; the same measured fact independently
-      appears in this parent doc's own (stable, non-excluded) Deferred-work table, so it is re-drafted here from that
-      stable citation instead.
+      counts in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Deferred-work table item
+      5). ✅ — instruments-service@9167e5d7 (HEAD), read-only verification 2026-08-04: fresh gap-measurement run shows
+      BITGET-FUTURES=0 (before: 33, after: 0). Catalogue already rebuilt 2026-08-04T01:02Z; gap closed by prior rollup.
+      See Progress Log entry above for full detail.
 - [ ] [SCRIPT] P2. **Confirm (and land if still missing) the dry-run chain-drop blind-spot fix in
       `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`.** Grep-check whether `"chain"` is present in
       `_DRYRUN_COLS` today. **Context — downgraded from the parent doc's P0 because the acute risk has already passed**:
@@ -581,6 +579,28 @@ cells). The MDPS `--force` backfill to close this gap needs a dedicated VM — f
 105 incomplete cells, and a P2 `[INFRA]` todo to launch a dedicated MDPS `--force` backfill VM for the 8 affected days.
 The `[OPERATOR]`-gated delete of the 149 stale objects is ACCOMPLISHED (all gone); the remaining work is the bundle
 regeneration only.
+
+### 2026-08-04 (slot-11, `data_engineering`) — Todo 11 (BITGET-FUTURES catalogue rollup re-run)
+
+**Verdict: GAP ALREADY CLOSED — 0 BITGET-FUTURES CME-letter-month gaps.**
+
+Ran the gap-measurement script (`instruments-service/scripts/measure_cefi_catalogue_enumeration_gap_2026_07_23.py`,
+`instruments-service@f6f16785`) fresh against the live prod manifest + catalogue. **Before (2026-07-23 baseline):** 211
+total gap rows (OKX-SPOT 174, BITGET-FUTURES 33, COINBASE-SPOT 4). **After (2026-08-04, this run):** 171 total gap rows
+— OKX-SPOT 170, COINBASE-SPOT 1, **BITGET-FUTURES 0**. All 171 residual rows are `spot-quote-gap` case class; zero
+`cme-letter-month-gap` entries. Exit code 0 (within the 20–5000 stop-on-surprise band).
+
+The catalogue (`prod/catalog.parquet`) was last rebuilt 2026-08-04T01:02:51Z — a prior rollup (likely the daily
+reference-data capture + catalogue rebuild cycle) already absorbed the 33 BITGET-FUTURES CME-letter-month rows. No code
+change was needed (as planned); the rollup re-run already happened organically since the 2026-07-14 parser fix landed.
+
+**No residual**: a targeted grep of the per-row CSV detail (`/tmp/gap_detail_2026_08_04.csv`, 171 rows) confirms zero
+BITGET-FUTURES or `cme-letter-month-gap` entries — all 171 are OKX-SPOT (170) + COINBASE-SPOT (1), both
+`spot-quote-gap`. The OKX-SPOT/COINBASE-SPOT gap rows stay out of scope here (needs operator decision on widening UAC's
+`_CEFI_VENUE_QUOTE_EXTENSIONS`, per the plan).
+
+Evidence: fresh gap-measurement run at `instruments-service@9167e5d7` (HEAD) with
+`GCP_PROJECT_ID=central-element-323112`. No new commit needed — read-only verification, no code change.
 
 ## Reconciliation
 
