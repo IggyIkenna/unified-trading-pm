@@ -89,13 +89,21 @@ guardrail was created to catch (3 prior real outages).
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Fix the report filename collision** — `report.write_report()` (or its caller in
+- [x] ✅ [BACKEND] P2. **Fix the report filename collision** — `report.write_report()` (or its caller in
       `pipeline_e2e_check.py`) should key the output filename on `(run_date, legs)` — e.g.
       `data_pipeline_e2e_check_mtds_<run_date>_<legs_joined>.md` (`legs_joined` = e.g. `force_skip` / `live`) — or
       append/merge into the existing same-day report instead of overwriting it outright. Add a regression test that
       writes a report for `legs=[force,skip]` then `legs=[live]` on the same `run_date` and asserts BOTH reports'
       content is independently readable afterward (either via distinct paths or a verified merge, whichever fix
-      direction is chosen). Repo: market-tick-data-service.
+      direction is chosen). Repo: market-tick-data-service. — unified-trading-library@1bf3e7d1. Implemented the MERGE
+      direction (not the filename-suffix direction) in
+      `unified_trading_library/pipeline_e2e_check/report.py::write_report()` — it now merges into any pre-existing
+      same-day report by `(shard_label, leg)` instead of overwriting it, keeping the existing filename convention
+      (`{stem}.md`/`.json`, no legs suffix) that every plan/skill doc already references, so no doc drift. Regression
+      coverage: `unified-trading-library/tests/unit/test_pipeline_e2e_check_report_merge_on_rewrite.py` (4 tests —
+      two-invocation merge preserves both legs' results; same-leg re-run replaces its own cell without duplicating;
+      no-prior-report path unchanged; malformed prior JSON tolerated, not fatal). Full `quality-gates.sh` green on both
+      the commit and the quickmerge Pass-1 (sentinel `1bf3e7d12b5e8d10f5e0c95abc86c529663a2bd9`).
 - [ ] [BACKEND] P2. **Root-cause and fix the post-completion hang.** After `write_report()` returns and all VM-related
       work is done (confirmed via `gcloud compute instances list` showing none of the run's check-VMs still exist), the
       `pipeline_e2e_check.py` process should exit promptly. Investigate: an un-joined/non-daemon thread (e.g. an SDK
@@ -122,3 +130,7 @@ guardrail was created to catch (3 prior real outages).
   hang occurrences via exact-PID `SIGTERM`, no data loss, real VM cost from the extra Phase-2 re-run (session died
   mid-Phase-2 for an unrelated reason, required a fresh re-run) but bounded (`--test-run`, small VMs, ~90s duration cap
   each).
+- **2026-08-04 (slot 13, backend_engineer)**: shipped todo 1's fix — unified-trading-library@1bf3e7d1. Chose the merge
+  direction over the filename-suffix direction to avoid drifting the many plan/skill docs that hardcode the current
+  `data_pipeline_e2e_check_mtds_<date>.md` filename. Todos 2 (post-completion hang root cause) and 3 (wall-clock safety
+  timeout) remain open — separate backlog items, not touched by this fix.
