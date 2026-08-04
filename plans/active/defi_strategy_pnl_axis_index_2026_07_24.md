@@ -41,6 +41,7 @@ last_updated: "2026-07-24"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
+archive_exempt: true
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
@@ -156,3 +157,9 @@ independently-startable item any session can pick up without waiting on the phas
   (`issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `strategy-service@a90e85eb`) — this
   doc's own text had not been updated to reflect it. Flipped `[x]` with citation; doc has zero remaining open scope
   (index/entry-point doc, `assigned_vm` unchanged).
+- **plan_health CI-gate remediation 2026-08-04 (cicd agent, agt-7d1126)**: added `archive_exempt: true` —
+  `check_archive_candidates.sh` flagged this doc (0 open, 1 done), but it is a **standing navigation/index hub**
+  (`nature: process`, operator instruction 2026-07-23: "ALL DeFi strategy/PnL work must be discoverable from THIS one
+  plan"), not a completed task-plan. The one closed checkbox is a historical record of one shipped correction; the
+  doc's real purpose (routing to `[[lst_rate_honest_coverage_2026_07_21]]` and 5 other live sibling docs) is durable
+  and ongoing. Archiving it would break the "no orphans" discoverability contract, not just clear a stale done-item.

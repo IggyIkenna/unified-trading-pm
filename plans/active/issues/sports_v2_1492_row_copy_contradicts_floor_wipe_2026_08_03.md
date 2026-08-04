@@ -17,7 +17,7 @@ summary: >-
   into the pre-floor-wipe scope — i.e. DELETE — not preserve them). Executing the copy task as literally worded would
   write 1,492 rows of fabrication-by-construction data into live canonical storage, reversing the intent of an
   already-executed operator-authorised wipe campaign. NOT executed pending operator reconfirmation.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -168,3 +168,7 @@ rather than executing the copy.
   the 2026-08-03 confirmed § 1b option B) — todo 1 is an explicit `[REVIEW] P0` operator/main reconciliation ask and
   todo 2 is gated on its outcome; neither is worker-determinable. Already correctly filed as a big finding (SSOT
   contradiction, `tags: big-finding`) by its author; no further escalation needed from this pass.
+- **plan_health CI-gate remediation 2026-08-04 (cicd agent, agt-7d1126)**: `status: resolved` retagged back to `open` —
+  `check_terminal_status_archived` flagged this doc DUAL-TRACK (terminal status but sitting in `plans/active/issues/`),
+  but todo 3 (`[DATA] P2`, manifest-prune verification) is genuinely still `[ ]` open. The main finding (todo 1/2) is
+  resolved; the doc as a whole is not archival-eligible until todo 3 closes. No content changed otherwise.

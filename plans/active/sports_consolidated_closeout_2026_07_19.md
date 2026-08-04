@@ -589,6 +589,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       buckets; (2) an unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22. Root cause
       unknown for both — operator decision: investigate now rather than deferring, since both are currently unowned and
       could be actively recurring. Detail: see the OR-1/player_stats-union issue doc's own RE-TRIAGE (2026-07-23).
+- [ ] [DATA] P2. **Manifest-hygiene: 2,002 blank-`league_id` FIXTURE_EVENTS manifest rows are dead ghost rows, not a
+      coverage gap** (migrated from `plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md`'s
+      2026-08-03 campaign-close finding, non-blocking follow-up). These are the pre-per-league-migration bare bulk
+      parquet rows (`entity=fixture_events/fixture_events.parquet`, no `league=` segment); every real fixture they'd
+      cover is already correctly captured under its real per-league canonical object (confirmed via a direct
+      cross-check, fixture 707776). Flip these 2,002 rows to a superseded/duplicate manifest status (same pattern as
+      the LEAGUES retirement) so they stop inflating any future FIXTURE_EVENTS census denominator. Not urgent.
 - [ ] [DATA] P1. **Prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows** (NEW 2026-07-24,
       folded in from archived `sports_master_closeout_2026_07_21.md`). The already-deleted 6,110-object subset is now
       PHANTOM (drift, not a coverage gap — the real data is still covered by the `SOCCER_*` uppercase twins). Clean via

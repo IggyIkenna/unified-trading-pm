@@ -42,6 +42,7 @@ last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
+archive_exempt: true
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 9
@@ -617,3 +618,9 @@ safely-completable work. Terminal state:
       `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`. Net: this plan's "⏳
       Remaining" table (above) is stale prose as of this check — all 4 rows are actually resolved, just tracked in other
       docs rather than restated here. No new issue doc filed; nothing was orphaned.
+
+- **plan_health CI-gate remediation 2026-08-04 (cicd agent, agt-7d1126)**: added `archive_exempt: true` —
+  `check_archive_candidates.sh` flagged this doc (0 open, 3 done), but P2/P4/P6/P7/P8/P9/P10 carry real, still-relevant
+  Design Guide + Acceptance-criteria reference sections for future work on this page ("Recommended order" section
+  explicitly tells the next agent what to pick up next) that were never checkbox-tracked in the first place — this is
+  a live reference doc for an ongoing UX workstream, not a completed task-plan sitting unarchived. Not archived.
