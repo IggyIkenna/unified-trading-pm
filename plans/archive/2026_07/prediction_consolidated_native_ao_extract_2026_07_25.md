@@ -15,7 +15,7 @@ summary: >-
   Phase-B-post-migration blocker), and the P1 POLYMARKET `prediction_trades` schema-extension todo stays human — its own
   linked issue doc states the trader-identity/PII field list "needs a separate call", an unresolved UAC canonical-schema
   architecture decision, not a bounded worker task.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -32,7 +32,7 @@ related:
     /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): all 5 todos' Done-when/Source lines corrected to point at their new homes in phase_ab_residuals/phase_d (the parent's "Queued audits + reviews" section they originally cited no longer carries real checkboxes); related: extended to add phase_ab_residuals
+last_updated: "2026-08-04" # archived — all 5 todos done; finalize plan prediction_consolidated_native_ao_extract_2026_07_25_finalize.md archived alongside
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.64
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md
 depends_on: []
 source: >-
   Fresh AO-eligibility triage session 2026-07-25, dispatched specifically to check
@@ -65,6 +65,15 @@ context_scope:
 ---
 
 # Prediction consolidated closeout — native-todo AO extract
+
+> **🟢 ARCHIVED 2026-08-04.** All 5 todos done — 5 corresponding checkboxes flipped or Progress Log notes recorded at
+> their respective new homes (`prediction_phase_ab_residuals_2026_07_24.md` and
+> `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`), verified by the companion finalize plan. Both deferred
+> items resolved: the P3 duplicate-note merged into phase_ab's reconciliation-cadence todo (still genuinely blocked on
+> Phase B `--apply`), the P1 POLYMARKET schema-extension ruled 2026-07-28 (trader-identity/PII fields excluded, A2c
+> checkbox done). No new durable contract — codex-alignment check: nothing to update. Archived via
+> `/plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md` (archived alongside this
+> doc, same commit).
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule, a triage-drafted AO batch is never auto-shipped to `active`
 > — flip this frontmatter's `status` to `active` only after operator review.

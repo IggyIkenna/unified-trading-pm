@@ -551,13 +551,6 @@ by hand._
 - [`prediction_consolidated_closeout_2026_07_18`](./prediction_consolidated_closeout_2026_07_18.md) — Single
   coordination plan that AGGREGATES (references, does not duplicate) every open prediction + prediction-touching IS/MTDS
   plan and issue into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md and…
-- [`prediction_consolidated_native_ao_extract_2026_07_25`](./prediction_consolidated_native_ao_extract_2026_07_25.md) —
-  First AO-eligibility triage of prediction_consolidated_closeout_2026_07_18.md's OWN native `- [ ]` todos (distinct
-  from the prediction_satellite_ao_dispatch_batch1/2 docs, which extracted from OTHER orphaned prediction plans/issues
-  and…
-- [`prediction_consolidated_native_ao_extract_2026_07_25_finalize`](./prediction_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for prediction_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done. This extract's own source WAS…
 - [`prediction_cross_venue_arb_and_coverage_2026_07_24`](./prediction_cross_venue_arb_and_coverage_2026_07_24.md) — The
   cross-venue Kalshi↔Polymarket arb detector (matcher, dispersion features, strategy engine, GCS arb-store, live
   dispatch), cqg canonicalization, the honest-coverage P0 correctness chain (43a-43d), and historical backfill/manifest
