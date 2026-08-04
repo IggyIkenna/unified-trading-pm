@@ -210,14 +210,14 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item above
       2026-07-30.
 
-- [ ] [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
-      still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).** `_ALLOWED_NON_ASCII_RANGES` in
-      `instruments-service/instruments_service/engine/orchestrator/venue_core.py` currently allows only Latin-1
-      Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence (2021-11-20, `--venues API_FOOTBALL`):
-      `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (AZERBAIJAN_PREMYER_LIQA) are still
-      rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF, covers Vietnamese tone-mark
-      combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic schwa/dotless-i adjacent forms) to the
-      allow-list, OR reconsider the original fix-direction suggestion
+- [x] ✅ [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
+      — instruments-service@af4ce16d still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).**
+      `_ALLOWED_NON_ASCII_RANGES` in `instruments-service/instruments_service/engine/orchestrator/venue_core.py`
+      currently allows only Latin-1 Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence
+      (2021-11-20, `--venues API_FOOTBALL`): `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail`
+      (AZERBAIJAN_PREMYER_LIQA) are still rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF,
+      covers Vietnamese tone-mark combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic
+      schwa/dotless-i adjacent forms) to the allow-list, OR reconsider the original fix-direction suggestion
       (`issues/sports_features_layer_findings_sweep_2026_07_18.md` §D: "make the ASCII rule crypto-only and exempt
       sports entirely") given sports team names span many scripts and an enumerated allow-list will likely keep missing
       others (Icelandic, Welsh, Polish, etc. — untested, worth a broader audit). Add regression tests pinning the 2
