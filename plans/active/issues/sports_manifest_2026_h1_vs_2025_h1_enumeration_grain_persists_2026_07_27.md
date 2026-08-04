@@ -323,3 +323,24 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
     `bash launch-expected-universe-v2-historical-backfill-vm.sh sports` naturally resumes rather than restarting. Not
     yet reached: rest of chunk 2, chunks 3-7 (2022-01-01 through the then-current rolling boundary), and the final
     post-run cell-seeding ratio re-check that this todo's done-when requires.
+- **data_engineering worker (slot 14) 2026-08-04 (checkpoint before /compact)**: two more developments since the entry
+  above, both confirming the design is working as intended, not new bugs:
+  1. **Investigated an apparent stall** (present-set base metric looked nearly flat for ~2h despite many successful
+     halt-safety writes) — ruled out via a direct read-only manifest query (single download, column-projected, same
+     pattern as this issue's own original measurement): 2021 currently carries **785,398 genuine `expected_unattempted`
+     rows** (0 before this backfill), and per-attempt file content hashes differ across consecutive writes (ruling out
+     "rewriting the same rows" as a bug). The flat-looking metric was a red herring — it reads a
+     periodically-consolidated base snapshot, not the live augmented total the enumerator actually uses for exclusion.
+     No code change needed; documenting so a future session doesn't re-chase the same false alarm.
+  2. **The 5th relaunch (v5) exhausted its own `MAX_CHUNK_ATTEMPTS=50` on chunk 2** — hit the hard-abort I designed for
+     a suspected runaway (`"still hit the max-writes-per-run halt-safety after 50 attempts ... STOPPING"`), but this was
+     overwhelmingly preemption-storm-driven (the fleet-wide `asia-northeast1-c` storm from finding above intensified
+     sharply late in this invocation — several consecutive back-to-back preemptions with zero writes in between), not a
+     genuine runaway-candidate bug (already ruled out per point 1). Correct response per my own design: relaunch fresh
+     rather than raise the cap — each invocation's `MAX_CHUNK_ATTEMPTS` counter is per-invocation only, real progress
+     persists in GCS regardless of how many times the script itself has been relaunched. **6th relaunch (v6) in
+     progress** as of this checkpoint, chunk 1/7 re-confirmed clean, chunk 2/7 resuming. **If a future relaunch ALSO
+     exhausts its cap purely from consecutive preemptions**: this is expected under the ongoing storm, not a signal to
+     raise `--max-writes-per-run` — just relaunch again; only escalate/pause if a `would-write` count from a SINGLE
+     attempt is ever anomalously large (e.g. 10x+ the prior norm), which would be the actual runaway-bug signature, not
+     repeated exhaustion from preemption alone.
