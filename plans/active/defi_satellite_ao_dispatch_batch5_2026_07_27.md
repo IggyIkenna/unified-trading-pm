@@ -153,15 +153,17 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       in the source doc) is now moot/superseded — closed in this same push. Both SHAs verified on
       `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
 
-- [ ] [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` GCS-object coverage for UNISWAP_V2, UNISWAP_V4,
-      TRADER_JOE_V2, VELODROME_V2 across 2026-03 through today (repeat the sampled `list_blobs` existence +
-      `pq.read_table` content-probe methodology from the source doc), now that the mtds-dex-pools-backfill relaunch and
-      the mtds-dex-swaps-backfill-1/2/3 sharded fleet have had time to run; if network/GCS conditions allow, also re-run
-      the manifest-level `capture_status` cross-check (chunked-download or pyarrow dataset+filter pattern, as the source
-      doc's Todo4 prescribes) to corroborate the object-level findings. Repo: market-tick-data-service. Done when: a
-      written verdict states, per (protocol, data_type) cell, whether the 2026-03→today gap identified in the source doc
-      has closed (with sample-date evidence), and either the manifest cross-check ran and its capture_status
-      distribution is recorded, or a stated reason it remains blocked on network conditions. Source:
+- [x] ✅ [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` GCS-object coverage — 2026-08-04, slot-7. Verdict
+      recorded in Progress Log below. **Summary**: (A) Old 2026-03→07-20 `dex_pool_state` gap CONFIRMED CLOSED for
+      UNISWAP_V2 (14/16 dates found), UNISWAP_V4 (13/16), VELODROME_V2 (14/16) — GCS objects present with real content
+      (verified via `pq.read_table` on 8 sampled objects); TRADER_JOE_V2 `dex_pool_state` gap NOT closed (2/16 found,
+      only 03-12 and 04-03). (B) LIVE-EDGE `dex_pool_state` gap confirmed: all 3 healthy protocols absent 08-02/08-04
+      (the running `mtds-dex-pools-backfill` VM's `--end 2026-07-24` bound leaves dates after 07-24 uncovered). (C)
+      `dex_pool_swaps` mid-year gap (05-17→07-22) confirmed active for UNISWAP_V2/V4/VELODROME_V2; TRADER_JOE_V2
+      `dex_pool_swaps` still SPARSE (1/16 found: 08-02, 3 real swap rows — live capture working but historical gap fully
+      open). (D) Manifest cross-check NOT attempted: prior sessions measured ~100 KB/s GCS throughput; a full ~940 MB
+      manifest download would take 2.5-4.7h — same documented network constraint as the source doc's "Why not the
+      manifest" section. Object-level evidence is ground truth. Source:
       `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
 
 - [ ] [DATA] P2. Now that the `_instruments_metadata.py` layout-tolerant reader fix (todos 1-3:
@@ -331,3 +333,26 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   2-of-5-venues-sampled scope note, so AO does not re-dispatch shipped work. Open todos: 5 → 4.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- unchanged, already minimal (code-free
   dispatch-batch coordinator).
+
+- **2026-08-04 (slot-7, data_engineering)** — worked the `[DATA] P2` dex_pool_state/dex_pool_swaps spot-check todo. Ran
+  128 GCS-object-existence probes (4 protocols × 2 data_types × 16 dates spanning 2026-03-01→2026-08-04) plus 8 content
+  probes (pq.read_table on sampled objects). Path structure verified correct:
+  `by_date/day=<d>/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=<UPPERCASE>/chain=<C>/instrument_type=pool/data_type=<D>/`.
+  Full verdict table:
+
+  **dex_pool_state**: UNISWAP_V2 — 14/16 found (88%, old gap CLOSED). UNISWAP_V4 — 13/16 (81%, CLOSED; 07-11 absent same
+  as slot-16's 08-03 residual). VELODROME_V2 — 14/16 (88%, CLOSED). TRADER_JOE_V2 — 2/16 (12%, NOT CLOSED; only 03-12
+  and 04-03 present — the stale-catalogue-cache root cause shipped `market-tick-data-service@d4408134` needs a VM
+  relaunch to take effect).
+
+  **LIVE-EDGE dex_pool_state gap**: all 3 healthy protocols absent for 08-02 and 08-04 (the running VM's fixed
+  `--end 2026-07-24` leaves dates after 07-24 uncovered, same as slot-16's 08-03 finding — the source doc's own
+  `[DATA] P2` todo (line ~358) already tracks this).
+
+  **dex_pool_swaps**: UNISWAP_V2 — 8/16 (50%, mid-year gap 05-17→07-22 remains). UNISWAP_V4 — 7/16 (44%). VELODROME_V2 —
+  7/16 (44%). TRADER_JOE_V2 — 1/16 (SPARSE; only 08-02 with 3 real rows — live capture works but historical gap fully
+  open). All content-probed objects returned real, non-trivial rows (no empty placeholders, no back-dated timestamps).
+  Manifest cross-check NOT attempted: same ~100 KB/s GCS throughput constraint documented in the source doc's "Why not
+  the manifest" section. Object-level evidence is ground truth. No code changes shipped — read-only GCS verification
+  only. Scratch script at `market-tick-data-service/scripts/scratch/dex_coverage_spot_check_2026_08_04.py` (deleted
+  after use).
