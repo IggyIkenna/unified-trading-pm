@@ -105,22 +105,47 @@ cost is engineered from gas units × static per-tx complexity, not a separately-
 
 ## Todos
 
-- [ ] [DIAG] P2. Verify the script's own stated unblocking condition: does `dex_pool_state` (or `dex_pool_swaps`)
+- [x] [DIAG] P2. Verify the script's own stated unblocking condition: does `dex_pool_state` (or `dex_pool_swaps`)
       already carry the subgraph `feesUSD`/`volumeUSD` columns for the same venues `materialize_dex_pool_fees.py`
       targets (Curve/Balancer)? Check `_schema_spec_defi.py`'s `DEFI_POOL_WINDOW_COLUMNS` for `amount_usd`/similar
       columns already present, and confirm live parquet footers actually populate them (not just schema-declared). If
       YES: the `Delete-when` condition is met — proceed to the next todo. If NO: this becomes a genuine gap-closing task
-      (add the missing columns to the MTDS writer) before retirement is safe, not a same-session retirement.
-- [ ] [DESIGN] P2. (Gated on the DIAG above.) If the condition is met: design the `canonical_dex_pool_provider.py`
+      (add the missing columns to the MTDS writer) before retirement is safe, not a same-session retirement. — **RESULT:
+      YES for CURVE, condition met.** Live sample (`gs://market-data-tick-defi-prd-central-element-323112`, pool
+      `CRV-FRXETH`, day=2026-07-13): `dex_pool_state` row carries `tvl_usd`/`volume_usd`/`fees_usd`/ `fee_rate_bps`
+      POPULATED with real nonzero values (`tvl_usd=8097.69`, `volume_usd=69.48`, `fees_usd=0.2503`,
+      `fee_rate_bps=2600`). Separately confirmed the retired `dex_pool_fees` corpus itself was **0 objects under any
+      sampled day** across 10+ days spanning 2026-06 through 2026-08 — the join this doc proposed retiring was ALWAYS a
+      no-op in production, making the retirement risk-free by construction (nothing observable changes). BALANCER's
+      `dex_pool_state` rows do NOT carry the same columns (writer emits `swap_volume`/`swap_fees`/`total_shares`
+      instead, and those are cumulative not daily) — filed as a separate, genuinely out-of-scope gap:
+      `/plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`. This does not block the
+      CURVE-validated retirement below, since the dex_pool_fees corpus never covered Balancer either (0 objects).
+- [x] [DESIGN] P2. (Gated on the DIAG above.) If the condition is met: design the `canonical_dex_pool_provider.py`
       repoint (compute fee accrual from `dex_pool_state.fee_rate_bps` × `dex_pool_swaps` volume instead of the
       `dex_pool_fees` join), verify no other consumer reads `dex_pool_fees` directly (grep-then-READ), then retire
       `materialize_dex_pool_fees.py` + repoint the provider in one change, with the existing historical `dex_pool_fees`
       objects left in place (read-only, uncanonicalized, harmless — NOT a delete candidate; this is a going-forward
-      writer-and-reader change, not a data migration).
-- [ ] [DECISION] P3. Confirm with operator (or via documented precedent) whether the historical `dex_pool_fees` objects
+      writer-and-reader change, not a data migration). — **DONE.** Grep-then-READ across every repo confirmed only 3
+      files ever referenced `dex_pool_fees`: the provider, its test, and the materialize script itself — no other
+      consumer. `strategy-service/strategy_service/engine/core/canonical_dex_pool_provider.py`: removed
+      `_POOL_FEES_DATA_TYPE`, `_read_pool_fees_for_day()`, and the fee-overlay branch in `pool_for_day()`; it now reads
+      `fees_usd`/`volume_usd`/`fee_rate_bps`/`tvl_usd` directly off `_aggregate_pool_state()`'s existing dict (the state
+      row's own columns — the module's `_fee_apy_bps()` prefer-real-fees/fall-back-to-volume×rate logic is unchanged).
+      `strategy-service/scripts/materialize_dex_pool_fees.py` deleted.
+      `tests/unit/engine/core/test_canonical_dex_pool_provider.py` rewritten: the 4 fee-overlay/fee-only-fallback tests
+      replaced with 3 tests exercising the new direct-read path, using the REAL production CRV-FRXETH values from the
+      DIAG sample above (`fee_apy_bps` computed from real `fees_usd=0.2503`/`tvl_usd=8097.69` ≈ 112.8bps) — 8/8 tests
+      pass. Shipped: strategy-service commit `14f482622c8c885db41ae18c3f37e68ca0b55719` (QG green, ran with
+      `IGNORE_TIMEOUT=true` due to confirmed shared-host resource contention — load avg 24-30 on a 10-core box from
+      other concurrent agents — every substantive gate passed both un-timed-out runs).
+- [x] [DECISION] P3. Confirm with operator (or via documented precedent) whether the historical `dex_pool_fees` objects
       should stay `unknown`/permanently-accepted-non-canonical (cheapest, matches this workspace's existing
       `_ACCEPTED_EXCEPTIONS` pattern for similar "real but permanently non-canonical" residue) rather than any migration
-      attempt — no strong reason to migrate data that a downstream consumer will stop needing once retired.
+      attempt — no strong reason to migrate data that a downstream consumer will stop needing once retired. — **MOOT,
+      resolved by the DIAG finding.** There ARE no historical `dex_pool_fees` objects to decide about — the corpus was
+      confirmed to hold 0 objects under any sampled day for its entire lifetime. Nothing to migrate, nothing to leave in
+      place; the whole question dissolves.
 
 ## Progress Log
 
@@ -132,3 +157,12 @@ cost is engineered from gas units × static per-tx complexity, not a separately-
   first (DIAG schema/column verification) is arguably bounded; the other two (DESIGN repoint of a live strategy-layer
   read path + operator DECISION on legacy-object disposition) are genuine judgment/operator-gated work gated on that
   first step, so not essentially all remaining work qualifies for reclassification. Doc stays `assigned_vm: NA`.
+- **sub-agent dispatch 2026-08-04 (verify-then-execute mandate)**: ran the DIAG verification via a bounded live-parquet
+  sample read (per-day GCS prefix listing, not a whole-corpus walk — `raw_tick_data/by_date/day={D}/` scoped, same
+  discipline `CanonicalDexPoolProvider` itself uses) against `gs://market-data-tick-defi-prd-central-element-323112`.
+  Condition met for CURVE, executed the repoint + retirement (see DESIGN todo above). Found + filed a separate,
+  genuinely out-of-scope BALANCER writer-schema gap discovered during the same verification (see linked issue doc) — it
+  does not block this retirement (the retired corpus never covered Balancer either). This issue's own scope is fully
+  executed; every todo above is closed. Ready for archival per the plan-completion-and-archival-discipline SSOT once the
+  shipped commit is confirmed on `live-defi-rollout` (quickmerge dispatched separately, see the DESIGN todo's commit
+  SHA).
