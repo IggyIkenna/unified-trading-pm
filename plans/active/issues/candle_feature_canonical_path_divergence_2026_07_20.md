@@ -592,6 +592,9 @@ remain genuinely open content-level work, distinct from the path-migration infra
   (`candle_canonical_path_migration_execution_2026_07_24.md`) completed and archived 2026-07-28 — annotated in place
   with evidence; todo 9 itself stays open pending its own stated deliverable (a corpus-wide split count), not the P5
   gate. No `assigned_vm` change.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale items — reaffirms the 2026-08-03
+  verdict; todos 15/16 already carry the correct citation to `infra_satellite_ao_dispatch_batch2_2026_07_27.md`, todo 3
+  stays a genuine judgment call. No change since.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
   resolve; the two codex layout docs, the completed migration-execution plan, the still-open manifest-coverage-gap issue
   doc, and the migration script remain the right minimal set for the genuinely open items (todo 3's TradFi quarantine
