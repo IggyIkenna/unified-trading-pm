@@ -216,10 +216,12 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       Real live-VM confirmation (an actual `mdps-features-live` launch) is still pending — out of scope for this todo,
       which was specifically about the exec-dispatch wiring; the two `[SCRIPT]` P3 todos below (VM_OPERATION metadata
       fix, vm-exec-with-gcs-tee.sh failure-signaling gap) remain open and unblocked by this change.
-- [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
-      it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
+- [x] ✅ [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value
+      — it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
       `build-continuous`); once the dispatch branch above ships, set the metadata this launcher passes to match whatever
-      the branch actually consumes.
+      the branch actually consumes. — deployment-service@3cfe056 (already shipped as part of the exec-dispatch P2 todo
+      at e7d17f2; the P2 branch wired `--operation streaming-aggregation` for MDPS, and this launcher's `VM_OPERATION`
+      metadata was corrected to `streaming-aggregation` in that same push — checkbox missed the flip)
 - [ ] [SCRIPT] P3. Related, smaller gap noticed in passing: `vm-exec-with-gcs-tee.sh`'s post-launch task-failure path (a
       wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
       `[vm-exec] command exited     rc=1`) does not appear to self-delete or otherwise loudly signal on a
