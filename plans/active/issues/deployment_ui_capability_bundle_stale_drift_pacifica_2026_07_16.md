@@ -352,9 +352,17 @@ GMX-freedom). All fixed and shipped this session, live-verified (tests green, `c
   `dex_pool_swaps` data_type. The removal genuinely holds live; the residue was entirely in stale generated snapshots +
   the 4 orphan objects above, never an active resurrection.
 
-Net: zero remaining live `gmx`/`gmx_v2` references found anywhere checked this pass (source registries, all 3 generated-
-bundle instances, GCS). The prospectus-generator fourth instance below is untouched (out of scope — DRIFT-specific,
-unrelated to this GMX pass).
+Net: zero remaining live `gmx`/`gmx_v2` references found in the surfaces this pass actually checked (source registries,
+all 3 generated-bundle instances, the 4 orphan objects' specific GCS cell). The prospectus-generator fourth instance
+below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass).
+
+> **CORRECTION (same session, immediately after posting the above):** the "zero remaining" claim did not extend to a
+> live manifest-skeleton check — the operator directly asked "did you purge the manifest" and a follow-up targeted read
+> of the defi `availability_index.parquet` found 4 DIFFERENT `venue=GMX` rows (dated today,
+> `capture_status= expected_unattempted`, unrelated to the 4 orphan objects above), meaning some enumerator still treats
+> GMX as a valid venue. Filed as its own issue rather than folded in here since it's a genuinely different, unresolved
+> root cause (a catalogue-level artifact, not the generated-bundle/source-registry class this doc tracks):
+> `/plans/active/issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`.
 
 ## Todos
 
