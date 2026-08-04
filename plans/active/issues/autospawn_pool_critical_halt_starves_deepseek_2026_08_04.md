@@ -17,7 +17,7 @@ summary: >-
   `balance_is_available: true` — it should be absorbing exactly this overflow. The halt was designed (operator ruling
   2026-07-29) BEFORE the DeepSeek blended-routing integration (2026-07-28) and was never made provider-aware, so a
   Claude-only exhaustion signal now incorrectly gates a mixed Claude+DeepSeek fleet.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -40,7 +40,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: "agent-orchestrator@3f06bea (code fix) + operator balance top-up, verified live 2026-08-04T14:33Z"
 ---
 
 # AutoSpawn critical-pool halt starves the DeepSeek pool (provider-blind halt)
@@ -117,8 +117,9 @@ Make the halt provider-aware so it only fires when there is **no usable dispatch
       tests covering the halt (headroom present/absent/unusable/health-gate-tripped/ no-non-anthropic-registered) +
       balance-headroom edge cases + the per-spawn balance-skip fallback chain; full suite green (2333 passed),
       `basedpyright`/`tsc`/`vitest` clean.
-- [ ] [OPERATOR] P2. Top up the `deepseek-v4-pro` balance (currently `$0.34`) — even once the routing bug is fixed,
-      DeepSeek dispatch fails-closed at zero balance.
+- [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance (was `$0.34`) — even once the routing bug is fixed,
+      DeepSeek dispatch fails-closed at zero balance. — Done: operator topped up to `$4.84` (confirmed live via
+      `/api/accounts`, 2026-08-04 ~14:33Z).
 
 ## Notes
 
@@ -126,5 +127,8 @@ Main agent (`agt-fdecde`) does not push code and did not modify `autospawn.py`; 
 engineer worker / operator. The main agent's earlier "capacity halt is by-design, queue prereq-gated" read was
 **incorrect** — corrected here by the STEP 2.4 per-task readiness proof above.
 
-**2026-08-04 update**: `[BUG] P1` fixed and shipped (see checkbox above). `[OPERATOR] P2` (balance top-up) remains open
-— operator-owned, not something a worker can action.
+**2026-08-04 update — both follow-ups closed.** `[BUG] P1` fixed and shipped (`agent-orchestrator@3f06bea`); the fix
+auto-deployed to the planning VM (`ao-self-pull.sh` restart at 14:30:19Z) and was verified live within minutes: DeepSeek
+slots picked up real backlog tasks (`sports_curated_universe_domestic_selection_remaining-003`,
+`sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists-006`) for the first time since the halt engaged.
+`[OPERATOR] P2` (balance top-up) also done — balance confirmed `$4.84` live. This issue is fully resolved.
