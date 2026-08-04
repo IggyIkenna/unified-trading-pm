@@ -284,7 +284,7 @@ items explicitly "FENCED" to another named agent/live process).
       5). ✅ — instruments-service@9167e5d7 (HEAD), read-only verification 2026-08-04: fresh gap-measurement run shows
       BITGET-FUTURES=0 (before: 33, after: 0). Catalogue already rebuilt 2026-08-04T01:02Z; gap closed by prior rollup.
       See Progress Log entry above for full detail.
-- [ ] [SCRIPT] P2. **Confirm (and land if still missing) the dry-run chain-drop blind-spot fix in
+- [x] ✅ [SCRIPT] P2. **Confirm (and land if still missing) the dry-run chain-drop blind-spot fix in
       `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`.** Grep-check whether `"chain"` is present in
       `_DRYRUN_COLS` today. **Context — downgraded from the parent doc's P0 because the acute risk has already passed**:
       per `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 5, the Surface-C v2 `--apply`
@@ -601,6 +601,25 @@ BITGET-FUTURES or `cme-letter-month-gap` entries — all 171 are OKX-SPOT (170) 
 
 Evidence: fresh gap-measurement run at `instruments-service@9167e5d7` (HEAD) with
 `GCP_PROJECT_ID=central-element-323112`. No new commit needed — read-only verification, no code change.
+
+### 2026-08-04 (slot-14, `data_engineering`) — Todo 12 (dry-run chain-drop blind-spot fix confirm)
+
+**Verdict: FIX ALREADY LANDED — `"chain"` is in `_DRYRUN_COLS`. No code change needed.**
+
+Confirmed `"chain"` is present in `_DRYRUN_COLS` at
+`instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220` (`instruments-service@1284606a`,
+2026-07-24 16:59:54 +0100, "fix(cefi): include chain in dry-run column projection so chain-drop safety gate isn't a
+no-op"). The commit message itself documents the exact blind-spot this todo exists to confirm closed: "a column silently
+absent from a dry-run read makes that gate a no-op that always reports (0, 0) regardless of the real data — found
+2026-07-24 after a dry-run claiming 0/0 was immediately followed by a real 3304-group STOP at --apply time."
+
+The v2 script (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py:85-86`) imports v1 via
+`importlib.util.module_from_spec` and uses `v1._DRYRUN_COLS` at line 401 for its dry-run column projection — so the fix
+reaches both the original v1 script and the v2 reuse path.
+
+**No code change possible or needed** — the fix predates even this triage plan's creation date (2026-07-25). The acute
+risk never recurred (the Surface-C v2 `--apply` ran successfully with 28 `TOLERATED` chain-lossy groups, 0 CAPTURED rows
+lost, canonical-fraction 99.24%).
 
 ## Reconciliation
 
