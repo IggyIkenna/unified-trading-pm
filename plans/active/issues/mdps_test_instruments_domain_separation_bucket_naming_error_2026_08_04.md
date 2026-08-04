@@ -21,7 +21,7 @@ last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P3
+priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.1
@@ -74,7 +74,12 @@ unsupported-in-this-context provider value that should never reach production co
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Root-cause why cloud provider `"local"` reaches `as_cloud()` in
+> **🔴 REPO-WIDE BLOCKER (bumped P3→P1 by main agt-1756f6, 2026-08-04, from slot-5 BLK-4c3b8444)**: this deterministic
+> (100%-reproducible) failure now blocks a green `quality-gates.sh` Pass-1 for the ENTIRE market-data-processing-service
+> tree — NO MDPS commit can ship until it lands (confirmed: slot-5's verified-correct adapter-registration commit is
+> stuck on it, and its task is parked pending this fix). Prioritised urgent; land it to unblock all MDPS shipping.
+
+- [ ] [SCRIPT] P1. Root-cause why cloud provider `"local"` reaches `as_cloud()` in
       `test_instruments_domain_separation`'s environment and fix the env resolution. **NOT via a bare
       `try/except BucketNamingError: pytest.skip(...)`** around the loop body (investigated + rejected 2026-08-04 — see
       Progress Log: it makes both tests in the file skip-only on this host, which trips `quality-gates.sh`'s
