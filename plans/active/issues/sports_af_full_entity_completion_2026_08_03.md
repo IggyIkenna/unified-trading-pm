@@ -486,3 +486,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   preemption rate to rule out a resurging storm before continuing to just relaunch blindly: only 13 events in the
   trailing 60min, no dense clustering — confirms this is still the same low, sustained background rate already
   documented (not a new crisis). Relaunched PLAYER_STATS again (`af-backfill-20260804-123759`), confirmed RUNNING.
+- **2026-08-04T12:46Z** — `-123759` also landed short (~3.6min, 11:39:06Z→11:42:45Z preempted). That's 2 consecutive
+  short PLAYER_STATS preemptions since the last confirmed-progress run, so per the alternating strategy switched the
+  singleton lock to FIXTURE_STATS rather than a 3rd blind PLAYER_STATS retry — launched `af-backfill-20260804-124609`,
+  confirmed RUNNING. Launch emitted a stale-tarball warning for instruments-service (tarball @87682dd98 vs repo
+  @579421bf, i.e. the census-fix commit) — not republished: the backfill VM runs the AF fetch/writer path, not the
+  standalone census scripts the fix touched, so this is not expected to affect this run's correctness; noting it in case
+  a future launch on this VM needs newer instruments-service code for an unrelated reason.
