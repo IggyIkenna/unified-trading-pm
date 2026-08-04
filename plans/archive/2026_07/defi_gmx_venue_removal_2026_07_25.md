@@ -424,6 +424,19 @@ changelog/docstring comment describing the historical removal itself (never insi
     the CAS rewrite strips `consolidator_content_write_at`) triggered a CRITICAL `MANIFEST_COLUMN_FILL_REGRESSION` on 11
     unrelated columns (73.92%→71.71%) — NOT part of this GMX task, filed as its own big-finding issue doc:
     `plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
+  - **Residual-rows ROOT-CAUSED 2026-08-04**: the 4 rows do NOT clear via passive consolidator cycles (confirmed via a
+    second `--verify-only` pass, same 4 rows). Direct manifest read shows all 4 are
+    `capture_status=expected_unattempted` (honest placeholders, not fake captured data) for
+    `instrument_id=0x489ee077994b6658eafa855c308275ead8097c4a` (venue=GMX, chain=ARBITRUM), freshly
+    `written_at=2026-08-04T01:39:03` — NOT leftover purge residue, but **freshly re-seeded by the daily
+    `expected-universe-v2-defi-daily` cron (fires 01:30 UTC)**. That Cloud Run job
+    (`enumerate_expected_universe.py --asset-group defi --catalog-path gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet ...`)
+    reads a cached catalogue parquet, not the live UAC venue registry — that catalogue still lists the GMX pool
+    instrument, so it will re-seed 4 GMX `expected_unattempted` rows every day going forward regardless of this
+    session's purge. Low severity (honest placeholders, doesn't affect completeness accounting) but real and recurring —
+    new todo: regenerate `catalog.parquet` (via `instruments-service/scripts/build_instrument_catalogue.py`) to drop the
+    GMX entry. Not done this session — a prod catalogue rebuild deserves its own careful pass, not a rushed same-session
+    change on top of everything else touched today.
 
 ## Codex SSOTs
 
