@@ -143,22 +143,15 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       `quickmerge.sh --agent --files`. Source:
       `plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`
 
-- [ ] [CODE] P2. Execute the swaps_ohlcv_* defi data_types registry fix (the two open `[CODE]` todos at lines 258/262 of
-      the source doc, consolidated). GATED ON `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s completeness_pct
-      simulation VERIFY (target doc line 253, marked [x]) — read that finding from the issue doc's Progress Log FIRST.
-      If the simulation showed the exclusion-guard is required: add a
-      `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard to instruments-service's
-      `scripts/enumerate_expected_universe.py` (mirroring `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` exactly,
-      scoped to the 7 `swaps_ohlcv_*` keys — coordinate/sequence AFTER batch1's own line-164
-      enumerate_expected_universe.py edit lands to avoid same-file collision), THEN add
-      `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` to unified-api-contracts' `DATA_TYPES_BY_ASSET_GROUP['defi']`. Otherwise
-      (guard not needed): execute Path B stopgap — add a `DEFI_CANDLE_ACCEPTED_NONCANONICAL_DATA_TYPES` frozenset to
-      deployment-api's `deployment_api/routes/data_status/_distinct_values.py::_ACCEPTED_EXCEPTIONS`. Repos:
-      instruments-service, unified-api-contracts, deployment-api. Done when: the chosen path's change is committed via
-      scoped `quickmerge.sh --agent --files` with `quality-gates.sh` green, and — for Path A — a cited before/after
-      completeness_pct measurement is recorded, or — for Path B — confirmation the change is deployment-api-local with
-      zero denominator/expected_unattempted impact. Source:
-      `plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`
+- [x] ✅ [CODE] P2. Execute the swaps_ohlcv_* defi data_types registry fix — instruments-service@942e0808,
+      unified-api-contracts@28c7102d. **ALREADY DONE by slot-6 on 2026-08-02.** The gating VERIFY (2026-07-28, slot-5)
+      showed the exclusion-guard IS required; Path A was then executed via two commits: (1) instruments-service@942e0808
+      added `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` guard + `_defi_mtds_tick_manifest_data_types()` wired into
+      both `enumerate_v2` call sites; (2) unified-api-contracts@28c7102d added the 7 `swaps_ohlcv_*` keys to
+      `DATA_TYPES_BY_ASSET_GROUP['defi']` with `NEEDS_CANDLE_PROCESSING: False`. Before/after delta measured: **zero**
+      (byte-identical row sets from the real shipped `enumerate_v2()`). Path B (accepted-exception stopgap, `[CODE] P3`
+      in the source doc) is now moot/superseded — closed in this same push. Both SHAs verified on
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
 
 - [ ] [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` GCS-object coverage for UNISWAP_V2, UNISWAP_V4,
       TRADER_JOE_V2, VELODROME_V2 across 2026-03 through today (repeat the sampled `list_blobs` existence +
