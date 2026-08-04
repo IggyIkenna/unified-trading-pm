@@ -389,3 +389,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   preemptions if any land, rather than continuing to gate on an increasingly-unlikely "fully clean zone" signal.
   Relaunched as `af-backfill-20260804-073723`, confirmed RUNNING. Will monitor for either genuine progress or
   auto-recovery actually firing on a future preemption (a live test of the fix, useful either way).
+- **2026-08-04T07:01Z — root cause found and fixed; first genuinely healthy run today.** The residual pattern's real
+  root cause was found and fixed by slot-5 (`asia_northeast1_c_spot_preemption_storm_2026_08_04.md`, now fully resolved
+  and archived): `expected-universe-v2-sports`'s own per-chunk retry loop had ZERO backoff on confirmed preemption,
+  immediately re-launching into the same just-reclaimed SPOT slot — and `launch-api-football-backfill-vm.sh`
+  (af-backfill) defaults to the SAME `e2-standard-4` machine type when unset, so the two launchers were colliding on one
+  constrained SPOT pool, not two independent ones. Backoff fix shipped `deployment-service@1861cbe`. Checked
+  `af-backfill-20260804-073723` at 07:01Z (~24 min after launch): **still RUNNING** — already far outlasting every one
+  of today's prior 9 attempts (which died in 1.5-17 min) — zero failure signatures, healthily processing date=2020-08-03
+  (up from the 2020-06-06 start). Re-census shows 125/68,284 non-MVP shards still (unchanged) — not yet concerning,
+  since a fresh restart always re-walks already-captured early dates before reaching genuinely new ground; the
+  durability itself is the real signal here. Continuing to monitor.
