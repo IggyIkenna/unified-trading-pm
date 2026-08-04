@@ -107,6 +107,49 @@ guardrail firing on a NEW asset group for what looks like a DIFFERENT, not-yet-d
 blast radius of "full-merge can silently drop column fill," not a recurrence of the already-fixed bug. That doc is
 930/1000 lines (near its hard cap) — not a good target for the full investigation write-up; cross-referenced instead.
 
+## Root cause (2026-08-04, slot-8 DIAG)
+
+**Verdict: candidate (b) — legitimate dilution from net-new rows, NOT a merge/union bug.** Confirmed via a bounded,
+single-object read of the two known objects already named above (`_index/availability_index.parquet` +
+`_index/snapshots/pre_gmx_venue_removal_20260804-013217.parquet`, downloaded once each, column-pruned DuckDB queries
+with an explicit `memory_limit`, no corpus walk) — three independent checks, all consistent:
+
+1. **The 11 columns are one atomic per-row block, never independently filled.** Exact partition of the 42,135,529
+   post-merge rows: `all_null=11,920,547` + `all_filled=30,214,982` = total, with **`partial=0`** (verified exactly — no
+   row has SOME but not all of the 11 filled). This alone mechanically explains "why identical before/after percentage
+   across 11 unrelated-looking columns": they aren't 11 independent signals, they're one row-level "enriched" flag read
+   through 11 column names — whatever downstream process populates `quote_asset`/`margin_type`/
+   `combo_type`/`leg_weights`/`fixture_id`/`job_id`/`cadence`/`instrument_count`/`expected`/`available`/`available_at`
+   writes all 11 together or none at all, so ANY slicing of the corpus reproduces the identical percentage across all 11
+   by construction.
+2. **Zero previously-filled rows lost their values.** A 2,226-row sample of pre-merge-snapshot rows with the 11-column
+   block filled, looked up in the post-merge canonical by the normalized dedup key (`_dedup_key_sql` over
+   `date, venue, data_type, service_name` + the optional dims present) — **2,226/2,226 (100%) were still filled
+   post-merge**, none nulled. This rules out candidate (a) (a `union_by_name`/dtype merge bug silently nulling surviving
+   rows) outright — the exact failure mode `_check_column_fill_regression` was built to catch in the sports
+   `available_at` incident did NOT recur here.
+3. **The entire 2.21-point drop is arithmetic dilution from net-new rows.** Anti-join reconstruction on dedup key:
+   - Pre-existing keys (present in both the pre-merge snapshot and the post-merge canonical): 40,862,298 rows,
+     30,207,394 filled = **73.92%** — identical to the pre-merge baseline, to 2 decimal places.
+   - Net-new keys this cycle (absent from the pre-merge snapshot — i.e. rows the full-merge picked up from live
+     capture/un-pruned per-VM-shard activity accumulated since the last consolidation): 1,273,231 rows, only 7,588
+     filled = **0.60%** (99.4% blank on the 11-column block — expected, since a freshly-materialized cell hasn't yet
+     been touched by whatever downstream process fills that block).
+   - Recombined: `(30,207,394 + 7,588) / 42,135,529 = 71.71%` — **exact match** to the guardrail's reported "after"
+     percentage. No unexplained residual.
+
+**Conclusion**: the guardrail fired correctly (a real fill-rate drop happened) but the mechanism is benign — this
+cycle's forced full-merge legitimately absorbed ~1.27M net-new dedup-key rows that simply haven't been reached yet by
+the enrichment pass that populates this combo/expected-coverage 11-column block, diluting the aggregate. No row lost
+data; no restore or targeted re-fill is needed on correctness grounds. This directly informs the DECISION todo below
+(recommendation: accept as expected composition, not a regression — see that todo for the actual ruling, not decided
+here).
+
+Diagnostic scripts (ad-hoc, not shipped — bounded single-object reads per the craft's efficiency north-star, downloads
+streamed to disk not buffered in memory, DuckDB `memory_limit`/`temp_directory` set, run under
+`scripts/dev/run-bounded-analysis.sh`): not committed to any repo (ephemeral session scratch); the queries + exact
+counts are reproduced above in full so the check is independently re-runnable from this doc alone.
+
 ## What I did NOT do (and why)
 
 - **Did not attempt to root-cause the exact mechanism** — this needs either a synthetic DuckDB repro (mirroring the
@@ -124,20 +167,18 @@ blast radius of "full-merge can silently drop column fill," not a recurrence of 
 
 ## Todos
 
-- [ ] [DIAG] P1. Root-cause why these exact 11 columns regressed together with identical before/after percentages.
-      Candidates: (a) one or more of the 30 raw per-VM shards has a schema that's missing all 11 columns, and DuckDB's
-      `union_by_name` merge is padding NULL for rows sourced from that shard in a way that ALSO nulls out rows from
-      OTHER shards that previously had these columns filled (a genuine union/join bug, not just "new rows are
-      unpopulated" — the fill % of the WHOLE 42M-row set dropped, meaning previously-filled rows lost their values, not
-      just that new unfilled rows diluted the average — confirm this distinction with a row-level check before
-      concluding); (b) a legitimate but non-obvious explanation (e.g., dedup_dropped=4,096,177 rows removed by the
-      merge's tie-break happened to be disproportionately the ones that HAD these columns filled, and the SURVIVING rows
-      are legitimately less-filled — this would NOT be a bug, just needs confirming). Use a bounded, single-object read
-      of the pre-merge snapshot vs. the new canonical for a sample of dedup-key groups, not a full corpus walk.
-- [ ] [DECISION] P1. (Gated on the DIAG above.) If confirmed a real bug: decide remediation — targeted re-fill of the
-      affected columns/rows (preferred, mirrors the sports precedent) vs. a scoped restore vs. accept as low-severity
-      residue (2.2-point drop on already-sparse ~74%-filled columns is a much smaller blast radius than the sports
-      62.9%→15.7% case that triggered a full restore).
+- [x] ✅ [DIAG] P1. Root-cause why these exact 11 columns regressed together with identical before/after percentages —
+      unified-trading-pm@(this commit). **Verdict: candidate (b), legitimate dilution, NOT a bug** — see "## Root cause
+      (2026-08-04, slot-8 DIAG)" above for the full evidence (atomic all-or-nothing per-row fill, 100% of a 2,226-row
+      pre-merge-filled sample still filled post-merge, and an exact anti-join reconstruction: pre-existing keys stayed
+      at 73.92%, net-new keys (1,273,231 rows, 0.60% filled) diluted the aggregate to exactly 71.71%, matching the
+      guardrail's reported number with no unexplained residual). Candidate (a) (union/dtype merge bug nulling surviving
+      rows) is ruled out — zero sampled previously-filled rows were nulled.
+- [ ] [DECISION] P1. (Gated on the DIAG above — now unblocked.) DIAG confirmed NOT a bug (see "## Root cause" section):
+      no rows lost data, the drop is 100% explained by net-new rows not yet enriched. Recommendation for whoever rules
+      this: accept as expected composition — no targeted re-fill and no restore needed on correctness grounds (a restore
+      would, per the "What I did NOT do" section below, also undo the legitimate GMX cleanup + discard ~1.27M
+      legitimately-new rows). Still an open decision to formally close (not decided by the DIAG worker).
 - [ ] [DIAG] P3. Confirm whether the 4 residual `venue=GMX` manifest rows (found in the post-apply `--verify-only`
       check) clear on their own after 1-2 more incremental consolidator cycles (per the purge script's own recommended
       "run --verify-only at least twice, spaced apart" procedure) or need a follow-up manual sweep.
@@ -153,3 +194,9 @@ blast radius of "full-merge can silently drop column fill," not a recurrence of 
   correctness, cross-cutting mechanism, production-live) rather than silently noting it in the GMX doc's progress log
   where it could be missed. GMX purge itself (the actual task) completed successfully and independently of this finding
   — see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` for that record.
+- **slot-8, 2026-08-04 (`defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge-001`, DIAG P1)**:
+  root-caused via a bounded, single-object read of the two named GCS objects (canonical + pre-merge snapshot; downloaded
+  once each to local disk, DuckDB `memory_limit`/`temp_directory` set, no corpus walk). Verdict: candidate (b),
+  legitimate dilution from net-new rows — NOT a merge/union bug. Full evidence in the new "## Root cause (2026-08-04,
+  slot-8 DIAG)" section above. Todo 1 flipped; todo 2 (DECISION) left open for the actual ruling but annotated with a
+  recommendation (accept as expected, no restore/re-fill needed).
