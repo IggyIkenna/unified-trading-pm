@@ -11,7 +11,7 @@ summary: |
   or where there are GAPS. Destructive actions (archival, supersession, codex SSOT rewrites) are RECOMMENDED here and
   routed to the operator — NOT executed autonomously (both epics are locked_by: live-defi-rollout; archival is the 5-step
   ritual + ASK). This doc is the living tracker + verdict matrix; verified findings accrue here.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -26,7 +26,7 @@ related:
     /plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-16
+last_updated: 2026-08-04
 parent_epic: agent_operating_framework_master
 priority: P1
 source:
@@ -35,6 +35,9 @@ source:
 assigned_vm: NA
 execution_scope: local-only
 resolved_by:
+  "/ag-closeout-audit ao, 2026-08-04 — both remaining checkboxes (line 490, 494) were pure status-drift, independently
+  re-verified against agent-orchestrator@3abe56c (2026-07-29) and unified-trading-pm@7a3cc1289 (2026-07-24). No new
+  work landed; this closure is a stale-checkbox correction only."
 locked_by:
 locked_since:
 estimate_class: design
@@ -53,6 +56,13 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** (`/ag-closeout-audit ao`) — the doc's own "Todos — the UNABSORBED remainder" section
+> (2026-07-23) reached zero open items; both remaining checkboxes were pure status-drift (6/11 days stale against
+> already-shipped commits), not new work. Archiving this digest does not mean every Tier 0-6 "Recommended action" in the
+> body below was executed — see `ao_open_issues_consolidated_close_out_2026_07_17.md` for what actually landed of that
+> earlier prose (most of Tiers 1/2/4/5, per this doc's own 2026-07-16 Progress Log entry); this closure only concerns
+> the doc's own tracked `- [ ]` items, which is what "resolved" means here.
 
 > **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
 > [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
@@ -487,14 +497,16 @@ post-pivot re-sweep.
       VMs — confirmed `launch-central-brain-aws.sh` (the central-VM DR relaunch tool) never depended on the epic-VM
       scripts. One new gap surfaced in the process: that relaunch tool doesn't re-provision the self-hosted GitHub
       Actions "glue" runner pool also hosted on this VM — separately tracked, not resolved here.
-- [ ] [REVIEW] P3. **Reopen or annotate `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:192`** — its
-      agent-orchestrator line is still `[x] SHIPPED` with no note about the post-pivot re-drift this doc's own G-M1
-      finding asked for. A `[x]` that predates a pivot reads as current coverage. **Gate**: the line carries either a
-      re-verification date or an explicit reopen.
-- [ ] [DOCS] P3. **Banner or fix `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`** — it still
-      carries 2 live `tab/<operator>/<N>` references (the RETIRED tab-branch model) with no banner. Same class as the
-      `canonical-plan-flow.md` fix above and flagged by this doc's own C-cluster. **Gate**: no unbannered `tab/<...>`
-      branch instruction remains in the file.
+- [x] ✅ [REVIEW] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
+      `agent-orchestrator@3abe56c` (2026-07-29): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s agent-orchestrator
+      line now reads "REOPENED 2026-07-24... RE-CLOSED 2026-07-29 (slot-11, fresh audit against current single-VM/
+      Path-B code) — agent-orchestrator@3abe56c" — both halves of the gate (explicit reopen AND re-verification date)
+      satisfied. Checkbox lagged reality by ~6 days.
+- [x] ✅ [DOCS] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
+      `unified-trading-pm@7a3cc1289` (2026-07-24): `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s
+      Host-Behaviour-Matrix row now reads "Per-slot Path-B reference-clone on `live-defi-rollout`" (bare `tab/<op>/N`
+      cell removed) and its interactive-session bullet explicitly bannered "RETIRED — corrected 2026-07-23." No
+      unbannered `tab/<...>` instruction remains. Checkbox lagged reality by ~11 days.
 - [x] ✅ [REVIEW] P2. **The Tier-6 remainder is now its own issue doc — track it there, not here.** Tier-6's per-file
       dispositions were executed as a blanket delete, leaving 5 dead doc-references in shipped code and a tracker
       Progress Log claiming "0 dead links" that never covered that batch. Filed 2026-07-23 as

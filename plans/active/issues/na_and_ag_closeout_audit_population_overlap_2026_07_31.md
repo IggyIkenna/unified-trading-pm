@@ -23,7 +23,9 @@ summary: >-
   skill's own procedure currently requires that check.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Agent-operating-framework
+  # tooling defect (generate_ag_closeout_audit_candidates.py), not cross-AG data content.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

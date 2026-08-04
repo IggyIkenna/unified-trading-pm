@@ -24,7 +24,9 @@ summary: >-
   captured at dispatch time, not re-read from the doc.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [meta]. Genuinely AO server code
+  # (agent-orchestrator/server/verify.py M3 tag-correlation fallback), not a generic process doc.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]

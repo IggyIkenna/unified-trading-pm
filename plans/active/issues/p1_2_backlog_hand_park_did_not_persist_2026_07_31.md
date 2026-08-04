@@ -21,7 +21,9 @@ summary: >-
   sound.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Same AO backlog/park
+  # mechanism family as backlog_regen_reverted_p1_2_park_2026_08_01.md, not cross-AG.
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

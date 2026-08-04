@@ -45,7 +45,7 @@ related:
     ../archive/issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
     issues/ao_residuals_after_dispatch_hardening_2026_07_17.md,
     issues/ao_recovery_audit_layer1_deleted_2026_07_15.md,
-    issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     ../epics/orchestrator_master.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -77,7 +77,7 @@ context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
-    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/stale_dispatch.py,
     agent-orchestrator/server/routes/agents.py,

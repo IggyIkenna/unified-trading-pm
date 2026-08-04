@@ -137,11 +137,15 @@ progress-signal half.
 > `agent-orchestrator@5e0f67d` ("suppress GIT STATUS RED nudge on a stale git-status snapshot") solves a DIFFERENT
 > problem — a dead reporter cron freezing the snapshot — not liveness-by-progress.
 
-- [ ] [BACKEND] P2. **Gate the staleness/sync-nudge emitters on liveness-by-progress.** Suppress or soften
+- [x] ✅ [BACKEND] P2. **Gate the staleness/sync-nudge emitters on liveness-by-progress.** Suppress or soften
       `maybe_alert_git_staleness` / `maybe_nudge_on_red_repos` when the worktree's last commit
       (`git -C <worktree> log -1 --format=%ct`) is newer than the sustain window, or a live child process is running
       under it (`pgrep -f <worktree>`). **Gate**: a regression test simulates a burst-committing worker (recent commit,
-      still dirty) and asserts the staleness alert does NOT fire, while the genuinely-stale-slot tests stay green.
+      still dirty) and asserts the staleness alert does NOT fire, while the genuinely-stale-slot tests stay green. —
+      **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`)**: shipped `agent-orchestrator@0757a751` + `@0cc12fdb`,
+      both re-confirmed ancestors of `live-defi-rollout` HEAD; `tests/test_git_staleness_alerting.py` exists on disk
+      with the burst-committing-worker regression coverage this gate asks for. Checkbox lagged reality by ~2 weeks — a
+      plain stale-checkbox correction, not new work.
 - [ ] [DOCS] P2. **Apply the same check to the review-role wedge heuristic** — `agents/review.md` step 3d still
       classifies a long-dirty worktree as dead/stale from tmux-session and heartbeat state alone, the very signal that
       produced the 2026-07-21 false positive. Add an explicit commit-recency + live-process check before recommending

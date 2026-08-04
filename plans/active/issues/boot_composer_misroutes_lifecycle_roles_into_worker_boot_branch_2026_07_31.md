@@ -19,7 +19,9 @@ summary: >-
   reporter's boot (3 agent_ids agt-65ba48/agt-42e455/agt-2a8120 tied to tmux_session orch-slot-1 within ~25 min).
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [meta]. Genuinely AO server code
+  # (server/prompts.py::_compose() boot-prompt routing bug), not a generic process doc.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]

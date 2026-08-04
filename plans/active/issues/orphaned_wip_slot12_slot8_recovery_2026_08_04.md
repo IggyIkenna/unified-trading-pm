@@ -19,7 +19,9 @@ summary: >-
   (backend-owned) or push code (quickmerge is worker-side), hence worker-rescue todos.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Multi-repo is just WHERE
+  # the orphaned commits happen to live; the doc's own subject is AO worker/slot-lifecycle rescue mechanics.
 stage: [meta]
 repos: [unified-trading-library, unified-api-contracts, deployment-service, market-tick-data-service]
 scope: [admin]

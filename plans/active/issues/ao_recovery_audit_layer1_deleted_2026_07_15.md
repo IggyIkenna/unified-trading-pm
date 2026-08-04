@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [recovery, kill-switch, defence-in-depth, codex-drift, agent-role, ssot-contradiction, operator-decision]
 related:
   [
-    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]

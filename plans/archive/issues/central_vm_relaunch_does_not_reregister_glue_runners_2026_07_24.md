@@ -19,7 +19,10 @@ repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, disaster-recovery, self-hosted-runners, ci-cd, planning-vm]
 related:
-  [/plans/active/issues/ao_docs_reconciliation_2026_07_15.md, /codex/05-infrastructure/local-tmux-precompact-watcher.md]
+  [
+    /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
+    /codex/05-infrastructure/local-tmux-precompact-watcher.md,
+  ]
 created: 2026-07-24
 last_updated: 2026-07-28 # (was: 2026-07-24; RULED 2026-07-28 — do both, see Progress Log)
 priority: P2
@@ -125,16 +128,16 @@ Two options, not mutually exclusive:
       `quickmerge.sh     ... --files 'scripts/vm/launch-central-brain-aws.sh'`).
 
       **DONE 2026-07-30 — shipped: `deployment-service@d49767d`.** Resolved the blocking merge conflict (it was the
-                                                                              SAME session's own earlier `feat(monitors): make DP-WATCHER-003 maintenance-window-aware` work colliding with a
-                                                                              re-attempted redo after a context reset — the "different, unidentified agent session" was this same lineage;
-                                                                              kept the already-complete "Updated upstream" side wholesale, discarded the duplicate redo, verified no content
-                                                                              loss). Full `quality-gates.sh` green (2967 passed). The `setup-glue-runners.sh install` step (covers both `glue`
-                                                                              and `glue-writer`, best-effort — a failure only WARNs + falls back to the runbook, never fails the whole VM
-                                                                              bootstrap) is now live in `launch-central-brain-aws.sh`. **Gate not independently exercised this session** (a
-                                                                              real or simulated central-VM relaunch + glue-routed-workflow-picks-up-a-runner verification is an operational
-                                                                              action against the live planning VM, out of this doc-triage pass's bounded scope) — the code is shipped and
-                                                                              QG-verified; the live DR-drill confirmation remains a genuine residual for whoever next performs (or simulates)
-                                                                              a central-VM relaunch.
+                                                                                  SAME session's own earlier `feat(monitors): make DP-WATCHER-003 maintenance-window-aware` work colliding with a
+                                                                                  re-attempted redo after a context reset — the "different, unidentified agent session" was this same lineage;
+                                                                                  kept the already-complete "Updated upstream" side wholesale, discarded the duplicate redo, verified no content
+                                                                                  loss). Full `quality-gates.sh` green (2967 passed). The `setup-glue-runners.sh install` step (covers both `glue`
+                                                                                  and `glue-writer`, best-effort — a failure only WARNs + falls back to the runbook, never fails the whole VM
+                                                                                  bootstrap) is now live in `launch-central-brain-aws.sh`. **Gate not independently exercised this session** (a
+                                                                                  real or simulated central-VM relaunch + glue-routed-workflow-picks-up-a-runner verification is an operational
+                                                                                  action against the live planning VM, out of this doc-triage pass's bounded scope) — the code is shipped and
+                                                                                  QG-verified; the live DR-drill confirmation remains a genuine residual for whoever next performs (or simulates)
+                                                                                  a central-VM relaunch.
 
 ## Progress Log
 

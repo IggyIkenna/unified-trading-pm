@@ -15,7 +15,9 @@ summary: >-
   git-health incarnation inherits this instead of re-flagging it every recycle.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. AO fleet git-health
+  # scanner false-positive, not cross-AG content.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [admin]
