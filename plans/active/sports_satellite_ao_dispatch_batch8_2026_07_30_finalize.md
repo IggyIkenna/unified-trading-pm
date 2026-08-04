@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for sports_satellite_ao_dispatch_batch8_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch3-7-finalize pattern: reconcile each distinct source
   doc's checkboxes once its batch-8 todo lands, then archive both docs.
-status: active
+status: complete # (was: active) 2026-08-04 archival: both todos [x], no locked_by
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -53,6 +53,11 @@ context_scope:
 
 # Sports satellite AO batch 8 — finalize
 
+> **🟢 ARCHIVED 2026-08-04.** Both todos done: source-doc reconciliation (todo 1, slot-7) verified all 5 batch-8 commits
+> on `origin/live-defi-rollout`, §E3 properly resolved; archival (todo 2, slot-5) completed via the 6-step ritual.
+> Deferred items re-verified and all already tracked in their respective target docs. No new durable contract
+> established. Archived alongside `sports_satellite_ao_dispatch_batch8_2026_07_30.md` in the same session.
+
 > **Status: draft.** Flip to `active` in the same commit/decision as the parent batch (`gate_on_depends: true` holds
 > every todo below back until all 5 parent todos are `done`, regardless of this doc's own `status`).
 
@@ -74,15 +79,11 @@ context_scope:
       `@627fd31c` (venue case-mismatch), `@af4ce16d` (Vietnamese/Azerbaijani follow-up) — all ancestor-verified. §E3
       properly resolved: closed-with-citation + precisely-scoped residual `[CONFIG] P2`. No code shipped
       (verification-only reconciliation).
-- [ ] [DOC] P2. **Archive `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (and this finalize doc) once both are
-      terminal**, per CLAUDE.md's plan-archival ritual: confirm the Deferred section's 3 items are still accurately
-      described (re-verify, don't just carry forward) and migrate them to a tracked note for whichever future batch
-      picks up `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` or the closeout's own
-      dual-layout reconciliation → add the archive banner → confirm no new durable contract needs a codex update (this
-      batch establishes none) → grep the corpus for every referrer of `sports_satellite_ao_dispatch_batch8_2026_07_30`
-      and fix each path to the archived location → clear `locked_by` (already empty; confirm). **Done when**: both docs
-      are in `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` is 0-hard-failures afterwards.
+- [x] ✅ [DOC] P2. **Archived `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (and this finalize doc) 2026-08-04
+      (slot-5).** Both docs terminal — all 5 batch-8 todos verified [x], locked_by empty on both. 6-step ritual: (1)
+      Deferred items re-verified and all already tracked in target docs; (2) archive banners added to both docs; (3)
+      codex check clean — no new contracts; (4) no CLAUDE.md/codex update needed; (5) referrer paths updated
+      corpus-wide; (6) `git mv` both to `plans/archive/2026_07/`. `INDEX.md` regenerated. Hygiene sweep green.
 
 ## Codex SSOTs
 

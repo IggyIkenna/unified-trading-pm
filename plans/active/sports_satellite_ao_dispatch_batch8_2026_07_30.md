@@ -17,7 +17,7 @@ summary: >-
   distinct-dimension-values UI listing already tracked generically in prediction's Phase C, and the manifest-staleness
   DIAG already fully root-caused in its own issue doc) and are reconciled in the source doc directly rather than
   re-drafted.
-status: active
+status: complete # (was: active) 2026-08-04 archival: all 5 todos [x], no locked_by
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -79,6 +79,16 @@ context_scope:
 ---
 
 # Sports satellite AO batch 8 — dedicated triage/design pass
+
+> **🟢 ARCHIVED 2026-08-04.** All 5 todos done + verified: 3 clear orphans root-caused/fixed (bucketing-bug DIAG,
+> junk-symbol guard CODE, Odds-API historical-backfill DIAG), 1 Vietnamese/Azerbaijani follow-up CODE, 1
+> canonical-naming AUDIT extension. Deferred section's 3 items re-verified: (1) dual-layout cleanup already tracked in
+> `sports_consolidated_closeout_2026_07_19.md` lines 572-581 +
+> `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` line 319; (2) UAC canonical registry +
+> curated ~300-league set already `[x]` in canonical-universe doc — completed, not deferred; (3) §E5 MODEL-horizon
+> suggestion already tracked as `- [ ] [MODEL] P2` in `issues/sports_features_layer_findings_sweep_2026_07_18.md`
+> line 620. No new durable contract established — no codex update needed. Archived alongside
+> `sports_satellite_ao_dispatch_batch8_2026_07_30_finalize.md` in the same session.
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
 > skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
