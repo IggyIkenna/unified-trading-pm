@@ -609,7 +609,13 @@ buildable or verifiable from a dev checkout. See each todo's own "Done when" bel
   use the key we have available on this pc, I will tell you the env-var name in some time." The env file deployed above
   uses the LOCAL key (same one already in the creds buckets), not a GSM-sourced one. When the operator supplies the GSM
   secret name, re-source the env file from GSM (rotate the `ANTHROPIC_AUTH_TOKEN` value) rather than treating this as
-  already-final. No GSM secret name has been given yet — do not guess one.
+  already-final. No GSM secret name has been given yet — do not guess one. Tracked as a formal todo below (was prose
+  only until 2026-08-04).
+  - **2026-08-04 check**: confirmed via `gcloud secrets list --project=central-element-323112` (using the planning VM's
+    own GCP identity — the local dev-checkout identity lacks `secretmanager.list` on this project, a permission gap not
+    a "no secrets" result, don't repeat that misread) that **no `deepseek*`-named secret exists in GSM yet**. Full
+    secret list has no DeepSeek entry at all (closest is the unrelated `anthropic-api-key`). Still waiting on the
+    operator to either create one or supply an existing name — do not guess one.
 - **No repo commit for this todo's own work** — `accounts.json` and `~/.claude-accounts/*.env` are both
   operator-config/secret, deliberately NOT git-tracked (per this plan's own established convention: "accounts.json is
   gitignored so code merge alone doesn't activate anything"). This Progress Log entry (+ the eventual checkbox flip) IS
@@ -899,5 +905,12 @@ default from an external reference.
       (proactive skip on a drained account, not just reactive after spawn failures accumulate). —
       `agent-orchestrator@3f06bea`, `ahead=0`. Also bumped `deepseek_route_fraction` 0.8→0.9 (env-free `TuningDefaults`
       field — no env var exists for it; code-default + redeploy is the only lever) — `agent-orchestrator@0b62753`.
-- [ ] [OPERATOR] P2. Top up the `deepseek-v4-pro` balance (`$0.34` as of 2026-08-04T14:05Z, dropping in real time) —
-      even with the halt fix above, DeepSeek dispatch fails closed at zero balance. Tracked in the same issue doc.
+- [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance (`$0.34` as of 2026-08-04T14:05Z, dropping in real time) —
+      even with the halt fix above, DeepSeek dispatch fails closed at zero balance. Tracked in the same issue doc. —
+      Done: confirmed `$4.84` live via `/api/accounts` at 2026-08-04T14:33Z.
+- [ ] [OPERATOR] P3. Create/name the DeepSeek GSM secret and give it to an agent, then re-source
+      `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` from it (both locally and on the planning VM)
+      instead of the current hardcoded local-PC key. Confirmed 2026-08-04: no `deepseek*` secret exists in GSM yet
+      (`gcloud secrets list --project=central-element-323112`, checked via the planning VM's own GCP identity — the
+      dev-checkout identity has no `secretmanager.list` on this project). Do not guess a secret name; wait for the
+      operator.
