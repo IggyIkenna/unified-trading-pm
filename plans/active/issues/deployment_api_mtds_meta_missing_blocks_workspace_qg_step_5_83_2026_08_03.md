@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [quality-gates, adapter-contract-regression, shared-host-drift, deployment-api, blocking]
 related:
   [
-    /plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
+    /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
     /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
   ]
 created: 2026-08-03
@@ -61,7 +61,7 @@ context_scope:
     scripts/qg/no_adapter_contract_regression.sh,
     scripts/quality_gates/adapter_contract_baseline.yaml,
     deployment-api/deployment_api/services/data_status/mtds_meta.py,
-    /plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
+    /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
   ]
 ---
 
@@ -148,9 +148,10 @@ without knowing what it is). No further action was taken on `deployment-api` —
       `git show     origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
       OTHER repo on that same host. Cross-reference
-      `/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md` (same
-      STEP 5.83 check, different flake class — timeout-under-contention vs missing-file-under-drift; both point at the
-      same check being fragile to shared-host state it doesn't fully control).
+      `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`
+      (ARCHIVED 2026-08-04, all todos done — same STEP 5.83 check, different flake class — timeout-under-contention vs
+      missing-file-under-drift; both pointed at the same check being fragile to shared-host state it doesn't fully
+      control).
 
 ## Progress Log
 

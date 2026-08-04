@@ -10,7 +10,7 @@ summary: >-
   the 60s timeout fires and STEP 5.83 is treated as a HARD FAIL even though the check itself is logically green
   (`[check_adapter_contract_regression] OK`). This produced 2 of 4 full quality-gates.sh runs failing on an unrelated
   diff (features-service orchestrator.py pipeline_mode fix) purely due to this flake.
-status: open
+status: resolved # (was: open) 2026-08-04 -- all 3 todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -54,6 +54,12 @@ context_scope:
 ---
 
 # QG STEP 5.83 (adapter contract-call regression ratchet) flakes under fleet-wide shared-host contention
+
+> **✅ ARCHIVED 2026-08-04 — all 3 todos done, doc unlocked.** Todo 1 (raise `run_timeout` 60→300s, all repos) done
+> 2026-07-28; todo 3 (CI single-tenancy check) done 2026-07-30; todo 2 (I/O-light scanner walk) confirmed already
+> resolved by `unified-trading-pm@91e9865b9` (2026-07-27) — verified live 2026-08-04 at 0.9s real vs. the doc's
+> originally-measured 2m21s. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## What was found
 
