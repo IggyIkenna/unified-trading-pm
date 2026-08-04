@@ -12,7 +12,10 @@ summary: >-
   normalizer `normalize_api_football_fixture()` built the league id from a raw country/name slug instead of the UAC
   registry; `instruments-service`'s own write paths were already gated (hence its population is legacy residue, not
   growing), `features-service`'s was not (hence the live leak). Write path closed for every consumer. The 9,733-object
-  historical migration remains open, `[OPERATOR]`-gated (see Todos) — must NOT be folded into the odds-tick relocation.
+  historical migration remains open — the delete-safety gate is already cleared (30-day soft-delete retention, no
+  `[OPERATOR]` step needed), split 2026-08-04 into census+inspection (DONE — path-only rewrite confirmed, no
+  content-column rewrite needed) / build+dry-run / gated-apply (see Todos). Must NOT be folded into the odds-tick
+  relocation.
 status: open
 nature: issue
 asset_group: [sports]
