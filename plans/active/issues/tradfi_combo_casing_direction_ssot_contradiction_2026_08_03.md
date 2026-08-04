@@ -139,10 +139,14 @@ production data.
 4. Once (1)+(2) are resolved, `tradfi_casing_100pct_redrift-014`'s `--apply` can proceed against the now-understood
    ~1.4M-row population (with the script's STOP-ON-SURPRISE ceiling raised to match, citing this diagnosis).
 
-- [ ] [OPERATOR] P0. Decide the canonical casing direction for tradfi `combo` (and by extension every other
+- [x] ✅ [OPERATOR] P0. Decide the canonical casing direction for tradfi `combo` (and by extension every other
       instrument_type this affects) — UPPERCASE per UAC schema + the existing operator ruling in
       `tradfi_casing_100pct_redrift_2026_07_27.md`, or LOWERCASE per the archived 2026-07-29 migration's precedent. This
-      gates every todo below. (repo: unified-trading-pm)
+      gates every todo below. (repo: unified-trading-pm) — DECIDED: Option A, UPPERCASE is canonical (matches UAC
+      `InstrumentType.COMBO="COMBO"` + this issue thread's existing operator ruling/UTL seam). Approved raising the
+      script's STOP-ON-SURPRISE ceiling and re-running `--apply` against the now-understood ~1.4M-row population,
+      conditioned on the seeding-function fix landing FIRST — that precondition was already satisfied before this ruling
+      arrived (`-002` closed `instruments-service@47a631ff` + `d79b9d74`).
 - [x] ✅ [DATA] P1. Verify whether
       `instruments-service/scripts/enumerate_expected_universe.py::_canonical_writer_instrument_type` still seeds
       `expected_unattempted` rows in lowercase while MTDS's writer now captures in UPPERCASE (post
