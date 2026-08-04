@@ -425,15 +425,15 @@ then reaps `lifecycle-complete` in <45 s, proving the cleanup path is correct; i
 session-death signal).
 
 **The contract (LANDED 2026-07-21, `agent-orchestrator@0d510e9` →
-[`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).** A
-`one_shot`/`scheduled` agent, on completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off
-— today's `/done` is task + plan-flip gated and must be extended to accept a task-less completion). The backend then (a)
-archives the AgentRow `lifecycle-complete`, (b) frees the slot, (c) flags it so `WorkerLivenessKicker` stops nudging it.
-The agent then stops; the next reap cleans the now-dead session. This makes "finished" an **explicit signal** instead of
-an inference from a session death that never happens — and let the `f641968`/`1e7fec0` carve-outs be **DELETED** (done —
-C1, `agent-orchestrator@0d510e9`; a booted one-off is `working`, never `idle`, so idle-scanners skip it by construction;
-on `/done` it is archived, not reaped). Only `5907317` (the boot-gate `spawn_base_role` recognition) is kept — B1
-depends on it, so it was not subsumed.
+[`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).**
+A `one_shot`/`scheduled` agent, on completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less
+one-off — today's `/done` is task + plan-flip gated and must be extended to accept a task-less completion). The backend
+then (a) archives the AgentRow `lifecycle-complete`, (b) frees the slot, (c) flags it so `WorkerLivenessKicker` stops
+nudging it. The agent then stops; the next reap cleans the now-dead session. This makes "finished" an **explicit
+signal** instead of an inference from a session death that never happens — and let the `f641968`/`1e7fec0` carve-outs be
+**DELETED** (done — C1, `agent-orchestrator@0d510e9`; a booted one-off is `working`, never `idle`, so idle-scanners skip
+it by construction; on `/done` it is archived, not reaped). Only `5907317` (the boot-gate `spawn_base_role` recognition)
+is kept — B1 depends on it, so it was not subsumed.
 
 > **"One-off" here = an event-spawned CRAFT** (escalation/scheduled). A **plan-backlog worker is persistent** and DOES
 > go `idle` when it has no ready task — the idle-reclaimer reaping it is then correct (a fresh worker picks up later
@@ -498,6 +498,13 @@ lives in the plan items + Progress Log** (the operator-facing SSOT a worker writ
 commits; a fresh worker re-reads those and continues correctly. Conversational memory is a nice-to-have efficiency, not
 a correctness requirement — losing it re-reads a plan, it does not lose work. (The dead-worker `--resume` for a MID-task
 crash — `resume_lifecycle.py`, `ao_task_lifecycle` Phase B — is a different mechanism and stays.)
+
+This is the philosophical basis the 2026-08-04 one-task-per-session hard rule (`tuning.one_task_per_session_enabled`,
+default True) acts on directly: since conversational carry-over was never load-bearing, forcing a fresh session on EVERY
+task boundary (not just idle/retire) costs nothing but respawn overhead — see
+[agent-orchestrator-single-vm-architecture.md's worker-lifecycle bullets](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+for the full mechanism. The "same live session drains the next task" claim earlier in this doc's own lifecycle
+description is now the NON-default path (`one_task_per_session_enabled=False` only).
 
 ### Interaction with the C1 carve-out deletion — still correct
 

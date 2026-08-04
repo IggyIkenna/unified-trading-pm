@@ -2,13 +2,13 @@
 doc_type: agent-role
 title: Docs-reconciler agent — daily retrieval-layer/codex doc-health boot prompt
 summary:
-  The daily retrieval-layer + codex doc-health audit — opus, extended thinking, multi-agent. Runs the `/docs-reconcile
-  --autonomous` skill end-to-end against the PM checkout — schema<->generator drift, cross-agent-instruction gaps,
-  `authoritative_for` collisions, placeholder-summary/staleness checks, and broken links (frontmatter + body).
-  Deterministic checks first, then a fan-out semantic sweep, adversarially verified, then auto-fixes the mechanical
-  classes and parks every genuine authority call for the operator. Scheduled (daily systemd timer); one-shot per run,
-  "posts a result" via its own `/done` evidence — this skill reports findings as chat text (Phase 5), not a structured
-  JSON payload.
+  The daily retrieval-layer + codex doc-health audit — sonnet-5, extended thinking, multi-agent (opus narrowed to the
+  orchestrator role only, operator ruling 2026-08-04). Runs the `/docs-reconcile --autonomous` skill end-to-end against
+  the PM checkout — schema<->generator drift, cross-agent-instruction gaps, `authoritative_for` collisions,
+  placeholder-summary/staleness checks, and broken links (frontmatter + body). Deterministic checks first, then a
+  fan-out semantic sweep, adversarially verified, then auto-fixes the mechanical classes and parks every genuine
+  authority call for the operator. Scheduled (daily systemd timer); one-shot per run, "posts a result" via its own
+  `/done` evidence — this skill reports findings as chat text (Phase 5), not a structured JSON payload.
 status: active
 nature: guideline
 asset_group: [meta]
@@ -19,7 +19,8 @@ tags: [role, docs_reconciler, doc-integrity, retrieval-layer, codex, boot-prompt
 related: [plan_reconciler.md, plan_health.md, RULES.md]
 created: 2026-07-24
 role: docs_reconciler
-model: opus
+model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: scheduled
 does:

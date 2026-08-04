@@ -5,13 +5,19 @@ summary: >-
   Model-tier + effort selection SSOT — model tier (sonnet/opus/fable) and effort (low<medium<high<xhigh<max) are
   INDEPENDENT axes (ground truth: agent-orchestrator/server/model_tier.py, 2026-07) — effort is the primary reasoning
   control on every adaptive-reasoning model (sonnet/opus/fable alike, Haiku excluded), NOT opus-gated. Model tier:
-  default Sonnet 5, Opus only for the main orchestrator / cross-repo architecture judgment / trading judgment — NOT for
-  raw context size (Sonnet 5 has 1M context, same as Opus; operator ruling 2026-07-23 retired the old ">200k ctx" /
-  ">50KB plan" opus triggers). **Every AO planning-VM-eligible plan (`assigned_vm: planning`) defaults to Sonnet 5 at
-  max effort** — that is the standard, not an exception. Effort: a plan declaring no tier gets a todo-count-derived
-  default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD open todos — operator ruling 2026-07-22), not a
-  silent "medium". Covers the mandatory task-start self-check (model + effort mismatch → STOP/FLAG), always-set
-  sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier enforcement.
+  default Sonnet, Opus ONLY for the main orchestrator role (operator ruling 2026-08-04 — cross-repo architecture
+  judgment and trading judgment are RETIRED as opus triggers, narrowed from three qualitative categories to one) — NOT
+  for raw context size (Sonnet's 1M context matches Opus; operator ruling 2026-07-23 retired the old ">200k ctx" /
+  ">50KB plan" opus triggers). **Within the sonnet tier, a second axis (operator ruling 2026-08-04) picks the concrete
+  snapshot**: sonnet-4.6 is the default for routine/specified AO dispatch (target >=80% of the fleet), sonnet-5 is for
+  harder/judgment-heavy work, escalation (server/escalation.py), and CI (agents/cicd.md) — set via a plan's/role's
+  `sonnet_variant: light | default` frontmatter, resolved at spawn by
+  `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot`. **Every AO planning-VM-eligible plan
+  (`assigned_vm: planning`) defaults to Sonnet at max effort** — that is the standard, not an exception. Effort: a plan
+  declaring no tier gets a todo-count-derived default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD
+  open todos — operator ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model +
+  effort mismatch → STOP/FLAG), always-set sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier
+  enforcement.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -41,6 +47,23 @@ many files are in context. **Every plan eligible for AO planning-VM dispatch (`a
 Sonnet 5 at `effort: max`** ("highest thinking") — this is the STANDARD configuration for AO-dispatched work, not a
 fallback. The `audit_model_tier.py` heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
 
+**Operator ruling (2026-08-04) — opus narrowed to ONE category; a new sonnet-4.6/sonnet-5 axis added.** Two amendments,
+both cost-driven, both qualitative (neither reintroduces a size trigger — the 2026-07-23 ruling's core point stands):
+
+1. **Opus is main-orchestrator-role ONLY.** The other two 2026-07-23 categories (cross-repo architecture judgment,
+   trading judgment) are RETIRED as opus triggers — that work now runs on **sonnet-5** (below), not opus. Every
+   `agents/*.md` role that declared `model: opus` for a reason other than being the orchestrator (`ag_closeout_auditor`,
+   `docs_reconciler`, `na_eligibility_auditor`, `plan_reconciler` — daily cross-corpus audit/reconciliation roles) was
+   moved to `model: sonnet` + `sonnet_variant: default` as part of this ruling.
+2. **Within `model: sonnet`, a new `sonnet_variant` axis picks the concrete snapshot** — see "Sonnet sub-tier" below.
+   This is additive to the existing `model_tier` field, not a replacement: `model_tier` still decides sonnet vs opus vs
+   fable; `sonnet_variant` only matters once that's landed on sonnet.
+
+Ground truth: `agent-orchestrator/server/model_tier.py` (`SONNET_LIGHT_MODEL`/`SONNET_DEFAULT_MODEL`/
+`resolve_sonnet_snapshot`), `role_registry.py` (`RoleSpec.sonnet_variant`), `regen_backlog_from_plan.py`
+(`_parse_frontmatter_sonnet_variant`), `autospawn.py::_resolve_task_model` (where it's actually applied at spawn),
+`escalation.py` (CI/escalation defaults), `plan_health.py` (the `smart_tier` scheduled-audit family).
+
 ---
 
 ## The two tiers
@@ -58,19 +81,20 @@ the TASK itself is one of the three qualitative categories above.
 ## Decision rule (apply at work-split time, per slot)
 
 ```
-IF slot is main orchestrator (slot 1)                          → Opus 4.8
-IF task IS a cross-repo architecture DESIGN DECISION requiring  → Opus 4.8
-   simultaneous judgment across UAC schema + UTL + 3+ services
-   (the judgment call itself, not merely "the files are large")
-IF task IS a trading judgment call (position sizing, risk       → Opus 4.8
-   limits, archetype topology)
-OTHERWISE (including large plans, multi-file context,           → Sonnet 5
-   AO planning-VM-eligible work of any size)                       (effort: max if large/complex)
+IF slot is main orchestrator (slot 1)                          → Opus
+OTHERWISE (including large plans, multi-file context,           → Sonnet
+   cross-repo architecture judgment, trading judgment,             (effort: max if large/complex)
+   AO planning-VM-eligible work of any size)
+   IF task is harder/judgment-heavy, escalation, or CI          →   sonnet_variant: default (sonnet-5)
+   ELSE (routine/specified — target >=80% of AO dispatch)       →   sonnet_variant: light (sonnet-4.6, the default)
 ```
 
-**When in doubt, use Sonnet 5 and escalate only for one of the three qualitative reasons above — never for size.**
-Pre-escalating to Opus because a plan is large is exactly the "just in case" anti-pattern this doc already banned; the
-2026-07-23 ruling just removes the one reason (context ceiling) that used to make size-based escalation look justified.
+**When in doubt, use Sonnet and escalate to Opus only for the one qualitative reason above (main orchestrator role) —
+never for size, and never for cross-repo/trading judgment (retired 2026-08-04, see the ruling above — that work runs on
+sonnet-5 now).** Pre-escalating to Opus because a plan is large is exactly the "just in case" anti-pattern this doc
+already banned; the 2026-07-23 ruling removed the one reason (context ceiling) that used to make size-based escalation
+look justified, and the 2026-08-04 ruling removed the two remaining opus-qualifying JUDGMENT categories in favor of
+sonnet-5.
 
 ---
 
@@ -92,23 +116,57 @@ Pre-escalating to Opus because a plan is large is exactly the "just in case" ant
 
 ---
 
-## Opus 4.8 — only for these
+## Opus — only for this (narrowed 2026-08-04)
 
-**Purely qualitative, per the 2026-07-23 ruling — NEVER escalate because a plan/task is large; Sonnet 5's 1M context
-already holds it.** Only three categories:
+**Purely qualitative — NEVER escalate because a plan/task is large; Sonnet's 1M context already holds it.** Exactly ONE
+category, as of the 2026-08-04 ruling:
 
 - **Slot 1 main orchestrator ROLE**: boot checklist, ledger sweep, cross-slot Q&A dispatch, plan curation, ping triage,
-  master plan refresh. The reason is the ROLE (orchestrating the whole fleet), not the context volume — Sonnet 5 could
+  master plan refresh. The reason is the ROLE (orchestrating the whole fleet), not the context volume — Sonnet could
   technically hold the same context now, but this role is kept on Opus for judgment quality on fleet-wide tradeoffs.
-- **Cross-repo architecture JUDGMENT**: design tasks that require making a coherent DECISION across UAC schema + UTL
-  helpers + 3+ service implementations + codex SSOT (e.g., new shard-atom design, new manifest column rationale,
-  signal-broadcast topology, full-workspace impact pre-audit for a public API change). The escalation reason is the
-  judgment call itself — weighing tradeoffs across services — not merely that the files involved are numerous or large;
-  a mechanical multi-file sweep with no real design decision stays Sonnet 5 even if it touches every repo.
-- **Trading judgment calls**: position sizing, risk-limit calibration, archetype topology decisions — the escalation
-  reason is the JUDGMENT (irreversible-adjacent, high-stakes tradeoffs), not context volume.
 
-Document the reason in the spawn prompt either way: `OPUS-REQUIRED: <one of the three categories above>`.
+**RETIRED 2026-08-04** (were opus-qualifying since 2026-07-23; now run on **sonnet-5**, not opus):
+
+- ~~Cross-repo architecture JUDGMENT~~ (design tasks spanning UAC schema + UTL + 3+ services) — the judgment-call
+  reasoning that used to justify opus here still applies to the WORK, it just no longer justifies opus SPECIFICALLY; use
+  `sonnet_variant: default` (sonnet-5) instead.
+- ~~Trading judgment calls~~ (position sizing, risk-limit calibration, archetype topology) — same: sonnet-5, not opus.
+
+Document the reason in the spawn prompt either way: `OPUS-REQUIRED: main orchestrator role` for opus, or
+`sonnet_variant: default — REASON: <harder/judgment-heavy | escalation | CI>` for sonnet-5.
+
+---
+
+## Sonnet sub-tier: 4.6 vs 5 (added 2026-08-04)
+
+Within `model_tier: sonnet` (the vast majority of AO dispatch), a second, INDEPENDENT axis picks the concrete snapshot —
+this is a cost/capability tradeoff WITHIN the sonnet tier, not a replacement for the model_tier decision above.
+
+| Value                      | Snapshot            | Default for                                                                             |
+| -------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| `light` (absent = default) | `claude-sonnet-4-6` | Routine/specified work — the target is **>=80% of AO dispatch** on this snapshot.       |
+| `default`                  | `claude-sonnet-5`   | Harder/judgment-heavy work, escalation (`server/escalation.py`), CI (`agents/cicd.md`). |
+
+**How it's set**: a plan's or role's `sonnet_variant: light | default` frontmatter (mirrors `model_tier`'s own
+plan-overrides-role-overrides-absent-default precedence — see `_resolve_task_tier` / `_parse_frontmatter_sonnet_variant`
+in `regen_backlog_from_plan.py`). Absent → `light` (sonnet-4.6) — this is the STANDARD, not a fallback needing
+justification; only declare `sonnet_variant: default` when the work is genuinely harder-judgment, or the dispatch path
+is escalation/CI. The four daily cross-corpus audit roles moved off opus in this same ruling
+(`ag_closeout_auditor`/`docs_reconciler`/`na_eligibility_auditor`/`plan_reconciler`) all declare
+`sonnet_variant: default` — that whole-corpus reconciliation judgment work is exactly what sonnet-5 is for.
+
+**Where it's actually applied**: `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot(prefer_light=...)`,
+called from `autospawn.py::_resolve_task_model` (the main per-task dispatch path — reads `BacklogTask.sonnet_variant`),
+`escalation.py` (hardcoded `sonnet_variant: default` equivalent — the function defaults changed to
+`model_tier.SONNET_DEFAULT_MODEL` directly), and `plan_health.py`'s `smart_tier` branch (same, for the scheduled-audit
+family). Before this ruling, AO only ever passed the BARE tier alias (`"sonnet"`) to `--model` and let the Claude Code
+CLI silently resolve it — meaning AO's own telemetry never recorded which literal snapshot actually ran. Passing a
+concrete snapshot string fixes that as a side effect (a worker's `slot_boot` self-report just echoes its launch value).
+
+**Self-check**: this axis does NOT get its own hard-stop protocol (unlike the model_tier Step 3 check below) — a
+sonnet-4.6-vs-5 mismatch is a cost-tuning concern, not a capability-correctness one, so it is not worth interrupting a
+worker over. If you notice you're running a snapshot that doesn't match your task's declared `sonnet_variant`, mention
+it in your final report; don't stop.
 
 ---
 
@@ -162,6 +220,8 @@ tier is no longer advisory-only:
 
 - `model_tier: opus-required` → the regen-derived backlog task gets `model: opus`; else `sonnet`. Effort is a SEPARATE
   decision (below) — it does not follow from model tier in either direction.
+- `sonnet_variant: light | default` (2026-08-04, meaningful only when the resolved model is `sonnet`) → the backlog
+  task's `sonnet_variant` field; absent → `light`. See "Sonnet sub-tier" above.
 - `thinking_tier: max | high | medium` → task `effort`: `max`→`effort=max`; `high`→`effort=high`; `medium`/absent (and
   no `effort:` frontmatter, no `assigned_role`) → **todo-count-derived default** (operator ruling 2026-07-22): `max` if
   the plan has more than `model_tier.LARGE_PLAN_TODO_THRESHOLD` (10) open todos, else `xhigh` — replacing what used to
@@ -170,10 +230,12 @@ tier is no longer advisory-only:
   spawn, before dispatch picks its task — so it's chosen from the highest-priority pending task).
 
 Code: `agent-orchestrator/server/regen_backlog_from_plan.py` (`_parse_frontmatter_model_tier` +
-`_parse_frontmatter_thinking_tier` + the todo-count-derived default added right after the explicit-`effort:` override) →
-`server/backlog.py::BacklogTask` (`model`/`effort`/`thinking`) → `server/autospawn.py::_top_queued_task_params`. Shared
-threshold constant: `server/model_tier.py::LARGE_PLAN_TODO_THRESHOLD` (also used by `context_lifecycle.py`'s
-large-plan-worker carve-out from the worker exclusion, so the two never drift apart). Coverage audit:
+`_parse_frontmatter_sonnet_variant` + `_parse_frontmatter_thinking_tier` + the todo-count-derived default added right
+after the explicit-`effort:` override) → `server/backlog.py::BacklogTask` (`model`/`sonnet_variant`/`effort`/`thinking`)
+→ `server/autospawn.py::_spawn_param_plan` (per-slot spawn plan, R2 2026-07-16 — NOT the deleted
+`_top_queued_task_params`) → `_resolve_task_model` (resolves the concrete snapshot, 2026-08-04). Shared threshold
+constant: `server/model_tier.py::LARGE_PLAN_TODO_THRESHOLD` (also used by `context_lifecycle.py`'s large-plan-worker
+carve-out from the worker exclusion, so the two never drift apart). Coverage audit:
 `unified-trading-pm/scripts/plans/audit_model_tier.py`. Until a plan declares `model_tier`, it silently defaults to
 Sonnet (model tier's silent default is UNCHANGED by the 2026-07-22 ruling — only effort's silent default changed).
 Backfilled opus set (2026-06-01): `master_to_live_defi`, `mdps_long_running_multi_shard_architecture_audit`,

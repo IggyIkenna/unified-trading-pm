@@ -35,15 +35,14 @@
 
 ## Model tier
 
-Default **Sonnet 5**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes — no
-effort level requires or implies a model tier (ground truth: `agent-orchestrator/server/model_tier.py`, 2026-07).
-**`model_tier: opus-required` is PURELY QUALITATIVE — main orchestrator role / cross-repo architecture judgment /
-trading judgment ONLY, never plan/context size (2026-07-23 ruling: Sonnet 5's 1M context retires the old size
-triggers).** Every AO planning-VM-eligible plan (`assigned_vm: planning`) defaults to **Sonnet 5 at `effort: max`**
-regardless of size — this is the standard, not a fallback. **Effort default (operator ruling 2026-07-22)**: a plan/task
-declaring no tier gets a todo-count-derived default, not a silent "medium" — `xhigh` baseline, `max` past
-`LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override. Sub-agent `Agent` calls MUST set
-`model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
+Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
+truth: `agent-orchestrator/server/model_tier.py`, 2026-07). **`opus-required` = main orchestrator role ONLY**
+(2026-08-04: cross-repo/trading judgment retired as opus triggers → sonnet-5 instead; 2026-07-23: never size).
+**`sonnet_variant: light|default` (2026-08-04) picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO
+dispatch); default is for harder work + escalation + CI, always. Every `assigned_vm: planning` plan defaults to
+`effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
+`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
+every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
 `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates

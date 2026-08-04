@@ -237,14 +237,27 @@ resets (the persistent-session `/boot`→`/done` design means nothing else ever 
 `/heartbeat` hand a saturated slot a brand-new task 88 seconds after `/done` had correctly withheld one for that same
 slot — the `directive` field is the server-side fix for both; the honor-system prose line alone was not enough.
 
-**`directive: "reset_before_next"`** (`/done` only, added `ao_worker_session_continuity_and_resume_threshold_2026_07_27`
-— gated behind `plan_continuity_reset_enabled`, off by default). A SECOND, independent reason `next_task` can come back
-withheld: the picked next task belongs to a different plan (or role, or repo set) than the one you just finished. Unlike
-`compact_before_next`, **you do not need to take any action** — the server has already scheduled this session's teardown
-(a fresh worker will claim the withheld task on respawn). You will simply see your session end; there is nothing to
-compact and nothing to retry. This exists because durable state lives in the plan/Progress Log, not in your conversation
-(see "Conversational context-resume is an explicit NON-GOAL" in `agent-orchestrator-single-vm-architecture.md`) — a
-persistent session is only kept alive when the next task genuinely continues the plan you were just working on.
+**`directive: "reset_before_next"`** (`/done` only). A SECOND, independent reason `next_task` can come back withheld —
+now the COMMON case, not the exception:
+
+- **One-task-per-session hard rule** (`one_task_per_session_enabled`, default **ON** — operator ruling 2026-08-04, the
+  cost-halving fix): EVERY task boundary is now a session boundary, unconditionally, regardless of whether the next task
+  continues the same plan. A persistent session chaining many tasks back-to-back with only a 70%-triggered in-session
+  compact (never a real reset) was the dominant AO cost driver — sequential-plan sessions were observed climbing to
+  40-65%+ context across many same-plan tasks. This is the fix: one task, one bounded session, spawned at sonnet-4.6 by
+  default (`model_tier.resolve_sonnet_snapshot`) since a single-task session is small enough to trust the lighter
+  snapshot.
+- **Plan/role/repo switch** (`ao_worker_session_continuity_and_resume_threshold_2026_07_27`,
+  `plan_continuity_reset_enabled`, default ON) — the narrower, older check: fires even with the hard rule OFF, whenever
+  the picked next task belongs to a different plan (or role, or repo set) than the one you just finished.
+
+Unlike `compact_before_next`, **you do not need to take any action** — the server has already scheduled this session's
+teardown (a fresh worker will claim the withheld task on respawn). You will simply see your session end; there is
+nothing to compact and nothing to retry. This exists because durable state lives in the plan/Progress Log, not in your
+conversation (see "Conversational context-resume is an explicit NON-GOAL" in
+`agent-orchestrator-single-vm-architecture.md`) — under the pre-2026-08-04 amortized-session model a persistent session
+was kept alive only when the next task genuinely continued the plan you were just working on; now it is bounded to one
+task, period.
 
 USAGE-LIMIT SELF-REPORT (G2a): if a tool call / nested command returns an Anthropic usage-limit or HTTP 429 ("rate
 limit", "usage limit reached", "X-hour limit") while you can STILL act (i.e. before the CLI itself freezes you on the
@@ -437,13 +450,14 @@ including the PM plan flip. On a 409, the `dirty` field lists repo → staged/un
   Slack-alerts the operator by design (steady-state target is ZERO stashes) — stash honestly, never silently.
 - NEVER `git reset` / `git checkout --` / delete WIP to pass the gate.
 
-The response includes `next_task` — your next assignment with zero idle gap. If `next_task: null`, the queue is empty or
-all remaining tasks are blocked on prereqs / collisions — see § "When idle" below. **Unless** the response also carries
-`directive: "compact_before_next"` — that specific combination means a task WAS available but was deliberately withheld
-because your `context_used_pct` is over threshold; see the PROGRESS section's HARD RULE above before doing anything
-else. **Or** the response carries `directive: "reset_before_next"` — a task WAS available but belongs to a different
-plan than the one you just finished; the server has already scheduled this session's teardown, so there is nothing for
-you to do — see the PROGRESS section's note on `reset_before_next` above.
+The response may include `next_task` — your next assignment. **As of the 2026-08-04 one-task-per-session hard rule,
+`next_task: null` + `directive: "reset_before_next"` is the COMMON case, not zero-idle-gap continuation** — every task
+boundary is now a session boundary by default (see the PROGRESS section's note on `reset_before_next` above); a fresh
+worker claims the next task on respawn. If `next_task: null` with NO directive, the queue is genuinely empty or all
+remaining tasks are blocked on prereqs / collisions — see § "When idle" below. If the response carries
+`directive: "compact_before_next"` instead — that specific combination means a task WAS available but was deliberately
+withheld because your `context_used_pct` is over threshold; see the PROGRESS section's HARD RULE above before doing
+anything else.
 
 The response also includes `warnings: [{type, details}, …]` — server-side verification of your commit (audit M2-M8
 cluster). These are INFORMATIONAL, not blocking. Warning types: `sha_unverifiable` (SHA not reachable in your worktree),
