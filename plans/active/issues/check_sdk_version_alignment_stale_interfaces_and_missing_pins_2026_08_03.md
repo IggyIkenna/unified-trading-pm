@@ -130,14 +130,18 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
       list (11/16 stale) with 19 real api-contracts consumers derived by grepping every repo in
       workspace-manifest.json's repositories{} for a unified-api-contracts dependency in its pyproject.toml. Verified
       19/19 paths exercised (0 skipped), script passes ("SDK version alignment OK"), quality-gates.sh green.
-- [ ] [INFRA] P3. Harden `test_schema_validation_deps_match_schema_versions` (in
+- [x] ✅ [INFRA] P3. Harden `test_schema_validation_deps_match_schema_versions` (in
       `unified-api-contracts/tests/unit/test_schema_version_alignment.py`) to also assert every
       SCHEMA_VERSIONS.md-documented `[schema-validation]` package (except the already-special-cased `pydantic`) is
       PRESENT in pyproject.toml's schema-validation extras, not just version-equal when present — this is the exact
       blind spot that let finding 2 above go undetected. **Done when**: a synthetic test fixture with a
       documented-but-absent package fails pre-fix and passes post-fix (or: passes today because todo 1 above already
       closed the specific gap — either order is fine, just don't let the test regress silently again). Repo:
-      unified-api-contracts.
+      unified-api-contracts. — **unified-api-contracts@70454519**: added presence-check assertion in the
+      `for pkg in expected` loop (before the existing version-equality check). Verified: (1) synthetic gap test
+      (temporarily removed databento from pyproject.toml) correctly fails with clear message identifying the missing
+      package, (2) restored state — both tests in the file pass green, (3) quality-gates.sh green, (4) quickmerge landed
+      on LDR.
 
 ## Progress Log
 
