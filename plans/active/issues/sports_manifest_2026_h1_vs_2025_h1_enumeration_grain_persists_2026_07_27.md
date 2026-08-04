@@ -364,3 +364,24 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   `bash launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent). Per-VM shards + main manifest
   already hold real progress — the enumerator naturally resumes rather than restarting. Post-run cell-seeding ratio
   re-check (same method as this issue's original measurement) is the done-when gate.
+- **data_engineering worker (slot 6) 2026-08-04 (in progress)**: launched a fresh production run of
+  `launch-expected-universe-v2-historical-backfill-vm.sh sports`. All 4 prior fixes verified present. No RUNNING VMs at
+  launch time (all TERMINATED). The backfill script is running as a background tracked task with a 60-min monitor +
+  stall watchdog. **Status at ~20:50 UTC**: chunk 1/7 (2020-06-06..2020-12-31) completed clean — 636,632 rows,
+  EXIT_STATUS=0, 3 per-VM shard parts, ~20s. Chunk 2/7 (2021-01-01..2021-12-31) is on retry 14/50 — **14M+ rows written
+  across 15 attempts** (initial + 14 retries), each hitting EXIT_STATUS=5 (max-writes-per-run halt-safety). The 2021
+  window is significantly larger than slot 8's estimate of 9-10M — this is consistent with the original issue's finding
+  of 10.5x FIXTURES league growth (88→924), which produces proportionally more expected_unattempted cells across 365
+  days. Each retry writes exactly 1M rows and converges correctly (per-VM shard exclusion verified working across all
+  attempts). **No SPOT preemptions observed** (0 preemption events — the fleet-wide asia-northeast1-c SPOT preemption
+  storm from slot 8/14's sessions has subsided). No errors — script auto-cycling correctly, all retries within
+  MAX_CHUNK_ATTEMPTS=50. Per-attempt cycle time ~7 min (4-6 min bootstrap + 60-90s enumeration + 1-2 min teardown).
+  Chunks 3-7 (2022 through 2026-04-05) not yet reached. The stale tarball warnings (deployment-service,
+  unified-api-contracts) are benign — the existing GCS tarballs contain all needed fixes. **Measurement trap**: the
+  consolidated manifest count (`availability_index.parquet`) is a lagging indicator — the consolidator runs periodically
+  (~5 min intervals) and per-VM shards may not be folded for 10-30 min. Rely on per-VM shard counts and enumerator
+  run.logs, not the consolidated manifest, for real-time progress. **If picked up cold**: check
+  `gcloud compute instances list --filter='name~"expected-universe-v2-sports-"'` for a RUNNING VM; if none, re-launch
+  with `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent — per-VM shards +
+  manifest already hold real progress). Script PID this session: 2560979. Post-run cell-seeding ratio re-check (same
+  method as this issue's original measurement) is the done-when gate.
