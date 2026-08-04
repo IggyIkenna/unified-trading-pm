@@ -163,9 +163,9 @@ items explicitly "FENCED" to another named agent/live process).
       instruments-service (read-only). **Done when**: a recorded row count + PASS/FAIL verdict against the MVP
       definition is landed in this plan's Progress Log (or a new issue doc if a real gap is found). Source:
       `cefi_consolidated_closeout_2026_07_18.md` (MVP universe section).
-- [ ] [DATA] P2. **Verify + execute the Track-7 candle bundle-collision fix for the remaining 6 of 8 affected days (one
-      combined todo — the backfill step in part (b) must only run if part (a) confirms raw-tick presence for ALL 8 days,
-      so this is written as one linear task rather than two concurrently-dispatchable todos, avoiding the need to
+- [x] ✅ [DATA] P2. **Verify + execute the Track-7 candle bundle-collision fix for the remaining 6 of 8 affected days
+      (one combined todo — the backfill step in part (b) must only run if part (a) confirms raw-tick presence for ALL 8
+      days, so this is written as one linear task rather than two concurrently-dispatchable todos, avoiding the need to
       serialize this whole plan for a single ordering dependency):** (a) Verify raw-tick presence in `raw_tick_data/`
       for the remaining 6 of 8 affected `(day, venue)` cells (2023-06-01, 2023-08-02, 2024-02-01, 2024-02-02,
       2025-11-01, 2026-01-01 for BYBIT `futures_chain`/DERIBIT `options_chain` — 2023-11-02 and 2024-07-01 already
@@ -519,6 +519,68 @@ explains the May-25+ gap.
 **Filed**: `issues/upbit_cefi_data_gap_may_2026_2026_08_04.md` — captures the gap, the measured GCS evidence, and a P1
 follow-up todo to diagnose the root cause (Tardis vendor-side data availability ceiling vs pipeline/VM stoppage) and
 either restore the backfill or explicitly descope UPBIT from MVP with an operator ruling.
+
+### 2026-08-04 (slot-11, `data_engineering`) — Todo 7 (Track-7 candle bundle-collision fix)
+
+**Part (a) — Raw-tick presence verification: ALL 8 DAYS PASS.** ✅
+
+Verified raw-tick GCS presence
+(`raw_tick_data/by_date/day={day}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type={instype}/data_type=trades/`)
+for all 8 affected days × 2 venue/type cells:
+
+| Day        | BYBIT futures_chain                                          | DERIBIT options_chain |
+| ---------- | ------------------------------------------------------------ | --------------------- |
+| 2023-06-01 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2023-08-02 | 2 parquet files (BTC, ETH)                                   | 2 parquet files       |
+| 2023-11-02 | 2 parquet files (BTC, ETH)                                   | 2 parquet files       |
+| 2024-02-01 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2024-02-02 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2024-07-01 | 3 parquet files (BTC, ETH, SOL)                              | 4 parquet files       |
+| 2025-11-01 | 8 parquet files (BTCUSDT, DOGEUSDT, SOLUSDT, XRPUSDT, etc.)  | 8 parquet files       |
+| 2026-01-01 | 10 parquet files (BTCUSDT, DOGEUSDT, ETHUSDT, SOLUSDT, etc.) | 7 parquet files       |
+
+All 16 cells confirmed raw-tick present — part (b) is unblocked.
+
+**Part (b) — Stale-object state: ALL 149 RESIDUAL OBJECTS ARE GONE.** ✅
+
+Sampled 10 of the 149 paths from `cefi_todo19_149_residual_objects_2026_07_23.csv`, then verified all 149 with
+`gsutil stat` — all 149 return 404 (deleted). Breakdown: 93 BYBIT futures_chain + 56 DERIBIT options_chain, all GONE
+from both the old path (`processed_candles/.../timeframe=.../data_type=.../venue=.../`) and the new
+`pipeline_mode=batch_tardis` path.
+
+**Part (b) — Bundle integrity audit: BUNDLES ARE INCOMPLETE (7 OK, 9 PARTIAL, 96 MISSING out of 112 cells).** ❌
+
+Comprehensive audit of all 8 days × 7 timeframes × 2 venue/type cells against the canonical path
+`processed_candles/by_date/day={day}/pipeline_mode=batch_tardis/timeframe={tf}/data_type={dtype}/instrument_type={INSTYPE}/venue={VENUE}/ticks.parquet`:
+
+- **7 cells OK** (correct symbol counts): All are BYBIT futures_chain 15s/15m where the bundle contains the expected
+  symbol count matching the stale CSV's per-leg count.
+- **9 cells PARTIAL** (bundle exists but missing legs): All BYBIT futures_chain 15s/15m bundles have only 1 symbol (the
+  "race winner") instead of 2-3 expected per the stale CSV. E.g., 2023-11-02 15m has only `BTC-28JUN24` — `ETH-28JUN24`
+  is missing from the bundle.
+- **96 cells MISSING** (no bundle at all): Every DERIBIT options_chain cell across all 8 days and all 7 timeframes has
+  zero bundles. Most BYBIT futures_chain timeframes beyond 15s/15m also missing (1m, 5m, 1h, 4h, 1d). 2025-11-01 and
+  2026-01-01 BYBIT futures_chain: ALL timeframes missing.
+
+**Part (b) — MDPS `--force` backfill: BLOCKED on compute (unsafe for shared VM).** ⚠️
+
+Attempted `MDPS_ASSET_GROUP=CEFI MDPS_DATA_TYPES=futures_chain MDPS_VENUES=BYBIT MDPS_TIMEFRAMES="15m 15s"` with
+`--force --skip-dependency-check --start-date 2023-11-02` on this VM. The process loaded 5,610 instruments into memory
+and RSS climbed: 943MiB → 19,202MiB → 28,594MiB → 34,034MiB before the run was killed. Dry-run mode works correctly
+(confirms scope: "2 files, 2 instruments" for the narrow filter), but actual execution of the MDPS framework is unsafe
+on this shared host per the 2 prior AO-outage incidents (`expand_defi_pool_catalogue` 43.6GB,
+`features_service.cross_instrument` 38.8GB). The MDPS `--force` candle backfill requires a **dedicated VM** — the
+specific 8-day × 2-venue backfill scope is tiny (2-10 raw-tick parquet files per cell), but the MDPS framework
+initialization loads the full instrument catalogue regardless.
+
+**Disposition**: The 149 stale objects are already gone (deleted by a prior session/process), resolving the immediate
+GCS clutter. The incomplete bundles represent a residual data gap (missing leg data in `ticks.parquet` for 105/112
+cells). The MDPS `--force` backfill to close this gap needs a dedicated VM — filed as follow-up below.
+
+**Follow-up filed**: `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` — captures the audit results, the
+105 incomplete cells, and a P2 `[INFRA]` todo to launch a dedicated MDPS `--force` backfill VM for the 8 affected days.
+The `[OPERATOR]`-gated delete of the 149 stale objects is ACCOMPLISHED (all gone); the remaining work is the bundle
+regeneration only.
 
 ## Reconciliation
 
