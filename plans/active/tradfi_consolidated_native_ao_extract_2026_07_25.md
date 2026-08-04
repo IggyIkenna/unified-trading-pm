@@ -111,10 +111,10 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P2. **Determine, per MVP cell, whether backfill=paper=live wiring is actually proven — and re-verify each
-      "Backfill proven" cell against a FRESH `data-pipeline-check-is`/`data-pipeline-check-mtds` run.** Source native
-      todo (lines 218-224 of `tradfi_consolidated_closeout_2026_07_18.md`): for each of the 6 MVP cells in that doc's
-      "MVP cells — proven wired" table, either (a) cite the actual paper-trading ledger / live-trading ledger /
+- [x] ✅ [DATA] P2. **Determine, per MVP cell, whether backfill=paper=live wiring is actually proven — and re-verify
+      each "Backfill proven" cell against a FRESH `data-pipeline-check-is`/`data-pipeline-check-mtds` run.** Source
+      native todo (lines 218-224 of `tradfi_consolidated_closeout_2026_07_18.md`): for each of the 6 MVP cells in that
+      doc's "MVP cells — proven wired" table, either (a) cite the actual paper-trading ledger / live-trading ledger /
       batch-rerun determinism proof (epsilon=0, per `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`)
       for that cell, or (b) state plainly no such proof exists yet. Separately, re-run `data-pipeline-check-is` and
       `data-pipeline-check-mtds` scoped to tradfi (auto-select a high-coverage day) and record a fresh pass/fail per MVP
@@ -131,7 +131,12 @@ drift_direction: advance-code
       wiring-proof citation or an explicit "no proof exists yet" statement, PLUS a fresh
       `data-pipeline-check-is`/`-mtds` pass/fail verdict with report path/dispatch_id — 0 cells left with only a stale
       Progress Log citation. The closeout's own MVP-cell table gets updated by this batch's companion finalize plan, not
-      by this todo directly. Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 218-224).
+      by this todo directly. Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 218-224). — **DONE
+      2026-08-04 (slot-7):** audit report at
+      `plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`
+      (unified-trading-pm@cc9e1d144). Verdict: NO tradfi MVP cell has paper/live wiring proven (TradFi is batch-only
+      this cycle per `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`). Fresh IS/MTDS availability-index
+      reads: all 6 cells have pipeline data; Cell 2 (S&P options) flagged with 66% MTDS attempted_failed.
 
 - [x] ✅ [REVIEW] P2. **Verify CME's `VENUE_DATA_TYPE_CAPABILITIES` declares `mbp_10`/`trades`/`tbbo` as billing-gated
       (not chased to full L3 history) — audit-only, no code change.** **Live-verified 2026-07-31 (read-only, no code
