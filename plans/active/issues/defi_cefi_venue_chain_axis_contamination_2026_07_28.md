@@ -241,60 +241,60 @@ in this read-only audit pass (time-bounded scope).
       (`/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`) rather than duplicated here.
 
       **ADDITIVE-FALLBACK QUESTION EVALUATED 2026-08-04 (session continuation, data_engineering)** — a DIFFERENT
-                              question from the repoint question slot-4 already answered NO to above: could `CanonicalPerpFundingProvider`
-                              gain an ADDITIVE fallback (also check the CeFi-native bucket for these 6 venues, engaging ONLY when the DeFi-
-                              bucket primary read is empty for that exact (day, venue) — provably unchanged for every day the primary already
-                              serves) — real, safe progress toward one source of truth without touching the live-strategy read path's proven
-                              behavior? **Verdict: not achievable safely today — two real, evidenced blockers, not a "didn't get to it."**
-                              **Updated picture first** (this changes the doc's own prior framing): the underlying data outage IS being fixed
-                              — `perp_funding_data_semantics_and_cadence_2026_06_16.md`'s CEX-Tardis forward-capture-cron bug was ROOT-CAUSED
-                              + FIXED 2026-08-04 (slot-6, `deployment-service@fa794a1`) and real captures are confirmed resuming; the
-                              2026-05-22→2026-08-02 historical hole this outage left is a SEPARATE, already-launched, in-progress backfill
-                              (`/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, VM
-                              `cefi-fwd-20260804-021235`, running since ~02:12Z 2026-08-04, confirmed actively writing real
-                              `derivative_ticker` shards as of the last progress-log check). **But raw capture resuming does NOT by itself
-                              refresh the DeFi-bucket corpus `CanonicalPerpFundingProvider` reads** — that corpus is produced by a SEPARATE
-                              downstream compute step, `features-service/features_service/cefi/calculators/perp_funding_corpus.py`
-                              (`compute_cefi_perp_funding_corpus_for_day`), driven ONLY by a manual one-off script
-                              (`features-service/scripts/run_cefi_perp_funding_corpus.py`) — confirmed via a full repo grep for every caller
-                              of `compute_cefi_perp_funding_corpus_for_day` (3 hits: the module itself, its unit test, this one script). The
-                              script's own header literally documents this as temporary: `# Delete-when: CeFi perp_funding corpus compute is
-                              promoted to a features-service CLI subcommand and scheduled` — it has never been cron-wired, unlike the two
-                              forward-poll launchers this same investigation thread already fixed. **This is a previously-undocumented, real,
-                              actionable gap** — grepped the full `plans/`+`codex/` corpus for `run_cefi_perp_funding_corpus`/`perp_funding_
-                              corpus.*scheduled`/`.*cron`, zero hits before this entry. So even once the raw historical backfill + resumed
-                              forward cron give the compute step fresh input, the DeFi-bucket corpus will stay frozen at 2026-05-22 forever
-                              unless someone re-runs (or schedules) this script — see the new todo below.
+                                      question from the repoint question slot-4 already answered NO to above: could `CanonicalPerpFundingProvider`
+                                      gain an ADDITIVE fallback (also check the CeFi-native bucket for these 6 venues, engaging ONLY when the DeFi-
+                                      bucket primary read is empty for that exact (day, venue) — provably unchanged for every day the primary already
+                                      serves) — real, safe progress toward one source of truth without touching the live-strategy read path's proven
+                                      behavior? **Verdict: not achievable safely today — two real, evidenced blockers, not a "didn't get to it."**
+                                      **Updated picture first** (this changes the doc's own prior framing): the underlying data outage IS being fixed
+                                      — `perp_funding_data_semantics_and_cadence_2026_06_16.md`'s CEX-Tardis forward-capture-cron bug was ROOT-CAUSED
+                                      + FIXED 2026-08-04 (slot-6, `deployment-service@fa794a1`) and real captures are confirmed resuming; the
+                                      2026-05-22→2026-08-02 historical hole this outage left is a SEPARATE, already-launched, in-progress backfill
+                                      (`/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, VM
+                                      `cefi-fwd-20260804-021235`, running since ~02:12Z 2026-08-04, confirmed actively writing real
+                                      `derivative_ticker` shards as of the last progress-log check). **But raw capture resuming does NOT by itself
+                                      refresh the DeFi-bucket corpus `CanonicalPerpFundingProvider` reads** — that corpus is produced by a SEPARATE
+                                      downstream compute step, `features-service/features_service/cefi/calculators/perp_funding_corpus.py`
+                                      (`compute_cefi_perp_funding_corpus_for_day`), driven ONLY by a manual one-off script
+                                      (`features-service/scripts/run_cefi_perp_funding_corpus.py`) — confirmed via a full repo grep for every caller
+                                      of `compute_cefi_perp_funding_corpus_for_day` (3 hits: the module itself, its unit test, this one script). The
+                                      script's own header literally documents this as temporary: `# Delete-when: CeFi perp_funding corpus compute is
+                                      promoted to a features-service CLI subcommand and scheduled` — it has never been cron-wired, unlike the two
+                                      forward-poll launchers this same investigation thread already fixed. **This is a previously-undocumented, real,
+                                      actionable gap** — grepped the full `plans/`+`codex/` corpus for `run_cefi_perp_funding_corpus`/`perp_funding_
+                                      corpus.*scheduled`/`.*cron`, zero hits before this entry. So even once the raw historical backfill + resumed
+                                      forward cron give the compute step fresh input, the DeFi-bucket corpus will stay frozen at 2026-05-22 forever
+                                      unless someone re-runs (or schedules) this script — see the new todo below.
 
-                              **Why the reader-side additive fallback itself is blocked (not just "not yet needed")**: the only same-tier
-                              candidate to build it from is `CanonicalDerivativeTickerFundingProvider` (already lives in strategy-service, no
-                              service-to-service import issue) — but its `_VENUE_SYMBOL_TEMPLATE` is a deliberately narrow, explicit
-                              per-(venue, asset) allowlist (today: `DERIBIT`/`BYBIT` only), and its own docstring requires live-GCS
-                              filename-shape verification before adding any venue ("Tardis symbol conventions are venue-specific, not
-                              formula-derivable"). `catalog_carry.py`'s live `_CARRY_BASIS_PERP_VENUE_BUNDLES` (lines ~211-229) configures the
-                              5 still-unmapped venues (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`OKX-FUTURES`/`BITFINEX-FUTURES`/`BITGET-FUTURES`)
-                              against a 13-coin `_CARRY_BASIS_PERP_COINS` universe (BTC/ETH/SOL/AVAX/ARB/LINK/MATIC/OP/NEAR/DOGE/XRP/ADA/BNB,
-                              lines ~240-253) — up to 65 new (venue, coin) wire-symbol pairs needing individual live verification before this
-                              provider could safely serve as a generic fallback, not a small patch. The architecturally cleaner alternative —
-                              reuse `perp_funding_corpus.py`'s own directory-listing + `_coin_from_symbol()` pattern (lists every parquet
-                              under the day/venue prefix and derives the coin from the filename, needing NO per-coin template) — lives in
-                              **features-service**, and `strategy-service` is barred by this workspace's tier-and-import-architecture rule
-                              from depending on another service directly (`/codex/04-architecture/tier-and-import-architecture.md`, T4:
-                              UTL/UAC/`unified-*-interface` only). Reusing it would mean either duplicating that non-trivial symbol-parsing
-                              logic inside strategy-service (a NEW two-copies-of-the-same-thing risk — the exact class of problem this
-                              session is trying to reduce, not add) or first migrating it into UAC as a shared registry helper — a real,
-                              separate, larger prerequisite change, not part of a same-session additive patch. **Given both paths are
-                              genuinely blocked (not merely undone), no code was written or shipped this session** — per this doc's own
-                              mandatory determinism bar, an unverifiable-today "fallback" is worse than an honest stop.
+                                      **Why the reader-side additive fallback itself is blocked (not just "not yet needed")**: the only same-tier
+                                      candidate to build it from is `CanonicalDerivativeTickerFundingProvider` (already lives in strategy-service, no
+                                      service-to-service import issue) — but its `_VENUE_SYMBOL_TEMPLATE` is a deliberately narrow, explicit
+                                      per-(venue, asset) allowlist (today: `DERIBIT`/`BYBIT` only), and its own docstring requires live-GCS
+                                      filename-shape verification before adding any venue ("Tardis symbol conventions are venue-specific, not
+                                      formula-derivable"). `catalog_carry.py`'s live `_CARRY_BASIS_PERP_VENUE_BUNDLES` (lines ~211-229) configures the
+                                      5 still-unmapped venues (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`OKX-FUTURES`/`BITFINEX-FUTURES`/`BITGET-FUTURES`)
+                                      against a 13-coin `_CARRY_BASIS_PERP_COINS` universe (BTC/ETH/SOL/AVAX/ARB/LINK/MATIC/OP/NEAR/DOGE/XRP/ADA/BNB,
+                                      lines ~240-253) — up to 65 new (venue, coin) wire-symbol pairs needing individual live verification before this
+                                      provider could safely serve as a generic fallback, not a small patch. The architecturally cleaner alternative —
+                                      reuse `perp_funding_corpus.py`'s own directory-listing + `_coin_from_symbol()` pattern (lists every parquet
+                                      under the day/venue prefix and derives the coin from the filename, needing NO per-coin template) — lives in
+                                      **features-service**, and `strategy-service` is barred by this workspace's tier-and-import-architecture rule
+                                      from depending on another service directly (`/codex/04-architecture/tier-and-import-architecture.md`, T4:
+                                      UTL/UAC/`unified-*-interface` only). Reusing it would mean either duplicating that non-trivial symbol-parsing
+                                      logic inside strategy-service (a NEW two-copies-of-the-same-thing risk — the exact class of problem this
+                                      session is trying to reduce, not add) or first migrating it into UAC as a shared registry helper — a real,
+                                      separate, larger prerequisite change, not part of a same-session additive patch. **Given both paths are
+                                      genuinely blocked (not merely undone), no code was written or shipped this session** — per this doc's own
+                                      mandatory determinism bar, an unverifiable-today "fallback" is worse than an honest stop.
 
-                              **The better-sequenced next move** (lower risk, higher leverage, and doesn't touch the live-strategy read path
-                              at all): once the in-progress historical backfill lands, re-run (or schedule) `run_cefi_perp_funding_corpus.py`
-                              over the recovered window so the DeFi-bucket corpus — the SINGLE thing `CanonicalPerpFundingProvider` reads
-                              today — becomes current again at the SOURCE. This is a pure write-side data-freshness fix (zero changes to
-                              `canonical_perp_funding_provider.py` or any strategy-service read path), so it carries NONE of the determinism
-                              risk a reader-side fallback would, and it converges toward the operator's one-source-of-truth goal more directly
-                              than adding a second read path ever would — if the corpus stays fresh going forward, the reader-side fallback
-                              idea evaluated above may never actually be needed.
+                                      **The better-sequenced next move** (lower risk, higher leverage, and doesn't touch the live-strategy read path
+                                      at all): once the in-progress historical backfill lands, re-run (or schedule) `run_cefi_perp_funding_corpus.py`
+                                      over the recovered window so the DeFi-bucket corpus — the SINGLE thing `CanonicalPerpFundingProvider` reads
+                                      today — becomes current again at the SOURCE. This is a pure write-side data-freshness fix (zero changes to
+                                      `canonical_perp_funding_provider.py` or any strategy-service read path), so it carries NONE of the determinism
+                                      risk a reader-side fallback would, and it converges toward the operator's one-source-of-truth goal more directly
+                                      than adding a second read path ever would — if the corpus stays fresh going forward, the reader-side fallback
+                                      idea evaluated above may never actually be needed.
 
 - [ ] [DATA] P1. **NEW 2026-08-04.** Once
       `/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`'s backfill (VM
@@ -676,3 +676,39 @@ casing fold (P3, cosmetic — not currently mis-badged).
 **Process note**: this session found and corrected two cases where a prior doc's stated completion did not match live
 reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caught by insisting on live verification
 (`--dry-run`, direct code reads) over trusting prior written claims, per this workspace's own R5 precedent.
+
+- [ ] [DIAG] P1. **NEW 2026-08-04 (interactive session, found while investigating a related bare-OKX manifest cleanup) —
+      a THIRD, previously-uncovered `chain="FUTURES"` occurrence, CeFi-bucket-native, root-cause NOT yet pinned.**
+      Direct read of `market-data-tick-cefi-prd-{PROJECT_ID}`'s consolidated index found 943 `chain=="FUTURES"` rows —
+      **8 `BITFINEX-FUTURES`** (`date=2026-07-24`, written by 07-27: consistent with the already-fixed
+      `migration_orphan_sweep.py` bug, `instruments-service@f651ff8b`, 2026-07-30 — likely the SAME mechanism as this
+      doc's Pattern B, just landing in the cefi bucket instead of/in addition to the defi one; not independently
+      re-traced) — **and 935 `COINBASE-FUTURES` `derivative_ticker` `captured` rows, `date=2026-08-03`, written
+      `2026-08-04T03:02-03:31Z` — i.e. TODAY, well after the 2026-07-30 fix shipped.** This second population is a
+      genuinely NEW, still-open bug. Correlates with `cefi-fwd-20260804-021235` (the historical-gap backfill VM from
+      `cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, launched 02:12Z today off the just-fixed
+      `deployment-service@fa794a1` forward-poll singleton-filter bug — this cron path had been silently dead since
+      2026-05-20, so today is its first real run ever). **Root cause NOT in the writer**: pulled this exact VM's raw
+      per-VM shard (`gs://.../_index/per_vm/cefi-fwd-20260804-021235.parquet`, 30,414 rows, 12,314 of them real
+      `COINBASE-FUTURES` entries) and found **zero** `chain=="FUTURES"` rows in it — the writer stamps blank chain
+      correctly. The corruption appears only in the CONSOLIDATED canonical index, for a SMALL SUBSET (935/12,314, ~7.6%)
+      of this VM's COINBASE-FUTURES rows — selective corruption is more consistent with a merge/dedup key-collision bug
+      in the manifest-consolidator (Cloud Run, `*/1 * * * *`) than a blanket writer bug, but NOT confirmed to an exact
+      line — flagging rather than guessing, per this doc's own established discipline. **Did not attempt a consolidator
+      code fix this session** (high blast-radius — it processes every asset_group's manifest merges; a wrong guess here
+      risks far more than the narrow issue it would fix). **Data cleanup DONE, root cause still OPEN**: relabeled all
+      943 rows `chain=""` in place (NOT deleted — 942/943 are real `captured`/`attempted_failed` data, only the field
+      was wrong; CAS write succeeded, `9,529,244` rows unchanged, verified via a scoped one-off script, not committed —
+      mirrors this session's separate bare-OKX manifest cleanup pattern). **Whoever picks this up next**: (1) trace the
+      consolidator's per-VM-shard merge/dedup path (`unified-trading-library`'s manifest_consolidator module) for
+      anything that could inject a stale/foreign `chain` value onto a subset of rows sharing a composite key with an
+      older canonical row; (2) re-check in a few days whether `chain="FUTURES"` reappears now that this forward-poll
+      cron is running daily — if it does, the relabel above will need repeating until the root cause lands.
+
+- [ ] [SCRIPT] P2. **NEW 2026-08-04.** Extend the 5-venue `_VENUE_INSTRUMENT_TYPE` lowercase-"spot"→`"SPOT_PAIR"` fix
+      (`market-tick-data-service`'s `symbol_rules.py`, same session) is CeFi's `instrument_type` axis, not this doc's
+      `chain`/`venue` axis — noted here only because it was found via the same Distinct Values panel sweep, not because
+      it's part of this doc's contamination pattern. Code fix + a one-off relabel of the 4,923 affected
+      `empty_confirmed` rows (COINBASE-SPOT/KRAKEN-SPOT/BINANCE-SPOT/BITFINEX-SPOT/OKX-SPOT) both done this session (see
+      the conversation this todo was filed from); no separate doc needed — this checkbox exists only so the corpus has a
+      durable record. Mark done once the MTDS code fix ships via quickmerge.
