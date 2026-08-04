@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Strategy Architecture v2 — Block List
 summary:
   Narrative + remediation SSOT for every architecture-v2 coverage cell that resolves to CoverageStatus=BLOCKED (entries
-  BL-1..BL-10) — each with affected archetypes, affected cells, rationale, remediation, UAC gap refs, and owner team;
-  kept in sync with the UI block-list.ts runtime mirror.
+  BL-1..BL-10, plus BL-12) — each with affected archetypes, affected cells, rationale, remediation, UAC gap refs, and
+  owner team; kept in sync with the UI block-list.ts runtime mirror.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -286,6 +286,26 @@ handful of strategies; does not scale.
 - execution-service combo auto-creation + circuit breakers
 
 **UAC gap refs:** #11 (representative-future registry)
+
+**Owner team:** Strategy + Execution + UAC (spans four repos).
+
+### BL-12: DeFi perp liquidation capture — no venue
+
+**Archetypes affected:** `LIQUIDATION_CAPTURE`.
+
+**Affected cells:** `(LIQUIDATION_CAPTURE, DeFi, perp)`.
+
+**Rationale:** `gmx_v2` was the sole DeFi perp-liquidation venue for this cell (perp liquidations have different
+economics than lending liquidations, which is why this was never merged with the Aave/Kamino lending-liquidation cells).
+GMX was removed platform-wide 2026-08-04 for unreliable historical funding data — the entire captured `perp_funding`
+history turned out to be a synthetic OI-imbalance proxy, not real per-market observations (see
+`/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`). Removing GMX leaves this cell with no remaining venue,
+so it flips from `PARTIAL` to `BLOCKED`.
+
+**Remediation:** Onboard a replacement DeFi perp DEX with a working, verified liquidation-capture feed (native
+per-market funding/liquidation data, not a fallback proxy).
+
+**UAC gap refs:** none.
 
 **Owner team:** Strategy + Execution + UAC (spans four repos).
 
