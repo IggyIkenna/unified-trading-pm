@@ -186,5 +186,5 @@ someone checks.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added the parent fleet doc (was cited in
   `related:` but missing from context_scope).
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
-  deploy-lag redeploy confirmation is still a genuine production-redeploy judgment call, with the relaunch todo gated
-  on it.
+  deploy-lag redeploy confirmation is still a genuine production-redeploy judgment call, with the relaunch todo gated on
+  it.
