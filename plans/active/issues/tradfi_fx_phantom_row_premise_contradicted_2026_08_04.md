@@ -18,7 +18,7 @@ summary: >-
   real object's content (the same pattern `migrate_tradfi_canonical_2026_07.py` already documents for "symbol-less FX
   `ticks_migrated_*` stems"), not deletion. Deleting them per the parent doc's original todo would have destroyed
   manifest bookkeeping for genuinely-captured historical FX data.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -45,7 +45,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: market-tick-data-service@c86016f6
 locked_by:
 locked_since:
 supersedes:
@@ -175,23 +175,29 @@ variants) should be re-scoped to cover the full ~2,787-row population, not just 
       `--content-repair` gate + a second content-read reduce pass — which is why they still physically sit at the wrong
       path today, 2026-08-04, and is exactly what this doc's own todo #2 below (re-stamp design+execute) is scoped to
       finish. (repo: market-tick-data-service)
-- [ ] [DATA] P1. Design + execute a RE-STAMP (not delete) for the full ~2,787-row FX blank-`instrument_id` population
-      (supersedes the parent doc's separate Defect 1 delete todo and Defect 2 dedup todo — now one unified population):
-      recover `instrument_id` from each row's real backing object content (`instrument_key` field or `symbol`+`venue`
-      columns depending on shape), correct `pipeline_mode`/`source` to match the content's true origin, and dedup the
-      resulting collisions per shard-day (the parent doc's Defect 2 analysis already describes up to 4 redundant
-      bookkeeping rows per date). Delete-safety 5-part-proof pass applies only if any residual rows end up genuinely
-      unresolvable after this — expect that population to be small or zero given today's 100% resolution rate. (repo:
+- [x] ✅ [DATA] P1. **DONE 2026-08-04 (slot-12, applied; slot-10 verified)** — Design + execute a RE-STAMP (not delete)
+      for the full ~2,787-row FX blank-`instrument_id` population (supersedes the parent doc's separate Defect 1 delete
+      todo and Defect 2 dedup todo — now one unified population): `market-tick-data-service@c86016f6` built
+      `restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py` — recovers `instrument_id` from each row's real
+      backing object content (`instrument_key` field or `symbol` column depending on shape, `instrument_type=spot_pair`
+      stamped), then GLOBALLY dedups by `(date, instrument_id)` across the whole captured population (not just the
+      candidates — 32 dates already had a pre-existing well-formed twin), keeping the latest `written_at` row per key.
+      `pipeline_mode`/`source` were live-verified ALREADY correct on every candidate row (`batch_yahoo`/`yahoo`, 100%) —
+      not touched. Applied (CAS write, snapshot + self-verify): manifest row count 6,601,216 → 6,600,032 (−1,184,
+      matching the commit's own predicted dedup count exactly). No delete-safety 5-part proof was needed — 0 rows were
+      genuinely unresolvable (100% resolution rate). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **VERIFIED 2026-08-04 (slot-10)** — re-ran
+      `market-tick-data-service/scripts/quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py` (dry-run) post-apply:
+      **0 candidates** matching the blank-`instrument_id` FX signature remain (down from 2,787) — the re-stamp
+      eliminated the candidate population entirely, not just the phantom-without-backing subset. (repo:
       market-tick-data-service)
-- [ ] [DATA] P2. Re-run `market-tick-data-service/scripts/quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py`
-      (kept as the corrected two-prefix diagnostic, not deleted) after the re-stamp above lands, to confirm 0 candidates
-      remain matching the blank-`instrument_id` FX signature at all (not just 0 phantom-without-backing — the re-stamp
-      should eliminate the candidate population entirely). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Once the above lands, close out `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md`'s
-      remaining open todos (Defect 1's delete todo, now superseded by this doc's re-stamp todo above; Defect 2's dedup
-      todo, folded into the same re-stamp; and the deferred `--apply` re-run of
-      `restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py`) with a pointer to this doc. (repo:
-      market-tick-data-service, unified-trading-pm)
+- [x] ✅ [DATA] P3. **DONE 2026-08-04 (slot-10)** — closed out
+      `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md`'s remaining open todos (Defect 1's delete todo,
+      superseded by this doc's re-stamp todo above; Defect 2's dedup todo, folded into the same re-stamp) with a pointer
+      to this doc's completion. The deferred `--apply` re-run of
+      `restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py` is moot — that script no longer exists (never actually
+      committed despite the parent doc's Progress Log referencing it) and its whole population is now covered by this
+      doc's completed re-stamp. (repo: market-tick-data-service, unified-trading-pm)
 
 ## Progress Log
 
@@ -219,3 +225,23 @@ variants) should be re-scoped to cover the full ~2,787-row population, not just 
   `tradfi_canonical_path_migration_design_2026_07_19.md`'s Progress Log, which already counted this exact ~1,808-object
   tail as deferred. No code change was needed for this todo (pure investigation); the answer directly informs todo #2's
   re-stamp design (still open). Read-only session — no GCS state changed.
+- **2026-08-04 (slot-12, data_engineering)**: closed todo #1 (design + execute the re-stamp) —
+  `market-tick-data-service@c86016f6` built + shipped `restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py`
+  (dry-run validated: 2,787/2,787 resolved, 0 quarantined, 1,184 redundant duplicate rows correctly identified for drop,
+  0 remaining duplicates post-mutation). Live-`--apply` ran shortly after (generation advanced, manifest row count
+  dropped 6,601,216 → 6,600,032, matching the predicted −1,184 dedup count exactly).
+- **2026-08-04 (slot-10, data_engineering, dispatched via `tradfi_fx_manifest_phantom_and_duplicate_rows-002`)**: picked
+  up this plan's originally-dispatched (now-superseded) Defect-2 dedup todo, discovered it was superseded by this doc's
+  unified re-stamp todo, and independently built a smaller-scoped alternative
+  (`restamp_tradfi_fx_instrument_id_and_type_2026_08_04.py` — safe-subset-only restamp, no dedup) before discovering
+  mid-session (via the 5-min slot fast-forward pulling in `market-tick-data-service@c86016f6`) that slot-12 had already
+  shipped a more complete solution covering the SAME population (restamp + global dedup in one pass). Applied MY safe
+  subset first (1,139 rows, CAS-verified) before the discovery — real, still-correct partial progress, though superseded
+  moments later by slot-12's `--apply` completing the rest. Did NOT commit my own script (redundant/ duplicate tooling
+  for an already-solved problem — deleted it from the working tree instead). Verified FULL closure independently: re-ran
+  `quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py` (todo #2's literal instruction) — **0 candidates remain**
+  (down from 2,787), confirming the population is fully resolved. Flipped todos #1-#3 above and `status: resolved`. Also
+  closing out the parent doc's now-superseded Defect 1/Defect 2 todos with a pointer here (see
+  `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md`'s own Progress Log). Lesson for future dispatches: the
+  5-min slot cron fast-forward can silently supersede in-flight work — worth a fresh `git log` check on the target repo
+  right before a CAS-mutating apply, not just at task start.

@@ -17,7 +17,7 @@ summary: >-
   instrument_type variants — a duplicate-manifest-row defect, not an id-labeling one). Neither can be resolved by an
   instrument_id-only repair; both need their own scoped investigation/decision. The 25 safe rows were applied (see
   Progress Log for the SHA/verification).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    /plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -44,7 +45,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: market-tick-data-service@c86016f6
 locked_by:
 locked_since:
 supersedes:
@@ -253,20 +254,20 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
       Defect 1 into Defect 2 below — see that doc's own re-stamp todo, which now supersedes both this todo and the dedup
       todo immediately below. market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin). (repo:
       market-tick-data-service)
-- [ ] [DATA] P2. Design + execute a de-duplication pass for the 1,958 FX rows spanning 664 dates with redundant
-      per-shard-day manifest bookkeeping (up to 4 rows per date across pipeline_mode × instrument_type-blank variants).
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-12 applied, slot-10 verified) via the superseding doc.** Design + execute a
+      de-duplication pass for the 1,958 FX rows spanning 664 dates with redundant per-shard-day manifest bookkeeping —
       **SUPERSEDED 2026-08-04 by the wider re-stamp todo in
-      `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`** — Defect 1's former 1,812 rows
-      folded into this same population (see the todo above), so the re-stamp + dedup should now be designed together
-      against the FULL ~2,787-row population, not just the originally-scoped 1,958. Requires a decision on which row is
-      canonical (recommend: the row whose content resolves cleanly, i.e. what this script's `resolve_pair_for_shard`
-      already determined) and a delete-safety 5-part proof pass before removing any genuinely-redundant rows
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) since a dedup pass is a manifest-row delete, not a
-      re-stamp. (repo: market-tick-data-service)
-- [ ] [DATA] P3. Once both of the above land, re-run `restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py --apply`
-      (kept in place, not deleted, per its own lifecycle marker — its `Delete-when` condition explicitly requires
-      dry-run affected-count == 0, which this pass did not reach) to close out the remainder of
-      `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s Finding 2. (repo: market-tick-data-service)
+      `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`**, which folded Defect 1's former
+      1,812 rows into this same population and designed the re-stamp + dedup together against the FULL ~2,787-row
+      population. That todo is now DONE: `market-tick-data-service@c86016f6` re-stamped every resolvable row and
+      globally deduped `(date, instrument_id)` (keeping the latest `written_at` row), applied + CAS-verified — manifest
+      row count 6,601,216 → 6,600,032 (−1,184, matching the predicted dedup count). Re-verified independently 2026-08-04
+      (slot-10): `quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py` dry-run shows **0** remaining
+      blank-`instrument_id` FX candidates. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. **MOOT 2026-08-04 (slot-10)** — `restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py` no longer
+      exists in the repo (never actually committed despite being referenced here — confirmed via `git log --all` on the
+      path, zero hits) and its whole population is now covered by the completed re-stamp above (0 remaining candidates).
+      Nothing left to re-run. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -299,3 +300,8 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
   executed. Filed `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` with full evidence + a
   corrected re-stamp (not delete) todo that now supersedes both todo 3 and todo 4 above.
   market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin).
+- **2026-08-04 (slot-10, data_engineering, dispatched via `tradfi_fx_manifest_phantom_and_duplicate_rows-002`)**: closed
+  out this doc — the superseding doc's unified re-stamp+dedup landed and was independently verified (0 remaining
+  blank-`instrument_id` FX candidates, down from 2,787; manifest row count 6,601,216 → 6,600,032 matching the predicted
+  −1,184 dedup exactly). Flipped both remaining todos + `status: resolved`. Full detail + evidence in
+  `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`'s own Progress Log.
