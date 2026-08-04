@@ -10,7 +10,7 @@ summary: >-
   here, the source docs stay assigned_vm:NA for their remaining judgment-call items. 9 todos from 3 source docs, all
   parent_epic:infrastructure_master, all checked pairwise and against every active infrastructure_master planning doc
   for file-level collision — zero found.
-status: active
+status: archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -45,7 +45,7 @@ context_scope:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -63,6 +63,12 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 2 (na-eligibility-audit extraction)
+
+> **ARCHIVED 2026-08-04** — All 10 todos shipped and verified. Closed out by
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md` which reconciled all 3 source-doc
+> checkboxes, confirmed no source doc reached zero-open-todo archival eligibility, verified the deferred tradfi item was
+> resolved by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, and archived both plans. No DEFERRED items remain
+> unresolved.
 
 ## Why this plan exists
 
