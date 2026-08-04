@@ -210,3 +210,19 @@ to preemption with proportionally little forward progress while it lasts.
   `af-backfill-20260804-011911` never got far enough to write a `run.log` (confirmed via `gsutil stat` — no object
   exists), so nothing to add on the "does auto-recovery fire" question beyond what todo 2 above already found.
   FIXTURE_LINEUPS gate remains unmet; `skip-current-task`'d the sports campaign todo again.
+- **2026-08-04T01:52Z (slot 11)** — First DIRECT dispatch of this todo itself
+  (`asia_northeast1_c_spot_preemption_storm-002`) — all 3 prior touches (slots 5/8/13) reached this doc as a side-effect
+  of the sports `FIXTURE_LINEUPS` task, not a dispatch of this specific recheck todo. **This todo's own bar is NOT yet
+  met**: the doc was filed ~00:54Z, "several hours" means a recheck due no earlier than ~03:54-04:54Z — only ~58 min
+  have elapsed. Ran the fuller analysis anyway (bucketed the ENTIRE storm timeline 23:00Z→01:50Z into 10-min buckets,
+  not just a trailing-90-min window): `1,1,2,4, 16,32,7,7,1,3,6,·,2,2,2` (23:00→01:40, `·`=zero events at 01:10) —
+  confirms the same peak-then-taper shape (peak 32/10min at 00:10-00:20Z) slot 13 already found, but extends it ~40 min
+  further: the post-peak rate has settled to a **low but NONZERO** steady background of ~2/10min for the last 30 min
+  checked (01:20, 01:30, 01:40 each = 2 events), not the extended clean gap that would support "genuinely subsided."
+  Read as: the PEAK has clearly passed, but the zone has NOT returned to the pre-storm baseline (quiet) — this is
+  exactly the ambiguous middle ground slot 13's own "revised recommendation" already flagged (zone-wide aggregate rate
+  alone isn't sufficient to green-light a relaunch). **Checkbox stays UNFLIPPED** — the todo's own "after several hours"
+  bar isn't met yet, and even the fuller data I do have doesn't cleanly support "subsided" either way.
+  `skip-current-task`'d (reason_code=GATED, estimated_unblock_minutes≈120) rather than force a premature verdict;
+  recommend the next dispatch of this specific todo not fire before ~03:54Z, and pull the FULL trailing window (not just
+  since my 23:00Z start point) at that time.
