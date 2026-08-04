@@ -71,7 +71,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 15 source docs' checkboxes.** For each of
+- [x] ✅ [REVIEW] P1. **Reconcile all 15 source docs' checkboxes.** For each of
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s 37 now-done todos: flip the corresponding checkbox in its
       named source doc (each todo's text ends with "Source: `<doc>.md`") to `[x]`, citing the batch-2 commit(s) that
       shipped it as evidence — verify the actual shipped commit exists (`git log`/`git show`) before citing it, do not
