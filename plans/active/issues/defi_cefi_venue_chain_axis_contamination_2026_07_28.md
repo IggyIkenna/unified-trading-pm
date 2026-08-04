@@ -516,3 +516,57 @@ in this read-only audit pass (time-bounded scope).
   cross-references the sibling `cefi_onchain_perp_forward_capture_outage_2026_08_03.md` silent-outage precedent) rather
   than duplicated here — see that doc's Progress Log entry same date. No code changed in this doc's own scope;
   disposition (`no-still-authoritative`, do not delete) is unchanged, just now evidenced further.
+
+## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
+
+**Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
+data_types/instrument_types and GMX still appearing as a venue; asked to investigate, check GCS/manifest, and execute
+fixes in full per this workspace's documented safe delete/migration patterns, without further check-ins.
+
+**Shipped (verified, landed on `live-defi-rollout`)**:
+
+1. `perp_daily_ctx` registered as a canonical `data_type` + `SchemaContract` — `unified-api-contracts@17b1cf21`,
+   `features-service@c678f0fd`, `unified-trading-pm@ccbef0315`. Historical backfill: **1,158 manifest rows registered
+   for 169,461 real objects**, 0 failures, verified via direct manifest read.
+2. Stale `_schema_spec_defi.py` docstring corrected (falsely claimed `dex_pools`/`dex_swaps` are current writers) —
+   `unified-api-contracts@ab4693de`.
+3. **GMX venue purge executed to completion** — `market-data-tick-defi-prd-central-element-323112`: 90/90 GCS objects
+   backed up + deleted, 660 manifest rows dropped via CAS rewrite, consolidator cron paused/resumed correctly. Also
+   corrected this workspace's own record: the archived GMX-removal plan's completion banner claimed this purge already
+   ran on 2026-07-25 ("zero objects remain") — a live dry-run this session found 90 objects still present, so that claim
+   did not hold up; this session's run is very likely the actual first execution.
+4. gas_fees legacy-venue-prefix delete (10 prefixes, 12,424 rows, full five-part-proof already passed from a prior
+   session) — dispatched to a sub-agent, in progress as of this entry (see its own doc for final status).
+
+**New findings filed (none executed without either full delete-safety-proof pass or explicit non-execution rationale)**:
+
+- `defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md` (**P1, big finding**) — the GMX
+  purge's forced full-merge triggered a CRITICAL `MANIFEST_COLUMN_FILL_REGRESSION` on 11 unrelated columns
+  (73.92%→71.71%) across the whole 42M-row DeFi manifest, now live in production. Not root-caused or remediated —
+  flagged for operator/infra-owner attention. **This is the one item from this session most worth the operator's direct
+  attention on return.**
+- `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` — `dex_pools`/`dex_swaps`/`rate_indices` (~4.0M
+  legacy manifest rows) confirmed retired/non-canonical, NOT executed (scale + the R5 precedent's exact failure shape
+  warrant a dedicated content-verified pass, not a same-session rename).
+- `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` — corrected my own initial "add to registry" instinct per
+  operator's live guidance: `dex_pool_fees` should NOT be canonicalized; pool fees are derivable from already- canonical
+  `dex_pool_state`(rate)×`dex_pool_swaps`(volume), mirroring the gas-fee "engineer, don't backfill" principle.
+- `defi_hyperliquid_residual_manifest_rows_2026_08_04.md` — corrected a stale citation trail (the doc previously blamed
+  for HYPERLIQUID's residual defi-manifest presence doesn't actually mention HYPERLIQUID); root cause still open.
+- `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` (sub-agent finding) — HYPERLIQUID `perp_daily_ctx`
+  has produced zero rows since 2026-06-02; no live writer covers it.
+- P2(b) cross-AG duplicate delete — **re-scoped from "safe cleanup" to `no-still-authoritative`, do not delete**: found
+  a live strategy reader (`paper_run_handler.py`'s CARRY_BASIS_PERP path) depends on this exact data with no bucket
+  fallback. Overturned this doc's own prior assumption; independently resolved the sibling contested-architecture
+  question using the same evidence.
+- POOL-vs-pool instrument_type casing — confirmed pure historical residue (both write paths already lowercase), filed as
+  a low-priority P3 cleanup todo in this doc.
+
+**Not executed, with reasons (not silent gaps — each is a tracked todo in its own doc)**: the 4M-row dex_pools/
+dex_swaps/rate_indices migration (scale + precedent risk), dex_pool_fees retirement (needs strategy-layer review),
+HYPERLIQUID residual-row root cause (DIAG not yet run), the new column-fill regression (needs a dedicated repro), POOL
+casing fold (P3, cosmetic — not currently mis-badged).
+
+**Process note**: this session found and corrected two cases where a prior doc's stated completion did not match live
+reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caught by insisting on live verification
+(`--dry-run`, direct code reads) over trusting prior written claims, per this workspace's own R5 precedent.
