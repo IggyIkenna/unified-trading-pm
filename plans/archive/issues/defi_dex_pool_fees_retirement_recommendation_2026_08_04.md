@@ -22,7 +22,7 @@ summary: >-
   anticipated this — it was always meant to be temporary. Recommends retiring the corpus once that condition is verified
   met, rather than legitimizing it as a permanent canonical data_type. NOT executed here — filed as the recommendation +
   the concrete verification step needed before a same-session code change to a strategy-layer fee-computation path.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -52,7 +52,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: strategy-service@f7ca12767a51dc5e7d9327b1d0b875dc5454bb8a
 depends_on: []
 context_scope:
   [
@@ -136,7 +136,7 @@ cost is engineered from gas units × static per-tx complexity, not a separately-
       `tests/unit/engine/core/test_canonical_dex_pool_provider.py` rewritten: the 4 fee-overlay/fee-only-fallback tests
       replaced with 3 tests exercising the new direct-read path, using the REAL production CRV-FRXETH values from the
       DIAG sample above (`fee_apy_bps` computed from real `fees_usd=0.2503`/`tvl_usd=8097.69` ≈ 112.8bps) — 8/8 tests
-      pass. Shipped: strategy-service commit `14f482622c8c885db41ae18c3f37e68ca0b55719` (QG green, ran with
+      pass. Shipped: strategy-service commit `f7ca12767a51dc5e7d9327b1d0b875dc5454bb8a` (QG green, ran with
       `IGNORE_TIMEOUT=true` due to confirmed shared-host resource contention — load avg 24-30 on a 10-core box from
       other concurrent agents — every substantive gate passed both un-timed-out runs).
 - [x] [DECISION] P3. Confirm with operator (or via documented precedent) whether the historical `dex_pool_fees` objects
