@@ -22,7 +22,15 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-pm, instruments-service, market-data-processing-service, features-service, alerting-service]
+repos:
+  [
+    unified-trading-pm,
+    instruments-service,
+    market-data-processing-service,
+    features-service,
+    alerting-service,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
 related:
@@ -33,7 +41,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-04T04:55Z
+last_updated: 2026-08-04T07:10Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -269,3 +277,41 @@ here.
   repro this time). `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot per `cicd.md`'s `^[0-9]+$` check)
   — skipped the authoring-slot ping. Slot left clean (`alerting-service` on `live-defi-rollout`, 0 commits ahead, no
   code changes made; only this doc entry in `unified-trading-pm`).
+
+- **2026-08-04 ~06:55-07:10Z (`cicd` escalation `agt-88658c`, slot 8, `deployment-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=679`) — `deployment-service` added to this doc's own `repos:` frontmatter (previously only cited in
+  `continued2`); already self-resolved before investigation, no code action needed**: escalation cited failing run
+  `30843983859` (`QG slice (tests)` job `91787698183`, created `2026-08-03T20:08Z`) — `pytest-timeout` fired
+  `Failed: Timeout (>300.0s)` on
+  `tests/unit/test_vm_launcher_scripts.py::TestApiFootballLauncherHardenedPreemptionSignal::test_shutdown_script_syntax_and_shellcheck_clean`
+  (`1 failed, 2888 passed, 17 skipped, 8 warnings in 2084.68s`) — the SAME test class already logged 3× for this exact
+  repo in `continued2` above (different individual tests each time — `_writes_launch_params_...`,
+  `_expected_instrument_types_cefi_deribit` — a random subset of the class, not a fixed hang site), and `PYTEST_TIMEOUT`
+  already sits at the sanctioned `300` ceiling in `deployment-service/scripts/quality-gates.sh` (unchanged, confirmed on
+  current HEAD `1861cbe`) — did NOT raise it a further time, per this doc-chain's established todo-1 practice. Checked
+  the PR directly rather than trusting the escalation's staleness: `gh pr view 679` → already **`MERGED`**,
+  `mergedAt=2026-08-03T19:02:26Z`, ~52 minutes _before_ the escalating run even started (`20:08Z`) — the required check
+  had already been satisfied by an earlier passing instance (the familiar self-merge-before-confirmatory-check-completes
+  pattern this doc-chain documents repeatedly); this run's later timeout arrived too late to matter and never blocked
+  anything. Confirmed live gate state directly instead of stopping at the PR check: `deployment-service`'s own most
+  recent COMPLETED `quality-gates-v2` on `live-defi-rollout` (`30879550487`, headSha `7a2b28f9`, `05:04:29Z`) =
+  `success`, several commits ahead of the failing run's tree; a fresh run against the true current HEAD (`30885643491`,
+  headSha `1861cbe`) was already `queued` at investigation time (no redispatch needed). `main`'s own most recent
+  completed `quality-gates-v2` (`ddad18ed`, `00:46:23Z`) = `success` too, and a newer LDR→main promote (`c22f471`,
+  `chore(promote): LDR → main (Option-B direct)`) had already landed and had its own `quality-gates-v2` `in_progress` at
+  investigation end — i.e. the promotion this escalation was originally raised about has since been superseded by a
+  later, already-green promotion. Ran a local isolation repro before declaring done rather than relying on the
+  doc-chain's prior same-class findings alone: the entire `TestApiFootballLauncherHardenedPreemptionSignal` class (6
+  tests, incl. the exact CI-flagged `test_shutdown_script_syntax_and_shellcheck_clean`) — **6 passed in 66.23s, zero
+  hang, zero shellcheck/syntax failures** — decisive, no code/test defect. `GET /api/repo-blockers` → open list
+  contained only `RB-e7d79260` (`market-tick-data-service`, unrelated CVE gate) — nothing to fast-path for
+  `deployment-service`. **Disposition: no code or workflow change made or needed** — the wall was already fully cleared
+  (PR merged, LDR green at a later HEAD, main green with a newer promotion in flight) before this investigation began;
+  the already-queued `30885643491` is left to complete on its own. `AUTHORING_SLOT=ci` (sentinel, fails `cicd.md`'s
+  `^[0-9]+$` check) — skipped the authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left
+  clean (`deployment-service` and `unified-trading-pm` both on `live-defi-rollout`, 0 commits ahead of origin beyond
+  this doc's own commit; no branch changes in either repo). This is now the **4th same-repo occurrence** for
+  `deployment-service`/`TestApiFootballLauncherHardenedPreemptionSignal` across the doc-chain (3 in `continued2`, this
+  one) — further corroborates todo 1 (capacity-side root cause, not a per-repo timeout raise) and todo 2's
+  operator-flagged missing cooldown/dedup guard (this escalation fired ~52min after the PR that would have satisfied it
+  had already merged).
