@@ -31,7 +31,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/epics/tradfi_master.md,
   ]

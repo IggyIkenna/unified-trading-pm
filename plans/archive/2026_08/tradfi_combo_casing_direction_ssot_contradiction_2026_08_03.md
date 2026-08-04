@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [tradfi, casing, instrument-type, manifest, ssot-contradiction, combo, data-correctness]
 related:
   [
-    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     /plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -53,7 +53,7 @@ depends_on: []
 sequential: true
 context_scope:
   [
-    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     unified-api-contracts/unified_api_contracts/_instrument_enums.py,
     instruments-service/scripts/enumerate_expected_universe.py,

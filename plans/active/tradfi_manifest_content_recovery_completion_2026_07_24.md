@@ -280,7 +280,7 @@ context_scope:
       QUARANTINE_COMBO, else honest-absence. Plan's cited counts were stale — real residual 2,058,772 evaluated, 1,587
       changed; applied live, independent re-read confirms held. New re-drift finding filed below. (repo: mtds)
 - [x] ✅ [DATA] P1. **Casing re-drift — 2 writer bypasses fixed, mtds@a1729bb4** — see
-      `/plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md` (residual + follow-ups tracked there). (repo:
+      `/plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md` (residual + follow-ups tracked there). (repo:
       mtds)
 - [x] ✅ [BACKEND] P0. **Converge every WRITER's `instrument_type` emission to the UPPERCASE enum (catalogue SSOT,
       operator 2026-07-18)** so forward-writes don't re-drift the manifest to lowercase after the Phase-B re-stamp.

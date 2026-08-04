@@ -9,7 +9,7 @@ summary: >-
   the same day. Either an active writer path still bypasses canonicalize_tradfi_manifest_itype, or the earlier
   self-verify sampled a stale consolidator-merge window. Diagnose via written_at freshness before re-running the casing
   script blindly.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -26,7 +26,10 @@ priority: P1
 parent_epic: tradfi_master
 assigned_vm: planning
 source: [tradfi_manifest_content_recovery_completion_2026_07_24.md]
-resolved_by: market-tick-data-service@a1729bb4
+resolved_by:
+  "market-tick-data-service@4cae1cb0 (ceiling raise) + the real --apply, 2026-08-04; see
+  /plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md for the full SSOT-contradiction
+  diagnosis + resolution"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -48,6 +51,12 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** — status=resolved, all 5 todos done, no `locked_by`. The tradfi manifest `instrument_type`
+> column is now literal-100% UPPERCASE (excluding the permanent `futures_chain`/`options_chain` bundle-grain exclusion).
+> Full mid-thread SSOT contradiction + resolution:
+> `/plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## What I found
 
