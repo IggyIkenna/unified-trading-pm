@@ -292,3 +292,14 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   general single-vm-architecture codex (background, not load-bearing for the 2 remaining todos); added the 2 sibling
   docs sharing the `/done`-handler file-collision gate on `slots_worker.py` plus `dispatch.py` (the
   current_task-clearing item's other touched file).
+- **Incident-6 — 2026-08-04 (review agt-10313c #3636 + main agt-1756f6 verify) — RESOLVED, earliest-wins held again**:
+  `cve_affected_pinned_deps_remediation-006` (agent-orchestrator cryptography CVE-2026-69247 bump, from the fleet sweep
+  main dispatched) double-dispatched to slots 10 and 11. Slot 11 won the race and shipped `agent-orchestrator@8b1ae78`
+  (main-verified ON origin/live-defi-rollout — the CVE is genuinely closed); slot 10 (since killed) held a functionally
+  IDENTICAL redundant local unpushed copy `1040985` (same override-dependencies pin/version, only comment wording +
+  insertion point differ), never pushed, nothing unique to rescue. Same benign pattern as Incident-5: concurrent-build
+  race occurred but the ship-side gate held — exactly one landed, zero duplicate reached origin. Slot 10's copy is
+  cleaned by the pre-spawn drift-quarantine gate on its next respawn (no action needed). Recurrence of the class (now 6
+  incidents) keeps this doc's dispatcher-dedup todos live: the backlog still occasionally hands one todo to two slots
+  simultaneously — the earliest-wins ship gate is the working backstop, but the dispatch-side dedup remains the real
+  fix.
