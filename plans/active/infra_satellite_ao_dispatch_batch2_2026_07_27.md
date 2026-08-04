@@ -147,11 +147,14 @@ once the corresponding todo below is actually done — not this plan.
       launch-features-vm.sh (×3), archived plan → codex/15-runbooks/smoke-testing-playbook.md. 7 other domain
       smoke_matrix.py files have identical stale citations → filed
       /plans/active/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md.
-- [ ] [DOC] P3. **Update `build_canonical_candle_path()`'s docstring example** (unified-trading-library) — it still
+- [x] ✅ [DOC] P3. **Update `build_canonical_candle_path()`'s docstring example** (unified-trading-library) — it still
       shows the SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) instead of the corrected
       SOURCE-keyed form. Not a functional bug (the function is value-agnostic), but could mislead a future maintainer.
       Repo: unified-trading-library. Source: `candle_feature_canonical_path_divergence_2026_07_20.md` #15. Done when:
-      the docstring example matches the 2026-07-21 correction (per that doc's Progress Log).
+      the docstring example matches the 2026-07-21 correction (per that doc's Progress Log). —
+      unified-trading-library@5793d28b. Docstring updated: "AGGREGATED mdps data_type" → "SOURCE data_type", example
+      data_type changed from `deriv_ohlcv_15m` to `derivative_ticker` (cefi perp BINANCE-FUTURES); same fix applied to
+      adjacent _candle_prefix() docstring. QG green, SHA verified on origin.
 - [ ] [SCRIPT] P3. **Investigate `CEFI:DERIBIT:trades:24h`'s force-leg `off_template=29` classification mismatch** —
       confirm whether the object path already writes `timeframe=1d` (making the docstring's "RAW token" claim stale the
       same way the `data_type` one was, todo above) or whether this is a genuine separate defect. Non-blocking audit.
