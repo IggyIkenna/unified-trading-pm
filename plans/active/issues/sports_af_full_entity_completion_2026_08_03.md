@@ -266,7 +266,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
   registered in `launcher_registry.py`, the PREEMPTED relaunch budget is 48/day and nowhere near exhausted, resume-env
   is correctly persisted via `lc_write_launch_params`) and filed the recurring-pattern finding as its own issue doc
   since it's a genuine infra gap outside this campaign's scope:
-  `/plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` (leading hypothesis: a VM whose
+  `/plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` (leading hypothesis: a VM whose
   full lifetime is shorter than one 5-min monitor tick may be structurally invisible to the monitor's
   prior-tick/this-tick census diff — both preempted VMs today died in ~6-17 min). **Action taken**: relaunched
   FIXTURE_STATS again as `af-backfill-20260804-002608` (same safe idempotent resume, no `--force`) — verified healthy at

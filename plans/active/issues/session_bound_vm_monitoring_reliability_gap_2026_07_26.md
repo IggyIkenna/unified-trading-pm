@@ -119,4 +119,4 @@ in the same way and at the same time when they're the same physical connection.
   GCS write → `compute.instances.preempted` op start was ~58s and ~24s respectively). Strengthens the case that the
   marker is not a reliable fleet-wide signal; a mitigation (write earlier/more defensively, or make the monitor rely on
   the Compute Operations API `preemption_op_checker` fallback rather than the in-guest blob) is warranted. Cross-ref:
-  `/plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
+  `/plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
