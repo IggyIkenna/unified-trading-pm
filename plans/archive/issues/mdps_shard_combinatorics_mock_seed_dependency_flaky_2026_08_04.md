@@ -11,14 +11,18 @@ summary: >-
   sometimes exactly 138 fail (135 of one parametrized test + 2 other pre-existing stale assertions), with byte-
   identical failure signatures each time it fails. Root-caused via traceback + direct filesystem inspection — three
   independent, unrelated causes bundled in one failing test file (`tests/smoke/test_shard_combinatorics.py`).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
 repos: [market-data-processing-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [flaky-test, mock-seed-data, shard-combinatorics, qg, test-infra]
-related: [/plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md]
+related:
+  [
+    /plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
+    /plans/active/issues/mdps_test_instruments_domain_separation_bucket_naming_error_2026_08_04.md,
+  ]
 created: "2026-08-04"
 last_updated: "2026-08-04"
 parent_epic: infrastructure_master
@@ -39,7 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-data-processing-service@41a4f30, market-data-processing-service@a0c822e
 depends_on: []
 context_scope:
   [
@@ -48,6 +52,12 @@ context_scope:
     market-tick-data-service/scripts/seed_mock_data.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** — status=resolved, all 3 todos done, archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-immediately rule. "What I found" item
+> 4 (`test_instruments_domain_separation` `BucketNamingError`) was never given its own todo — migrated to
+> `/plans/active/issues/mdps_test_instruments_domain_separation_bucket_naming_error_2026_08_04.md` per the ritual's step
+> 1 rather than left as a prose deferral.
 
 # MDPS shard-combinatorics smoke tests: 3 bundled unrelated issues, one causing non-deterministic QG (2026-08-04)
 
