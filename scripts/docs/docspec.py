@@ -166,6 +166,10 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("assigned_vm", Req.R, "registry_or_na", registry="vm"),
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
+        # worker.md §4.5 (FINDINGS CLOSURE, HARD RULE 2026-06-10) mandates author on issue docs;
+        # Req.E (elective) because 438/444 existing docs predate the rule — backfill tracked as
+        # issue_doc_author_field_ssot_contradiction_2026_08_04.md P3 follow-up todo.
+        FieldSpec("author", Req.E, "scalar"),
         FieldSpec("context_scope", Req.E, "free_list"),
     ],
     "audit-result": [

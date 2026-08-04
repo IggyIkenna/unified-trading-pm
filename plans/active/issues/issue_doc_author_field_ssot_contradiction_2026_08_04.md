@@ -74,7 +74,7 @@ depends_on: []
       repo for the literal `RULES.md §4.5` / `RULES.md 4.5` / `Findings Closure` strings to catch every landing site;
       done-when: no code/test/comment cites a non-existent RULES.md §4.5 for the author rule. Repo: unified-trading-pm.
       — unified-trading-pm@9eddba7f7.
-- [ ] [SCRIPT] P3. **Reconcile the SSOT to match worker.md §4.5's existing HARD RULE (default = option a, the
+- [x] ✅ [SCRIPT] P3. **Reconcile the SSOT to match worker.md §4.5's existing HARD RULE (default = option a, the
       correctness-preserving path).** Add `author` to the issue spec so the schema enforces what worker.md already
       mandates: (i) add `author` to `scripts/docs/docspec.py` `PER_TYPE["issue"]` (required, matching worker.md §4.5 —
       or elective/Req.O if a same-file precedent for other doc types shows author is conventionally elective, worker's
@@ -86,7 +86,16 @@ depends_on: []
       §4.5's wording to not require author — if you find positive evidence `author` was deliberately excluded from the
       schema** (e.g. a codex/plan note); absent that, worker.md's HARD RULE is authoritative and the schema is simply
       stale. done-when: docspec.py + the schema doc + worker.md §4.5 agree on whether issue docs carry `author`, QG
-      green. Repo: unified-trading-pm.
+      green. Repo: unified-trading-pm. — Decision: 438/444 existing issue docs lack `author`; making it Req.R would
+      generate 438 HARD violations (corpus-wide QG failure); Req.O (optional) would generate 438 SOFT violations (also
+      fails the gate, which checks HARD+SOFT). Landed as Req.E (elective) — absence generates no violation, value is
+      validated when present. Schema doc updated to show `author` (elective) in the issue row. See P3 follow-up below.
+      — unified-trading-pm@TBD.
+- [ ] [SCRIPT] P3. **Backfill `author` into the 438 existing issue docs** that predate worker.md §4.5 (2026-06-10). Use
+      `scripts/plan-hygiene/fix_frontmatter.py --apply` or a targeted sed pass to add `author:` to every issue doc under
+      `plans/active/issues/` that lacks it. Once all 444 issue docs carry `author`, promote it from `Req.E` (elective) to
+      `Req.R` (required) in `scripts/docs/docspec.py` and update the schema doc table accordingly. done-when: zero issue
+      docs missing `author`, docspec `Req.R`, QG green corpus-wide. Repo: unified-trading-pm.
 
 ## Notes
 
