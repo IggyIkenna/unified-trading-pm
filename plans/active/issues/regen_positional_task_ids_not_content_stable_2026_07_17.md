@@ -285,3 +285,11 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (the
   consolidated-execution plan + archived hardening batch + the two source files the mechanism section cites file:line
   against) — no changes.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — **DO NOT RECLASSIFY THIS DOC**,
+  re-affirmed on citation alone per the skill's own hardened rule (the rule this exact incident wrote in). Both
+  citations verified real by reading them directly: the top-of-body "🟢 EXECUTION CONSOLIDATED" banner still reads "Do
+  NOT start work from this doc alone" and still redirects to
+  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (confirmed still `assigned_vm: NA`, active,
+  present); the inline `assigned_vm: NA #`-comment still states "NOT AO-dispatchable" citing the 2026-07-31
+  RECLASSIFY-then-revert (BLK-29884333). No content drift since the 2026-08-03 marker (only incidental context-scout
+  touches). Not re-deriving the underlying judgment.

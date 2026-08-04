@@ -153,3 +153,6 @@ not the dispatch-tooling gap). Suggested next steps:
   (`test_regen_park_survives_sibling_insertion` passes on current code; matching is content-hash-only, not positional),
   leaving the original incident's trigger unexplained and the alerting question genuinely undecided rather than merely
   unimplemented.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed, no content change.
+  Cross-validated: the same-day sibling `/ag-closeout-audit ao` batch6 run independently declined this same doc into its
+  "too-large/unscoped-design" bucket.

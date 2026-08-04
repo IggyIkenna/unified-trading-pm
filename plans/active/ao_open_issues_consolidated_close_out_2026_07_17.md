@@ -905,3 +905,9 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   `ao_docs_reconciliation` close-out target, and the two source files (`worker_liveness_watchdog.py`,
   `stale_dispatch.py`) most load-bearing for the still-open Phase 8/LAST P0 items; dropped entries tied to
   already-archived earlier phases.
+- **na-eligibility-audit 2026-08-04** (tranche `ao`): KEEP-NA re-affirmed, whole-doc (8 open items, still mostly
+  operator/timing-gated per the 2026-08-02/08-03 markers, independently confirmed on a fresh read). **Closes the loop
+  the 2026-08-03 marker left open**: the 2 flagged BOUNDED_RECLASSIFY items (Phase-8 `tmux_session_lost` re-measure +
+  stale-dispatch 24h spot-check) are now extracted into `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 (drafted
+  today by `/ag-closeout-audit ao`) — same two items, independently found. `assigned_vm` stays NA (extraction ≠
+  reclassify-in-place; flipping this doc would also dispatch the other 6 genuinely-gated items).

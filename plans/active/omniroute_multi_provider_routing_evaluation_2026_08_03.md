@@ -197,10 +197,13 @@ nil: it authenticates as the existing Max subscription, so it returns the same q
 
 ### Phase 1 — benchmark matrix (the operator's ask: per-provider quality, rate limits, everything checkable)
 
-- [ ] [SCRIPT] P0. **Build `provider-matrix.sh` in `agent-orchestrator/scripts/orchestrator/omniroute-eval/`** — one
+- [x] ✅ [SCRIPT] P0. **Build `provider-matrix.sh` in `agent-orchestrator/scripts/orchestrator/omniroute-eval/`** — one
       harness that, per provider, records: `served_by` (mandatory — see finding 4), wall-clock latency, prompt/
       completion/reasoning token counts, HTTP status, and the response body for scoring. Must emit JSONL so runs are
-      diffable across days. `stream:false` and `max_tokens>=300` are mandatory (README traps 1-2).
+      diffable across days. `stream:false` and `max_tokens>=300` are mandatory (README traps 1-2). — DONE 2026-08-04,
+      `agent-orchestrator@2f48ee0` ("chore(scripts): add provider-matrix bake-off harness") — shipped alongside
+      `models.tsv`/`tasks.tsv`; see the "harness built and FIRST REAL RESULT" Progress-log entry below. Stale-checkbox
+      close only (found + fixed by na-eligibility-audit 2026-08-04), not new work.
 - [ ] [SCRIPT] P1. **Quality run — mistral** (`mistral-large-latest`, `codestral-latest`, `devstral-latest`) against 3
       real tasks drawn from this workspace's repos, not synthetic prompts. Record `served_by` per response.
 - ~~[SCRIPT] P1. Quality run — groq~~ **DROPPED 2026-08-03: structurally disqualified, do not re-add.** Groq free tier
@@ -445,3 +448,25 @@ for the incumbent, and raises the bar any challenger has to clear.
       Current data cannot distinguish them, so the model is neither passed nor failed — it is untested.
 - [ ] [SCRIPT] P3. **Design a harder objective-gaming trap.** The baseline-raise cheat was refused by both models, so it
       no longer discriminates. Without a trap that some model actually takes, this dimension yields no signal.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc;
+  `grep -cE '^- \[ \]'` = 19 open + 1 closed this pass (was 20 open). All 19 remaining open todos are correctly homed NA
+  on TWO independent grounds: (1) most require hitting the live OmniRoute instance, which per this doc's own banner runs
+  on `127.0.0.1:20128` **loopback-only on the operator's personal host** — a structural access constraint, not a
+  judgment call: no AO-dispatched worker (running on the shared planning-vm or another slot) has a network path to that
+  address, so every quality-run/fallback/rate-limit/decommission todo that depends on the live harness is not executable
+  by a remote worker regardless of how mechanically it reads. (2) The remainder are explicit `[OPERATOR]`-tagged
+  go/no-go and correction-banner decisions, or genuinely open-ended design work ("design a harder trap" has no defined
+  target). Also independently declined by the same-day sibling `/ag-closeout-audit ao` batch6 run into its
+  operator-gated bucket. **One stale checkbox found and closed this pass** (Phase-1 todo P0, `provider-matrix.sh` —
+  shipped `agent-orchestrator@2f48ee0`, verified real via `git show --stat`, evidence cited inline above) — a KEEP-NA
+  "stale items" correction per the verdict rubric, not a reclassification. **Adjacent, out-of-tranche note (not actioned
+  this run)**: todo "Fold DeepSeek's ratchet fix back into the repo" references `check_reference_paths.py`'s ratchet,
+  which I independently re-ran and confirmed IS currently red on the live corpus (92 dangling vs. baseline 86; 96 format
+  vs. baseline 81, `plans/active/issues/reference_path_convention_2026_07_23.md` is the existing tracked home,
+  `asset_group: [infrastructure]` — a different tranche's territory, not touched further here). **Edit-safety note**:
+  this doc showed 3 commits within the ~2h preceding this audit (each by the operator's own interactive session,
+  `harshkantariya main·harsh_pc`) — genuinely live, hands-on iteration. This edit was deliberately kept small,
+  additive-only, and isolated to its own commit to minimize collision risk with that in-progress work.

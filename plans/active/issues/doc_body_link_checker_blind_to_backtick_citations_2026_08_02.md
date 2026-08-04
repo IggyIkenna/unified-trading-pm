@@ -118,3 +118,7 @@ corpus actually uses was never brought into the checker's purview.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added
   `/plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md`, the checker's own origin doc named in this
   doc's "Why this matters" section.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed (first `ao`-tranche
+  marker on this doc; prior marker was the `infra` tranche, 2026-08-02, same verdict). The doc's own "Options" still
+  present a genuine P1-vs-P2 scope/risk fork on a shared QG-infra checker with no live-violation-count measurement taken
+  yet — a real judgment call, not a bounded worker-determinable outcome. Content unchanged since the last marker.
