@@ -80,7 +80,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-01"
+last_updated: "2026-08-04"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -251,37 +251,50 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ### MVP cells — proven wired (backfill=paper=live) vs. declared in-scope only
 
-| MVP cell                                      | Declared in-scope                | Backfill proven (this plan's Phase-D condensed summary above)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Paper/live wiring proven  |
-| --------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| S&P index futures (ES)                        | yes                              | fleet finished, not yet manifest-verified — MEASURED 2026-07-26: all 7 `es-{2020..2026}` shards ran + self-deleted by 2026-07-21T09:48Z, zero preemptions. **Operator-ruled 2026-07-29**: run the manifest-verify now as a manifest-COUNT-only interim check (NOT this closeout's heavier fresh-pipeline-check), mirroring the NASDAQ/NYSE precedent in `data_completion_tradfi_2026_07_15.md` — tracked as a new `[DATA] P0` todo in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, pending execution; update this cell once that todo's result lands. | NOT VERIFIED IN THIS PASS |
-| S&P index options                             | yes                              | not launched — but the singleton-Databento-lock blocker CLEARED (MEASURED 2026-07-26: futures fleet gone since 2026-07-21). **Operator-ruled 2026-07-29**: launch ES_OPT now via `launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (SPOT default) — tracked as a new `[DATA] P0` launch todo + a `[DATA] P1` post-completion manifest-verify todo in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, so the post-completion manifest-verify isn't missed; update this cell once launched/verified.                                                     | NOT VERIFIED IN THIS PASS |
-| Delta-one single-stock equities               | yes                              | filenames already canonical; id-column verification still open (Phase A2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | NOT VERIFIED IN THIS PASS |
-| CME BTC/ETH/MBT/MET futures                   | yes (+409 expansion, 2026-07-21) | backfill fleet launched at scale (2026-07-21 Progress Log); completion not re-confirmed                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | NOT VERIFIED IN THIS PASS |
-| Daily Treasuries + daily KRW (Yahoo)          | yes                              | KRX equities gap closed 2026-07-22 (new Yahoo-daily launcher); Treasuries backfill status not re-confirmed                                                                                                                                                                                                                                                                                                                                                                                                                                                        | NOT VERIFIED IN THIS PASS |
-| VIX FUTURE (CBOE) + CBOE yield INDEX + FX KRW | yes (+409 expansion)             | part of the same 2026-07-21 backfill fleet launch; completion not re-confirmed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | NOT VERIFIED IN THIS PASS |
+| MVP cell                                      | Declared in-scope                | Backfill proven (re-verified 2026-08-04 — `plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`, `unified-trading-pm@cc9e1d144`)                                                                                                                            | Paper/live wiring proven          |
+| --------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| S&P index futures (ES)                        | yes                              | ✅ IS availability-index: data present. MTDS availability-index: data present. Fleet finished (all 7 `es-{2020..2026}` shards self-deleted by 2026-07-21T09:48Z, zero preemptions). Manifest-verify still owed (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` `[DATA] P0`).      | NOT PROVEN — TradFi is batch-only |
+| S&P index options                             | yes                              | ⚠️ IS availability-index: data present. MTDS availability-index: **66% `attempted_failed`** (2026-08-04 live read). Not yet launched — blocker CLEARED (futures fleet gone since 2026-07-21). Launch + manifest-verify tracked in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`. | NOT PROVEN — TradFi is batch-only |
+| Delta-one single-stock equities               | yes                              | ✅ IS availability-index: data present. MTDS availability-index: data present. Filenames already canonical; id-column verification tracked in `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`.                                                                                   | NOT PROVEN — TradFi is batch-only |
+| CME BTC/ETH/MBT/MET futures                   | yes (+409 expansion, 2026-07-21) | ✅ IS availability-index: data present. MTDS availability-index: data present. Backfill fleet launched at scale (2026-07-21 Progress Log); completion not independently re-confirmed this pass.                                                                                            | NOT PROVEN — TradFi is batch-only |
+| Daily Treasuries + daily KRW (Yahoo)          | yes                              | ✅ IS availability-index: data present. MTDS availability-index: data present. KRX equities gap closed 2026-07-22; Treasuries backfill status not re-confirmed.                                                                                                                            | NOT PROVEN — TradFi is batch-only |
+| VIX FUTURE (CBOE) + CBOE yield INDEX + FX KRW | yes (+409 expansion)             | ✅ IS availability-index: data present. MTDS availability-index: data present. Part of the same 2026-07-21 backfill fleet launch; completion not independently re-confirmed this pass.                                                                                                     | NOT PROVEN — TradFi is batch-only |
 
-> **Honest finding (this pass, 2026-07-24)**: every "Backfill proven" cell above is sourced from this plan's own
-> Progress Log / child-plan digests — none is a fresh re-verification. The "Paper/live wiring proven" column is entirely
-> unpopulated: nothing in this plan, its children, or the Aggregated-source-docs index references a paper-trading
-> ledger, live-trading ledger, or the epsilon=0 batch=live=paper determinism proof
-> (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) for ANY tradfi MVP cell — this plan's scope is
-> data-backfill readiness only, and the paper/live wiring question has not been investigated by any tradfi doc found in
-> this pass.
+> **Re-verified 2026-08-04** (`plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`,
+> `unified-trading-pm@cc9e1d144`): the table above is now updated with fresh IS + MTDS availability-index reads (live
+> prod data, 2026-08-04). **Paper/live wiring**: NO tradfi MVP cell has paper/live wiring proven — TradFi is batch-only
+> this cycle (per `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`). This finding replaces the 2026-07-24
+> "not verified in this pass" placeholder; the wiring question is now definitively answered (batch-only, not a gap to
+> close).
 
-- [ ] [DATA] P2. Determine, per MVP cell in the table above, whether it has actually been proven wired through
-      backfill=paper=live — cite the actual paper-trading ledger / live-trading ledger / batch-rerun determinism proof
-      (epsilon=0 per `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) per cell, or state plainly
-      that no such proof exists yet for that cell. Also re-verify each "Backfill proven" cell against a fresh
-      `data-pipeline-check-is`/`data-pipeline-check-mtds` run rather than the last-recorded Progress Log entry.
-      Definition-of-done: 0 remaining "NOT VERIFIED IN THIS PASS" cells in the table, each replaced with a real
-      verdict + evidence citation (report path / ledger query / dispatch_id). **CROSS-REFERENCED 2026-07-30
-      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted near-verbatim (source lines
-      218-224 of this doc) as `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo (active,
-      `assigned_vm: planning`). Not checked off here — the extracting doc's todo is not yet done; tracked there going
-      forward.
+- [x] ✅ [DATA] P2. **Determine, per MVP cell, whether backfill=paper=live wiring is proven — VERIFIED 2026-08-04
+      (`plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`,
+      `unified-trading-pm@cc9e1d144`, dispatched via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1).**
+      Verdict: **NO tradfi MVP cell has paper/live wiring proven** — TradFi is batch-only this cycle (per
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`). Fresh IS + MTDS availability-index reads against
+      live prod data (2026-08-04): all 6 MVP cells have pipeline data present. Cell 2 (S&P index options) flagged: 66%
+      MTDS `attempted_failed` — launch not yet executed. Table above updated with per-cell verdicts. The extracting
+      doc's todo is now `[x]` done; this closeout checkbox is flipped here as part of the reconciliation pass
+      (`tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 2).
 
 ## Progress Log
 
+- **2026-08-04 (slot-16, review — `tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 2
+  reconciliation)**: reconciled this closeout doc's own native content against the parent extraction's 9 completed todos
+  (verified by slot-13, 2026-08-04, in the finalize plan's todo 1). Changes in this commit: (a) MVP-cell table — all 6
+  rows updated with fresh IS + MTDS availability-index evidence from
+  `plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`; Paper/live wiring column now
+  definitively reads "NOT PROVEN — TradFi is batch-only" (per
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`); 0 remaining "NOT VERIFIED IN THIS PASS" cells. (b)
+  `[DATA] P2` MVP-cell-wiring-proof checkbox flipped `[x]` with evidence citation. (c) Phase A2+C digest updated — A2
+  and Phase C item-level notes reconciled against parent-extraction todos 2-9 (all 8 now completed); KRX name-column
+  note updated (name column already landed live via daily regen, both sub-items confirmed done). (d) 3
+  deliberately-deferred native todos re-checked 2026-08-04: (#1) adapter smoke findings — still 0 tradfi-scoped open
+  items, checkbox-flip candidate; (#2) live defects — evidence-reconciliation done, defect-fixing still conflict-gated
+  (no gate cleared); (#3) BLOCKED-INFRA Certify tradfi Layer-1 — still blocked (catalogue rebuild+promote "FINAL STEP"
+  in `tradfi_backfill_throughput_followups_2026_07_24.md` still pending, live-verified 2026-08-04). (e) Split-notice
+  digest's catalogue-migration line — already corrected by the 2026-07-31 sweep; live re-verified catalogue commit
+  `instruments-service@52d8b3ef` still on LDR, claim accurate.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the IS-SSOT codex doc for the 2 other live
   sibling children (Phase-D gate + registry/coverage) so the umbrella's reading list covers all 3 forked-child
   companions plus the 3 domain codex SSOTs.
@@ -390,18 +403,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > originally named below are still open (still accurate as descriptions), just no longer the complete set — re-derive
 > the live list from the child directly rather than trusting "11" as the total:
 >
-> - **A2 (adapter/registry correctness)** — CME mbp_10/trades/tbbo capability-declaration verify (P1, the
->   `ohlcv_15m/24h` writer DESIGN decision split out as a non-dispatchable pointer), KRX equities registry-vs-adapter
->   verify (P2, the `mvp_mode` DECISION split out as a non-dispatchable pointer), Full MTDS+IS adapter smoke findings
->   re-verify (P2), adapter dead-code/fallback audit (P2), the "two live defects" digest pointer (source-mislabel + FX
->   manifest id, reformatted non-checkbox per finding H — NOT a real `- [ ]` line, so the original "5 open" count for
->   this sub-group over-counted by 1; the 4 real checkboxes above are A2's actual open total).
-> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open (verified still accurate):
->   billing-gated Databento L2/L3 classification (P2), data-status page canonical render (P1),
->   distinct-values/axis-value census (P1), denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up
->   tracking (P2, rewritten inline per the fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked
->   as of 2026-07-31 — the catalogue rebuild+promote "FINAL STEP" in
->   `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
+> - **A2 (adapter/registry correctness)** — 4 real checkboxes as of 2026-07-31. **Reconciled 2026-08-04** against
+>   `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos: CME mbp_10/trades/tbbo
+>   capability-declaration verify (P1) — verified 2026-07-31 (billing enforcement confirmed live, clean pass); KRX
+>   equities registry-vs-adapter verify (P2) — verified 2026-07-31 (fix holds, FX KRW no analogous gap, both PASS);
+>   adapter dead-code/fallback audit (P2) — done 2026-07-31 (3-repo audit, 11 tracked todos filed in
+>   `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md`, all 3 repos clean of duplicate-implementation violations);
+>   the `ohlcv_15m/24h` writer DESIGN decision and the `mvp_mode` DECISION remain split out as non-dispatchable pointers
+>   in the forked child. Full MTDS+IS adapter smoke findings re-verify (P2) was substantively resolved for tradfi (0
+>   tradfi-scoped open items across all 3 cited docs — checkbox-flip candidate, per the parent extraction's
+>   deferred-item #1). The "two live defects" digest pointer (source-mislabel + FX manifest id) —
+>   evidence-reconciliation sub-piece done (child plan Phase-B todo `[x]` RE-VERIFIED LIVE 2026-07-25); defect-fixing
+>   sub-pieces remain conflict-gated in `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s Deferred section (parent
+>   extraction deferred-item #2).
+> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 named items as of 2026-07-31. **Reconciled
+>   2026-08-04** against `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos: data-status page
+>   canonical render (P1) — verified 2026-07-27 (deployment-api@c19edcc, fully canonical, venue-lookup holds);
+>   distinct-values/axis-value census (P1) — done 2026-07-28 (3 named dupes explained, 1 new P2 filed);
+>   denominator/catalogue-completeness re-verify (P2) — done 2026-07-31 (all 3 findings re-measured, 0 recurrence); KRX
+>   name-column follow-up tracking (P2) — **DONE 2026-07-31, name column already landed live** via daily
+>   `lifecycle-catalogue-regen-tradfi` (green every day 2026-07-22 through 2026-08-04; all 6 KRX single-stock-equity
+>   rows carry `name` column); catalogue-as-SSOT decision still stands (no `name` field in manifest schema). The
+>   billing-gated Databento L2/L3 classification (P2) and BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0) remain open —
+>   see the forked child for current status. Re-checked 2026-08-04: BLOCKED-INFRA still blocked (catalogue
+>   rebuild+promote "FINAL STEP" in `tradfi_backfill_throughput_followups_2026_07_24.md` still pending); billing-gated
+>   classification verified 2026-08-04 by parent-extraction todo 5 (UAC@9fd24804 + MTDS@b0d44fb2, both shipped).
 >
 > **Retained here**: the ground-truth verdict + MVP universe (unchanged), the Codex SSOTs index, and the Aggregated
 > source docs digest (untouched, 421 lines).
