@@ -192,18 +192,89 @@ new pool is confirmed green, (3) only then resize AO down.
       (the new VM's, online); a fleet-wide sweep across all 21 allowlisted repos confirmed zero collateral damage beyond
       the PM incident (which was fully restored). - **Gate met**: real CI run `success`, claimed by the new VM's runner
       (`glue-ip-172-31-3-59-1`); old runner cleanly deregistered; PM's pool restored + verified; fleet-wide sweep clean.
-- [ ] [INFRA] P1. **Batch migration IN PROGRESS.** Batch 1 (5 repos) DONE 2026-08-03: `strategy-service`,
-      `trading-agent-service`, `unified-api-contracts`, `unified-trading-api`, `execution-service` — each registered on
-      the new VM (`POOL_TAG=<repo>`), verified via a real `quality-gates-v2` dispatch (2 landed clean-green immediately;
-      3 hit an unrelated "supersede check" cancellation from genuine concurrent CI activity on those repos,
-      re-dispatched clean; `unified-api-contracts` additionally proven via REAL organic production traffic already
-      landing on the new runner — a semver-agent run + a promotion-PR's Cloud-Build gate, both success, before I even
-      finished verifying), then old runner deregistered via the safe exact-unit-name + `gh api DELETE` method (not
-      `teardown` — see the canary todo's incident note). PM's pool re-checked healthy after the batch (0 offline).
-      Combined with the canary: **6 of 21 pools done** (13 single-runner repos + PM's 8-runner pool + AO's 3-runner pool
-      remain). Mirror the original migration's canary→10→remaining phasing — each batch: register on new VM, verify
+- [x] ✅ [INFRA] P1. **Side-finding, fixed: the original 21-repo fleet count (todo 2) was undercounted — 25 repos,
+      not 21.** While auditing the old VM's live systemd units (`systemctl list-units 'github-glue-runner*'`) before
+      migrating PM's/AO's pools, found 4 running, GitHub-registered, online pools never accounted for anywhere in the
+      batch plan: `deployment-ui`, `e2e-testing`, `unified-trading-library`, `unified-trading-system-ui` — confirmed
+      real via `gh api repos/IggyIkenna/<repo>/actions/runners` (all `status=online`) before touching anything. Folded
+      in as **Batch 4** and migrated the same way (register on new VM, `WRITER_COUNT=0` to match the old VM's glue-only
+      config for these 4 — the first attempt (`deployment-ui`) defaulted to 3 unwanted writer runners when
+      `WRITER_COUNT` was left unset, caught via a registration-count diff against the old VM and fixed by stopping +
+      `gh api DELETE`-ing the 3 extras before repeating the remaining 3 installs with `WRITER_COUNT=0` explicit). **Root
+      cause of the miscount not investigated** — todo 2's original enumeration method should be revisited so this
+      doesn't recur; not done here (out of scope for a migration task). Batch 4 installed + `quality-gates-v2`
+      dispatched on all 4 2026-08-04; verification pending.
+- [ ] [INFRA] P1. **Batch migration IN PROGRESS — 13 of 25 pools done (25, not 21 — see the miscount finding above).**
+      Batch 1 (5 repos, 2026-08-03): `strategy-service`, `trading-agent-service`, `unified-api-contracts`,
+      `unified-trading-api`, `execution-service`. Batch 2 (7 repos, 2026-08-04): `features-service`,
+      `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`, `instruments-service`,
+      `market-tick-data-service`, `batch-live-reconciliation-service` — 4 verified via a clean manual `quality-gates-v2`
+      dispatch, 3 (`features-service`, `instruments-service`, `market-tick-data-service`) hit the same "supersede check"
+      cancellation pattern as batch 1 on re-dispatch too, so verified instead via REAL organic production traffic
+      already on the new runner (a Semver Agent run + an `update-dep` job, both `success`) — a stronger signal than a
+      manual dispatch anyway. Every batch: register on the new VM (`POOL_TAG=<repo>`), verify green (manual dispatch OR
+      real organic traffic), THEN deregister the old runner via the safe exact-unit-name + `gh api DELETE` method (never
+      `teardown` — see the canary todo's incident note). PM's pool re-checked healthy after each batch (0 offline, both
+      times). Batch 3 (6 repos: `alerting-service`, `client-reporting-api`, `ml-service`, `deployment-api`,
+      `market-data-processing-service`, `deployment-service`) installed + dispatched, **stuck `queued` on real fleet
+      contention for several minutes at check time** — direct evidence of the exact problem this split exists to fix;
+      waiting on completion, not re-dispatching into the same backlog. Remaining after batch 3: PM's 8-runner pool +
+      AO's 3-runner pool — the two highest-stakes pools, done last and carefully given the batch-1 incident. **Operator
+      explicit hold (2026-08-04): do PM + AO pool migration, then STOP before the actual AO box downsize (todo below)
+      and wait for explicit confirmation — accepting the temporary extra spend of running both boxes at current size
+      meanwhile.** Mirror the original migration's canary→10→remaining phasing — each batch: register on new VM, verify
       green, THEN deregister the old runner for those repos. Do not batch-migrate without verifying the prior batch
-      first. Gate: per-batch, a passing CI run per migrated repo cited by run URL.
+      first. Gate: per-batch, a passing CI run per migrated repo cited by run URL. **Batch 4** (the 4 miscounted repos
+      above) installed + `quality-gates-v2` dispatched 2026-08-04; verification pending. **PM's 8-runner pool (5 glue +
+      3 writer) and AO's 3-runner pool (2 glue + 1 writer) both installed on the new VM 2026-08-04** — every slot
+      confirmed online at the correct count via `gh api .../actions/runners` (PM: 5 `glue-ip-172-31-3-59-*` + 3
+      `writer-ip-172-31-3-59-*`; AO: 2 `glue-*` + 1 `writer-*`, same IP), matching the old VM's counts exactly. AO's
+      `quality-gates-v2` dispatched (run 30897598568, queued). PM's workflow has no `workflow_dispatch` trigger (422 on
+      manual dispatch attempt) — verification will come from this session's own next quickmerge ship to
+      `unified-trading-pm` (organic push-triggered CI), not a manual dispatch. **Old-VM deregistration for PM/AO NOT YET
+      DONE** — waiting on the above verification first, given the batch-1 incident precedent (never partially deregister
+      a multi-runner pool).
+- [x] ✅ [INFRA] P1. **Side-finding, fixed: PM's/AO's pool installs on the new VM stalled ~9 minutes on a real per-pool
+      memory-cap throttle, not a code bug.** `scripts/self-hosted-runners/github-glue-runner.slice` caps EVERY pool
+      independently at `MemoryMax=8G`/`MemoryHigh=6G` (each `POOL_TAG` renders its own separately-named slice — this is
+      a per-pool fence, not a single fleet-wide 8G ceiling as the unit file's own comment implies). The old VM's
+      identical PM slice sits at the same ~6G `MemoryHigh` line in steady state too (confirmed via a live check:
+      `MemoryCurrent=6.44G` there) — so 8G/6G was ALREADY tight, just not stall-inducing under the old VM's warmed-up,
+      staggered-restart operating pattern. On the new VM, all 8 PM processes (+3 AO) cold-started simultaneously, pushed
+      the slice's cgroup into sustained `MemoryHigh` throttling (confirmed via `memory.pressure`: `some avg10=100.00`,
+      `full avg10=98.44` on the parent `github-glue.slice`) — every memory-allocating syscall in the pool got delayed,
+      producing 9+ minutes with literally zero script-level log output past the systemd `Started` line (confirmed via
+      `journalctl`) despite the HOST having 22GB+ genuinely free (`free -h`: 30Gi total, only ~8.3Gi used). **Fix**:
+      raised `MemoryMax`/`MemoryHigh` to `20G`/`18G` for `github-glue-runner.slice` (PM) and
+      `github-glue-runner-ao.slice` (AO) — via `systemctl set-property` (live, immediate) plus a persistent
+      `*.slice.d/override-dedicated-vm.conf` drop-in (survives future reinstalls/reboots without editing the shared
+      template) — **on the new VM only**. The old VM's copy and the repo's canonical `.slice` template are UNTOUCHED:
+      the rationale in that file ("a CI burst must never starve the agent-orchestrator sharing this VM") is specific to
+      the shared old-VM topology and genuinely doesn't apply on the new, CI-dedicated escalation VM. Registration
+      completed within ~90s of the cap raise (confirmed: `MemoryCurrent` climbed past the old 8G ceiling to 8.15G then
+      13.3G, both `.runner` markers appeared). **Not done**: the OTHER 23 pools on the new VM (single glue-only, no
+      writers) never showed this symptom and were left on the stock 8G/6G template — only PM's and AO's wide
+      (multi-process) pools needed the override. **Follow-up not filed as a todo** (low priority, informational): the
+      unit file's own comment ("resource cap for the WHOLE glue-runner fleet... guarantees the orchestrator always
+      keeps >= 4 of the 8 vCPUs") is misleading given the actual per-pool-not-fleet-wide behavior confirmed here — worth
+      a comment fix next time that file is touched, not urgent enough for its own todo.
+- [x] ✅ [INFRA] P2. **Side-finding, fixed: the new VM was invisible in `deployment-ui`'s `/deployments` + `/cockpit` —
+      not a dashboard limitation, a real registration gap.** Operator asked whether the new VM shows up anywhere for
+      load/dispatch/log visibility; the AO dashboard genuinely never tracks arbitrary EC2 instances (only its own
+      in-process worker slots — confirmed via code read, no fix possible there), but `deployment-api`'s AWS EC2 census
+      (`deployment-service/backends/aws_census.py::list_ec2_census`) DOES discover every running instance
+      unconditionally — the gap was downstream: `_ec2_item()` silently DROPS any instance whose `Name` tag matches no
+      registered prefix (`deployment_api/routes/deployments_inventory/__init__.py::_VM_PREFIX_REGISTRY`), unlike the GCP
+      path which degrades to a visible `NONE`-umbrella row instead of hiding it (a real, confirmed asymmetry between the
+      two cloud paths — not fixed here, out of scope). Fixed by registering `"ci-escalation-runner"` →
+      `LifecycleClass.LONG_LIVED_LIVE` (same class as `agent-orchestrator`/`planning`) + adding it to
+      `_CONTROL_PLANE_PREFIXES`, with a new passing test
+      (`test_build_aws_inventory_classifies_ci_escalation_runner_as_live`) proving the instance is no longer silently
+      skipped. **Blocked from shipping**: quickmerge's re-gate hit 2 PRE-EXISTING, unrelated `deployment-api` test
+      failures (confirmed via `git stash` — fail identically on the clean tree), which block ANY commit to
+      `deployment-api` right now — filed as
+      `/plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (shipped). The
+      fix + test sit locally uncommitted in this session's checkout until that issue clears.
 - [ ] [INFRA] P1. Once every repo's runner is confirmed migrated and no runner-claimed job has landed on
       `i-0c9b283b31d6b5ca7` for a full day, tear down the old runner pool there (`setup-glue-runners.sh teardown` or
       equivalent). Gate: `gh api .../actions/runners` shows zero runners registered against the old VM fleet-wide.
