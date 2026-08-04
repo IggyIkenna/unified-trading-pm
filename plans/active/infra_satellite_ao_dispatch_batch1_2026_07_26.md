@@ -658,19 +658,21 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       Repo: alerting-service (investigation only, zero-diff). Source:
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 
-- [ ] [INFRA] P3. **Smoke-test the stash-pile classifier before anyone trusts its auto-drop classes (dry-run only, no
-      `--apply`).** `scripts/dev/audit-stash-pile.sh` shipped (`pm@e4ef61532`) with a dry-run default and an
-      archive-first 3-way safety spine, but its classifier has never been validated. Run
-      `bash scripts/dev/audit-stash-pile.sh --repo unified-trading-pm` (dry-run is the default — do NOT pass `--apply`),
-      eyeball the full classification, and **hand-verify at least 3 stashes it labels `redundant`** by diffing each
-      one's tree against `origin/live-defi-rollout` yourself to confirm there is genuinely no net change, before anyone
-      relies on the auto-drop class. Also confirm the base-ref resolution is right per repo (`origin/main` for
-      agent-orchestrator, `origin/live-defi-rollout` otherwise). **This todo must not drop, pop, or apply any stash** —
-      a foreign WIP stash dropped by mistake is UNRECOVERABLE. The `--apply` sweep, the per-host fan-out, and the
-      archive purge all stay out of scope (the fan-out's targets are a parked operator decision — see `## Deferred`).
-      **Done when**: a written classification report exists for PM's stash pile with ≥3 hand-verified `redundant` calls
-      and an explicit "classifier trustworthy: yes/no" verdict. Repo: unified-trading-pm. Source:
-      `stash_pile_workspace_cleanup_2026_06_03.md`.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-04 — `unified-trading-pm@<pending-sha>`.** Smoke-test the stash-pile classifier
+      before anyone trusts its auto-drop classes (dry-run only, no `--apply`). Ran
+      `bash scripts/dev/audit-stash-pile.sh --repo unified-trading-pm` (dry-run, nothing dropped/popped/applied) against
+      the host's shared root-clone stash pile — **76 stashes** (grown from the 31 the parent plan measured against),
+      classifying to **1 `redundant`** / 0 `empty` / 0 `foreign-park` / 75 `genuine-WIP`. The done-when's "≥3
+      hand-verified redundant calls" does not hold against the current data (there is only 1 such call to verify, not an
+      oversight) — hand-verified that 1 as a TRUE POSITIVE (byte-identical vs `origin/live-defi-rollout`, no
+      captured-untracked 3rd parent) and broadened to 5 additional `genuine-WIP` boundary-case spot-checks (smallest
+      file-counts) to compensate, including one case (`stash@{37}`) that validates the untracked-file safety net
+      actually fires on an empty tracked diff. Confirmed base-ref resolution (`origin/main` for agent-orchestrator,
+      `origin/live-defi-rollout` otherwise) correct both by source read and by this run's own `base-verified: yes`.
+      **Verdict: classifier trustworthy: YES** (zero false positives found; caveat: redundant-class n=1, re-verify when
+      the pile's redundant count grows). Full report:
+      `plans/active/issues/stash_audit_reports/stash-audit-ip-172-31-5-118-20260804.md`. No stash dropped, popped, or
+      applied. Repo: unified-trading-pm. Source: `stash_pile_workspace_cleanup_2026_06_03.md`.
 
 - [x] ✅ [INFRA] P3. **DONE 2026-07-30 — `unified-trading-pm@59756e802`.** Folded a WARNING-only `--max-stash-age`-style
       signal into `scripts/dev/slot-git-status-report.sh`: a new standalone detector
