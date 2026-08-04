@@ -167,7 +167,7 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: market-tick-data-service
     file: market_tick_data_service/engine/orchestrator/venue_fetch.py
-    line: 187
+    line: 186
     function: _check_sports_v9_columns
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27
