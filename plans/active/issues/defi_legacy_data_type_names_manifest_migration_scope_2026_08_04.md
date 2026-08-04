@@ -122,10 +122,11 @@ context_scope:
 - [ ] [DATA] P2. (Gated on the above.) Design + dry-run + execute the actual migration once the DIAG above resolves
       which case applies — following the five-part delete-safety proof if any GCS-level change is needed, or a simpler
       manifest-only re-key if the DIAG confirms pure 1:1 naming drift with no content divergence.
-- [ ] [REVIEW] P3. Once resolved, fix `unified-api-contracts/unified_api_contracts/registry/_schema_spec_defi.py`'s
-      docstring (lines 15-21) — it currently claims `dex_pools`/`dex_swaps` are "current Solana/EVM writers," which is
-      stale relative to `/codex/02-data/defi-canonical-naming-ssot.md`'s "RETIRED" ruling and the actual writer code.
-      Cheap, safe, no data risk — can be done independently of the data migration above.
+- [x] ✅ [REVIEW] P3. Fixed independently of the DATA migration below (no data risk, as this todo itself notes) —
+      `unified-api-contracts@ab4693de` ("docs: correct stale _schema_spec_defi.py docstring — dex_pools/dex_swaps are
+      RETIRED, not current writers"). Live-verified: the docstring now reads "RETIRED legacy manifest data_type names
+      (corrected 2026-08-04: this docstring previously and incorrectly described these bare forms as 'current'
+      writers...)" and cites this exact issue doc. — interactive session, 2026-08-04.
 
 ## Progress Log
 
@@ -134,3 +135,10 @@ context_scope:
   this exact session already caught one "looked safe, wasn't" mistake on a smaller, related delete candidate this same
   day — proceeding to a 4M-row migration on an unverified content-equivalence assumption would repeat that failure mode.
   Not executed.
+- **interactive session 2026-08-04 (separate session, `/autonomous`)**: independently arrived at this same doc while
+  investigating an operator report of `dex_pools`/`dex_swaps` showing as non-canonical in a Data Status panel — cross-
+  checked live writers (two running `mtds-dex-swaps-backfill-*` VMs' own per-VM manifest shards read directly from GCS:
+  4527 + 400 rows, 100% `data_type=dex_pool_swaps`, zero legacy `dex_swaps` rows), confirming this doc's "no live writer
+  emits the bare legacy forms" finding independently. Did not duplicate the DIAG/DATA todos above (correctly scoped,
+  already gated on real content-verification per the R5 precedent this doc cites) — flipped only the REVIEW P3 todo,
+  which was already shipped (`unified-api-contracts@ab4693de`) but left unchecked.
