@@ -59,7 +59,7 @@ DEPRECATED_PLAN_FIELDS = {
 
 DEPRECATED_EPIC_FIELDS = {"owner"}
 
-# Fields RULES.md § 4.5 "Findings Closure" requires on every doc_type: issue doc. `author` is a
+# Fields worker.md § 4.5 "FINDINGS CLOSURE" (HARD RULE 2026-06-10) requires on every doc_type: issue doc. `author` is a
 # legitimate DEPRECATED_PLAN_FIELDS entry for doc_type: plan (PLAN_FORMAT.md's schema has no
 # `author` field), but the same name collides with a hard-required issue-doc field — confirmed live
 # regression, fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md. Subtracted
