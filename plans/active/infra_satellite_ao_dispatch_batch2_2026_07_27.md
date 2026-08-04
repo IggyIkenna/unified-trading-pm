@@ -227,10 +227,13 @@ once the corresponding todo below is actually done — not this plan.
       both `SKILL.md`s: a `case`-statement guard run immediately before every Phase-1 launcher invocation, checking the
       EXACT resolved `--output-bucket`/`--sink-bucket` string for `-test-` and refusing loudly (exit 1) if absent —
       closes the gap where an omitted/mistyped flag silently fell through to PROD.
-- [ ] [DOC] P3. **Add an explicit "never pass `--allow-live-prod-writes`" prohibition** to
+- [x] ✅ [DOC] P3. **Add an explicit "never pass `--allow-live-prod-writes`" prohibition** to
       `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md`. Repo: unified-trading-pm. Source:
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a). Done when: the skill doc states the
-      prohibition explicitly, matching the pattern already used elsewhere in that skill for other prod-write guards.
+      prohibition explicitly, matching the pattern already used elsewhere in that skill for other prod-write guards. —
+      unified-trading-pm@f40169fe5. Added §2a "`--allow-live-prod-writes` is PROHIBITED" to SKILL.md: names the flag,
+      explains it bypasses `--test-run` and writes PROD, declares it fire-and-forget, and states the prohibition is
+      absolute with no operator override. Matches the §2a pattern already used in mdps/features sibling skills.
 
 ## Deferred (conflict-checked, held back — not drafted here)
 
