@@ -166,17 +166,13 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       manifest" section. Object-level evidence is ground truth. Source:
       `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
 
-- [ ] [DATA] P2. Now that the `_instruments_metadata.py` layout-tolerant reader fix (todos 1-3:
-      `market-tick-data-service@b94259a0` + `@cd8ce74e`) has shipped and promoted, verify against the real prod bucket
-      that `load_pool_metadata_for_date` returns non-`None`, non-zero real rows for `morpho`, `fluid`, and
-      `kamino_lending` (SOLANA) on a post-cutover date in 2026-07-23..2026-07-26, AND that the availability manifest
-      (`read_availability_index` on the `market-data-tick-defi` bucket, filtered `data_type=risk_params`,
-      `venue in     [morpho, fluid, kamino_lending / KAMINO-SOLANA]`, `date>=2026-07-23`) now shows non-zero captured
-      `row_count` — i.e. production data stopped being silently stamped `captured, row_count=0`. Read-only manifest/GCS
-      probe; no code changes. Repo: market-tick-data-service. Done when: a written verdict cites, per venue (morpho,
-      fluid, kamino_lending), at least one post-fix date where `load_pool_metadata_for_date` returns real rows and the
-      manifest confirms non-zero captured `row_count`; if any venue still reads zero, the residual is recorded rather
-      than silently passed. Source:
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-6).** Reader fix CONFIRMED works against prod: `load_pool_metadata_for_date`
+      returns 562-566 rows (morpho/ETHEREUM), 12 rows (fluid/ETHEREUM), 113 rows (kamino_lending/SOLANA) for all tested
+      dates 2026-07-24 through 2026-08-03. **Manifest STILL BROKEN:** every `risk_params` row for MORPHO (18,512 rows)
+      and FLUID (234 rows) since 2026-07-23 is `row_count=0` (`empty_confirmed`/`expected_unattempted`) — `attempted_at`
+      as recent as `2026-08-04T01:39:03Z`. KAMINO/KAMINO_LENDING/KAMINO-SOLANA has ZERO manifest rows. Residual: already
+      filed as P1 todo 8 in the source issue doc (stale VM tarball deployment). — market-tick-data-service@d2366203
+      (verification only). Source:
       `plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`
 
 ## Deferred
@@ -356,3 +352,16 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   the manifest" section. Object-level evidence is ground truth. No code changes shipped — read-only GCS verification
   only. Scratch script at `market-tick-data-service/scripts/scratch/dex_coverage_spot_check_2026_08_04.py` (deleted
   after use).
+
+- **2026-08-04 (slot-6, data_engineering)** — worked the `[DATA] P2` `_instruments_metadata.py` reader-fix verification.
+  Read-only, no code changes. **Part A — reader fix CONFIRMED works**: `load_pool_metadata_for_date` invoked directly
+  against `instruments-store-defi-prd-central-element-323112` returns real non-empty rows for all 3 target venues:
+  morpho/ETHEREUM (562-566 rows across 2026-07-24→2026-08-03), fluid/ETHEREUM (12 rows), kamino_lending/SOLANA (113
+  rows). **Part B — manifest CONFIRMED STILL BROKEN**: `read_availability_index` on
+  `market-data-tick-defi-prd-central-element-323112`, filtered `data_type=risk_params`/`date>=2026-07-23`: MORPHO 18,512
+  rows ALL `row_count=0`, FLUID 234 rows ALL `row_count=0`, `attempted_at` as recent as `2026-08-04T01:39:03Z`
+  (`pipeline_mode=batch_onchain_rpc`). KAMINO/KAMINO_LENDING/ KAMINO-SOLANA has ZERO manifest rows since 2026-07-01
+  (consistent with source doc's finding that kamino_lending risk_params never dispatches). The reader fix
+  (market-tick-data-service@b94259a0 + @cd8ce74e, promoted to main) is correct in code but the production capture
+  pipeline is still running pre-fix code — consistent with the suspected stale VM tarball deployment documented in the
+  source issue doc's todo 8 (P1). Flipped the plan checkbox recording the residual rather than silently passing it.
