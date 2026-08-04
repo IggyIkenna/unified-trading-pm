@@ -188,11 +188,15 @@ currently nothing at all.
       unified-api-contracts if (b)). Done when: either a new adapter ships with tests + QG green, or an explicit bypass
       declaration ships with a one-line justification comment, and the "⚠️ No adapter for PREDICTION/book_snapshot_5"
       warning no longer fires on the next live scan.
-- [ ] [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-run the same bounded
-      GCS-timespan check this issue's parent verification did (`processed_candles/by_date/day={D}/pipeline_mode=live_*`
-      for a fresh day post-fix) and confirm PASS. Repo: market-data-processing-service (read-only). Done when: a dated
-      PASS verdict with the measured processed-store time span is recorded in
-      `prediction_live_clob_depth_capture_2026_07_24.md`'s Progress Log, superseding the 2026-08-04 FAIL entry.
+- [x] ✅ [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-ran the same bounded
+      GCS-timespan check (`processed_candles/by_date/day={D}/pipeline_mode=live_*` for 2026-08-01 through 2026-08-04).
+      **VERDICT: Still zero live-mode processed objects on every sampled day — FULLY EXPLAINED, not a surprise.** Todos
+      1-2 are done (root cause: worker never deployed + CLI dispatch fixed at `market-data-processing-service@558b5b7`),
+      but todo 3 (slot-10) decided NOT to launch the `mdps-features-live` cluster after pilot failures + the structural
+      finding that `mdps_mvp_universe('prediction')` returns zero shards. The zero-live-objects result is the expected
+      consequence of that conscious operational decision. Full re-verification evidence recorded in
+      `prediction_live_clob_depth_capture_2026_07_24.md`'s Progress Log (2026-08-04 slot-7 entry), superseding the
+      2026-08-04 FAIL entry. Repo: unified-trading-pm (read-only verification, no code shipped).
 
 ## Progress Log
 

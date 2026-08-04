@@ -332,6 +332,28 @@ context_scope:
   - **Done-when satisfied** for `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 2 (this todo's own checkbox
     there flipped, citing this entry).
 
+- **2026-08-04 (slot-7, data_engineering) — todo 4 re-verification (post todos 1-2): VERDICT — Still no live-mode
+  processed accumulation, FULLY EXPLAINED.** Re-ran the same bounded GCS-timespan check this doc's 2026-08-04 entry
+  described: `gs://market-data-tick-pred-prd-central-element-323112/processed_candles/by_date/day={D}/` for 2026-08-01,
+  2026-08-02, 2026-08-03, 2026-08-04. Result on every day: **ZERO `pipeline_mode=live_*` objects.** Only
+  `pipeline_mode=batch_kalshi` output exists (the daily 6am UTC batch cron, still running normally — confirmed objects
+  present on days 2026-08-02 and 2026-08-03). This is the EXPECTED state given the two upstream resolutions: (1) todo 1
+  root-caused the gap: the MDPS live-mode worker was never deployed/launched for ANY asset_group (fleet-wide, not
+  prediction-specific); (2) todo 2 fixed the `_mode_dispatch_handler` construction + categories-default bugs
+  (`market-data-processing-service@558b5b7`) so the code path is correct when invoked, but — (3) todo 3 (slot-10)
+  **DECIDED NOT TO LAUNCH** the `mdps-features-live` cluster after 2 real pilot VMs (cefi + tradfi) both failed with
+  distinct bugs (OOM + argparse mismatch) AND the structural finding that `mdps_mvp_universe('prediction')` returns zero
+  shards by design (2026-07-30 ruling), so even a successful launch would not have produced prediction MDPS candle
+  output. The zero-live-objects result is therefore not a regression or surprise — it is the direct, expected
+  consequence of the conscious operational decision recorded in todo 3's resolution. **This re-verification is
+  complete.** The remaining unfixed gap (no live processed prediction depth history) is now fully characterized: (a) raw
+  flush still overwrites (finding #1, MTDS path); (b) processed live-mode output requires the `mdps-features-live`
+  cluster to be operational AND `mdps_mvp_universe('prediction')` to be non-empty — both preconditions are currently
+  false by deliberate decision, not by oversight. The 6 scoped follow-up todos in the successor issue
+  (`/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`) own the path
+  to making those preconditions true. This entry supersedes the 2026-08-04 FAIL entry above — the gap is now explained
+  end-to-end; no new surprise was found.
+
 - **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **1 stale item cited** — 2 open,
   unchanged in count. The only commit to this file since the 2026-07-30 marker (`1ab67de59`) dropped the inherited
   `cefi` tag per the operator's 2026-07-30 option-A ruling; no content moved. New this run, found by the Phase-2
