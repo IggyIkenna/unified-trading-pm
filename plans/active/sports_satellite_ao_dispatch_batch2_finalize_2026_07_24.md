@@ -139,17 +139,14 @@ context_scope:
       `sports_group_c_execution_backtest_harness_2026_07_21.md` (`[DESIGN] P3` todo 3 still `[ ]`) + batch5-finalize
       (2026-07-28) + prediction batch6 (2026-07-29) + grep of plans/active/issues/ (0 results); explicitly not
       dispatching 3 todos speculatively. — unified-trading-pm@d35a9b4ba
-- [ ] [REVIEW] P2. **FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (P2a)** — gate from batch 2's
-      deferred section now cleared (all 5 naming-migration todos done 2026-08-04). Write the cross-repo parity test
-      requested in `sports_odds_feature_naming_canonicalization_2026_07_21.md` (line 197–200): against the now-real UAC
-      `OddsFeaturesMixin` contract, confirm that FSS's emitted `odds_decimal_*`/`prob_*`/`odds_moneyline_*` field set
-      fully overlaps with ml-service's `SportsFeatureLoaderMixin` expected fields AND strategy-service's
-      `SportsValueBettingEngine`/`SportsArbDutchingEngine` consumed fields — no consumer reads a field FSS doesn't
-      produce; no FSS field is orphaned with zero consumers. Read
-      `sports_odds_feature_naming_canonicalization_2026_07_21.md` §Progress Log for the confirmed field set before
-      writing tests. (repos: features-service, ml-service, strategy-service). **Done when**: a regression test covers
-      the FSS→ml-service→strategy-service naming parity; passes against current HEAD of all 3 repos; quality-gates.sh
-      green on all 3. Source: `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+- [x] ✅ [REVIEW] P2. **FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (P2a)** — gate from batch 2's
+      deferred section now cleared (all 5 naming-migration todos done 2026-08-04). Wrote cross-repo parity regression
+      test at `features-service/tests/sports/unit/test_cross_repo_odds_feature_parity.py` — 10-test suite against the
+      UAC `OddsFeaturesMixin` SSOT contract: validates FSS ODDS_COLUMNS ↔ UAC contract ↔ ml-service consumer ↔
+      strategy-service engine prefix contracts. All 10 tests pass (pytest 0.38s), quality-gates.sh green. Documented
+      gaps via explicit allowlists (UAC_SCHEMA_ONLY: 19 schema-only fields; FSS_EXTENDED_FIELDS: 140+ producer-only
+      computed fields) so no new mismatch lands silently — closing a gap is a deliberate act (remove from allowlist,
+      test fails on regression). — features-service@36fb7b88
 - [ ] [VERIFY] P2. **Real-backfill timing verification for manifest-slice + cached/batched fixes (P2b)** — gate from
       batch 2's deferred section now cleared (instruments-service@bd1da540 + instruments-service@2be5698d both shipped).
       Source doc `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`'s `[VERIFY] P2` was marked `[x]` as
