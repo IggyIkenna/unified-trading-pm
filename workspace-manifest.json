@@ -271,7 +271,7 @@
         "cefi",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
       "codebase_health": {
         "warn_file_count": 4,
@@ -536,7 +536,7 @@
         "large_file_count": 2,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
     "fund-administration-service": {
