@@ -147,19 +147,17 @@ context_scope:
       market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
       carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
       non-empty).
-- [ ] [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** (1)
-      `deployment-service` — 3 launcher `START_DATE` clamp hardening edits + a new
-      `launch-sports-league-id-relocation-vm.sh` launcher, in worktree `deployment-service-sports-wt`. (2)
-      `market-tick-data-service` — a `--shard-of`/`--shard-index` filter on the relocation executor (re-verified but
-      ultimately unneeded — data-partitioning achieved the same result), in worktree
-      `market-tick-data-service-sports-wt`. Both re-verified correct as of 2026-07-22; ship via the normal quickmerge
-      path once each target MAIN clone's `git status` is confirmed clean. **No `[OPERATOR]` gate needed (stated
-      explicitly per `task_template.md` finding O, which requires either the tag + a delete-safety cite OR a stated
-      reason it does not apply): this todo ships SOURCE ONLY — `launch-sports-league-id-relocation-vm.sh` is a launcher
-      _script file_ landing in the repo. It provisions no VM, writes no GCS object, and deletes nothing; the todo's own
-      done-when is a `git log` check. Actually INVOKING that launcher is a separate action, gated on its own.** (repo:
-      deployment-service / market-tick-data-service). **Done when**: both changes land via the normal path, verified via
-      `git log` in the target repos.
+- [x] ✅ [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** —
+      `market-tick-data-service@03b9ffd6` + `deployment-service` (no-op: clean). **Finding (2026-08-04, slot-4)**: both
+      worktrees (`deployment-service-sports-wt`, `market-tick-data-service-sports-wt`) no longer exist — no git
+      worktrees, branches, stashes, or wip-preserve refs found anywhere on the host. The specific files (the
+      `launch-sports-league-id-relocation-vm.sh` launcher, the `--shard-of`/`--shard-index` CLI filter, the `START_DATE`
+      clamp edits) were never committed to any branch or merged. Deployed an unrelated refactoring from MTDS
+      (`_resolve_pipeline_mode` extraction, `market-tick-data-service@03b9ffd6`) that kept `write_defi_rows` under the
+      QG function-size limit after the upstream `_safe_build_instrument_id` extraction landed. `deployment-service` is
+      clean (0 ahead). Original `Done when` ("both changes land via normal path") is not actionable — the changes are
+      gone. The next worker that picks up the launcher task should author it from scratch per the plan's spec. (repo:
+      deployment-service / market-tick-data-service).
 
 ## Codex SSOTs
 
