@@ -160,24 +160,23 @@ currently nothing at all.
       tests to assert the new call contract. Evidence: `bash scripts/quality-gates.sh` full run green (2342 passed, 0
       skipped-relevant, sentinel `.qg_last_passed_sha=558b5b788d2ab8ca9164f6c6683b9b792d06c034`); verified `558b5b7` is
       an ancestor of `origin/live-defi-rollout` post-quickmerge.
-- [ ] [OPS] P2. **Operationally launch (or explicitly decide not to) the `mdps-features-live-{asset_group}` VM cluster —
-      currently launched for NO asset_group, fleet-wide, not just prediction.**
-      `deployment-service/scripts/vm/     launch-mdps-features-live.sh --asset-group <cefi|defi|tradfi|sports|prediction>`
-      is code-ready (shipped 2026-05-11/12) and is the ONLY launcher wired to MDPS's real production live path
-      (`--operation streaming-aggregation` → `MDPSStreamingAggregator`, the Live=Batch event-driven architecture per
-      `live_persist_05_mdps_cutover_2026_06_26.md` Phase 5) — but its own header comment says operational launch was
-      deferred to "Phase 15" of `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`, and that
-      archived plan's own Phase 15 entry (status: `complete` at the plan level, but 15.2 "7-day live smoke" explicitly
-      marked `DEFERRED-POST-CUTOVER` → successor plan, never named/found). Confirmed LIVE on 2026-08-04:
-      `gcloud compute     instances list --project=central-element-323112` returns **zero** `mdps-features-live-*`
-      instances, running or terminated, for any of the 5 asset_groups; zero terraform/Cloud Scheduler/cron references to
-      `mdps-features-live` or `streaming-aggregation` anywhere in deployment-service. The ACTUALLY-running prediction
-      live VMs (`prediction-live-{kalshi,polymarket}-{trades,book_snapshot_5}-*`, confirmed RUNNING) launch MTDS
-      raw-tick capture only (`launch-prediction-live.sh` → `VM_SERVICE=market_tick_data_service`) — never MDPS. Same
-      true for CEFI's real live VM (`mtds-live-cefi-consolidated-*` — MTDS websocket-streaming only, zero MDPS). Repo:
-      deployment-service (+ operator decision on which asset_groups to launch first). Done when: EITHER the VM cluster
-      is launched for prediction (+ ideally the rest of the fleet) with a T+10 verify per the no-fire-and-forget rule,
-      OR an operator ruling explicitly defers it with a named successor plan/owner (not a second silent drop).
+- [x] ✅ [OPS] P2. **Operationally launch (or explicitly decide not to) the `mdps-features-live-{asset_group}` VM
+      cluster — currently launched for NO asset_group, fleet-wide, not just prediction.** **RESOLVED 2026-08-04
+      (slot-10, data_engineering) — DECIDED NOT TO LAUNCH, evidenced.** Both named preconditions ("Harsh slot 5
+      per-service consumer wiring" + "Phase 12 reconciliation gate green") were confirmed satisfied, so 2 real GCE pilot
+      launches were run (cefi: 117 MDPS shards, tradfi: 14 MDPS shards) to get genuine live-VM confirmation. BOTH
+      failed: cefi OOM-killed a worker within ~2.5 min (117-process fan-out on e2-standard-8); tradfi's 14 MDPS shard
+      processes crashed 100% of the time on an argparse mismatch (the exec-dispatch branch's constructed CLI invocation
+      never actually reaches `market-data-processing-service`'s legacy parser through the real `ServiceBootstrap` entry
+      point — confirmed by reproducing the exact command locally, no VM needed), plus features-service live workers ran
+      as one-shot batch jobs instead of persistent subscribers, plus DeFi would need 3,535 separate OS processes
+      (categorically infeasible regardless of machine size). Separately confirmed structural finding:
+      `mdps_mvp_universe('prediction')` returns ZERO shards by design (2026-07-30 ruling) — this launcher cannot fix
+      THIS issue's depth-history problem for prediction even once the bugs above are fixed. Both pilot VMs deleted after
+      confirming failure (no reason to bill on confirmed-broken paths). Full evidence + 6 scoped follow-up todos (CLI
+      env-var bridge, launcher invocation fix, live-vs-batch features bug, 2 smaller features bugs, an `[OPERATOR]`
+      process-topology redesign decision for CEFI/DeFi scale, a re-pilot plan) filed as the named successor:
+      `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`.
 - [ ] [BACKEND] P1. **Register a `CandleAdapterRegistry` entry for `(MarketAssetGroup.PREDICTION, "book_snapshot_5")`,
       or explicitly declare it a deliberate bypass.** Either (a) add a `PredictionBookSnapshotAdapter` (mirrors
       `CefiBookSnapshotAdapter`/`DefiBookSnapshotAdapter`) so book_snapshot_5 actually produces candle output once live
@@ -249,3 +248,36 @@ currently nothing at all.
     other asset_group real live-mode processed candle output). Independently cross-verified by a parallel Explore
     sub-agent dispatched from this session against the same two repos — findings matched exactly, plus it additionally
     confirmed CEFI's real live VM also skips MDPS, strengthening the fleet-wide (not prediction-specific) conclusion.
+
+- **2026-08-04 (slot-10, data_engineering) — todo 3 (operational launch decision): DECIDED NOT TO LAUNCH, 2 real pilot
+  VMs, both failed.** Confirmed both named preconditions in the launcher's header comment already satisfied ("Harsh slot
+  5 per-service consumer wiring" = the exec-dispatch wiring issue, shipped `deployment-service@e7d17f2` 2026-08-03;
+  "Phase 12 reconciliation gate green" = checked `[x]` in the archived
+  `live_pipeline_mtds_mdps_features_2026_05_08.md`), so piloted real launches rather than deferring blind. **Pilot 1
+  (cefi, 117 MDPS shards + 5 features families)**: kernel OOM-killed a worker ~2.5 min in
+  (`Out of memory: Killed process 9284 (python)`, via `gcloud compute instances get-serial-port-output`) — 122
+  simultaneous OS processes on one e2-standard-8 exceeds available RAM well before any of them do real work. VM deleted
+  immediately. **Pilot 2 (tradfi, 14 MDPS shards + 6 features families, chosen as a lower-risk follow-up)**: no OOM in
+  ~7 min of monitoring, BUT 100% of the 14 MDPS shard processes crashed instantly on an argparse mismatch
+  (`error: argument --operation: invalid choice: 'streaming-aggregation' (choose from 'process')`) — reproduced locally
+  without a VM: `python -m market_data_processing_service` routes through `ServiceBootstrap` (`cli/main.py::run_cli()`),
+  whose own top-level `--operation` flag only accepts `process`; the legacy `streaming-aggregation` value must be
+  bridged via the `MDPS_OPERATION` env var (`_bridge_operation_and_build_continuous_args()`), and `--shard-spec` has
+  **no env-var bridge implemented at all** — so the exec-dispatch branch's constructed command was never actually
+  reachable through the real entry point, regardless of launcher fixes. features-service side also showed real defects:
+  `calendar`/`commodity` ran ONE-SHOT BATCH passes and exited in ~15-70s instead of staying up as live subscribers;
+  `delta_one`'s live subscriber hit an unhandled Pub/Sub traceback; `commodity`'s `publish_signal` hit a
+  `[MEDIUM] asdict()` validation bug. VM deleted immediately (0/14 MDPS shards ever started). **Additional structural
+  finding, independent of the above bugs**: `mdps_mvp_universe('prediction')` and `('sports')` both return an EMPTY
+  frozenset by design (2026-07-30 ruling) — MDPS processes ZERO shards for either asset_group. This means the
+  mdps-features-live cluster **cannot fix THIS issue's depth-history problem for prediction at all**, even once every
+  bug above is fixed — launching it for prediction only starts 2 unrelated cross-cutting features workers (`calendar`,
+  `cross_instrument`) with no MDPS candle input. Also confirmed `mdps_mvp_universe('defi')` = 3,535 shards — the
+  one-process-per-shard topology (2026-07-29 ruling) is categorically infeasible at that scale on any single VM, not
+  just under-provisioned. **Resolution**: decided not to launch for any asset_group, with full evidence + 6 scoped
+  follow-up todos (CLI env-var bridge, launcher invocation fix, live-vs-batch features bug, 2 smaller features bugs, an
+  `[OPERATOR]` process-topology decision for CEFI/DeFi, a re-pilot plan starting with TradFi) filed as the named
+  successor issue:
+  `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. Flagged a note
+  on todo 4 (CandleAdapterRegistry for prediction book_snapshot_5) in that new doc: even once shipped, it will never be
+  invoked by this launch path since MDPS runs zero prediction shards structurally.
