@@ -75,6 +75,14 @@ resolved_by:
 
 ## What's deferred, and why
 
+> **📤 THE TODO BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo `[SCRIPT] P3` ("Run the additive
+> MDPS manifest reconciliation for the cefi trades gap-fill campaign, on a VM") — `status: active`,
+> `assigned_vm: planning` — carries it verbatim (same function, bucket, service_name, prefix, `r20251225` rationale, and
+> safe-idempotent justification) and Source-cites this doc; its done-when explicitly includes flipping the open checkbox
+> below once the merge runs to completion. Leave `assigned_vm: NA` here — flipping it would create a second, competing
+> dispatch path for the identical work.
+
 - [ ] [DATA] P3. **CORRECTED 2026-07-30 (ag-closeout-audit cefi) — do NOT call `rebuild_manifest_from_canonical_paths`
       as originally written below; it wholesale-REPLACES this co-located bucket's entire manifest index and would
       silently delete essentially the whole CEFI `raw_tick_data` manifest to register 7 candle rows.** Confirmed via
@@ -128,3 +136,10 @@ safe; only the manifest's registration of it is what the reconciliation todo abo
   reclassification, needs the gating line added first.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale (already-duplicated) — Phase-1
+  classification alone read this as RECLASSIFY (the todo now carries a stated safe-idempotent justification, satisfying
+  `task_template.md` finding O/T), but the mandatory Phase-2 conflict-check found
+  `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`status: active`, `assigned_vm: planning`) already extracted this
+  exact todo verbatim on 2026-08-02, Source-citing this doc. Corrected to KEEP-NA-STALE-duplicate per the shared
+  conflict-check protocol (`ao-dispatch-batch-naming-and-conflict-check.md` § 3, case 4) — citation banner added above,
+  `assigned_vm` left as `NA`.
