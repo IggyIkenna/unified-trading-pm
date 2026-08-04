@@ -362,3 +362,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   launcher warned of 2 stale code tarballs (instruments-service, deployment-service) — not republished before this
   launch (time-sensitive to catch the clean window; the FIXTURE_STATS fetch path itself hasn't changed since the
   tarballs were built, so this is a low-risk gap, not blocking). Monitoring for a clean, non-preempted run.
+- **2026-08-04T06:03Z** — Checked on `af-backfill-20260804-063845`. **Preempted at 05:41:34Z, ~2 min after launch** —
+  despite the 4+ hour af-backfill-specific clean window that motivated the relaunch. **Correction to the prior entry's
+  framing**: "af-backfill has been clean" was true of its PAST history but is not immunity — cross-referencing the full
+  90-min preemption log shows this was the ONLY af-backfill hit in the window; every other event (13 total) is
+  `expected-universe-v2-sports-*`, firing steadily every 2-14 min right through 05:52:59Z (just ~10 min before this
+  check) — i.e. the narrower residual pattern flagged in the storm doc is still actively live, and while it's mostly
+  hitting one VM-name family, the underlying capacity pressure evidently isn't perfectly isolated to that name (it
+  caught af-backfill once too, right in the middle of the sports-VM pattern's continued firing). This matches slot-13's
+  original caution (`asia_northeast1_c_spot_preemption_storm_2026_08_04.md`): zone-wide OR single-family aggregate
+  history isn't sufficient evidence on its own for this `e2-standard-8` entity. **Did not immediately relaunch again** —
+  the residual pattern needs to show genuine subsidence (not just af-backfill's own trailing history) before the next
+  attempt. FIXTURE_STATS remains at 125/68,284 non-MVP shards (0.18%), unchanged — 9 attempts today, zero net progress.

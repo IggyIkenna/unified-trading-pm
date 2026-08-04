@@ -194,7 +194,15 @@ to preemption with proportionally little forward progress while it lasts.
       constraint the launcher's auto-relaunch loop keeps colliding with (would argue for a relaunch backoff or alternate
       zone/machine-type for this launcher specifically), or (b) expected/ acceptable background churn not worth acting
       on. Check `expected-universe-v2-sports` launcher config (machine type, relaunch cadence) and whether it has
-      working auto-recovery already absorbing this at acceptable cost (repo: deployment-service).
+      working auto-recovery already absorbing this at acceptable cost (repo: deployment-service). **CORRECTION
+      2026-08-04T06:03Z** (sports campaign monitoring loop): the "af-backfill completely quiet" premise no longer holds
+      cleanly — relaunched `af-backfill-20260804-063845` at 05:38Z on the strength of 4+ hours of af-backfill quiet, and
+      it was preempted at 05:41:34Z (~2 min lifetime) while the `expected-universe-v2-sports` pattern was still actively
+      firing nearby (steady hits through 05:52:59Z). One data point, not conclusive, but it suggests the residual
+      capacity pressure may not be perfectly isolated to the `expected-universe-v2-sports` name/launcher — worth
+      checking machine type overlap (is af-backfill also `e2-standard-8`, same as this family?) as part of the
+      investigation above, not just the launcher config. Full detail: `sports_af_full_entity_completion_2026_08_03.md`'s
+      06:03Z entry.
 
 ## Progress Log
 
