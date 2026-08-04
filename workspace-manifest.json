@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.91.0",
       "codebase_health": {
         "coverage_pct": null,
