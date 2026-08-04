@@ -59,6 +59,14 @@ DEPRECATED_PLAN_FIELDS = {
 
 DEPRECATED_EPIC_FIELDS = {"owner"}
 
+# Fields RULES.md § 4.5 "Findings Closure" requires on every doc_type: issue doc. `author` is a
+# legitimate DEPRECATED_PLAN_FIELDS entry for doc_type: plan (PLAN_FORMAT.md's schema has no
+# `author` field), but the same name collides with a hard-required issue-doc field — confirmed live
+# regression, fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md. Subtracted
+# from the deprecated set for issue docs (see fix_active_plan()) so this collision class can't recur
+# for any other field either.
+ISSUE_REQUIRED_FIELDS = {"title", "created", "author", "source", "assigned_vm"}
+
 SKIP_ACTIVE = {"INDEX.md", "task_template.md"}
 
 # Valid assigned_vm values per PLAN_FORMAT.md
@@ -801,9 +809,14 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
         new_fm.insert(0, field_line)
         changes.append("unjammed")
 
-    # Remove deprecated fields
+    # Remove deprecated fields — never strip a field THIS doc's own doc_type requires (e.g.
+    # `author` is deprecated for doc_type: plan but REQUIRED on doc_type: issue).
+    doc_type_val = get_field_value(new_fm, "doc_type") or ""
+    deprecated_set = DEPRECATED_PLAN_FIELDS
+    if doc_type_val == "issue":
+        deprecated_set = DEPRECATED_PLAN_FIELDS - ISSUE_REQUIRED_FIELDS
     before = list(new_fm)
-    new_fm = remove_deprecated_fields(new_fm, DEPRECATED_PLAN_FIELDS)
+    new_fm = remove_deprecated_fields(new_fm, deprecated_set)
     if new_fm != before:
         changes.append("removed deprecated")
 
