@@ -156,10 +156,11 @@ to preemption with proportionally little forward progress while it lasts.
       itself IS verified working.
 - [ ] [SCRIPT] P2. Re-check `compute.instances.preempted` volume in `asia-northeast1-c` after several hours — confirm
       whether the storm has subsided; note the outcome in this doc's Progress Log (repo: deployment-service). **Clock
-      reset 2026-08-04T03:29Z** (see Progress Log entry below) — a fresh, sharper spike (peak 20/min at 03:10, far
-      exceeding the original 32/10min peak) landed well inside the originally-scheduled ~03:52-04:54Z recheck window
-      itself. Do not treat that window as satisfied by pre-spike data — the next recheck should look for a genuinely
-      clean window measured FROM the 03:10 spike, not from the original ~00:54Z filing time.
+      reset 2026-08-04T04:14Z** (see Progress Log entry below) — two FRESH sub-minute preemptions
+      (`expected-universe-v2-sports-20260804-041142` 55s lifetime, `expected-universe-v2-sports-20260804-041305` 68s
+      lifetime) landed at the moment of the ~04:14Z recheck itself, right after what looked like a 24-min clean window.
+      Do not treat this window as satisfied — the next recheck should look for a genuinely clean window measured FROM
+      04:14Z, not from the original ~00:54Z filing time or the ~03:10Z spike.
 - [x] ✅ [SCRIPT] P2. ~~**NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
       `terminated = [name for name in prior if     name not in running]` diff (`exit_code_fleet_monitor.py:565`)
       requires a VM to have appeared in a PRIOR tick's `running` census before its disappearance can ever be detected. A
@@ -271,3 +272,21 @@ to preemption with proportionally little forward progress while it lasts.
   Shipped `deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`, verified on `origin/live-defi-rollout`. Todo
   flipped above. Did not touch todos 1-2 (already resolved) or the still-open recheck todo (separate,
   operator-judgment-timing scoped).
+- **2026-08-04T04:14Z (slot 6)** — Direct dispatch of the recheck todo (`asia_northeast1_c_spot_preemption_storm-002`),
+  auto-chained after todo 3 above. Per the 03:29Z entry's own recommendation, pulled the FULL trailing window fresh
+  (`gcloud logging read 'protoPayload.methodName="compute.instances.preempted" AND resource.labels.zone="asia-northeast1-c"' --freshness=75m`)
+  rather than trusting stale numbers: 03:04→04:14Z, 80 total events. Minute buckets: burst 03:07-03:20
+  (9,1,1,**20**,2,·,·,·,2,6,5,1,8,1 — matches the 03:29Z entry's spike), tapering 03:22-03:32 (2,·,·,·,·,2,·,1,1,5), a
+  genuine 9-min clean gap (03:33-03:41), 4 events at 03:42, a 4-min clean gap, 1 event at 03:47, then a **24-min clean
+  window (03:48-04:11)** that looked like real subsidence — until, at the exact moment of this recheck, TWO fresh
+  preemptions landed: `expected-universe-v2-sports-20260804-041142` (55s lifetime, preempted 04:12:37Z) and
+  `expected-universe-v2-sports-20260804-041305` (68s lifetime, preempted 04:14:13Z) — both freshly-launched VMs
+  preempted within ~1 minute of insert, i.e. live confirmation of the exact sub-tick pattern todo 3's fix above targets.
+  **Verdict: still NOT subsided** — the storm is now intermittent (long-ish clean gaps broken by fresh isolated hits)
+  rather than sustained-dense, but "confirm 30-60 clean minutes measured forward from the actual latest event" (the
+  03:29Z entry's own bar) cannot be satisfied by a point-in-time check — the latest event is effectively "now."
+  **Checkbox stays UNFLIPPED.** Clock reset to 04:14Z above (superseding the 03:10Z reference). `skip-current-task`'d
+  (reason_code=GATED, estimated_unblock_minutes≈45) rather than force a premature verdict — recommend the next dispatch
+  pull the full window fresh again no earlier than ~05:00Z and specifically check whether the clean-gap-to-isolated-hit
+  pattern seen here (vs. the earlier sustained-dense bursts) continues to lengthen, which would be the actual subsidence
+  signal.
