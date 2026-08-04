@@ -84,3 +84,14 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   RSS ~4.9GB/19% mem, healthy. Armed a 25-min background watchdog (day-marker + VM-status + error-signature poll) rather
   than continuous polling. Will verify via manifest row counts once the VM reaches its
   `[[VM_PROGRESS]] last_completed_date=2026-08-02` marker / shuts down, then flip the todo + `/done`.
+- **slot-9 2026-08-04 ~06:55Z**: Picked up this task again (`already_in_progress: true`, resume dispatch). VM
+  `cefi-fwd-20260804-021235` confirmed still `RUNNING`, now at day=2026-06-01 (of the 2026-05-01→2026-08-02 range), RSS
+  ~5.6GB, log actively growing (37k+ lines), no error/traceback signatures, healthy pace (~30 days progressed over ~4.5h
+  runtime). Hit a transient `slot9-monitor` gcloud config drift (active account reverted to `github-actions-deploy`,
+  whose cached token had gone stale, between Bash calls — shell state doesn't persist across tool calls) that made
+  `gsutil` report "invalid credentials"; self-serviced by re-running
+  `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` immediately before each
+  `gsutil`/`gcloud` call in the same Bash invocation (ambient identity, no new grant needed — RULES.md § permission
+  self-service). Re-armed a 25-min background watchdog with the account-set baked into the same call. Will verify via
+  manifest row counts once the VM reaches its `[[VM_PROGRESS]] last_completed_date=2026-08-02` marker / shuts down, then
+  flip the todo + `/done`.
