@@ -163,5 +163,9 @@ duplicate-dispatch risk this run.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: The doc's two open items split cleanly:
   item 2 is explicitly and self-declaredly a design/judgment call the author refused to resolve unilaterally ('a genuine
   design call, not a bug I should silently fix'; 'I don't have enough context on the original design intent to rule
-  this'), so it must stay KEE...
+  this'), so it must stay KEEP-NA. [Entry completed 2026-08-04 — the original write was cut off mid-sentence; cosmetic
+  fix only, no reasoning added.]
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — item 1 (`[DOC] P2`, conflict-check
+  surface) is now extracted near-verbatim into today's `ao_satellite_ao_dispatch_batch6_2026_08_04.md` (which itself
+  notes item 2 stays open/NA); item 2 remains the doc's own self-declared, unilaterally-unresolvable design call.

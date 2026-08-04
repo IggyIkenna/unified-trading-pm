@@ -467,3 +467,8 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   request. All three remain genuinely operator-gated, no change since the 2026-07-30 verdict.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- was epic+plan-only; added the 3 real source files
   behind the 3 still-open P0 items (SM secret sync script, dirty-worktree resolver, VM bootstrap script).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-verified all 3 remaining open
+  items against live doc text: a permission-blocked-by-design SM secret write, a DESIGN dirty-worktree policy still
+  unscoped into dispatchable units, and a BLOCKED-CREDENTIALS IAM grant with a filed approval request. Independently
+  corroborated by `ao_satellite_ao_dispatch_batch5_2026_08_03.md` and `batch6_2026_08_04.md`, both of which separately
+  bucket this doc under "Operator-gated." No change since the 2026-08-01 verdict.

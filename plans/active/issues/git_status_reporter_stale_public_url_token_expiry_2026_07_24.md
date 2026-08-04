@@ -131,3 +131,7 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
   removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
   `reporter_stale=false` live before closing it.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed; the sole open
+  `[INFRA] P3` (re-mint `~/.orch_token`) remains a distinct credential operation per the batch1 Deferred-list ruling,
+  unchanged since 2026-07-30. Still no live-orchestrator access this run to verify whether the shipped loopback fix
+  already made it moot.

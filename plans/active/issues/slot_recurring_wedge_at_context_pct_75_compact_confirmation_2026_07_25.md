@@ -165,3 +165,6 @@ recurrence-prone and episode 1 needed manual intervention.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added
   `agent-orchestrator/server/worker_liveness/_respawn.py`, the module the doc's own unresolved item-2 investigation
   targets directly).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed; the 2026-08-01 entry's
+  explicit non-reclassification of items 1/3 still stands, item 2 still pending a live trace. Independently corroborated
+  by `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s "Conflict-gated" listing of this doc today. No change.

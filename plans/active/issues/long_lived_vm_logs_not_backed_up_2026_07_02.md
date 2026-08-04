@@ -102,3 +102,7 @@ EXEMPT reasons accordingly.
   ruling in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed; still gated on the
+  2026-07-02 operator decision plus `locked_by: live-defi-rollout`. Independently corroborated same-day:
+  `ag-closeout-audit`'s `ao_satellite_ao_dispatch_batch6_2026_08_04.md` lists this doc verbatim under its "Deferred —
+  Operator-gated" bucket.

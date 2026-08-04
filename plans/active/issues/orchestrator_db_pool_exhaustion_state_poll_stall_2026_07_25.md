@@ -283,3 +283,8 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   because the `[BACKEND] P2` readiness-probe todo embeds a `/codex/04-architecture/autonomous-recovery-matrix.md` edit,
   which is never autonomous.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — of the 3 open `[BACKEND]` items, item
+  1 (leak-vs-concurrency proof) is now drafted (not yet active) as a scoped todo in
+  `ao_satellite_ao_dispatch_batch5_2026_08_03.md`; items 2-3 (DB-aware readiness probe requiring a codex
+  autonomous-recovery-matrix edit, and pool-resize/git-status-batching) stay genuinely operator-gated/unscoped,
+  independently reconfirmed by today's `batch6_2026_08_04.md`.

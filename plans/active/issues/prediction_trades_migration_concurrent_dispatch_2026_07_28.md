@@ -194,3 +194,6 @@ solution.
   heartbeat-staleness threshold and the stale-claim takeover rule"), which the dispatch-scope eligibility bar keeps
   human-resolved before any AO todo is cut against their outcome. Verdict agrees with the ruling; no change.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed; all 3 open todos remain
+  design decisions per the 2026-08-02 ao-tranche-adoption ruling, corroborated by
+  `ao_satellite_ao_dispatch_batch2_2026_07_30.md`'s Deferred-section citation. No change.

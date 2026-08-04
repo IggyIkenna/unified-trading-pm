@@ -450,3 +450,9 @@ solo work.
   make a todo — left standing as an authorial call rather than overridden, since converting it would also grow the NA
   corpus.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid (whole-doc) — Phase 2's 3 items remain
+  genuinely `BLOCKED-OPERATOR-DECISION` on reaching the planning-vm, so the doc stays NA as a whole. Flagging, not
+  carving out this run: the Results-table-2 rigor-follow-up trio — `check_pm_script_path_refs.py` optimization, the solo
+  idle-host re-measurement, and the `--skip-tests`/`--skip-<X>` delta — are all bounded/mechanical with stated
+  done-whens and are good material for a future dedicated small satellite plan (SPLIT pattern: parallel Plan A while
+  Phase 2 stays gated here), so this isn't lost.

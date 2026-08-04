@@ -384,3 +384,8 @@ investigated further here, out of scope for this doc.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the 2
   sibling capacity/contention docs plus the `host_resources.py` module the swap-tile fix lives in).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the sole open `[REVIEW] P3`
+  one-line-correction item is self-declined by its own author and independently reconfirmed NOT AO-eligible by
+  `batch5_2026_08_03.md` and today's `batch6_2026_08_04.md`. Flagged cosmetic issue (not fixed): the 2026-08-01
+  na-eligibility-audit entry in this doc's earlier Progress Log section cuts off mid-sentence ("The target...") right
+  before `## Todos`.

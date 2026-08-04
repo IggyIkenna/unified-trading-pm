@@ -120,3 +120,8 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and remain the right minimal set
   for the doc's sole open todo (rejected-push recovery design in `_ahead_push.py`).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — sole open P3 todo still needs a
+  genuine design decision (retry/backoff vs re-stamp vs alert) on what the doc calls "the single riskiest automated code
+  path in the system." Independently corroborated by two of the most recent same-tranche satellite-batch drafting passes
+  (`batch5_2026_08_03`, `batch6_2026_08_04`), both separately bucketing this doc under "Too-large/unscoped-design, needs
+  `/plan-brainstorm`." Not re-litigated.

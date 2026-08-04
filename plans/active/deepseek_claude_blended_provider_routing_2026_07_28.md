@@ -541,6 +541,11 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in autospawn.py/config.py, the actual
   files hosting select_account_for_spawn/_pick_headroom_account/_resume_pass and the deepseek_route_fraction tuning
   knob.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — independently re-verified all 6 open
+  items (not just trusting the 2026-07-30 infra-tranche citation below, which predates 3 shipped todos + the whole Phase
+  2 section): INFRA P0 (VM registration) and INFRA P2 (new-provider generalization) are credential/VM-gated, REVIEW
+  P1/P2 need real elapsed time and real Claude-account headroom, DATA P1 needs the gitignored per-VM `accounts.json`,
+  and OPERATOR P3 is an explicit spend/business decision — all 6 genuinely un-dispatchable by an isolated AO worker.
 
 ## Recommended rollout sequence (2026-07-29)
 

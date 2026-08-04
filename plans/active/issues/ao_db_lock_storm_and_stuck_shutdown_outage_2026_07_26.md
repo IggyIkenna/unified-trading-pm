@@ -358,3 +358,9 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and cover the two remaining open
   todos (apply the live `--reload` removal + confirm via journalctl).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — traced via `git log --follow -p`:
+  this doc flipped `NA→planning` 2026-07-30 (prior RECLASSIFY; its P1/P2 `[BACKEND]` todos since shipped and checked
+  off), then correctly reverted `planning→NA` 2026-07-31 via the mass operator-directive commit
+  `unified-trading-pm@14478ca26` (25-doc AO-plumbing reclassification to local-only). The 2 remaining open todos are
+  genuinely non-dispatchable: `[OPERATOR]` P2 needs privileged VM access no worker has (`NoNewPrivileges=yes`, confirmed
+  twice live), and `[REVIEW]` P2 is explicitly gated on it. Not re-litigated.

@@ -338,3 +338,8 @@ regression) is worse.**
   Progress Log. Further corroborates Option A: the materiality/severity fix (`alerting-service@bb76cae`) only touches
   Slack/PagerDuty routing, not the separate escalation fast path that spawned this session — still the open gap this doc
   tracks.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — reaffirms the 2026-08-01 verdict.
+  Option A/B/C remains an undecided operator/design call after 31+ corroborating dispatches. Independently reaffirmed
+  same-day by both `ao_satellite_ao_dispatch_batch5_2026_08_03.md` ("gated on a design fork or operator decision") and
+  `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s Deferred "Operator-gated" list — neither extracts this doc's content
+  as a dispatchable todo.

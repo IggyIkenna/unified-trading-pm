@@ -152,3 +152,8 @@ backfill).
   `[BACKEND] P1` was already self-serviced + closed 2026-07-29.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body; no change needed.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA-STALE (already-duplicated) — the sole open
+  `[DOCS] P1` todo is already extracted verbatim as an active `[OPERATOR]`-tagged todo in
+  `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (lines 221-229), citing this doc as Source. Confirmed both target
+  codex docs still describe the stale always-pin model (content genuinely still open, not resolved elsewhere) — but the
+  dispatchable claim itself lives in batch2, so this doc correctly stays NA rather than duplicating it.

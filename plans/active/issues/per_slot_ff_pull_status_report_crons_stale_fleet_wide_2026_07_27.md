@@ -222,3 +222,6 @@ uncommitted work above must be preserved before any decommission/reclaim action 
   does not apply. The new P1 adds a WIP-preservation requirement over 5 dirty repos on that host; still operator-only.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the 2
   per-slot cron scripts + the 2 codex SSOTs covering the access-denial and the multi-agent worktree model).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed; both open `[OPERATOR]`
+  todos remain gated on access to the human-planning VM (`i-0dd9812a96cdda5dc`) that no worker-class AWS identity can
+  reach (`ssm:SendCommand`/`sts:AssumeRole` denied). No change since 2026-08-02.

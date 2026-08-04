@@ -177,3 +177,8 @@ Two independent, complementary fixes — either alone helps, both together close
   `agents/worker.md` (the STEP 2 example todo 1 says to mirror) — now 6 entries.
 - **context-scout 2026-08-03 (re-pass)**: re-verified under the updated methodology, unchanged (6 entries) — all still
   resolve and remain the right minimal set for the 3 open todos.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — all 3 todos touch
+  `server/prompts.py::_compose()`/`_session_vars_block()`/`BootRequest`, the fleet-wide worker-boot path every slot
+  reads first. Independently verified the cited 2026-07-31 operator directive (`unified-trading-pm@14478ca26`, a
+  25-doc AO-plumbing reclassification to local-only) is real and its file list is exactly this risk class,
+  reinforcing the same-day 2026-08-02 verdict. Not re-litigated.

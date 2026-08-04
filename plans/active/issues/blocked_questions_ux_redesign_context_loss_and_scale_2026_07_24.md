@@ -140,6 +140,10 @@ exists" section together before scoping the workstream.
   archiving this doc or auto-picking a direction on its `[DESIGN]` todo below (an open-ended scoping call, correctly
   staying a human decision per this doc's own frontmatter) — flagging the renewed operator pain as a signal it may be
   worth un-deferring, not deciding that myself.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the sole open todo is still an
+  operator-deferred `[DESIGN]` scoping call (pain points 2-4 remain live per the 2026-08-03 entry above). Reaffirmed
+  same-day by `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s Deferred "Operator-gated" list, which names this doc
+  verbatim.
 
 ## Todos
 

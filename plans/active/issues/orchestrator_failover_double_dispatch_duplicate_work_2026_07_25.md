@@ -303,3 +303,7 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   incidents) keeps this doc's dispatcher-dedup todos live: the backlog still occasionally hands one todo to two slots
   simultaneously — the earliest-wins ship gate is the working backstop, but the dispatch-side dedup remains the real
   fix.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — of the 2 open `[BACKEND] P3` items,
+  item 1 (current_task-clearing on redispatch) is now drafted (not yet active) as a scoped todo in today's
+  `ao_satellite_ao_dispatch_batch6_2026_08_04.md`; item 2 (`/done` idempotency) stays genuinely file-collision-gated on
+  `server/routes/slots_worker.py`, shared with 2 other still-NA docs.

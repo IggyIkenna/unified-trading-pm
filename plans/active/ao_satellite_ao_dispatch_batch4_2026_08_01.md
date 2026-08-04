@@ -176,3 +176,8 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
   `plan` doc's own archival-pending state, not a reclassification question (it was NA/local-only by this tranche's
   established convention from inception, per the frontmatter note the 2026-08-01 batch-1 classification pass already
   recorded).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): confirmed ARCHIVE-eligible (0 open todos, sole todo
+  `[x]` shipped) — same finding as the 2026-08-01 pass. Not archived here:
+  `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (active, `assigned_vm: planning`) already carries its own
+  queued `[INFRA] P0` todo to run the 6-step archival ritual; archiving independently would duplicate already-claimed AO
+  work.

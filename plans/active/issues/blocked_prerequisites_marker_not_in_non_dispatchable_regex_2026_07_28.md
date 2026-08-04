@@ -208,3 +208,7 @@ same-corpus dependencies). Instead:
   each occurrence needs per-case classification (external-gate mislabel → retag, vs. same-corpus dependency → convert to
   `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
   decision, explicitly "not a worker's call to make unilaterally".
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — reaffirms the 2026-08-02 verdict.
+  `unified-trading-pm@14478ca26` re-verified real via `git show` (this doc is in its file list). Independently
+  corroborated same-day by `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s Deferred "Operator-gated" list, which names
+  this doc verbatim.

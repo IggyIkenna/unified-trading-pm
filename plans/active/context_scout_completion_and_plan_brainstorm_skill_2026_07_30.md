@@ -180,6 +180,13 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   progress recorded there as of 2026-08-01: `NEVER_SCOUTED` reduced 609→386). This doc's own checkbox simply never got a
   pointer back to that extraction. Added the citation inline above; `assigned_vm` correctly stays `NA` here — flipping
   it would dispatch a duplicate of already-active work.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — sole open item (`[SCRIPT] P0`,
+  corpus-wide `context_scope` backfill) re-confirmed as the identical work item tracked verbatim as todo 1 of
+  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (which cites this doc's item directly as its source).
+  Correction to the entry above: batch3 is itself `assigned_vm: NA` (not `planning` as stated there — that claim was
+  already ~24h stale when written; batch3 was flipped `planning` → `NA` by `unified-trading-pm@14478ca2` on 2026-07-31,
+  before the 2026-08-01 audit ran). The duplicate-tracking conclusion holds regardless — `assigned_vm` correctly stays
+  `NA` here.
 
 ## Codex SSOTs
 

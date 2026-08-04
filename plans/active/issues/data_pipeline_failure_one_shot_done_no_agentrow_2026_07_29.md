@@ -247,3 +247,10 @@ still in flight.
   different mechanism. **Suggested next step for whoever revisits this**: the very next `one_shot_complete` 400 — call
   `claim-interactive` FIRST, then retry the SAME `/done` call before concluding it is still broken; that single retry is
   the missing data point every report so far (including this one) has left open.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA-STALE (already-duplicated) — **supersedes the
+  2026-07-30 RECLASSIFY entry above; do NOT re-apply that recommendation.** Todo 1 (query the live AgentRow) is already
+  extracted verbatim as an active `[DATA] P2` todo in `ao_satellite_ao_dispatch_batch5_2026_08_03.md` (lines 179-191,
+  covering all 5 escalation ids logged here). Todo 2 (the code fix) stays correctly un-extracted/contingent — batch5's
+  own text says it is "two-hypothesis-contingent" on Todo 1's outcome. Flipping this doc's own `assigned_vm` to
+  `planning` now would create a duplicate/competing dispatch claim against batch5's already-queued todo — current
+  correct state is KEEP-NA, not RECLASSIFY.

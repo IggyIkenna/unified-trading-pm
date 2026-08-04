@@ -483,3 +483,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — replaced the generic dispatch-architecture set
   with the sole remaining todo's actual target (the context_scope backfill itself: its source plan, the skill, and the 2
   scripts it names); dispatch-batch coordinator, source paths included since the todo names them directly.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — sole open item (`[SCRIPT] P1`,
+  corpus-wide `context_scope` backfill) re-confirmed still incomplete via a fresh `generate_context_scope_inventory.py`
+  run: 663 in-scope docs, 572 `UP_TO_DATE`, 85 `STALE`, 6 `NEVER_SCOUTED` — real progress, still short of the 0/0
+  threshold this todo's own done-when requires. Correctly corpus-scale, incremental work, not a single AO dispatch.

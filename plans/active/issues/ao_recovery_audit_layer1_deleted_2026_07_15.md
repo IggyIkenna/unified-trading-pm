@@ -176,6 +176,11 @@ function.
   Checked `ao_orphan_audit_followup_triage_2026_07_30.md`'s claim that `ao_satellite_ao_dispatch_batch2_2026_07_30.md`
   already carries a fix for this doc — grep against the live batch2 doc found zero mentions of recovery-audit/this doc,
   so that candidate was NOT added (flagged as a stale pointer on the triage doc instead, not fixed here).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-confirmed both citations current:
+  the 2026-07-16 operator ruling (Option B, re-home producer, "scheduled LAST") and the 🟢 EXECUTION CONSOLIDATED
+  2026-07-17 redirect banner. Verified `ao_open_issues_consolidated_close_out_2026_07_17.md` is still `status: active`
+  (last_updated 2026-08-03) and still lists this item live ("OPEN by operator ruling... sequenced LAST after AO
+  correctness work"). Not re-litigated.
 
 ## Todos
 

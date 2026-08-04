@@ -228,3 +228,8 @@ whole suite (1609 passed).
   reclassified: dispatching the todo as written would ship banned-pattern code, and rewriting its substance is a scope
   change beyond a mechanical citation fix.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the sole open `[SCRIPT] P3` item's
+  fix already shipped as `unified-trading-pm@2db15bb` (2026-07-28, verified via `git show`), 2 days before the
+  2026-07-30 entry above's "direction superseded, re-scope" annotation was written — that entry is stale/misleading if
+  read in isolation. `ao_satellite_ao_dispatch_batch5_2026_08_03.md` already carries a verification-only closeout todo
+  sourced from this item; stays NA pending that batch's dispatch, not reclassified here.

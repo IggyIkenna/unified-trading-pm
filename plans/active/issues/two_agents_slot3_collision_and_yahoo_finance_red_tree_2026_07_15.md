@@ -169,3 +169,6 @@ is not complete until the counterpart's files build again, not just until your o
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — marker was stale (claimed 2, held 5, missing
   epic-vs-source balance); dropped the generic `cefi_master` epic pointer, kept the named `quickmerge.sh` source file.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — sole open `[INFRA] P2` (hunk-scope
+  `quickmerge.sh --files` staging) still declined by the doc's own author as out-of-scope/regression-risk; independently
+  corroborated in `ao_satellite_ao_dispatch_batch2_2026_07_30.md`'s Deferred section. No change.

@@ -300,3 +300,6 @@ under active consideration, and only once its 3 prerequisite research todos reso
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the setup guide for the multi-account
   headless-auth codex SSOT this doc's own "Codex SSOTs" section names as the mechanism deliberately NOT reused.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — all 6 open todos remain
+  `[OPERATOR]`-tagged or gated behind one of those 3; the doc's own 2026-07-30 operator ruling keeping it NA/local-only
+  still stands, re-confirmed by batch3/batch6's Operator-gated classification. No change.

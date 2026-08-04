@@ -150,3 +150,8 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   shipped gate-aware sweep (`agent-orchestrator@49c919d`) unblocked the still-open `/done`-on-origin-gate todo.
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 5 entries resolve on disk (sibling
   issue + codex SSOT + reaper source + evidence-gate QG check + the archived unblocking fix) — no changes.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — item 1 (reaper-overeagerness fix) is
+  already extracted as an active todo in `ao_satellite_ao_dispatch_batch5_2026_08_03.md`; item 2 (`/done`-on-origin
+  gate) is independently re-confirmed "Conflict-gated" by `ao_satellite_ao_dispatch_batch6_2026_08_04.md`, coupled to
+  `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s 3rd item; item 3 (commit recovery) stays on the
+  operator-decision list, "very likely MOOT" per 2026-07-31 but still unconfirmed. Doc correctly stays NA.

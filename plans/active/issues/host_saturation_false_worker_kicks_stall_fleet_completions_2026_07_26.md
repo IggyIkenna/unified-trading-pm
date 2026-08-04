@@ -221,3 +221,11 @@ is known-wrong is actively dangerous.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `scripts/quality-gates-base/base-service.sh`,
   the shared QG entry point the sole remaining `[DEVOPS] P1` admission-semaphore todo must touch; dropped the archived
   `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` sibling to stay within the minimal-list cap).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the sole open `[DEVOPS] P1` remains
+  genuinely open, uncited by any satellite batch. **Flag for a human/design-owner (not resolved here):** this overlaps,
+  uncross-referenced, with the already-shipped `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+  (predates this doc by 12 days; replaced the literal `max(2, floor(cores/4))` ask with a host-adaptive RAM+CPU
+  formula, live since 2026-07-20). That plan's own 2026-07-27 Progress Log entry found 7+ concurrent
+  `quality-gates.sh` processes at once ("well over the documented ≤2 full QGs at once host budget") — possible
+  evidence this doc's saturation issue persists under the live governor. Needs a design-owner pass to reconcile the
+  two docs next time either is touched.

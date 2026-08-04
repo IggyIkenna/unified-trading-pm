@@ -164,3 +164,6 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
   open `[REVIEW] P3` remains explicitly observation-gated ("act only if this scenario is ever observed live"). No change
   since the 2026-07-31 re-triage above.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the sole open `[REVIEW] P3` item is
+  now drafted (not yet active) as a scoped `[BACKEND] P3` todo in `ao_satellite_ao_dispatch_batch5_2026_08_03.md`;
+  flipping this doc's `assigned_vm` now would create a competing dispatch claim once that batch activates.

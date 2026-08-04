@@ -232,3 +232,6 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the generic epic pointer for
   `scripts/quickmerge.sh` (the root-caused file — `cascade_dep_branch()` is the actual mechanism, per this doc's own
   todos 1/7/8).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — items 3/4/5/8 remain held on
+  blast-radius grounds (QG-green redefinition + an unresolved `cascade_dep_branch` design fork) per the 2026-07-31
+  re-triage; verified items 4/5 still named in the archived batch1's Deferred list. No change.

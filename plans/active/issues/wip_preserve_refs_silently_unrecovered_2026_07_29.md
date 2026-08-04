@@ -158,3 +158,6 @@ closing the "then what" gap:
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the two named
   `worktree_clean_check` source modules + `quickmerge.sh` (the remaining open todos' actual targets), dropped a
   now-redundant epic pointer.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — the 2 remaining `[SCRIPT] P3` items
+  (fleet-wide wip-preserve sweep, "consider" post-push quickmerge verification) are unchanged since the 2026-08-01
+  verdict; corroborated by batch2's Deferred-section citation. No change.
