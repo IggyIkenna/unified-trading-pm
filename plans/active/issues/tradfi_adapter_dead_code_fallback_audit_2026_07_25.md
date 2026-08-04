@@ -379,9 +379,11 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       to a specific exception type and bump the log level from `debug` to `warning`. Repo: execution-service —
       execution-service@4485e0bd (already landed by another slot; verified ancestor of origin/live-defi-rollout).
 
-- [ ] [BACKEND] P3. **Update MTDS `market_interface/adapters/tradfi/__init__.py`'s module docstring** (lines 1-16) to
-      mention all 10 exported adapter/converter classes (currently narrates only 6 of 10) once todos for M-2/M-3 above
-      are resolved — the stale docstring is corroborating evidence for those findings. Repo: market-tick-data-service.
+- [x] ✅ [BACKEND] P3. **Update MTDS `market_interface/adapters/tradfi/__init__.py`'s module docstring** (lines 1-16) to
+      mention all 14 adapter/converter classes — market-tick-data-service@db5317cd. Updated docstring lists all exported
+      adapters (Tardis, Databento, Yahoo, FRED, ECB, OFR, IBKR, Databento Equity, Baker Hughes, CFTC COT, EIA, Fear &
+      Greed) plus the 2 converter classes (DatabentoCmeConverter, DatabentoOpraConverter) with status annotations
+      matching the M-2/M-3 operator rulings.
 
 - [x] [BACKEND] P3. ✅ **Add a one-line clarifying comment in MTDS `market_interface/factory.py`** near line 151's
       `"tardis": ("tradfi", TardisAdapter)` registration, noting `tradfi/` groups by data-vendor/transport (Tardis is a
