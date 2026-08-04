@@ -466,3 +466,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   confirmed RUNNING) to see if the pattern is PLAYER_STATS-specific bad luck or general right now. Will return to
   PLAYER_STATS next tick regardless — it's still the closest-to-done entity and worth another try once this
   FIXTURE_STATS run either converges meaningfully or gets preempted itself.
+- **2026-08-04T11:42Z** — FIXTURE_STATS's 15th attempt also preempted quickly (~4.3min, 10:19:22Z→10:23:40Z), confirming
+  this is general SPOT variance right now, not PLAYER_STATS-specific bad luck. Per the alternating strategy, switched
+  back to PLAYER_STATS (3rd attempt, `af-backfill-20260804-114310`), confirmed RUNNING. Both entities' recent attempts
+  are landing in the 3-14 min range — real but partial progress is plausible even from short runs once one lands mid-
+  fetch-phase rather than during boot; will re-census whichever entity gets the next longer run.
