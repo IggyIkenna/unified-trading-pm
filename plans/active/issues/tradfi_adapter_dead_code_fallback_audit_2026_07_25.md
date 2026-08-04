@@ -41,14 +41,16 @@ related:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown
 priority: P1
 parent_epic: tradfi_master
-source: "tradfi_consolidated_native_ao_extract_2026_07_25.md todo 4 — 3 parallel full-repo sub-agent audits, 2026-07-31"
+source:
+  "/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md todo 4 — 3 parallel full-repo sub-agent
+  audits, 2026-07-31"
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -60,7 +62,7 @@ context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_cme_converter.py,
     execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py,
   ]
@@ -80,7 +82,7 @@ read-only audit — the task's own done_definition is a filed finding, not an in
 2. **Live tradfi order execution is currently impossible.** All 6 execution-service tradfi venue adapters are registered
    and tested but unreachable from both production entry points. See Finding E-1 below. This is direct, new evidence for
    this SAME plan family's still-open todo 1 ("Determine... whether backfill=paper=live wiring is actually proven" —
-   `tradfi_consolidated_native_ao_extract_2026_07_25.md`).
+   `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`).
 
 ## Methodology
 
@@ -257,8 +259,9 @@ No third production caller found (repo-wide grep). TradFi backtesting is unaffec
 simulated-fill path (GCS Databento data + `SimulatedMatcher`) that never touches this adapters directory.
 
 **This is direct new evidence for this same plan family's still-open todo 1** ("Determine, per MVP cell, whether
-backfill=paper=live wiring is actually proven" — `tradfi_consolidated_native_ao_extract_2026_07_25.md`): for the
-execution leg specifically, the answer is "not wired, and cannot be reached even if you tried."
+backfill=paper=live wiring is actually proven" —
+`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`): for the execution leg specifically, the
+answer is "not wired, and cannot be reached even if you tried."
 
 **Decision needed** (todo 3 below): bridge the two vocabulary gates to make tradfi execution reachable, or explicitly
 document this as intentional not-yet-activated scaffolding (matching the `databento_equity.py` precedent found in
@@ -323,8 +326,8 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       plus the `TRADFI_VENUES` registration site (`execution-service/execution_service/trade_execution/factory.py`) and
       the shared base's own module docstring (`ibkr_tradfi.py`), each cross-referencing this finding and this same plan
       family's still-open todo 1 (backfill=paper=live wiring proof,
-      `tradfi_consolidated_native_ao_extract_2026_07_25.md`) as the condition for future activation. Repos:
-      execution-service@d87002da, unified-api-contracts@e39170d5.
+      `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) as the condition for future
+      activation. Repos: execution-service@d87002da, unified-api-contracts@e39170d5.
 
 - [x] ✅ [BACKEND] P2. **instruments-service `ibkr.py` dead-code candidate** (Finding I-3): registered twice
       (`factory.py:168`, `router.py:236,329`), tested, but zero entries for adapter key `"ibkr"` in UAC's
@@ -396,9 +399,9 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
 
 ## Reconciliation
 
-Once this doc lands, `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo 4 checkbox is flipped by its
-companion finalize plan (`tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md`), not by this doc directly — per
-that plan's own stated reconciliation pattern.
+Once this doc lands, `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo 4 checkbox
+is flipped by its companion finalize plan (`tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md`), not by this
+doc directly — per that plan's own stated reconciliation pattern.
 
 ## Progress Log
 

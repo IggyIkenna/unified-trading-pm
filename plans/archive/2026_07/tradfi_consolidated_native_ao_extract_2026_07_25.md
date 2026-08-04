@@ -16,7 +16,7 @@ summary: >-
   (`instruments-service@52d8b3ef`) — this directly un-blocks one of the drafted todos below (see its provenance note)
   and is flagged as a standalone finding for the operator/session, not silently corrected in the parent doc by this
   extraction.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -76,9 +76,15 @@ drift_direction: advance-code
 
 # TradFi consolidated closeout — native AO extract
 
-> **Status: active — approved + dispatched.** (Banner corrected 2026-07-31, slot-6: frontmatter already read `active`
-> and this session's task was dispatched from it; the "draft" text below was stale.) All 10 todos below are
-> same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them writes back to
+> **🟢 ARCHIVED 2026-08-04.** All 10 todos done (verified by slot-13 2026-08-04 in the companion finalize plan
+> `tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md`). The 3 Deferred items below were re-verified
+> 2026-08-04 — all 3 remain correctly tracked elsewhere (adapter-smoke resolved for tradfi; live-defects conflict-gated
+> in batch2; BLOCKED-INFRA still gated on catalogue rebuild+promote). This plan is superseded by its own completed todos
+> — no successor plan.
+
+> **Status: active — approved + dispatched (RETROSPECTIVE).** (Banner corrected 2026-07-31, slot-6: frontmatter already
+> read `active` and this session's task was dispatched from it; the "draft" text below was stale.) All 10 todos below
+> are same-priority-independent and touch DISTINCT files/targets (verified per-todo below — none of them writes back to
 > `tradfi_consolidated_closeout_2026_07_18.md` itself except todo 10, whose entire purpose is exactly that; every other
 > todo records its evidence in its own cited source/target so no two todos in this batch collide on the same file), so
 > they are safe to dispatch concurrently once activated.

@@ -61,8 +61,8 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
@@ -269,8 +269,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 - [x] ✅ [DATA] P2. **Determine, per MVP cell, whether backfill=paper=live wiring is proven — VERIFIED 2026-08-04
       (`plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`,
-      `unified-trading-pm@cc9e1d144`, dispatched via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1).**
-      Verdict: **NO tradfi MVP cell has paper/live wiring proven** — TradFi is batch-only this cycle (per
+      `unified-trading-pm@cc9e1d144`, dispatched via
+      `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1).** Verdict: **NO tradfi MVP
+      cell has paper/live wiring proven** — TradFi is batch-only this cycle (per
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`). Fresh IS + MTDS availability-index reads against
       live prod data (2026-08-04): all 6 MVP cells have pipeline data present. Cell 2 (S&P index options) flagged: 66%
       MTDS `attempted_failed` — launch not yet executed. Table above updated with per-cell verdicts. The extracting
@@ -313,13 +314,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   promoted to checkboxes) is flagged but not batched — that doc is genuinely 5-AG-shared
   (`parent_epic: instruments_master`), so per the primary-owner rule its write belongs to whichever tranche actually
   owns it. See `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`'s own summary + Deferred sections for full detail.
-- **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 —
-  the 2 remaining categories: stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y
-  method applied to the 2 categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for
-  A2+Phase C content only. **Real-checkbox sweep**: `grep -n '^- \[ \]\|^- \[x\]'` finds exactly 2 native todos in this
-  file (line ~250 `[DATA] P2` MVP-cell-wiring-proof, line ~324 `[REVIEW] P2` the audit-pass todo itself) — both carry a
-  stated definition-of-done, neither is stale (the P2 correctly cross-references its live tracking location; the REVIEW
-  todo's own `[x]` closure text is accurate for its stated A2+Phase C scope). **Missing-dod sweep: clean, 0 findings.**
+- **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 — the 2 remaining categories:
+  stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y method applied to the 2
+  categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for A2+Phase C content only.
+  **Real-checkbox sweep**: `grep -n '^- \[ \]\|^- \[x\]'` finds exactly 2 native todos in this file (line ~250
+  `[DATA] P2` MVP-cell-wiring-proof, line ~324 `[REVIEW] P2` the audit-pass todo itself) — both carry a stated
+  definition-of-done, neither is stale (the P2 correctly cross-references its live tracking location; the REVIEW todo's
+  own `[x]` closure text is accurate for its stated A2+Phase C scope). **Missing-dod sweep: clean, 0 findings.**
   **Stale-checkbox-class sweep (the digest bullets, not real checkboxes, per this file's own bold-no-brackets
   convention)**: live re-derived 4 digest sections against their cited child docs' actual `- [ ]` counts — found + fixed
   3 stale entries: (1) Split-notice digest's `tradfi_manifest_content_recovery_ completion_2026_07_24.md` line
@@ -339,14 +341,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
   still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
   re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc
-  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` / `assigned_vm: planning`, and its
-  own near-verbatim copy of this todo is still unchecked. Only one commit has touched this file since the 2026-07-30
-  marker (`39d663e92`, 2026-07-31 — an unrelated cross-reference path fix), so nothing material changed. `assigned_vm`
-  stays unchanged; no backlog impact.
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` /
+  `assigned_vm: planning`, and its own near-verbatim copy of this todo is still unchecked. Only one commit has touched
+  this file since the 2026-07-30 marker (`39d663e92`, 2026-07-31 — an unrelated cross-reference path fix), so nothing
+  material changed. `assigned_vm` stays unchanged; no backlog impact.
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
-  checkbox is already duplicated near-verbatim in the active `tradfi_consolidated_native_ao_extract_2026_07_25.md`;
-  citation added above, zero `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not
-  `infra` — a residual scope-leak from this session's pre-fix Phase 0 population (see
+  checkbox is already duplicated near-verbatim in the active
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`; citation added above, zero
+  `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not `infra` — a residual scope-leak
+  from this session's pre-fix Phase 0 population (see
   `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
   accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
   this doc going forward.
@@ -362,19 +365,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   checkbox to flip, and out of this pass's assigned-file scope) — left as-is, already accurate.
 - **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
   native open checkbox (MVP-cell-wiring-proof, line ~262) re-read; count matches tranche-inventory tool (1).
-  Independently re-confirmed the extracting doc (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still
-  `status: active` with its own near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were
-  the 2026-08-01 `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo)
-  and a context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
+  Independently re-confirmed the extracting doc
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` with its own
+  near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were the 2026-08-01
+  `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo) and a
+  context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
 - **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
   still accurate (4th consecutive confirmation).** Full end-to-end read via an independent sub-agent classification (892
   lines: frontmatter, Split notice, Ground-truth verdict, MVP table, the one native todo, Progress Log, Phase A2+C fork,
   Plan-quality review, Codex SSOTs, Aggregated source docs digest); sole native checkbox count reconciled (1/1) —
   confirmed the "digest bullets" throughout the Aggregated source docs section are deliberately bold-not-bracket
   formatted and correctly NOT counted as this doc's own open checkboxes. Independently re-confirmed the extracting doc
-  (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active`/`assigned_vm: planning` with its own
-  copy still unchecked. Nothing here is RECLASSIFY-eligible — the sole native todo is correctly NA because the real
-  dispatchable copy already lives on an active planning doc. `assigned_vm` stays unchanged.
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still
+  `status: active`/`assigned_vm: planning` with its own copy still unchecked. Nothing here is RECLASSIFY-eligible — the
+  sole native todo is correctly NA because the real dispatchable copy already lives on an active planning doc.
+  `assigned_vm` stays unchanged.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
 
 ---
@@ -404,10 +409,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > the live list from the child directly rather than trusting "11" as the total:
 >
 > - **A2 (adapter/registry correctness)** — 4 real checkboxes as of 2026-07-31. **Reconciled 2026-08-04** against
->   `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos: CME mbp_10/trades/tbbo
->   capability-declaration verify (P1) — verified 2026-07-31 (billing enforcement confirmed live, clean pass); KRX
->   equities registry-vs-adapter verify (P2) — verified 2026-07-31 (fix holds, FX KRW no analogous gap, both PASS);
->   adapter dead-code/fallback audit (P2) — done 2026-07-31 (3-repo audit, 11 tracked todos filed in
+>   `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos: CME
+>   mbp_10/trades/tbbo capability-declaration verify (P1) — verified 2026-07-31 (billing enforcement confirmed live,
+>   clean pass); KRX equities registry-vs-adapter verify (P2) — verified 2026-07-31 (fix holds, FX KRW no analogous gap,
+>   both PASS); adapter dead-code/fallback audit (P2) — done 2026-07-31 (3-repo audit, 11 tracked todos filed in
 >   `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md`, all 3 repos clean of duplicate-implementation violations);
 >   the `ohlcv_15m/24h` writer DESIGN decision and the `mvp_mode` DECISION remain split out as non-dispatchable pointers
 >   in the forked child. Full MTDS+IS adapter smoke findings re-verify (P2) was substantively resolved for tradfi (0
@@ -417,9 +422,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 >   sub-pieces remain conflict-gated in `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s Deferred section (parent
 >   extraction deferred-item #2).
 > - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 named items as of 2026-07-31. **Reconciled
->   2026-08-04** against `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos: data-status page
->   canonical render (P1) — verified 2026-07-27 (deployment-api@c19edcc, fully canonical, venue-lookup holds);
->   distinct-values/axis-value census (P1) — done 2026-07-28 (3 named dupes explained, 1 new P2 filed);
+>   2026-08-04** against `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`'s completed todos:
+>   data-status page canonical render (P1) — verified 2026-07-27 (deployment-api@c19edcc, fully canonical, venue-lookup
+>   holds); distinct-values/axis-value census (P1) — done 2026-07-28 (3 named dupes explained, 1 new P2 filed);
 >   denominator/catalogue-completeness re-verify (P2) — done 2026-07-31 (all 3 findings re-measured, 0 recurrence); KRX
 >   name-column follow-up tracking (P2) — **DONE 2026-07-31, name column already landed live** via daily
 >   `lifecycle-catalogue-regen-tradfi` (green every day 2026-07-22 through 2026-08-04; all 6 KRX single-stock-equity
@@ -937,6 +942,6 @@ cross-cutting checker bugs but is not yet fully green, blocked on the chain-bund
 (adapter/registry correctness) + the still-open Phase C (data-status/honest-coverage) residue moved to a 4th child,
 `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (Child 4), this same day. Two AO-dispatch satellite batches
 (`tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`, `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`) and a
-native-todo AO-eligibility extract (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) have since drafted
-AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending operator
-activation.
+native-todo AO-eligibility extract (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) have
+since drafted AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending
+operator activation.

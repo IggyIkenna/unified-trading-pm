@@ -84,10 +84,11 @@ drift_direction: none
       BLOCKED-INFRA Layer-1 catalogue-rebuild+promote evidence) and confirm the cited evidence is real (commit exists,
       report exists, live read shows what's claimed) — do not trust a todo's own "done" claim without re-verifying at
       least one hard fact per todo. Also cross-check whether any of these were instead closed via
-      `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own AO-dispatched derivatives (todos 2-9 there target the
-      same underlying facts) — if so, cite that plan's finalize evidence rather than re-verifying twice. **Done when**:
-      each open todo in the target plan has a confirmed-real evidence citation recorded (or, for any that don't check
-      out, a note that it's NOT actually done and should stay open, re-queued rather than falsely reconciled).
+      `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own AO-dispatched derivatives
+      (todos 2-9 there target the same underlying facts) — if so, cite that plan's finalize evidence rather than
+      re-verifying twice. **Done when**: each open todo in the target plan has a confirmed-real evidence citation
+      recorded (or, for any that don't check out, a note that it's NOT actually done and should stay open, re-queued
+      rather than falsely reconciled).
 - [ ] [REVIEW] P2. **Reconcile every sibling doc's own checkbox that the target plan's closures imply** — for each todo
       verified done in the step above, flip/update the corresponding checkbox in its own named source doc (e.g.
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s capability-declaration note,

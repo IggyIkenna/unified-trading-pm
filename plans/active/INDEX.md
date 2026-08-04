@@ -323,13 +323,6 @@ by hand._
 - [`tradfi_consolidated_closeout_2026_07_18`](./tradfi_consolidated_closeout_2026_07_18.md) — Coordination index
   (umbrella) that AGGREGATES (references, does not duplicate) every open tradfi + tradfi-touching IS/MTDS plan/issue
   into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md. **2026-07-24 line-cap…
-- [`tradfi_consolidated_native_ao_extract_2026_07_25`](./tradfi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
-  AO-eligibility triage of `tradfi_consolidated_closeout_2026_07_18.md`'s own 13 open native `- [ ]` todos (deliberately
-  excluded from this session's earlier `tradfi_satellite_ao_dispatch_batch1/2_2026_07_25.md` extractions, which…
-- [`tradfi_consolidated_native_ao_extract_2026_07_25_finalize`](./tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for `tradfi_consolidated_native_ao_extract_2026_07_25.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 10 of that plan's todos are done. Unlike the batch1/batch2 satellite extractions
-  (whose "source…
 - [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
   **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
   timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics

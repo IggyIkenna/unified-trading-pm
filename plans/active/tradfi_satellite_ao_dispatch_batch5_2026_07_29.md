@@ -65,11 +65,12 @@ source: >-
   dependency-graph — the latter caught 5 forked children/extracts a naive filename grep would have missed and
   misclassified as orphan candidates: `tradfi_manifest_content_recovery_completion_2026_07_24.md`,
   `tradfi_backfill_throughput_followups_2026_07_24.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`,
-  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`, `tradfi_consolidated_native_ao_extract_2026_07_25.md`).
-  Phase 1 classified all 32 remaining tradfi-primary candidates via a `Workflow` (one agent per doc, 2 passes needed —
-  17 of 32 agents hit transient 500/529 API errors on the first pass and were cleanly re-run via `resumeFromRunId`, 0
-  errors on the second pass). Phase 3 ran the conflict-check against the full covering family before drafting any todo
-  below; conflicts found are parked in the Deferred section, not silently resolved.
+  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`,
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`). Phase 1 classified all 32 remaining
+  tradfi-primary candidates via a `Workflow` (one agent per doc, 2 passes needed — 17 of 32 agents hit transient 500/529
+  API errors on the first pass and were cleanly re-run via `resumeFromRunId`, 0 errors on the second pass). Phase 3 ran
+  the conflict-check against the full covering family before drafting any todo below; conflicts found are parked in the
+  Deferred section, not silently resolved.
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code

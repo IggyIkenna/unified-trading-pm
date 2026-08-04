@@ -19,7 +19,7 @@ auditor: "slot-7"
 audited_scope: "All 6 tradfi MVP cells — wiring-proof determination + IS/MTDS availability-index pipeline verification"
 severity: P2
 parent_epic: tradfi_master
-source: /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md (todo 1)
+source: /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md (todo 1)
 resulting_plan: ""
 lib_version: ""
 doc_versions_checked: ""

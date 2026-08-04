@@ -196,7 +196,8 @@ numbering.)**
       prerequisite plan `tradfi_v9_stage1_finish_2026_07_06` is now fully resolved + archived (2026-07-24, all 11 of its
       own todos `[x]`; the 2 remaining forked out verbatim to `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
       and `tradfi_consolidated_closeout_2026_07_18.md`) — so tasks 2-11 have landed. `catalog.parquet` does now exist
-      and is actively read/written elsewhere (`tradfi_consolidated_native_ao_extract_2026_07_25.md:353`,
+      and is actively read/written elsewhere
+      (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md:353`,
       `tradfi_manifest_content_recovery_completion_2026_07_24.md:577`), but at `prod/catalog.parquet`, NOT the `prd/`
       prefix this task's own text expects — unresolved per option (d) above. No doc in the active corpus records
       `run_live_verify_tradfi.py` actually having been re-run/published since;

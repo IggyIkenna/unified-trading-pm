@@ -15,8 +15,9 @@ summary: >-
   readiness fixes applied during the move (2 broken cross-doc "above" references restated inline, 1 finding-H digest
   reformat, 1 missing self-justification added, 1 stale whole-plan gate relocated here, the `related:` gap closed on the
   parent, 2 bundled VERIFY+DECIDE todos split into a bounded verify + a non-dispatchable decision pointer). Several
-  items already have AO-dispatchable derivatives drafted in `tradfi_consolidated_native_ao_extract_2026_07_25.md`
-  (status: draft) — this doc keeps the NATIVE (non-duplicated) form only; see this doc's fork-note for the mapping.
+  items already have AO-dispatchable derivatives drafted in
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (status: draft) — this doc keeps the
+  NATIVE (non-duplicated) form only; see this doc's fork-note for the mapping.
 status: draft
 nature: process
 asset_group: [tradfi]
@@ -37,8 +38,8 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
@@ -72,9 +73,9 @@ source: >-
   2026-07-25 second-tier line-cap trim of `tradfi_consolidated_closeout_2026_07_18.md` (927 lines, target ~690L after
   the trim). This fork carries Phase A2 + the STILL-OPEN residue of Phase C verbatim in substance, with the 8
   AO-dispatch-readiness fixes from that trim's design pass applied — see the fork-note below for the fix-by-fix
-  rationale and the cross-check against `tradfi_consolidated_native_ao_extract_2026_07_25.md` (a sibling pass's
-  AO-eligibility triage of the parent's OWN native todos, drafted the same day) that avoided re-drafting any item that
-  pass had already covered.
+  rationale and the cross-check against `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (a
+  sibling pass's AO-eligibility triage of the parent's OWN native todos, drafted the same day) that avoided re-drafting
+  any item that pass had already covered.
 ---
 
 # TradFi registry/adapter correctness + honest-coverage residuals
@@ -90,12 +91,12 @@ source: >-
 
 ## Fork note — 8 AO-dispatch-readiness fixes applied during this move, and the native-extract overlap check
 
-Read `tradfi_consolidated_native_ao_extract_2026_07_25.md` (status: draft, same-day sibling pass) before drafting any
-NEW AO-dispatchable derivative of this doc's content — several items below already have one there (todos 2, 3, 4, 5, 6,
-7, 8, 9 of that plan derive from the exact same underlying facts as this doc's A2/Phase-C items). This doc intentionally
-keeps the NATIVE (non-AO-dispatched, `assigned_vm: NA`) form only, mirroring its 3 sibling children — it is not itself
-an AO-dispatch surface; a future `/ag-closeout-audit` or similar pass drafts AO batches off ITS content the same way it
-already has off the parent's.
+Read `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (status: draft, same-day sibling pass)
+before drafting any NEW AO-dispatchable derivative of this doc's content — several items below already have one there
+(todos 2, 3, 4, 5, 6, 7, 8, 9 of that plan derive from the exact same underlying facts as this doc's A2/Phase-C items).
+This doc intentionally keeps the NATIVE (non-AO-dispatched, `assigned_vm: NA`) form only, mirroring its 3 sibling
+children — it is not itself an AO-dispatch surface; a future `/ag-closeout-audit` or similar pass drafts AO batches off
+ITS content the same way it already has off the parent's.
 
 Fixes applied (verbatim content preserved, only the specific defect corrected):
 
@@ -251,19 +252,19 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       non-zero count). (repo: instruments-service)
 
       **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
-                          (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                          scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
-                          manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
-                          `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
-                          to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
-                          and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
-                          slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
-                          thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
-                          the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
-                          this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
-                          `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
-                          scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
-                          host. No `--apply` was ever reached; nothing was mutated.
+                                  (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                                  scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+                                  manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+                                  `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+                                  to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+                                  and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+                                  slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+                                  thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+                                  the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+                                  this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+                                  `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+                                  scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+                                  host. No `--apply` was ever reached; nothing was mutated.
 
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —
