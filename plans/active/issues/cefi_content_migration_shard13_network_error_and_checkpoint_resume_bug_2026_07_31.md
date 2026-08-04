@@ -124,6 +124,12 @@ real progress, until this fix.
 
 ## Recommended decision
 
+> **📤 THE TODO BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 4 (`status: draft` — not yet
+> activated) carries it verbatim (same `_GCS_RETRY` widen + `list_blobs()` timeout + regression test) and Source-cites
+> this doc; its done-when includes flipping this checkbox citing that run. Leave `assigned_vm: NA` here — revisit
+> RECLASSIFY only if batch4 stalls without ever activating.
+
 - [ ] [BACKEND] P2. Widen `_GCS_RETRY`
       (`unified-trading-library/unified_trading_library/cloud_interface/providers/     gcp.py:66-75`) to also retry
       connection-level transient errors — simplest: adopt `google.cloud.storage.retry.DEFAULT_RETRY` directly, or union
@@ -152,3 +158,7 @@ real progress, until this fix.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries) -- all 3 entries (parent fleet doc, batch4
   dispatch plan, gcp.py) still accurate and resolve; no change needed.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): corrected from the 2026-08-01 KEEP-NA-valid verdict to
+  KEEP-NA-STALE-duplicated — the sole open todo is already extracted verbatim into
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 4 (`status: draft`), which the 2026-08-01 pass didn't flag;
+  applied the citation banner above. `assigned_vm` left `NA`.

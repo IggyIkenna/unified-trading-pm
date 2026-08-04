@@ -250,6 +250,13 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
       marked done that isn't — the underlying sweep genuinely has NOT run; only this reconcile-the-wording task is
       complete. The sibling `legacy_bucket_dual_write_decommission_2026_07_24.md` edit is a **separate** todo below and
       is still genuinely open. (repo: unified-trading-pm)
+
+> **📤 THE 3 OPEN TODOS BELOW ARE EXTRACTED — do NOT dispatch from this doc (`/na-eligibility-audit` 2026-08-04,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` `[DATA] P2` ("Legacy-bucket 3-part
+> reconciliation bundle", `status: draft` — not yet activated) carries all 3 verbatim as sub-items (a)/(b)/(c) and
+> Source-cites this doc; its done-when includes flipping these 3 checkboxes citing that run. Leave `assigned_vm: NA`
+> here — revisit RECLASSIFY only if batch4 stalls without ever activating.
+
 - [ ] [DATA] P2. Update `legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 (the "L6 decommission" and
       "version-aware + orphan-aware delete" rows) to reflect cefi's legacy bucket is ALREADY deleted (2026-07-14), not
       "stays open" — the current text contradicts live GCP state. (repo: unified-trading-pm)
@@ -292,3 +299,6 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-03 (re-scout)**: swapped the satellite-dispatch-batch doc for the CF-11
   `rebuild_cefi_manifest.py` source module (the P1 todo's actual comparison-logic target) -- still 6 entries.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated — reaffirms the 2026-08-01
+  verdict (batch4 still `status: draft`, not yet activated) and actually applies the citation banner above the 3 open
+  checkboxes that entry only described in prose. `assigned_vm` left `NA`.
