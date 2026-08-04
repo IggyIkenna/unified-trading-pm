@@ -38,6 +38,8 @@ priority: P2
 parent_epic: sports_master
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Decision 16 investigation — standings/teams day-partition + player_values cartesian-junk
