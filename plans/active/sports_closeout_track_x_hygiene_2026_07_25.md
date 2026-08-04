@@ -109,11 +109,19 @@ context_scope:
       plan's own golden-window audit only, not this closeout's canonical form — no unflagged "raw string is canonical"
       claim remains in either doc. Execution (building `LEAGUE_ID_TO_TIER` / extending `EXPECTED_BOOKMAKER_MARKET_SETS`)
       stays with the bookmaker plan's own P1 todos, unchanged — this todo was tracking reconciliation only.
-- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-12) — traced the writer, root-caused, fixed at the write path.** SPLIT off
-      the original bundled todo's trace/root-cause/write-path-fix scope from its migration scope (the migration is a
-      separate, `[OPERATOR]`-gated todo below — this split itself resolves the issue doc's own repeated
-      na-eligibility-audit blocker: "bundles an unbounded root-cause trace with a ... GCS migration carrying no
-      `[OPERATOR]` tag"). `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
+- [x] ✅ [DATA] P2. **Root-cause + fix + migrate the peripheral-bucket league-vocabulary contamination** — a SECOND,
+      DISTINCT non-canonical league vocabulary (country-prefixed `ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN`, not the
+      api-football-display-name axis the league_id relocation fixes) found in `features-sports-prd` (30 objects, live to
+      2026-07-11) + `instruments-store-sports-prd` (9,733 objects / 172 values). Identify the writer producing this
+      vocabulary, fix it at the write path, then migrate the existing contaminated objects to the correct vocabulary.
+      MUST NOT be folded into the league_id relocation (different population, different writer). Detail:
+      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: instruments-service /
+      market-tick-data-service). **Done when**: the writer is identified and fixed, and a fresh census of both buckets
+      returns 0 objects carrying the contaminated vocabulary. — **DONE 2026-08-04, `unified-api-contracts@f3f1bbe0`
+      (slot-12) — trace + root-cause + write-path fix ONLY; the migration half is SPLIT into its own `[OPERATOR]`-gated
+      todo below (this checkbox's original "Done when" — a fresh 0-contaminated-objects census — is NOT yet met; closing
+      this checkbox tracks the write-path-fix sub-scope, not the full original scope).** Traced the writer:
+      `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
       `normalize_api_football_fixture()` built `CanonicalLeague.league_id` from a bare `build_league_id(country, name)`
       slug of the RAW api-football country name ("England" → `ENGLAND_PREMIER_LEAGUE`) instead of the UAC league
       registry's canonical slug ("EPL") — a different, ungoverned vocabulary from every other sports write path.
@@ -121,16 +129,12 @@ context_scope:
       (added ~2026-06-24/27), which is why `instruments-store-sports-prd`'s 9,733 objects read as legacy residue, not an
       actively-growing leak; `features-service`'s `_write_per_league` has no equivalent gate, so `features-sports-prd`
       was still live-leaking as of 2026-07-11 — confirmed the ROOT CAUSE, not a third-party-adapter naming convention
-      (checked every other sports adapter in both repos). **Fixed** (`unified-api-contracts@f3f1bbe0`): new
-      `_resolve_league_id()` mirrors instruments-service's own `_canonical_league_id` two-pass, non-lossy design —
-      registry-first via the numeric `api_football_id` (authoritative), falling back to the raw country/name slug only
-      when the league genuinely has no registry entry. Closes the leak at its TRUE shared source for every consumer of
-      `normalize_api_football_fixture`, not just the one write path that happened to lack a gate — 5 new regression
-      tests lock in the fix (registered-league resolves via registry / non-lossy unregistered fallback / blank-league
-      no-op); full existing api_football suite (95 tests) re-run clean. DISTINCT from the api-football-display-name axis
-      the league_id relocation fixes (different population, different writer) — MUST NOT be folded into that relocation,
-      unchanged from the original scoping. Detail:
-      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: unified-api-contracts).
+      (checked every other sports adapter in both repos). Fixed: new `_resolve_league_id()` mirrors instruments-
+      service's own `_canonical_league_id` two-pass, non-lossy design — registry-first via the numeric `api_football_id`
+      (authoritative), falling back to the raw country/name slug only when the league genuinely has no registry entry.
+      Closes the leak at its TRUE shared source for every consumer of `normalize_api_football_fixture`, not just the one
+      write path that happened to lack a gate — 5 new regression tests lock in the fix; full existing api_football suite
+      (95 tests) re-run clean.
 - [ ] [DATA] P2. **[OPERATOR] Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the
       correct league vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. Split out
       2026-08-04 from the original bundled todo — this is a GCS content/path rewrite over prod objects, so it needs the
