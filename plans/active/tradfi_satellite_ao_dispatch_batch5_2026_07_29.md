@@ -268,13 +268,13 @@ ground to open up, and it did:
       quality-gates.sh is green — at which point the backfill can revert to the cheaper e2-standard-4 machine type (a
       follow-up note, not this todo's own scope). Source: `issues/tradfi_backfill_oom_remediation_2026_06_24.md`.
 
-- [ ] [SCRIPT] P2. **Audit the other tradfi/cefi/defi canonical-migration executors for the same PROGRESS.json
-      checkpoint gap.** The P2 script-fix for one executor already shipped with commit+test evidence; audit the
-      remaining `market-tick-data-service/scripts/migrate_*_2026_07*.py` executors for the identical gap. Repo:
-      market-tick-data-service. **Done when**: every executor in that family is checked, and any found missing the
-      checkpoint is either fixed inline (if trivial/same-pattern) or filed as a new tracked follow-up todo naming the
-      specific executor — do not leave an audit finding as prose. Source:
-      `issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md`.
+- [x] ✅ [SCRIPT] P2. **Audit the other tradfi/cefi/defi canonical-migration executors for the same PROGRESS.json
+      checkpoint gap.** Full census done (slot 12, 2026-08-04): 16 `migrate_*_2026_07*.py` scripts found; 15/16 missing
+      the checkpoint. Only `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` already carries it (reference
+      implementation). Filed issue doc `issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` with 15
+      tracked P2/P3 follow-up todos (10 date-loop → `record_vm_progress`; 5 non-date → object-index checkpoint). No code
+      changed — audit only per the todo's own scope. Evidence: `unified-trading-pm@64f366dfc`. Source:
+      `/plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md`.
 
 - [ ] [TEST] P2. **Update 3 failing test assertions + 2 docstring examples to the now-canonical raw short-root
       `underlying` form.** In `market-tick-data-service/tests/unit/test_databento_enrichment_combo_underlying.py`,
