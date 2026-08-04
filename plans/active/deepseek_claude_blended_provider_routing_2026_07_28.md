@@ -542,6 +542,75 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
   files hosting select_account_for_spawn/_pick_headroom_account/_resume_pass and the deepseek_route_fraction tuning
   knob.
 
+**2026-08-04 — `[INFRA] P0` VM-side registration IN PROGRESS, not yet complete. Core "Done when" bar is MET (AUTH_OK
+verified on the real planning VM); a follow-on DB-sync step is paused awaiting operator go-ahead. Do not flip this
+todo's checkbox until that's resolved one way or the other.**
+
+- **What's actually done, on the REAL planning VM** (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`, EIP `13.113.200.22`), via
+  AWS SSM `send-command` (`AWS-RunShellScript`) — no SSH, no inbound firewall change, every call audited in CloudTrail,
+  same sanctioned pattern as `check-ao-backlog-status.sh`:
+  1. Read-only recon FIRST (before any write): confirmed repo root
+     `/home/ubuntu/unified-trading-system-repos/agent-orchestrator`, confirmed `accounts.json` had exactly the 6
+     existing Ikenna sub-accounts (no deepseek entry), confirmed `~/.claude-accounts/` is `ubuntu:ubuntu` mode 700 with
+     sibling `.env` files at mode 600, confirmed `orchestrator.service` was `active (running)` with ~15 live tmux worker
+     slots doing real work (real `gh` polling, real git pushes) — i.e. this is a genuinely live production instance, not
+     idle.
+  2. Wrote `/home/ubuntu/.claude-accounts/deepseek-v4-pro.env` on the VM — same content as this operator's local
+     `~/.claude-accounts/deepseek-v4-pro.env` (the same key already verified working and already pushed to the creds
+     buckets earlier in this plan's history), mode 600, owned `ubuntu:ubuntu`. Deployed via a base64'd Python script
+     over the SSM command channel (avoids shell-quoting the API key directly into a command string).
+  3. Appended a `deepseek-v4-pro` entry to `accounts.json` on the VM:
+     `{"id": "deepseek-v4-pro", "label": "DeepSeek V4 Pro", "tier": "api", "provider": "deepseek", "weekly_msg_limit": 0, "primary_email": null, "oauth_token_env_file": "~/.claude-accounts/deepseek-v4-pro.env"}`
+     — no `operator` field (deliberately: unlike the 6 personal sub-accounts, this is a shared fleet-wide key, and
+     `config.host_operator()`'s resolution order checks `ORCHESTRATOR_OPERATOR`/`ORCHESTRATOR_VM_ID`/`slot_operator`
+     before ever falling back to `account.operator` — hardcoding one there would misattribute every DeepSeek-routed
+     slot's branch/commit identity). The write used a small idempotent Python script (load → check `deepseek-v4-pro` not
+     already present → append → re-dump with `indent=2`, matching the file's existing style) rather than a fragile
+     sed/shell edit — safe to re-run, verified: re-running now would just print "already in accounts.json -- no-op".
+  4. **Verified for real**: `claude -p 'reply AUTH_OK'` run as the `ubuntu` user (matching the actual runtime identity —
+     SSM defaults to root, `HOME` unset there, so `~` expansion would have resolved wrong; used
+     `sudo -u ubuntu bash -c '...'` from the repo's own working directory) sourcing the new env file returned
+     **`AUTH_OK`**. This is the plan's own literal "Done when" — met.
+- **Real, load-bearing finding: `accounts.json` → `AccountRow` (the DB table `/api/accounts` reads) syncs ONLY once, at
+  server boot (`bootstrap.initialise()` → `sync_accounts_to_db()`, the ONE call site — grepped, confirmed, not assumed).
+  There is no periodic or on-demand accounts-resync loop (unlike `PlanRegenLoop` for the backlog).** Read-only-checked
+  the LIVE `/api/accounts` endpoint after the write above — it does NOT yet list `deepseek-v4-pro`, confirming this gap
+  is real, not theoretical, on this exact instance right now.
+  - **This does NOT block real dispatch.** Verified by reading the actual code, not assumed: `_pick_headroom_account()`
+    and `account_is_usable()` both do a plain `session.get(AccountUsageRow, acc.id)` / check-for-`None` pattern that
+    already treats a missing DB row as "healthy, has headroom" — this is explicitly by design for exactly the DeepSeek
+    case (`_pick_headroom_account()`'s own docstring: "it degenerates gracefully because a DeepSeek account's
+    five_hour_pct/weekly_pct are never populated... no separate picker needed"). `select_account_for_spawn()` reads
+    `accounts.json` fresh via `load_accounts()` on every call, not through the DB row at all. **DeepSeek is already
+    eligible for real automatic dispatch on this VM right now, with zero further action** — the gap is purely dashboard
+    visibility (the provider badge shipped earlier this plan, usage-report/rate-limit endpoints that 404 via
+    `ss.get_account()` on an unknown-to-DB id) until the next sync.
+  - **A restart would close this gap and is SAFE for the live fleet** — verified by reading the actual
+    `orchestrator.service` unit file on the VM (not assumed): `KillMode=process` (not `mixed`/control-group) is
+    explicitly set, with an inline comment citing a real prior incident (2026-05-20: `KillMode=mixed` once caused
+    `systemctl restart` to SIGKILL the entire cgroup, including all live tmux/claude worker sessions). With
+    `KillMode=process`, a restart only signals the uvicorn main PID; tmux/claude workers "survive a backend restart and
+    keep polling" per the unit file's own words. This is also the SAME restart `ao-self-pull.sh` already performs
+    routinely on every FF pull that changes `HEAD` — not an exceptional action on this fleet.
+  - **Paused, not done**: the restart command was queued (`systemctl restart orchestrator && sleep 5 && ...`) but the
+    operator interrupted the tool call before it ran and asked to check in first — **no restart has occurred**. Resume
+    point: either run it (`aws ssm send-command` with the same `AWS-RunShellScript` document against
+    `i-0c9b283b31d6b5ca7`/`ap-northeast-1`, command body:
+    `systemctl restart orchestrator && sleep 5 && systemctl is-active orchestrator && curl -s -m 10 localhost:8765/api/mode`)
+    once the operator confirms, or explicitly decide dashboard-visibility can wait for a routine restart and flip this
+    todo now on the strength of the AUTH_OK bar alone — operator's call, not mine to make unilaterally given it touches
+    the live fleet.
+- **Not yet done, separate from the above (operator's own stated next step, not started)**: the operator said the
+  DeepSeek key is also in Google Secret Manager and wants THAT to be the actual source of truth going forward — "for now
+  use the key we have available on this pc, I will tell you the env-var name in some time." The env file deployed above
+  uses the LOCAL key (same one already in the creds buckets), not a GSM-sourced one. When the operator supplies the GSM
+  secret name, re-source the env file from GSM (rotate the `ANTHROPIC_AUTH_TOKEN` value) rather than treating this as
+  already-final. No GSM secret name has been given yet — do not guess one.
+- **No repo commit for this todo's own work** — `accounts.json` and `~/.claude-accounts/*.env` are both
+  operator-config/secret, deliberately NOT git-tracked (per this plan's own established convention: "accounts.json is
+  gitignored so code merge alone doesn't activate anything"). This Progress Log entry (+ the eventual checkbox flip) IS
+  the durable record; there is no `agent-orchestrator@<sha>` for this specific todo.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
