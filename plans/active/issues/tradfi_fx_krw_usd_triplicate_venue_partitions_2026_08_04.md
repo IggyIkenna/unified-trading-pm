@@ -1,0 +1,154 @@
+---
+doc_type: issue
+title:
+  TradFi FX KRW-USD daily bar physically triplicated across THREE venue partitions (FX/SPOT/YAHOO_FINANCE) — 7 manifest
+  rows surfaced venue="SPOT" as a fresh non-canonical value on the live distinct-values panel
+summary: >-
+  Live-evidence finding (operator directly observed `venue="SPOT"` non-canonical in deployment-ui's tradfi
+  distinct-values panel, 2026-08-04). Traced via a bounded, column-pruned, predicate-pushdown read of
+  `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (single object, no new GCS
+  walk): 7 manifest rows carry `venue="SPOT"`, all `instrument_type="SPOT_PAIR"`, `instrument_id=
+  "YAHOO_FINANCE:SPOT_PAIR:KRW-USD"`, `data_type=ohlcv_24h`, `source=yahoo`, `service_name=market-tick-data-service`,
+  `row_count=0`, dates 2025-01-02..2025-01-10, all `written_at` within the same ~1.2s window
+  (2026-08-02T15:46:59.632Z..15:47:00.788Z). Content-verified (not manifest-inferred): for one sampled date (2025-01-02)
+  there are THREE real, physically distinct GCS objects carrying the IDENTICAL KRW-USD daily bar
+  (open/high/low/close/volume byte-identical) — one correctly under `venue=FX` (the canonical partition, `time_created
+  2026-06-11`), and two duplicates under WRONG venue partitions `venue=SPOT` and `venue=YAHOO_FINANCE` (both
+  `time_created 2026-07-20`, ~7 minutes apart). The manifest only registered the `venue=SPOT` copies on 2026-08-02 — ~2
+  weeks after the GCS objects themselves were created — consistent with a manifest rebuild/consolidation pass
+  discovering pre-existing stray objects, not a fresh writer bug on 2026-08-02. `venue=SPOT` is not a registered tradfi
+  venue anywhere in `VENUES_BY_ASSET_GROUP['tradfi']`; `venue=YAHOO_FINANCE` is the ALREADY-tracked legacy
+  vendor-as-venue artifact (removed from the registry 2026-07-15, see the related doc below) — this finding is new in
+  that it shows BOTH wrong-venue partitions carry REAL duplicated GCS objects (not just manifest bookkeeping drift), and
+  adds a third, previously-unseen wrong-venue value (`SPOT`) to that same defect family. Not fixed or deleted here —
+  read-only investigation, filed per the findings-triage rule.
+status: open
+nature: issue
+asset_group: [tradfi]
+stage: [data]
+repos: [market-tick-data-service, unified-api-contracts, deployment-api]
+scope: [engineer, admin]
+tags: [tradfi, fx, venue, data-correctness, manifest, duplicate-rows, canonicalisation, distinct-values, delete-safety]
+related:
+  [
+    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+  ]
+created: "2026-08-04"
+last_updated: "2026-08-04"
+parent_epic: tradfi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: research
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 1.2
+assigned_role: data_engineering
+drift_direction: investigate
+depends_on: []
+resolved_by:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source:
+  "Operator live observation of deployment-ui's tradfi distinct-values panel (venue axis), 2026-08-04 interactive
+  session."
+context_scope:
+  [
+    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
+---
+
+# TradFi FX KRW-USD daily bar triplicated across FX/SPOT/YAHOO_FINANCE venue partitions
+
+## What I found
+
+Operator reported `venue="SPOT"` showing non-canonical in deployment-ui's tradfi distinct-values panel (live,
+2026-08-04). Confirmed via `_distinct_values.py`: that panel reads the nightly honest-coverage rollup's `by_venue` map,
+which is built by `measure_honest_coverage.py` grouping RAW manifest rows on the `venue` column — so a `SPOT` entry
+there means real manifest rows carry `venue="SPOT"`, not an aggregation-layer bug.
+
+**Manifest-side (bounded, column-pruned, predicate-pushdown read of the single consolidated
+`_index/availability_index.parquet` object — no new GCS walk):**
+
+| venue | asset_group | instrument_type | data_type | capture_status | service_name             | source | instrument_id                   | row_count | dates                    | written_at (all 7)                                   |
+| ----- | ----------- | --------------- | --------- | -------------- | ------------------------ | ------ | ------------------------------- | --------- | ------------------------ | ---------------------------------------------------- |
+| SPOT  | tradfi      | SPOT_PAIR       | ohlcv_24h | captured       | market-tick-data-service | yahoo  | YAHOO_FINANCE:SPOT_PAIR:KRW-USD | 0         | 2025-01-02 .. 2025-01-10 | 2026-08-02T15:46:59.632Z .. 2026-08-02T15:47:00.788Z |
+
+7 rows total, all one instrument (KRW-USD), all one ~1.2-second write batch. `SPOT` is not a member of
+`VENUES_BY_ASSET_GROUP['tradfi']` (confirmed: only `NASDAQ, NYSE, CME, ICE, CBOE, KRX, FX, FRED`).
+
+**GCS-side, content-verified for the first affected date (2025-01-02)** — listed every object under that date's prefix
+and found THREE physically distinct objects carrying the SAME real KRW-USD daily bar
+(`open=0.000679, high=0.000684, low=0.000677, close=0.000679, volume=0.0` — byte-identical OHLC across all three):
+
+| Path (venue segment)                                | `pipeline_mode` | `time_created`       | Status                                                                |
+| --------------------------------------------------- | --------------- | -------------------- | --------------------------------------------------------------------- |
+| `venue=FX/instrument_type=spot_pair/...`            | `batch_yahoo`   | 2026-06-11T10:13:28Z | **Correct** — the canonical partition                                 |
+| `venue=SPOT/instrument_type=spot_pair/...`          | `batch_yahoo`   | 2026-07-20T04:35:37Z | **Wrong venue** — duplicate real object, this doc's new finding       |
+| `venue=YAHOO_FINANCE/instrument_type=spot_pair/...` | `batch_yahoo`   | 2026-07-20T04:28:59Z | **Wrong venue** — the already-tracked legacy vendor-as-venue artifact |
+
+The `SPOT` and `YAHOO_FINANCE` copies were both created ~7 minutes apart on 2026-07-20 — plausibly the same write pass.
+The manifest only registered the 7 `venue=SPOT` rows on 2026-08-02, ~2 weeks after the GCS objects themselves were
+created, consistent with a manifest rebuild/consolidation run discovering pre-existing stray objects rather than a fresh
+writer bug that day. `row_count=0` in the manifest is itself wrong — the real object has 1 real data row.
+
+## Why it matters
+
+This is a genuinely new cluster, not covered by any existing tracked finding:
+
+- **Not the same as `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md`'s 1,812 phantom rows** — that
+  population is scoped to `venue=FX` with NO backing GCS object at all, written in 3 distinct 2026-07-16/04-06/07-18
+  batches. This finding's rows carry `venue=SPOT` (which that doc's `venue=FX`-scoped census would never have seen) and
+  DO have real, content-verified backing objects.
+- **Not the same as `tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`** (the `YahooFinanceAdapter` row-content
+  `venue="YAHOO"` stamp) — that doc is about the row's own `venue` FIELD inside the parquet content; this finding is
+  about the GCS PATH partition + manifest venue column landing on `SPOT`/`YAHOO_FINANCE`, a path-level triplication.
+- **Storage + correctness impact**: every affected day's real FX daily bar exists 3× in GCS (only 1 canonical). Any
+  consumer trusting the manifest's `venue` column for FX/KRW-USD before 2025-01-10 could double- or triple-count this
+  instrument, or fail to find it under the canonical `FX` venue while it's actually only registered under `SPOT`.
+
+## Not investigated here (out of scope for this read-only pass)
+
+- The exact writer/script that created the `venue=SPOT` and `venue=YAHOO_FINANCE` duplicate GCS objects on 2026-07-20 —
+  not traced. Given the ~7-minute gap between the two and their shared date range, they may be the same run, but this is
+  not confirmed.
+- Whether this triplication extends beyond the 7 manifest-registered `venue=SPOT` rows (2025-01-02..01-10) — the GCS
+  side was only content-verified for one date. A `venue=SPOT` OR `venue=YAHOO_FINANCE` prefix count across the full FX
+  date range was not run (would need a bounded read scoped to those two prefixes specifically, not a new whole-corpus
+  walk).
+- Whether the `venue=YAHOO_FINANCE` duplicate objects are already counted inside the existing
+  `tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` scope or are a distinct row population — not cross-checked.
+
+## Recommended next steps
+
+- [ ] [DATA] P2. Trace the exact write batch that created the `venue=SPOT` and `venue=YAHOO_FINANCE` duplicate GCS
+      objects on 2026-07-20 (correlate `time_created`/`service_name`/`job_id` provenance, mirroring the method that
+      root-caused the sibling `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` and
+      `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` findings). (repo: market-tick-data-service)
+- [ ] [DATA] P2. Once root-caused, measure the FULL scope: how many dates/instruments carry a `venue=SPOT` and/or
+      `venue=YAHOO_FINANCE` duplicate GCS object (bounded read scoped to those two venue prefixes only — do not re-walk
+      the whole corpus). (repo: market-tick-data-service)
+- [ ] [DATA] P3. Decide + execute disposition for the duplicate objects + their manifest rows once scope is known:
+      quarantine (add `SPOT` to `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` if genuinely permanent residue) vs. delete
+      (per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check + snapshot-first, since these are real captured-status rows
+      with real backing objects, not empty phantoms). Fix the `row_count=0` mis-stamp if a repair script touches these
+      rows anyway. (repo: market-tick-data-service, unified-api-contracts)
+
+## Progress Log
+
+- **2026-08-04 (interactive session)**: filed from operator's live observation of the deployment-ui distinct-values
+  panel. Root-caused via a bounded manifest read (7 rows, single object, no new walk) + content-verified GCS listing for
+  one sampled date (3 real, identical-content objects across FX/SPOT/YAHOO_FINANCE partitions). Not fixed — read-only
+  investigation.
