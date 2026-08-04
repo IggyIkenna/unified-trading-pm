@@ -118,7 +118,7 @@ currently nothing at all.
 
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause why `pipeline_mode=live_*` processed-candle output is completely absent for PREDICTION
+- [x] ✅ [DATA] P1. **Root-cause why `pipeline_mode=live_*` processed-candle output is completely absent for PREDICTION
       `trades` (adapter exists) on every sampled day** (2026-06-23/24/26/28). Check whether an MDPS live-mode continuous
       worker (`--mode live --operation timer-candles`,
       `market_data_processing_service/cli/handlers/live_mode_handler.py`) is deployed/launched for the prediction
@@ -126,7 +126,45 @@ currently nothing at all.
       live-mode launch config found in this verification pass — confirm via deployment-service VM/Cloud Run inventory,
       not a fresh corpus walk). Repo: deployment-service (+ market-data-processing-service read-only). Done when: a
       definitive root cause is recorded (worker never deployed / deployed but erroring / deployed but scanning the wrong
-      prefix) with evidence, in this doc's Progress Log.
+      prefix) with evidence, in this doc's Progress Log. — **VERDICT: worker never deployed, fleet-wide (not
+      prediction-specific)** — full evidence + 2 new follow-up todos in the 2026-08-04 Progress Log entry below.
+- [ ] [BACKEND] P2. **Fix the MDPS `--mode live --operation timer-candles` CLI dispatch — currently crashes for EVERY
+      asset_group if invoked, confirmed live.** `market_data_processing_service/cli/parser.py:71-74`
+      (`_mode_dispatch_handler`) does `live_handler_cls()` (zero args) then `handler.run(args)` (passes an
+      `argparse.Namespace`), but the real `LiveModeHandler.__init__(self, config: MarketDataProcessingServiceConfig)`
+      requires `config`, and `.run()`'s real signature is `(interval: int, categories, venues, timeframes)`, not
+      `(args)`. Confirmed via direct execution (`uv run python3 -c "LiveModeHandler()"` →
+      `TypeError: LiveModeHandler.__init__() missing 1 required positional argument: 'config'`). Masked from CI because
+      `tests/unit/test_cli_parser_coverage.py` fully mocks `LiveModeHandler`, and every other test constructs
+      `LiveModeHandler(cfg)` directly, bypassing the parser dispatch entirely — add a regression test that exercises the
+      REAL `_mode_dispatch_handler(args)` path with `mode=live`/`operation=timer-candles` (a thin config + mocked
+      orchestration is enough) so this can't silently regress again. Separately, `LiveModeHandler.run()`
+      (`live_mode_handler.py:76`) defaults `categories` to `["CEFI", "TRADFI", "DEFI"]` when the caller passes none —
+      PREDICTION (and SPORTS) are excluded from the default, so even a fixed dispatcher would silently skip prediction
+      unless a caller explicitly passes `categories=["PREDICTION", ...]`. Fix both: (1) correct the dispatcher to
+      `live_handler_cls(config)` + call `.run(interval=..., categories=..., venues=..., timeframes=...)` derived from
+      `args` instead of passing `args` itself: (2) either default `categories` to `list(MarketAssetGroup)` or make the
+      omission an explicit, documented choice (comment) rather than a silent gap. Repo: market-data-processing-service.
+      Done when: QG-green with the new dispatch-path regression test, and PREDICTION is reachable via
+      `--mode live --operation timer-candles` with no `--categories` override.
+- [ ] [OPS] P2. **Operationally launch (or explicitly decide not to) the `mdps-features-live-{asset_group}` VM cluster —
+      currently launched for NO asset_group, fleet-wide, not just prediction.**
+      `deployment-service/scripts/vm/     launch-mdps-features-live.sh --asset-group <cefi|defi|tradfi|sports|prediction>`
+      is code-ready (shipped 2026-05-11/12) and is the ONLY launcher wired to MDPS's real production live path
+      (`--operation streaming-aggregation` → `MDPSStreamingAggregator`, the Live=Batch event-driven architecture per
+      `live_persist_05_mdps_cutover_2026_06_26.md` Phase 5) — but its own header comment says operational launch was
+      deferred to "Phase 15" of `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`, and that
+      archived plan's own Phase 15 entry (status: `complete` at the plan level, but 15.2 "7-day live smoke" explicitly
+      marked `DEFERRED-POST-CUTOVER` → successor plan, never named/found). Confirmed LIVE on 2026-08-04:
+      `gcloud compute     instances list --project=central-element-323112` returns **zero** `mdps-features-live-*`
+      instances, running or terminated, for any of the 5 asset_groups; zero terraform/Cloud Scheduler/cron references to
+      `mdps-features-live` or `streaming-aggregation` anywhere in deployment-service. The ACTUALLY-running prediction
+      live VMs (`prediction-live-{kalshi,polymarket}-{trades,book_snapshot_5}-*`, confirmed RUNNING) launch MTDS
+      raw-tick capture only (`launch-prediction-live.sh` → `VM_SERVICE=market_tick_data_service`) — never MDPS. Same
+      true for CEFI's real live VM (`mtds-live-cefi-consolidated-*` — MTDS websocket-streaming only, zero MDPS). Repo:
+      deployment-service (+ operator decision on which asset_groups to launch first). Done when: EITHER the VM cluster
+      is launched for prediction (+ ideally the rest of the fleet) with a T+10 verify per the no-fire-and-forget rule,
+      OR an operator ruling explicitly defers it with a named successor plan/owner (not a second silent drop).
 - [ ] [BACKEND] P1. **Register a `CandleAdapterRegistry` entry for `(MarketAssetGroup.PREDICTION, "book_snapshot_5")`,
       or explicitly declare it a deliberate bypass.** Either (a) add a `PredictionBookSnapshotAdapter` (mirrors
       `CefiBookSnapshotAdapter`/`DefiBookSnapshotAdapter`) so book_snapshot_5 actually produces candle output once live
@@ -147,3 +185,54 @@ currently nothing at all.
 
 - **2026-08-04 (slot-5, data_engineering)**: filed immediately after the FAIL verdict on the parent verification todo,
   per the CLAUDE.md findings-triage "big finding" rule (data-correctness, silent, production-live).
+
+- **2026-08-04 (slot-6, data_engineering) — todo 1 root-cause, VERDICT: worker never deployed (fleet-wide, not
+  prediction-specific).** Two independent MDPS live-mode code paths exist, and NEITHER is operationally running for
+  PREDICTION — or for any other asset_group:
+  1. **`--mode live --operation timer-candles`** (the default, the path this todo names) → `LiveModeHandler`. No
+     launcher in `deployment-service` invokes it at all (`grep -rn "timer-candles"` / `grep -rln "live_mode_handler"`
+     against the whole repo: zero hits). It is effectively dead code from a deployment standpoint. It is ALSO currently
+     broken if anyone tried to invoke it: `market_data_processing_service/cli/parser.py:71-74`
+     (`_mode_dispatch_handler`) calls `live_handler_cls()` with no `config` arg, then `handler.run(args)` passing a raw
+     `argparse.Namespace` — but the real `LiveModeHandler.__init__` requires `config: MarketDataProcessingServiceConfig`
+     and `.run()`'s real signature is `(interval, categories, venues, timeframes)`. Confirmed by direct execution
+     (read-only, no GCS I/O):
+     `cd market-data-processing-service && uv run python3 -c "from market_data_processing_service.cli.handlers.live_mode_handler import LiveModeHandler; LiveModeHandler()"`
+     → `TypeError: LiveModeHandler.__init__() missing 1 required positional argument: 'config'`. This bug is masked from
+     CI because `test_cli_parser_coverage.py` fully mocks `LiveModeHandler` and every other test constructs
+     `LiveModeHandler(cfg)` directly (bypassing the real parser dispatch). Separately, `live_mode_handler.py:76`
+     defaults `categories` to `["CEFI", "TRADFI", "DEFI"]` when none are supplied — PREDICTION (and SPORTS) are excluded
+     from the default, a third, independent gap.
+  2. **`--mode live --operation streaming-aggregation`** → `MDPSStreamingAggregator` (event-driven via the UTL
+     `EventTransport`/Redis-Stream facade — the real "Live = Batch" architecture per
+     `plans/archive/2026_06/live_persist_05_mdps_cutover_2026_06_26.md` Phase 5). This IS the intended production live
+     path, and its launcher —
+     `deployment-service/scripts/vm/launch-mdps-features-live.sh --asset-group <cefi|defi|tradfi|sports|prediction>` —
+     is code-ready (shipped 2026-05-11/12, registered identically for all 5 asset_groups in `vm_prefix_registry.py` +
+     `launcher_registry.py`, no prediction-specific exclusion) but was **never operationally invoked**. Its own header
+     comment says so explicitly ("operational launch awaits Harsh slot 5 per-service consumer wiring + Phase 12
+     reconciliation gate green"), and the archived plan that owns Phase 15
+     (`plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`, `status: complete` at the plan level)
+     explicitly marks its own "15.2 7-day live smoke" sub-item `DEFERRED-POST-CUTOVER` to a named successor
+     (`Phase 3.5 per-venue rollouts → cluster bootstrap → 7-day smoke`) that this investigation found no evidence of
+     ever having executed.
+  - **Live confirmation (2026-08-04, read-only):** `gcloud compute instances list --project=central-element-323112` (68
+    total instances, all zones) returns **zero** instances matching `mdps-features-live-*`, running OR terminated, for
+    any of the 5 asset_groups. Zero terraform/Cloud Scheduler/cron references to `mdps-features-live` or
+    `streaming-aggregation` anywhere in `deployment-service`. The prediction live VMs that ARE actually running
+    (`prediction-live-{kalshi,polymarket}-{trades,book_snapshot_5}-20260803-*`, confirmed RUNNING) are MTDS raw-tick
+    capture producers only (`launch-prediction-live.sh` → `VM_SERVICE=market_tick_data_service`) — they never invoke
+    MDPS. The same is true of CEFI's actual live VM (`mtds-live-cefi-consolidated-20260802-*`, confirmed RUNNING) — MTDS
+    websocket-streaming only, zero MDPS. Cloud Run's MDPS deployment
+    (`deployment-service/configs/cloud-run/market-data-processing-service.yaml`) is a health-check-only FastAPI app
+    (`market_data_processing_service/api/main.py` wires `/health`+`/readiness` via UTL `make_health_router` — no
+    candle-processing code runs there despite the yaml's stale "streaming processor runs as background thread" comment).
+  - **Verdict**: the MDPS live-mode continuous worker was never deployed/launched for PREDICTION — but this is a
+    **fleet-wide gap** (confirmed identically absent for CEFI, DEFI, TRADFI, SPORTS), not a prediction-specific defect.
+    `deployment-service/configs/clusters/prediction.yaml`'s batch-cron-only shape is therefore CORRECT/consistent with
+    the rest of the fleet, not an omission specific to prediction. 2 new follow-up todos filed above: fixing the
+    `timer-candles` CLI dispatch bug (dead-but-broken code, low urgency since nothing invokes it) and the actual
+    operational-launch decision (higher-leverage — it's the one gap that, if closed, would give prediction AND every
+    other asset_group real live-mode processed candle output). Independently cross-verified by a parallel Explore
+    sub-agent dispatched from this session against the same two repos — findings matched exactly, plus it additionally
+    confirmed CEFI's real live VM also skips MDPS, strengthening the fleet-wide (not prediction-specific) conclusion.
