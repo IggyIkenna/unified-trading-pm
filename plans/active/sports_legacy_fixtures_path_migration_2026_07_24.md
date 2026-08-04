@@ -257,16 +257,16 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       against real "previously-load-bearing dates" was run because Phase 1's census already proved that population is
       empty (0 rows) — the done-when's own premise (a previously-load-bearing date existing to test against) does not
       hold, consistent with todos 2-4's vacuous reasoning above.
-- [ ] [DATA] P2. Snapshot-then-delete the migrated legacy-path GCS objects (per five-part proof,
+- [x] ✅ [DATA] P2. Snapshot-then-delete the migrated legacy-path GCS objects (per five-part proof,
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), and purge their now-superseded
       `data_type="FIXTURES"` manifest rows for the migrated population only (leave the redundant-with-canonical and
-      stale-label populations from Phase 1 alone unless a separate decision covers them). **Reversibility-verified, no
-      `[OPERATOR]` gate needed** (finding T, `task_template.md`): object-level delete only against
-      `instruments-store-sports-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
-      `604800` (7 days) fresh-checked 2026-07-26 per §3a (this is the bucket that had soft-delete disabled at the time
-      of the 2026-07-17 incident; it was re-enabled the same day this finding was added — re-query fresh before running,
-      not from this citation). **Done when**: a post-delete listing for the migrated (date, league_id) set returns 0
-      legacy objects.
+      stale-label populations from Phase 1 alone unless a separate decision covers them). — **DONE 2026-08-04,
+      `unified-trading-pm` (this doc, no data deleted — migrated population is empty; see Progress Log below).**
+      **Reversibility-verified, no `[OPERATOR]` gate needed** (finding T, `task_template.md`): object-level delete only
+      against `instruments-store-sports-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)`
+      returned `2592000` (30 days) fresh-checked 2026-08-04 per §3a (well above the 604800s minimum). **Done when**: a
+      post-delete listing for the migrated (date, league_id) set returns 0 legacy objects — vacuously true:
+      load_bearing_count=0, nothing to delete.
 - [ ] [DOC] P2. Update `sports_consolidated_closeout_2026_07_19.md`'s FROZEN-legacy-path declaration to state the freeze
       is now TRUE (no live reads of the legacy path remain), citing this plan's completion. Update
       `/codex/02-data/sports-gcs-path-ssot.md` if it references the fallback as a known exception. **Done when**: both
@@ -355,3 +355,21 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
 - **context-scout 2026-08-03 (re-run)**: re-verified all 6 entries resolve on disk — unchanged. Both remaining open
   todos (P2 GCS delete, P2 doc update) are covered by the existing delete-safety codex + parent-doc entries; no further
   source path warranted since the code work (`sports_fixtures.py` fallback removal) already shipped.
+- **Todo 6 re-verification (2026-08-04)**: dispatched as a standalone task. Before treating this todo's done-when as
+  vacuously satisfied (load_bearing_count=0 → nothing to delete), re-verified rather than blindly trusted the same
+  three-part basis todos 2-4 established: (1) re-read the committed census report
+  (`instruments-service/scripts/_sports_fixtures_legacy_census_report_2026_08_02.json`) — `load_bearing_count: 0`,
+  `stale_label_count: 83`, `redundant_total_count: 42688`, `read_error_count: 0` — confirmed the census script used the
+  same production path-builder functions as the now-removed fallback, so the zero count is genuine; (2) confirmed the
+  fallback-removal commit `instruments-service@333c35d2` is on `origin/live-defi-rollout` and a grep for
+  `_read_fixtures_entity_with_schedule_fallback` in `instruments_service/` returns zero hits — Part 4 (no live reader)
+  passes; (3) fresh-queried
+  `gcs_bucket_soft_delete_retention_seconds('instruments-store-sports-prd-central-element-323112')` = **2,592,000s (30
+  days)** — well above the 604,800s §3a minimum (the plan's 2026-07-26 citation of 604,800s is stale; the bucket was
+  upgraded to 30 days at some point after that audit). The migrated population is the load-bearing population (the set
+  that would have been copied from legacy to canonical paths), which is empty — there are no "migrated" GCS objects to
+  snapshot or delete, and no `data_type="FIXTURES"` manifest rows that correspond to a migrated object. The redundant
+  population (42,688 duplicate objects at both paths) and stale-label population (83 phantom manifest rows) are
+  explicitly excluded by the todo's own text ("leave ... alone unless a separate decision covers them"). **Conclusion:
+  the done-when is vacuously satisfied — 0 migrated objects → 0 post-delete objects.** Todo flipped with this written
+  confirmation. Todo 7 (doc update) is the last remaining open item.
