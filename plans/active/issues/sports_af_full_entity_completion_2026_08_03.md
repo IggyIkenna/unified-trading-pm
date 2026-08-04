@@ -182,20 +182,28 @@ not urgent enough to block this campaign.
       above), confirm every needed-count converges to ~0 (accounting for genuine honest-absence floors per entity, same
       pattern as FIXTURE_EVENTS' ~1,943-stub floor), and only then close this doc + notify the operator the full AF
       completion is genuinely done and the API-Football plan can be downgraded.
-- [ ] [SCRIPT] P1. **Implement the durable convergence-gate fix flagged 4 times in this doc's Progress Log (repo:
-      agent-orchestrator).** `sports_af_full_entity_completion-003` (Launch FIXTURE_LINEUPS) has now been dispatched **6
-      times** to 6 different slots (main/12, 4, 6, 6-continued, 5, 8) purely because `sequential:true` only encodes
-      dispatch ORDER, not the real gate ("after FIXTURE_STATS converges") — every dispatch redoes the identical
-      singleton-lock + census check and finds FIXTURE_STATS still not converged, then `skip-current-task`s. Fix: on the
-      live orchestrator (`data/config/backlog.yaml` for this task id), `POST /api/prerequisites/<name>` to create a
-      `false` condition (e.g. `sports-fixture-stats-af-widening-converged`), attach it via `prereqs.prerequisites` per
-      `agents/RULES.md` §4 "Adding new conditions mid-cycle" / "Park a task", set `priority: 999` +
-      `priority_override: true` so it stops being redispatched, then `POST /api/backlog/reload`. Flip the condition
-      `true` (and unpark) only once a fresh `census_fixture_stats_lineups_widening_volume_2026_07_31.py` run shows the
-      non-MVP FIXTURE_STATS gap at or near 0. **Not done by slot 8** — no local filesystem access to the live
-      `data/config/backlog.yaml` from this worker's `.tabs/8/agent-orchestrator` clone (only
-      `data/config/     backlog.test.yaml`, a test fixture, exists there) to safely apply/verify the edit; this needs
-      the main agent/operator, who has direct access to the orchestrator's runtime data dir.
+- [x] ✅ [SCRIPT] P1. **Implement the durable convergence-gate fix flagged 4 times in this doc's Progress Log (repo:
+      agent-orchestrator).** — **DONE 2026-08-04 (slot 11)**: slots 5/6/8/13 all correctly found no filesystem access to
+      the LIVE `data/config/backlog.yaml` from their `.tabs/<slot>/agent-orchestrator` clones and concluded this needed
+      main/operator — but a purpose-built API endpoint for exactly this disposition already existed and was missed:
+      `POST /api/backlog/{task_id}/park` (`server/routes/backlog.py:709`, shipped
+      `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31`, predates none of the prior dispatches' checks
+      but wasn't discovered until this one). It applies the identical mutation RULES.md §4 describes
+      (`priority=999`+`priority_override=true`+ a false synthetic `prereqs.prerequisites` condition) via a single
+      authenticated POST — **no backlog.yaml filesystem access needed at all**, worker-callable. Called it:
+      `condition=auto_unpark__sports_af_full_entity_completion-003`, confirmed via `GET /api/backlog/parked`
+      (`parked:     true`, `priority_override` implied by presence in that list). This task will not be offered to ANY
+      slot again until that condition is flipped true. **Unpark criteria** (for whoever does it — operator via dashboard
+      "Dispatch now", or a worker instructed to check): re-run
+      `instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`, confirm FIXTURE_STATS
+      non-MVP captured count is at/near the full ~68k needed (it was 125/68,284 = 0.18% at park time, 2026-08-04T01:40Z)
+      — once genuinely converging,
+      `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-003     {"value": true, "set_by": "operator"}`
+      (or `POST /api/backlog/sports_af_full_entity_completion-003/unpark`). **Residual gap, not fixed here**:
+      FIXTURE_STATS itself has no dedicated recurring-retry todo of its own — every relaunch to date happened only as a
+      side-effect of this task's repeated redispatch. Now that this task is parked, nothing will proactively relaunch
+      FIXTURE_STATS past the SPOT storm; it needs an explicit operator check-in (dashboard's parked-tasks view now
+      surfaces this task per `get_parked_tasks()`'s design intent) rather than relying on redispatch churn to notice.
 
 ## Sequencing note
 
@@ -323,3 +331,21 @@ are genuinely in scope for the operator's "no exceptions" directive.
   confirmed (again) this worker has no filesystem access to the live orchestrator `data/config/backlog.yaml` from
   `.tabs/13/agent-orchestrator` (only the `backlog.test.yaml` fixture) to implement it directly; still needs
   main/operator.
+- **2026-08-04 (slot 11)** — Dispatched `sports_af_full_entity_completion-003` an eighth time. Re-verified both gates
+  fresh: singleton lock FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING or even listed — today's ephemeral VMs are
+  fully deleted on preemption, not just terminated), FIXTURE_STATS re-censused at 125/68,284 non-MVP shards (0.18%) —
+  byte-identical to slot 13's check ~19 min earlier, zero net progress. Pulled the raw `compute.instances.preempted`
+  audit log for `asia-northeast1-c` 01:02Z→01:34Z: events at 01:04 (af-backfill), 01:06×4 (2 tradfi VMs), 01:21×2
+  (af-backfill), and **01:33:47Z** — an `expected-universe-v2-sports-*` VM (non-af-backfill), i.e. the zone was still
+  actively preempting sports-campaign VMs **~1 minute before this check**. Given that fresher, still-active evidence
+  plus the established 7/7 relaunch-failure pattern, did **NOT** attempt a further FIXTURE_STATS relaunch (would only
+  repeat slot 13's just-failed judgment call on comparably-thin evidence of a "clean window"). **Root-fixed the
+  redispatch waste instead of re-logging it a 5th time**: found `POST /api/backlog/{task_id}/park`
+  (`server/routes/backlog.py:709`, live since `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31`) — a
+  worker-callable API that applies RULES.md §4's exact park recipe without needing the backlog.yaml filesystem access
+  that blocked slots 5/6/8/13. Called it (see todo above, now flipped) — `sports_af_full_entity_completion-003` is now
+  durably parked (`condition=auto_unpark__sports_af_full_entity_completion-003`, confirmed via
+  `GET /api/backlog/parked`), so this task will NOT be redispatched to any slot again until an operator (or an
+  explicitly instructed worker) confirms FIXTURE_STATS convergence and flips the condition true. Did not attempt to also
+  fix FIXTURE_STATS's own lack-of-a-retry-mechanism (out of scope for a park action) — flagged as a residual gap in the
+  todo above instead. `skip-current-task`'d (reason_code=GATED) to release the slot per the now-parked state.
