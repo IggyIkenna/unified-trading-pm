@@ -93,18 +93,27 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
       out already-superseded/landed, close with that note). (repo: market-data-processing-service)
 
-- [ ] [BACKEND] P2. Ensure slot-11's vault_share_price fix lands on `origin/live-defi-rollout` (outcome-defined, not
-      SHA-brittle). Review saw it committed cleanly as `market-tick-data-service@b411374c1` (Quickmerge trailer;
-      real+tested fix for `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` — per-instrument
-      instrument_id now recorded per shard instead of one null-id aggregate call), but slot 11 died a 2nd time before
-      Pass-1 QG finished and the Part-B 900s ahead-commit age guard correctly declined to auto-push the half-verified
-      commit. As of main's check (~02:52Z) slot 11 is FULLY dead (tmux_alive=false, worker_alive=false, phase=idle) and
-      `b411374c1` is NOT on LDR and NOT on any wip-preserve ref fetchable to main's clone — though slot 11 has MANY
-      other `refs/wip-preserve/orchestrator-slot-11-*` refs, so the fix's CHANGE may be preserved under a different
-      (rebased) SHA. **Steps**: check whether the vault_share_price per-shard-instrument_id change is already an
-      ancestor of origin/live-defi-rollout under ANY SHA (it may have landed/rebased); if not, recover it from slot-11's
-      mtds worktree or the slot-11 wip-preserve refs, run a FRESH `bash scripts/quality-gates.sh` green (b411374c1's
-      Pass-1 never finished — mint the real sentinel), then quickmerge. Done-when: the fix is an ancestor of
+- [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-04 (main agt-1756f6 verify) — fix landed independently, b411374c1 moot.** Slot
+      6 shipped `market-tick-data-service@b0909a5e` at 02:33:55Z (BEFORE this todo was even written) fixing the EXACT
+      same `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` issue, same technique (per-shard
+      `record_captured` with real instrument_id, mirroring `_lst_rates_write`), same 2 files — review agt diffed both
+      commits side-by-side + main verified `git merge-base --is-ancestor b0909a5e origin/live-defi-rollout` = ON-LDR
+      ("fix(defi): vault_share_price_handler records per-instrument…"), well-tested (asserts call-count == vault
+      registry size, no blank/None ids, all distinct). This todo's outcome-defined done-when (the fix lands under ANY
+      SHA) is therefore already MET; slot-11's orphan `b411374c1` is a redundant duplicate, do NOT recover/rebase it.
+      This is exactly why the todo was written outcome-defined rather than SHA-brittle. — Ensure slot-11's
+      vault_share_price fix lands on `origin/live-defi-rollout`. Review saw it committed cleanly as
+      `market-tick-data-service@b411374c1` (Quickmerge trailer; real+tested fix for
+      `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` — per-instrument instrument_id now recorded
+      per shard instead of one null-id aggregate call), but slot 11 died a 2nd time before Pass-1 QG finished and the
+      Part-B 900s ahead-commit age guard correctly declined to auto-push the half-verified commit. As of main's check
+      (~02:52Z) slot 11 is FULLY dead (tmux_alive=false, worker_alive=false, phase=idle) and `b411374c1` is NOT on LDR
+      and NOT on any wip-preserve ref fetchable to main's clone — though slot 11 has MANY other
+      `refs/wip-preserve/orchestrator-slot-11-*` refs, so the fix's CHANGE may be preserved under a different (rebased)
+      SHA. **Steps**: check whether the vault_share_price per-shard-instrument_id change is already an ancestor of
+      origin/live-defi-rollout under ANY SHA (it may have landed/rebased); if not, recover it from slot-11's mtds
+      worktree or the slot-11 wip-preserve refs, run a FRESH `bash scripts/quality-gates.sh` green (b411374c1's Pass-1
+      never finished — mint the real sentinel), then quickmerge. Done-when: the fix is an ancestor of
       origin/live-defi-rollout (or confirmed already-landed under another SHA). (repo: market-tick-data-service)
 
 ## Progress Log
