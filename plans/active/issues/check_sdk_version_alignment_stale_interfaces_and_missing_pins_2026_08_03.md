@@ -114,13 +114,17 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
 
 ## Recommended decision
 
-- [ ] [INFRA] P3. Add the 3 missing SDK pins to `unified-api-contracts/pyproject.toml`'s
+- [x] ✅ [INFRA] P3. Add the 3 missing SDK pins to `unified-api-contracts/pyproject.toml`'s
       `[project.optional-dependencies.schema-validation]` — `databento>=0.32.0,<1.0.0`, `ccxt>=4.5.24,<5.0.0`,
       `ib_insync>=0.9.86,<1.0.0` (copy SCHEMA_VERSIONS.md's already-documented target ranges verbatim; also confirm
       whether `tardis-client` is already pinned or has the same gap, since the live run didn't flag it — check before
       assuming it's fine). **Done when**: a live `uv run python scripts/check_sdk_version_alignment.py` run no longer
       reports a missing-pin error for any of the three, `tests/unit/test_schema_version_alignment.py` stays green, and
-      `quality-gates.sh` is green. Repo: unified-api-contracts.
+      `quality-gates.sh` is green. Repo: unified-api-contracts. — **unified-api-contracts@35812399**: added full
+      `[project.optional-dependencies] schema-validation` section with all 6 packages from SCHEMA_VERSIONS.md SSOT
+      (pydantic, requests, databento, tardis-client, ccxt, ib_insync). `check_sdk_version_alignment.py` → green ("SDK
+      version alignment OK"); `quality-gates.sh` → green. Confirmed `tardis-client` had same gap (undetected because no
+      surviving INTERFACES consumer pins it).
 - [ ] [INFRA] P3. Replace `check_sdk_version_alignment.py`'s hardcoded `INTERFACES` list with the fleet's real current
       api-contracts consumers. Derive the list by grepping every repo in `workspace-manifest.json`'s `repositories{}`
       for a `unified-api-contracts` dependency in its `pyproject.toml` (do not guess successor names from the old list —
