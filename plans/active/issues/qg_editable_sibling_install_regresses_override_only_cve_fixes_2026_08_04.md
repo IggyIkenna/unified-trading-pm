@@ -138,20 +138,40 @@ Candidate fix directions (none applied — this needs review given the shared bl
    makes the fix visible to pip-compat consumers too. Doesn't generalize to purely-transitive cases where
    override-dependencies is the only way to force the floor at all.
 
-None of these were applied by this todo — direction 1 has the best generality-to-risk ratio but needs the
-test-collection-safety check across the fleet before landing on a script this many repos depend on.
+**RESOLVED 2026-08-04 (slot-12)**: direction 1 (`--no-deps`) was tested and REJECTED — it broke
+`unified-api-contracts`'s own `pydantic`-based imports in THIS repo (`tests/unit/test_capability_readiness.py`,
+`test_capability_param_schema.py` both import `unified_api_contracts.internal.architecture_v2.capability_manifest`,
+which imports `pydantic` at module level; PM's own `pyproject.toml` never declares `pydantic`, so it's only ever
+reachable via UAC's normal transitive resolve — confirmed live: `ModuleNotFoundError: No module named 'pydantic'`). The
+shipped fix instead extracts each LOCAL_DEPS sibling's `[tool.uv] override-dependencies` into a combined
+`--overrides <file>` passed to `uv pip install -e` (a real `uv pip install` flag — requirements-file-style version
+overrides, distinct from project-mode `override-dependencies`) — this forces the intended CVE floor while preserving
+full normal transitive-dependency resolution. See `base-service.sh@568cd6e17` for the implementation.
+
+Also corrects this doc's own "22 of 23 repos" scope claim: that count came from `grep -rl "LOCAL_DEPS="`, which matches
+the empty `LOCAL_DEPS=()` declaration too. Re-enumerated 2026-08-04 across all 25 fleet repos with non-empty-array
+detection: only **2 repos** are actually affected — `unified-trading-pm` (`unified-api-contracts`,
+`unified-trading-library`) and `deployment-service` (`deployment-api`). Both were validated end-to-end (full
+`bash scripts/quality-gates.sh`, genuine exit 0, sentinel == HEAD) with the shipped fix before it landed.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Validate whether `uv pip install -e <sibling> --no-deps` (added to the LOCAL_DEPS loop in
+- [x] ✅ [SCRIPT] P1. Validate whether `uv pip install -e <sibling> --no-deps` (added to the LOCAL_DEPS loop in
       `scripts/quality-gates-base/base-service.sh`) causes any import failure across the fleet's test suites that import
       `unified_api_contracts`/`unified_trading_library` directly — run each affected repo's full `quality-gates.sh`
       before/after the flag change and diff pass/fail counts. If clean, land the flag change (one shared-script edit) —
-      this is the most general fix. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. Once direction 1 (or an accepted alternative) lands, re-verify `unified-trading-pm`'s own
+      this is the most general fix. (repo: unified-trading-pm) — unified-trading-pm@568cd6e17. Re-enumerated the fleet:
+      only unified-trading-pm + deployment-service actually have non-empty LOCAL_DEPS (not 22). `--no-deps` empirically
+      broke PM's own `capability_manifest` import (missing `pydantic`) — REJECTED. Shipped a safer `--overrides <file>`
+      fix instead (extracts each sibling's `[tool.uv] override-dependencies`, preserves full transitive resolution).
+      Both affected repos' full `quality-gates.sh` genuinely pass (PM: 1687 passed/0 failed, pip-audit clean, sentinel==
+      HEAD; deployment-service: 3066 passed/0 failed, sentinel==HEAD).
+- [x] ✅ [SCRIPT] P2. Once direction 1 (or an accepted alternative) lands, re-verify `unified-trading-pm`'s own
       cryptography CVE-2026-69247 bump gets a genuine `bash scripts/quality-gates.sh` exit 0 (its `pyproject.toml`/
       `uv.lock` changes are already independently verified correct via manual `pip-audit` — this todo is purely about
-      confirming the FULL script now agrees). (repo: unified-trading-pm)
+      confirming the FULL script now agrees). (repo: unified-trading-pm) — confirmed by the SAME Pass-1 run above:
+      `.qg_last_passed_sha` == HEAD (568cd6e17), `✅ pip-audit clean` in the log (cryptography correctly at 50.0.0, no
+      downgrade).
 - [ ] [OPERATOR] P2. Decide whether any OTHER repo's LOCAL_DEPS sibling install has already produced a false-negative
       (silently upgrading a version the frozen lock had correctly pinned LOW for a real reason) rather than today's
       false-positive (downgrading a version the frozen lock had correctly pinned for security) — this doc only confirms
@@ -164,3 +184,10 @@ test-collection-safety check across the fleet before landing on a script this ma
   `cve_affected_pinned_deps_remediation_2026_06_18.md`'s unified-trading-pm cryptography todo. Ruled out stale-cache,
   venv-contamination, and PM-specific-config explanations before concluding this is a genuine, fleet-wide
   `uv pip install -e` vs `[tool.uv] override-dependencies` visibility gap.
+- 2026-08-04 (slot-12): closed todos #1 and #2. Re-enumerated LOCAL_DEPS fleet-wide (only 2 repos actually affected, not
+  22). Empirically confirmed `--no-deps` breaks PM's own pydantic-dependent imports — rejected it and shipped a
+  `--overrides <file>` fix instead (`unified-trading-pm@568cd6e17`), validated via genuine full `quality-gates.sh`
+  passes (exit 0, sentinel==HEAD) on both affected repos (unified-trading-pm, deployment-service). Todo #3 remains open
+  — genuinely operator-gated per its own text. Also filed
+  `fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md` as an unrelated side-finding (this repo's
+  own hygiene fixer strips the RULES.md-required `author` field from issue-doc frontmatter).
