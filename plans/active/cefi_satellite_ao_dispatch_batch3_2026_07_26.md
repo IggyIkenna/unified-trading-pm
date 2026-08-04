@@ -134,7 +134,7 @@ context_scope:
       `grep -rn     'catalog_list_not_yet_listed_cefi\|cefi_pre_listing_by_venue' market-tick-data-service/` returns 0
       hits outside tests-being-deleted, no `EXPECTED_INSTRUMENT_NOT_LISTED` write path remains in the cefi orchestrator,
       `quality-gates.sh` is green, and the source doc's `[SCRIPT] P2` checkbox is flipped with the commit cited.
-- [ ] [DIAG] P2. **Profile whether the 17s CPU-bound block in `catalogue_symbols_for_venue` is GCS-parse time or an
+- [x] ✅ [DIAG] P2. **Profile whether the 17s CPU-bound block in `catalogue_symbols_for_venue` is GCS-parse time or an
       in-memory filter — read-only fact-finding, implement NEITHER fix option.** Every per-day cefi backfill subprocess
       rebuilds a `CeFiCatalogReader` and calls `list_instruments("cefi", day, day, venues=[venue])`, loading the full
       ~428k-row catalogue and re-resolving the universe — ~34s wall for a 0-row day, of which ~17s is CPU-bound. The
