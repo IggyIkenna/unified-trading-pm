@@ -298,6 +298,64 @@ prospectus-generator/committed-copy resync.
     checked this pass. The fourth instance (`openapi/prospectus/*.md`, 57 files) remains explicitly open — same
     generator-drift blast-radius risk, unowned, per this doc's existing note above.
 
+## Fifth pass — same instances, GMX venue this time (interactive session, 2026-08-04, `/autonomous`)
+
+The 2026-07-25 GMX venue removal (`/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) hand-fixed UAC's live
+Python registries and ran its own definition-of-done grep, but — exactly like the DRIFT case this doc tracks — that grep
+was word-boundary (`\bgmx\b`), which cannot match `gmx_v2`/`gmx-arbitrum` (the actual live token forms), and the
+generated-bundle class of file this doc exists for was never in scope. An operator report ("GMX coming up as a venue")
+led to a live audit finding gmx_v2 residue across the SAME three instance locations this doc already tracks, plus one
+this doc doesn't cover (UAC's own internal `archetype_capability_manifest.json`, which is genuinely hand-authored
+source-of-truth, not generated from Python — the round-trip generator only proves internal consistency, never proved
+GMX-freedom). All fixed and shipped this session, live-verified (tests green, `check_capability_regression.py` PASS):
+
+- **UAC internal source** — `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`: hand-
+  edited 9 cells (removed `gmx_v2` from `venue_ids`, dropped gmx-specific `representative_slot_labels`, flipped
+  `LIQUIDATION_CAPTURE`/DEFI/perp from PARTIAL→BLOCKED since gmx_v2 was its sole venue — added a new `BL-12` block-list
+  entry, mirrored into `codex/09-strategy/architecture-v2/block-list.md` + `unified-trading-system-ui`'s
+  `block-list.ts`), regenerated clean via `generate_archetype_capability_manifest.py --write`.
+  `unified-api-contracts@5474716e`.
+- **Third instance** (UAC `openapi/capability-manifest.json` + reports) — full regen via
+  `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` was safe this time (unlike the 2026-07-26 DRIFT
+  pass, which hit a large unrelated diff and fell back to surgical prune) — 0 regressions on
+  `check_capability_regression.py`, same commit as above.
+- **First instance** (`deployment-ui/src/data/capability-manifest.json` + `capability-verdict-matrix.json`) — same
+  formula-verified surgical-prune playbook as the DRIFT pass (this doc's 2026-07-21 entry): 4 nodes / 26 edges removed
+  from the manifest (572→568 / 2412→2386, zero new dangling refs vs. baseline), 66 `venue=gmx_v2` cells removed from the
+  verdict-matrix across 8 archetypes with `available_count`/`blocked_count`/`cell_count`/top-level `summary`
+  formula-recomputed (total_cells 20544→19488, blocked 7974→6918, available/not_registered unchanged) — both files'
+  custom pretty-printer (dicts expand, scalar-only lists inline ≤120-char width, verified byte-for-byte round-trip
+  before editing). Updated the 2 hardcoded Playwright count assertions in `tests/smoke/capability_tab.spec.ts`. `vitest`
+  (1096 tests) + `tsc` + full `quality-gates.sh` green. `deployment-ui@24d06ac`.
+- **Second instance** (`unified-trading-system-ui/lib/registry/ui-reference-data.json`) — surgical prune across all 3
+  sub-structures this doc's DRIFT pass already established as the pattern: `archetype_capability_registry.per_archetype`
+  (9 cells), `strategy_registry.strategies` (4 gmx-only instances removed) + `.families` (4 string refs removed),
+  `venue_set_variants` (18 entries, venue removed + `(N ...)` count recomputed). Also re-synced
+  `lib/registry/capability-manifest.json` (byte-copy from the freshly-regenerated UAC original, matching this doc's
+  established "re-sync from UAC" convention) and `public/capability-verdict-matrix.json` (its own automated sha256
+  parity gate in `tests/unit/wizard/parity-gates.test.ts` was independently failing on unrelated drift — fixed via the
+  gate's own prescribed `cp` fix). `lib/architecture-v2/coverage.ts` (the UAC-generated TS mirror) hit the SAME
+  unrelated-drift-from-a-blind-regen risk this doc's "Fourth instance" section already warns about (new archetypes in
+  UAC's registry not yet in this repo's `StrategyArchetype` enum) — reverted the full regen, did a targeted 9-cell
+  surgical edit instead, same playbook as the JSON files. Fixed 3 hardcoded test-count assertions (venue count 225→224,
+  BLOCK_LIST 10→11 entries) + added the `BL-12` codex/TS mirror entries this fix required. `vitest` (3300 tests) +
+  `tsc` + full `quality-gates.sh` green. `unified-trading-system-ui@3c2efb2c`.
+- **Orphan GCS objects** (new finding, not a "bundle" instance): 4 pre-existing `venue=GMX` liquidations parquets
+  (`day=2020-12-01`, `_migrated_gmx_{ARBITRUM,AVALANCHE}_*` filenames — artifacts of an unrelated 2026-06-21/22
+  migration/fold script, never registered in the manifest, so the 2026-07-25 purge's manifest-driven day-loop never
+  visited them) found + deleted via the sanctioned `unified_trading_library.cloud_interface.gcs_delete_object` SDK path
+  (bucket soft-delete retention = 604800s, qualifying the reversibility-verified self-service carve-out); verified gone
+  via a fresh `gcs_describe_object` read post-delete.
+- **Live-writer resurrection check** (the operator's specific worry, given a long-running defi backfill VM booted
+  2026-07-23, two days before the removal): read both currently-running `mtds-dex-swaps-backfill-*` VMs' own per-VM
+  manifest shards directly from GCS (`_index/per_vm/*.parquet`) — 4527 + 400 rows, zero GMX venue rows, 100% canonical
+  `dex_pool_swaps` data_type. The removal genuinely holds live; the residue was entirely in stale generated snapshots +
+  the 4 orphan objects above, never an active resurrection.
+
+Net: zero remaining live `gmx`/`gmx_v2` references found anywhere checked this pass (source registries, all 3 generated-
+bundle instances, GCS). The prospectus-generator fourth instance below is untouched (out of scope — DRIFT-specific,
+unrelated to this GMX pass).
+
 ## Todos
 
 - [ ] [ENGINEER] P2. **Resync the fourth instance (`unified-api-contracts/openapi/prospectus/*.md`, 57 files)** — the
