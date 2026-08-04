@@ -10,7 +10,7 @@ summary:
   therefore quickmerge Pass-1) for EVERY slot shipping any unrelated unified-trading-pm change, confirmed pre-existing
   on my own unrelated task (fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md) — the citation's
   own doc dates the entry 2026-07-25, well before this session, and my diff never touched that file."
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -34,7 +34,7 @@ source:
     and my diff never touches the offending file.",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-pm@64c4bfdab
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: investigate
