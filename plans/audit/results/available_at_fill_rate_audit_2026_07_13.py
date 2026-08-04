@@ -48,7 +48,7 @@ def audit_bucket(kind: str, asset_group: str | None) -> dict | None:
         return None
 
     try:
-        df = read_availability_index(bucket)
+        df = read_availability_index(bucket, columns=["capture_status", "available_at", "service_name"])
     except Exception as exc:
         print(f"SKIP {kind}/{asset_group} bucket={bucket}: read failed: {exc}", file=sys.stderr)
         return None

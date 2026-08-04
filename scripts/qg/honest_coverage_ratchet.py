@@ -63,7 +63,7 @@ def _compute_coverage(bucket: str, asset_group: str | None) -> dict[str, float]:
     """
     from unified_trading_library import compute_coverage_for_bucket, read_availability_index
 
-    index = read_availability_index(bucket)
+    index = read_availability_index(bucket, columns=["data_type", "asset_group"])
     if index is None or index.empty:
         return {}
 
