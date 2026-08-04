@@ -556,6 +556,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       **Forward-pointer (2026-07-25 split)**: once `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` ships, its
       EXCHANGE_ODDS/FIXED_ODDS split changes the sports `instrument_type` vocabulary this assertion checks against —
       re-verify this assertion's vocabulary list includes the new split values before claiming this todo done.
+      **2026-08-04 (§F league/fixture/betting-market audit):** census across all 3 sports manifests — `league_id` has 24
+      `SOCCER_*`/`soccer_*` case-dupe pairs in MTDS (6,600 UPPER + 3,336 lower), 12 of same in instruments; features
+      CLEAN. Fixture: no `fixture_id` column (structural). Betting-market: `instrument_type` CLEAN (40 values, 0 dupes);
+      `data_type` casing already tracked above. Full detail: batch8 todo 5.
 
 ## Track S — STORE: bucket hygiene + legacy path elimination · P1
 

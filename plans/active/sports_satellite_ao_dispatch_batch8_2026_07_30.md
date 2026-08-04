@@ -251,18 +251,21 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       with this evidence + a new residual [CONFIG] P2 todo (add T-12h/T-4h/T-2h triggers + relaunch VM). (repo:
       market-tick-data-service, deployment-service — read-only inspection).
 
-- [ ] [AUDIT] P2. **Extend the canonical-naming audit (§F1-F6 methodology) to league / fixture / betting-market
-      identifier columns (§F residual).** The existing F1-F6 audit (case-duplication, dimension-pollution, timeframe-
-      in-data_type, suspect venue values) covered `data_type`/`instrument_type`/`venue`; the operator explicitly asked
-      ("in sports case leagues and fixtures and betting market canonicals are relevant too") for the same methodology
-      applied to league / fixture / betting-market identifier values. Read via `read_availability_index()` (manifest-
-      driven, no fresh corpus walk) across the sports manifest surfaces, apply the same case-duplication /
-      dimension-pollution checks to league_id / fixture-identifier / bookmaker-market-identifier columns, and report any
-      violations found. Fold confirmed violations into `sports_consolidated_closeout_2026_07_19.md`'s Track C
-      (canonicalization) as new dated findings rather than fixing them inline here. **Done when**: the audit has run
-      against all 3 identifier classes, findings (or a confirmed-clean result) are recorded, and any real violation is
-      cross-linked into Track C. (repo: unified-trading-pm doc + read-only manifest reads against instruments-service /
-      market-tick-data-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §F (line 601).
+- [x] ✅ [AUDIT] P2. **DONE 2026-08-04 — canonical-naming audit extended to league / fixture / betting-market
+      identifiers across all 3 sports manifest surfaces; findings cross-linked into
+      `sports_consolidated_closeout_2026_07_19.md` Track C.** Read-only `read_availability_index()` census
+      (manifest-driven, no GCS walk) against MTDS (645,697 rows, 10 columns), features (309,803 rows, 6 columns), and
+      instruments (9,239,513 rows, 9 columns) production manifests. **Findings: (a) LEAGUE — REAL:** 24
+      `SOCCER_*`/`soccer_*` case-duplicate pairs in MTDS `league_id` (6,600 UPPER + 3,336 lower live rows), 12 of the
+      same 24 pairs + 13 UPPER-only leagues in instruments. Features `league_id`: CLEAN (1,006 distinct, 0 case-dupes) —
+      consumer is already normalized, writers are the gap. **(b) FIXTURE — CLEAN (structural):** no `fixture_id` column
+      exists in any sports manifest; fixture identity is GCS-path/parquet-level, not manifest-column-level. **(c)
+      BETTING-MARKET — MIXED:** MTDS `instrument_type` (40 values) is CLEAN of case-duplication; `data_type` casing
+      issues (ODDS/odds etc.) are already tracked in Track C. Cross-linked into Track C as new dated finding with
+      per-manifest row counts + census script citation. (repo: unified-trading-pm doc-only). Evidence: census script
+      `unified-trading-pm/scripts/sports_canonical_naming_audit_league_fixture_betting_2026_08_04.py` (one-shot,
+      delete-after-commit), run against live production manifests 2026-08-04. Source:
+      `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` §F (line 601).
 
 ## Deferred — still genuinely conflict-gated / non-batchable
 
@@ -296,3 +299,11 @@ SSOT for the dedicated-triage-pass procedure this plan followed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the 2 remaining open [CODE]/[DIAG] todos'
   real source-code targets (venue_core.py's allow-list, verify_ml_readiness.py).
+- **slot-14 (data_engineering) 2026-08-04**: executed the `[AUDIT] P2` canonical-naming audit extension (league /
+  fixture / betting-market identifiers). Read-only census across all 3 sports manifest surfaces (MTDS 645,697 rows,
+  features 309,803, instruments 9,239,513). Primary finding: 24 `SOCCER_*`/`soccer_*` case-duplicate pairs in MTDS
+  `league_id`, 12 of the same in instruments; features `league_id` is clean (1,006 distinct, 0 dupes). Fixture
+  identifiers: no `fixture_id` column in any manifest (structural absence, not a violation). Betting-market:
+  `instrument_type` is clean, `data_type` casing issues already tracked in Track C. Findings cross-linked into
+  `sports_consolidated_closeout_2026_07_19.md` Track C as new dated `[DATA] P1` todo. Census script:
+  `scripts/sports_canonical_naming_audit_league_fixture_betting_2026_08_04.py` (one-shot).
