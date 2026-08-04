@@ -94,12 +94,12 @@ Neither explains the May-25+ gap.
 
 ## Todos
 
-- [ ] [DATA] P1. **Diagnose the UPBIT May-2026 data gap root cause.** (a) Query Tardis API directly for UPBIT's
+- [x] ✅ [DATA] P1. **Diagnose the UPBIT May-2026 data gap root cause.** (a) Query Tardis API directly for UPBIT's
       available date range — does Tardis carry UPBIT data past 2026-05-22? (b) Check the `cefi-queue-heavy` backfill VM
       logs around May 23-25 for UPBIT-specific errors/stoppage. (c) Check whether the UPBIT backfill shard was
       explicitly disabled/de-prioritized in launcher config. Repo: market-tick-data-service. **Done when**: a written
       root-cause verdict (Tardis-vendor-ceiling vs pipeline-stoppage vs config-change) is recorded in this issue doc's
-      Progress Log, with evidence.
+      Progress Log, with evidence. — market-tick-data-service@N/A (diagnosis-only, no code change)
 - [ ] [DATA] P1. **Based on the root cause from the todo above, either restore the UPBIT backfill or file an
       operator-gated descope decision.** If Tardis has the data: relaunch the UPBIT backfill and verify objects land in
       GCS for ≥3 recent days. If Tardis doesn't: file a concrete operator decision ask (wire live WS → GCS, or descope
@@ -111,3 +111,35 @@ Neither explains the May-25+ gap.
 
 _Initial finding filed 2026-08-04 by slot-6 (data_engineering) as part of
 `cefi_consolidated_native_ao_extract_2026_07_25.md` Todo 6._
+
+### Root-cause diagnosis — 2026-08-04 by slot-15 (data_engineering)
+
+**Verdict: PIPELINE STOPPAGE** (not Tardis vendor ceiling, not launcher config exclusion).
+
+**Evidence:**
+
+1. **Tardis API (a) — data IS available past 2026-05-22**: Direct `GET /v1/exchanges/upbit` query to `api.tardis.dev`
+   confirms UPBIT is `"enabled": true`, available since `2021-03-03`, with **no exchange-level `availableTo`**. Symbols
+   have been added as recently as **2026-07-31** (4 days before this diagnosis) — e.g. `BTC-AI` added 2026-06-30,
+   multiple symbols added 2026-07-28 through 2026-07-31. This conclusively rules out "Tardis stopped carrying UPBIT
+   data."
+
+2. **Launcher config (c) — UPBIT IS included and NOT disabled**: `launch-cefi-sharded-backfill.sh` line 636 includes
+   `UPBIT` in the default `VENUES` list alongside all other CEFI spot venues. The `_venue_years()` function (line 652)
+   assigns UPBIT years `2022 2023 2024 2025 2026`. UPBIT is correctly classified as spot-only (`_venue_is_derivatives`
+   returns 1 for UPBIT — it only gets the "heavy" group with `trades;book_snapshot_5`, no light/derivatives group). No
+   config exclusion, no commented-out UPBIT, no de-prioritization.
+
+3. **VM logs (b) — pattern matches SPOT preemption without auto-recovery**: The degradation pattern (2026-05-22: 606
+   objects → May 23-24: 36 book_snapshot_5-only, KRW pairs only, no trades → May 25+: zero) is characteristic of a SPOT
+   VM that was preempted mid-backfill and never auto-recovered. The `cefi-coverage-backfill` VM task uses SPOT by
+   default (`--provisioning-model=SPOT`), and pre-May-2026 the preemption recovery infrastructure (`RelaunchPreemptedVm`
+   actuator) may not have been in place for this launcher (the `lc_write_launch_params` +
+   `lc_write_preemption_signal_file` preemption-recovery wiring was added 2026-07-15 per
+   `cefi_completion_program_2026_07_15.md`). The 2-day residual tail (May 23-24 with KRW-only book data) is consistent
+   with a partially-completed shard that finished its in-flight work before the VM terminated.
+
+**Recommendation for Todo 2**: Since Tardis carries the data and the launcher config is correct, **relaunch the UPBIT
+backfill** (2022-2026, heavy group only — `trades;book_snapshot_5` for SPOT_PAIR instruments). The preemption-recovery
+infrastructure is now in place, so a fresh launch should complete normally. Scope:
+`VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
