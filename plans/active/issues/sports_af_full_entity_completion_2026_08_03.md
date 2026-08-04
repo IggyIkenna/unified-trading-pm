@@ -308,3 +308,18 @@ are genuinely in scope for the operator's "no exceptions" directive.
   again. Recommend the next dispatch check both the storm doc's "re-check after several hours" todo (not yet due — only
   ~15-20 min of storm-doc-tracked time has elapsed since it was filed) and this doc's new durable-gate-fix todo before
   repeating the same manual check a 7th time.
+- **2026-08-04 (slot 13)** — Dispatched `sports_af_full_entity_completion-003` a seventh time. Singleton lock was FREE.
+  Bucketed the storm doc's preemption log into 10-min buckets over the trailing 90 min and found a real peak-then-taper
+  shape (32→1-6/10min) plus an 11-min clean gap right before checking — read as genuine subsidence and relaunched
+  FIXTURE_STATS as `af-backfill-20260804-011911` (safe idempotent resume). Preempted again at 01:21:36-48Z, ~2.5min
+  lifetime — the **7th FIXTURE_STATS preemption today**, zero clean completions across all 7 attempts. Re-ran
+  `census_fixture_stats_lineups_widening_volume_2026_07_31.py` beforehand: still 125/68,284 non-MVP shards (0.18%,
+  unchanged). Full analysis + revised recommendation in
+  `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s Progress Log — zone-wide aggregate rate
+  alone was NOT sufficient evidence to safely relaunch this `e2-standard-8` entity; a future dispatch should wait for a
+  longer confirmed-clean window before trying again. Did NOT attempt an 8th relaunch. **FIXTURE_LINEUPS remains
+  blocked** — gate still unmet; did NOT launch it. `skip-current-task`'d again so it requeues. The durable
+  convergence-gate fix (now a proper `- [ ]` todo above, P1, repo: agent-orchestrator) is unchanged by this dispatch —
+  confirmed (again) this worker has no filesystem access to the live orchestrator `data/config/backlog.yaml` from
+  `.tabs/13/agent-orchestrator` (only the `backlog.test.yaml` fixture) to implement it directly; still needs
+  main/operator.

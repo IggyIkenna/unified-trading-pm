@@ -193,3 +193,20 @@ to preemption with proportionally little forward progress while it lasts.
   hours" recheck (too soon, todo below stays open): `af-backfill-20260804-015704` (FIXTURE_STATS) was preempted at
   01:04:30-41Z after a ~6.2min lifetime — storm confirmed still active as of this timestamp, no material change from the
   151-events/5h baseline. Did not attempt a further FIXTURE_STATS relaunch (5 attempts today, zero net progress).
+- **2026-08-04 (slot 13)** — Working `sports_af_full_entity_completion-003` (7th dispatch). Bucketed
+  `compute.instances.preempted` in `asia-northeast1-c` over the trailing 90 min into 10-min buckets: 1, 16, 32, 7, 7, 1,
+  3, 6 — a genuine peak-then-taper shape (peak 32/10min at 00:10-00:20Z, down to 1-6/10min by 00:40-01:10Z), plus an
+  11-min clean gap (01:06:55Z→01:18:08Z) immediately before I checked. Read this as real evidence of subsidence (not
+  just a lull inside an ongoing storm) and, with the singleton lock free and FIXTURE_STATS still at 125/68,284 non-MVP
+  shards (0.18%, unchanged), relaunched it as `af-backfill-20260804-011911` (safe idempotent resume, no `--force`) —
+  **this was the wrong call**: preempted again at 01:21:36-48Z, ~2.5min lifetime, the **7th FIXTURE_STATS preemption
+  today**. The zone-wide rate check immediately after (last 20 min: only 2 log lines, both this one VM's own
+  preempt-start/preempt-end pair) shows the broader storm genuinely IS much calmer than the 00:10-00:20 peak — so this
+  reads as one unlucky `e2-standard-8` capacity hit rather than a resumed broad storm, but it's still enough to keep
+  FIXTURE_STATS from converging. **Revised recommendation for the next dispatch**: the zone-wide aggregate rate is not
+  by itself sufficient evidence to green-light a relaunch of THIS specific machine type/entity — either wait for a
+  longer clean window (this attempt only had ~11 min of quiet before I acted) or check `e2-standard-8`-specific SPOT
+  capacity signals if that's exposed anywhere, before trying again. Did NOT attempt an 8th relaunch this session.
+  `af-backfill-20260804-011911` never got far enough to write a `run.log` (confirmed via `gsutil stat` — no object
+  exists), so nothing to add on the "does auto-recovery fire" question beyond what todo 2 above already found.
+  FIXTURE_LINEUPS gate remains unmet; `skip-current-task`'d the sports campaign todo again.
