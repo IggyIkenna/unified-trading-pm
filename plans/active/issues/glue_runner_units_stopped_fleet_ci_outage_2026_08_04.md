@@ -50,8 +50,9 @@ depends_on: []
 # Fleet CI outage: two stopped glue-runner units block UAC->main + 11 dependent repos
 
 > **🔴 FLEET CI OUTAGE — 11 repos' LDR->main promotion blocked ~1h+ by two stopped self-hosted runners on the planning
-> VM. Immediate fix needs host root (`systemctl start` ×2). instruments-service main QG-v2 RED is a SYMPTOM — do NOT
-> "fix" instruments-service code; it is GREEN on LDR.**
+> VM. Immediate fix needs host root (`systemctl start` ×2). instruments-service main QG-v2 RED was ALSO a genuine
+> test-layer break (now fixed on LDR as `96ea6c4b`, see "Correction" below) — the runner outage still blocks a fresh CI
+> reading, but was never the sole cause.**
 
 ## Root-cause chain (slot-11-diagnosed, main-verified)
 
@@ -65,6 +66,18 @@ depends_on: []
    dependent repos incl. instruments-service — so instruments-service **main** QG-v2 is RED purely because it resolves
    `unified-api-contracts` against a STALE UAC main (missing `d67a226f`'s OKX_SWAP venue-registry cleanup, already on
    UAC LDR + already consumed by instruments-service LDR). The 4 failing OKX-SWAP venue tests are the visible symptom.
+   **Correction (cicd slot-3, agt-0f742e, 2026-08-04, live verification): the "instruments-service code+tests are GREEN
+   on LDR" claim above is WRONG for the test layer** — `d67a226f` also removed bare `"OKX"` as a `CEFI_VENUE_FOLD`
+   target (OKX-SWAP/OKX-FUTURES became their own declared venues), but instruments-service's own tests were never
+   updated to match. This is NOT a runner-outage artifact: the completed (non-stuck) main run 30893378880 actually
+   EXECUTED pytest and produced real `AssertionError`s (`assert 'OKX-SWAP' == 'OKX'`, golden-fixture drift, factory
+   itype-exchange mismatch, dedup-count pin drift) — an infra/runner failure would abort the workflow, not produce a
+   clean pytest diff. Confirmed independently via a local `.venv` install of the exact editable UAC content (same
+   `CEFI_VENUE_FOLD` dict, no bare `OKX` key). Fixed + shipped to `instruments-service@live-defi-rollout` as `96ea6c4b`
+   (full `quality-gates.sh` green, 5200 passed) — see `cefi_bare_okx_venue_removal_2026_08_04.md`, which shipped the
+   UAC+MTDS side of this migration but omitted the instruments-service test update. **Net**: the runner-outage root
+   cause (below) is still real and still blocks a FRESH green CI reading from landing, but it is no longer the ONLY
+   thing standing between instruments-service and a green LDR — the test-layer fix was also required and is now on LDR.
 4. All 11 OTHER repos' `github-glue-runner-*@glue-1.service` units are `active/running` (main verified) — confirming the
    two named units are the isolated anomaly, not a fleet-wide runner-config problem.
 
@@ -99,3 +112,12 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   so cannot self-serve. Answered the blocked question (Option A — operator host restart; disposition partial, the fix is
   operator-executed) and told slot-11 to stand down (fully diagnosed, nothing more it can do). This is a big finding
   (fleet CI outage, 11 repos, CI-critical path) — routed to the operator via this P1 issue doc's `[OPERATOR]` todo.
+- **2026-08-04 (cicd slot-3, agt-0f742e, escalation `main_ci_red`)** — Dispatched to fix instruments-service main
+  quality-gates-v2 RED. Found the "GREEN on LDR" claim above was incomplete: the completed (non-stuck) main run
+  30893378880 shows real pytest `AssertionError`s from `d67a226f`'s bare-`OKX` fold removal never being reflected in
+  instruments-service's own tests (`_canon_venue` fold assertions, the cefi expected-universe golden, the bare-OKX
+  itype-exchange gather, a dedup'd-target-count pin). Fixed all 4, regenerated the golden fixture, verified full
+  `quality-gates.sh` green locally (5200 passed, 6 skipped), shipped to `live-defi-rollout` as `96ea6c4b` (verified
+  ancestor-of-origin). Added the "Correction" note above rather than leaving the incomplete diagnosis to stand. Did NOT
+  touch the glue-runner infra (operator-gated, out of scope for this role, already correctly filed as the P1
+  `[OPERATOR]` todo below).
