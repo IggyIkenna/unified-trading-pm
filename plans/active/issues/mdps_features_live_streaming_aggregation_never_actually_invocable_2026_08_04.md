@@ -200,13 +200,16 @@ OOM if left running). The named successor is this issue doc's Todos below.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Add an `MDPS_SHARD_SPEC` env-var bridge to `_build_legacy_argv()`**
+- [x] ✅ [BACKEND] P1. **Add an `MDPS_SHARD_SPEC` env-var bridge to `_build_legacy_argv()`**
       (`market-data-processing-service/market_data_processing_service/cli/main.py`, mirrors the existing
       `MDPS_OPERATION`/`MDPS_CONTINUOUS_ROOT` pattern in `_bridge_operation_and_build_continuous_args()`) so
       `--shard-spec` can reach the legacy parser through the real `ServiceBootstrap` entry point. Add a regression test
       that exercises `_build_legacy_argv()` with `MDPS_OPERATION=streaming-aggregation` +
       `MDPS_SHARD_SPEC=cefi:BINANCE-FUTURES:trades` set and asserts both flags land in the returned argv. Repo:
-      market-data-processing-service.
+      market-data-processing-service. — market-data-processing-service@213e133 (bridge added inside
+      `_bridge_operation_and_build_continuous_args()`; 2 new regression tests in `tests/unit/test_cli_main_coverage.py`:
+      `test_mdps_shard_spec_env_var_bridges_to_shard_spec_flag` +
+      `test_no_mdps_shard_spec_env_var_omits_shard_spec_flag`; full quality-gates.sh green on this SHA).
 - [ ] [SCRIPT] P1. **Fix `setup-data-pipeline-vm.sh`'s `mdps-features-live` exec-dispatch branch** (~line 2474,
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) to invoke MDPS via the REAL entry-point contract:
       `MDPS_OPERATION=streaming-aggregation MDPS_SHARD_SPEC=<ag>:<venue>:<data_type> "$VENV/bin/python" -m     market_data_processing_service --operation process --mode live --start-date ... --end-date ...`
