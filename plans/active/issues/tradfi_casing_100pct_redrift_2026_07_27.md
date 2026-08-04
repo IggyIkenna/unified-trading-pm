@@ -42,7 +42,7 @@ context_scope:
   [
     market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
     unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
-    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
+    /plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -238,7 +238,7 @@ compare case-insensitively in the interim (`migration_pending`).
       `instruments-service@10513f78` (`tests/unit/test_tradfi_manifest_casing_inherited_from_utl_seam.py`, 5 tests) and
       `market-data-processing-service@25faf6d` (same filename, 2 tests). No code change needed in either repo. Full QG
       green both repos.
-- [ ] [DATA] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
+- [x] ✅ [DATA] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
       `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` to repair the 82,311 pre-fix lowercase rows
       (heavy-I/O → VM/in-region; prod-manifest CAS mutation, snapshot-first). **Re-tagged off `[OPERATOR]`
       (2026-07-28)**: per this doc's own line-85 framing ("idempotent, already-proven-safe") plus finding T
@@ -246,16 +246,21 @@ compare case-insensitively in the interim (`migration_pending`).
       `gcs_bucket_soft_delete_retention_seconds()` check on the tradfi manifest bucket returning ≥604800s at execution
       time qualifies this CAS re-stamp as reversibility-verified, no `[OPERATOR]` sign-off required. Add
       `continuous_future → FUTURE` to the restamp's canonical map first so its self-verify does not refuse. (repo:
-      market-tick-data-service) — **BLOCKED, NOT EXECUTED (2026-08-03, slot-7)**: both prerequisites confirmed met (UTL
-      seam content-verified present at deployed `v0.72.0`; all three writer fleet images — mtds/IS/MDPS — rebuilt
-      2026-08-03 with `unified-trading-library>=0.72.0` pinned; `continuous_future → FUTURE` already lives in UTL's
-      `canonicalize_manifest_instrument_type`, not a local map, so no separate add was needed). Dry-run found 1,400,429
-      candidate rows — 17x this doc's last-known 82,311 residual and past the script's own STOP-ON-SURPRISE ceiling
-      (500,000); it correctly refused rather than blind-rewrite. Root-caused to a SEPARATE archived migration that
-      already flipped ~1.3M of these same rows the OPPOSITE direction (lowercase) on 2026-07-29 — a genuine cross-repo
-      SSOT contradiction, not a new writer bug. Full diagnosis + operator decision needed:
-      `/plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`. This todo stays open, gated
-      on that doc's `[OPERATOR]` ruling.
+      market-tick-data-service) — DONE 2026-08-04. Prerequisites confirmed met 2026-08-03 (UTL seam content-verified
+      present; all three writer fleet images — mtds/IS/MDPS — rebuilt pinning `unified-trading-library>=0.72.0`;
+      `continuous_future → FUTURE` already lives in UTL's `canonicalize_manifest_instrument_type`). The initial dry-run
+      surfaced a 17x population surprise (1,400,429 vs 82,311) that the script's own STOP-ON-SURPRISE ceiling correctly
+      refused — root-caused to a genuine cross-repo SSOT contradiction against an archived, opposite-direction
+      migration; full diagnosis + resolution in
+      `/plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md` (archived, all 4 todos
+      done): operator ruled UPPERCASE canonical (Option A), the seeding-function staleness precondition was fixed
+      (`instruments-service@47a631ff`, `@d79b9d74`), the STOP-ON-SURPRISE ceiling was raised with justification
+      (`market-tick-data-service@4cae1cb0`, 500,000 → 2,000,000), and the real `--apply` landed: 6,600,032 rows
+      rewritten in place (row count preserved), 1,401,523 `instrument_type` values case-corrected to UPPERCASE,
+      self-verify 5,860,660/5,860,660 canonical, independently re-verified with a fresh read against the confirmed
+      post-apply generation — 0 residual. The tradfi manifest `instrument_type` column is now literal-100% UPPERCASE
+      (excluding the permanent `futures_chain`/`options_chain` bundle-grain exclusion). **This closes the last open todo
+      in this doc — every todo here is now done, no `locked_by`, archiving this session.**
 
 ## Progress Log
 

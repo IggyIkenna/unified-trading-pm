@@ -27,7 +27,7 @@ related:
     /plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
+    /plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
   ]
 created: 2026-07-28
 priority: P3
@@ -152,7 +152,7 @@ lookup), so this is a cleanliness/consolidation migration, not a correctness blo
   this doc's own 2026-07-29 apply) — the two efforts never cross-referenced each other, and this migration's ~1.3M
   relabeled rows are the dominant population behind a 17x population surprise found working
   `tradfi_casing_100pct_redrift-014`. See
-  `/plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md` for the full diagnosis + the
+  `/plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md` for the full diagnosis + the
   pending `[OPERATOR]` ruling on which direction is actually canonical. This doc's `status: resolved` reflects that its
   OWN stated goal (collapse `COMBO`/`combo` to one casing) was achieved at the time — it does not mean the direction
   chosen is still considered correct.

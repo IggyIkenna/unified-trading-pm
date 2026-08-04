@@ -15,7 +15,7 @@ summary: >-
   tradfi combo-lowercase rows, matching that migration's 2026-07-29 post-apply total (1,339,306) plus organic growth.
   Re-running the UPPERCASE script now would flip these same 1.3M+ rows a THIRD time with no coordination between the two
   efforts. NOT executed — escalating instead.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -36,6 +36,8 @@ parent_epic: tradfi_master
 assigned_vm: planning
 source: [tradfi_casing_100pct_redrift_2026_07_27.md]
 resolved_by:
+  "market-tick-data-service@4cae1cb0 (ceiling raise) + the real --apply, 2026-08-04 -- 6,600,032 rows rewritten,
+  1,401,523 case-corrected, independently re-verified 0 residual"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: investigate
@@ -59,6 +61,16 @@ context_scope:
     market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** — status=resolved, all four todos done. Direction ruled UPPERCASE (operator, Option A);
+> seeding-function staleness fixed (`instruments-service@47a631ff`, `@d79b9d74`); the real `--apply` landed
+> (`market-tick-data-service@4cae1cb0` ceiling raise + apply) — 6,600,032 rows rewritten, 1,401,523 case-corrected,
+> independently re-verified 0 residual against the post-apply generation; cross-references added to the archived
+> `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` and
+> `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`. Codex-alignment: added a new lesson to
+> `/codex/02-data/availability-manifest-and-data-status.md` on seed/capture casing parity (a manifest-column casing
+> canon must be applied identically at every place that materializes a row for the same shard atom, not just the writer
+> seam). Archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## What I found
 
