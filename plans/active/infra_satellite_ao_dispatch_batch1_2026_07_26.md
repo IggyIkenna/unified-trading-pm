@@ -719,19 +719,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       deployment-service (audit + doc only, no code change). Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`
       (deployment_scripts_bucket).
 
-- [ ] [CODE] P3. **Build GAP G-TRACE — a cross-service E2E data-pipeline trace API + UI view.** Rehomed 2026-07-27 from
-      `issues/issue_docs_remediation_sweep_2026_06_02.md` as a true orphan (per operator decision,
-      `june_2026_vintage_audit_findings_2026_07_27.md` §5#28). Add `/api/data-status/pipeline-trace?instrument&date` to
-      deployment-api: thread one instrument/date through every pipeline stage (IS→MTDS→MDPS→features→strategy→
-      execution) and return per-hop `capture_status`, so an operator can answer "where did this instrument/date get
-      stuck" in one call instead of checking each service's manifest separately. Add a corresponding deployment-ui view
-      (playwright gate applies — `pw:L2 ✓` + a cited regression spec). This is a larger feature than most items in this
-      batch; coordinate with any in-flight data-status canonicalisation work touching `DataStatusTab.tsx` /
-      `data_status_service` before landing (this batch's own Deferred item 4 already flags `DataStatusTab.tsx` as a
-      multi-batch collision point — read it first). **Done when**: the trace endpoint returns real per-hop
-      `capture_status` for a known instrument/date, the UI view renders it with `pw:L2 ✓` evidence, and both are
-      QG-green. Repos: deployment-api, deployment-ui. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`
-      (e2e-pipeline-manifest-wiring, G-TRACE).
+- [x] ✅ [CODE] P3. **DONE 2026-08-04 — `deployment-api@4c394e9` + `deployment-ui@10d2a60`.** Built GAP G-TRACE.
+      `GET /api/data-status/pipeline-trace?instrument&date&asset_group` (orchestrates the existing
+      `lookup_capture_status_for_shard` per-hop, no new manifest-read logic) threads one instrument/date through all 8
+      hops (IS→MTDS→MDPS→3x features families→strategy→execution) and returns per-hop `capture_status` + `stuck_at`.
+      Live-verified against real GCS data (MTDS/MDPS real `captured` + timestamps for a real instrument, 2026-08-04); 5
+      backend unit tests. `PipelineTraceCard` added to deployment-ui's `DataStatusTab.tsx` (unconditional, matching
+      `HonestCoverageCard`). `pw:L2 ✓` (3/3 new + 48/48 matched specs, 0 regressions) | regression:
+      `tests/smoke/pipeline_trace_card.spec.ts`. Vitest `PipelineTraceCard.test.tsx` (6/6) closed a global
+      branch-coverage floor miss the new component caused (63.62%→64.21%, floor 64%). Both repos full `quality-gates.sh`
+      green, both shas confirmed ancestors of `origin/live-defi-rollout`. Repos: deployment-api, deployment-ui. Source:
+      `issues/issue_docs_remediation_sweep_2026_06_02.md` (e2e-pipeline-manifest-wiring, G-TRACE).
 
 ## Deferred — real AO-eligible work held back, with the reason (per the non-batchable taxonomy)
 

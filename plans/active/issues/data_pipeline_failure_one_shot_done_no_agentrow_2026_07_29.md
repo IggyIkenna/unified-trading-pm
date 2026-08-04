@@ -220,3 +220,30 @@ still in flight.
   contributing trigger — every prior report's session was a single continuous tool-call sequence, while this one had a
   multi-minute gap where the acting session had no tool calls in flight (waiting on a backgrounded `Workflow` task),
   which is exactly the kind of gap an idle/liveness-based AgentRow reclaim would key on.
+- **2026-08-04 (cicd escalation agt-892a1c, slot 2):** seventh corroboration, but with a WORKAROUND this time (not just
+  another repro) — a `POST /api/slots/2/claim-interactive` call fixed normal dispatch immediately, though the specific
+  `one_shot_complete` 400 itself was never retried post-fix (see caveat below; do not read this as "resolved"). Hit the
+  identical 400 (`task_id: ""` and `task_id: "agt-892a1c"`, same message, twice) after finishing a
+  `cicd`/`ldr_qg_failure` escalation. Before giving up per the established precedent, checked one thing none of the six
+  prior reports mention: `GET /api/slots/2/claim` (the file-based `.agent-claim`, DISTINCT from the `AgentRow` DB table
+  this doc's own code trace targets — see `server/routes/slots_worker.py`'s `claim_interactive_session` docstring:
+  "Worker sessions are registered automatically via `/spawn`... interactive sessions must call this endpoint") →
+  `{"present": false}`. A `cicd`-role escalation session never calls `/spawn` (it is dispatched via `POST /api/escalate`
+  instead, per `cicd.md`), so if `/spawn` is what writes `.agent-claim` normally, an escalation-dispatched session would
+  ALWAYS start with no claim on file — a plausible root cause for why this bug class disproportionately hits one-shot
+  escalation/audit roles (`cicd`, `data_pipeline_failure`, `ag_closeout_auditor`, `na_eligibility_auditor` — every role
+  in this doc-chain so far) rather than normally-`/spawn`ed persistent workers. Called
+  `POST /api/slots/2/claim-interactive {tmux_session: "orch-slot-2", operator: "ikenna"}` (self-registers a 12-hour
+  claim, `role: "interactive"`) as a diagnostic probe — `GET /api/slots/2/claim` then confirmed
+  `{"present": true, ...}`. Immediately after, a plain `/heartbeat` (no special flag) went from
+  `dispatch_reason: "spawn registration pending (grace window, holding slot)"` / `new_task: null` to a REAL Class-A
+  dispatch (`infra_satellite_ao_dispatch_batch1-022`) — i.e. this DID fix normal backlog dispatch for this slot. Went on
+  to do that task (and a follow-up, `-026`) as a normal worker, and `/done` (plain, `one_shot_complete` NOT set, a real
+  `task_id`) succeeded cleanly both times with a real `next_task` returned — no 400, no workaround needed on THAT code
+  path. **Caveat — do not overclaim**: never went back and retried the ORIGINAL `one_shot_complete: true` call for
+  `agt-892a1c` after the claim fix, so it is NOT confirmed whether `_done_one_off`'s `find_active_agent_for_session`
+  (the AgentRow-status check this doc's code trace targets) is satisfied by a `.agent-claim` file at all, vs. these
+  being two genuinely independent registration systems where the claim fix happened to also unstick dispatch via a
+  different mechanism. **Suggested next step for whoever revisits this**: the very next `one_shot_complete` 400 — call
+  `claim-interactive` FIRST, then retry the SAME `/done` call before concluding it is still broken; that single retry is
+  the missing data point every report so far (including this one) has left open.
