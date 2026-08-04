@@ -29,6 +29,7 @@ related:
     /codex/11-project-management/issue-doc-lifecycle.md,
   ]
 created: 2026-07-31
+author: unknown
 last_updated: 2026-07-31
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

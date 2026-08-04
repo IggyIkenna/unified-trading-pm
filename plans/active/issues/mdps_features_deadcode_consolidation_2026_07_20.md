@@ -26,6 +26,7 @@ scope: [engineer, admin]
 tags: [dead-code, orphan, vm-launcher, registry, self-heal, monitoring, consolidation, mdps, features]
 related: [../data_pipeline_check_mdps_features_2026_07_20.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-07-20
+author: unknown
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -89,15 +90,25 @@ launcher deletions. Other: operator free-text.
       `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md:93`: `deployment-service@77c0206`, deleted the
       entire unreachable post-redirect body + fixed `_python_module_for`/`lc_verify_tarball_freshness`,
       `quality-gates.sh` green.
-- [ ] 5. [SCRIPT] P3. S2-b — delete the 8 stale `features_*_service` keys in `setup-data-pipeline-vm.sh`
+- [x] ✅ 5. [SCRIPT] P3. S2-b — delete the 8 stale `features_*_service` keys in `setup-data-pipeline-vm.sh`
       SERVICE_TARBALLS (post-2026-05-08 consolidation; only `features_service` is built). Adjacently fix the stale
-      `ml_*_service` keys.
-- [ ] 6. [SCRIPT] P3. S3-a — delete MDPS one-offs past `Delete-when` after verifying each condition:
+      `ml_*_service` keys. **DONE (ao-dispatch batch2 2026-08-03)** — closed via
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:100: `deployment-service@d3b5a3f`, deleted all 10
+      stale keys from SERVICE_TARBALLS + orphaned TARBALL_DIRS entries + MTDS_DEPENDENT_SERVICES + AWS twin,
+      `quality-gates.sh` green.
+- [x] ✅ 6. [SCRIPT] P3. S3-a — delete MDPS one-offs past `Delete-when` after verifying each condition:
       `reconcile_mdps_available_at_2026_05_13.py`, `reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py`,
       `reconcile_1440_nan_placeholders.py`. KEEP `benchmark_fullmonth_binance.py` (reused for the MDPS steady-state
-      benchmark in the parent plan; its `Delete-when` plan is archived but the tool is in active use).
-- [ ] 7. [SCRIPT] P3. S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations (archived plan +
-      dead `launch-features-backfill-vm.sh` header) to `launch-features-vm.sh` + the codex smoke-matrix doc.
+      benchmark in the parent plan; its `Delete-when` plan is archived but the tool is in active use). **DONE
+      (ao-dispatch batch2 2026-08-03)** — closed via
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:106: `market-data-processing-service@75509b8`,
+      Delete-when verified 2026-08-04 for all 3 scripts, companion test files deleted, benchmark_fullmonth_binance.py
+      confirmed still present, `quality-gates.sh` green.
+- [x] ✅ 7. [SCRIPT] P3. S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations (archived
+      plan + dead `launch-features-backfill-vm.sh` header) to `launch-features-vm.sh` + the codex smoke-matrix doc.
+      **DONE (ao-dispatch batch2 2026-08-03)** — closed via
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:113: `e2e-testing@e117593` (file already relocated
+      from features-service@7717fbee; fixed at new location), 4 citations replaced, `quality-gates.sh` green.
 - [ ] 8. [SCRIPT] P3. S3-b — sports dual entrypoint (`python -m features_service.sports` with `--tables`/sfi-progressive
       vs `--feature-family sports`) — operator/design adjudication (fold submodule behind the family flag OR bless the
       submodule). Do NOT silently delete (breaks live sports backfills). Also the misleading "DEPRECATION NOTE" on the

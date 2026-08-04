@@ -28,6 +28,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-13
+author: unknown
 parent_epic: mtds_mdps_master
 priority: P0
 source: sports_manifest_canonicalisation-004 dispatch, slot 3, 2026-07-13

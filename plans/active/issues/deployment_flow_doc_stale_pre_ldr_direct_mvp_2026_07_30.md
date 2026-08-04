@@ -22,6 +22,7 @@ related:
   - /codex/08-workflows/ci-cd-flow.md
   - /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-30
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 assigned_vm: NA

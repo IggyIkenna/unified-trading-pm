@@ -50,13 +50,14 @@ tags:
   ]
 related:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md,
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
   ]
 created: 2026-08-02
+author: unknown
 parent_epic: sports_master
 priority: P1
 estimate_class: research
@@ -73,7 +74,7 @@ depends_on: []
 last_updated: 2026-08-02
 context_scope:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     /codex/02-data/sports-data-source-coverage-matrix.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_core.py,
@@ -160,5 +161,5 @@ LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
   an in-progress UAC edit (`PipelineMode.LIVE_API_FOOTBALL` + `SOURCE_MODE_CAPABILITY["api_football"]` Mode.LIVE flip)
   before committing, once this conflict surfaced — no code shipped, tree clean. Escalating via `/blocked`; continuing on
   the non-conflicting primary `odds_api` live-VM resume in parallel (see
-  `/plans/active/sports_live_availability_and_source_latency_2026_07_24.md` Progress Log for that thread).
+  `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` Progress Log for that thread).
 - **context-scout 2026-08-03**: populated context_scope (5 entries).

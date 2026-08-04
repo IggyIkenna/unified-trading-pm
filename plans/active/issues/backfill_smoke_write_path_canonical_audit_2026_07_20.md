@@ -41,6 +41,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-07-20
+author: unknown
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -62,7 +63,7 @@ context_scope:
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
     /codex/02-data/pipeline-mode-partition.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
   ]
 source: >-
@@ -283,19 +284,21 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
 - [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
       IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
       `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.
-- [x] ✅ 4. [SCRIPT] P2. **[already covered by `/plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see
-      that doc for execution]** — citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm:
-      add a Phase-0 `-test-` assertion on the resolved WRITE bucket to `data-pipeline-check-mdps` and
-      `data-pipeline-check-features`, closing their fail-open `--output-bucket` / `--sink-bucket` mechanism. Provenance:
-      this audit § 1. **Extracted verbatim** into that active `assigned_vm: planning` batch, which cites
+- [x] ✅ 4. [SCRIPT] P2. **[already covered by
+      `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see that doc for execution]** —
+      citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm: add a Phase-0 `-test-`
+      assertion on the resolved WRITE bucket to `data-pipeline-check-mdps` and `data-pipeline-check-features`, closing
+      their fail-open `--output-bucket` / `--sink-bucket` mechanism. Provenance: this audit § 1. **Extracted verbatim**
+      into that active `assigned_vm: planning` batch, which cites
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #4 (audit § 1) as its own `Source:` and carries the
       done-when. Tracked there, not here — this checkbox simply never got flipped to cite the extraction.
-- [x] ✅ 5. [DOCS] P2. **[already covered by `/plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see that
-      doc for execution]** — citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm: add
-      an explicit "never pass `--allow-live-prod-writes`" prohibition to `data-pipeline-check-mtds/SKILL.md`.
-      Provenance: this audit § 1a. **Extracted verbatim** into that active `assigned_vm: planning` batch as a `[DOC] P3`
-      todo citing `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a) as its own `Source:`.
-      Tracked there, not here.
+- [x] ✅ 5. [DOCS] P2. **[already covered by `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`,
+      see that doc for execution]** — citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi).
+      unified-trading-pm: add an explicit "never pass `--allow-live-prod-writes`" prohibition to
+      `data-pipeline-check-mtds/SKILL.md`. Provenance: this audit § 1a. **Extracted verbatim** into that active
+      `assigned_vm: planning` batch as a `[DOC] P3` todo citing
+      `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a) as its own `Source:`. Tracked there, not
+      here.
 - [ ] 6. [DATA] P3. instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
       `partition={"group","day","venue"}` → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat
       `day=/venue=`) are in the canonical shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit

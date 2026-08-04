@@ -143,45 +143,36 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       `quickmerge.sh --agent --files`. Source:
       `plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`
 
-- [ ] [CODE] P2. Execute the swaps_ohlcv_* defi data_types registry fix (the two open `[CODE]` todos at lines 258/262 of
-      the source doc, consolidated). GATED ON `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s completeness_pct
-      simulation VERIFY (target doc line 253, marked [x]) — read that finding from the issue doc's Progress Log FIRST.
-      If the simulation showed the exclusion-guard is required: add a
-      `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard to instruments-service's
-      `scripts/enumerate_expected_universe.py` (mirroring `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` exactly,
-      scoped to the 7 `swaps_ohlcv_*` keys — coordinate/sequence AFTER batch1's own line-164
-      enumerate_expected_universe.py edit lands to avoid same-file collision), THEN add
-      `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` to unified-api-contracts' `DATA_TYPES_BY_ASSET_GROUP['defi']`. Otherwise
-      (guard not needed): execute Path B stopgap — add a `DEFI_CANDLE_ACCEPTED_NONCANONICAL_DATA_TYPES` frozenset to
-      deployment-api's `deployment_api/routes/data_status/_distinct_values.py::_ACCEPTED_EXCEPTIONS`. Repos:
-      instruments-service, unified-api-contracts, deployment-api. Done when: the chosen path's change is committed via
-      scoped `quickmerge.sh --agent --files` with `quality-gates.sh` green, and — for Path A — a cited before/after
-      completeness_pct measurement is recorded, or — for Path B — confirmation the change is deployment-api-local with
-      zero denominator/expected_unattempted impact. Source:
-      `plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`
+- [x] ✅ [CODE] P2. Execute the swaps_ohlcv_* defi data_types registry fix — instruments-service@942e0808,
+      unified-api-contracts@28c7102d. **ALREADY DONE by slot-6 on 2026-08-02.** The gating VERIFY (2026-07-28, slot-5)
+      showed the exclusion-guard IS required; Path A was then executed via two commits: (1) instruments-service@942e0808
+      added `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` guard + `_defi_mtds_tick_manifest_data_types()` wired into
+      both `enumerate_v2` call sites; (2) unified-api-contracts@28c7102d added the 7 `swaps_ohlcv_*` keys to
+      `DATA_TYPES_BY_ASSET_GROUP['defi']` with `NEEDS_CANDLE_PROCESSING: False`. Before/after delta measured: **zero**
+      (byte-identical row sets from the real shipped `enumerate_v2()`). Path B (accepted-exception stopgap, `[CODE] P3`
+      in the source doc) is now moot/superseded — closed in this same push. Both SHAs verified on
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
 
-- [ ] [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` GCS-object coverage for UNISWAP_V2, UNISWAP_V4,
-      TRADER_JOE_V2, VELODROME_V2 across 2026-03 through today (repeat the sampled `list_blobs` existence +
-      `pq.read_table` content-probe methodology from the source doc), now that the mtds-dex-pools-backfill relaunch and
-      the mtds-dex-swaps-backfill-1/2/3 sharded fleet have had time to run; if network/GCS conditions allow, also re-run
-      the manifest-level `capture_status` cross-check (chunked-download or pyarrow dataset+filter pattern, as the source
-      doc's Todo4 prescribes) to corroborate the object-level findings. Repo: market-tick-data-service. Done when: a
-      written verdict states, per (protocol, data_type) cell, whether the 2026-03→today gap identified in the source doc
-      has closed (with sample-date evidence), and either the manifest cross-check ran and its capture_status
-      distribution is recorded, or a stated reason it remains blocked on network conditions. Source:
+- [x] ✅ [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` GCS-object coverage — 2026-08-04, slot-7. Verdict
+      recorded in Progress Log below. **Summary**: (A) Old 2026-03→07-20 `dex_pool_state` gap CONFIRMED CLOSED for
+      UNISWAP_V2 (14/16 dates found), UNISWAP_V4 (13/16), VELODROME_V2 (14/16) — GCS objects present with real content
+      (verified via `pq.read_table` on 8 sampled objects); TRADER_JOE_V2 `dex_pool_state` gap NOT closed (2/16 found,
+      only 03-12 and 04-03). (B) LIVE-EDGE `dex_pool_state` gap confirmed: all 3 healthy protocols absent 08-02/08-04
+      (the running `mtds-dex-pools-backfill` VM's `--end 2026-07-24` bound leaves dates after 07-24 uncovered). (C)
+      `dex_pool_swaps` mid-year gap (05-17→07-22) confirmed active for UNISWAP_V2/V4/VELODROME_V2; TRADER_JOE_V2
+      `dex_pool_swaps` still SPARSE (1/16 found: 08-02, 3 real swap rows — live capture working but historical gap fully
+      open). (D) Manifest cross-check NOT attempted: prior sessions measured ~100 KB/s GCS throughput; a full ~940 MB
+      manifest download would take 2.5-4.7h — same documented network constraint as the source doc's "Why not the
+      manifest" section. Object-level evidence is ground truth. Source:
       `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`
 
-- [ ] [DATA] P2. Now that the `_instruments_metadata.py` layout-tolerant reader fix (todos 1-3:
-      `market-tick-data-service@b94259a0` + `@cd8ce74e`) has shipped and promoted, verify against the real prod bucket
-      that `load_pool_metadata_for_date` returns non-`None`, non-zero real rows for `morpho`, `fluid`, and
-      `kamino_lending` (SOLANA) on a post-cutover date in 2026-07-23..2026-07-26, AND that the availability manifest
-      (`read_availability_index` on the `market-data-tick-defi` bucket, filtered `data_type=risk_params`,
-      `venue in     [morpho, fluid, kamino_lending / KAMINO-SOLANA]`, `date>=2026-07-23`) now shows non-zero captured
-      `row_count` — i.e. production data stopped being silently stamped `captured, row_count=0`. Read-only manifest/GCS
-      probe; no code changes. Repo: market-tick-data-service. Done when: a written verdict cites, per venue (morpho,
-      fluid, kamino_lending), at least one post-fix date where `load_pool_metadata_for_date` returns real rows and the
-      manifest confirms non-zero captured `row_count`; if any venue still reads zero, the residual is recorded rather
-      than silently passed. Source:
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-6).** Reader fix CONFIRMED works against prod: `load_pool_metadata_for_date`
+      returns 562-566 rows (morpho/ETHEREUM), 12 rows (fluid/ETHEREUM), 113 rows (kamino_lending/SOLANA) for all tested
+      dates 2026-07-24 through 2026-08-03. **Manifest STILL BROKEN:** every `risk_params` row for MORPHO (18,512 rows)
+      and FLUID (234 rows) since 2026-07-23 is `row_count=0` (`empty_confirmed`/`expected_unattempted`) — `attempted_at`
+      as recent as `2026-08-04T01:39:03Z`. KAMINO/KAMINO_LENDING/KAMINO-SOLANA has ZERO manifest rows. Residual: already
+      filed as P1 todo 8 in the source issue doc (stale VM tarball deployment). — market-tick-data-service@d2366203
+      (verification only). Source:
       `plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`
 
 ## Deferred
@@ -338,3 +329,39 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   2-of-5-venues-sampled scope note, so AO does not re-dispatch shipped work. Open todos: 5 → 4.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- unchanged, already minimal (code-free
   dispatch-batch coordinator).
+
+- **2026-08-04 (slot-7, data_engineering)** — worked the `[DATA] P2` dex_pool_state/dex_pool_swaps spot-check todo. Ran
+  128 GCS-object-existence probes (4 protocols × 2 data_types × 16 dates spanning 2026-03-01→2026-08-04) plus 8 content
+  probes (pq.read_table on sampled objects). Path structure verified correct:
+  `by_date/day=<d>/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=<UPPERCASE>/chain=<C>/instrument_type=pool/data_type=<D>/`.
+  Full verdict table:
+
+  **dex_pool_state**: UNISWAP_V2 — 14/16 found (88%, old gap CLOSED). UNISWAP_V4 — 13/16 (81%, CLOSED; 07-11 absent same
+  as slot-16's 08-03 residual). VELODROME_V2 — 14/16 (88%, CLOSED). TRADER_JOE_V2 — 2/16 (12%, NOT CLOSED; only 03-12
+  and 04-03 present — the stale-catalogue-cache root cause shipped `market-tick-data-service@d4408134` needs a VM
+  relaunch to take effect).
+
+  **LIVE-EDGE dex_pool_state gap**: all 3 healthy protocols absent for 08-02 and 08-04 (the running VM's fixed
+  `--end 2026-07-24` leaves dates after 07-24 uncovered, same as slot-16's 08-03 finding — the source doc's own
+  `[DATA] P2` todo (line ~358) already tracks this).
+
+  **dex_pool_swaps**: UNISWAP_V2 — 8/16 (50%, mid-year gap 05-17→07-22 remains). UNISWAP_V4 — 7/16 (44%). VELODROME_V2 —
+  7/16 (44%). TRADER_JOE_V2 — 1/16 (SPARSE; only 08-02 with 3 real rows — live capture works but historical gap fully
+  open). All content-probed objects returned real, non-trivial rows (no empty placeholders, no back-dated timestamps).
+  Manifest cross-check NOT attempted: same ~100 KB/s GCS throughput constraint documented in the source doc's "Why not
+  the manifest" section. Object-level evidence is ground truth. No code changes shipped — read-only GCS verification
+  only. Scratch script at `market-tick-data-service/scripts/scratch/dex_coverage_spot_check_2026_08_04.py` (deleted
+  after use).
+
+- **2026-08-04 (slot-6, data_engineering)** — worked the `[DATA] P2` `_instruments_metadata.py` reader-fix verification.
+  Read-only, no code changes. **Part A — reader fix CONFIRMED works**: `load_pool_metadata_for_date` invoked directly
+  against `instruments-store-defi-prd-central-element-323112` returns real non-empty rows for all 3 target venues:
+  morpho/ETHEREUM (562-566 rows across 2026-07-24→2026-08-03), fluid/ETHEREUM (12 rows), kamino_lending/SOLANA (113
+  rows). **Part B — manifest CONFIRMED STILL BROKEN**: `read_availability_index` on
+  `market-data-tick-defi-prd-central-element-323112`, filtered `data_type=risk_params`/`date>=2026-07-23`: MORPHO 18,512
+  rows ALL `row_count=0`, FLUID 234 rows ALL `row_count=0`, `attempted_at` as recent as `2026-08-04T01:39:03Z`
+  (`pipeline_mode=batch_onchain_rpc`). KAMINO/KAMINO_LENDING/ KAMINO-SOLANA has ZERO manifest rows since 2026-07-01
+  (consistent with source doc's finding that kamino_lending risk_params never dispatches). The reader fix
+  (market-tick-data-service@b94259a0 + @cd8ce74e, promoted to main) is correct in code but the production capture
+  pipeline is still running pre-fix code — consistent with the suspected stale VM tarball deployment documented in the
+  source issue doc's todo 8 (P1). Flipped the plan checkbox recording the residual rather than silently passing it.

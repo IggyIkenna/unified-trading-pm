@@ -7,7 +7,7 @@ summary: >-
   corresponding checkbox back into its true source doc (mdps_features_deadcode_consolidation_2026_07_20.md,
   candle_feature_canonical_path_divergence_2026_07_20.md, backfill_smoke_write_path_canonical_audit_2026_07_20.md) and
   checks whether any source doc now has zero open todos and is itself an archival candidate.
-status: active
+status: archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, na-eligibility-audit, finalize, batch-2]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -39,7 +39,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -54,12 +54,19 @@ source: >-
 
 # Infra satellite AO dispatch batch 2 — finalize
 
+> **ARCHIVED 2026-08-04** — Closeout complete. All 3 source-doc checkboxes reconciled against parent batch SHAs (all 8
+> verified on origin). Verdict: `mdps_features_deadcode_consolidation` (4 open: operator A/B/C + design adjudication),
+> `candle_feature_canonical_path_divergence` (2 open: split-count + cosmetic),
+> `backfill_smoke_write_path_canonical_audit` (2 open: comment corrections + scope decision) — none at zero open todos,
+> none archival-eligible. Deferred tradfi item resolved by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` todos 3 +
+> 9 (both `[x]`). This plan + parent archived per the 6-step ritual; all corpus-wide referrer paths updated.
+
 > **Machine-gated on `infra_satellite_ao_dispatch_batch2_2026_07_27.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue this plan's todo until the parent's 9 todos are done.
 
 ## Todos
 
-- [ ] [DOC] P2. **Reconcile source-doc checkboxes + check archival eligibility for all 3 sources.** Once the parent
+- [x] ✅ [DOC] P2. **Reconcile source-doc checkboxes + check archival eligibility for all 3 sources.** Once the parent
       batch's 9 todos are `[x]`: (1) for each of `issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
       `issues/candle_feature_canonical_path_divergence_2026_07_20.md`,
       `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md` — close the corresponding checkbox(es) this batch
@@ -82,3 +89,17 @@ source: >-
 ## Progress Log
 
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries) — finalize gate, code-free by design.
+- **2026-08-04 (slot 9, infra)**: Executed the closeout todo: (1) Verified all 8 parent-batch commit SHAs exist on
+  `origin/live-defi-rollout` — `deployment-service@77c0206`, `deployment-service@d3b5a3f`, `deployment-service@a182c68`,
+  `market-data-processing-service@75509b8`, `market-data-processing-service@beb9fed`,
+  `unified-trading-library@5793d28b`, `unified-trading-pm@0f13ea066`, `unified-trading-pm@f40169fe5`,
+  `e2e-testing@e117593` — all confirmed. (2) Flipped source-doc checkboxes: `mdps_features_deadcode_consolidation`
+  #5/6/7, `candle_feature_canonical_path_divergence` #15/16, each citing the verified SHA.
+  `backfill_smoke_write_path_canonical_audit` #4/5 were already `[x]` — no change needed. (3) Checked archival
+  eligibility for all 3 source docs — none qualify: `mdps_features_deadcode` has 4 remaining open (1/2/3 operator A/B/C
+  decisions, 8 design adjudication), `candle_feature_canonical_path_divergence` has 2 (9 split-brain count, 13 cosmetic
+  index key), `backfill_smoke_write_path_canonical_audit` has 2 (3 comment corrections, 6 scope decision). All stay
+  `status: open`, `assigned_vm: NA`. (4) Verified the deferred tradfi item:
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` todos 3 and 9 are both `[x]` done with evidence confirming they
+  flipped the corresponding checkboxes in `tradfi_backfill_throughput_followups_2026_07_24.md` — resolved, no follow-up
+  needed. (5) Archiving this finalize plan + its parent batch per the 6-step ritual.

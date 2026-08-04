@@ -34,11 +34,12 @@ tags:
   [pipeline-e2e-check, data-pipeline-check-mtds, report-write, process-hang, memory-leak, shared-host, resource-cleanup]
 related:
   [
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: "2026-08-04"
+author: unknown
 last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -62,7 +63,7 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/scripts/pipeline_e2e_check.py,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
   ]
 ---
 
@@ -121,11 +122,14 @@ guardrail was created to catch (3 prior real outages).
       file writes are complete before `os._exit()` fires. Test coverage: 4 unit tests in
       `tests/unit/test_pipeline_e2e_check_post_completion_exit.py` verifying `os._exit()` (not `sys.exit()`) is called
       with the correct exit codes. QG: 9966 passed.
-- [ ] [BACKEND] P3. **Add a wall-clock safety timeout** to `pipeline_e2e_check.py`'s own top-level `main()` (e.g. via
+- [x] ✅ [BACKEND] P3. **Add a wall-clock safety timeout** to `pipeline_e2e_check.py`'s own top-level `main()` (e.g. via
       `signal.alarm` or an external `timeout --kill-after=` wrapper documented in this skill's own usage instructions)
       so a future recurrence of either defect above self-terminates instead of hanging indefinitely when run unattended
       (`/autonomous`, `schedule` skill cron). This is a defense-in-depth backstop, not a substitute for the P2
-      root-cause fixes above. Repo: market-tick-data-service.
+      root-cause fixes above. Repo: market-tick-data-service. — market-tick-data-service@18c3f4d3. Implemented via
+      SIGALRM handler (`os._exit(3)`), `--wall-clock-timeout-sec` CLI arg (default 3600s, 0=disabled), called early in
+      `main()` before any blocking work. 7 unit tests in
+      `test_pipeline_e2e_check_post_completion_exit.py::TestWallClockTimeout`. QG: 9966 passed.
 
 ## Progress Log
 
@@ -148,3 +152,9 @@ guardrail was created to catch (3 prior real outages).
   call it instead of `sys.exit(main())`. Safe because all file writes complete before `os._exit()` fires. Test coverage:
   4 unit tests in `tests/unit/test_pipeline_e2e_check_post_completion_exit.py`. QG: 9966 passed. Todo 3 (wall-clock
   timeout) remains open.
+- **2026-08-04 (slot 13, backend_engineer)**: shipped todo 3's fix — market-tick-data-service@18c3f4d3. Implemented
+  SIGALRM-based wall-clock safety timeout: `--wall-clock-timeout-sec` CLI arg (default 3600s, 0=disabled),
+  `_setup_wall_clock_timeout()` arms a handler that calls `os._exit(3)` (exit code deliberately distinct from 0/1/2),
+  called early in `main()` before any potentially-blocking work. 7 unit tests in
+  `test_pipeline_e2e_check_post_completion_exit.py::TestWallClockTimeout`. QG: 9966 passed. All 3 todos now closed —
+  issue doc is archival-eligible.

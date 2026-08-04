@@ -160,9 +160,9 @@ context_scope:
 
 ### 2026-07-27 (slot-8, review) — tradfi native-extract todo 6: canonical ids + venue-lookup gap re-verify
 
-Re-verified per `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6 (catalogue Surface A migration landed live
-2026-07-25, `instruments-service@52d8b3ef`, un-blocking this check — the parent closeout's digest table saying "NOT yet
-executed" is stale).
+Re-verified per `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6 (catalogue Surface A
+migration landed live 2026-07-25, `instruments-service@52d8b3ef`, un-blocking this check — the parent closeout's digest
+table saying "NOT yet executed" is stale).
 
 **Upcoming Expiries widget — canonical ids confirmed live, not stale.** Called
 `deployment_api.services.catalogue_lifecycle.list_upcoming_expiries_page` (the exact function the widget/catalogue view
@@ -181,7 +181,8 @@ both correctly resolve `None` — not yet UAC-registered venues) and one cefi ve
 proving the lookup is generic/registry-driven across asset groups. Fix holds.
 
 Verified against `deployment-api@c19edcc` (fresh-pulled to `origin/live-defi-rollout` before checking); read-only
-verification, no code changed. Source: `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6.
+verification, no code changed. Source: `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`
+todo 6.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- this doc's every P-section

@@ -49,6 +49,7 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 created: 2026-07-17
+author: unknown
 parent_epic: manifest_master
 source:
   "data_engineering worker (slot-9, planning VM), 2026-07-17, AO task sports_manifest_canonicalisation-005 ([AUDIT] P2
@@ -259,10 +260,15 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       2010-01-01 was the unscrutinized value (git-blame: single commit `e81f598b`, never touched since, no rationale
       comment — unlike the DERIBIT-COMBO near-miss in the sibling shard-dimension doc). Updated
       `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)`, dropped the TODO marker.
-- [ ] [DATA] P2. Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument,
-      ~2.3-year gap) — decide whether the catalogue denominator should measure from CLOB launch or from first actual
-      captured instrument, and reconcile `PREDICTION_SOURCE_COVERAGE_START["POLYMARKET"]` against `venue_mapping.py`'s
-      `POLYMARKET` entry accordingly. (repo: unified-api-contracts)
+- [x] ✅ [DATA] P2. Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument,
+      ~2.3-year gap) — **DONE 2026-08-04 (slot-15) — unified-api-contracts@d1eac060.** Corrected
+      `PREDICTION_SOURCE_COVERAGE_START["POLYMARKET"]` from `date(2022, 11, 21)` (CLOB launch — ~2.3 years of
+      permanently-red "missing" coverage before any actual instrument) to `date(2025, 3, 14)` (first actual captured
+      instrument, manifest-verified per `venue_mapping.py`'s per-market GCS-parquet dates: `POLYMARKET:BTC=2025-03-13`,
+      `POLYMARKET:ETH/SOL/XRP=2025-03-14`, etc.). Same pattern as the CME fix (2026-07-25, same issue doc) — catalogue
+      denominator measures from first actual captured instrument, not venue/platform launch. Removed POLYMARKET from
+      `check_coverage_floor_registry_drift.py`'s `KNOWN_DIVERGENCES` (now 9 baselined, down from 10). Falsifier confirms
+      clean (0 new findings, 0 stale baseline). (repo: unified-api-contracts)
 - [ ] [DATA] P3. Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO) and
       decide the AAVE_V3 chain-axis question — either add a per-chain axis to `DEFI_SOURCE_COVERAGE_START` (matching
       `venue_mapping.py`'s `PROTOCOL-CHAIN` grain) or explicitly document that the flat value is intended as the

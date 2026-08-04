@@ -29,6 +29,7 @@ related:
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
   ]
 created: 2026-07-17
+author: unknown
 source:
   - Operator questions 2026-07-17 ("is it doing data that doesnt exist or is it just skipping", "why you looking for
     wrong symbol dont we have a converter / mapping", "is it the date (available for and to?)") - all three proved

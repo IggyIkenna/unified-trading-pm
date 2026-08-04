@@ -23,6 +23,7 @@ related:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
   ]
 created: 2026-07-28
+author: unknown
 parent_epic: infrastructure_master
 source:
   [data_engineering slot-6, 2026-07-28, discovered while executing defi_lst_yields_coverage_extension_gcs_verified-001]

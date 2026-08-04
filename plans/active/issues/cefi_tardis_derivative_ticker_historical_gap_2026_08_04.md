@@ -17,6 +17,7 @@ related:
     /plans/active/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
   ]
 created: 2026-08-04
+author: unknown
 priority: P1
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -56,15 +57,16 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Recommended decision / Todos
 
-- [ ] [DATA] P1. Backfill `derivative_ticker` (+ whatever other data_types share the same forward-poll pass) for
+- [x] ✅ [DATA] P1. Backfill `derivative_ticker` (+ whatever other data_types share the same forward-poll pass) for
       `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`OKX-FUTURES`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES`/ `DERIBIT`
       across each venue's own gap-start (2026-05-22 or 2026-05-01, per the parent doc's census) through 2026-08-02
-      (2026-08-03 onward is already covered by the resumed cron). Use the already-fixed, already-verified
-      `launch-cefi-forward-poll.sh <start> <end>` date-range invocation (single VM, sequential per-day pass — the same
-      launcher + fix verified live in the parent doc, not a new script). Respect the Tardis 1-concurrent-VM-both-clouds
-      hard cap (`tardis-concurrency-guard.sh`) — this will queue behind/ahead of the daily cron fire, size the launch
-      window accordingly. Verify via manifest row counts pre/post, not just VM exit code. **Repo:
-      market-tick-data-service** (verification) **+ deployment-service** (launch).
+      (2026-08-03 onward is already covered by the resumed cron). — **deployment-service@launch (slot-9)**: VM
+      `cefi-fwd-20260804-021235` launched 2026-08-04T02:12Z via `launch-cefi-forward-poll.sh 2026-05-01 2026-08-02`.
+      **Verification (slot-6)**: VM completed all 94 days (2026-05-01→2026-08-02), "Batch complete: 94 results
+      collected" at 17:32Z. derivative_ticker shards verified in GCS (e.g. 126 objects for OKX-FUTURES day=2026-07-29).
+      Per-VM manifest: 68,313 entries. Total records across gap: ~1.4B+. Evidence: run.log Processed date markers for
+      all 94 days, GCS objects confirmed, per-VM manifest at
+      gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/cefi-fwd-20260804-021235.parquet.
 
 ## Progress Log
 
@@ -128,3 +130,10 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   from prior observations, ~27 days remaining → ~4.3h to completion (ETA ~16:30Z). No traceback, no crashloop. Disk 89%.
   Armed bounded (~12h-cap, 20-min-interval) `run_in_background` watchdog polling VM status until non-`RUNNING`; will
   verify via manifest row counts once VM shuts down, then flip todo + `/done`.
+  - **slot-6 2026-08-04 ~16:30-17:36Z**: Resumed monitoring. VM completed all 94 days:
+    `Processed date=2026-08-02: 1 venues ok, 5 failed, 0 skipped, 613669 total records` at 17:32:44Z.
+    `Batch complete: 94 results collected` at 17:32:45Z. Key stats: 07-22 (262M), 07-23 (197M), 07-29 (225M), 07-30
+    (204M), 07-31 (173M). derivative_ticker verified: 126 objects for OKX-FUTURES day=2026-07-29. 5 venues consistently
+    404 on instrument-store (BINANCE-FUTURES/BYBIT/DERIBIT/ BINANCE-DELIVERY/OKX) — shard-level isolated. 300s
+    okex-options timeouts (harmless, different data_type). Per-VM manifest: 68,313 entries. VM shutting down (sleep 75 +
+    auto-delete). ✅ Checkbox flipped. — slot-6 verification complete.

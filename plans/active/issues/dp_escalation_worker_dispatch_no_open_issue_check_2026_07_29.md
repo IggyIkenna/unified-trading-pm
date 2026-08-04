@@ -39,6 +39,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-29
+author: unknown
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

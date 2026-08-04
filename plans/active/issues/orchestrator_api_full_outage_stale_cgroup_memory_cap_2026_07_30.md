@@ -30,6 +30,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, incident, cgroup, memory-cap, systemd, api-outage, instance-resize, bootstrap_vm]
 related: [/plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
 created: "2026-07-30"
+author: unknown
 last_updated: "2026-07-30"
 parent_epic: orchestrator_master
 assigned_vm: NA

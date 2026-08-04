@@ -18,6 +18,7 @@ scope: [engineer, admin]
 tags: [docs-reconcile, operator-decision, authoritative_for, retrieval-layer, prediction]
 related: [docs_reconcile_operator_decisions_2026_08_02]
 created: 2026-08-03
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

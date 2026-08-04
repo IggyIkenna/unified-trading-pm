@@ -67,6 +67,7 @@ related:
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

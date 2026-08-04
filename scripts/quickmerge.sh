@@ -1814,7 +1814,16 @@ if [ -n "$FILES_ARG" ]; then
       # Tracked but absent from the worktree = a DELETION — stage it. The old
       # `[ -e ]`-only guard silently dropped deleted paths from scoped commits
       # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
-      git add -- "$f"
+      #
+      # `git rm --cached`, NOT `git add`: when the path is ALSO gitignored --
+      # the normal case for dropping a now-ignored build/run artifact from
+      # tracking -- `git add` prints "The following paths are ignored by one of
+      # your .gitignore files" and exits 1 EVEN THOUGH it stages the deletion
+      # correctly, which aborted quickmerge at STAGE 5 and made such a removal
+      # unshippable through the sanctioned path (agent-orchestrator
+      # omniroute-eval/results, 2026-08-04). `git rm --cached` stages the same
+      # deletion and is ignore-agnostic.
+      git rm --cached --quiet -- "$f"
       ADDED_ANY=1
     elif git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
       # Already staged as a deletion (e.g. the caller ran `git rm`/committed via a
@@ -1890,7 +1899,14 @@ fi
 _qm_restage_target_files() {
   if [ -n "$FILES_ARG" ]; then
     for f in $FILES_ARG; do
-      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
+      if [ -e "$f" ]; then
+        git add -- "$f"
+      elif git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
+        # Deletion of a tracked path — see the STAGE-5 comment above for why this
+        # is `git rm --cached` and not `git add` (gitignored paths make `git add`
+        # exit 1 while still staging, which aborts the retry).
+        git rm --cached --quiet -- "$f"
+      fi
     done
   else
     git add -A

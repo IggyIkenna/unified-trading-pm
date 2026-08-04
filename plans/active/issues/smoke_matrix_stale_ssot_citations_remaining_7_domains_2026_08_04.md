@@ -12,8 +12,9 @@ stage: [meta]
 repos: [e2e-testing, unified-trading-pm]
 scope: [engineer, admin]
 tags: [doc-fix, smoke-matrix, stale-citations, e2e-testing]
-related: [/plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md]
+related: [/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md]
 created: "2026-08-04"
+author: unknown
 last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning

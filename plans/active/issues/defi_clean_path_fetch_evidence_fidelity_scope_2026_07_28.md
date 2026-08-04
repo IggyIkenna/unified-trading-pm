@@ -30,6 +30,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+author: unknown
 last_updated: "2026-08-02"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)
 resolved_by:

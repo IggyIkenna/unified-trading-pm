@@ -29,6 +29,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-24
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
 source: >-

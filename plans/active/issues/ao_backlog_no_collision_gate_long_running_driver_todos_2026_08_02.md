@@ -24,6 +24,7 @@ related:
     /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
   ]
 created: 2026-08-02
+author: unknown
 priority: P2
 parent_epic: orchestrator_master
 source:

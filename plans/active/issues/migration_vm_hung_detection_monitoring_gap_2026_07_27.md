@@ -57,6 +57,7 @@ related:
     /plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra

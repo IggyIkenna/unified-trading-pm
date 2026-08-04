@@ -28,6 +28,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-17
+author: unknown
 last_updated: 2026-08-03
 parent_epic: observability_master
 assigned_vm: planning

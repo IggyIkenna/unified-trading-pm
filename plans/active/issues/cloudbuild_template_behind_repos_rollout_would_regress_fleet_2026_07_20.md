@@ -27,6 +27,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 created: 2026-07-20
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

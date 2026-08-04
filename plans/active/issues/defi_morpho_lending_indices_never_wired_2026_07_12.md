@@ -22,6 +22,7 @@ related:
     plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md,
   ]
 created: 2026-07-12
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA

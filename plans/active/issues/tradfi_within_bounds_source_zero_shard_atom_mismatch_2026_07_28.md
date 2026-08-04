@@ -62,6 +62,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-28
+author: unknown
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only

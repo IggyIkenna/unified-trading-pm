@@ -48,6 +48,7 @@ related:
     /plans/active/issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md,
   ]
 created: 2026-07-27
+author: unknown
 priority: P0
 parent_epic: infrastructure_master
 source:

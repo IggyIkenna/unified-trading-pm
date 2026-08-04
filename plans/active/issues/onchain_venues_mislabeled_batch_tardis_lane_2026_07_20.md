@@ -27,6 +27,7 @@ related:
     _cefi_canonical_blueprint_2026_07_17,
   ]
 created: 2026-07-20
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source:

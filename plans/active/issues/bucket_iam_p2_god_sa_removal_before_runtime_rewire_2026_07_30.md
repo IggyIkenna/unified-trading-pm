@@ -38,6 +38,7 @@ related:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: "2026-07-30"
+author: unknown
 last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning

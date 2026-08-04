@@ -28,6 +28,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-29
+author: unknown
 last_updated: 2026-08-01
 priority: P2
 parent_epic: orchestrator_master

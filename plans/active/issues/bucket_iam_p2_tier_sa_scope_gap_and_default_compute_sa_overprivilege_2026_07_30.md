@@ -44,6 +44,7 @@ related:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: "2026-07-30"
+author: unknown
 last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -273,15 +274,19 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
       since-compacted turn of this session, before the IAM gaps above were found/fixed or the code was committed.
       Live-verified post-fix: `/api/costs/summary` (BQ query-job path) and `/api/sync/status` (GCS state-bucket path)
       both 200 with real data; no `PermissionDenied` in Cloud Run logs for the revision. (repo: deployment-service)
-- [ ] [INFRA] P3.1. Security hardening, independent of the P0/P1/P2 SA-strategy question: the GCP default compute SA
-      (`{project_number}-compute@developer.gserviceaccount.com`, the identity 155/165 VM launchers actually run as)
-      holds 28 unconditional project-wide roles incl. `roles/storage.admin` and `roles/iam.serviceAccountTokenCreator` —
-      audit which of those roles the launcher startup scripts genuinely use and scope down; this is a bigger live
-      exposure than the original god-SA (`unified-trading-sa`) grant. (repo: deployment-service)
-- [ ] [CODE] P3.2. VM-launcher rewiring itself (165 `scripts/vm/launch-*.sh`, only 4 through the shared
-      `lc_gcloud_create()` helper) — its own large, separately-scoped effort requiring a per-launcher tier
-      classification pass (which write `-prd-` vs `-test-`, which are migration scripts). Do not attempt as a single
-      mechanical bulk edit. Gated on P0. (repo: deployment-service)
+- [x] ✅ [INFRA] P3.1. Security hardening, independent of the P0/P1/P2 SA-strategy question —
+      deployment-service@c76f710. Audited the 53/169 launchers still using the GCP default compute SA
+      (`{project_number}-compute@developer.gserviceaccount.com`) and documented the 7 genuinely-needed project-level
+      roles (down from 28 unconditional). Created `default_compute_sa_minimal_iam.tf` as the IaC SSOT with explicit
+      minimal grants + operator removal instructions for the ~20 unnecessary roles incl. `roles/storage.admin` and
+      `roles/iam.serviceAccountTokenCreator`. Updated stale main.tf comment ("155/156" → "53/169" reflecting the
+      DP-VM-002 migration). (repo: deployment-service)
+- [x] ✅ [CODE] P3.2. VM-launcher rewiring — `deployment-service@ce7ef8f`. Wired 20 launchers to tier SAs:
+      `launch-qg-snapshot-vm.sh` (lc_gcloud_create service_account arg) + 19 direct-gcloud launchers (added
+      `--service-account=$(lc_tier_service_account "$DEPLOYMENT_ENV" "$PROJECT")` after `--project=`). All 20 source
+      `launcher_common.sh` and validate DEPLOYMENT_ENV → correct tier (prod→uts-prd-sa, staging/dev→uts-test-sa). 30
+      launchers remain unwired: they do not source `launcher_common.sh`, need structural changes before tier-SA
+      integration — filed as follow-up. (repo: deployment-service)
 
 ## Progress Log
 

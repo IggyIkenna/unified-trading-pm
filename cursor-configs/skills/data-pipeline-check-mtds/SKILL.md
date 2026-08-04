@@ -107,6 +107,28 @@ gcloud storage buckets create "gs://market-data-tick-${mtds_ag}-test-${PROJECT_I
 
 - Do not advance an asset_group into Phase 1 until its `-test-` bucket exists.
 
+### 2a. `--allow-live-prod-writes` is PROHIBITED — never pass it (HARD RULE)
+
+MTDS's pipeline checker is **fail-closed by default** — the batch force/skip legs hardcode `--test-run`
+(`market-tick-data-service/scripts/pipeline_e2e_check.py:1369`), and the launcher bakes `IS_TEST_RUN=true`
+(`launch-mtds-backfill-vm.sh:198`), so every write resolves to a `-test-` bucket. However, the checker also registers
+ONE explicit prod-write escape hatch: `--allow-live-prod-writes` (`pipeline_e2e_check.py:2561`, `:2642`, `:1983`). When
+passed, the live leg builds its launcher argv **without `--test-run`** — `IS_TEST_RUN` is never set, `test_aware` never
+fires, and `get_tick_data_bucket` returns the PROD `-prd-` bucket. The leg is additionally fire-and-forget (returns
+`status="skipped"` with "verification skipped" because the VM never terminates).
+
+**⛔ NEVER pass `--allow-live-prod-writes` to `pipeline_e2e_check.py` from this skill.** This flag exists for standalone
+operator-driven prod-live launches ONLY — it is never appropriate for a `/data-pipeline-check-mtds` smoke check. The
+skill's entire purpose is proving the pipeline on `-test-` buckets without touching production data; passing this flag
+defeats that guarantee and writes real PROD objects with no guard.
+
+**This prohibition is absolute — there is no operator override within this skill's invocation.** A PROD live launch is
+out of scope for `/data-pipeline-check-mtds` entirely. If a prod live verification is genuinely needed, it must be done
+as a separate, explicitly-scoped operator action outside this skill, never by passing `--allow-live-prod-writes` through
+these instructions.
+
+Provenance: `backfill_smoke_write_path_canonical_audit_2026_07_20.md` §1a.
+
 ## 3. Phase 1 — batch force + skip matrix
 
 > **⛔ TARDIS CELLS ARE SERIAL — N=1, NEVER ONE-VM-PER-SHARD (HARD RULE, operator 2026-07-16).** Every `cefi` cell whose

@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [deployment-ui, smoke-tests, playwright, regression, daily-costs, nav]
 related: [/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md]
 created: "2026-07-21"
+author: unknown
 parent_epic: deployment_and_user_management_master
 source: discovered running `npx playwright test tests/smoke/` while verifying mtds_data_status_page_parity_2026_07_21.md
 execution_scope: orchestrator-agent

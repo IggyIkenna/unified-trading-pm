@@ -34,6 +34,7 @@ related:
     /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: 2026-07-20
+author: unknown
 last_updated: 2026-07-25
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -488,19 +489,24 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       QUARANTINE_CORRUPT. Confirmed: the TRADFI-only scope boundary was NOT intentional — `_renormalize_wire_cefi`
       already existed, was already imported into the script, and was simply never wired into the CEFI branch.
       `mdps@6b9ee49`.
-- [ ] 15. [DOC] P3. `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows the
+- [x] ✅ 15. [DOC] P3. `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows the
       SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
       is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
-      the docstring example to match the 2026-07-21 correction. **na-eligibility-audit 2026-08-03**: already tracked
-      (still open) in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:127-131 (citing this doc's #15 as its own
-      `Source:`) — not closing here.
-- [ ] 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
+      the docstring example to match the 2026-07-21 correction. **DONE (ao-dispatch batch2 2026-08-03)** — closed via
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:131: `unified-trading-library@5793d28b`, docstring
+      updated to SOURCE data_type with `derivative_ticker` example, same fix applied to adjacent `_candle_prefix()`
+      docstring, `quality-gates.sh` green, SHA verified on origin.
+- [x] ✅ 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
       `off_template=29` (timeframe mismatch against the raw `"24h"` token) while the canonical leg still passes it —
       confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
-      real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`. **na-eligibility-audit
-      2026-08-03**: already tracked (still open) in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:132-137 (citing
-      this doc's #16 as its own `Source:`) — not closing here.
+      real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`. **DONE (ao-dispatch batch2
+      2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:135: **STALE
+      DOCSTRING** (same pattern as todo 15). Root cause: `canonical_writer.py:255` calls
+      `_normalise_timeframe(timeframe)` before building the GCS path, so all DERIBIT:trades:24h objects write with
+      `timeframe=1d`. No data defect — `_measured_violations` compares normalized "1d" against raw "24h" token causing
+      the force-leg mismatch; GCS objects are correctly canonical. Follow-up fix needed in `pipeline_e2e_check.py` to
+      normalize `tf` in `_measured_violations`.
 - [x] ✅ 19. [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
       (`migrate_candle_canonical_2026_07.py:794-831`) — a destination that exists but FAILS verification
       (`SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`) is never re-copied on a subsequent run (the copy is gated on

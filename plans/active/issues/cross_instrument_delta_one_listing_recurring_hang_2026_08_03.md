@@ -31,6 +31,7 @@ related:
     /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
   ]
 created: 2026-08-03
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source:
@@ -155,14 +156,13 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
       Evidence: static read of `pipeline_e2e_check.py` (`--day` CLI arg usage ~L80-90, force leg ~L1279/1396, skip leg
       ~L1580, no delete/prune grep hits) + `feature_writer.py::check_exists` (~L764-808) + orchestrator
       `force_reprocess` short-circuit.
-- [ ] [INFRA] P3. **Prune stale `-test-` day prefixes before a CEFI:cross_instrument e2e re-check run.** Have
-      `features-service/scripts/pipeline_e2e_check.py` delete (or reset to a fresh `--day`) the target
-      `delta_one/by_date/day=<day>/` prefix in the `-test-` bucket before starting a new force/skip/canonical leg
-      sequence, so repeated same-day re-checks don't accumulate recently-written objects that maximize the
-      `size=None`-reload density found in the P3 diagnostic above. `-test-` bucket only (never touch PROD paths); wire
-      through the existing `deployment-service/smoke_test_framework.py::clean_test_bucket` helper if its shape fits,
-      else a scoped `list_blobs`+`delete_blob` loop restricted to the exact `day=` prefix being re-checked. Repo:
-      features-service.
+- [x] ✅ [INFRA] P3. **Prune stale `-test-` day prefixes before a CEFI:cross_instrument e2e re-check run.** —
+      features-service@45a52cd7 `features-service/scripts/pipeline_e2e_check.py` now calls
+      `_prune_test_day_prefix(sink_bucket, end)` before the force leg for delta_one shards, deleting all objects under
+      `delta_one/by_date/day=<day>/` in the `-test-` bucket so repeated same-day re-checks don't accumulate
+      recently-written objects that maximize the `size=None`-reload density. Scoped to `-test-` buckets only (the caller
+      only passes test-sink-bucket names); uses UTL's `gcs_delete_object` for per-object deletes (no subprocess
+      `gsutil`/`gcloud`). Repo: features-service.
 - [x] ✅ [BACKEND] P3. **Follow-up optimization (deferred, not required for the P2 fix above):** eliminate the reload()
       tax at its root for callers that never use blob size — unified-trading-library@649fd8e1,
       features-service@5275fef1. Added an opt-in `resolve_size: bool = True` parameter to `StorageClient.list_blobs()`

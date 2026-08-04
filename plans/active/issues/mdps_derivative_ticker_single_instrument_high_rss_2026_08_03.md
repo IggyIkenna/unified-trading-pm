@@ -22,6 +22,7 @@ scope: [engineer]
 tags: [mdps, candle, derivative-ticker, memory, resource-usage, host-contention]
 related: [/plans/archive/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md]
 created: "2026-08-03"
+author: unknown
 last_updated: "2026-08-03"
 parent_epic: cefi_master
 assigned_vm: planning

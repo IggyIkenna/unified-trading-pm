@@ -27,6 +27,7 @@ related:
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
   ]
 created: 2026-07-27
+author: unknown
 priority: P2
 parent_epic: tradfi_master
 source:
@@ -138,16 +139,77 @@ wound), but should be tracked rather than silently absorbed.
       19 total unit tests green). Also fixed an unrelated pre-existing QG-blocking failure (stale `SPORTS` shard-count
       pin, verified against `unified-api-contracts` commit history as a legitimate re-pin, not a regression) at
       market-tick-data-service@b4fd439e so both commits could ship. Full `quality-gates.sh` clean on both.
-- [ ] [DATA] P3. Investigate what pruned/reused `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 (only 9
-      unrelated `day=2026-01-*` prefixes remain, from a different quarantine event — full instrument-id-as-underlying,
-      not this run's numeric/opaque garbage codes). Not urgent (no destructive-risk signal found — no lifecycle
-      auto-delete rule on the bucket), but the mechanism is currently unidentified and could recur for other in-flight
-      quarantine passes. Repo: market-tick-data-service (or infra, if traced to a shared migration/cleanup script).
-      **Done when**: root cause identified (which script/run touched `_quarantine/raw_tick_data/` and when) or
-      documented as unable-to-determine with the evidence gathered.
+- [x] ✅ [DATA] P3. Investigate what pruned/reused `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 —
+      **ROOT CAUSE: UNABLE TO DETERMINE from committed evidence** (see Progress Log 2026-08-04, slot 14 investigation).
+      The committed codebase contains no script, lifecycle rule, or automated process that deletes objects from
+      `_quarantine/raw_tick_data/`. The `_rel()` function in `migrate_tradfi_canonical_2026_07.py` strips the
+      `_quarantine/` prefix via `path.find(marker)` (a latent bug for already-quarantined objects), but this bug causes
+      source-not-found errors (`SRC_ALREADY_GONE` / `QUARANTINE_VERIFY_FAILED`), NOT accidental deletions — confirmed by
+      full trace through the apply-phase logic. Same latent bug is inherited by `rebundle_tradfi_chains_2026_07.py`
+      (imports `_rel`), same non-deletion outcome. The 9 remaining `day=2026-01-*` prefixes (different quarantine event,
+      `CME:OPTION:EW1-USD-...` data) confirm the removal was selective, not a bucket-level operation. Most plausible
+      explanations: (a) manual operator cleanup via `gsutil rm` or equivalent, (b) uncommitted one-off cleanup script.
+      Recommended follow-up: check Cloud Audit Logs for the tradfi tick bucket (`storage.objects.delete` on
+      `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27) if definitive identification is desired. The
+      `_rel()` bug (stripping `_quarantine/` prefix on already-quarantined objects) is a latent correctness issue — file
+      as a separate preventative fix. Repo: market-tick-data-service.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: fixed a duplicate entry (`cme_combo_underlying_extraction_garbage_2026_07_19.md` was
   listed twice) — deduped to 5 distinct entries, otherwise unchanged.
+
+- **2026-08-04 (slot 14, data_engineering, task `tradfi_satellite_ao_dispatch_batch5-006`)** — Completed the quarantine
+  staleness investigation (finding 2 / todo 3). **Root cause: UNABLE TO DETERMINE from committed evidence.** Full
+  investigation below.
+
+  **What I checked:**
+
+  1. **Bucket lifecycle configuration**: the issue doc already established no auto-delete rule exists (only 60-day
+     Coldline storage-class transition). Confirmed via the bucket lifecycle rule inventory in the existing doc text.
+
+  2. **Committed scripts that could delete from `_quarantine/raw_tick_data/`**: Traced every `gcs_delete_object` /
+     `blob.delete()` call site across the MTDS scripts directory. Zero committed scripts target the `_quarantine/`
+     prefix for deletion. The scripts that interact with quarantine are:
+     - `recover_tradfi_garbage_underlying_2026_07.py` — writes TO `_quarantine/` (MOVE via `gcs_copy` + `gcs_delete` of
+       the ORIGINAL `raw_tick_data/` source), never deletes from `_quarantine/`.
+     - `migrate_tradfi_canonical_2026_07.py` — can MOVE objects TO `_quarantine/` (`A_QUARANTINE` action), but the apply
+       logic for already-quarantined objects fails safely (see latent bug below).
+     - `rebundle_tradfi_chains_2026_07.py` — same `_move_to_quarantine` pattern (copy-to-quarantine + delete-source),
+       and `_delete_merged` which deletes per-contract sources after successful rebundle.
+     - `correct_tradfi_recovery_quarantine_manifest_2026_07_27.py` — manifest-only CAS correction (no GCS object ops).
+     - `register_tradfi_recovery_quarantine_manifest_2026_07_30.py` — manifest-only additive registration (no GCS object
+       ops).
+
+  3. **Latent `_rel()` bug in `migrate_tradfi_canonical_2026_07.py`**: The `_rel()` function (line 160-163) uses
+     `path.find("raw_tick_data/by_date/")` to extract the bucket-relative path. For objects in
+     `_quarantine/raw_tick_data/by_date/...`, this strips the `_quarantine/` prefix, making `rel` =
+     `"raw_tick_data/by_date/..."` — the object appears to be at its original (pre-quarantine) location. I fully traced
+     the apply-phase logic for both `A_COPY` and `A_QUARANTINE` actions with this bug active:
+     - `A_COPY`: `src = "gs://bucket/raw_tick_data/..."` (WRONG — object is at `_quarantine/...`) →
+       `gcs_describe_object(src)` → None → returns `SRC_ALREADY_GONE` → **no deletion**.
+     - `A_QUARANTINE`: `src = "gs://bucket/raw_tick_data/..."` (WRONG) → `gcs_describe_object(src)` → None →
+       `gcs_describe_object(dst) and gcs_describe_object(src)` is False → **no deletion**.
+     - The `NOOP_TARGET_EQUALS_SOURCE` guard at line 675 also doesn't trigger because `res.new_rel`
+       (`"_quarantine/raw_tick_data/..."`) ≠ `rel` (`"raw_tick_data/..."`). **Conclusion**: this is a real latent bug
+       (it silently fails to process already-quarantined objects rather than correctly identifying them as
+       already-quarantined and skipping), but it does NOT cause deletion. The same bug is inherited by
+       `rebundle_tradfi_chains_2026_07.py` (imports `_rel` from the migrate script), same non-deletion outcome.
+
+  4. **Selectivity evidence**: The 9 remaining `day=2026-01-*` prefixes under `_quarantine/raw_tick_data/by_date/` are
+     from a DIFFERENT quarantine event (`CME:OPTION:EW1-USD-...` full instrument-id-as-underlying data, not the
+     numeric/opaque garbage codes from run `20260720-120911`). A bucket-level operation (lifecycle rule, `gsutil rm -r`)
+     would not be this selective — it would delete ALL `_quarantine/raw_tick_data/` prefixes equally.
+
+  **Plausible root causes (in descending likelihood):**
+  - (a) Manual operator cleanup — `gsutil rm` of the garbage-underlying quarantine prefixes after confirming the
+    manifest correction was complete.
+  - (b) Uncommitted one-off cleanup script run on a VM during the migration/recovery campaign (2026-07-20 to
+    2026-07-27).
+  - (c) GCS infrastructure event (unlikely given the selectivity evidence).
+
+  **Recommendation**: If definitive identification is desired, check Cloud Audit Logs for the tradfi tick bucket
+  (`storage.objects.delete` on `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27). The `_rel()` bug
+  (stripping `_quarantine/` prefix on already-quarantined objects) should be filed as a separate preventative fix — it's
+  a latent correctness issue even though it doesn't cause this specific problem.

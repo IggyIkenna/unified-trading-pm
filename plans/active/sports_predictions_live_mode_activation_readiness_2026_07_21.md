@@ -36,7 +36,7 @@ related:
     /codex/04-architecture/promote-workflow-architecture.md,
     /codex/04-architecture/backtest-groups.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
     /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
@@ -66,7 +66,7 @@ context_scope:
   [
     /codex/04-architecture/promote-workflow-architecture.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
   ]
 ---
@@ -220,9 +220,9 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       authenticate and write)~~; **STALE (na-eligibility-audit 2026-08-03)** — part (a) is done: the cited doc's own
       resolved summary confirms "the P0 live-mode sports odds writer shape fix shipped
       (market-tick-data-service@d6d539a8)" before it archived. **(b)** the open P2 todo in
-      `/plans/active/sports_live_availability_and_source_latency_2026_07_24.md` — "Live ODDS quota decision + cheap
-      second source" — done when the api_football `/odds` in-play second source is wired as a fallback/supplement AND
-      the live sports-odds ingestion is confirmed resumed (a fresh poll cycle succeeding against the live key in
+      `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` — "Live ODDS quota decision +
+      cheap second source" — done when the api_football `/odds` in-play second source is wired as a fallback/supplement
+      AND the live sports-odds ingestion is confirmed resumed (a fresh poll cycle succeeding against the live key in
       production, not just a direct-API-call verification) — **remains genuinely open** (checked live 2026-08-03: that
       doc's own item now additionally reports the api_football second-source half STRUCK/superseded 2026-08-02
       (BLK-b969f5f0, not pursued) and a NEW blocker — the `odds-api-key` quota went exhausted 2026-08-02, 4 days after

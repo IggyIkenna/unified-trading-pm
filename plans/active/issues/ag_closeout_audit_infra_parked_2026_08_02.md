@@ -40,6 +40,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-02"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA

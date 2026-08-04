@@ -27,6 +27,7 @@ related:
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
   ]
 created: 2026-08-02
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 assigned_vm: NA

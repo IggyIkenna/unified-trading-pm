@@ -51,6 +51,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 last_updated: 2026-07-29
 parent_epic: sports_master
 assigned_vm: planning

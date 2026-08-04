@@ -18,6 +18,7 @@ scope: [engineer, admin]
 tags: [terraform, aws, codebuild, infrastructure, state-backend, drift]
 related: []
 created: 2026-07-22
+author: unknown
 parent_epic: infrastructure_master
 priority: P3
 source:

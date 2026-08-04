@@ -30,6 +30,7 @@ related:
     /plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
     /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
     /plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md,
+    /plans/archive/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md,
   ]
 created: 2026-07-16
 last_updated: "2026-07-24"
@@ -125,6 +126,15 @@ this plan is not umbrella-exempt — 45 todos is under the 100-todo exemption th
 `umbrella: true` marker — so the applicable hard cap is 1000 lines, not the 2000-line umbrella cap). **Nothing was
 deleted** — read the history file for the complete original text, including every gate, measurement, and the
 2026-07-16/17 Progress Log entries.
+
+> **🔴 Post-completion correction (2026-08-04): the original runbook's delete-gate reasoning rested on canonical being a
+> faithful row-superset of legacy for all surfaces. Measured live 2026-07-16: for raw odds on early dates, canonical
+> held 14.2× fewer rows than legacy (5,626 vs 79,773 on day=2022-04-16) — not a superset, a truncation. The symptom is
+> fixed (199-day `batch_footystats`→`batch_odds_api` merge, `market-tick-data-service@75f226e8`; per-date loss guards on
+> both MDPS and features re-derive paths), but any future delete-gate reasoning must read "canonical is a superset" with
+> this date-bounded caveat. Full detail:
+> [`sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`](/plans/archive/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md)
+> (`status: resolved`).**
 
 > **🔴 DO NOT run a full `tofu apply` on prod** — it would resurrect `instruments-store-cefi-…` (404 but still declared
 >

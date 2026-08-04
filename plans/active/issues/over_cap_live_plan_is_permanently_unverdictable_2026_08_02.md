@@ -32,6 +32,7 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 created: 2026-08-02
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: plan_hygiene_master
 assigned_vm: NA

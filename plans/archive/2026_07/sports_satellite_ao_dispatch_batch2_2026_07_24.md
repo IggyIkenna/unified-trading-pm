@@ -20,8 +20,8 @@ summary: >-
   `sports_group_c_execution_backtest_harness_2026_07_21.md`'s todos; a manifest-perf verify-speedup todo depends on 2
   sibling implementation todos both landing). 7 of the 22 source docs contributed ZERO AO-eligible todos (either 100%
   human-only design/operator-decision work, or already fully done) and are untouched by this plan.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [sports]
 stage: [data]
 repos:
@@ -77,6 +77,8 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+resolved_by:
+  "All 37 todos complete, reconciled by sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md; archived 2026-08-04."
 depends_on: []
 source: >-
   Operator request 2026-07-24: satellite docs referenced by the sports consolidated closeout's discoverability index
@@ -988,11 +990,8 @@ context_scope:
 Once a todo here ships, flip the corresponding checkbox in its named source doc, citing this plan's commit as evidence.
 This plan's own reconciliation-then-archive step is machine-gated on it via
 `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`
-(`depends_on: [sports_satellite_ao_dispatch_batch2_2026_07_24]`
-
-- `gate_on_depends: true`) — mirroring `sports_closeout_batch1_finalize_2026_07_24.md`'s pattern for batch 1, adapted
-  for batch 2's 15-way source-doc fan-out (batch 1 reconciles one gate-able parent; batch 2 reconciles 15 independent
-  docs, per-doc, before archiving this plan).
+(`depends_on: [sports_satellite_ao_dispatch_batch2_2026_07_24]` + `gate_on_depends: true`) — mirroring
+`sports_closeout_batch1_finalize_2026_07_24.md`'s pattern.
 
 ## Codex SSOTs
 

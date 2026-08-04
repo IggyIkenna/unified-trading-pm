@@ -33,6 +33,7 @@ related:
     ../cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
   ]
 created: "2026-07-28"
+author: unknown
 source: data_completion_cefi_2026_07_15.md "Orphan sweep + bucket-state evidence" todo re-run (slot-3, data_engineering)
 resolved_by:
 locked_by:

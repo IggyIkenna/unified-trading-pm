@@ -21,6 +21,7 @@ scope: [engineer]
 tags: [prettier, prosewrap, tooling, plan-hygiene, cosmetic, corpus-cleanup]
 related: [/plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md]
 created: 2026-08-03
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent

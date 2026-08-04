@@ -15,6 +15,7 @@ scope: [engineer, admin]
 tags: [quality-gates, quickmerge, scripts, ssot-audit, orchestrator, self-healing]
 related: [capability_wizard_and_manifest_2026_06_11]
 created: 2026-06-11
+author: unknown
 parent_epic: infrastructure_master
 priority: P3
 source:

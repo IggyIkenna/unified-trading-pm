@@ -26,6 +26,7 @@ related:
     /plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
   ]
 created: 2026-08-03
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: NA

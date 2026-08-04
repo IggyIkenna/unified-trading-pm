@@ -43,6 +43,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: "2026-08-02"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: orchestrator_master
 assigned_vm: NA

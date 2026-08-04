@@ -27,6 +27,7 @@ scope: [engineer, admin]
 tags: [data-correctness, defi, venue-canonicalization, factory-address, sushiswap, uniswap, dex-pool, residual]
 related: [defi_consolidated_closeout_2026_07_18, canonical_closeout_open_questions_2026_07_18]
 created: 2026-07-21
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA

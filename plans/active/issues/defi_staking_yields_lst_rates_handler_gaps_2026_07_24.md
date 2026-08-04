@@ -40,6 +40,7 @@ related:
     canonical_path_oracle_blind_to_filename_stem_2026_07_20,
   ]
 created: 2026-07-24
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source:

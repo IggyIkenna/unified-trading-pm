@@ -21,6 +21,7 @@ scope: [engineer, admin]
 tags: [infra, disk-space, shared-host, fleet-wide, blocking]
 related: []
 created: 2026-07-26
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source: "slot 2, discovered mid-task via a git-push ENOSPC failure, 2026-07-26 ~19:10 UTC"

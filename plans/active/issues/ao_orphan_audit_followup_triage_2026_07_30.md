@@ -24,6 +24,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
   ]
 created: 2026-07-30
+author: unknown
 priority: P2
 parent_epic: orchestrator_master
 assigned_vm: NA

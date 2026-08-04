@@ -28,6 +28,7 @@ scope: [admin]
 tags: [orphan-rescue, per-tab-worktrees, wip-preserve, git-health, worktree-health]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-08-04
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA

@@ -33,6 +33,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-30
+author: unknown
 last_updated: 2026-07-30
 priority: P3
 parent_epic: mtds_mdps_master

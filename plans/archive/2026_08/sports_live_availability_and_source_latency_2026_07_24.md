@@ -19,7 +19,7 @@ summary: >-
   picked a paid tier, proceed with the resume) — retagged `[DATA]` below, no longer BLOCKED-OPERATOR-DECISION; the
   remaining step is confirming the subscription is active, not a further design/business call. Nothing was dropped or
   reworded in the original move.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -42,11 +42,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
-last_updated: "2026-07-29"
+last_updated: "2026-08-04"
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30
 depends_on: []
 source: >-
   data_completion_to_100_all_ag_2026_06_21 (M-1) -- split 2026-07-24, plan line-cap remediation
@@ -62,6 +62,11 @@ context_scope:
     instruments-service/scripts/aggregate_source_latency_observations.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04.** All 8 todos complete; the final remaining todo (Live-ODDS quota/second-source) was
+> verified done 2026-08-03 (live VM healthy, api_football half struck per `BLK-b969f5f0`). Superseded by
+> `/plans/active/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md`. Moved to
+> `plans/archive/2026_08/`.
 
 # Data completion to 100% — Sports live/forward availability + source-latency validation
 
@@ -162,31 +167,31 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       source is still unwired.
 
       **api_football `/odds` in-play second-source half STRUCK 2026-08-02 (`BLK-b969f5f0`, main, decision B) —
-                                  SUPERSEDED, not pursued.** Wiring api_football as a sports-odds/TRADES write source into MTDS directly
-                                  contradicts the operator's 2026-06-24 wipe ruling and would re-open the resolved 1.26M-row wrong-source
-                                  re-accumulation incident — api_football has ZERO sanctioned business writing sports odds into MTDS (its only
-                                  sanctioned writes are reference data in `instruments-store-sports`; the IS adapter's `get_odds()` is a literal
-                                  empty-list stub). Full evidence + the ruling:
-                                  `/plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`. A
-                                  genuine second live-odds source remains a valid future idea but is now its OWN new operator-gated design
-                                  decision if ever wanted — not folded back into this todo.
+                                      SUPERSEDED, not pursued.** Wiring api_football as a sports-odds/TRADES write source into MTDS directly
+                                      contradicts the operator's 2026-06-24 wipe ruling and would re-open the resolved 1.26M-row wrong-source
+                                      re-accumulation incident — api_football has ZERO sanctioned business writing sports odds into MTDS (its only
+                                      sanctioned writes are reference data in `instruments-store-sports`; the IS adapter's `get_odds()` is a literal
+                                      empty-list stub). Full evidence + the ruling:
+                                      `/plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`. A
+                                      genuine second live-odds source remains a valid future idea but is now its OWN new operator-gated design
+                                      decision if ever wanted — not folded back into this todo.
 
-                                  **Live ODDS quota decision** (market-tick-data-service + deployment-service) — resume the primary `odds_api`
-                                  live connector. **Done when**: the live sports-odds ingestion is confirmed resumed (a fresh poll cycle
-                                  succeeding against the live key in production, not just a direct-API-call verification).
+                                      **Live ODDS quota decision** (market-tick-data-service + deployment-service) — resume the primary `odds_api`
+                                      live connector. **Done when**: the live sports-odds ingestion is confirmed resumed (a fresh poll cycle
+                                      succeeding against the live key in production, not just a direct-API-call verification).
 
-                                  **BLOCKER found 2026-08-02, RESOLVED 2026-08-03**: the `odds-api-key` quota was EXHAUSTED
-                                  (`x-requests-remaining: -772`, `x-requests-used: 5000772` — live-verified via direct curl), just 4 days
-                                  after the 2026-07-29 provisioning showed `5000000` remaining. Root-caused (not a runaway/no-backoff
-                                  consumer — 5+ uncoordinated batch backfill VM relaunches against the shared key) and closed: the operator
-                                  purchased a 10,000,000-credit top-up (`BLK-6728ec9a` Option-B), live-verified 2026-08-03
-                                  (`x-requests-remaining: 14992590`, `x-requests-used: 7410` — sums to 15,000,000 = 5M base + 10M top-up).
-                                  Full trail: `/plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`
-                                  (archived, resolved). **Done-when bar met**: `mtds-live-sports-odds-api-trades-20260803-172841` is
-                                  RUNNING and verified healthy — 35+ min of clean `run.log` (zero errors/401s/`OUT_OF_USAGE_CREDITS`), its
-                                  per-VM manifest shard writing 5 new entries/min matching the 5-league MVP set (EPL/La Liga/Bundesliga/
-                                  Serie A/Ligue 1) — a genuine fresh poll cycle succeeding against the restored key in production, not
-                                  just a direct-API-call check.
+                                      **BLOCKER found 2026-08-02, RESOLVED 2026-08-03**: the `odds-api-key` quota was EXHAUSTED
+                                      (`x-requests-remaining: -772`, `x-requests-used: 5000772` — live-verified via direct curl), just 4 days
+                                      after the 2026-07-29 provisioning showed `5000000` remaining. Root-caused (not a runaway/no-backoff
+                                      consumer — 5+ uncoordinated batch backfill VM relaunches against the shared key) and closed: the operator
+                                      purchased a 10,000,000-credit top-up (`BLK-6728ec9a` Option-B), live-verified 2026-08-03
+                                      (`x-requests-remaining: 14992590`, `x-requests-used: 7410` — sums to 15,000,000 = 5M base + 10M top-up).
+                                      Full trail: `/plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`
+                                      (archived, resolved). **Done-when bar met**: `mtds-live-sports-odds-api-trades-20260803-172841` is
+                                      RUNNING and verified healthy — 35+ min of clean `run.log` (zero errors/401s/`OUT_OF_USAGE_CREDITS`), its
+                                      per-VM manifest shard writing 5 new entries/min matching the 5-league MVP set (EPL/La Liga/Bundesliga/
+                                      Serie A/Ligue 1) — a genuine fresh poll cycle succeeding against the restored key in production, not
+                                      just a direct-API-call check.
 
 - [x] ✅ [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM**
       (instruments-service) — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free)

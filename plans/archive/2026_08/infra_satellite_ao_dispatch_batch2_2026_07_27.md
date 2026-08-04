@@ -10,7 +10,7 @@ summary: >-
   here, the source docs stay assigned_vm:NA for their remaining judgment-call items. 9 todos from 3 source docs, all
   parent_epic:infrastructure_master, all checked pairwise and against every active infrastructure_master planning doc
   for file-level collision — zero found.
-status: active
+status: archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -45,7 +45,7 @@ context_scope:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
@@ -63,6 +63,12 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 2 (na-eligibility-audit extraction)
+
+> **ARCHIVED 2026-08-04** — All 10 todos shipped and verified. Closed out by
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_finalize_2026_07_27.md` which reconciled all 3 source-doc
+> checkboxes, confirmed no source doc reached zero-open-todo archival eligibility, verified the deferred tradfi item was
+> resolved by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, and archived both plans. No DEFERRED items remain
+> unresolved.
 
 ## Why this plan exists
 
@@ -227,10 +233,13 @@ once the corresponding todo below is actually done — not this plan.
       both `SKILL.md`s: a `case`-statement guard run immediately before every Phase-1 launcher invocation, checking the
       EXACT resolved `--output-bucket`/`--sink-bucket` string for `-test-` and refusing loudly (exit 1) if absent —
       closes the gap where an omitted/mistyped flag silently fell through to PROD.
-- [ ] [DOC] P3. **Add an explicit "never pass `--allow-live-prod-writes`" prohibition** to
+- [x] ✅ [DOC] P3. **Add an explicit "never pass `--allow-live-prod-writes`" prohibition** to
       `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md`. Repo: unified-trading-pm. Source:
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a). Done when: the skill doc states the
-      prohibition explicitly, matching the pattern already used elsewhere in that skill for other prod-write guards.
+      prohibition explicitly, matching the pattern already used elsewhere in that skill for other prod-write guards. —
+      unified-trading-pm@f40169fe5. Added §2a "`--allow-live-prod-writes` is PROHIBITED" to SKILL.md: names the flag,
+      explains it bypasses `--test-run` and writes PROD, declares it fire-and-forget, and states the prohibition is
+      absolute with no operator override. Matches the §2a pattern already used in mdps/features sibling skills.
 
 ## Deferred (conflict-checked, held back — not drafted here)
 

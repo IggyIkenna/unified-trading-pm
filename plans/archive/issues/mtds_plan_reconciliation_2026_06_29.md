@@ -96,9 +96,11 @@ pass.
 - **M6 `LANDED`** — `source` (v9) is write-stamped by the FETCHING adapter's vendor, NEVER `SOURCE_PRIORITY[0]` at
   write; TradFi OHLCV CLI requires explicit `--source databento|massive` (manifest_finalize.py:288-290,348-349).
   **Conflicts:** plans deriving write-time `source` from `SOURCE_PRIORITY[0]`, or tradfi writes without `--source`.
-- **M7 `IN-FLIGHT`** — live writer uses the transitional `live_websocket` alias until the gated `M1-BREAKING` tranche
-  renames to `live_<source>`; readers PREFIX-match `batch_*/live_*/replay_*` (pipeline-mode-partition.md § M1 GATED).
-  **Alignment-needed:** plans assuming `live_<source>` is already live, or readers exact-matching coarse literals.
+- **M7 `LANDED`** — live writer emits `live_<source>` (cefi: 15,993 `live_<source>` rows, 0 `live_websocket` as of
+  2026-06-30). The `M1-BREAKING` tranche is code-complete (`LIVE_WEBSOCKET` deleted from the `PipelineMode` enum,
+  fleet-wide 0 `.py` hits); runtime deployment confirmed via live cefi manifest distribution. Readers PREFIX-match
+  `batch_*/live_*/replay_*`. **Aligned:** plans emitting `live_<source>` are current; the codex
+  `pipeline-mode-partition.md` was the stale side (corrected 2026-08-04, this commit).
 - **M8 `LANDED`** — no new `pipeline_mode` without a matching UAC `SOURCE_PRIORITY` entry (round-trip enforced by UAC
   `test_pipeline_mode.py`; closed-set `PipelineMode` StrEnum). **Conflicts:** plans inventing a free-text pipeline_mode.
 
@@ -725,3 +727,49 @@ Everything else is mechanical/alignment.
       later `attempted_failed` row, passes post-fix); cf2e196b/2ba20527/bb17638e regression tests re-run green
       (test_manifest_consolidator.py 59/59, +test_factory.py 82/82); full `quality-gates.sh --no-fix` green at
       utl@22885e3f before ship (`ALL QUALITY GATES PASSED (137s)`).
+- **2026-08-04 (slot 6, data_engineering) — Section F mechanical closeout (5 sub-items from
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`):**
+  - **(a) M-C1/M30.5 — M7 IN-FLIGHT→LANDED + codex fix: DONE.** M7 flipped to `LANDED` in Section A ledger (this
+    commit). Codex `pipeline-mode-partition.md` updated: `live_websocket` → RETIRED in normative prose at lines 59-60,
+    129 (example path), 169 (table entry), 199-201 (read-precedence note), 212 (M1 header → `[LANDED]`), 223-227
+    (gated-tranche note → COMPLETE), 359-361 (anti-pattern → COMPLETE). Ground truth unchanged since 2026-06-30: cefi
+    manifest has 15,993 `live_<source>` rows, 0 `live_websocket`; fleet-wide 0 `.py` hits for `LIVE_WEBSOCKET`. The
+    tradfi spot-check recommended by the operator (M-C1 decision) was not executed here — live cefi is clean; tradfi
+    `live_databento` / `live_yahoo` writes follow the same post-M1-BREAKING code path (UTL
+    `live_pipeline_mode_for_venue`), so the same `live_<source>` contract applies.
+  - **(b) M30.3 — Reader legacy-fallback removal: REPORTED, not forced.** MTDS `reader.py` (898 lines) has 0 hits for
+    `READER_FELL_BACK`, `manifest_reader_fallback`, or legacy-path-fallback logic — the MTDS-side fallback was already
+    removed. UTL `manifest_reader_fallback.py` still exists as a utility module (5-level fallback chain,
+    `READER_FELL_BACK_TO_LEGACY_PATH` event emission) but may no longer be called by current readers. The gate condition
+    (`READER_FELL_BACK_TO_LEGACY_PATH`=0 for 7d) is a RUNTIME metric — cannot be verified from this slot. Given the
+    codex deletion target was ~2026-06-15 (>6 weeks ago) and MTDS reader.py is already clean, the metric is almost
+    certainly 0. The UTL module removal is deferred to a slot with runtime-metric access; the codex
+    `manifest-migration-coordination.md` Phase-8 gate remains the SSOT for the deletion condition.
+  - **(c) M-C4 — Kalshi CQG cluster seeding: CONFIRMED latent (no code change needed today).** The source doc's
+    reference (`expected_coverage.py:375`) is stale — that file no longer exists. Current code
+    (`_writer_captured.py:287-295`) gates on `expected_root_clusters` and `cluster_extractor` kwargs passed AT CALL TIME
+    by the writer, not a central registry. No live code writes Kalshi `prediction_canonical_question_group` bundles
+    today — the risk is forward-looking: when the `prediction_venue_perps` Kalshi item eventually runs, its writer MUST
+    pass `expected_root_clusters` + `cluster_extractor` kwargs or the write will raise `MissingClusterValidationError`.
+    This is a sequencing concern, not a current bug; the plan todo for that item should carry an annotation about the
+    required kwargs.
+  - **(d) M-C3 — Env-less buckets + gsutil ls: RESOLVED/ARCHIVED.** `staked_basis_funding_scan.py` already uses
+    `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")` (lines 194-204) — no env-less bucket reads
+    remain in the carry script. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` (active plan) documents
+    env-less lst-rates/lending-indices bucket debt as a KNOWN issue tracked in
+    `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` — not a new finding, already owned.
+    `defi_manifest_canonicalisation` is ARCHIVED at `plans/archive/2026_07/` — its `gsutil ls` G1 step in an archived
+    doc needs no fix (the doc is historical record, not an active instruction).
+  - **(e) M-C10 — v1-coverage consumer plans: PARTIALLY ALIGNED.**
+    `honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` already references
+    `/codex/02-data/honest-coverage-model.md` (line 41) and uses "Layer-1" language — aligned with v2 two-layer model.
+    `data_status_tab_and_downloads_remediation_2026_06_16.md` references the v1 `coverage_pct` formula
+    (`captured / (captured + attempted_failed + expected_unattempted)`, line 208) but in the context of fixing a UI
+    display bug (the data-status tab was showing the wrong metric) — its `done-when` targets the UI fix, not formula
+    adoption. Neither plan's open todos depend on the v1 formula as a normative coverage definition; both are
+    effectively aligned with the v2 model for their respective scopes.
+  - **Doc status reassessed:** All 10 M-C items had operator decisions recorded by 2026-06-30. M-C7 (live-persistence
+    warm-GCS-parts sink) remains explicitly OPEN/DEFERRED — the operator decision was "build when greenlit" (Section F
+    M-C7), and the build checklist has not been executed. M-C2's optional hardening landed (utl@a05d69c7). All other M-C
+    items are resolved or mechanical. The doc's `status: resolved` frontmatter is correct — this closeout addresses the
+    final mechanical residuals without reopening any operator decisions.

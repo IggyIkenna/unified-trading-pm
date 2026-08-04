@@ -36,6 +36,7 @@ related:
     /codex/07-security/gha-wif-migration.md,
   ]
 created: 2026-07-25
+author: unknown
 last_updated: 2026-08-01
 parent_epic: orchestrator_master
 assigned_vm: NA

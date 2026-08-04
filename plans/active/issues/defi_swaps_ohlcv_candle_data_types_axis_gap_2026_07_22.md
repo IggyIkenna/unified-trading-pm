@@ -46,6 +46,7 @@ related:
     plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: "2026-07-22"
+author: unknown
 last_updated: "2026-07-22"
 parent_epic: manifest_master
 priority: P2
@@ -271,8 +272,12 @@ in a registry/exception addition without addressing the discrepancy.
       Repos: instruments-service, unified-api-contracts. — **EXECUTED 2026-08-02 (slot-6)**, see "## Progress Log"
       below. Delta measured: **zero** (byte-identical row set vs. pre-addition baseline). Evidence:
       `instruments-service@942e0808`, `unified-api-contracts@28c7102d`.
-- [ ] [CODE] P3. Alternatively/interim, execute Path B (accepted-exception stopgap) if Path A is not prioritized soon —
-      lower engineering cost, zero denominator risk, but flag the semantic tradeoff (these are not a "permanent,
+- [x] ✅ [CODE] P3. Alternatively/interim, execute Path B (accepted-exception stopgap) if Path A is not prioritized soon
+      — lower engineering cost, zero denominator risk, but flag the semantic tradeoff (these are not a "permanent,
+      never-fixed" case the way tradfi's bundle-grain values are) to whoever approves it. **MOOT/SUPERSEDED 2026-08-04
+      (slot-15): Path A shipped directly 2026-08-02 (slot-6, instruments-service@942e0808,
+      unified-api-contracts@28c7102d) with zero delta confirmed — stopgap unnecessary.** if Path A is not prioritized
+      soon — lower engineering cost, zero denominator risk, but flag the semantic tradeoff (these are not a "permanent,
       never-fixed" case the way tradfi's bundle-grain values are) to whoever approves it.
 - [x] [VERIFY] P3. Reconcile the `swaps_ohlcv_4h` timeframe discrepancy (real captured data exists at a timeframe not in
       `_candle_contracts.py`'s declared DeFi timeframe set) before either path ships. — already covered by

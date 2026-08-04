@@ -93,18 +93,19 @@ context_scope:
       `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the COINBASE relabel
       premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is flipped `[x]` with
       the commit cited, and prek is green.
-- [ ] [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded range.**
-      The cefi instruments-service recon job runs on a hardcoded `--start-date`/`--end-date`, so it re-processes a fixed
-      historical window every day instead of doing true T+1 forward-fill. Implement EITHER (a) the IS CLI defaults
-      `--start-date`/`--end-date` to the run day (yesterday for true T+1) when `--run-tag=t1-recon` and both are unset,
-      OR (b) `t1_batch_scheduler.tf`'s scheduler injects `{start-date,end-date}` via `httpTarget.body` overrides — (a)
-      is preferred because it keeps the default in the CLI where every caller inherits it, but either satisfies this
-      todo; this is an implementation choice, not a design fork. Repos: instruments-service, deployment-service.
-      **Coordination note (conflict-check)**: `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` hygiene
-      sweep sub-item (c) already imported these t1-recon Cloud Run JOB specs into the shared prod tofu state
-      (`deployment-service@54aa6f5`, **already DONE/`[x]`** — verified re-plan clean). Build ON that state; do not
-      re-import or re-create the job specs. Sub-items (a)/(b) of that same sweep (dead-CLI daily Workflow; all-AG
-      producer crash) are also already closed — this todo is the remaining, uncovered date-default half. Source:
+- [x] ✅ [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded
+      range.** — instruments-service@2217756f The cefi instruments-service recon job runs on a hardcoded
+      `--start-date`/`--end-date`, so it re-processes a fixed historical window every day instead of doing true T+1
+      forward-fill. Implement EITHER (a) the IS CLI defaults `--start-date`/`--end-date` to the run day (yesterday for
+      true T+1) when `--run-tag=t1-recon` and both are unset, OR (b) `t1_batch_scheduler.tf`'s scheduler injects
+      `{start-date,end-date}` via `httpTarget.body` overrides — (a) is preferred because it keeps the default in the CLI
+      where every caller inherits it, but either satisfies this todo; this is an implementation choice, not a design
+      fork. Repos: instruments-service, deployment-service. **Coordination note (conflict-check)**:
+      `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` hygiene sweep sub-item (c) already imported
+      these t1-recon Cloud Run JOB specs into the shared prod tofu state (`deployment-service@54aa6f5`, **already
+      DONE/`[x]`** — verified re-plan clean). Build ON that state; do not re-import or re-create the job specs.
+      Sub-items (a)/(b) of that same sweep (dead-CLI daily Workflow; all-AG producer crash) are also already closed —
+      this todo is the remaining, uncovered date-default half. Source:
       `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (line ~167). **Done when**: a cefi t1-recon run with no
       explicit date arguments processes the run day (or run-day-minus-1) rather than the old hardcoded window,
       demonstrated by one real execution's logged date range; a unit test covers the defaulting branch; `tofu plan` is
@@ -118,9 +119,10 @@ context_scope:
       `exit_code_fleet_monitor`, and `heartbeat_stall_watcher`. Corrected
       `/codex/05-infrastructure/deployment-     observability.md` § "Slack parity + alert enrichment" to state both
       facts. Source doc's `[DOCS] P2` checkbox flipped in the same commit series (see below).
-- [ ] [SCRIPT] P2. **Delete the now-inert cefi pre-listing plumbing from MTDS.** With the pre-listing source retired,
-      `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}` → the
-      `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded parameter and the
+- [x] ✅ [SCRIPT] P2. **Delete the now-inert cefi pre-listing plumbing from MTDS.** — market-tick-data-service@d2366203
+      (catalog method + tests deleted; sentinel plumbing already removed in fc64e092) With the pre-listing source
+      retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}` →
+      the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded parameter and the
       write block are dead code across ~6 call sites in market-tick-data-service's `engine/orchestrator/sentinels.py`
       and `engine/orchestrator/__init__.py`. Remove them for a clean break per the workspace "delete deprecated code, no
       shims" rule — do NOT leave a stub or a feature flag. Repo: market-tick-data-service. **Coordination note
@@ -132,7 +134,7 @@ context_scope:
       `grep -rn     'catalog_list_not_yet_listed_cefi\|cefi_pre_listing_by_venue' market-tick-data-service/` returns 0
       hits outside tests-being-deleted, no `EXPECTED_INSTRUMENT_NOT_LISTED` write path remains in the cefi orchestrator,
       `quality-gates.sh` is green, and the source doc's `[SCRIPT] P2` checkbox is flipped with the commit cited.
-- [ ] [DIAG] P2. **Profile whether the 17s CPU-bound block in `catalogue_symbols_for_venue` is GCS-parse time or an
+- [x] ✅ [DIAG] P2. **Profile whether the 17s CPU-bound block in `catalogue_symbols_for_venue` is GCS-parse time or an
       in-memory filter — read-only fact-finding, implement NEITHER fix option.** Every per-day cefi backfill subprocess
       rebuilds a `CeFiCatalogReader` and calls `list_instruments("cefi", day, day, venues=[venue])`, loading the full
       ~428k-row catalogue and re-resolving the universe — ~34s wall for a 0-row day, of which ~17s is CPU-bound. The
@@ -150,7 +152,7 @@ context_scope:
       attributing the ~17s across the three phases with measured numbers is appended to that issue doc, the doc states
       explicitly which of options A/B the evidence favours **as information for the operator** without adopting either,
       and zero code/GCS/manifest mutations occurred.
-- [ ] [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
+- [x] ✅ [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
       bare-venue residual.** **RULED 2026-07-28 (operator gate-cleanup pass)** — resolves the cross-tranche conflict
       previously parked below pending an operator decision: no specific answer was on file, so the operator's general
       design-choice theme was applied (full completions/backfills where determinable, no shortcuts; never fabricate a

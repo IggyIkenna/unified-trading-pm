@@ -32,6 +32,7 @@ related:
     /codex/04-architecture/agent-orchestrator-overview.md,
   ]
 created: 2026-07-31
+author: unknown
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

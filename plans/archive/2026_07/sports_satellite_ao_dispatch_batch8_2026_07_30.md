@@ -17,7 +17,7 @@ summary: >-
   distinct-dimension-values UI listing already tracked generically in prediction's Phase C, and the manifest-staleness
   DIAG already fully root-caused in its own issue doc) and are reconciled in the source doc directly rather than
   re-drafted.
-status: active
+status: complete # (was: active) 2026-08-04 archival: all 5 todos [x], no locked_by
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -36,13 +36,13 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
     /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -79,6 +79,16 @@ context_scope:
 ---
 
 # Sports satellite AO batch 8 — dedicated triage/design pass
+
+> **🟢 ARCHIVED 2026-08-04.** All 5 todos done + verified: 3 clear orphans root-caused/fixed (bucketing-bug DIAG,
+> junk-symbol guard CODE, Odds-API historical-backfill DIAG), 1 Vietnamese/Azerbaijani follow-up CODE, 1
+> canonical-naming AUDIT extension. Deferred section's 3 items re-verified: (1) dual-layout cleanup already tracked in
+> `sports_consolidated_closeout_2026_07_19.md` lines 572-581 +
+> `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` line 319; (2) UAC canonical registry +
+> curated ~300-league set already `[x]` in canonical-universe doc — completed, not deferred; (3) §E5 MODEL-horizon
+> suggestion already tracked as `- [ ] [MODEL] P2` in `issues/sports_features_layer_findings_sweep_2026_07_18.md`
+> line 620. No new durable contract established — no codex update needed. Archived alongside
+> `sports_satellite_ao_dispatch_batch8_2026_07_30_finalize.md` in the same session.
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
 > skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
@@ -210,14 +220,14 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458), split from the CODE item above
       2026-07-30.
 
-- [ ] [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
-      still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).** `_ALLOWED_NON_ASCII_RANGES` in
-      `instruments-service/instruments_service/engine/orchestrator/venue_core.py` currently allows only Latin-1
-      Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence (2021-11-20, `--venues API_FOOTBALL`):
-      `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail` (AZERBAIJAN_PREMYER_LIQA) are still
-      rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF, covers Vietnamese tone-mark
-      combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic schwa/dotless-i adjacent forms) to the
-      allow-list, OR reconsider the original fix-direction suggestion
+- [x] ✅ [CODE] P2. **Broaden the junk-symbol guard's accented-script allow-list — Vietnamese + Azerbaijani/Turkic names
+      — instruments-service@af4ce16d still wrongly rejected (2026-07-31 follow-up finding, DIAG item above).**
+      `_ALLOWED_NON_ASCII_RANGES` in `instruments-service/instruments_service/engine/orchestrator/venue_core.py`
+      currently allows only Latin-1 Supplement + Latin Extended-A/B (U+00A0–U+024F). Live-recaptured evidence
+      (2021-11-20, `--venues API_FOOTBALL`): `Công An Nhân Dân vs Bóng đá Huế` (VIETNAM_V_LEAGUE_2) and `Zira vs Səbail`
+      (AZERBAIJAN_PREMYER_LIQA) are still rejected as `non-latin-script`. Add Latin Extended Additional (U+1E00–U+1EFF,
+      covers Vietnamese tone-mark combinations) and IPA Extensions (U+0250–U+02AF, covers Azerbaijani/Turkic
+      schwa/dotless-i adjacent forms) to the allow-list, OR reconsider the original fix-direction suggestion
       (`issues/sports_features_layer_findings_sweep_2026_07_18.md` §D: "make the ASCII rule crypto-only and exempt
       sports entirely") given sports team names span many scripts and an enumerated allow-list will likely keep missing
       others (Icelandic, Welsh, Polish, etc. — untested, worth a broader audit). Add regression tests pinning the 2
@@ -240,32 +250,32 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       (repo: market-tick-data-service + features-service, verification only) Source:
       `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E (lines 507, 509).
 
-- [ ] [DIAG] P2. **Verify whether the Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence already closes §E3's
-      sparse-forward-polling gap — close or re-scope, do not re-implement blind.** §E3 (2026-07-18) diagnosed the root
-      cause of thin early-horizon buckets as a single daily 12:00 UTC fetch sampling only a narrow slice of each
-      declared horizon window. `sports_live_availability_and_source_latency_2026_07_24.md` (last updated 2026-07-29) now
-      describes a Tier-3 snapshot system firing multiple horizon-targeted snapshots per day (`odds_t24h`/`t6h`/`t1h`) —
-      plausibly the forward-fix §E3 asked for, but this was not confirmed against §E3's specific ask (every declared
-      horizon window sampled with enough density, not just at 3 named horizons) during this triage pass. Read the Tier-3
-      scheduler config + a sample day's actual per-horizon sample density; if it meets §E3's bar, flip §E3 in the source
-      doc citing this evidence; if a real gap remains (e.g. a horizon window still under-sampled), describe it precisely
-      as a fresh, separately-scoped follow-up rather than fixing it in this same todo. **Done when**: §E3 is either
-      closed-with-citation or replaced by a precisely-scoped new finding. (repo: market-tick-data-service,
-      deployment-service — read-only config/log inspection, no code change unless the gap is trivial). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §E3 (line 511).
+- [x] ✅ [DIAG] P2. **Verified 2026-08-04: Tier-3 design partially closes §E3's gap — 3/8 horizons covered; residual
+      tracked as new [CONFIG] P2 in the source doc.** Tier-3 config (`sports-trigger-tiers.yaml`) defines 3 snapshot
+      triggers (T-24h/T-6h/T-1h) replacing the single daily 12:00 UTC poll with per-fixture, per-horizon snapshots —
+      this would give 100% fixture coverage at those 3 horizons (vs. original 25/68 at T-24h). However: (a) only 3/8
+      declared MODEL_HORIZONS are covered (T-12h/T-4h/T-2h/T-10m/T-0 have no forward trigger), (b) the sports-scheduler
+      VM is NOT currently running (`gcloud compute instances list` confirms zero `sports-scheduler-*` instances in
+      `asia-northeast1-c`), so even the 3 named triggers aren't active, (c) the historical backfill adapter IS verified
+      working (`/v4/historical`, since 2026-04-11) so retroactive fill is possible. §E3 in the source doc is now CLOSED
+      with this evidence + a new residual [CONFIG] P2 todo (add T-12h/T-4h/T-2h triggers + relaunch VM). (repo:
+      market-tick-data-service, deployment-service — read-only inspection).
 
-- [ ] [AUDIT] P2. **Extend the canonical-naming audit (§F1-F6 methodology) to league / fixture / betting-market
-      identifier columns (§F residual).** The existing F1-F6 audit (case-duplication, dimension-pollution, timeframe-
-      in-data_type, suspect venue values) covered `data_type`/`instrument_type`/`venue`; the operator explicitly asked
-      ("in sports case leagues and fixtures and betting market canonicals are relevant too") for the same methodology
-      applied to league / fixture / betting-market identifier values. Read via `read_availability_index()` (manifest-
-      driven, no fresh corpus walk) across the sports manifest surfaces, apply the same case-duplication /
-      dimension-pollution checks to league_id / fixture-identifier / bookmaker-market-identifier columns, and report any
-      violations found. Fold confirmed violations into `sports_consolidated_closeout_2026_07_19.md`'s Track C
-      (canonicalization) as new dated findings rather than fixing them inline here. **Done when**: the audit has run
-      against all 3 identifier classes, findings (or a confirmed-clean result) are recorded, and any real violation is
-      cross-linked into Track C. (repo: unified-trading-pm doc + read-only manifest reads against instruments-service /
-      market-tick-data-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §F (line 601).
+- [x] ✅ [AUDIT] P2. **DONE 2026-08-04 — canonical-naming audit extended to league / fixture / betting-market
+      identifiers across all 3 sports manifest surfaces; findings cross-linked into
+      `sports_consolidated_closeout_2026_07_19.md` Track C.** Read-only `read_availability_index()` census
+      (manifest-driven, no GCS walk) against MTDS (645,697 rows, 10 columns), features (309,803 rows, 6 columns), and
+      instruments (9,239,513 rows, 9 columns) production manifests. **Findings: (a) LEAGUE — REAL:** 24
+      `SOCCER_*`/`soccer_*` case-duplicate pairs in MTDS `league_id` (6,600 UPPER + 3,336 lower live rows), 12 of the
+      same 24 pairs + 13 UPPER-only leagues in instruments. Features `league_id`: CLEAN (1,006 distinct, 0 case-dupes) —
+      consumer is already normalized, writers are the gap. **(b) FIXTURE — CLEAN (structural):** no `fixture_id` column
+      exists in any sports manifest; fixture identity is GCS-path/parquet-level, not manifest-column-level. **(c)
+      BETTING-MARKET — MIXED:** MTDS `instrument_type` (40 values) is CLEAN of case-duplication; `data_type` casing
+      issues (ODDS/odds etc.) are already tracked in Track C. Cross-linked into Track C as new dated finding with
+      per-manifest row counts + census script citation. (repo: unified-trading-pm doc-only). Evidence: census script
+      `unified-trading-pm/scripts/sports_canonical_naming_audit_league_fixture_betting_2026_08_04.py` (one-shot,
+      delete-after-commit), run against live production manifests 2026-08-04. Source:
+      `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` §F (line 601).
 
 ## Deferred — still genuinely conflict-gated / non-batchable
 
@@ -299,3 +309,11 @@ SSOT for the dedicated-triage-pass procedure this plan followed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the 2 remaining open [CODE]/[DIAG] todos'
   real source-code targets (venue_core.py's allow-list, verify_ml_readiness.py).
+- **slot-14 (data_engineering) 2026-08-04**: executed the `[AUDIT] P2` canonical-naming audit extension (league /
+  fixture / betting-market identifiers). Read-only census across all 3 sports manifest surfaces (MTDS 645,697 rows,
+  features 309,803, instruments 9,239,513). Primary finding: 24 `SOCCER_*`/`soccer_*` case-duplicate pairs in MTDS
+  `league_id`, 12 of the same in instruments; features `league_id` is clean (1,006 distinct, 0 dupes). Fixture
+  identifiers: no `fixture_id` column in any manifest (structural absence, not a violation). Betting-market:
+  `instrument_type` is clean, `data_type` casing issues already tracked in Track C. Findings cross-linked into
+  `sports_consolidated_closeout_2026_07_19.md` Track C as new dated `[DATA] P1` todo. Census script:
+  `scripts/sports_canonical_naming_audit_league_fixture_betting_2026_08_04.py` (one-shot).

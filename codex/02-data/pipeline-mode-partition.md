@@ -57,7 +57,8 @@ code_refs:
 > where `mode ∈ {batch, live, replay}`, `source` is the VENDOR only, and `[_{transport}]` is an OPTIONAL trailing
 > segment present in the path key **only** where a source genuinely runs >1 transport for the SAME shard (else omitted).
 > See § "Source-aware modes + transport" below — this SUPERSEDES the earlier batch-only `{batch_*, live_websocket}`
-> framing (`live_websocket` is now a transitional alias, and `replay_<source>` is a real mode). SSOT:
+> framing (`live_websocket` is RETIRED; `live_<source>` is the current standard, and `replay_<source>` is a real mode).
+> SSOT:
 > [`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`](../../plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md).
 
 ## Shipped progress (updated 2026-05-19 post-Phase-3 run)
@@ -126,7 +127,7 @@ for all five asset groups.
 `pipeline_mode` is the outermost hive partition column added to every parquet path:
 
 ```
-gs://{pid}-raw-tick/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=live_websocket/asset_group=cefi/venue=binance/...
+gs://{pid}-raw-tick/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=live_binance/asset_group=cefi/venue=binance/...
 ```
 
 Same parquet schema, same `available_at` semantics, same row-key shape across batch and live. UAC `SOURCE_PRIORITY` does
@@ -147,26 +148,26 @@ Three reasons:
 
 ## Closed-set values (UAC `PipelineMode` StrEnum)
 
-| Value                         | Source                                                                                                                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `batch_databento`             | Databento bulk + replay APIs (CME GLBX.MDP3 trades, OHLCV)                                                                                                                                  |
-| `batch_tardis`                | Tardis CeFi historical ticks                                                                                                                                                                |
-| `batch_ccxt`                  | CCXT REST batch (per-instrument T+1 reconcile)                                                                                                                                              |
-| `batch_barchart`              | RETIRED 2026-06-24; Barchart removed as a source. VIX 15m now aggregates from VX futures via Databento (XCBF.PITCH → `batch_databento`) with `batch_yahoo` for the rolling window. No shim. |
-| `batch_yahoo`                 | VIX 15m rolling window (last 60d) + tradfi ETFs                                                                                                                                             |
-| `batch_api_football`          | api_football fixtures / events / lineups / stats                                                                                                                                            |
-| `batch_footystats`            | footystats odds / xG                                                                                                                                                                        |
-| `batch_understat`             | understat xG / shot maps                                                                                                                                                                    |
-| `batch_transfermarkt`         | transfermarkt player values                                                                                                                                                                 |
-| `batch_soccer_football_info`  | SFI progressive stats                                                                                                                                                                       |
-| `batch_open_meteo`            | open-meteo weather (per fixture)                                                                                                                                                            |
-| `batch_odds_api`              | odds_api closing-line + horizon snapshots                                                                                                                                                   |
-| `batch_polymarket_historical` | Polymarket CLOB historical                                                                                                                                                                  |
-| `batch_kalshi_historical`     | Kalshi historical                                                                                                                                                                           |
-| `batch_lighter_candles`       | Lighter `/candles` historical (per dex_perp_onboarding 2026-05-07)                                                                                                                          |
-| `batch_pacifica_kline`        | Pacifica `/kline` historical                                                                                                                                                                |
-| `batch_databento_replay`      | Databento used by the replay-cascade subsystem                                                                                                                                              |
-| `live_websocket`              | Live websocket-streaming pipeline (MTDS / MDPS / features-service live mode)                                                                                                                |
+| Value                         | Source                                                                                                                                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `batch_databento`             | Databento bulk + replay APIs (CME GLBX.MDP3 trades, OHLCV)                                                                                                                                                                                                         |
+| `batch_tardis`                | Tardis CeFi historical ticks                                                                                                                                                                                                                                       |
+| `batch_ccxt`                  | CCXT REST batch (per-instrument T+1 reconcile)                                                                                                                                                                                                                     |
+| `batch_barchart`              | RETIRED 2026-06-24; Barchart removed as a source. VIX 15m now aggregates from VX futures via Databento (XCBF.PITCH → `batch_databento`) with `batch_yahoo` for the rolling window. No shim.                                                                        |
+| `batch_yahoo`                 | VIX 15m rolling window (last 60d) + tradfi ETFs                                                                                                                                                                                                                    |
+| `batch_api_football`          | api_football fixtures / events / lineups / stats                                                                                                                                                                                                                   |
+| `batch_footystats`            | footystats odds / xG                                                                                                                                                                                                                                               |
+| `batch_understat`             | understat xG / shot maps                                                                                                                                                                                                                                           |
+| `batch_transfermarkt`         | transfermarkt player values                                                                                                                                                                                                                                        |
+| `batch_soccer_football_info`  | SFI progressive stats                                                                                                                                                                                                                                              |
+| `batch_open_meteo`            | open-meteo weather (per fixture)                                                                                                                                                                                                                                   |
+| `batch_odds_api`              | odds_api closing-line + horizon snapshots                                                                                                                                                                                                                          |
+| `batch_polymarket_historical` | Polymarket CLOB historical                                                                                                                                                                                                                                         |
+| `batch_kalshi_historical`     | Kalshi historical                                                                                                                                                                                                                                                  |
+| `batch_lighter_candles`       | Lighter `/candles` historical (per dex_perp_onboarding 2026-05-07)                                                                                                                                                                                                 |
+| `batch_pacifica_kline`        | Pacifica `/kline` historical                                                                                                                                                                                                                                       |
+| `batch_databento_replay`      | Databento used by the replay-cascade subsystem                                                                                                                                                                                                                     |
+| `live_<source>`               | Live streaming pipeline (MTDS / MDPS / features-service live mode). Formerly the transitional `live_websocket` alias (RETIRED — M1-BREAKING tranche complete 2026-06-30; fleet-wide 0 `.py` hits; cefi manifest: 15,993 `live_<source>` rows, 0 `live_websocket`). |
 
 **Source-of-truth rule**: every UAC `SOURCE_PRIORITY` entry MUST have a corresponding **batch** `PipelineMode` value,
 and vice versa. Unit test in `unified-api-contracts/tests/unit/test_pipeline_mode.py` enforces the round-trip. (The
@@ -197,8 +198,7 @@ The `pipeline_mode` axis is **source-aware for ALL three modes** — `batch_<sou
 
 **Read precedence is mode-contextual (M4)**: a live consumer reads `live > replay > batch`; a batch consumer reads
 `batch > replay > live`; `replay` is always the middle (gap-fill) tier. (The object-side `live_websocket` →
-`live_<source>` migration + the M4 reader are a separate GATED tranche; until then live still writes the transitional
-`live_websocket` alias.)
+`live_<source>` migration is COMPLETE — M1-BREAKING tranche shipped; `live_websocket` is RETIRED.)
 
 ## Ratified TARGET design — live/replay (M1–M8 settled contract)
 
@@ -209,7 +209,7 @@ The `pipeline_mode` axis is **source-aware for ALL three modes** — `batch_<sou
 > (M1–M9). Items marked **[GATED — `M1-BREAKING` tranche]** are the ratified target whose OBJECT/code migration has not
 > yet run; everything else is live contract today.
 
-### M1 — object layout: `live_<source>` / `replay_<source>` **[GATED — `M1-BREAKING` tranche]**
+### M1 — object layout: `live_<source>` / `replay_<source>` **[LANDED — `M1-BREAKING` tranche COMPLETE 2026-06-30]**
 
 Live and replay objects land on the SAME canonical hive path as batch, differing only in the `pipeline_mode=` value
 (LEFT of `asset_group=`, byte-identical otherwise — batch=live):
@@ -221,10 +221,10 @@ Live and replay objects land on the SAME canonical hive path as batch, differing
 ```
 
 The source-aware live value fixes the live multi-source PATH COLLISION (two live sources for one cell both writing
-`pipeline_mode=live_websocket/…` → same path → silent overwrite). Until the gated tranche migrates live
-writers/objects/readers, live still writes the transitional `live_websocket` alias; `replay_<source>` writers land in
-the same tranche. The transitional alias is REMOVED once no object references it. Readers ALWAYS prefix-match `batch_*`
-/ `live_*` / `replay_*` (+ bare legacy) — never an exact coarse literal.
+`pipeline_mode=live_websocket/…` → same path → silent overwrite). The `M1-BREAKING` tranche is COMPLETE (2026-06-30):
+live writers emit `live_<source>`; `replay_<source>` writers are live; the transitional `live_websocket` alias is
+RETIRED (0 fleet-wide `.py` hits; cefi manifest: 15,993 `live_<source>` rows, 0 `live_websocket`). Readers PREFIX-match
+`batch_*` / `live_*` / `replay_*` (+ bare legacy) — never an exact coarse literal.
 
 ### M2×M3 — capability + per-shard availability registries (UAC SSOT)
 
@@ -358,7 +358,8 @@ execution:
   > 1-transport source). See § "Source-aware modes + transport".
 - `replay_<source>` is a REAL mode (intraday gap-fill), NOT a `live_websocket` write. (SUPERSEDES the prior "Don't use
   `pipeline_mode=replay_*`; replay writes to `live_websocket`" rule — that contradicted M1.) The object-side
-  `live_websocket` → `live_<source>` + `replay_<source>` write migration is a separate GATED tranche.
+  `live_websocket` → `live_<source>` + `replay_<source>` write migration is COMPLETE (M1-BREAKING tranche landed
+  2026-06-30; `live_websocket` RETIRED).
 - Don't write to manifest without the explicit `pipeline_mode=` kwarg post-migration. The default value is removed after
   Phase 4 sweep is grep-clean — explicit-or-fail. (UTL `add()` now AUTO-DERIVES it for a derivable market-data row —
   C-#2 — so a blank tag can't silently pass; features/service rows still keep `""`.)

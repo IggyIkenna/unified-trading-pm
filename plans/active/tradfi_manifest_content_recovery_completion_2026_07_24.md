@@ -239,12 +239,19 @@ context_scope:
       self-deleted, not preempted). `assert_tradfi_derivative_ids_canonical` over the live manifest's chain-bundle
       scope: `checked=961 canonical=961 violations=0`; direct GCS content read confirms genuine canonical ids (e.g.
       `CME:FUTURE:CRUDE-USD@LIN-20200619`).
-- [ ] [DATA] P2. **RULED 2026-07-28 — Option A (normalize qualifier + map to base root), previously gated on an operator
-      decision.** Canonicalisation-not-a-hack rules out Option B (relax the naming gate) and Option C
-      (quarantine/defer); Option A was already the team's own `[REC]`. Build: normalize the qualifier (`_Z`/`!`/`_MD1`)
-      into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`. Non-MVP, no rush, no longer
-      operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row quarantine bucket canonicalize, 0
-      remaining.
+- [x] ✅ [DATA] P2. **RULED 2026-07-28 — Option A (normalize qualifier + map to base root), previously gated on an
+      operator — unified-api-contracts@f2a86e1e.** Implemented via two new regex constants in
+      `tradfi_id_canonicalizer.py`: `_ICE_UNDERSCORE_BODY_RE` (pre-strips `_MD1`/`_Z`/`_MM1`/`_P` qualifiers before
+      `_`→space normalization breaks the ICE_FUTURE_RE match) and `_ICE_QUALIFIER_SUFFIX_RE` (post-strips `!` qualifier
+      from `classification.underlying` before `EXCHANGE_CODE_TO_NAME` lookup). Extracted `_build_future_option_result`
+      helper to keep `canonicalize_raw_tradfi_id` under the 200-line limit (now 148 lines). 8 updated/new unit tests (43
+      total), QG green. All 269,520 ICE-qualifier manifest rows that were previously QUARANTINE_UNPARSEABLE now
+      canonicalize — the qualifier is venue-specific contract metadata the canonical id does not need (expiry+strike
+      already uniquely identify the contract). decision.** Canonicalisation-not-a-hack rules out Option B (relax the
+      naming gate) and Option C (quarantine/defer); Option A was already the team's own `[REC]`. Build: normalize the
+      qualifier (`_Z`/`!`/`_MD1`) into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`.
+      Non-MVP, no rush, no longer operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row
+      quarantine bucket canonicalize, 0 remaining.
 - [x] ✅ [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18) — CASING sub-scope
       CLOSED 2026-07-25 to the literal-100% directive bar; semantic-mislabel-relabel + null/blank sub-scopes remain
       separately open, see the new P1 todo just below.** The migration MUST be driven by the FULL distinct set of

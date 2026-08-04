@@ -25,6 +25,7 @@ related:
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
   ]
 created: "2026-07-21"
+author: unknown
 parent_epic: sports_master
 priority: P2
 assigned_vm: NA

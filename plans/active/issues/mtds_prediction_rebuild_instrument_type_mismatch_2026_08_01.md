@@ -34,6 +34,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-31
+author: unknown
 parent_epic: manifest_master
 priority: P1
 source:

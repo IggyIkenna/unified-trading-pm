@@ -22,6 +22,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-24
+author: unknown
 parent_epic: cefi_master
 priority: P1
 source: >-

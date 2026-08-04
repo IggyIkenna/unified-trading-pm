@@ -30,6 +30,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source:

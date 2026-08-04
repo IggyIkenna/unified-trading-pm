@@ -23,6 +23,7 @@ related:
     plans/active/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
   ]
 created: 2026-07-12
+author: unknown
 parent_epic: mtds_mdps_master
 priority: P2
 source: [plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md G1.6, slot-2 2026-07-12]

@@ -41,6 +41,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-04T13:00Z
 parent_epic: infrastructure_master
 assigned_vm: NA

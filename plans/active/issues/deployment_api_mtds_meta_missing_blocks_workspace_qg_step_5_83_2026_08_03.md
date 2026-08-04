@@ -29,6 +29,7 @@ related:
     /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
   ]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: NA

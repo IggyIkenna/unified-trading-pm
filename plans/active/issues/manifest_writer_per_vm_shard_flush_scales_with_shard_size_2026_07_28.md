@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [manifest-writer, performance, backfill, scalability, per-vm-shard]
 related: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 created: 2026-07-28
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 assigned_vm: NA

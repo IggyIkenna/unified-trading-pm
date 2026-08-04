@@ -33,6 +33,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-31"
+author: unknown
 last_updated: "2026-07-31"
 parent_epic: infrastructure_master
 assigned_vm: planning

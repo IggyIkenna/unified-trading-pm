@@ -32,6 +32,7 @@ related:
     /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
   ]
 created: "2026-08-02"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: plan_hygiene_master
 priority: P2

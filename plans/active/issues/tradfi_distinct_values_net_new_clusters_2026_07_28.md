@@ -25,6 +25,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+author: unknown
 last_updated: "2026-07-28"
 parent_epic: manifest_master
 assigned_vm: NA
@@ -105,15 +106,34 @@ scope).
 > "investigate once, cite from all three" sequencing. Live blocker = batch5's draft status (operator item 5 in
 > `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
 
-- [ ] [DATA] P2. Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer (tradfi manifest `chain` column)
-      and either fix the writer to leave `chain=""` for tradfi (mirrors the cefi `_canonical_manifest_venue_chain`
-      precedent) or re-stamp the 7+7 rows if the writer fix alone would fragment row identity (same caution as the MTDS
-      venue-as-chain precedent on this doc). Source: this doc.
-- [ ] [DATA] P3. Confirm whether `YAHOO_FINANCE` should be added to `VENUES_BY_ASSET_GROUP['tradfi']` (real, working
-      daily-source venue per the 2026-07-19 sourcing decision) or is a mis-stamped `source=` value leaking into the
-      `venue` column. Source: this doc.
-- [ ] [DIAG] P3. Identify what writes `instrument_type='UD'` in tradfi and either register it (if a real, distinct
-      instrument type) or trace it as a mis-stamp. Source: this doc.
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-04 (slot 7, data_engineering) — 0 rows remaining, no fix needed.** Trace the
+      `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer (tradfi manifest `chain` column) and either fix the
+      writer to leave `chain=""` for tradfi (mirrors the cefi `_canonical_manifest_venue_chain` precedent) or re-stamp
+      the 7+7 rows if the writer fix alone would fragment row identity (same caution as the MTDS venue-as-chain
+      precedent on this doc). **Measured live 2026-08-04 against the consolidated tradfi
+      `_index/availability_index.parquet` (6.4M rows): 0 non-empty `chain` values across the entire tradfi manifest —
+      all rows have `chain=""`, confirming the 7+7 rows flagged on 2026-07-28 were cleaned up between then and now. No
+      code fix needed for this cluster.** Source: this doc.
+- [x] ✅ [DATA] P3. **RESOLVED 2026-08-04 (slot 7, data_engineering) — cite sibling finding, no separate fix needed.**
+      Confirm whether `YAHOO_FINANCE` should be added to `VENUES_BY_ASSET_GROUP['tradfi']` (real, working daily-source
+      venue per the 2026-07-19 sourcing decision) or is a mis-stamped `source=` value leaking into the `venue` column.
+      **Measured live 2026-08-04: 0 `venue=YAHOO_FINANCE` rows in the live manifest. The sibling investigation
+      (`/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved 2026-08-04) confirmed: 0 live
+      rows, `write_canonical_shard()` is dead code (the active `_umi_yahoo.py` route never calls it), and
+      `YAHOO_FINANCE` was DELIBERATELY removed 2026-07-15 as a source-as-venue modeling error per UAC's
+      `market_data_categories.py` + `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`. Do NOT re-register it. This doc's own
+      YAHOO_FINANCE question is fully answered by that investigation — cite, do not re-derive.** Source: this doc.
+- [x] ✅ [DIAG] P3. **TRACED 2026-08-04 (slot 7, data_engineering) — root cause identified, already tracked in sibling
+      doc, no separate fix needed here.** Identify what writes `instrument_type='UD'` in tradfi and either register it
+      (if a real, distinct instrument type) or trace it as a mis-stamp. **Measured live 2026-08-04: 1,099 rows
+      (`capture_status=captured`, venue=CME, source=databento, `ohlcv_1m`=1,092 + `trades`=7), ALL `instrument_id=None`,
+      ALL `underlying=None`, ALL written in the 2026-07-27T16:46:31-40Z phantom batch — the IDENTICAL signature as the
+      UD/OPTION/FUTURE/COMBO phantom rows already root-caused + tracked in
+      `/plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` (traced to
+      `market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py`). `UD` is already
+      quarantined as `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` in
+      `unified-api-contracts/registry/market_data_categories.py`. This cluster is a subset of the broader phantom-batch
+      defect already tracked in that sibling doc — no separate fix needed here.** Source: this doc.
 
 ## Progress Log
 
@@ -126,3 +146,13 @@ scope).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: trimmed context_scope from 7 to 6 entries (dropped two generic dispatch-batch/closeout
   provenance links) and added the `VENUES_BY_ASSET_GROUP` registry file the `YAHOO_FINANCE` todo would edit.
+- **2026-08-04 (slot 7, data_engineering, task `tradfi_satellite_ao_dispatch_batch5-004`)** — Investigated all 3
+  clusters end-to-end against the live consolidated tradfi `_index/availability_index.parquet` (6.4M rows, bounded
+  single-object read via `gsutil cp`). All 3 checkboxes flipped with evidence — zero code changed (no fix needed for any
+  cluster). (1) ESM0/MIGRATED chain-axis: 0 non-empty chain values in the entire tradfi manifest — the 7+7 rows flagged
+  2026-07-28 are gone (cleaned up between then and now). (2) YAHOO_FINANCE venue: 0 rows live, confirmed dead code per
+  the sibling investigation (`tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved same day) — cite, do NOT
+  re-register (deliberately removed 2026-07-15 as source-as-venue modeling error). (3) UD instrument_type: 1,099 rows
+  (all CME/Databento, all written in the 2026-07-27T16:46:31-40Z phantom batch, all `instrument_id=None`) — root cause
+  already traced to `market-data-processing-service/.../canonical_writer.py` and already tracked + quarantined in
+  `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`. No new fix needed for any cluster.

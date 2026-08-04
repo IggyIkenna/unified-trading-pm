@@ -46,6 +46,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -344,3 +345,22 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
      raise `--max-writes-per-run` — just relaunch again; only escalate/pause if a `would-write` count from a SINGLE
      attempt is ever anomalously large (e.g. 10x+ the prior norm), which would be the actual runaway-bug signature, not
      repeated exhaustion from preemption alone.
+- **data_engineering worker (slot 8) 2026-08-04 (in progress)**: launched a fresh production run of
+  `launch-expected-universe-v2-historical-backfill-vm.sh sports`. All 4 fixes from slot 14 verified present at
+  deployment-service HEAD (f399619, b64e4a7, 3d70522, 16e8de3, e7c9510 all ancestors of 5c9d673). No pre-existing
+  RUNNING VMs at launch time (all TERMINATED from prior runs). The backfill script is running as a background tracked
+  task with a 2-min event monitor and a 15-min stall watchdog (per-VM shard count as progress metric). **Status at 18:00
+  UTC**: chunk 1/7 (2020-06-06..2020-12-31) completed clean — 636,632 rows, EXIT_STATUS=0, 3 per-VM shard parts, 20.5s.
+  Chunk 2/7 (2021-01-01..2021-12-31) is on retry 9/50 — 9M rows written across 9 attempts, each hitting EXIT_STATUS=5
+  (max-writes-per-run halt-safety). Per-VM shard exclusion verified working: retry 6's run.log confirmed it correctly
+  loads prior per-VM shards (retries 3-5: 3M rows) and the main manifest base reflects consolidated shards from earlier
+  retries. The 2021 window genuinely has >10M expected_unattempted cells (consistent with the original issue's finding
+  of 10.5x FIXTURES league growth: 88→924). Each retry writes exactly 1M rows and converges — the script handles this
+  automatically (MAX_CHUNK_ATTEMPTS=50). No SPOT preemption observed in this session so far (0 preemption events in
+  asia-northeast1-c during ~1h of VM launches). Chunks 3-7 (2022 through 2026-04-05) not yet reached. The backfill is a
+  multi-hour operation — at ~7 min/retry with 10+ retries expected for the larger full-year chunks, total runtime is
+  estimated at 2-4 hours. **If picked up by a fresh session**: the backfill may still be running (check
+  `gcloud compute instances list` for a RUNNING `expected-universe-v2-sports-*` VM); if no VM is running, re-launch with
+  `bash launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent). Per-VM shards + main manifest
+  already hold real progress — the enumerator naturally resumes rather than restarting. Post-run cell-seeding ratio
+  re-check (same method as this issue's original measurement) is the done-when gate.

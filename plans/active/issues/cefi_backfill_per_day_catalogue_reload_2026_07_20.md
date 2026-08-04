@@ -27,6 +27,7 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 created: 2026-07-20
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -110,6 +111,47 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
 - [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process, or a cross-process `CeFiCatalogReader`
       cache)** — the interim per-year sharding mitigation only hides the per-day catalogue-reload waste behind
       parallelism; neither of the two proper-fix options above has been implemented.
+
+## Profile findings — cProfile breakdown of the ~17s CPU block (2026-08-04)
+
+A cProfile run of one full `list_instruments("cefi", day=2025-06-15, day, venues=["HYPERLIQUID"])` invocation on the
+orchestrator VM, measuring all three phases separately (wall clock):
+
+| Phase                  | Wall time  | % of total | Notes                                                                          |
+| ---------------------- | ---------- | ---------- | ------------------------------------------------------------------------------ |
+| (i) GCS download       | **0.19s**  | 0.4%       | `download_bytes()` on `prod/catalog.parquet` — 8.6 MB                          |
+| (ii) Parquet parse     | **0.65s**  | 1.2%       | `pd.read_parquet(BytesIO(raw))` — 431,301 rows × 40 cols                       |
+| (iii) In-memory filter | **53.68s** | 98.5%      | `df.iterrows()` loop over all 431k rows + MVP gate + `CatalogRow` construction |
+| **Total**              | **54.52s** |            |                                                                                |
+
+**Where the 53.68s of phase (iii) goes:**
+
+- `_build_has_perp_for_base()` — **26.68s** (1 call iterating ALL 431k rows via `df.iterrows()` to find which
+  `(exchange, base)` pairs have a PERPETUAL/EQUITY_PERP row)
+- `_yield_for_date()` — **26.88s** (1 call + 178 generator yields, iterating ALL 431k rows a SECOND time to filter by
+  venue, active-date window, MVP capture universe, and margin-leg gate)
+- `catalogue_symbols_for_venue`'s own symbol-set loop: included in the `_yield_for_date` time
+
+The per-day backfill subprocess pays BOTH costs: `_build_has_perp_for_base` re-computes the same per-exchange perp-index
+from the full catalogue (the catalogue is date-independent — the same result every day), and `_yield_for_date` re-scans
+all 431k rows even though the MVP gate's perp-bases set hasn't changed and the venue filter eliminates ~99.96% of rows
+(~172 of 431k pass).
+
+cProfile confirms the bottleneck is pure `pandas` row-at-a-time overhead: 862,604 calls to `df.iterrows()`, 876,306
+calls to `_get_first` (column extraction per row), ~30M `isinstance` checks — standard `iterrows()` tax on a 431k×40
+DataFrame.
+
+**Which fix option does the evidence favour (operator information only — neither is adopted here):**
+
+- **Option B (cross-process local-disk cache of the GCS download) would fix 0.4% of the total time.** The GCS download +
+  parquet parse together account for under 2% of wall clock. Even eliminating them entirely would not move the needle —
+  the bottleneck is the in-memory row iteration, not I/O. **Option B is the wrong design for the stated problem.**
+- **Option A (range-loop in one process, loading the catalogue + constructing the reader once per process) is the
+  correct direction**, because it eliminates the per-day re-iteration over all 431k rows — both the
+  `_build_has_perp_for_base` scan and the `_yield_for_date` per-row loop repeat identically every subprocess. One
+  bootstrap per VM instead of one per day directly removes the dominant cost.
+
+This profiling run was strictly read-only: zero code changes, zero GCS/manifest mutations, zero VM launches.
 
 ## Progress Log
 

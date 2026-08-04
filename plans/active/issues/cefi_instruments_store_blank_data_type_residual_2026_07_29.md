@@ -14,6 +14,7 @@ scope: [engineer]
 tags: [cefi, instruments-store, manifest, data-type, data-correctness]
 related: [/plans/active/data_completion_cefi_2026_07_15.md]
 created: 2026-07-29
+author: unknown
 parent_epic: mtds_mdps_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

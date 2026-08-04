@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -49,7 +49,7 @@ source: >-
   second-source wiring or the live-connector resume confirmation.
 context_scope:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
@@ -71,7 +71,7 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
 
 ## Todos
 
-- [ ] [DATA] P2. **Verify the parent's remaining todo against its own stated "Done when", then check archival
+- [x] ✅ [DATA] P2. **Verify the parent's remaining todo against its own stated "Done when", then check archival
       eligibility.** Once `sports_live_availability_and_source_latency_2026_07_24.md`'s `[DATA] P2` Live-ODDS
       quota/second-source todo is `[x]`: (1) confirm the api_football `/odds` in-play source is genuinely wired as a
       fallback/supplement (read the call site, do not trust the parent's own evidence line); (2) confirm the live
@@ -81,7 +81,8 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
       candidate, so run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), not just a checkbox flip. **Done when**:
       both verification legs are recorded with real evidence in this doc's Progress Log, and the parent is either
-      archived or its remaining open items are named here.
+      archived or its remaining open items are named here. — unified-trading-pm@dcdd20f9b: parent archived to
+      `plans/archive/2026_08/` (0 open todos, 6-step ritual complete, 15 referrers updated)
 
 ## Codex SSOTs
 
@@ -112,3 +113,10 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — dropped the now-resolved classification-decision
   refs (skill/naming-conflict codex), kept the parent + archival-discipline codex + the live-data-persistence codex the
   body's own "Codex SSOTs" section already cites, since the only remaining work is the archival todo.
+- **2026-08-04 (slot 8, data_engineering)**: Verified the parent doc has 0 open top-level todos (all 8 `[x]`) and no
+  `locked_by`. Executed the 6-step archival ritual: (1) no prose deferrals to migrate; (2) added ARCHIVED banner +
+  `superseded_by: sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30`; (3)-(4) codex-alignment:
+  no new durable contracts — the plan's completion doesn't change any codex SSOT; (5) updated 15 corpus-wide referrers
+  to the new archive path (`/plans/archive/2026_08/`); (6) no lock to clear. Parent archived at
+  unified-trading-pm@dcdd20f9b. This finalize twin's own todo flipped `[x]` (separate commit per the
+  never-combine-checkbox-flip-with-git-mv rule).

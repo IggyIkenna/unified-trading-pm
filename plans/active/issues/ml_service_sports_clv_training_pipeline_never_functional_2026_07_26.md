@@ -32,6 +32,7 @@ related:
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

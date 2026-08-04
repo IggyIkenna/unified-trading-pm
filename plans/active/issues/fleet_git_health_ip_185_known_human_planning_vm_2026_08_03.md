@@ -24,6 +24,7 @@ scope: [admin]
 tags: [fleet-git-health, human-planning-vm, false-positive, scanner-allowlist, per-tab-worktrees]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-08-03
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: NA

@@ -38,6 +38,7 @@ tags:
   ]
 related: [plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md]
 created: "2026-07-31"
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: NA

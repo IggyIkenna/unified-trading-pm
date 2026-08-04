@@ -15,6 +15,7 @@ scope: [engineer, admin]
 tags: [quickmerge, test-failure, deployment-api, blocking]
 related: [/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md]
 created: 2026-08-04
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source: "interactive session, 2026-08-04 — discovered shipping a VM-classification fix, not this issue's own scope"

@@ -18,6 +18,7 @@ related:
   - plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
   - plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md
 created: 2026-07-20
+author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

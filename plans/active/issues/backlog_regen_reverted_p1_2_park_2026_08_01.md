@@ -31,6 +31,7 @@ related:
     /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
   ]
 created: "2026-08-01"
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

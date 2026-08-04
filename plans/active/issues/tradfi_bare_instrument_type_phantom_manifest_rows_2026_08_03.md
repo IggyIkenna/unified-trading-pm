@@ -26,6 +26,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 parent_epic: instruments_master
 assigned_vm: planning
@@ -323,7 +324,7 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       2026-08-03), independently of this doc. Verified live on `origin/live-defi-rollout`, working tree clean. No code
       change needed — this todo's own diagnosis (the wiring gap) was already closed by unrelated work before this
       session found it. (repo: deployment-api)
-- [ ] [DATA] P2. **NEW 2026-08-04.** Fix the 13,923 phantom rows (venue∈{CME,ICE,NASDAQ,NYSE,CBOE},
+- [x] ✅ [DATA] P2. **NEW 2026-08-04.** Fix the 13,923 phantom rows (venue∈{CME,ICE,NASDAQ,NYSE,CBOE},
       instrument_type∈{UD,OPTION,FUTURE,COMBO,EQUITY,ETF,INDEX}, `written_at` in
       `2026-07-27T16:46:31Z..2026-07-27T16:46:41Z`, `instrument_id IS NULL AND underlying IS NULL`) at the ROW level — a
       delete-safety-gated manifest CAS write scoped to this exact signature (fresh
@@ -331,8 +332,11 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       ESM0/SPOT/YAHOO_FINANCE purge this same day), not an axis-value quarantine (which the doc above's REVERTED entry
       shows breaks the distinct-values panel for the axis's legitimate population). Root cause already traced
       (`market-data-processing-service/.../canonical_writer.py::write_candle_parquet`'s aggregated-write path omitting
-      `instrument_id`/`underlying`) — this todo is the row-level remediation, not further investigation. (repo:
-      market-tick-data-service or market-data-processing-service, whichever owns the manifest CAS write path)
+      `instrument_id`/`underlying`) — this todo is the row-level remediation, not further investigation. —
+      market-tick-data-service@6c797a14 + evidence: 9,440 phantom rows purged (COMBO 4,190 already absent), snapshot at
+      gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_tradfi_bare_itype_phantom_purge_20260804T145447Z.parquet,
+      verified 0 phantom rows remain, zero non-captured collateral, soft-delete retention 604800s confirmed fresh.
+      (repo: market-tick-data-service)
 
 ## Progress Log
 

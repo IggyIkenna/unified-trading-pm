@@ -33,6 +33,7 @@ related:
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

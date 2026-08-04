@@ -24,6 +24,7 @@ related:
     tradfi_chain_bundle_sampler_root_mismatch_2026_07_23,
   ]
 created: 2026-07-25
+author: unknown
 parent_epic: tradfi_master
 priority: P1
 source:
@@ -144,8 +145,8 @@ unless you want to move on it; just confirming this session didn't touch it.
 ingested, NOT dispatched, nothing working them: `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md:15` (5 todos),
 `…batch1_finalize_2026_07_25.md:10` (3), `…batch2_2026_07_25.md:16` (11), `…batch2_finalize_2026_07_25.md:12` (3),
 `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md:20` (11), `…_finalize.md:18` (3),
-`tradfi_consolidated_native_ao_extract_2026_07_25.md:19` (10), `…_finalize.md:12` (3) = **49 open todos, zero
-dispatched.**
+`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md:19` (10), `…_finalize.md:12` (3) = **49 open
+todos, zero dispatched.**
 
 **Why it matters (not cosmetic).** batch3's own Deferred section defers
 `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` on the grounds that batch2_finalize "already owns the job of
@@ -216,15 +217,16 @@ positives: batch1's `[DOC] P1` launcher-naming todo is self-declared "doc-only s
 **The two sides.** The plan is `status: active`, `locked_by:` empty, and has exactly **1** open todo —
 `plans/active/tradfi_consolidated_closeout_2026_07_18.md:234`: "[DATA] P2. Determine, per MVP cell in the table above,
 whether it has actually been proven wired through backfill=paper=live…". An AO-dispatchable derivative of that same todo
-already exists at `plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md:104`. Against archiving: the doc's
-own frontmatter calls it a "Coordination index (umbrella) that AGGREGATES (references, does not duplicate) every open
-tradfi + tradfi-touching" plan, it is the linkage anchor for the whole tranche, and it `depends_on` two still-active
-children. Per the skill's Phase 4, where a near-complete remnant folds is operator-gated and never autonomous.
+already exists at `plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md:104`. Against archiving:
+the doc's own frontmatter calls it a "Coordination index (umbrella) that AGGREGATES (references, does not duplicate)
+every open tradfi + tradfi-touching" plan, it is the linkage anchor for the whole tranche, and it `depends_on` two
+still-active children. Per the skill's Phase 4, where a near-complete remnant folds is operator-gated and never
+autonomous.
 
 **Options:**
 
-- A: Fold the remnant into `tradfi_consolidated_native_ao_extract_2026_07_25.md` (where its derivative already lives)
-  and archive the shell via the 6-step ritual.
+- A: Fold the remnant into `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (where its
+  derivative already lives) and archive the shell via the 6-step ritual.
 - **B [WORKER REC]: Keep it as the tranche coordination index** — it is explicitly an umbrella, its aggregated-source
   list is what `check_ag_closeout_linkage.py` resolves against, and archiving it would orphan that. Instead mark the one
   open todo as tracked-elsewhere (pointing at the native-extract derivative) so the doc reads as an index, not a

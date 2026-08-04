@@ -23,6 +23,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-24
+author: unknown
 assigned_vm: planning
 parent_epic: sports_master
 execution_scope: orchestrator-agent

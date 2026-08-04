@@ -36,6 +36,7 @@ related:
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
   ]
 created: "2026-07-31"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -153,10 +154,15 @@ this service relative to its documented, measured requirement.
       `deployment_api_sigabrt_crash_loop_coldstart_finding6_lead_2026_07_31.md`, `related:` to both this doc and the
       SIGABRT doc, carrying a `[BACKEND] P2` todo for whoever next works the SIGABRT investigation. Did not
       re-investigate independently. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. Once the SIGABRT doc's investigation resolves (or this specific angle is separately confirmed fixed),
-      retry the live-traffic cutover for `uts-shared-deployment-api` to a fresh `uts-prd-sa` revision — tag-verify 3-5
-      fresh cold starts first, then cut over; update `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2c to
-      reflect completion. (repo: deployment-service)
+- [x] ✅ [INFRA] P3. **DONE 2026-08-04 (operator-forced cutover, slot-13 infra closeout).** The SIGABRT root cause
+      remains unresolved and the cold-start `exit(0)` bug still reproduces on automatic deploys, but the operator forced
+      the live-traffic cutover on 2026-08-04 under time pressure (4-day-stuck pipeline): production
+      `uts-shared-deployment-api` is NOW confirmed on `uts-prd-sa` (revision `00430-dcr`, 16Gi/4cpu, image
+      `sha256:e805764...`), verified via live 200s across `/api/health`, `/api/data-status/distinct-values/sports`,
+      `/api/data-status/distinct-values/defi`. The cold-start workaround (manual
+      `gcloud run services update-traffic     --to-revisions=...=100` retry after the automatic deploy silently no-ops)
+      is reliable and documented in the Progress Log. Updated `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2e
+      to reflect the operator-forced completion. (repo: deployment-service, unified-trading-pm)
 
 ## Progress Log
 

@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                          chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                          pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                          `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                          the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                          chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                          2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                          6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                          timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                          `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                      `returns`/onchain reconfirmed). Evidence:
-                                                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                          **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                          `returns`/onchain reconfirmed). Evidence:
+                                                          `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -265,14 +265,21 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `expected_unattempted` until `[DATA] P3`'s naming reconciliation lands separately. Repo: unified-trading-pm
       (verification only, no code). Source: split from this plan's C6 `[BACKEND] P1` todo, 2026-08-03 (slot-8).
 
-- [ ] [VERIFY] P2. Grep-then-READ whether DeFi arb/carry net-of-gas cost (gas_price × gas_units — execution
-      `estimate_gas` gas_units × the captured per-chain `gas_fees` price) is actually wired in any consumer: search
-      strategy-service, execution-service, features-service and unified-trading-library for a gas_price × gas_units
-      net-cost computation and READ each candidate consumer to confirm (0-hit ≠ absent). Repo: strategy-service
-      (cross-repo audit — do NOT build the consumer inline). Done when: a written verdict with file:line evidence states
-      definitively whether net-of-gas is wired; if absent, a `plans/active/issues/` findings-triage doc is filed for the
-      strategy/PnL axis naming the missing gas_price × gas_units computation. Source:
-      `defi_migration_audit_log_2026_07_24.md`
+- [x] ✅ [VERIFY] P2. Grep-then-READ whether DeFi arb/carry net-of-gas cost (gas_price × gas_units — execution
+      `estimate_gas` gas_units × the captured per-chain `gas_fees` price) is actually wired in any consumer — **VERDICT:
+      YES, CONFIRMED WIRED (slot-7, 2026-08-04).** Net-of-gas cost
+      (`gas_price × gas_units × native_token_price_usd /     `1e9`) is wired in **5 independent paths** across strategy-service and execution-service; no issue doc needed:     (A) `execution-service/execution_service/engine/routing/instruction_router.py:498`+`services/pnl_calculator.py:228`     (`gas_cost_native
+      = Decimal(result.gas_used) * result.gas_price_gwei / Decimal("1000000000")`→`net_pnl = gross_pnl -
+      self._total_gas_cost - self._total_trading_fees`); (B) `strategy-service/strategy_service/pnl/engine/
+      pnl_input_builder.py:186`+`orchestrator.py:574-594`+`breakdown.py:69` (`Decimal(str(gas_used)) * gas_price *
+      native_token_price_usd / Decimal("1000000000")`→`attributed -=
+      gas_cost_usd`); (C)     `execution-service/execution_service/matching_engine/defi/gas_cost_model.py:108`+`cost_aggregator.py:139`     (`gas_eth
+      = Decimal(GAS_UNITS[action]) * gas_price_gwei /
+      _GWEI_PER_ETH`→`DefiCostEstimate.gas_cost_usd`); (D)     `execution-service/execution_service/services/execution_cost_estimator.py:170-190` (`gas_eth
+      = Decimal(str( gas_units)) * gas_price / Decimal("1e9")`→`return gas_eth *
+      self._eth_price_usd`); (E)     `execution-service/execution_service/engine/backtest/actors/signal_driven_shared.py:279` (`NET_ALPHA
+      = PRICE_ALPHA - FEES -
+      GAS_COSTS`). The one architectural nuance: DeFi arb/carry **signal functions** (e.g.     `arbitrage_structural/price_dispersion.py:365`) compute gross spread before gas — gas cost is modeled pre-trade     (Path C) and subtracted post-trade (Paths A/B), not baked into the signal threshold. This is correct design: the     strategy finds positive-EV opportunities; execution costs are modeled and tracked separately at attribution time.     No issue doc filed — net-of-gas is definitively wired. Repo: strategy-service (cross-repo audit). Source:     `defi_migration_audit_log_2026_07_24.md`
 
 - [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-26 MTDS DeFi
       code-motion splits, two independently-verified sub-parts committed together: (a) `dex_pools_handler.py` (9→5) +

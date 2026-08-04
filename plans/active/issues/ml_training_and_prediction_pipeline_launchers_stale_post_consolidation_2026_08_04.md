@@ -28,9 +28,10 @@ tags: [dead-code, stale-launcher, vm-launcher, consolidation, features, ml-train
 related:
   [
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
   ]
 created: 2026-08-04
+author: unknown
 last_updated: 2026-08-04
 parent_epic: infrastructure_master
 assigned_vm: NA

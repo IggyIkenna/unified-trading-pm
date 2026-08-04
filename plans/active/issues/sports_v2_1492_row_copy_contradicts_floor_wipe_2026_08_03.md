@@ -36,6 +36,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 parent_epic: sports_master
 assigned_vm: NA

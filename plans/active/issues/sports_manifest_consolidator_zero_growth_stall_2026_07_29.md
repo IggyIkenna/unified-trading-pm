@@ -15,7 +15,12 @@ summary: >-
   The canonical for this bucket appears to not be absorbing new content at all right now.
 status: open
 nature: issue
-asset_group: [sports, meta]
+asset_group:
+  [sports, prediction, defi, meta] # prediction+defi added 2026-08-04 by /ag-closeout-audit sports tranche: sports'
+  # own remaining work is 100% closed (see Progress Log), but the doc's 2 genuinely-open residual checkboxes are
+  # prediction- and defi-scoped (KALSHI/polymarket_clob source-mislabel in the prediction manifest;
+  # market-data-tick-defi-prd blast-radius census) -- without these tags neither tranche's own /ag-closeout-audit
+  # membership check (`asset_group contains <tranche>`) will ever discover this doc, an invisible-orphan gap.
 stage: [data]
 repos: [unified-trading-library, market-tick-data-service, deployment-service, instruments-service]
 scope: [engineer, admin]
@@ -39,6 +44,7 @@ related:
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
 created: 2026-07-29
+author: unknown
 priority: P0
 parent_epic: sports_master
 source: [sports_odds_api_scattered_multiyear_gaps-001]

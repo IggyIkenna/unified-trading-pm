@@ -438,7 +438,8 @@ Notes for whoever picks this up:
 
 - [x] [VERIFY] P2. Reconcile the post-07-13 rebuild delta (`PLAYER_VALUES` −10,934, `ODDS` −3,180 captured cells vs the
       2026-07-12 verified state) against real GCS objects — phantom-correction or data loss. Gate: per-key
-      manifest-vs-GCS diff for the missing keys. — already covered by
-      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` (extracted per
+      manifest-vs-GCS diff for the missing keys. — **Owning todo**:
+      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` Track S2 `[VERIFY] P2` (extracted per
       `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s explicit "(5) the post-07-13 rebuild-delta
-      reconciliation (fully covered, not repeated here)"; see that doc for execution).
+      reconciliation (fully covered, not repeated here)"; cross-linked 2026-08-04 per
+      `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 9).

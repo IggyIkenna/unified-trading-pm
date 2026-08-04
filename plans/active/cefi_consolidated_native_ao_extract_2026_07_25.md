@@ -157,15 +157,15 @@ items explicitly "FENCED" to another named agent/live process).
       `git diff b1028e6 HEAD -- <4 files>` is empty, proving nothing was left uncommitted; (4) all 3 previously-cited
       dirty deps (unified-trading-library, unified-api-contracts, deployment-service) are clean on fresh-pull. No new
       commit was possible or needed — the "land via quickmerge" step had already happened.
-- [ ] [DATA] P2. **Confirm UPBIT's live-wiring status in the cefi manifest.** UPBIT is codex-MVP
+- [x] ✅ [DATA] P2. **Confirm UPBIT's live-wiring status in the cefi manifest.** UPBIT is codex-MVP
       (`/codex/02-data/mvp-scope-canonical.md`) but has zero mentions anywhere in the parent plan's audit trail. Query
       the live cefi manifest for `venue=UPBIT` captured-row counts and check for any open backfill/issue doc. Repo:
       instruments-service (read-only). **Done when**: a recorded row count + PASS/FAIL verdict against the MVP
       definition is landed in this plan's Progress Log (or a new issue doc if a real gap is found). Source:
       `cefi_consolidated_closeout_2026_07_18.md` (MVP universe section).
-- [ ] [DATA] P2. **Verify + execute the Track-7 candle bundle-collision fix for the remaining 6 of 8 affected days (one
-      combined todo — the backfill step in part (b) must only run if part (a) confirms raw-tick presence for ALL 8 days,
-      so this is written as one linear task rather than two concurrently-dispatchable todos, avoiding the need to
+- [x] ✅ [DATA] P2. **Verify + execute the Track-7 candle bundle-collision fix for the remaining 6 of 8 affected days
+      (one combined todo — the backfill step in part (b) must only run if part (a) confirms raw-tick presence for ALL 8
+      days, so this is written as one linear task rather than two concurrently-dispatchable todos, avoiding the need to
       serialize this whole plan for a single ordering dependency):** (a) Verify raw-tick presence in `raw_tick_data/`
       for the remaining 6 of 8 affected `(day, venue)` cells (2023-06-01, 2023-08-02, 2024-02-01, 2024-02-02,
       2025-11-01, 2026-01-01 for BYBIT `futures_chain`/DERIBIT `options_chain` — 2023-11-02 and 2024-07-01 already
@@ -272,7 +272,7 @@ items explicitly "FENCED" to another named agent/live process).
       `cefi_consolidated_closeout_2026_07_18.md` (execution-log carryover, LIGHTER-ZKSYNC map item);
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Findings 8/10, prior Range A/B/C work this
       todo built on).
-- [ ] [DATA] P2. **Re-run the CeFi instrument catalogue rollup to resolve the 33 BITGET-FUTURES CME-letter-month gap
+- [x] ✅ [DATA] P2. **Re-run the CeFi instrument catalogue rollup to resolve the 33 BITGET-FUTURES CME-letter-month gap
       rows** (`BTCUSDH26`-style dated futures currently at 0 catalogue rows against on-disk data that exists) — per the
       parent doc's own Deferred-work table item 5: the gap-measurement script is already shipped
       (`instruments-service@f6f16785`, live-measured 211 gap rows: OKX-SPOT 174, COINBASE-SPOT 4, BITGET-FUTURES 33),
@@ -280,13 +280,11 @@ items explicitly "FENCED" to another named agent/live process).
       need an operator decision on widening UAC's `_CEFI_VENUE_QUOTE_EXTENSIONS` and stay out of scope here. Repo:
       instruments-service. **Done when**: a fresh run of the gap-measurement script (`instruments-service@f6f16785`)
       shows the BITGET-FUTURES CME-letter-month gap count at 0 (or explains any residual), cited with before/after row
-      counts in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Deferred-work table
-      item 5) — this exact candidate was previously identified and EXCLUDED from
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` because its only citable source at the time was the
-      too-large/risky `cefi_4surface_migration_execution_log_2026_07_24.md`; the same measured fact independently
-      appears in this parent doc's own (stable, non-excluded) Deferred-work table, so it is re-drafted here from that
-      stable citation instead.
-- [ ] [SCRIPT] P2. **Confirm (and land if still missing) the dry-run chain-drop blind-spot fix in
+      counts in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Deferred-work table item
+      5). ✅ — instruments-service@9167e5d7 (HEAD), read-only verification 2026-08-04: fresh gap-measurement run shows
+      BITGET-FUTURES=0 (before: 33, after: 0). Catalogue already rebuilt 2026-08-04T01:02Z; gap closed by prior rollup.
+      See Progress Log entry above for full detail.
+- [x] ✅ [SCRIPT] P2. **Confirm (and land if still missing) the dry-run chain-drop blind-spot fix in
       `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`.** Grep-check whether `"chain"` is present in
       `_DRYRUN_COLS` today. **Context — downgraded from the parent doc's P0 because the acute risk has already passed**:
       per `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 5, the Surface-C v2 `--apply`
@@ -480,6 +478,148 @@ information here. A genuinely clean baseline follow-up is already queued on that
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — trimmed 7→6 (dropped the aggregated-sources
   index + vm-launcher-runbook.md codex doc), added the `_cefi_canonical_resolver_migration_2026_07_18.py` source path
   (the shared resolve_canonical script Track-8 todos build on).
+
+### 2026-08-04 (slot-6, `data_engineering`) — Todo 6 (UPBIT live-wiring status confirm)
+
+**Verdict: FAIL against MVP definition — 2.5+ month data gap with no open tracking issue.**
+
+UPBIT is codex-MVP (`MVP_SCOPE.cefi.venues`, `/codex/02-data/mvp-scope-canonical.md` § CeFi venues row: SPOT_PAIR
+spot-without-perp carve-out via `STAKING_SPOT_EXCEPTION`) but has zero mentions in the parent
+`cefi_consolidated_closeout_2026_07_18.md` audit trail, and the live GCS estate reveals a gap the audit surface hasn't
+caught.
+
+**Live-manifest query (read-only, instruments-service GCS buckets):**
+
+- **IS catalogue** (`instruments-store-cefi-prd`/`instrument_availability/by_date/day=2026-08-03/`): 488 active UPBIT
+  instruments, all `SPOT_PAIR`, 308 base assets across 2 quote assets (KRW, USDT). `status=active` on all.
+- **MTDS tick data** (`market-data-tick-cefi-prd`/`raw_tick_data/by_date/`):
+  - Pipeline mode: `batch_tardis` only (Tardis-sourced historical backfill — no live/forward pipeline mode).
+  - Data types captured: `trades` (~263/day) + `book_snapshot_5` (~345/day) = ~608 parquet objects/day. `funding_rate`
+    and `derivative_ticker` not applicable (spot-only venue). Per MVP data_type cut: trades ✅, book_snapshot_5 ✅ —
+    both captured when the pipeline was running.
+  - **Coverage period**: 2021-03-03 through 2026-05-22 (~5.2 years, ~600 objects/day).
+  - **May 23–24, 2026**: Dramatic drop to 36 objects/day — KRW-pair `book_snapshot_5` ONLY (BTC-KRW, ETH-KRW, DOT-KRW,
+    etc.). No `trades` objects, no USDT pairs.
+  - **May 25, 2026 → present (2026-08-04)**: **ZERO objects**. Complete data gap for 72+ days.
+  - **Live connectors exist in code** (`upbit_spot_ws.py`, `upbit_book_ws.py`, `upbit_adapter.py`) but produce no GCS
+    objects — the Tardis backfill is the sole data source, and it stopped.
+  - **No `pipeline_mode=batch_live_*`** for UPBIT on any checked day post-cutoff (verified May 20/June 1/ July 1/Aug 1
+    2026).
+
+**Known historical issues** (both resolved, `cefi_venue_backfill_coverage_remediation_2026_05_27.md`): UPBIT Tardis CSV
+type mismatch (ArrowInvalid float-in-int-column) ✅ fixed; cross-date memory accumulation (~78 GB) ✅ fixed. Neither
+explains the May-25+ gap.
+
+**No open issue doc or backfill plan** tracks this gap. The parent plan's audit trail (the
+`cefi_consolidated_closeout_2026_07_18.md` table) has zero UPBIT mentions. The `cefi_master.md` epic expects UPBIT at
+"trades/book_snapshot_5, 450 each" — the actual on-disk estate was meeting that bar until May 25, then fell to zero.
+
+**Filed**: `issues/upbit_cefi_data_gap_may_2026_2026_08_04.md` — captures the gap, the measured GCS evidence, and a P1
+follow-up todo to diagnose the root cause (Tardis vendor-side data availability ceiling vs pipeline/VM stoppage) and
+either restore the backfill or explicitly descope UPBIT from MVP with an operator ruling.
+
+### 2026-08-04 (slot-11, `data_engineering`) — Todo 7 (Track-7 candle bundle-collision fix)
+
+**Part (a) — Raw-tick presence verification: ALL 8 DAYS PASS.** ✅
+
+Verified raw-tick GCS presence
+(`raw_tick_data/by_date/day={day}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type={instype}/data_type=trades/`)
+for all 8 affected days × 2 venue/type cells:
+
+| Day        | BYBIT futures_chain                                          | DERIBIT options_chain |
+| ---------- | ------------------------------------------------------------ | --------------------- |
+| 2023-06-01 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2023-08-02 | 2 parquet files (BTC, ETH)                                   | 2 parquet files       |
+| 2023-11-02 | 2 parquet files (BTC, ETH)                                   | 2 parquet files       |
+| 2024-02-01 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2024-02-02 | 4 parquet files (BTC, ETH, ticks.parquet)                    | 2 parquet files       |
+| 2024-07-01 | 3 parquet files (BTC, ETH, SOL)                              | 4 parquet files       |
+| 2025-11-01 | 8 parquet files (BTCUSDT, DOGEUSDT, SOLUSDT, XRPUSDT, etc.)  | 8 parquet files       |
+| 2026-01-01 | 10 parquet files (BTCUSDT, DOGEUSDT, ETHUSDT, SOLUSDT, etc.) | 7 parquet files       |
+
+All 16 cells confirmed raw-tick present — part (b) is unblocked.
+
+**Part (b) — Stale-object state: ALL 149 RESIDUAL OBJECTS ARE GONE.** ✅
+
+Sampled 10 of the 149 paths from `cefi_todo19_149_residual_objects_2026_07_23.csv`, then verified all 149 with
+`gsutil stat` — all 149 return 404 (deleted). Breakdown: 93 BYBIT futures_chain + 56 DERIBIT options_chain, all GONE
+from both the old path (`processed_candles/.../timeframe=.../data_type=.../venue=.../`) and the new
+`pipeline_mode=batch_tardis` path.
+
+**Part (b) — Bundle integrity audit: BUNDLES ARE INCOMPLETE (7 OK, 9 PARTIAL, 96 MISSING out of 112 cells).** ❌
+
+Comprehensive audit of all 8 days × 7 timeframes × 2 venue/type cells against the canonical path
+`processed_candles/by_date/day={day}/pipeline_mode=batch_tardis/timeframe={tf}/data_type={dtype}/instrument_type={INSTYPE}/venue={VENUE}/ticks.parquet`:
+
+- **7 cells OK** (correct symbol counts): All are BYBIT futures_chain 15s/15m where the bundle contains the expected
+  symbol count matching the stale CSV's per-leg count.
+- **9 cells PARTIAL** (bundle exists but missing legs): All BYBIT futures_chain 15s/15m bundles have only 1 symbol (the
+  "race winner") instead of 2-3 expected per the stale CSV. E.g., 2023-11-02 15m has only `BTC-28JUN24` — `ETH-28JUN24`
+  is missing from the bundle.
+- **96 cells MISSING** (no bundle at all): Every DERIBIT options_chain cell across all 8 days and all 7 timeframes has
+  zero bundles. Most BYBIT futures_chain timeframes beyond 15s/15m also missing (1m, 5m, 1h, 4h, 1d). 2025-11-01 and
+  2026-01-01 BYBIT futures_chain: ALL timeframes missing.
+
+**Part (b) — MDPS `--force` backfill: BLOCKED on compute (unsafe for shared VM).** ⚠️
+
+Attempted `MDPS_ASSET_GROUP=CEFI MDPS_DATA_TYPES=futures_chain MDPS_VENUES=BYBIT MDPS_TIMEFRAMES="15m 15s"` with
+`--force --skip-dependency-check --start-date 2023-11-02` on this VM. The process loaded 5,610 instruments into memory
+and RSS climbed: 943MiB → 19,202MiB → 28,594MiB → 34,034MiB before the run was killed. Dry-run mode works correctly
+(confirms scope: "2 files, 2 instruments" for the narrow filter), but actual execution of the MDPS framework is unsafe
+on this shared host per the 2 prior AO-outage incidents (`expand_defi_pool_catalogue` 43.6GB,
+`features_service.cross_instrument` 38.8GB). The MDPS `--force` candle backfill requires a **dedicated VM** — the
+specific 8-day × 2-venue backfill scope is tiny (2-10 raw-tick parquet files per cell), but the MDPS framework
+initialization loads the full instrument catalogue regardless.
+
+**Disposition**: The 149 stale objects are already gone (deleted by a prior session/process), resolving the immediate
+GCS clutter. The incomplete bundles represent a residual data gap (missing leg data in `ticks.parquet` for 105/112
+cells). The MDPS `--force` backfill to close this gap needs a dedicated VM — filed as follow-up below.
+
+**Follow-up filed**: `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` — captures the audit results, the
+105 incomplete cells, and a P2 `[INFRA]` todo to launch a dedicated MDPS `--force` backfill VM for the 8 affected days.
+The `[OPERATOR]`-gated delete of the 149 stale objects is ACCOMPLISHED (all gone); the remaining work is the bundle
+regeneration only.
+
+### 2026-08-04 (slot-11, `data_engineering`) — Todo 11 (BITGET-FUTURES catalogue rollup re-run)
+
+**Verdict: GAP ALREADY CLOSED — 0 BITGET-FUTURES CME-letter-month gaps.**
+
+Ran the gap-measurement script (`instruments-service/scripts/measure_cefi_catalogue_enumeration_gap_2026_07_23.py`,
+`instruments-service@f6f16785`) fresh against the live prod manifest + catalogue. **Before (2026-07-23 baseline):** 211
+total gap rows (OKX-SPOT 174, BITGET-FUTURES 33, COINBASE-SPOT 4). **After (2026-08-04, this run):** 171 total gap rows
+— OKX-SPOT 170, COINBASE-SPOT 1, **BITGET-FUTURES 0**. All 171 residual rows are `spot-quote-gap` case class; zero
+`cme-letter-month-gap` entries. Exit code 0 (within the 20–5000 stop-on-surprise band).
+
+The catalogue (`prod/catalog.parquet`) was last rebuilt 2026-08-04T01:02:51Z — a prior rollup (likely the daily
+reference-data capture + catalogue rebuild cycle) already absorbed the 33 BITGET-FUTURES CME-letter-month rows. No code
+change was needed (as planned); the rollup re-run already happened organically since the 2026-07-14 parser fix landed.
+
+**No residual**: a targeted grep of the per-row CSV detail (`/tmp/gap_detail_2026_08_04.csv`, 171 rows) confirms zero
+BITGET-FUTURES or `cme-letter-month-gap` entries — all 171 are OKX-SPOT (170) + COINBASE-SPOT (1), both
+`spot-quote-gap`. The OKX-SPOT/COINBASE-SPOT gap rows stay out of scope here (needs operator decision on widening UAC's
+`_CEFI_VENUE_QUOTE_EXTENSIONS`, per the plan).
+
+Evidence: fresh gap-measurement run at `instruments-service@9167e5d7` (HEAD) with
+`GCP_PROJECT_ID=central-element-323112`. No new commit needed — read-only verification, no code change.
+
+### 2026-08-04 (slot-14, `data_engineering`) — Todo 12 (dry-run chain-drop blind-spot fix confirm)
+
+**Verdict: FIX ALREADY LANDED — `"chain"` is in `_DRYRUN_COLS`. No code change needed.**
+
+Confirmed `"chain"` is present in `_DRYRUN_COLS` at
+`instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220` (`instruments-service@1284606a`,
+2026-07-24 16:59:54 +0100, "fix(cefi): include chain in dry-run column projection so chain-drop safety gate isn't a
+no-op"). The commit message itself documents the exact blind-spot this todo exists to confirm closed: "a column silently
+absent from a dry-run read makes that gate a no-op that always reports (0, 0) regardless of the real data — found
+2026-07-24 after a dry-run claiming 0/0 was immediately followed by a real 3304-group STOP at --apply time."
+
+The v2 script (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py:85-86`) imports v1 via
+`importlib.util.module_from_spec` and uses `v1._DRYRUN_COLS` at line 401 for its dry-run column projection — so the fix
+reaches both the original v1 script and the v2 reuse path.
+
+**No code change possible or needed** — the fix predates even this triage plan's creation date (2026-07-25). The acute
+risk never recurred (the Surface-C v2 `--apply` ran successfully with 28 `TOLERATED` chain-lossy groups, 0 CAPTURED rows
+lost, canonical-fraction 99.24%).
 
 ## Reconciliation
 

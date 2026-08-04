@@ -102,17 +102,28 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
 
 ## Todos
 
-- [ ] [BACKEND] P3. Add a QG lint step to `market-tick-data-service/scripts/quality-gates.sh` (repo-local, next to the
-      existing 5.90-5.93 steps) banning the unsafe fallback idioms
+- [x] ✅ [BACKEND] P3. Add a QG lint step to `market-tick-data-service/scripts/quality-gates.sh` (repo-local, next to
+      the existing 5.90-5.93 steps) banning the unsafe fallback idioms
       `classification.retry_safe if classification is not None else True` and `retry_safe if classification else True`
       in `market_tick_data_service/` — ratchet baseline = the decided residual count from todo 2 (0 if flipped, 2 if
-      whitelisted-by-comment), failing on any INCREASE. Repo: `market-tick-data-service`.
-- [ ] [BACKEND] P3. Decide + implement the 2 residual non-status-path sites (`glassnode.py` `_get` ClientError/Timeout
-      branch, `helius_solana.py` `_rpc_call` same): either (a) flip to `else False` for full convention consistency
-      (accepting fail-fast on first timeout for unregistered venues — check backfill impact first: a single flaky
-      timeout would then fail the metric/method fetch immediately), or (b) keep `else True` for the transient-only error
-      class with an explicit `# lint-allow` comment + lint whitelist, documenting WHY the transient path may default to
-      retry. Record the decision rationale in this plan's Progress Log. Repo: `market-tick-data-service`.
+      whitelisted-by-comment), failing on any INCREASE. Repo: `market-tick-data-service`. — **DONE via fleet-wide
+      generalization (todo 3): STEP 5.104 in `scripts/quality-gates-base/base-service.sh` (PM@4d3713ade) covers every
+      repo consuming UAC `classify_venue_error` with a pure-`rg` ratchet (baseline=2, the 2 annotated
+      `# QG-allow: retry-safe` residual sites at mtds@0041a8a6). A repo-local duplicate was intentionally not created —
+      the fleet-wide home is the right home per the todo 3 decision.**
+- [x] ✅ [BACKEND] P3. Decide + implement the 2 residual non-status-path sites (`glassnode.py` `_get`
+      ClientError/Timeout branch, `helius_solana.py` `_rpc_call` same): either (a) flip to `else False` for full
+      convention consistency (accepting fail-fast on first timeout for unregistered venues — check backfill impact
+      first: a single flaky timeout would then fail the metric/method fetch immediately), or (b) keep `else True` for
+      the transient-only error class with an explicit `# lint-allow` comment + lint whitelist, documenting WHY the
+      transient path may default to retry. Record the decision rationale in this plan's Progress Log. Repo:
+      `market-tick-data-service`. — **mtds@0041a8a6: Option (b) — kept `else True` for the transient-only non-status
+      exception path (`aiohttp.ClientError`/`asyncio.TimeoutError`) with `# QG-allow: retry-safe` annotation + inline
+      rationale comment referencing this plan's todo 2. Rationale: both sites' `else True` is on the non-status
+      exception path only — permanent HTTP statuses (404/400/403) are already intercepted by `_handle_response_error` in
+      the branch above (mtds@b8218f8a). Retrying transient-by-nature network errors for a bounded number of attempts is
+      the standard resilience posture, unlike retrying a permanent error to exhaustion. Both sites annotated:
+      glassnode.py:238 and helius_solana.py:217.**
 - [x] [BACKEND] P3. Evaluate generalizing the lint into the shared PM `scripts/quality-gates-base/base-service.sh`
       codex-compliance section (fires for every repo consuming UAC `classify_venue_error`) — implement if trivially
       portable (pure `rg` step, no per-repo state); otherwise record why repo-local is the right home. Repos:
@@ -126,9 +137,13 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
       `unified-trading-pm`. ✅ DONE — all 3 sub-points added under a new "`classify_venue_error()` unclassified-default
       convention (retry_safe)" section, cross-linked to mtds@b8218f8a/f82f29c1/0041a8a6 + this plan + the parent
       incident doc.
-- [ ] [BACKEND] P3. Closeout — verify the parent issue doc `issues/mtds_perp_funding_backfill_hang_2026_07_14.md` has no
-      remaining open todos, set its `resolved_by:` to this plan + the fix shas, and run the issue-doc lifecycle
-      (resolve/archive per `codex/11-project-management/`). Repo: `unified-trading-pm`.
+- [x] ✅ [BACKEND] P3. Closeout — verify the parent issue doc `issues/mtds_perp_funding_backfill_hang_2026_07_14.md` has
+      no remaining open todos, set its `resolved_by:` to this plan + the fix shas, and run the issue-doc lifecycle
+      (resolve/archive per `codex/11-project-management/`). Repo: `unified-trading-pm`. — **DONE 2026-08-04 (slot 16):
+      parent issue doc verified — already archived at
+      `plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`, `status: resolved`, 0 open todos.
+      `resolved_by:` populated with this plan + all 4 fix shas (mtds@b8218f8a, mtds@f82f29c1, mtds@0041a8a6,
+      PM@4d3713ade). Issue-doc lifecycle complete — already archived, no further action needed.**
 
 ## Progress Log
 
@@ -155,3 +170,8 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the batch1b execution-vehicle plan (do NOT
   double-dispatch) + the 2 residual adapter files + the MTDS QG script the new lint step lands in.
+- **2026-08-04 (slot 16, backend_engineer) — all 5 todos now checked closed.** Todos 1-2 and 5 flipped with evidence:
+  (1) repo-local MTDS lint → covered by fleet-wide STEP 5.104 (PM@4d3713ade); (2) 2 residual sites → Option (b) kept
+  `else True` with `# QG-allow: retry-safe` annotations (mtds@0041a8a6); (5) parent issue doc closeout → verified
+  already archived + resolved, `resolved_by:` populated with all 4 fix shas. The batch1b plan's `[BACKEND] P3` todo is
+  being flipped simultaneously with this commit.

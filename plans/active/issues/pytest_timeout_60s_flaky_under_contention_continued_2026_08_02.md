@@ -42,6 +42,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
+author: unknown
 last_updated: 2026-08-03T15:35Z
 parent_epic: infrastructure_master
 assigned_vm: NA

@@ -48,6 +48,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-25
+author: unknown
 last_updated: 2026-07-25
 priority: P3
 parent_epic: orchestrator_master

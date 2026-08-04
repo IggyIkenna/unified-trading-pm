@@ -28,6 +28,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, version-alignment, stale-config, fleet-consolidation, schema-validation]
 related: [/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 priority: P3
 parent_epic: infrastructure_master
@@ -113,29 +114,34 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
 
 ## Recommended decision
 
-- [ ] [INFRA] P3. Add the 3 missing SDK pins to `unified-api-contracts/pyproject.toml`'s
+- [x] ✅ [INFRA] P3. Add the 3 missing SDK pins to `unified-api-contracts/pyproject.toml`'s
       `[project.optional-dependencies.schema-validation]` — `databento>=0.32.0,<1.0.0`, `ccxt>=4.5.24,<5.0.0`,
       `ib_insync>=0.9.86,<1.0.0` (copy SCHEMA_VERSIONS.md's already-documented target ranges verbatim; also confirm
       whether `tardis-client` is already pinned or has the same gap, since the live run didn't flag it — check before
       assuming it's fine). **Done when**: a live `uv run python scripts/check_sdk_version_alignment.py` run no longer
       reports a missing-pin error for any of the three, `tests/unit/test_schema_version_alignment.py` stays green, and
-      `quality-gates.sh` is green. Repo: unified-api-contracts.
-- [ ] [INFRA] P3. Replace `check_sdk_version_alignment.py`'s hardcoded `INTERFACES` list with the fleet's real current
-      api-contracts consumers. Derive the list by grepping every repo in `workspace-manifest.json`'s `repositories{}`
-      for a `unified-api-contracts` dependency in its `pyproject.toml` (do not guess successor names from the old list —
-      verify each). Drop entries with no current-fleet repo; add any real consumer missing from the old list. **Done
-      when**: the list contains only real, existing repo paths confirmed via the manifest, a live
-      `uv run python scripts/check_sdk_version_alignment.py` run exercises all of them (no silent `continue`-skips on
-      missing paths — spot-check by temporarily logging skip count), and `quality-gates.sh` is green. Repo:
-      unified-api-contracts.
-- [ ] [INFRA] P3. Harden `test_schema_validation_deps_match_schema_versions` (in
+      `quality-gates.sh` is green. Repo: unified-api-contracts. — **unified-api-contracts@35812399**: added full
+      `[project.optional-dependencies] schema-validation` section with all 6 packages from SCHEMA_VERSIONS.md SSOT
+      (pydantic, requests, databento, tardis-client, ccxt, ib_insync). `check_sdk_version_alignment.py` → green ("SDK
+      version alignment OK"); `quality-gates.sh` → green. Confirmed `tardis-client` had same gap (undetected because no
+      surviving INTERFACES consumer pins it).
+- [x] ✅ [INFRA] P3. Replace `check_sdk_version_alignment.py`'s hardcoded `INTERFACES` list with the fleet's real
+      current api-contracts consumers. — **unified-api-contracts@19b992a8**: replaced the 16-entry hardcoded INTERFACES
+      list (11/16 stale) with 19 real api-contracts consumers derived by grepping every repo in
+      workspace-manifest.json's repositories{} for a unified-api-contracts dependency in its pyproject.toml. Verified
+      19/19 paths exercised (0 skipped), script passes ("SDK version alignment OK"), quality-gates.sh green.
+- [x] ✅ [INFRA] P3. Harden `test_schema_validation_deps_match_schema_versions` (in
       `unified-api-contracts/tests/unit/test_schema_version_alignment.py`) to also assert every
       SCHEMA_VERSIONS.md-documented `[schema-validation]` package (except the already-special-cased `pydantic`) is
       PRESENT in pyproject.toml's schema-validation extras, not just version-equal when present — this is the exact
       blind spot that let finding 2 above go undetected. **Done when**: a synthetic test fixture with a
       documented-but-absent package fails pre-fix and passes post-fix (or: passes today because todo 1 above already
       closed the specific gap — either order is fine, just don't let the test regress silently again). Repo:
-      unified-api-contracts.
+      unified-api-contracts. — **unified-api-contracts@70454519**: added presence-check assertion in the
+      `for pkg in expected` loop (before the existing version-equality check). Verified: (1) synthetic gap test
+      (temporarily removed databento from pyproject.toml) correctly fails with clear message identifying the missing
+      package, (2) restored state — both tests in the file pass green, (3) quality-gates.sh green, (4) quickmerge landed
+      on LDR.
 
 ## Progress Log
 

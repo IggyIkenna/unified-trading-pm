@@ -180,3 +180,10 @@ review-blocking.
   until that migration lands; see the issue doc
   (`issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`) for the full evidence and the new,
   properly-scoped migration todo split out from the original bundled one.
+- **2026-08-04 (slot-8, data_engineering, `sports_closeout_track_x_hygiene-006`)**: built + shipped the migration script
+  (`market-tick-data-service@976786c5`,
+  `scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`). Path-only GCS
+  copy — mirrors the sibling's 3-mode structure (dry-run / `--validate` / `--apply-prod`) and no-clobber / CAS-safe /
+  quarantine conventions. Cross-entity resolution via `entity=fixtures` → `af_league_id` →
+  `get_league_by_api_football_id()`. Flipped the issue doc's build-script sub-todo checkbox. Plan-level P2 checkbox
+  stays open (gated on the full migration, per the issue doc's split sub-todos).

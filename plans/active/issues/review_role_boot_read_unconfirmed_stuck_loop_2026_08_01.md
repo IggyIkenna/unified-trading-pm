@@ -28,6 +28,7 @@ related:
   - /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
   - /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
 created: 2026-08-01
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 assigned_vm: NA

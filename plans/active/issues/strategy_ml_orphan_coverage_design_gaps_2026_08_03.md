@@ -27,6 +27,7 @@ related:
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-08-03"
+author: unknown
 last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 assigned_vm: planning

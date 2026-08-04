@@ -27,6 +27,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, deploy-currency, ao-self-pull, dirty-gate, main-agent, gitignore, silent-alert-failure]
 related: [/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
 created: 2026-07-30
+author: unknown
 priority: P1
 parent_epic: orchestrator_master
 source:

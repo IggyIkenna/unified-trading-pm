@@ -29,6 +29,7 @@ related:
     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
   ]
 created: 2026-07-31
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source:

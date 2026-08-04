@@ -18,6 +18,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-26
+author: unknown
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

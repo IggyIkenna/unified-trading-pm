@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [delete-safety, k1-k2, casing-migration, sports, gcs, data-correctness, blocked-question]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

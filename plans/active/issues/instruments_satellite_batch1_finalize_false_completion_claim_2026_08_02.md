@@ -29,6 +29,7 @@ related:
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 created: "2026-08-02"
+author: unknown
 parent_epic: instruments_master
 assigned_vm: planning
 resolved_by:

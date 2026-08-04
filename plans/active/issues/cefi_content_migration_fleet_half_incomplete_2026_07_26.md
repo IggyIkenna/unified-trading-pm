@@ -27,6 +27,7 @@ related:
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 priority: P1
 parent_epic: cefi_master
 source:
@@ -230,13 +231,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       confirmed working. Evidence:
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-14-verify20260730-221322/run.log`.
       Repo: market-tick-data-service (verification only — no code iteration needed).
-- [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
-      `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
-      `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
-      `1060025368044-compute@developer.gserviceaccount.com` invoked from within a GCE VM. Check
-      `vm_zombie_watchdog.py`'s other code paths (`_reap_terminated_vms`/`should_reap()`) and any other automated
-      process running under the GCE default compute SA that could issue `compute.instances.delete` against a
-      `canonical-migration-cefi-` VM. Repo: deployment-service.
+- [x] [BACKEND] P3. ✅ **Investigate what actually deleted
+      `canonical-migration-cefi-content-19-relaunch20260730-130600`** — **VM self-deleted** via
+      `VM_SHUTDOWN_ON_COMPLETION=true` mechanism in `vm-exec-with-gcs-tee.sh:444-472`. Root cause: the Python migration
+      script was OOM-killed by the Linux kernel (`rc=137` = SIGKILL) at ~13:32Z after 23min of processing (7,600/153,655
+      files, `bytes_read=34GB` on 32GB `e2-standard-8`). The `vm-exec-with-gcs-tee.sh` cleanup path detected the
+      workload exit, wrote EXIT_STATUS, then fired `gcloud compute instances delete` from inside the VM — the GCE
+      default compute SA (`1060025368044-compute@developer.gserviceaccount.com`) was the ambient credential used by the
+      in-VM `gcloud` command. NOT the zombie watchdog: `is_zombie()` heartbeat/shard-staleness paths already ruled out
+      (heartbeat fresh), `_reap_terminated_vms` targets only TERMINATED VMs, and `zombie_finished_not_shutdown` would
+      have required a pre-existing EXIT_STATUS — the EXIT_STATUS was written by the cleanup sequence triggered by this
+      same OOM kill. EXIT_STATUS=137 confirmed in GCS. Evidence: run.log tail shows `Killed ... rc=137` →
+      `DEPLOYMENT_FAILED` → `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`. The OOM was the same
+      `e2-standard-8` memory-exhaustion class later fixed by the `e2-standard-16` default bump
+      (`deployment-service@9e6004a`, 2026-07-31) and the pyarrow-pool-release fix (`market-tick-data-service@9f4098b1`).
+      Repo: deployment-service (investigation only, no code change).
 - [x] [BACKEND] P2. ✅ **Investigate shard 16's fast-OOM anomaly in its date range (2024-08-20..2024-11-13)** — this is
       now its 2nd distinct OOM on `e2-standard-16` itself (03:41Z entry: 706s/3.4% before death; 2026-07-31 03:27-03:41Z
       entry below: also fast, ~14min, `mem_pct` jumping 20.0%→51.7% in a single ~1min sample). Both are far too fast for

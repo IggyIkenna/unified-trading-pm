@@ -24,6 +24,7 @@ scope: [engineer, admin]
 tags: [git-health, fleet-monitoring, worktree-health, reporter-bug, review-agent]
 related: []
 created: 2026-07-27
+author: unknown
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

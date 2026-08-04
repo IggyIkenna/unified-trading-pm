@@ -34,6 +34,7 @@ related:
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-07-28
+author: unknown
 parent_epic: infrastructure_master
 source: [data_engineering slot-12, 2026-07-28, dispatched via defi_satellite_ao_dispatch_batch1-049]
 assigned_vm: planning

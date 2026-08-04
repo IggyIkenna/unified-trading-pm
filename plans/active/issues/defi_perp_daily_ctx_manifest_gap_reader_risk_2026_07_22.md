@@ -44,6 +44,7 @@ related:
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
 created: "2026-07-22"
+author: unknown
 last_updated: "2026-07-22"
 parent_epic: manifest_master
 priority: P1

@@ -18,6 +18,7 @@ repos: [market-tick-data-service]
 scope: [engineer]
 tags: [quality-gates, ratchet, ci-cd, ready-to-ship-blocked]
 created: 2026-08-03
+author: unknown
 last_updated: "2026-08-03"
 parent_epic: plan_hygiene_master
 assigned_vm: NA

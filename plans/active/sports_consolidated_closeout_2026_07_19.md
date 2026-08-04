@@ -40,7 +40,7 @@ related:
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
-    /plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md,
+    /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
@@ -194,14 +194,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - **Fixtures entity split**: `entity=fixtures_schedule` (schedule fields incl. `round`) + `entity=fixtures_outcomes`
   (scores/status), under `pipeline_mode=batch_api_football/`. The legacy bare `entity=fixtures/` is FROZEN (last real
   write 2026-05-23) and must not be read or written. **The manifest `data_type` must record the split entities, not the
-  `"FIXTURES"` umbrella** (§ C1). **NOTE (2026-07-23): this freeze is currently violated by at least 3 live artifacts**
-  — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of 07-17),
-  `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (shipped `_read_fixtures_entity_with_schedule_fallback`,
-  an active fallback READ of the frozen path, `instruments-service@e1524d21`), and
-  `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
-  `entity={fixtures,teams, injuries}/` under a different namespace). See Track S/E's new todos below — these are being
-  reconciled, not silently left contradicting this rule. **SECOND CROSS-LINK (2026-07-25,
-  `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
+  `"FIXTURES"` umbrella** (§ C1). **✅ RESOLVED for reads (2026-08-04): the freeze is now TRUE — no live reads of the
+  legacy bare `entity=fixtures/` path remain.** The read fallback `_read_fixtures_entity_with_schedule_fallback` and its
+  4 call sites in `sports_fixtures.py` were removed (`instruments-service@333c35d2`,
+  `/plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md` todo 5); a full Phase-1 census across all
+  2,319 post-floor dates confirmed the fallback was never load-bearing (0 dates where canonical `fixtures_schedule/` was
+  empty and legacy `fixtures/` had real data). The two remaining write-side artifacts from the original 2026-07-23 NOTE
+  are still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of
+  07-17) and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
+  `entity={fixtures,teams, injuries}/` under a different namespace) — tracked via Track S/E's todos below. **SECOND
+  CROSS-LINK (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
   `sports_catalog_league_grain_only_scope_2026_07_08.md` also independently designs a manifest-schema extension for
   per-fixture-grain capture tracking (its own todos), a parallel, independently-designed fixture-grain redesign running
   alongside this closeout's own fixture-grain entity-split work (Track E), with neither doc aware of the other until
@@ -554,6 +556,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       **Forward-pointer (2026-07-25 split)**: once `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` ships, its
       EXCHANGE_ODDS/FIXED_ODDS split changes the sports `instrument_type` vocabulary this assertion checks against —
       re-verify this assertion's vocabulary list includes the new split values before claiming this todo done.
+      **2026-08-04 (§F league/fixture/betting-market audit):** census across all 3 sports manifests — `league_id` has 24
+      `SOCCER_*`/`soccer_*` case-dupe pairs in MTDS (6,600 UPPER + 3,336 lower), 12 of same in instruments; features
+      CLEAN. Fixture: no `fixture_id` column (structural). Betting-market: `instrument_type` CLEAN (40 values, 0 dupes);
+      `data_type` casing already tracked above. Full detail: batch8 todo 5.
 
 ## Track S — STORE: bucket hygiene + legacy path elimination · P1
 
@@ -584,11 +590,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `sports_canonical_migrated_odds_mistamped_footystats` has no standalone issue doc — it's the footystats
       legacy-bundle mislabel already tracked as its own Track C todo above (venue vocabulary cleanup, `venue=ODDS_API`→
       `FOOTYSTATS`, 42,476 rows). **Done when**: the cutover runbook is corrected and cites this doc.
-- [ ] [DIAG] P2. **NEW 2026-07-23 (decision 16) — investigate 2 unfiled loose ends from the OR-1 investigation.** (1)
-      standings/teams season-2026 data being written under historical `day=` partitions across ~3,050 days in both
-      buckets; (2) an unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22. Root cause
-      unknown for both — operator decision: investigate now rather than deferring, since both are currently unowned and
-      could be actively recurring. Detail: see the OR-1/player_stats-union issue doc's own RE-TRIAGE (2026-07-23).
+- [x] ✅ [DIAG] P2. **NEW 2026-07-23 (decision 16) — DONE 2026-08-04, `unified-trading-pm@09ce04535`** (batch7 todo 4).
+      Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
+      emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
+      (path-template mismatch). Issue doc + 3 follow-up todos:
+      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
 - [ ] [DATA] P1. **Prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows** (NEW 2026-07-24,
       folded in from archived `sports_master_closeout_2026_07_21.md`). The already-deleted 6,110-object subset is now
       PHANTOM (drift, not a coverage gap — the real data is still covered by the `SOCCER_*` uppercase twins). Clean via
@@ -717,11 +723,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       returns 0 hits in both — the `odds_movement_home/_draw/_away` hits in `features-service` are a different,
       unrelated FEATURE COLUMN concept, confirmed false-positive by the exact-literal check. Per the operator ruling
       this todo cites: nothing downstream needs them, so retirement (out of this todo's scope) is unblocked.
-- [ ] [CODE] P1. **RESTORED 2026-07-24** (dropped with no surviving checkbox in a prior line-cap trim) — canonicalise
-      `BOOKMAKER_LEAGUE_COVERAGE` (`unified-api-contracts`, keyed on RAW league names while the sports v2 sentinel calls
-      it with a CANONICAL id — a standing coverage false-negative). Fix: regenerate the registry JSON from
-      `ODDS_API_DISPLAY_TO_CANONICAL` or re-run `refresh_sports_bookmaker_league_coverage_2026_06_21.py`. Detail:
-      archive history doc's "Newly-actionable todos" section.
+- [x] ✅ [CODE] P1. **RESTORED 2026-07-24, SHIPPED 2026-07-27 — `unified-api-contracts@804858c9`** (batch7 todo 3). 25
+      leagues double-keyed (358/1129 pairs); `canonicalize_odds_api_league_id()` + 10 regression tests; JSON regenerated
+      1129→771 deduped.
 - [ ] [CODE] P2. **NEW 2026-07-23 (decision 12) — design + build the missing cross-object-CAS safety mechanism** for the
       1,066,231-row manifest purge/reclassify. Root-cause fix shipped, all 4 related operator decisions already ruled —
       the ONLY remaining blocker is that this safety tooling doesn't exist yet (harder than the league_id migration's

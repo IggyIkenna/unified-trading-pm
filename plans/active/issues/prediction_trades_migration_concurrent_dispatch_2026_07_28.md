@@ -29,6 +29,7 @@ related:
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 created: "2026-07-28"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: orchestrator_master
 assigned_vm: NA

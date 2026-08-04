@@ -48,6 +48,7 @@ related:
     /plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md,
   ]
 created: "2026-07-29"
+author: unknown
 last_updated: "2026-07-30"
 parent_epic: agent_operating_framework_master
 priority: P2

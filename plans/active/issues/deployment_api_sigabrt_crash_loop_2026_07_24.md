@@ -25,6 +25,7 @@ scope: [engineer]
 tags: [deployment-registry, crash-loop, observability, cloud-run, sigabrt]
 related: [deployment_registry_reaper_not_draining_stale_entries_2026_07_24]
 created: 2026-07-24
+author: unknown
 priority: P1
 parent_epic: observability_master
 source:
@@ -564,23 +565,23 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       **2026-07-31T22:57Z (slot 7, infra): done-when MET, see the parent P0 todo above (identical evidence) — flipping,
       no Support case needed.** No further detail duplicated here for line-cap reasons.
 
-- [ ] [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup: `workers/auto_sync.py`'s
-      entire background-sync implementation is unreachable in production.** Found while tracing the call graph for the
-      todo above. `deployment_api/main.py:140` wires `lifespan=lifespan` from `deployment_api/lifespan.py`, which is
-      what actually runs (`lifespan.py` imports `auto_sync_running_deployments` from `background_sync.py`).
-      `deployment_api/app_config.py` independently defines its OWN `lifespan()` (line 139) and `create_app()` (line 179)
-      that instead wire `workers/auto_sync.py`'s auto-sync loop (a larger, more elaborate implementation with
-      quota-broker/orphan-VM-cleanup logic not present in `background_sync.py`) — but `app_config.create_app` is never
-      called from `main.py`; only individual helper functions from `app_config.py` are imported elsewhere
-      (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`, `services/data_status_service.py`). This means
-      `workers/auto_sync.py`'s entire background loop (695+ lines) is dead code in the live service — a real
-      maintenance/confusion risk (two divergent implementations of the same job, only one of which anyone should be
-      editing) independent of the SIGABRT investigation. Not itself a SIGABRT candidate (confirmed unreachable, so it
-      cannot be the crash source) — filed as its own small P3 rather than folded into the SIGABRT todos above. Next
-      step: confirm with a repo owner whether `workers/auto_sync.py` (and `app_config.py`'s unused `lifespan`/
-      `create_app`) should be deleted outright, or whether it's an in-progress migration target that
-      `background_sync.py` is meant to be replaced by (in which case the migration itself is the real follow-up, not a
-      deletion). (repo: deployment-api)
+- [x] ✅ [BACKEND] P3. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — dead-code cleanup:
+      `workers/auto_sync.py`'s entire background-sync implementation is unreachable in production.** Found while tracing
+      the call graph for the todo above. `deployment_api/main.py:140` wires `lifespan=lifespan` from
+      `deployment_api/lifespan.py`, which is what actually runs (`lifespan.py` imports `auto_sync_running_deployments`
+      from `background_sync.py`). `deployment_api/app_config.py` independently defines its OWN `lifespan()` (line 139)
+      and `create_app()` (line 179) that instead wire `workers/auto_sync.py`'s auto-sync loop (a larger, more elaborate
+      implementation with quota-broker/orphan-VM-cleanup logic not present in `background_sync.py`) — but
+      `app_config.create_app` is never called from `main.py`; only individual helper functions from `app_config.py` are
+      imported elsewhere (`routes/deployments/_crud.py`, `routes/deployments/__init__.py`,
+      `services/data_status_service.py`). This means `workers/auto_sync.py`'s entire background loop (695+ lines) is
+      dead code in the live service — a real maintenance/confusion risk (two divergent implementations of the same job,
+      only one of which anyone should be editing) independent of the SIGABRT investigation. Not itself a SIGABRT
+      candidate (confirmed unreachable, so it cannot be the crash source). **RESOLVED 2026-08-04 (slot 7,
+      backend_engineer): deleted `workers/auto_sync.py` (719 lines), `tests/unit/test_auto_sync.py`, and
+      `app_config.py`'s unused `lifespan()`/`create_app()` dead code (1,611 lines total). Relocated `pending_vm_deletes`
+      dict to `_deployment_processor_vm_cleanup.py` (sole remaining consumer). QG green, shipped —
+      deployment-api@1e065f4.** (repo: deployment-api)
 
 - [x] ✅ [REVIEW] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — monitor whether `deployment-api@ec1f635`'s
       catalogue-lifecycle concurrency guard actually drops the `"Container terminated on     signal 9"` (SIGKILL/OOM)

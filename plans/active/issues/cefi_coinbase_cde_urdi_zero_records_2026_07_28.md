@@ -19,6 +19,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+author: unknown
 priority: P1
 parent_epic: cefi_master
 assigned_vm: planning

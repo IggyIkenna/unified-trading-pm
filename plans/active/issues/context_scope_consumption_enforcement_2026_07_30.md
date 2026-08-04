@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
 source:

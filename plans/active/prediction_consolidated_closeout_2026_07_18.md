@@ -66,8 +66,8 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
@@ -587,7 +587,7 @@ this section)**:
 | POLYMARKET `prediction_trades` schema-extension migration (`[DESIGN] P1`) | `prediction_phase_ab_residuals_2026_07_24.md`, Phase B section (folded into the existing A2 dual-write-trees todo, same source issue doc) |
 
 **AO-dispatch status**:
-[`prediction_consolidated_native_ao_extract_2026_07_25.md`](/plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md)
+[`prediction_consolidated_native_ao_extract_2026_07_25.md`](/plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md)
 (`status: draft`) already carries an AO-dispatchable execution copy of the first 5 rows above (its own todos 1-5,
 drafted before this relocation). Its own text and its finalize plan's text were corrected in this same pass to reconcile
 evidence into the NEW homes above rather than into this now-relocated section — see that plan for the currently-drafted

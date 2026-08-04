@@ -19,6 +19,7 @@ scope: [engineer, admin]
 tags: [live-trading, reconciliation, mtds, mdps, data-correctness, pipeline-mode, uac]
 related: [mtds_plan_reconciliation_2026_06_29]
 created: 2026-06-24
+author: unknown
 parent_epic: batch_live_symmetry_master
 priority: P2
 source:

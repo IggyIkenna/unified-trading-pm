@@ -23,6 +23,7 @@ scope: [engineer]
 tags: [deployment-service, data-pipeline-monitors, dp-watcher, stale-identity, cosmetic, docstring]
 related: []
 created: "2026-07-31"
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: planning # reclassified NA -> planning 2026-08-02 (na-eligibility-audit, infra tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent

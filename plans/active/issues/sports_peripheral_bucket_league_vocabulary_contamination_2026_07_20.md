@@ -29,6 +29,7 @@ related:
     ../sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-20"
+author: unknown
 source: league_id relocation workflow wf_664f7ed4-df6 gcs-sizing verifier (2026-07-20)
 resolved_by:
 locked_by:
@@ -147,12 +148,20 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
       rule), same class as the sanctioned Tier-2 reconciliation census work, not an ad-hoc `gcloud storage ls -r` from
       this session. Did NOT attempt that walk — 1-2 targeted sample listings only (bounded, single-day, not
       corpus-scale). (repo: instruments-service — inspection only, no code changed).
-- [ ] [DATA] P2. **Build the migration script + run its dry-run.** Depends on todo 1's findings (path-only rewrite;
-      `fixtures`-borrowed resolution for entities with no own numeric id) and a real census (either the VM walk todo 1
-      flagged, or — cheaper first cut — drive off the availability_index / any manifest structure that already records
-      per-(day,entity,league) shard rows for `instruments-store-sports-prd`, if one exists at that grain; check before
-      defaulting to a fresh walk). Mirror the sibling's mode structure (default dry-run / `--validate` against TEST /
-      `--apply-prod` gated behind `--confirm-prod-write`) and its no-clobber / CAS-safe / quarantine conventions
+- [x] ✅ [DATA] P2. **Build the migration script + run its dry-run.** **SCRIPT BUILT + SHIPPED 2026-08-04 (slot-8,
+      `market-tick-data-service@976786c5`)** — `migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`
+      mirrors the sibling's mode structure (default dry-run / `--validate` against TEST / `--apply-prod` gated behind
+      `--confirm-prod-write`) and its no-clobber / CAS-safe / quarantine conventions. Path-only copy (no content
+      rewrite, per slot 5's confirmed content inspection). Cross-entity resolution via `entity=fixtures`'s
+      `af_league_id` → `get_league_by_api_football_id()` → canonical `league_id`. The dry-run itself has NOT been
+      executed (requires GCS access to `instruments-store-sports-prd`); a follow-up dispatch must run the dry-run and
+      produce the per-entity / per-pipeline_mode report before any `--apply-prod`. Depends on todo 1's findings
+      (path-only rewrite; `fixtures`-borrowed resolution for entities with no own numeric id) and a real census (either
+      the VM walk todo 1 flagged, or — cheaper first cut — drive off the availability_index / any manifest structure
+      that already records per-(day,entity,league) shard rows for `instruments-store-sports-prd`, if one exists at that
+      grain; check before defaulting to a fresh walk). Mirror the sibling's mode structure (default dry-run /
+      `--validate` against TEST / `--apply-prod` gated behind `--confirm-prod-write`) and its no-clobber / CAS-safe /
+      quarantine conventions
       (`market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`).
       Quarantine (never guess-map, never drop) any (day, pipeline_mode, contaminated-value) group where no sibling
       `fixtures` object exists to borrow a resolution from. **Done when**: a dry-run report exists with per-
@@ -218,3 +227,14 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   step needed per the already-cleared §3a bucket check). Did NOT build the migration script or touch prod. `[OPERATOR]`
   tag removed from the remaining todos (the delete-safety gate that tag existed for is already satisfied; what remains
   is a design/build/review gate, tracked via the split, not an operator authorization gate).
+- **2026-08-04 (slot 8, data_engineering, dispatched via `sports_closeout_track_x_hygiene-006`)**: built + shipped the
+  migration script (`market-tick-data-service@976786c5`,
+  `scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`). Path-only GCS
+  copy design — mirrors the sibling's 3-mode structure (dry-run / `--validate` against TEST / `--apply-prod` gated
+  behind `--confirm-prod-write`) and its no-clobber / CAS-safe / quarantine conventions. Cross-entity resolution: reads
+  `entity=fixtures/league=<contaminated>/` parquet → extracts `af_league_id` → lazy-imports
+  `unified_api_contracts.canonical.domain.sports.league_data.get_league_by_api_football_id()` → canonical `league_id`.
+  Dry-run has NOT been executed from this session (requires GCS access to
+  `instruments-store-sports-prd-central-element-323112`); a follow-up dispatch must run the dry-run and produce the
+  per-entity/per-pipeline_mode report before any `--apply-prod`. Flipped the issue doc's build+dry-run sub-todo
+  checkbox; the plan-level P2 checkbox stays open (gated on the full migration, not just the script).

@@ -26,7 +26,7 @@ related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,

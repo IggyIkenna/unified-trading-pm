@@ -18,6 +18,7 @@ related:
     /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
   ]
 created: "2026-06-23"
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 source:

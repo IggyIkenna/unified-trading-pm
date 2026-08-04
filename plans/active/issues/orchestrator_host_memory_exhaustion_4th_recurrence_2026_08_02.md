@@ -17,6 +17,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-health, memory-exhaustion, shared-host, recurring-incident]
 related: []
 created: 2026-08-02
+author: unknown
 parent_epic: orchestrator_master
 priority: P1
 source:

@@ -65,11 +65,12 @@ source: >-
   dependency-graph — the latter caught 5 forked children/extracts a naive filename grep would have missed and
   misclassified as orphan candidates: `tradfi_manifest_content_recovery_completion_2026_07_24.md`,
   `tradfi_backfill_throughput_followups_2026_07_24.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`,
-  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`, `tradfi_consolidated_native_ao_extract_2026_07_25.md`).
-  Phase 1 classified all 32 remaining tradfi-primary candidates via a `Workflow` (one agent per doc, 2 passes needed —
-  17 of 32 agents hit transient 500/529 API errors on the first pass and were cleanly re-run via `resumeFromRunId`, 0
-  errors on the second pass). Phase 3 ran the conflict-check against the full covering family before drafting any todo
-  below; conflicts found are parked in the Deferred section, not silently resolved.
+  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`,
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`). Phase 1 classified all 32 remaining
+  tradfi-primary candidates via a `Workflow` (one agent per doc, 2 passes needed — 17 of 32 agents hit transient 500/529
+  API errors on the first pass and were cleanly re-run via `resumeFromRunId`, 0 errors on the second pass). Phase 3 ran
+  the conflict-check against the full covering family before drafting any todo below; conflicts found are parked in the
+  Deferred section, not silently resolved.
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
@@ -225,37 +226,39 @@ ground to open up, and it did:
       `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` (`unified-trading-pm@061741184`). Repo:
       market-tick-data-service.
 
-- [ ] [DATA] P2. **Trace/fix 3 distinct-value mis-stamp clusters — combined into ONE todo because all 3 edit the same
-      issue doc.** (1) Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer in the tradfi manifest and
-      either blank the chain column or re-stamp the 7+7 affected rows. (2) Confirm whether `YAHOO_FINANCE` should be
-      added to `VENUES_BY_ASSET_GROUP['tradfi']` or is a mis-stamped `source=` value leaking into `venue` — **same
-      YAHOO_FINANCE venue question as todo 8; run that investigation once and cite it here rather than duplicating**.
-      (3) Identify what writes `instrument_type='UD'` in tradfi and register or trace it as a mis-stamp. Repos:
-      market-tick-data-service, unified-api-contracts (`VENUES_BY_ASSET_GROUP`). **Done when**: each of the 3 clusters
-      has either a shipped fix (chain column blanked/re-stamped, `UD` writer identified+registered) or a recorded
-      `venue`-vs-`source` verdict for `YAHOO_FINANCE` consistent with todo 8's finding, with all 3 checkboxes flipped.
-      Source: `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot 7, data_engineering) — all 3 clusters investigated against the live tradfi
+      manifest (6.4M rows, bounded single-object read), zero code changed (no fix needed for any cluster).** (1)
+      ESM0/MIGRATED chain-axis: 0 non-empty chain values in the entire tradfi manifest — the 7+7 rows flagged 2026-07-28
+      are gone (cleaned up between then and now). No fix needed. (2) YAHOO_FINANCE venue: 0 live rows, confirmed dead
+      code per the sibling investigation (`tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved 2026-08-04) —
+      cite, do NOT re-register (deliberately removed 2026-07-15 as source-as-venue modeling error per UAC's
+      `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`). (3) UD instrument_type: 1,099 rows (all CME/Databento, all from the
+      2026-07-27T16:46:31-40Z phantom batch, all `instrument_id=None`) — root cause already traced to
+      `market-data-processing-service/.../canonical_writer.py` and already tracked + quarantined in
+      `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md`. Source issue doc all 3 checkboxes flipped:
+      `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`.
 
-- [ ] [DATA] P2. **Run the Phase-0 YAHOO_FINANCE venue-vendor-conflation investigation methodology already defined in
-      the doc** (reconcile real counts + trace consumers for a `venue="YAHOO"` dependency), starting at
-      `yahoo_finance_adapter.py`'s `write_canonical_shard` per the doc's own recommended entry point, before deciding
-      whether/how to fix the vendor-as-venue stamp. **Run this FIRST among todos 6/7/8** if it touches the same file as
-      either (see the file-collision note below) — its output directly answers todo 7 item 2's YAHOO_FINANCE question
-      and informs todo 4 item 3's FX/YAHOO_FINANCE root-cause. Repo: market-tick-data-service. **Done when**: the
-      investigation's count-reconciliation + consumer-trace is recorded in the doc with an explicit fix-or-no-fix
-      recommendation, and that finding is cited (not re-derived) by todos 4 and 7 above. Source:
-      `issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`.
+- [x] ✅ [DATA] P2. **Run the Phase-0 YAHOO_FINANCE venue-vendor-conflation investigation** — investigation completed
+      2026-08-04 (interactive session), recorded in `issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`
+      (resolved). Result: (1) count-reconciliation: bounded, column-pruned read of the live tradfi manifest (6.6M rows)
+      filtered to `venue="YAHOO"` returns **0 rows** — this stamp has never reached the manifest. (2) consumer-trace:
+      the confirmed-active Yahoo route (`_umi_yahoo.py`) never calls the flagged `write_canonical_shard()` method;
+      instead it stamps real venues directly (`"FX"`, `"KRX"`, `idx.venue`) and writes via a separate `ChunkWriter` path
+      that bypasses `write_canonical_shard()` entirely. (3) Recommendation: **no fix needed** — dead code, correctly
+      flagged by structural-similarity concern (sports `venue=ODDS_API` precedent) but confirmed not live. Evidence:
+      `market-tick-data-service` code verified (adapter registry has no live Yahoo adapter entry;
+      `write_canonical_shard()` has no confirmed caller).
 
-- [ ] [SCRIPT] P2. **Write a register-phase script + investigate quarantine staleness — combined into ONE todo because
-      both edit the same issue doc.** (1) Write a register-phase script (mirroring
-      `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s register phase) that additively registers manifest
-      rows for the ~428 content-recovered-but-unregistered combo/chain cells from run `20260720-120911`, confirmed via
-      targeted (non-corpus-walk) `gcs_describe_object` checks. (2) Investigate what pruned/reused
-      `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 (0/98,256 of this run's quarantine targets still
-      exist; only 9 unrelated day=2026-01-* prefixes remain). Repo: market-tick-data-service. **Done when**: every
-      reachable canonical bundle target that exists on GCS and has no manifest row is registered (count reported against
-      the ~428 upper bound), and item 2's root cause is identified or explicitly documented as unable-to-determine.
-      Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`.
+- [x] ✅ [SCRIPT] P2. **Write a register-phase script + investigate quarantine staleness** — `unified-trading-pm@<sha>`
+      (doc-only: investigation findings recorded in issue doc). (1) Register-phase script: shipped independently by a
+      prior worker — `market-tick-data-service@c1e1de71` (`register_tradfi_recovery_quarantine_manifest_2026_07_30.py`,
+      13 unit tests, QG green), dry-run + apply already completed (248 rows registered into prod manifest). (2)
+      Quarantine staleness investigation: completed 2026-08-04 (slot 14) — root cause documented as UNABLE TO DETERMINE
+      from committed evidence. No committed script deletes from `_quarantine/raw_tick_data/`. Latent `_rel()` bug in
+      `migrate_tradfi_canonical_2026_07.py` strips `_quarantine/` prefix but causes source-not-found errors, not
+      deletions (full code trace in issue doc Progress Log). Most plausible: manual operator cleanup or uncommitted
+      one-off script. Issue doc todo 3 flipped, full findings in Progress Log. Source:
+      `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`.
 
 - [ ] [TRADFI] P3. **Implement the pyarrow per-symbol-writer fan-out fix the 2026-07-27 memray repro identified as the
       real OOM mechanism** — batch multiple low-volume symbols onto a shared `pq.ParquetWriter`, or cap/eagerly-flush

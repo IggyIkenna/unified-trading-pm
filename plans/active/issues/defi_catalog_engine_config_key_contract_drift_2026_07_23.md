@@ -23,6 +23,7 @@ related:
     pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21,
   ]
 created: 2026-07-23
+author: unknown
 parent_epic: strategy_master
 assigned_vm: NA
 execution_scope: local-only

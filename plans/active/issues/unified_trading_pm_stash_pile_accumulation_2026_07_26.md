@@ -17,6 +17,7 @@ scope: [admin, engineer]
 tags: [git-hygiene, multi-agent-safety, stash]
 related: []
 created: 2026-07-26
+author: unknown
 last_updated: 2026-07-30
 priority: P2
 parent_epic: infrastructure_master

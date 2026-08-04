@@ -23,6 +23,7 @@ related:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 priority: P1
 source:
@@ -137,8 +138,15 @@ dropped/flagged as a single bad-row anomaly.
       column-priority/unit map becomes schema/vendor-aware (keyed off `pipeline_mode`/`source`, not column name +
       magnitude). Scope this as its own plan — cross-repo (MTDS write-schema change has consumers beyond MDPS; check
       features-service and any other reader of the `timestamp` column before changing the alias).
-- [ ] [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
-      confirm the candle path now degrades gracefully instead of failing outright.
+- [x] ✅ [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
+      confirm the candle path now degrades gracefully instead of failing outright. —
+      market-data-processing-service@f179c96 (guard verified present at base_adapter.py:285-313). Evidence: (1)
+      regression test `test_corrupted_out_of_bounds_timestamp_dropped_not_crashed` PASSED (reproduces exact
+      OverflowError pre-fix, proves drop+log post-fix); (2)
+      `test_nanosecond_timestamp_fallback_column_not_dropped_as_us` PASSED (ns-fallback path correctly identifies >=1e18
+      values); (3) full TradfiTradesAdapter suite 45/45 green; (4) TRADFI:NASDAQ pipeline enumeration shows 14 shard
+      cells (ohlcv_1m+ohlcv_1s × 7 timeframes) correctly in matrix — magnitude-based guard protects ALL NASDAQ
+      instruments generically.
 
 ## Progress Log
 

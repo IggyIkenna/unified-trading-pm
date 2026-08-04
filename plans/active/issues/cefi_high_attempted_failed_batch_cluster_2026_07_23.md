@@ -47,6 +47,7 @@ related:
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-07-23
+author: unknown
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

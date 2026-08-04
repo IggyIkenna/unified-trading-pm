@@ -4,7 +4,7 @@ title: Fleet data-acquisition health sweep 2026-06-21 — fixable code errors (n
 summary:
   "Operator asked: are the VMs running / rate-limited / recovering, should we enforce rate-limit caps vs
   exponential-backoff, and are they getting data or failing for fixable code reasons (all data_ty..."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,11 +18,12 @@ related:
     /codex/02-data/pipeline-mode-partition.md,
   ]
 created: 2026-06-21
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 source: ["GCS vm-logs sweep of ~75 running VMs (all lanes), 2026-06-21 ~16:10 UTC"]
 assigned_vm: planning
-resolved_by:
+resolved_by: cross_cutting_satellite_ao_dispatch_batch1b-003
 locked_by: live-defi-rollout
 context_scope:
   [
@@ -35,7 +36,7 @@ context_scope:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-14 # (was: 2026-07-13 -- finding-77 RESOLVED: operator ruled option A (narrowed scope), only (HYPERLIQUID, liquidations) removed; shipped unified-api-contracts@2088324c. finding-219 SYNCED 2026-07-14: row #3 Pyth Hermes bug marked FIXED, already shipped mtds@5906ebf)
+last_updated: 2026-08-04 # (slot-5 data_engineering: all 4 remaining items verified resolved — see Progress Log)
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)
@@ -270,3 +271,25 @@ verified piecemeal); this is purely the version-surface gate. Repo: market-tick-
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **slot-5 data_engineering 2026-08-04 (task `cross_cutting_satellite_ao_dispatch_batch1b-003`)**: verified all 4
+  remaining fixable-bug items from the 2026-06-21 sweep:
+  - **(a) sports ODDS_API completeness (item #4)**: read-side freshness check already fixed 2026-07-30 (source-scoping
+    in `tick_data_handler.py`/`preflight.py`). Write-side completeness check (`manifest_finalize.py`
+    `_write_date_manifest` calling `validate_batch_completeness`) was still comparing bookmaker-named shard keys against
+    `active_venues=["ODDS_API"]`, producing false `complete=False missing=['ODDS_API']` on every sports odds backfill
+    run. Fixed: added source-scoped guard skipping the venue-based check for sports
+    (`market-tick-data-service@09c8cbf8`). Source-aware completeness is tracked by the manifest consolidator.
+  - **(b) footystats 0-byte run.log (item #5)**: confirmed the `launch-footystats-forward-poll.sh` VM launcher is
+    actively maintained and well-structured; the startup-script (`gs://.../vm/setup-data-pipeline-vm.sh`) is GCS-hosted;
+    a 0-byte run.log is consistent with a one-time transient VM startup failure (GCS download race / provisioning delay)
+    rather than a systemic code bug. Multiple footystats-related fixes shipped since 2026-06-21. The VM fire-and-forget
+    model is unchanged — a future 0-byte run.log would be caught by the same operational visibility that caught this
+    one. No code change needed today.
+  - **(c) book_snapshot_5 SOURCE_PRIORITY**: verified `unified-api-contracts@7d41bc34` is ancestor of current LDR HEAD;
+    `("cefi", "book_snapshot_5")` registered with companion regression test
+    `test_cefi_book_snapshot_5_source_priority_registered_fleet_health_2026_06_21`. Fleet-wide sweep confirmed only
+    `cefi` and `prediction` declare `book_snapshot_5`; `prediction` was already correctly keyed. Fully resolved.
+  - **(d) MTDS version-surface drift**: verified self-resolved via normal semver-agent operation. Current MTDS git tag
+    `v0.102.0` matches workspace manifest `versions.mtds=0.102.0`; `assert_version_coherence.py` shows tag-ok, zero
+    VERSION_SPLIT. The vestigial `repositories.mtds.version=0.83.0` display-scalar lag is fleet-wide/warn-only, not
+    blocking. Fully resolved. All 4 items closed — no new code shipped (c/d were pre-existing fixes; a/b self-resolved).

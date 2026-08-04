@@ -36,6 +36,7 @@ related:
     /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
   ]
 created: "2026-07-30"
+author: unknown
 last_updated: "2026-07-30"
 parent_epic: agent_operating_framework_master
 priority: P1

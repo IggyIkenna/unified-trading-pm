@@ -32,6 +32,7 @@ related:
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: NA

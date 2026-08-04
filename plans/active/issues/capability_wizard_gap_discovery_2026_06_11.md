@@ -18,6 +18,7 @@ related:
     ../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 created: 2026-06-11
+author: unknown
 parent_epic: strategy_master
 priority: P2
 source: [gaps surfaced by capability wizard/manifest work 2026-06-11]

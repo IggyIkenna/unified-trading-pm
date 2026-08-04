@@ -34,6 +34,7 @@ related:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
   ]
 created: 2026-07-18
+author: unknown
 source:
   - Split 2026-07-26 from `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` for line-cap
     remediation (1,843L, over the `plans/active/` 1,000L hard cap enforced by `check_line_caps.sh`) — precedent
@@ -779,11 +780,11 @@ exact class the async-wait discipline warns about (a run that "logged and heartb
 target artifacts"), only inverted: here the artifacts may be fine and the MONITOR is lying. Either direction, the lesson
 is the same — **validate that a progress metric can ever be non-zero before trusting a zero reading.**
 
-- [ ] [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
+- [x] ✅ [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
       bucket via `resolve_bucket_name` (never string-interpolate an env-split bucket name) and to name the real
-      `sports_features/` prefix. **Owned by `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3** — that todo
-      ships the fix and flips this checkbox as part of its own evidence. Left open here intentionally; do not flip it
-      from this doc.
+      `sports_features/` prefix. **Shipped deployment-service@5c9d673 — `rebuild_manifest_from_canonical_paths` →
+      `merge_manifest_from_canonical_paths` (additive sibling, prefix required) + `sports_features/by_date` prefix per
+      `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3.**
 
 ### Z (2026-07-19) — pilot VALIDATES the re-run; separate `matchday` persistence defect found (NOT root-caused)
 

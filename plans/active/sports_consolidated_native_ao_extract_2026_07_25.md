@@ -41,6 +41,7 @@ related:
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/task_template.md,
+    /plans/archive/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-08-03"
@@ -199,22 +200,21 @@ context_scope:
       carrying the footystats-legacy-bundle `venue=ODDS_API` signature under `pipeline_mode=batch_footystats` — NOT
       UNIBET_UK/UNIBET_EU/SMARKETS (excluded above; forcing those to 0 would be a data-correctness regression, not a
       fix). FOOTBALL is already 0 (no further action). Source: `sports_consolidated_closeout_2026_07_19.md:364-374`.
-- [ ] [DATA] [CLEANUP] P2. **Track S — snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout.**
-      **RETAGGED self-justified 2026-08-03**: the carve-out (764 sole-surviving-copy pre-floor cells, 1,528 physical
-      objects) is resolved — WIPED via
-      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --root-prefix     sports_reference_v2/by_date --apply`
-      (`{'DELETED': 1528, 'ERROR': 0}`, verified 0 pre-floor day dirs remain), per operator ruling on
-      `sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md`. **Done when** (revised): the reader-check is
-      recorded for the 16 REMAINING post-floor day dirs (2024-12-24..2026-04-20) AND (if clear) snapshot+delete runs on
-      those, with a post-delete listing showing 0 objects total under the prefix. Prod deletes still human-only unless
-      §3a-reversibility-qualified ([delete-safety](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)). (repo:
-      instruments-service / GCS)
-- [ ] [DOC] P2. **Track S — Finding C correction: fix the cutover runbook's canonical-is-a-superset premise for raw odds
-      on early dates**, citing `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`
-      (`status:     resolved`, corpus-destroying risk already remediated — only this documentation correction remains).
-      (repo: unified-trading-pm, doc edit — locate the cutover runbook via
-      `sports_legacy_bucket_cutover_2026_07_16.md`'s own references). **Done when**: the cutover runbook is corrected
-      and cites this doc. Source: `sports_consolidated_closeout_2026_07_19.md:423-429`.
+- [x] ✅ [DATA] [CLEANUP] P2. **Track S — snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout.** —
+      deployment-service@1b63863 **DONE 2026-08-04 (slot-12).** Reader-check: 64 parquet files across 16 post-floor day
+      dirs (2024-12-24..2026-04-20), all redundant with canonical `sports_reference/by_date/`. Snapshot→delete→verify
+      via `wipe_sports_reference_v2_post_floor_2026_08_04.py --apply`: 64 DELETED, 0 ERROR. Post-delete: 0 objects under
+      prefix. Canonical v1 spot-checked intact. §3a did NOT qualify (soft-delete=0) — proceeded per pre-floor operator
+      ruling. (repo: instruments-service / GCS)
+- [x] ✅ [DOC] P2. **Track S — Finding C correction: fixed the cutover runbook's canonical-is-a-superset premise for raw
+      odds on early dates** — unified-trading-pm@af8355cac. Added
+      `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` (issue doc, `status: resolved`) to the
+      trimmed runbook's `related` frontmatter + a post-completion correction note in the body (citing the 14.2×
+      row-count discrepancy on day=2022-04-16, the 199-day merge fix, and the loss guards on both MDPS and features
+      re-derive paths). The original runbook's full history (`sports_legacy_bucket_cutover_history_2026_07_24.md`)
+      already preserved the correction verbatim at line 1667; this edit adds the citation to the 129-line lean index so
+      a reader of the trimmed runbook is directed to the issue doc. Source:
+      `sports_consolidated_closeout_2026_07_19.md:423-429`.
 - [x] [CODE] P1. **Track E — wire the T0/T1 dependency gate for real: make every real caller of the pre-flight pass
       `date=`.** ✅ instruments-service@3c424e61 — threaded `date=`/`bucket=` through all 5 real production call sites
       (`footystats.py` x3: predictions/matches/odds, `transfermarkt.py`, `understat.py`, `sfi.py`); confirmed via grep
@@ -481,22 +481,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                                                                                      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                                                                                      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                                                                                      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                                                                                      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                                                                                      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                                                                                      count > 0) rather than a blanket `empty_confirmed`.
+                                                                                                                                                                          from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                                                                                                                                          404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                                                                                                                                          of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                                                                                                                                          correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                                                                                                                                          compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                                                                                                                                          count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                                                                                      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                                                                                      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                                                                                      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                                                                                      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                                                                                      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                                                                                      instance's result was independently verified correct, not corrupted by it): filed
-                                                                                                                                                      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                                                                                      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                                                                                      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                                                                                                                                          **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                                                                                                                                          the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                                                                                                                                          never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                                                                                                                                          report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                                                                                                                                          defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                                                                                                                                          instance's result was independently verified correct, not corrupted by it): filed
+                                                                                                                                                                          `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                                                                                                                                          todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                                                                                                                                          day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -588,7 +588,8 @@ context_scope:
       determine phantom-correction vs data loss. **Flagged as important**: a genuine data-loss verdict here would be a
       real finding, not just hygiene — surface it prominently regardless of outcome. (repo: instruments-service,
       read-only diff). **Done when**: the per-key diff is run and a written determination (phantom-correction vs data
-      loss) is recorded for every missing key. Source: `sports_consolidated_closeout_2026_07_19.md:937-941`.
+      loss) is recorded for every missing key. Source: `sports_consolidated_closeout_2026_07_19.md:937-941`; also
+      `issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` § D.
 - [ ] [DATA] P2. **Track S2 — mirror the staleness-budget fix + drop hardcoded workarounds.** (1) Add `"sports": 1800`
       to deployment-api's `_AG_STALENESS_BUDGET_SEC` (cockpit consolidator-health view) — the UTL-side
       `AG_STALENESS_BUDGET_SEC` mirror already shipped (`unified-trading-library@fd87daa1`, verified via `git log`); (2)

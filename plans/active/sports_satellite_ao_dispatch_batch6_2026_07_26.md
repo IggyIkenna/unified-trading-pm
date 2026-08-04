@@ -167,12 +167,12 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       even ran — no action taken since there was no open checkbox to annotate; noted here rather than silently ignored.
       `check_line_caps.sh` clean (879L, no new violations — `1 pre-existing violation(s), within baseline (17)`).
 
-- [ ] [CODE] P2. **Fix `launch-features-vm.sh`'s post-backfill hint — it names a bucket that 404s, and that already
-      produced a 20-minute false-stall reading.** The launcher's closing instructions tell the operator to run
-      `rebuild_manifest_from_canonical_paths('features-sports-sports-central-element-323112', ...)`. That bucket does
-      not exist: the hint interpolates `<family>-<asset_group>` and drops the `-prd-` env segment. The real name is
-      `features-sports-prd-central-element-323112`, and the data prefix in the hint is wrong too — objects live under
-      `sports_features/`, not `features/by_date/`. Resolve the bucket via
+- [x] ✅ [CODE] P2. **Fix `launch-features-vm.sh`'s post-backfill hint — deployment-service@5c9d673 — it names a bucket
+      that 404s, and that already produced a 20-minute false-stall reading.** The launcher's closing instructions tell
+      the operator to run `rebuild_manifest_from_canonical_paths('features-sports-sports-central-element-323112', ...)`.
+      That bucket does not exist: the hint interpolates `<family>-<asset_group>` and drops the `-prd-` env segment. The
+      real name is `features-sports-prd-central-element-323112`, and the data prefix in the hint is wrong too — objects
+      live under `sports_features/`, not `features/by_date/`. Resolve the bucket via
       `resolve_bucket_name(cloud="gcp",     kind="features", asset_group="sports")` and never string-interpolate an
       env-split bucket name (CLAUDE.md § Writing STORAGE code; QG 5.69). **Why this is worth a todo and not a typo
       fix**: the source finding records that a watchdog armed on the hinted bucket read `shard_days=0` for 20 minutes,
@@ -350,8 +350,8 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       steps 1-2 `[x]` (or an explicit measured statement that `0ded2449` is not merged) and step 3 as an unchecked
       `[OPERATOR]` item, and the parent plan's todo 4 matches whatever was actually measured.
 
-- [ ] [DOC] P2. **Cross-link the rebuild-delta todo in `sports_consolidated_native_ao_extract_2026_07_25.md` to its real
-      source issue doc.** Phase 3's conflict check found that
+- [x] ✅ [DOC] P2. **Cross-link the rebuild-delta todo in `sports_consolidated_native_ao_extract_2026_07_25.md` to its
+      real source issue doc — unified-trading-pm@a116ac7fa.** Phase 3's conflict check found that
       `issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`'s sole
       genuine open todo (`[VERIFY] P2` — reconcile the post-07-13 rebuild delta, `PLAYER_VALUES` −10,934 / `ODDS` −3,180
       captured cells vs the 2026-07-12 verified state, via a per-key manifest-vs-GCS diff, to determine

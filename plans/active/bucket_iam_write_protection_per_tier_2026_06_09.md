@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                      > (or any other role) without going through terraform at all. See
-                                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                          > (or any other role) without going through terraform at all. See
+                                                                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                          > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -580,28 +580,17 @@ Two independent gates because Group A and Group B are at different stages:
       `_register     "gcs-migration-bundle"` entry was investigated and deliberately left alone — it is a separate AWS
       EC2 task-name→instance-profile registry with no test coupling to either deleted GCP launcher's filename, so
       removing it was out of this todo's verified scope (not proven dead).
-- [ ] [INFRA][OPERATOR] P2.2e. **NEW, opened 2026-07-31 (slot-5).** Cut `uts-shared-deployment-api`'s live traffic
-      (`spec.traffic`) over to a `uts-prd-sa` revision (P2.2c wired the identity + resource sizing; this is the separate
-      step of actually promoting it). **Currently BLOCKED**: every fresh cold-start of a new/tagged revision fails
-      reproducibly (`Container called exit(0)` + STARTUP-TCP-probe-failed, ~30-32s in — independent of SA and of the
-      `16Gi/4cpu` resource fix, both confirmed via direct testing), a failure signature that looks like the same
-      mechanism as the open `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` investigation. Once that
-      investigation (or this specific cold-start angle) resolves: tag + curl-verify a fresh instance 3-5× for
-      confidence, then cut `spec.traffic` over (or ramp via the existing tagged-canary pattern — see
-      `e8ce86a-verify`/`00389-d9d`). Full writeup:
-      `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`. Gated on P2.2c
-      (met) + the cold-start blocker resolving. **`[OPERATOR]`-tagged 2026-08-02 (slot-11)**: this exact task has now
-      been dispatched 3x in one day (slot-6 declined 2026-08-02, slot-5 live-attempted the cold-start retry and it
-      failed on first try 2026-08-02T18:12Z, slot-7 declined again 2026-08-02T18:55Z citing slot-5's fresh failure) —
-      re-verified both gating docs are still `status: open` and no new evidence has landed since slot-5's 18:12Z
-      attempt. Same structural gap as P2.2d2c2 above: this is a live-production traffic cutover gated by a standing
-      main-orchestrator hold-until-durable-close directive that no worker can clear by re-attempting the identical
-      cold-start test a 4th time (risks compounding the investigation-churn hypothesis slot-7 already flagged) — it has
-      no structured `depends_on`/`gate_on_depends` link to the cold-start investigation (same-plan todos can't express a
-      per-todo prereq), so the backlog regenerator will keep re-offering it otherwise. `[OPERATOR]` routes this to the
-      operator's blocked-queue instead. **Retag back to plain `[INFRA]`** once the cold-start blocker durably resolves
-      (per its own doc's N-consecutive-fresh-cold-starts bar) — do not leave this tag stale per CLAUDE.md's
-      retag-on-resolve rule.
+- [x] ✅ [INFRA] P2.2e. **DONE 2026-08-04 (operator-forced cutover; slot-13 infra closeout).** The operator forced the
+      live-traffic cutover on 2026-08-04 under time pressure (pipeline stuck ~4 days on the cold-start bug). Production
+      `uts-shared-deployment-api` is NOW confirmed on `uts-prd-sa` (revision `00430-dcr`, 16Gi/4cpu, image
+      `sha256:e805764...`), verified via multiple live 200s across `/api/health`,
+      `/api/data-status/distinct-values/sports`, `/api/data-status/distinct-values/defi` — see
+      `issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` Progress Log
+      2026-08-04 entry for full evidence. The SIGABRT root cause (`deployment_api_sigabrt_crash_loop_2026_07_24.md`)
+      remains open and the cold-start `exit(0)` bug still reproduces on automatic deploys, but a reliable workaround
+      exists: manual `gcloud run services update-traffic --to-revisions=...=100` retry after the automatic deploy
+      silently no-ops. The cold-start doc's P3 todo is now also closed (same session). **Retagged `[INFRA][OPERATOR]` →
+      `[INFRA]`** — operator action completed; SIGABRT root cause tracked separately.
 - [x] ✅ [TEST] P2.3. **DONE 2026-08-02 (slot-4, infra) — live-verified, `deployment-service@4b86feb`/`b85aa53`
       (authored + shipped by an earlier session; this pass live-verified + closed it out).**
       `tests/integration/test_bucket_iam_tier_isolation.py` already existed (docstring corrects the plan's original
