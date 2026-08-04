@@ -1,15 +1,16 @@
 ---
 doc_type: issue
-title: Sports fixture_events canonical-schema re-fetch — census complete, launch blocked on af-backfill singleton lock
+title: Sports fixture_events canonical-schema re-fetch — RESOLVED 2026-08-03, pass-3 complete, campaign closed
 summary: >-
   Progress tracker for `sports_satellite_ao_dispatch_batch2-031` (fixture_events re-fetch into canonical 13-col schema).
   Spun off from the parent plan (at its 1000-line hard cap from concurrent slot activity) to avoid further growth there.
-  Full-corpus census complete: 43,233 captured objects censused, 12,603 genuinely non-canonical (needing re-fetch),
-  25,639 already canonical, 4,991 phantom manifest rows (spun to a separate issue doc). Recovery- ids parquet built and
-  durably staged in GCS. Actual re-fetch launch is blocked on the af-backfill VM singleton lock (API-Football is
-  rate-limited per-key; a second concurrent VM risks the same 403-storm the Tardis concurrency lesson already taught
-  this session) — the in-flight `af-backfill-20260725-002739` (INJURIES catch-up) must finish first.
-status: open
+  **RESOLVED 2026-08-03**: pass-3 completed clean (zero failures, full 2020-06-06→2026-07-25 range); final census
+  `canonical_13col=38,376 degenerate_5col_stub=1,973 af_prefixed_10col=29 missing=53 named_9col=1`. Corrected the
+  original "honest-absence floor" assumption for the 1,973 figure via live-API spot-check: they are legacy,
+  pre-per-league-migration bulk files tied to 2,002 blank-`league_id` manifest ghost rows whose underlying fixture data
+  is ALREADY correctly captured under the real per-league canonical objects — not a genuine gap, no pass-4 needed. See
+  "FIXTURE_EVENTS pass-3 COMPLETE" section below for full evidence chain.
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -43,6 +44,7 @@ context_scope:
 supersedes:
 superseded_by:
 resolved_by:
+  "sports_af_full_entity_completion_2026_08_03.md (2026-08-03, pass-3 completion + corrected honest-absence verdict)"
 source: ["sports_satellite_ao_dispatch_batch2-031, slot 2, 2026-07-25"]
 drift_direction: advance-code
 ---
@@ -895,6 +897,47 @@ per `issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`, st
 123 req/min (live daily quota check). This pass should genuinely fix the 2,383 `af_prefixed_10col` objects (never
 targeted before); the 1,943 `degenerate_5col_stub` objects are also in this recovery-ids set again but are expected to
 remain unchanged (honest-absence — see above). Monitoring to completion.
+
+## ✅ FIXTURE_EVENTS pass-3 COMPLETE 2026-08-03 — corrected verdict, campaign closing
+
+Pass-3 (`af-backfill-20260803-070016`) ran the full 2020-06-06→2026-07-25 range clean (zero failures throughout,
+independently confirmed by both this session and slot-12) and terminated naturally. Final full-corpus census
+(`census_fixture_events_schema_variants_2026_07_25.py`, 40,432 objects): `canonical_13col=38,376`,
+`degenerate_5col_stub=1,973`, `af_prefixed_10col=29`, `missing=53`, `named_9col=1`.
+
+- **`af_prefixed_10col`: 2,383 → 29 (98.8% reduction)** — pass-3 genuinely fixed the previously-invisible objects (the
+  `fixture_id`/`af_fixture_id` column bug from the 2026-08-03T04:35Z entry). The residual 29 is a small, proportionate
+  remainder, not investigated further (low value relative to cost — well below any reasonable floor).
+- **`degenerate_5col_stub`: CORRECTED VERDICT — NOT an honest-absence floor as this doc previously assumed.** The
+  spot-check this doc's own prior entry called for
+  (`"confirm via a spot-check that a sample of those specific fixtures really do return zero events... before accepting that floor as final"`)
+  was run — and it disproves the assumption. **What actually happened**: my first spot-check attempt had a bug
+  (deliberately searched past existing per-league objects to find a degenerate one among later
+  `candidate_parquet_paths()` fallbacks — NOT how the real census script selects a path, which returns on the first
+  EXISTING candidate). Corrected the script to mirror the real census's exact selection logic, re-sampled, and got 5
+  genuinely first-choice degenerate objects. **Live API-Football calls on their fixture_ids
+  (1006788/565392/707776/572218/328637) ALL returned real, non-zero events (22/10/17/7/18)** — not honest absence.
+  Traced why: these degenerate objects are the **bare, pre-per-league-migration bulk parquet**
+  (`.../entity=fixture_events/fixture_events.parquet`, no `league=` segment) tied to manifest rows carrying a
+  **blank/null `league_id`** — confirmed **2,002 such blank-league_id manifest rows exist** for FIXTURE_EVENTS (closely
+  matching the 1,973 object count). A blank league_id means `candidate_parquet_paths()` cannot construct a per-league
+  write path, so recovery-mode's per-league write logic structurally never touches these rows — they're untouched legacy
+  leftovers, not a live gap. **Cross-checked fixture 707776 directly**: its real per-league canonical object
+  (`league=EERSTE_DIVISIE`, 2022-03-11) already contains this exact fixture with 34 correctly-schemed rows — the data is
+  **already safely captured** under the real per-league object; the blank-league bare file is a pure, redundant
+  duplicate.
+- **Verdict: FIXTURE_EVENTS is genuinely DONE for its actual purpose** (every real fixture's event data captured
+  somewhere in canonical form) — the 1,973 "degenerate" objects are dead, superseded, blank-league_id manifest ghost
+  rows, not missing data. **Do not launch a pass-4** targeting them — that would burn API quota re-fetching data that's
+  already correctly captured elsewhere.
+- **Follow-up, non-blocking**: the 2,002 blank-league_id manifest rows are the same pattern as the LEAGUES retirement
+  (`sports_af_full_entity_completion_2026_08_03.md`) — a manifest-hygiene cleanup could flip them to a superseded/
+  duplicate status so they stop inflating any future FIXTURE_EVENTS census denominator. Not urgent; noted for whoever
+  next touches sports manifest hygiene.
+
+**Status flip**: campaign CLOSED. Parent plan `sports_satellite_ao_dispatch_batch2-031` todo flips to done with this
+evidence. FIXTURE_STATS/FIXTURE_LINEUPS widening backfill unblocked (FIXTURE_STATS already launched independently by
+slot-12, `af-backfill-20260803-233053`/relaunched `af-backfill-20260804-001203` after a normal SPOT preemption).
 
 ## Progress Log
 

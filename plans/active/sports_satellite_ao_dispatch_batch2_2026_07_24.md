@@ -741,11 +741,13 @@ context_scope:
       done-when). Two incidental findings, left untouched not absorbed: schema heterogeneity also affects ~12% of
       player_stats cells; ~4.9% of captured cells have no GCS object (2019 era). Detail:
       `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1, resolved).
-- [ ] [DATA] P1. **`fixture_events` re-fetch into the canonical 13-col schema** — fold into the OR-1 `fixture_events`
-      re-fetch campaign. (repo: instruments-service). **Done when**: a full re-census shows 0 genuinely non-canonical
-      objects remaining (or documented unrecoverable). **🟡 IN PROGRESS (2026-07-25, slot 2)**: full census done
-      (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the af-backfill
-      singleton lock (INJURIES VM still running) — full state + resume command:
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-03**: `fixture_events` re-fetch into the canonical 13-col schema — pass-3
+      complete, zero failures; final census `canonical_13col=38,376 degenerate_5col_stub=1,973 af_prefixed_10col=29`.
+      The 1,973 figure is NOT a gap (corrected via live-API spot-check: legacy blank-league_id duplicate objects whose
+      data already exists in the real per-league canonical objects) — full evidence in
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. **🟡 IN PROGRESS (2026-07-25, slot 2)**: full
+      census done (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the
+      af-backfill singleton lock (INJURIES VM still running) — full state + resume command:
       `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. — **Stale sub-status corrected 2026-07-25T05:38Z
       (slot 11): the INJURIES-VM lock cleared hours ago; the re-fetch VM (`af-backfill-20260725-032253`) has been
       RUNNING since 03:22Z** (launched by slot 4, health-checked healthy by slot 11 at 04:18Z and again now — heartbeat

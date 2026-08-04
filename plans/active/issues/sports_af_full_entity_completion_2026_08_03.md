@@ -67,7 +67,7 @@ Per `unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_EN
 | Entity           | Scope                        | Status (2026-08-03)                                                                                                            |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                           |
-| FIXTURE_EVENTS   | MVP-96                       | pass-3 in flight (`af-backfill-20260803-070016`), same doc                                                                     |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes not a gap, same doc               |
 | FIXTURE_STATS    | all-383 (widened 2026-07-28) | queued, not yet launched — census: 69,171 non-MVP shards needed (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`) |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | queued, not yet launched — census: 69,165 non-MVP shards needed                                                                |
 | **PLAYER_STATS** | **MVP-96**                   | **NEW this doc** — 42,368 expected, 24,928 captured, **17,440 needed**                                                         |
