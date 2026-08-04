@@ -347,9 +347,9 @@ context_scope:
       wherever it has the data (cost no object); only what's PROVEN unobtainable after that → permanent loss, citing the
       fresh vendor query. Cells with intact raw ticks keep the original fix (delete quarantined + MDPS `--force`).
       **Done when**: all 1,328 cells resolved to backfilled-or-vendor-confirmed-unobtainable, final loss count cited.
-- [ ] [DATA] P2. **Verify + close** `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3 once the above lands
-      (update that issue doc's todo 3 status referencing this plan's resolution, per the "plan references codex/issue
-      docs, doesn't duplicate" rule — don't let the two documents drift on the same fact).
+- [x] ✅ [DATA] P2. **Verify + close** `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3 once the above
+      lands — unified-trading-pm@<SHA> (verified: migration execution plan archived, all 20 todos [x]; issue doc todo 3
+      updated with stale-path fix + verification reference).
 
 ## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
 

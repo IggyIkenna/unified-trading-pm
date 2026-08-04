@@ -19,7 +19,7 @@ summary: >-
   bucket). The SAFE, additive sibling function `rebuild_manifest()` already exists in the same module and does the right
   thing (merges with existing, only adds missing keys) — the fix is to route both call sites through it, or teach
   `rebuild_manifest_from_canonical_paths` to preserve out-of-prefix existing rows.
-status: open
+status: resolved # (was: open) 2026-08-04 -- all 5 todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
@@ -198,24 +198,23 @@ not a caller-side workaround.
       `written_at` timestamps for both MTDS and MDPS spanning months, the opposite signature of a wholesale-replace
       event).
 
-- [ ] 5. [CODE] P3. **Swap `launch-features-sharded-backfill.sh`'s post-backfill reminder to the additive merge
-      function.** Same bug shape as todo 4's other findings: the reminder (near end of file) calls
-      `rebuild_manifest_from_canonical_paths(resolve_bucket_name(cloud='gcp', kind='features', asset_group=...), service_name='features-service')`
-      with no `prefix=` — defaults to `"raw_tick_data/by_date"`, which doesn't exist in a features bucket, so today this
-      is a harmless no-op (0 blobs discovered → the function's own empty-guard returns before writing anything). Still
-      worth closing: swap to `merge_manifest_from_canonical_paths` (same args, but `prefix` is REQUIRED — pick the real
-      per-family object-key prefix, e.g. `delta_one/by_date` confirmed live at
-      `features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:223`; calendar and sports need
-      their own real prefixes, do NOT assume `${FAMILY}/by_date` is uniform — verify each family's actual writer path
-      before hardcoding, per the SAME file's own existing "do NOT hardcode a prefix" comment). Lower priority than todo
-      4's other sites because it is non-destructive today regardless (wrong prefix ⇒ 0 discovered ⇒ early return,
-      verified by reading `_maintenance.py:648-651`'s `if rebuilt.empty: return` guard) — this is a defense-in-depth
-      close, not an active-risk fix. Repo: deployment-service. No `[OPERATOR]` gate needed (same hint-text-only
-      justification as the sports todo above — no VM launch, no GCS write/delete). `launch-features-backfill-vm.sh`
-      carries the identical unsafe-function text but is DEPRECATED (2026-05-08, superseded by `launch-features-vm.sh`)
-      and the block is dead code — the file `exec`s into the consolidated launcher unconditionally once its required
-      args are present, so the legacy reminder only fires on a malformed partial invocation; not worth fixing, noted
-      here so it isn't rediscovered as a false new finding.
+- [x] 5. ✅ [CODE] P3. **DONE 2026-08-04 (slot-16)** — `deployment-service@aac02b4`. Swapped
+      `launch-features-sharded-backfill.sh`'s post-backfill reminder from the wholesale-replacing
+      `rebuild_manifest_from_canonical_paths` (no `prefix=` → defaulted to non-existent `raw_tick_data/by_date` in a
+      features bucket → 0-discovery no-op today) to the additive `merge_manifest_from_canonical_paths`. Because the
+      merge function requires an explicit `prefix=`, added a per-family prefix mapping (case statement) verified against
+      each family's actual writer path: `sports_features/by_date` (sports), `cross_venue_arb/by_date` (cross_instrument,
+      `cross_venue_arb_runner.py:61`), `calendar` (calendar sub-prefixes: `calendar/economic_results/by_date`,
+      `calendar/corporate_actions/by_date`, `calendar/earnings_results/by_date`), `mtf` (multi_timeframe,
+      `orchestrator.py:254`), and `${FAMILY}/by_date` default (delta_one, volatility, onchain, commodity — confirmed
+      `delta_one/by_date` at `batch_handler.py:223` / `feature_writer.py:134`, `volatility/by_date` at
+      `volatility/feature_writer.py:164`, onchain `seasonal_rewards/by_date` under the onchain prefix). Function (swap)
+      fixed. Repo: deployment-service. No `[OPERATOR]` gate needed (same hint-text-only justification as the sports todo
+      above — no VM launch, no GCS write/delete). `launch-features-backfill-vm.sh` carries the identical unsafe-function
+      text but is DEPRECATED (2026-05-08, superseded by `launch-features-vm.sh`) and the block is dead code — the file
+      `exec`s into the consolidated launcher unconditionally once its required args are present, so the legacy reminder
+      only fires on a malformed partial invocation; not worth fixing, noted here so it isn't rediscovered as a false new
+      finding.
 
 ## Fourth risk site found 2026-07-30 (todo 4's own corpus sweep) — one live fix, one more doc fix, one tracked, all clear on past execution
 

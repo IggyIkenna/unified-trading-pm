@@ -88,8 +88,8 @@ all-or-nothing behavior means one malformed pool symbol blocks the entire protoc
 `build_instrument_id` failure should be recorded as `attempted_failed` for that specific pool (with the full error
 details preserved), while other pools in the same shard succeed normally.
 
-- [ ] [DATA] P1. Per-row `build_instrument_id` failure isolation in `write_defi_rows` — catch ValueError per-row instead
-      of aborting the entire batch, so one malformed pool symbol doesn't block the whole protocol+chain+date shard.
-      Repo: `market-tick-data-service`.
+- [x] ✅ [DATA] P1. Per-row `build_instrument_id` failure isolation in `write_defi_rows` — catch ValueError per-row
+      instead of aborting the entire batch, so one malformed pool symbol doesn't block the whole protocol+chain+date
+      shard. Repo: `market-tick-data-service`. — market-tick-data-service@badbcbde
 - [ ] [SCRIPT] P2. Re-run the 33 failing shard-dates after the fix to recover the blocked pool data. Repo:
       `market-tick-data-service`.

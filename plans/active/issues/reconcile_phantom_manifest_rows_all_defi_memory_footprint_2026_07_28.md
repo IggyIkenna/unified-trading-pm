@@ -125,13 +125,13 @@ because it is currently blocking anything urgent.
       open/out of scope for this todo (different repos: instruments-service, unified-trading-library). The
       `MACHINE_TYPE` env-var override added by the prior ad-hoc fix (`deployment-service@420c8be`) still works unchanged
       (`${MACHINE_TYPE:-$_DEFAULT_MACHINE_TYPE}`).
-- [ ] [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above.** Add a lighter-weight,
+- [x] ✅ [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above.** Add a lighter-weight,
       column-pruned read path to `merge_canonical_with_outstanding_shards` (or a scoped sibling helper) for callers that
       only need a handful of columns / a single (venue, data_type) slice — mirroring the ad-hoc 6-column pyarrow read
       this session used for verification (completed in well under a minute with no memory pressure on the same 27.3M-row
       file). Reserve the expensive full-frame path for callers that genuinely need to WRITE back the whole index (the
-      real `--apply` mutation path, which needs full-frame safety guarantees regardless). (repo: instruments-service,
-      unified-trading-library)
+      real `--apply` mutation path, which needs full-frame safety guarantees regardless). —
+      unified-trading-library@c1ec7311
 
 ## Progress Log
 

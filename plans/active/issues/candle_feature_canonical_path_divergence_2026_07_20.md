@@ -314,9 +314,10 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       `EMPTY_STEM_WITH_UNDERLYING`=2,576 + `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi
       `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) + `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this
       class. Repair itself is still **pending P7 `--apply`** (content-repair gated).
-- [x] 3. [DATA] P1. **[already covered by plans/active/candle_canonical_path_migration_execution_2026_07_24.md, see that
-      doc for execution]** Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`) or
-      rule the migration naming acceptable. **P0 census counted them exactly 2026-07-22**:
+- [x] 3. [DATA] P1. **✅ VERIFIED 2026-08-04 (slot-11, `tradfi_manifest_content_recovery_completion-004`)** — covered by
+      the now-archived `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (all 20 todos
+      `[x]`, 0 open, archived 2026-07-28). Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` →
+      `VENUE:TYPE:SYMBOL`) or rule the migration naming acceptable. **P0 census counted them exactly 2026-07-22**:
       `NEEDS_CONTENT_TRADFI_ID`=6,487,045 — **84.8% of the entire 7.65M-object TradFi corpus** needs content-read
       leaf-id repair, by far the dominant disposition class and the reason tradfi is sequenced LAST/hardest. **UPDATE
       2026-07-23 (post-P7/P8)**: `--apply` ran; the vast majority of this class did NOT auto-resolve and was routed to
