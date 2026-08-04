@@ -308,3 +308,7 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   which is the actual blocked gate).
 - **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (6 entries) — sole todo
   still blocked on the same `EXCHANGE_CODE_TO_NAME` SSOT contradiction, both disagreeing UAC files already listed.
+- **na-eligibility-audit 2026-08-04** (tradfi tranche, dispatch agt-ba1107): **KEEP-NA, valid — re-verified, unchanged
+  (4th consecutive pass).** Sole open todo re-read end-to-end; count reconciled (1/1). No content change since the
+  2026-08-02 verdict — only two context-scout `context_scope` touches since. Still self-tagged `P1-OPERATOR-DECISION`,
+  blocked on the non-injective `EXCHANGE_CODE_TO_NAME` SSOT contradiction; nothing to reclassify.

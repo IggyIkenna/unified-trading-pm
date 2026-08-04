@@ -324,3 +324,7 @@ every day narrows or closes it permanently.
   calls), and the 2 open checkboxes are meta-propagation todos explicitly gated on the operator answering them first —
   fails the bounded-outcome bar by design. No content drift since 2026-08-01. Nothing to reclassify.
 - **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries).
+- **na-eligibility-audit 2026-08-04** (tradfi tranche, dispatch agt-ba1107): **KEEP-NA, valid — re-verified, unchanged
+  (4th consecutive pass).** Both open todos re-read end-to-end; count reconciled (2/2). No content change since the
+  2026-08-02 verdict — only two context-scout `context_scope` touches since. Still operator-gated by construction (10
+  numbered decision items, all authority/design/blast-radius calls); nothing to reclassify.

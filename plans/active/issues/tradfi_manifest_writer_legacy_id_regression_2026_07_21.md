@@ -455,3 +455,9 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   40Z phantom-batch root-cause (market-data-processing-service `canonical_writer.py`) looks like the same underlying
   write event as this doc's still-open 2026-07-27T16:46:40-48Z null-id registration-burst todo — flagging the overlap
   for whoever picks this up, not confirmed identical here.
+- **na-eligibility-audit 2026-08-04** (tradfi tranche, dispatch agt-ba1107): **KEEP-NA, valid — re-verified,
+  unchanged.** Sole open todo (the historical manifest repair) re-read end-to-end; count reconciled (1/1). Same two
+  independently-sufficient grounds as 2026-08-01/08-02 still hold: the registration/recovery script identification step
+  remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a stated safe-idempotent
+  justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout `context_scope` touches
+  since. Nothing to reclassify.
