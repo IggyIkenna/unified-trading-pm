@@ -115,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                              completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                              `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                              todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                              (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                              that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                              `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -234,23 +234,26 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       failure (dated 2026-07-14, CF-11), which is the exact distinction the todo asks for — but full gate closure (QG
       green + re-fetch confirmation) was not verified this pass, so NOT flipped, annotated in-place in the source doc
       instead. Not archivable yet — the P2 todo remains genuinely open pending that verification.
-- [ ] [PLAN] P2. `plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` →
+- [x] ✅ [PLAN] P2. **DONE (na-eligibility-audit 2026-08-04)** —
+      `plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` →
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` ([TRADFI] P1 memray-footprint todo) + gated
       `…batch2_finalize_2026_07_25.md`. **STATUS UPDATE 2026-07-28 (unified-trading-pm, verification-only, no file
       edit)**: premise was stale — the successor todo is no longer open, it shipped the SAME day this entry was written
       (`[x] ✅ [TRADFI] P1. DONE 2026-07-27 (slot-14, data_engineering)` in
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, memray evidence also appended in-place to this doc's own
       `[TRADFI] P2` checkbox, which is `[x]` too) — all 5 of this doc's own "Recommended decision" items are now `[x]`.
-      Content-complete, but **NOT archived**: doc carries `locked_by: live-defi-rollout` (line 27) with no
-      `[unlock-plan]` grant in this session — per the HARD RULE (`PLAN_FORMAT.md`: "Agents MUST NOT archive locked plans
-      even if all todos are done... only a human with `[unlock-plan]`") this is a STOP-and-report, not an archive.
-      Flagging for the operator: this doc is ready for a quick `[unlock-plan]` + archive pass whenever convenient.
-      **DISCREPANCY FOUND 2026-07-28** (unlock WAS granted this session, but NOT archived anyway): re-reading the doc
-      fresh surfaced a genuine NEW open item the "all 5 items [x]" framing above missed — a `[TRADFI] P3` follow-up
-      ("Fix the pyarrow per-symbol-writer fan-out identified by the 2026-07-27 memray repro") was added alongside the P2
-      memray flip and is still `- [ ]`, explicitly framed as real (if non-blocking) deferred work, matching the
-      precedent of the still-open, still-active analogous doc `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
-      Leaving this doc open rather than force-archiving over genuine remaining scope.
+      The remaining open P3 pyarrow-writer-fan-out remainder has since ALSO shipped —
+      `market-tick-data-service@c5152776` (Option C buffer/coalesce, 2026-08-01, slot-8/slot-10, full `quality-gates.sh`
+      green) — `tradfi_backfill_oom_remediation_2026_06_24.md` now greps to 0 open `- [ ]` checkboxes. That doc's own
+      `locked_by: live-defi-rollout` still blocks its own archival without `[unlock-plan]`, but this doc's citation of
+      it as "remains" is now stale and closed. Flagging for the operator: this doc is ready for a quick
+      `[unlock-plan]` + archive pass whenever convenient. **DISCREPANCY FOUND 2026-07-28** (unlock WAS granted this
+      session, but NOT archived anyway): re-reading the doc fresh surfaced a genuine NEW open item the "all 5 items [x]"
+      framing above missed — a `[TRADFI] P3` follow-up ("Fix the pyarrow per-symbol-writer fan-out identified by the
+      2026-07-27 memray repro") was added alongside the P2 memray flip and is still `- [ ]`, explicitly framed as real
+      (if non-blocking) deferred work, matching the precedent of the still-open, still-active analogous doc
+      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. Leaving this doc open rather than force-archiving over
+      genuine remaining scope.
 - [x] ✅ [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`
       → `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (~L270-286), covers items (2) DP_VM_GONE_NO_CAPTURE
       debounce + (3) InstrumentsHandler str/int bug. Item (1) (operator-gated prod-manifest `--apply`) has no other home
@@ -376,16 +379,20 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `infrastructure_master.md`'s own todo there updated to reflect the tracker-archival half is done, banner-removal
       half still open. Every corpus referrer fixed (7 codex docs + `infra_satellite_ao_dispatch_batch1_2026_07_26.md` +
       `infra_consolidated_closeout_2026_07_25.md`). unified-trading-pm@3d3b8266f + @aff24f097 (`[unlock-plan]`).
-- [ ] [PLAN] P2. `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` →
+- [x] ✅ [PLAN] P2. **DONE (na-eligibility-audit 2026-08-04)** —
+      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), covers 3 bounded items (relocate 8
       `smoke_matrix.py` files; retire `compute_sfi_progressive_only.py`+launcher; script-homes sweep). ~~2
       owner-design-call items (velocity-accel fallback; `make_session` loop-safety) have no successor — see §5.~~
       **RESOLVED 2026-07-28 (unified-trading-pm@21d31f2a9)** — per §5-RESOLVED item 35, both are now agent-owned scoped
       work, not parked on a human. Investigated + scoped both into real `- [ ] [CODE] P2` todos in
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (next to the existing 3-item entry, each with a
-      concrete fix + clear done-when criteria — not implemented here, scoping only) and annotated the 2 DEFERRED lines
-      in the source doc to point at them (prevents double-dispatch). Content verified present in both files. Still not
-      archivable (batch1b hasn't run; 5 total bounded items now open there for this source).
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`. **Migration confirmed complete**: the source doc now
+      greps to 0 open `- [ ]` checkboxes (it is `assigned_vm: planning`, out of this audit's NA population, but its
+      content state is directly verifiable) — velocity-accel and `make_session` both shipped `[x]` in batch1b
+      (`features-service@25932d23` + prior), and the smoke_matrix relocation half of the bundled 3-item todo also
+      shipped (`features-service@7717fbee` + `e2e-testing@4b5a743`). The remaining script-homes-sweep sub-part still
+      lives as batch1b's own open `[SCRIPT] P2` todo — that is batch1b's tracked concern now, not this vintage-audit
+      entry's job to keep re-watching.
 
 ---
 
@@ -933,3 +940,9 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) -- this is a genuinely code-free
   process/meta-audit-of-docs doc (`/plan-vintage-audit`'s own durable handoff), added the operating SKILL.md itself as
   the true "source" a worker executes.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, stale items closed — 2 of 6 remaining open checkboxes were stale and are
+  now closed above with evidence (the `tradfi_backfill_oom_remediation_2026_06_24.md` successor todo + its P3 pyarrow
+  remainder both shipped; the `features_service_coverage_and_script_canon_2026_06_10.md` migration confirmed complete,
+  source doc now 0 open checkboxes). The remaining 4 open items (perp_funding_data_semantics,
+  mvp_scope_catalogue_tagging, cryptovenue_equity_perps, colocated_feature_pipeline) verified still genuinely open — doc
+  stays KEEP-NA, judgment-based cross-doc reconciliation is this doc's own nature, not bounded AO work.

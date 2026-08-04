@@ -112,3 +112,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
   worker-idle. Remaining lever (kill+respawn) is backend/operator-owned → the two todos above. Not on-fire (11-12 other
   slots healthy, no WIP at risk); P2. Main will keep watching slot 2 and will close this if AutoSpawn/watchdog or the
   operator clears it.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — brand-new doc; 2 of 3 open todos are explicitly `[OPERATOR]`-
+  tagged live-infra actions (kill+respawn) that main cannot perform, and the 3rd (`[BACKEND]` watchdog-escalation fix)
+  is live dispatch-critical-path machinery — the exact mechanism that routes tasks to every AO worker — not a
+  worker-determinable bounded fix to dispatch through the same fleet it would be modifying.

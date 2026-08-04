@@ -109,3 +109,7 @@ should be filed as its own todo against that decision's outcome.
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries — added the extracted-successor doc
   `strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md`, cited repeatedly in this doc's own text).
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — re-confirms 2026-07-30; the sole remaining open todo is an
+  explicitly undecided design/schema-contract question ("nobody has decided what the per-pair schema/NaN-tolerance
+  contract should say"), citing the dispatch-scope-eligibility SSOT directly. The bounded P0 half was already split out
+  2026-07-30 into its own AO-dispatchable doc.

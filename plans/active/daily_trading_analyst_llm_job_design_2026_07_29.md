@@ -346,3 +346,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
   the list to 8) and dropped the least-cited codex link (`agent-orchestrator-autospawn.md`, 2 body mentions vs.
   `agent-orchestrator-single-vm-architecture.md`'s 5) to land back at the 6-entry cap; kept the Stage-4 source path
   (`stage4_agent_analysis.py`) since it is the exact leg this design completes.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the 2026-07-31 zero-checkbox sweep converted this doc's §5 prose
+  follow-ups into 6 real tracked checkboxes (content unchanged, format-only fix), so the open-todo count moved from 0 to
+  6 since the last pass, but the doc's own §5 banner still explicitly frames all 6 as "build-phase — not yet scoped for
+  AO dispatch; each needs its own sizing pass", and item 6 is explicitly `[OPERATOR]`-tagged. NA remains correct.

@@ -122,3 +122,7 @@ severities were weakened to `"none"`, masking 574 errors).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the archived predecessor plan for
   features-service `delta_one/` (the real target of the remaining open item 1.5b column-pruning work), since prior scope
   was codex/plan-only.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — item 1.4 flipped `[x]` DONE since the last pass
+  (`features-service@b457ee43`). Of the 3 remaining open items, 1.3b/1.7e already carry correct SUPERSEDED-BY-BATCH1
+  citations verified still open in the active `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 4th is
+  genuinely gated. `locked_by: live-defi-rollout` still applies.

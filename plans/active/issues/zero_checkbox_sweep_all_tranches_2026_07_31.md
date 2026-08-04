@@ -150,10 +150,12 @@ them as a finding; the population definition is deliberately left unchanged.
 
 ## Todos
 
-- [ ] [DOC] P2. **Wire the verifier into `/plan-reconcile`'s monthly full-corpus pass** — add the zero-checkbox
-      predicate (the `grep -LE` one-liner in the table above) to the `plan-reconcile` skill's corpus walk, so a new
-      zero-checkbox doc is reported against THIS register instead of needing a fresh one-off sweep doc. Done-when: the
-      skill file names this doc as the register and the predicate runs in its standard pass. (repo:
+- [x] ✅ [DOC] P2. **DONE (na-eligibility-audit 2026-08-04)** — Wire the verifier into `/plan-reconcile`'s monthly
+      full-corpus pass. Both done-when clauses now hold: the predicate already ran in the skill's standard pass as of
+      the 2026-08-02 note below, and the second clause (naming) landed hours later the same day —
+      `unified-trading-pm@d872efb3a` added the "Standing register" line at
+      `cursor-configs/skills/plan-reconcile/SKILL.md:371`, citing this doc by name. Verified live:
+      `grep -rn     "zero_checkbox_sweep_all_tranches" cursor-configs/skills/` returns a hit. (repo:
       `unified-trading-pm`)
 - [ ] [DOC] P3. **Re-run the sweep and update the "Last executed" row** at the next monthly pass; if the non-exempt
       unclassified count is 0, record that and leave this doc open as the standing register (it is deliberately NOT
@@ -187,3 +189,7 @@ them as a finding; the population definition is deliberately left unchanged.
   narrow population definition confirmed as the reason the 5 non-AG tranches were never swept. Standing owner/cadence
   table added above so the class no longer dies with its sweep doc.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — todo 1 closed above (both done-when clauses now verified live;
+  the naming half landed `unified-trading-pm@d872efb3a`, hours after the 2026-08-02 note below was written). Doc stays
+  open and NA: it is a deliberately-permanent standing register (own todo 2 / P3: "NOT archive-on-complete — archiving
+  is what orphaned this class twice already"), owned by the `/plan-reconcile` scheduled job, not AO dispatch.

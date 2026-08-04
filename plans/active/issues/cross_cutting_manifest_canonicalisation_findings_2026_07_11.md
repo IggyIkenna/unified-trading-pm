@@ -247,3 +247,7 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
   never-autonomous' operator sign-off.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — sole open `[DATA]` P1 todo is a legacy-bucket delete for
+  defi/tradfi/sports, explicitly gated in-doc on operator sign-off ("hard-stop, never-autonomous" per the delete-safety
+  protocol) — a genuine human-only gate, not a judgment-free bounded task. The 2026-08-03 inline annotation resolves
+  only the CEFI CF-audit-adjudication half; the bucket-delete half remains open and correctly NA.
