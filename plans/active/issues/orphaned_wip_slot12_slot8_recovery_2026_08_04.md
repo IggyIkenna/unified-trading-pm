@@ -93,3 +93,9 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   (backend-owned; AutoSpawn should recycle it — if a respawned/inheriting slot lands the WIP first, close this) and did
   NOT push (worker-side quickmerge). **Watch item main owns**: confirm slot 8 resolves bd0e231f's ahead-state after its
   respawn boots rather than stranding it; if it strands, the 2nd todo above covers it.
+- **2026-08-04 ~00:11Z (main agt-1756f6)** — **slot-8 watch discharged: it stranded.** Next tick after filing, slot 8
+  was again `worker_alive=false` (task=None) having died without landing bd0e231f — so it did NOT self-resolve
+  post-boot. Combined with review's structural point (fresh-pull's ff-only check cannot surface an ahead-only, non-dirty
+  state), repeated AutoSpawn respawns will keep stranding it, not fix it. **The 2nd todo's gate is therefore SATISFIED**
+  — a worker should now reconcile bd0e231f per that todo (fresh successful QG to mint the missing `.qg_last_passed_sha`
+  sentinel, then quickmerge). Still zero-loss (wip-preserved).
