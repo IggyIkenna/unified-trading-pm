@@ -141,3 +141,21 @@ Two independent fix directions, either or both:
   was detected (via the launcher's own error-surfacing fix, deployment-service@b64e4a7) and relaunching the (idempotent,
   safe-to-resume) backfill script. Did not implement either fix above — out of this todo's scope, filed here per the
   findings-closure HARD RULE instead of silently working around it forever.
+- **data_engineering worker (slot 6) 2026-08-04 — independent second confirmation, different task.** Hit the identical
+  failure shape while running `/data-pipeline-check-is --asset-group prediction --day 2026-08-02` (pre-Phase-B baseline,
+  `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 2): the POLYMARKET force-leg VM launched fine at
+  05:35:56 UTC under `unified-trading-sa`, but the skip-leg launch 26 min later (06:01:24 UTC) failed
+  `compute.instances.create PERMISSION_DENIED` — `gcloud config configurations list` at that moment showed the shared
+  active config (`slot9-monitor`) pointed at `github-deploy@...`, a different identity than what launched the force-leg
+  moments before, with no action taken by this session. Confirms the report is host-wide, not sports-specific or a
+  one-off. **Applied fix-direction 2 ad hoc for this session**: created a slot-scoped named config
+  (`gcloud config configurations create slot6-work --no-activate` +
+  `gcloud config set account unified-trading-sa@... --configuration=slot6-work`) and invoked all subsequent
+  `gcloud`/pipeline-check subprocess calls with `CLOUDSDK_ACTIVE_CONFIG_NAME=slot6-work` prefixed per-command —
+  confirmed this does NOT touch the shared active config (`gcloud config configurations list` showed `slot9-monitor`
+  still `IS_ACTIVE=True` afterward) while correctly scoping my own subprocess to `unified-trading-sa`. This validates
+  fix-direction 2 works as designed; it is still a per-session workaround (the named config isn't wired into
+  `setup-tab-worktrees.sh`/boot bootstrap), so the P3 todo above stays open. Also verified fix-direction 1's premise
+  directly: `unified-trading-sa` genuinely holds `roles/compute.admin` + `roles/compute.instanceAdmin.v1` at the project
+  level (confirmed via `gcloud projects get-iam-policy`) — this is conclusively an identity-selection race, never an IAM
+  gap, in both independent occurrences now on record.
