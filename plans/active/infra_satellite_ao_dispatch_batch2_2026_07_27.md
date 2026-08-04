@@ -135,14 +135,18 @@ once the corresponding todo below is actually done — not this plan.
       mdps@93883b7. Companion test files for scripts 1+2 deleted (imported the deleted scripts directly).
       benchmark_fullmonth_binance.py confirmed still present. quality-gates.sh green
       (sentinel=75509b876a43ee6c84de6c68317bf844449c4db4).
-- [ ] [DOC] P3. **Repoint `features-service/scripts/sports/smoke_matrix.py`'s stale SSOT citations** (currently cite an
-      archived plan + the dead `launch-features-backfill-vm.sh` header) to `launch-features-vm.sh` + the current codex
-      smoke-matrix doc. **Citation-only scope** — do NOT physically relocate `smoke_matrix.py` (that relocation is
+- [x] ✅ [DOC] P3. **Repoint `features-service/scripts/sports/smoke_matrix.py`'s stale SSOT citations** (currently cite
+      an archived plan + the dead `launch-features-backfill-vm.sh` header) to `launch-features-vm.sh` + the current
+      codex smoke-matrix doc. **Citation-only scope** — do NOT physically relocate `smoke_matrix.py` (that relocation is
       separately tracked in `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s "features-service
       coverage/script-canon cleanup" todo, which explicitly carves this citation-only todo out of its own scope; verify
       that todo's status before starting in case its relocation already landed and moved the file). Repo:
       features-service. Source: `mdps_features_deadcode_consolidation_2026_07_20.md` #7. Done when: the script's header
-      comment cites only current, live docs.
+      comment cites only current, live docs. — e2e-testing@e117593 (file had already been relocated from
+      features-service@7717fbee; fixed at new location). 4 citations replaced: launch-features-backfill-vm.sh →
+      launch-features-vm.sh (×3), archived plan → codex/15-runbooks/smoke-testing-playbook.md. 7 other domain
+      smoke_matrix.py files have identical stale citations → filed
+      /plans/active/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md.
 - [ ] [DOC] P3. **Update `build_canonical_candle_path()`'s docstring example** (unified-trading-library) — it still
       shows the SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) instead of the corrected
       SOURCE-keyed form. Not a functional bug (the function is value-agnostic), but could mislead a future maintainer.
