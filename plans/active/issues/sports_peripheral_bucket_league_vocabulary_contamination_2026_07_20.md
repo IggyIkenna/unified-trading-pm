@@ -122,7 +122,19 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
       fallback slug), rename/rewrite the `league=` GCS partition segment, and re-run the manifest bookkeeping. **Done
       when**: a fresh census of `instruments-store-sports-prd` returns 0 objects carrying the country-prefixed
       vocabulary. (repo: instruments-service / market-tick-data-service). Not started this session — deliberately
-      deferred per the `[OPERATOR]` gate, not a scope-creep decision to skip it.
+      deferred per the `[OPERATOR]` gate, not a scope-creep decision to skip it. **2026-08-04 (slot 5) — FRESH
+      bucket-retention check (delete-safety §3a requirement 2)**:
+      `gcloud storage buckets describe     gs://instruments-store-sports-prd-central-element-323112 --format "value(soft_delete_policy.retentionDurationSeconds)"`
+      returns `2592000` (30 days, well above the 604800s/7-day bar) — this bucket QUALIFIES for the reversibility-
+      qualified agent-autonomous path (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): a worker COULD
+      execute the actual migration itself, no operator step, once the migration script exists and passes dry-run. That
+      clears requirement 2 of the todo's own delete-safety gate; it does NOT resolve requirement 1 (the script itself
+      doesn't exist yet) or the underlying DESIGN questions the sibling
+      `league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py` (779 lines) had to resolve for its own,
+      narrower migration — e.g. whether `instruments-store-sports-prd`'s league value lives in the GCS path only or also
+      needs a content-column rewrite, whether any objects need per-row splitting (this sibling script's ROW-MIXED case),
+      and what a genuinely-unmapped/quarantine case should do. Filed a `/blocked` question rather than attempting a
+      from-scratch 9,733-object CAS-safe migration+prod-apply in one dispatch — see this doc's Progress Log.
 
 ## Progress Log
 
@@ -144,3 +156,18 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   resolves the na-eligibility-audit's own stated blocker ("bundles an unbounded root-cause trace with a ... migration
   carrying no `[OPERATOR]` tag"), so a future audit pass should re-classify the migration todo once it's picked up. Did
   NOT attempt the migration itself — out of AO scope without the delete-safety gate, per `task_template.md` finding O.
+- **2026-08-04 (slot 5, dispatched via `sports_closeout_track_x_hygiene-005`)**: ran the fresh delete-safety §3a
+  bucket-retention check — `instruments-store-sports-prd-central-element-323112` returns `2592000` (30 days), qualifying
+  for the reversibility-qualified agent-autonomous path (no operator step needed for the actual delete, once a script
+  exists). That resolves requirement 2 of the gate; requirement 1 (the script) does not exist yet and its design isn't
+  fully specified by this todo — the sibling `league_id_relocation/migrate_sports_league_id_casing_ 2026_07_21.py` this
+  todo points at as the pattern to mirror is 779 lines resolving several non-trivial questions (per-row vs per-path
+  reclassification, ROW-MIXED splitting, CAS-safe merge-on-write, quarantine for unmapped values) for a DIFFERENT,
+  narrower bucket/shape than `instruments-store-sports-prd`. Building an equivalent, correctly-designed migration for
+  9,733 objects across 172 distinct values / 6 pipeline_modes and safely applying it to prod in one dispatch is a
+  multi-hour undertaking with real judgment calls the todo doesn't resolve (e.g. does the league value need a
+  content-column rewrite or just a path-segment rename; what should happen to an object whose contaminated value has no
+  clean registry resolution). Did NOT attempt to build+ship+apply the migration — filed a `/blocked` question to the
+  operator with this finding + a recommendation (build+dry-run this session, defer the actual `--apply` to a follow-up
+  dispatch once dry-run is clean) rather than rushing a from-scratch prod-mutating script through in one turn. Checkbox
+  stays unchecked.
