@@ -93,7 +93,28 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
       out already-superseded/landed, close with that note). (repo: market-data-processing-service)
 
+- [ ] [BACKEND] P2. Ensure slot-11's vault_share_price fix lands on `origin/live-defi-rollout` (outcome-defined, not
+      SHA-brittle). Review saw it committed cleanly as `market-tick-data-service@b411374c1` (Quickmerge trailer;
+      real+tested fix for `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` — per-instrument
+      instrument_id now recorded per shard instead of one null-id aggregate call), but slot 11 died a 2nd time before
+      Pass-1 QG finished and the Part-B 900s ahead-commit age guard correctly declined to auto-push the half-verified
+      commit. As of main's check (~02:52Z) slot 11 is FULLY dead (tmux_alive=false, worker_alive=false, phase=idle) and
+      `b411374c1` is NOT on LDR and NOT on any wip-preserve ref fetchable to main's clone — though slot 11 has MANY
+      other `refs/wip-preserve/orchestrator-slot-11-*` refs, so the fix's CHANGE may be preserved under a different
+      (rebased) SHA. **Steps**: check whether the vault_share_price per-shard-instrument_id change is already an
+      ancestor of origin/live-defi-rollout under ANY SHA (it may have landed/rebased); if not, recover it from slot-11's
+      mtds worktree or the slot-11 wip-preserve refs, run a FRESH `bash scripts/quality-gates.sh` green (b411374c1's
+      Pass-1 never finished — mint the real sentinel), then quickmerge. Done-when: the fix is an ancestor of
+      origin/live-defi-rollout (or confirmed already-landed under another SHA). (repo: market-tick-data-service)
+
 ## Progress Log
+
+- **2026-08-04 ~02:52Z (main agt-1756f6)** — added the slot-11 vault_share_price fix (`b411374c1`, P2) per review #3651.
+  It crossed the "still stranded a few ticks out" bar main promised to act on: slot 11 is now fully dead and b411374c1
+  is neither on LDR nor on a main-fetchable wip-preserve ref (but slot 11 has many other preserve refs, so the change
+  may be preserved under a rebased SHA). Todo written outcome-defined (fix lands under ANY SHA) rather than asserting
+  b411374c1 is a lost orphan, since main can't see slot-11's worktree. Not data-loss-confirmed — the preserve refs
+  suggest the backend captured slot-11 WIP; this todo makes a worker verify + land it.
 
 - **2026-08-04 ~00:08Z (main agt-1756f6)**: Filed from review worktree-health #3630. Independently orphan-verified
   c927ec58 + 06c8e90b (not on LDR); 0e62096f + bd0e231f are review-cascade-verified, not in main's orchestrator-host
