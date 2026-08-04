@@ -134,12 +134,12 @@ context_scope:
       checkbox (it remains open pending the mid-migration leg). Source: **corrected 2026-07-25** —
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
       `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
-- [ ] [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass (no
-      new live run needed).** (a) Search the corpus (`plans/audit/results/`, `plans/active/`, `plans/archive/`) for a
-      `/data-pipeline-reconciliation prediction` report dated BEFORE 2026-07-20 (the confirmed baseline,
-      `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`); record found-with-path or
-      confirmed-absent. (b) **This triage already found** a second, later dated pass that exists but is NOT yet cited
-      anywhere in `prediction_consolidated_closeout_2026_07_18.md`:
+- [x] ✅ [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass
+      (no new live run needed) — DONE 2026-08-04 (slot-4).** (a) Search the corpus (`plans/audit/results/`,
+      `plans/active/`, `plans/archive/`) for a `/data-pipeline-reconciliation prediction` report dated BEFORE 2026-07-20
+      (the confirmed baseline, `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`); record
+      found-with-path or confirmed-absent. (b) **This triage already found** a second, later dated pass that exists but
+      is NOT yet cited anywhere in `prediction_consolidated_closeout_2026_07_18.md`:
       `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_24.md` — it explicitly diffs against the
       2026-07-20 baseline (reachable_coverage 95.82% vs 94.63%; F2 malformed `instrument_type` 76 `prediction` rows,
       unchanged, + 70 blank, was 30). Cite this report as the 2nd of the 3 required dated passes in the parent doc's
@@ -249,3 +249,15 @@ to every classification in this doc + the Deferred section above).
   Side findings filed to two existing issue docs rather than duplicated:
   `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (a false-positive PERMISSION_DENIED mid-run) and
   `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (extended scope to a 4th asset group + 2 more VM families).
+- **2026-08-04 (slot-4, data_engineering) — todo 4 (`/data-pipeline-reconciliation` verify predating run + cite) DONE.**
+  No new live reconciliation run — this was a doc-only discovery+citation task. (a) Corpus-wide search
+  (`plans/audit/results/`, `plans/active/`, `plans/archive/`) for a `/data-pipeline-reconciliation prediction` report
+  predating the 2026-07-20 baseline: **confirmed-absent** — only `data_pipeline_reconciliation_prediction_2026_07_20.md`
+  and `_2026_07_24.md` exist for this asset_group. (b) The 2026-07-24 pass was found ALREADY cited (by date, no explicit
+  path) in the parent doc's "Distinct Values / axis-value census" section as of the 2026-07-25 relocate-todos commit
+  (`41768ed9`) — added the explicit report path plus this todo's search result inline there. Both results also recorded
+  in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log per this todo's Done-when (its own merged Phase-B
+  `/data-pipeline-reconciliation` cadence todo stays open — the 3rd, post-Phase-B-migration pass is still genuinely
+  blocked, unaffected by this partial slice). Evidence: `prediction_consolidated_closeout_2026_07_18.md` "Distinct
+  Values / axis-value census" section + `prediction_phase_ab_residuals_2026_07_24.md` Progress Log, both this same
+  commit.

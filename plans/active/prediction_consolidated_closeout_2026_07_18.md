@@ -261,7 +261,11 @@ source: the same-day `/data-pipeline-reconciliation` four-surface pass against `
   duplicate of the Queued-Audits P2 reconciliation-cadence todo) is now ONE combined todo in
   [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md)'s Phase B
   section — see that doc for the live checkbox and the current cadence state (2 of 3 dated passes already cited: the
-  confirmed 2026-07-20 baseline above, plus a 2026-07-24 pass; only the post-Phase-B final gate remains).
+  confirmed 2026-07-20 baseline above, plus a 2026-07-24 pass —
+  `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_24.md`; only the post-Phase-B final gate
+  remains). **Predating-run search (2026-08-04, `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 4)**:
+  confirmed-absent — no `/data-pipeline-reconciliation prediction` report dated before 2026-07-20 exists anywhere in
+  `plans/audit/results/`, `plans/active/`, or `plans/archive/`; the 2026-07-20 file above is the earliest.
 
 ## MVP universe (the Phase-D / Phase-E readiness target)
 
