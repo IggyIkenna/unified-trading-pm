@@ -152,7 +152,7 @@ context_scope:
       attributing the ~17s across the three phases with measured numbers is appended to that issue doc, the doc states
       explicitly which of options A/B the evidence favours **as information for the operator** without adopting either,
       and zero code/GCS/manifest mutations occurred.
-- [ ] [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
+- [x] ✅ [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
       bare-venue residual.** **RULED 2026-07-28 (operator gate-cleanup pass)** — resolves the cross-tranche conflict
       previously parked below pending an operator decision: no specific answer was on file, so the operator's general
       design-choice theme was applied (full completions/backfills where determinable, no shortcuts; never fabricate a

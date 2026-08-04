@@ -133,8 +133,8 @@ rows) is real but small and not urgent.
 > same framing, same done-when). Leave `assigned_vm: NA` here — flip this checkbox only by citing batch3's execution
 > once it lands, not independently.
 
-- [ ] [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no longer
-      a cross-tranche operator-decision-gated conflict with
+- [x] ✅ [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no
+      longer a cross-tranche operator-decision-gated conflict with
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
       two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,743 rows) ALREADY
       market-type-suffixed venues (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/HYPERLIQUID/DERIBIT/BINANCE-SPOT/
