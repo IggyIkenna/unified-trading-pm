@@ -200,7 +200,7 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
       is scoped to `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` specifically (a different todo, not this one), §U's original
       approval still covers nothing the G1 script would ever touch. Read-only: no `--apply`, no deletes, no writes.
       (repo: `instruments-service`)
-- [ ] [REVIEW] P3. **UNPARKED 2026-08-03 — items 1+2 above both landed, this is now actionable** (was ⏸ PARKED
+- [x] ✅ [REVIEW] P3. **UNPARKED 2026-08-03 — items 1+2 above both landed, this is now actionable** (was ⏸ PARKED
       2026-08-02, main's BLOCKED-answer Option A, behind items 1+2). Corpus hygiene — update the closeout's G1 sub-item.
       After the two todos above land, update `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item
       with the corrected figures and a citation to this doc. The plan's own text ("§U... already-approved... the scale
