@@ -159,8 +159,8 @@ context_scope:
       2026-07-25** — `prediction_phase_ab_residuals_2026_07_24.md`'s merged Phase-B reconciliation todo + the parent
       doc's "Distinct Values / axis-value census" section (was `prediction_consolidated_closeout_2026_07_18.md`'s
       "Queued audits + reviews" + "Distinct Values / axis-value census").
-- [ ] [REVIEW] P2. **Adversarial AO-dispatch-readiness pass (Track-Y-style).** Run the same adversarial
-      AO-dispatch-readiness pass sports's Track Y ran (method: the archived
+- [x] ✅ [REVIEW] P2. **Adversarial AO-dispatch-readiness pass (Track-Y-style). DONE 2026-08-04 (slot-7). 0 findings.**
+      Run the same adversarial AO-dispatch-readiness pass sports's Track Y ran (method: the archived
       `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION" section, mirroring
       `task_template.md` §3 findings C/D/E/F/G/H) against `prediction_consolidated_closeout_2026_07_18.md` itself: check
       for bare `§X` shorthand, ambiguous verbs (absorb/incorporate/handle/address), delete-tagging inconsistency,

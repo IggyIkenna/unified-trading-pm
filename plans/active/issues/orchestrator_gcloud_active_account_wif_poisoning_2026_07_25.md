@@ -228,6 +228,14 @@ the Todos section is untouched. The head todo still carries `[OPERATOR-DECISION]
 for a shared-infrastructure auth design affecting every CI job on the host; todo 2 is still stated blocked on that
 decision; todo 3 is still a partial mitigation of the same surface.
 
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — unchanged.** Only 2 commits
+touched this doc since the 2026-08-02 marker (a `context_scope` backfill + a "Progress Log (context-scout)" addition),
+neither touching the Todos section or root-cause content. All 3 todos remain genuinely open under the same
+`[OPERATOR-DECISION]` gate. Noted for future consolidation, not acted on here: a same-topic sibling doc filed today,
+`shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (also `assigned_vm: NA`), investigates the
+identical shared `~/.config/gcloud` mutable-state hazard from a different angle — worth a human cross-link pass, but not
+a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdict.
+
 ## Progress Log (context-scout)
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged from prior scout — still accurate: the 2

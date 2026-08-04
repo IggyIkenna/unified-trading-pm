@@ -19,7 +19,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-27
+last_updated: 2026-08-04
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -108,13 +108,31 @@ context_scope:
       PM-only change. Kept here rather than dispatched into `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (D20)
       because that batch's `assigned_role` is `cicd`, not `ui_developer` — same UI-capable-role/playwright-gate blocker
       D28 already names for items 1-2; D20 there updated to reflect the decision is made (2026-07-27) but the dispatch
-      blocker is unchanged.
+      blocker is unchanged. — **RE-VERIFIED 2026-08-04 (na-eligibility-audit): sub-parts (1) and (2) are DONE; sub-part
+      (3) is the sole remaining gap.** Sub-part (1) (`package-lock.json` → `pnpm-lock.yaml`):
+      `unified-trading-system-ui` has shipped `pnpm-lock.yaml` since its first commit and deleted `package-lock.json` in
+      `unified-trading-system-ui@474bba76` (2026-04-17, predates this todo's 2026-06-17 creation); `deployment-ui`
+      migrated in `deployment-ui@de5b7af` (2026-07-29). Sub-part (2) (setup.sh + CI install steps):
+      `unified-trading-pm/scripts/setup.sh` auto-detects pnpm/yarn/npm since `unified-trading-pm@32ea69f5b`
+      (2026-05-20); both UI repos' CI workflows already run `pnpm install --frozen-lockfile`. Sub-part (3)
+      (hardlinked-store verification) is NOT done — empirically tested by comparing an identical pnpm-store package file
+      across 5 slot clones (`.tabs/2,4,6,7,8`, same filesystem): every clone shows `nlink=1` + a distinct inode, i.e. no
+      cross-clone hardlink dedup is occurring despite `pnpm-lock.yaml` being in place — the same failure signature as
+      the parallel uv/`.venv` investigation in `host_root_disk_full_transient_2026_07_13.md`. Remaining scope for this
+      todo narrows to: root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across slot
+      clones. Stays `[UI]`+NA per the standing citation above, though the narrowed scope is a tooling/infra
+      investigation touching no UI source — a future pass may find the `[UI]` gate no longer applies to what's left,
+      same reasoning this doc already applied to the setup.sh item.
 - [x] ✅ [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine
       hang fails twice) — removes the human re-run without weakening the budget. Repo: unified-trading-pm
       (`scripts/quality-gates-base/base-ui.sh`); exercise against a UI repo build before shipping. — **MIGRATED
       2026-07-26** verbatim into `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (dispatched `[SCRIPT] P3` todo, cites
       this doc as Source) — still open there, dual-tracked until it ships. Not yet independently re-verified as done in
-      code as of 2026-07-27.
+      code as of 2026-07-27. — **RE-VERIFIED 2026-08-04 (na-eligibility-audit): shipped.**
+      `unified-trading-pm@80148edde` (2026-08-02, "fix(ci): base-ui.sh — one automatic retry on the build-timeout
+      class") matches this item exactly (retry gated on timeout exit codes 124/137 only); also closed the same day in
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s dual-tracked copy. The 2026-07-27 "not yet independently
+      re-verified" note above is now stale — this item is genuinely done.
 
 ## Success criteria
 
@@ -130,6 +148,20 @@ they were deliberately kept OUT of the ci dispatch batch:
 `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s `assigned_role` is `cicd`, not `ui_developer` (D20/D28,
 2026-07-26/27). The pnpm migration is operator-APPROVED as scope but the role/gate blocker is unchanged. Established
 ruling confirmed present, not re-litigated.
+
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **KEEP-NA, stale items — corrected.** Re-read end to
+end. The 2026-07-30 verdict's bottom line (stay NA, `[UI]`-gated, role-mismatch blocker unchanged) still holds —
+re-confirmed via two further independent citations since (`ci_satellite_ao_dispatch_batch4_2026_07_31.md`,
+`ci_satellite_ao_dispatch_batch5_2026_08_02.md` D5-7, both declining to extract this item). But the sole open checkbox's
+own description had gone stale: sub-parts (1) `package-lock.json`→`pnpm-lock.yaml` and (2) setup.sh/CI install-step
+migration were BOTH already shipped (`unified-trading-system-ui@474bba76` 2026-04-17, `deployment-ui@de5b7af`
+2026-07-29, `unified-trading-pm@32ea69f5b` 2026-05-20) — none of that landed back into this doc's tracking, so 3
+subsequent audit/closeout passes (2026-07-30, -31, 08-02) kept repeating a stale "still needs its own plan" read without
+re-checking ground truth. Corrected the checkbox's inline text with commit citations; only sub-part (3) (cross-clone
+pnpm-store hardlink dedup, empirically confirmed NOT occurring) remains genuinely open. Also corrected a second stale
+annotation on the already-closed base-ui.sh retry item (shipped `unified-trading-pm@80148edde` 2026-08-02; its own
+trailing note still said "not yet verified as of 2026-07-27"). `assigned_vm` stays NA — not reclassifying; the
+citation-based role/gate blocker on the narrowed remaining scope is unaffected by this correction.
 
 ## Progress Log
 

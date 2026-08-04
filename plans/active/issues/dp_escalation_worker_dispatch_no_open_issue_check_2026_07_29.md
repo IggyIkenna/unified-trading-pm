@@ -338,3 +338,17 @@ regression) is worse.**
   Progress Log. Further corroborates Option A: the materiality/severity fix (`alerting-service@bb76cae`) only touches
   Slack/PagerDuty routing, not the separate escalation fast path that spawned this session — still the open gap this doc
   tracks.
+- **2026-08-04 (data_pipeline_failure escalation worker, agt-a76cf2, slot 4) — a THIRD distinct
+  `(asset_group, data_type)` cell, `(cefi, trades)`, now shows the identical pattern (previously only
+  `derivative_ticker` and `book_snapshot_5` were tracked in this doc).** DP-FETCH-009 dispatch: 263,836/1,172,762
+  attempted_failed, ratio 22.5% — down from 28.7% at original 2026-07-23 diagnosis in
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md` (no regression). Alert context already carried the STATIC
+  BACKLOG materiality annotation (93 rows/24h, below the 500-row floor). Skipped the live manifest re-read per
+  established precedent; verified the three referenced `market-tick-data-service` fix commits (`2ddc6d4a`, `6a067cf1`,
+  `6c6fab03`) are still ancestors of `origin/live-defi-rollout`. Session cost: two file reads + a git-ancestor batch
+  check + two Progress Log appends, no GCS read, no code change. Combined across all three tracked conditions ((cefi,
+  derivative_ticker) 12th+, (cefi, book_snapshot_5) 20th+, (cefi, trades) 1st), this backlog family has now consumed 33+
+  full orchestrator-agent dispatches — the count is now growing by BREADTH (new cells) as well as repetition of known
+  cells, which is a stronger argument for Option A (dedup by "OPEN issue doc already covers this signature") since B/C's
+  cost-benefit reasoning assumed a small, closed set of repeat conditions, not an expanding one. Still awaiting the
+  operator/design decision on Option A/B/C.

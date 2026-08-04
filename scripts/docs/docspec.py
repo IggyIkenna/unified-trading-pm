@@ -66,6 +66,12 @@ IMPLEMENTATION_STATUS = frozenset({"design", "code-shipped", "stub", "active", "
 AGENT_MODEL = frozenset({"opus", "sonnet", "haiku", "fable"})
 AGENT_THINKING = frozenset({"max", "high", "medium", "off", "none", "mechanical"})
 AGENT_LIFECYCLE = frozenset({"persistent", "one_shot", "scheduled"})
+# Sub-tier within model: sonnet ONLY (operator ruling 2026-08-04, mirrors
+# model_tier.SONNET_LIGHT_MODEL/SONNET_DEFAULT_MODEL) -- "light" (sonnet-4.6) is the
+# default for routine/specified work (target >=80% of AO dispatch); "default"
+# (sonnet-5) is for harder/judgment-heavy roles, escalation, and CI. Absent on a
+# sonnet role == "light". Meaningless (and left unvalidated) on opus/haiku/fable roles.
+AGENT_SONNET_VARIANT = frozenset({"light", "default"})
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
@@ -197,6 +203,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
     "agent-role": [
         FieldSpec("role", Req.R, "scalar"),
         FieldSpec("model", Req.R, "enum", AGENT_MODEL),
+        FieldSpec("sonnet_variant", Req.E, "enum", AGENT_SONNET_VARIANT),
         FieldSpec("thinking", Req.E, "enum", AGENT_THINKING),
         FieldSpec("lifecycle", Req.R, "enum", AGENT_LIFECYCLE),
         FieldSpec("does", Req.R, "free_list"),

@@ -2,15 +2,15 @@
 doc_type: agent-role
 title: AG-closeout-auditor agent — daily closeout-completeness boot prompt (9 topic tranches)
 summary:
-  The daily closeout-completeness projection — opus, extended thinking, multi-agent. Runs the `/ag-closeout-audit` skill
-  against the 9 topic tranches (the 5 asset groups cefi/defi/tradfi/prediction/sports, plus cross-cutting/ao/ci/infra) —
-  sharded (2026-07-26) into up to 9 concurrent one-tranche-each dispatches for real cross-slot parallelism when the
-  caller supplies `tranche`, or the `all` default (one worker, all 9 tranches) when it doesn't. Classifies every
-  tranche-primary plan/issue doc as archivable/orphaned given everything currently active/dispatched for that tranche,
-  then reports the orphan list. Phase 3 (drafting the next AO-dispatch batch) runs too where warranted, but only as a
-  draft (`status=draft`) — never auto-activated. Scheduled (daily systemd timer); one-shot per run, "posts a result" via
-  its own `/done` evidence — like docs_reconciler, this skill reports findings as chat text, not a structured JSON
-  payload.
+  The daily closeout-completeness projection — sonnet-5, extended thinking, multi-agent (opus narrowed to the
+  orchestrator role only, operator ruling 2026-08-04). Runs the `/ag-closeout-audit` skill against the 9 topic tranches
+  (the 5 asset groups cefi/defi/tradfi/prediction/sports, plus cross-cutting/ao/ci/infra) — sharded (2026-07-26) into up
+  to 9 concurrent one-tranche-each dispatches for real cross-slot parallelism when the caller supplies `tranche`, or the
+  `all` default (one worker, all 9 tranches) when it doesn't. Classifies every tranche-primary plan/issue doc as
+  archivable/orphaned given everything currently active/dispatched for that tranche, then reports the orphan list. Phase
+  3 (drafting the next AO-dispatch batch) runs too where warranted, but only as a draft (`status=draft`) — never
+  auto-activated. Scheduled (daily systemd timer); one-shot per run, "posts a result" via its own `/done` evidence —
+  like docs_reconciler, this skill reports findings as chat text, not a structured JSON payload.
 status: active
 nature: guideline
 asset_group: [cross-cutting]
@@ -21,7 +21,8 @@ tags: [role, ag_closeout_auditor, closeout-completeness, orphan-audit, boot-prom
 related: [plan_reconciler.md, docs_reconciler.md, plan_health.md, RULES.md]
 created: 2026-07-25
 role: ag_closeout_auditor
-model: opus
+model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: scheduled
 does:

@@ -352,3 +352,19 @@ here.
   This is now the **2nd occurrence for `features-service`** and **6th for the whole doc-chain** — further corroborates
   todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement check, this escalation
   fired ~7h after `agt-edf42f` already re-fired the identical repo's identical wall class green).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous, first pass): **KEEP-NA, valid.** This is the 3rd
+installment of a running `cicd`-role incident log (founding → continued → continued2 → this doc), each split purely
+because the prior doc hit its 1000-line hard cap. All 3 open todos fail the worker-determinable-outcome bar: todo 2 is
+explicitly `[OPERATOR]`-tagged ("operator decision, not something a one-shot wall-clearing session should
+self-implement"), unresolved identically across every predecessor doc in the chain; todos 1 and 3 require ongoing
+interpretive judgment over a live, evolving incident signal (the residual root cause, per this doc's own entries, is
+runner-pool starvation — a capacity/topology question, i.e. an operator-gated spend decision, not a code defect). No
+duplicate extraction found in any active `assigned_vm: planning` doc. Consistent with continued2's independent same-day
+verdict and the `fleet_wide_qg_self_hosted_runner_capacity_crisis`/`_continues_day2` sibling docs' established KEEP-NA
+logic for the same root-cause family. No RECLASSIFY, no ARCHIVE. **Note**: this chain's `continued2` doc sits at
+997/1000 lines (its own self-imposed hard cap) — too close to the cap to safely receive an incremental-skip marker this
+pass without risking `check_line_caps.sh`'s HARD gate (the small-marker-append exception only forgives docs already OVER
+cap, not ones a marker would push over); flagged for a future pass rather than risking the gate.

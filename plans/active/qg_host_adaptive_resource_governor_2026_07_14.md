@@ -747,3 +747,11 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   "FORKED 2026-08-03") is the redirect to `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (also re-
   confirmed KEEP-NA this same run, 5 items, no double-count with this doc's other 8) — correctly open until that fork
   ships and closes it back here. No RECLASSIFY, no ARCHIVE.
+- **na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — real content churn since
+  last pass, verdict unchanged.** Since the 2026-08-03 marker: the `[OPERATOR]` P3 `BLK-7eedce54` item was investigated
+  and closed 2026-08-04 (ticket was already answered 2026-08-02, no action needed); the FORKED P1 item's destination
+  (`qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) is now `status: complete`, archived, fully shipped and
+  soaked (~73min, 0 OOM, 11 repos) — its own closure note migrated its 2 genuine follow-ons into this doc's tracked
+  todos, not orphaned. All 9 open items re-verified as correctly self-triaged (deferred-with-condition or open design
+  question) under the standing 2026-07-14 operator ruling; none duplicated into any active `assigned_vm: planning`
+  sibling. No RECLASSIFY, no ARCHIVE.

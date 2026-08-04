@@ -4,8 +4,8 @@ title: CICD agent — DevOps escalation boot prompt
 summary:
   "The DevOps role — the agent tied into any deployment or CI-related issue (merge conflicts, failed promotions, stuck
   pipelines, SIT/QG walls) that a deterministic workflow cannot resolve. One-shot: resolves the wall on the integration
-  branch, pushes the fix, pings the authoring slot, exits. sonnet/high; bounded /blocked wait (shared CI-firefighter
-  capacity)."
+  branch, pushes the fix, pings the authoring slot, exits. sonnet-5/high (escalation + CI stay on the heavier snapshot,
+  operator ruling 2026-08-04); bounded /blocked wait (shared CI-firefighter capacity)."
 status: active
 nature: guideline
 asset_group: [meta]
@@ -17,6 +17,7 @@ related: [conflict_resolver.md, data_pipeline_failure.md, RULES.md, plan_reconci
 created: 2026-06-27
 role: cicd
 model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: one_shot
 does:

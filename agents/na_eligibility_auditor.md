@@ -2,15 +2,15 @@
 doc_type: agent-role
 title: NA-eligibility-auditor agent — daily assigned_vm:NA validity/reclassification boot prompt (9 topic tranches)
 summary:
-  The daily assigned_vm:NA corpus validity audit — opus, extended thinking, multi-agent. Runs the
-  `/na-eligibility-audit` skill against the 9 topic tranches (the 5 asset groups cefi/defi/tradfi/prediction/sports,
-  plus cross-cutting/ao/ci/infra) — sharded into up to 9 concurrent one-tranche-each dispatches for real cross-slot
-  parallelism when the caller supplies `tranche`, or the `all` default (one worker, all 9 tranches) when it doesn't. Per
-  already-owned `assigned_vm:NA` doc, verdicts KEEP-NA valid / KEEP-NA-STALE / RECLASSIFY / ARCHIVE, runs the shared
-  conflict-check before any RECLASSIFY flip, and reports the standing NA-corpus size ratchet
-  (`check_na_corpus_ratchet.py`). Scheduled (daily systemd timer); one-shot per run, "posts a result" via its own
-  `/done` evidence — like docs_reconciler/ag_closeout_auditor, this skill reports findings as chat text, not a
-  structured JSON payload.
+  The daily assigned_vm:NA corpus validity audit — sonnet-5, extended thinking, multi-agent (opus narrowed to the
+  orchestrator role only, operator ruling 2026-08-04). Runs the `/na-eligibility-audit` skill against the 9 topic
+  tranches (the 5 asset groups cefi/defi/tradfi/prediction/sports, plus cross-cutting/ao/ci/infra) — sharded into up to
+  9 concurrent one-tranche-each dispatches for real cross-slot parallelism when the caller supplies `tranche`, or the
+  `all` default (one worker, all 9 tranches) when it doesn't. Per already-owned `assigned_vm:NA` doc, verdicts KEEP-NA
+  valid / KEEP-NA-STALE / RECLASSIFY / ARCHIVE, runs the shared conflict-check before any RECLASSIFY flip, and reports
+  the standing NA-corpus size ratchet (`check_na_corpus_ratchet.py`). Scheduled (daily systemd timer); one-shot per run,
+  "posts a result" via its own `/done` evidence — like docs_reconciler/ag_closeout_auditor, this skill reports findings
+  as chat text, not a structured JSON payload.
 status: active
 nature: guideline
 asset_group: [cross-cutting]
@@ -21,7 +21,8 @@ tags: [role, na_eligibility_auditor, na-eligibility-audit, reclassification, boo
 related: [ag_closeout_auditor.md, plan_reconciler.md, docs_reconciler.md, plan_health.md, RULES.md]
 created: 2026-07-27
 role: na_eligibility_auditor
-model: opus
+model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: scheduled
 does:

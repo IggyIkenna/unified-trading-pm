@@ -12,7 +12,7 @@ summary: >-
   (unified-api-contracts market_data_categories.py TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE, root cause not
   confirmed); this extends that finding to OPTION/FUTURE/COMBO (same batch, same signature) and also found that
   frozenset is NOT actually wired into deployment-api's _ACCEPTED_EXCEPTIONS despite its own comment claiming it is.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -37,7 +37,7 @@ estimate_calibrated_ai_days: 1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: deployment-api@7988451
 locked_by:
 locked_since:
 supersedes:
@@ -306,11 +306,15 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       without a fresh delete-safety 5-part-proof pass regardless of how confident this doc's evidence looks. (repo:
       unified-api-contracts) — ✅ 2026-08-03, slot 9: `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` extended to
       all 6 values (quarantine, not delete) — unified-api-contracts@d1495b35
-- [ ] [CODE] P3. Fix the wiring gap — `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` should actually reach
-      `_ACCEPTED_EXCEPTIONS[("instrument_types", "tradfi")]` in
-      `deployment-api/deployment_api/routes/data_status/     _distinct_values.py`, or its own comment should stop
-      claiming it does. Decide which (probably: fix the wiring, since the comment's intent is clear) after todo 3 lands
-      so the exception set is correct at wiring time. (repo: deployment-api)
+- [x] ✅ [CODE] P3. **Already fixed — citation flip only (verified 2026-08-04).**
+      `_ACCEPTED_EXCEPTIONS[("instrument_types",     "tradfi")]` in
+      `deployment-api/deployment_api/routes/data_status/_distinct_values.py` (lines 225-227) already ORs in
+      `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` alongside
+      `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` — landed by `deployment-api@7988451` ("fix(data-status):
+      land 6 accepted-exception entries for sports/tradfi distinct-values census (recovered 2026-07-30 WIP)",
+      2026-08-03), independently of this doc. Verified live on `origin/live-defi-rollout`, working tree clean. No code
+      change needed — this todo's own diagnosis (the wiring gap) was already closed by unrelated work before this
+      session found it. (repo: deployment-api)
 
 ## Progress Log
 
@@ -342,3 +346,6 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
   reflect reality. Todo 4 (deployment-api wiring gap) remains open.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the confirmed root-cause write site
   (`canonical_writer.py::write_candle_parquet`) found by the slot-8 root-cause pass above.
+- **2026-08-04 (interactive session)**: closed the final open todo (4, deployment-api wiring gap) — found already fixed
+  by unrelated work (`deployment-api@7988451`, 2026-08-03) that landed 6 accepted-exception entries including this
+  frozenset. All 4 todos now done — flipped `status: resolved`.

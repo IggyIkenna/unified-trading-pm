@@ -158,12 +158,13 @@ context_scope:
       this doc's own sibling P0 todo above). Also tracked as an AO-dispatchable partial-slice execution copy in
       `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 3 — same reconciliation-target
       update as the `-is` todo above. Done when: both runs' report paths + dates are cited in this plan's Progress Log.
-- [ ] [REVIEW] P2. **Adversarial AO-dispatch-readiness pass, Track-Y-style (relocated 2026-07-25 from the parent's
-      "Queued audits + reviews" section).** Run the same adversarial AO-dispatch-readiness pass sports's Track Y ran
-      (method: the archived `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION"
-      section) against `prediction_consolidated_closeout_2026_07_18.md` itself: check for bare `§X` shorthand, ambiguous
-      verbs (absorb/incorporate/handle/address), delete-tagging inconsistency, missing definition-of-done, stale
-      checkboxes, and unsafe digest-checkbox syntax. Also tracked as an AO-dispatchable execution copy in
+- [x] ✅ [REVIEW] P2. **Adversarial AO-dispatch-readiness pass, Track-Y-style — DONE 2026-08-04 (slot-7). 0 findings.
+      (relocated 2026-07-25 from the parent's "Queued audits + reviews" section).** Run the same adversarial
+      AO-dispatch-readiness pass sports's Track Y ran (method: the archived
+      `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION" section) against
+      `prediction_consolidated_closeout_2026_07_18.md` itself: check for bare `§X` shorthand, ambiguous verbs
+      (absorb/incorporate/handle/address), delete-tagging inconsistency, missing definition-of-done, stale checkboxes,
+      and unsafe digest-checkbox syntax. Also tracked as an AO-dispatchable execution copy in
       `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 5 — that plan's own Done-when now
       reconciles evidence back into THIS checkbox (updated 2026-07-25, corpus-wide referrer fixup), not the parent's
       now-relocated section. Done when: findings (or an explicit "0 findings") are recorded in this plan's Progress Log,
@@ -236,3 +237,17 @@ context_scope:
   smoke VMs, re-ran Phase 2 fresh). **Report** (manually merged, see its own provenance note):
   `/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_02.md` (+ sibling `.json`, live-leg-only content per the
   overwrite defect above).
+- **2026-08-04 (slot-7, review) — Adversarial AO-dispatch-readiness pass, Track-Y-style DONE. 0 findings.** Target:
+  `prediction_consolidated_closeout_2026_07_18.md`. Method: `task_template.md` §3 findings C/D/E/F/G/H.
+  - C (stale checkboxes): 0 — doc has 0 open `- [ ]` todos (coordination hub, `gate_on_depends: false`,
+    `archive_exempt: true`). One `[x]` in "Deferred work" correctly closed (STALE — CLOSED 2026-07-31).
+  - D (bare §X shorthand): 0 — all §X references either pair with a full file path inline (e.g. §5.1/§A0 +
+    `prediction_consolidated_native_ao_extract_2026_07_25.md`), state the action inline ("CQG residual §5"), or appear
+    in narrative prose (Progress Log §1/§2/§11), not as todo first-line shorthand.
+  - E (ambiguous verbs): 0 — no open `- [ ]` todos; digest bullets use clear non-ambiguous verbs.
+  - F (delete-tagging inconsistency): 0 — no open `- [ ]` todos with delete operations.
+  - G (missing definition-of-done): 0 — no open `- [ ]` todos.
+  - H (unsafe digest-checkbox syntax): 0 — all aggregated-source-docs digest entries use `**[TAG] P<n>.**` bold format.
+    Line 457 `- [VERIFY]**[UI] P0.**` is non-standard but NOT parseable by regen
+    (`_UNCHECKED_RE = r"^\s*-\s+\[ \]\s+(.+)$"`; `[VERIFY]` ≠ `[ ]`, does not match). Verdict:
+    `prediction_consolidated_closeout_2026_07_18.md` passes adversarial AO-dispatch-readiness review clean.

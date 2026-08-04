@@ -27,7 +27,7 @@ related:
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
+last_updated: "2026-08-04" # todo 1 (reconcile-checkboxes REVIEW pass) DONE — all 5 extract-batch updates verified at new homes; checkbox flipped. Prior: 2026-07-25 same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,13 +64,13 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the checkboxes at their NEW homes (corrected 2026-07-25 — the parent's "Queued audits +
-      reviews" section this todo originally targeted was forked out to the 4 Phase children the SAME day this extract
-      was drafted; it no longer carries any real checkbox for any of the 5 items below).** Of the extract batch's 5
-      todos, 2 are FULL completions (adapter dead-code audit → `prediction_phase_ab_residuals_2026_07_24.md`'s "A5 —
-      Adapter code-quality audit" subsection; adversarial AO-dispatch-readiness pass →
-      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Phase D section) and 3 are PARTIAL (`-is`
-      pre-Phase-B baseline + `-mtds` pre-Phase-B baseline → both in
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-04 (slot-7, review). Reconcile the checkboxes at their NEW homes (corrected
+      2026-07-25 — the parent's "Queued audits + reviews" section this todo originally targeted was forked out to the 4
+      Phase children the SAME day this extract was drafted; it no longer carries any real checkbox for any of the 5
+      items below).** Of the extract batch's 5 todos, 2 are FULL completions (adapter dead-code audit →
+      `prediction_phase_ab_residuals_2026_07_24.md`'s "A5 — Adapter code-quality audit" subsection; adversarial
+      AO-dispatch-readiness pass → `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Phase D section) and 3
+      are PARTIAL (`-is` pre-Phase-B baseline + `-mtds` pre-Phase-B baseline → both in
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Phase D section, as their OWN dedicated
       3x-cadence-top-up checkboxes distinct from that doc's post-migration P0 gate; the reconciliation verify+cite →
       `prediction_phase_ab_residuals_2026_07_24.md`'s Phase B section, merged into ONE combined checkbox with the former
@@ -123,3 +123,15 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added phase_d (2nd reconciliation-target home)
   - the parent closeout doc + the archival-ritual codex SSOT (finalize gate, no source-code target).
+- **2026-08-04 (slot-7, review) — todo 1 (reconcile-checkboxes) DONE.** Verified all 5 extract-batch updates at their
+  new homes: (1) A5 adapter dead-code audit checkbox `[x]` in `prediction_phase_ab_residuals_2026_07_24.md` —
+  `unified-trading-pm@0476c0982`, 2 findings filed (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
+  `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`); (2) adversarial AO-dispatch-readiness pass
+  checkbox `[x]` in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` — `unified-trading-pm@e55e81aa7`, 0
+  findings; (3) `-is` pre-Phase-B baseline (1 of 2) Progress Log note in phase_d — `unified-trading-pm@744bf7905`,
+  `/plans/audit/results/data_pipeline_e2e_check_is_2026_08_02.md`; (4) `-mtds` pre-Phase-B baseline (1 of 2) Progress
+  Log note in phase_d — `unified-trading-pm@f751b3bf8`,
+  `/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_02.md`; (5) reconciliation verify+cite Progress Log note in
+  `prediction_phase_ab_residuals_2026_07_24.md` + parent Distinct Values explicit path citation —
+  `unified-trading-pm@7b0a3d2bd` (predating-run confirmed-absent; 2026-07-24 path already cited). All 5 done-when
+  conditions met; checkbox flipped this commit.

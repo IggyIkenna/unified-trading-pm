@@ -31,12 +31,13 @@ related:
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-03
+last_updated: 2026-08-04
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 source:
@@ -269,12 +270,17 @@ all).
       handles the raw `{-1,0,1}` CLV labels fine as classification via its own separate `ModelTrainer`) as the correct
       retrain command going forward. Actioned in the parent doc's Progress Log + `[ML] P2` todo, which is now DONE — all
       3 variants produced and GCS-verified using this exact command.
-- [ ] [INFRA] P2. Provision the missing GCP Pub/Sub topic `ml_model_coordination_events` in `central-element-323112` (or
-      fix `_emit_model_trained_event`'s error handling to not crash the whole process on a best-effort
+- [x] ✅ [INFRA] P2. Provision the missing GCP Pub/Sub topic `ml_model_coordination_events` in `central-element-323112`
+      (or fix `_emit_model_trained_event`'s error handling to not crash the whole process on a best-effort
       coordination-event publish failure — `log_event("STARTED", ...)` elsewhere in this same file already treats its
       own GCS write as best-effort/non-fatal; this publish call should probably match that pattern) — currently ANY
       successful training run of ANY operation in this GCP project exits non-zero after real success, which will confuse
-      any automation that gates on exit code. (repo: ml-service or infra, needs an owner)
+      any automation that gates on exit code. (repo: ml-service or infra, needs an owner) **DONE 2026-08-04 (slot-5,
+      infra)** — (1) Provisioned topic `ml_model_coordination_events` in `central-element-323112` via
+      `gcloud pubsub topics create`; (2) added `GoogleAPIError` to the except clause in `_emit_model_trained_event`
+      (already imported) so any future pub/sub infra gap is best-effort/non-fatal, mirroring
+      `_write_experiment_metrics`'s pattern; (3) added regression test `test_does_not_raise_on_google_api_error`
+      (NotFound). ml-service@9a8cafd, QG green (full pass).
 
 Findings 1+2 are fixed and shipped. Finding 4 needed no code fix (just the correct `--task-type` flag). Finding 5 means
 `--operation train --skip-dependency-check --task-type regression` (not `pipeline`) is the actual correct retrain
@@ -312,3 +318,18 @@ if not in its originally-literal command text.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — Findings 1+2 are done and shipped; scope moved to
   Findings 3-6 during the same session, so swapped the now-stable generator/targets files for the three still-open
   todos' real targets (console-script CLI wiring, task_type validation, and the Pub/Sub emit-event site).
+- **na-eligibility-audit 2026-08-04 (sports tranche)**: RECLASSIFY, conflict-cleared — flipped
+  `assigned_vm: NA → planning` (`execution_scope: orchestrator-agent`, `assigned_role: data_engineering`, matching every
+  worker who has actually touched this doc per the Progress Log above). All 4 remaining open todos (`[CODE] P3`
+  console-script wiring, `[DATA] P3` fixture-count discrepancy diagnosis, `[CODE] P3` task_type validation, `[INFRA] P2`
+  Pub/Sub topic fix) are bounded/deterministic-outcome work with no operator sign-off gate — the only gated item in this
+  doc (Finding 1's leakage-sensitive `merge_clv_target_columns` reuse) is already DONE and shipped. Conflict-check
+  (`ao-dispatch-batch-naming-and-conflict-check.md` §3) against every active `assigned_vm: planning` doc in
+  `parent_epic: sports_master`, this run's own sibling drafts (none), and `sports_consolidated_closeout_2026_07_19.md`:
+  CLEAR — the only cross-doc mentions found were (a) the parent doc
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, which explicitly defers these 4 items here
+  rather than re-claiming them, and (b) an unrelated `extra_args_fn` hit in
+  `sports_consolidated_native_ao_extract_2026_07_25.md` (a different repo/function — features-service CLI sharding
+  flags, not ml-service's training-arg wiring). No finalize-plan companion authored — `doc_type: issue`, structurally
+  exempt per `task_template.md`'s finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
+  `plans/active/*.md`).

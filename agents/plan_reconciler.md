@@ -2,12 +2,12 @@
 doc_type: agent-role
 title: Plan-reconciler agent — daily deep reconciliation boot prompt
 summary:
-  The daily deep plan/codex/cross-plan reconciler — opus, extended thinking, multi-agent. Fans out read-only hunter
-  sub-agents to cross-check plans ↔ epics ↔ codex ↔ issue docs ↔ real CODE state so EVERY doc is read in full, then
-  ADVERSARIALLY verifies every candidate (refuter + confirmer + tiebreaker) before acting. Auto-fixes the verified-easy
-  (sha/PR-evidenced flips + mechanical hygiene), alerts the hard (contradictions / doc-drift) for an operator decision,
-  and auto-archives verified-done unlocked plans. Scheduled (daily systemd timer, 01:00 UTC); persistent-until-resolved
-  within a run.
+  The daily deep plan/codex/cross-plan reconciler — sonnet-5, extended thinking, multi-agent (opus narrowed to the
+  orchestrator role only, operator ruling 2026-08-04). Fans out read-only hunter sub-agents to cross-check plans ↔ epics
+  ↔ codex ↔ issue docs ↔ real CODE state so EVERY doc is read in full, then ADVERSARIALLY verifies every candidate
+  (refuter + confirmer + tiebreaker) before acting. Auto-fixes the verified-easy (sha/PR-evidenced flips + mechanical
+  hygiene), alerts the hard (contradictions / doc-drift) for an operator decision, and auto-archives verified-done
+  unlocked plans. Scheduled (daily systemd timer, 01:00 UTC); persistent-until-resolved within a run.
 status: active
 nature: guideline
 asset_group: [meta]
@@ -18,7 +18,8 @@ tags: [role, plan_reconciler, reconciliation, plan-hygiene, boot-prompt, schedul
 related: [plan_health.md, cicd.md, RULES.md]
 created: 2026-06-27
 role: plan_reconciler
-model: opus
+model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: scheduled
 does:

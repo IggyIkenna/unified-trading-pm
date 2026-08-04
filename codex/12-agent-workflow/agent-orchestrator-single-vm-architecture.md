@@ -134,8 +134,8 @@ These never come from `backlog.yaml`. They are triggered by the keeper, by exter
 and most are one-shot or scheduled.
 
 > **✅ Completion-contract LANDED 2026-07-21 (`agent-orchestrator@0d510e9`; operator decision →
-> [`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).** The
-> prior model — _one-offs never `/done`; cleanup is the pruner/reaper's job on session death_ — was proven broken
+> [`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).**
+> The prior model — _one-offs never `/done`; cleanup is the pruner/reaper's job on session death_ — was proven broken
 > 2026-07-21: **a finished one-off does not die.** Saying "EXIT" in a role doc only ends the Claude _turn_; the tmux
 > session lingers at an idle `❯` prompt, `WorkerLivenessKicker` re-nudges it, `has_session()` stays True, and every
 > session-death-gated reaper is blind → the AgentRow stays `active` forever and pins its slot (15 such zombies pinned
@@ -260,6 +260,22 @@ dead worker's task or process stranded.
   — durable state was never supposed to depend on the conversation anyway. Shipped gated OFF, mirroring the
   `context_burn_kill` precedent (a new fleet-wide dispatch-behavior change gets an explicit operator flip once verified,
   not an unreviewed default-on) — the flip itself was that same explicit operator approval, verbatim "Flip to True now".
+- **One-task-per-session hard rule SUPERSEDES both persistence gates above by default** (operator ruling 2026-08-04, the
+  AO cost-halving fix — `tuning.one_task_per_session_enabled`, **default True**, shipped as the new standard not a gated
+  experiment). The plan-continuity gate above only resets on an actual plan/role/repo SWITCH — a long same-plan
+  sequential chain sails straight through it, since consecutive same-plan tasks never trigger
+  `_plan_switch_needs_reset`. This was the dominant real-world cost driver: sessions observed climbing to 40-65%+
+  context across many same-plan tasks with only the 70%-threshold in-session compact (never a real reset) between them.
+  With this rule on, `done_slot` withholds the next task and kills the session **unconditionally, on every task
+  boundary** — no plan/role/repo comparison needed — same `directive="reset_before_next"` contract, same kill-thread
+  mechanism (`_one_task_per_session_reset_response`, `server/routes/slots_worker.py::_maybe_plan_switch_reset`). Net
+  effect: "same live session drains the next task" (first bullet above) is no longer the default path — one task, one
+  bounded session, AutoSpawn respawns fresh each time (defaulting to sonnet-4.6 per
+  [model-tier-selection.md](/codex/06-coding-standards/model-tier-selection.md)'s sonnet-variant ruling, since a
+  single-task session is small enough to trust the lighter snapshot). `sequential: true` plans keep their ordering +
+  same-slot-affinity preference (`state_store/slots.py::_claim_plan_for_slot`) — that's about dispatch ORDER and
+  worktree-reuse efficiency, not context continuity, and is unaffected by this rule. Set
+  `one_task_per_session_enabled=False` to fall back to the pre-2026-08-04 behavior (debugging/comparison only).
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:

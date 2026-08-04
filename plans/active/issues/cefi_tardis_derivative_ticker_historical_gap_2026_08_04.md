@@ -115,3 +115,10 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   20-min-interval) `run_in_background` VM-status watchdog per the async-wait-discipline HARD RULE (polls until
   non-`RUNNING`) rather than continuous polling; will verify via manifest row counts once the VM shuts down
   (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo + `/done`.
+- **slot-15 2026-08-04 ~09:30Z**: Picked up on resume dispatch (task `cefi_tardis_derivative_ticker_historical_gap-001`
+  / adjacent monitoring for `defi_cefi_venue_chain_axis_contamination-011`). VM `cefi-fwd-20260804-021235` still
+  `RUNNING`, now at day=2026-06-17 (`run.log` last `Processed date=2026-06-17` at 09:23:37Z). Pace: ~9-10 min/day, ~46
+  days remaining to 2026-08-02 → ~7h to completion. No traceback, no crashloop. Disk at 88-91% (root fs — objects going
+  to GCS not local disk, not a blocking concern). 4/18 venues get 404 on IS instrument-store for June dates
+  (BINANCE-FUTURES/BYBIT/BINANCE-DELIVERY/OKX) — shard-level failure isolated, pipeline continues. Armed 20-min
+  `run_in_background` watchdog. Will monitor and verify manifest + run `run_cefi_perp_funding_corpus.py` once VM stops.

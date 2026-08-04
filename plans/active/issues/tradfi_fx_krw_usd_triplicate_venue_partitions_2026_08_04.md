@@ -132,19 +132,35 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
 
 ## Recommended next steps
 
-- [ ] [DATA] P2. Trace the exact write batch that created the `venue=SPOT` and `venue=YAHOO_FINANCE` duplicate GCS
-      objects on 2026-07-20 (correlate `time_created`/`service_name`/`job_id` provenance, mirroring the method that
-      root-caused the sibling `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` and
-      `tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` findings). (repo: market-tick-data-service)
-- [ ] [DATA] P2. Once root-caused, measure the FULL scope: how many dates/instruments carry a `venue=SPOT` and/or
-      `venue=YAHOO_FINANCE` duplicate GCS object (bounded read scoped to those two venue prefixes only — do not re-walk
-      the whole corpus). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Decide + execute disposition for the duplicate objects + their manifest rows once scope is known:
-      quarantine (add `SPOT` to `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` if genuinely permanent residue) vs. delete
-      (per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — a fresh
-      `gcs_bucket_soft_delete_retention_seconds()` check + snapshot-first, since these are real captured-status rows
-      with real backing objects, not empty phantoms). Fix the `row_count=0` mis-stamp if a repair script touches these
-      rows anyway. (repo: market-tick-data-service, unified-api-contracts)
+- [x] ✅ [DATA] P2. **DONE 2026-08-04.** Traced the 2026-07-20 write batch via code-trace of
+      `migrate_tradfi_canonical_2026_07.py` (commit e16705db, 2026-07-19). Root cause: the July 2026 migration executor
+      has NO `_VENUE_REMAP` dict (unlike predecessor `migrate_tradfi_to_hive.py`, which has carried
+      `_VENUE_REMAP = {"YAHOO_FINANCE": "FX"}` from inception). As a result, any intermediate-format object in the
+      enumeration with a wrong venue token is promoted to a canonical path preserving that token verbatim.
+      `venue=YAHOO_FINANCE` (04:28:59Z): D_SINGLE_NOOP path, `_target_single` extracts `_kv(rel)["venue"]` verbatim;
+      `_pipeline_mode("YAHOO_FINANCE","ohlcv_24h")` → YAHOO_FINANCE absent from `_VENUE_OVERRIDES` → SOURCE_PRIORITY
+      lookup → `["yahoo"]` → `batch_yahoo`. `venue=SPOT` (04:35:37Z, ~7 min later, same run): D_NONHIVE_EQ path,
+      `_target_nonhive_eq` extracts `bare[-1]="SPOT"` as venue from a non-hive object. Manifest rows for both venues
+      were not registered on 2026-07-20 — the 7 `venue=SPOT` manifest rows appeared only on 2026-08-02 via the
+      consolidation discovery run. Investigation script committed: market-tick-data-service@332f405b
+      (`scripts/investigate_tradfi_fx_krw_usd_venue_triplication_provenance_2026_08.py`).
+- [x] ✅ [DATA] P2. **DONE 2026-08-04.** Measured full scope: bounded reads scoped to `venue=SPOT`/`venue=YAHOO_FINANCE`
+      confirmed exactly the 7+13=20 manifest rows already found (2025-01-02..01-10, KRW-USD only, no other
+      instrument/date affected) — content-verified all 7 affected dates' `SPOT` and `YAHOO_FINANCE` GCS objects are
+      byte-identical to their canonical `FX` twin (OHLC match on every date, not just the original sample). No broader
+      corpus walk needed — the population was already fully bounded. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. **DONE 2026-08-04 — DELETED, not quarantined.** Fresh `gcs_bucket_soft_delete_retention_seconds()`
+      check on the tradfi bucket confirmed 604800s (≥7-day floor, qualifies for the reversibility-verified
+      autonomous-delete path, delete-safety protocol §3a). Deleted all 14 real duplicate GCS objects
+      (`venue=SPOT`/`venue=YAHOO_FINANCE`, 7 dates each) via `gcs_conditional_delete` (generation-matched, 14/14
+      succeeded, 0 failures). Snapshotted the manifest index first
+      (`_index/backups/availability_index.pre_spot_yahoofinance_esm0_purge_20260804T092533Z.parquet`), then removed the
+      corresponding 20 manifest rows (7 `SPOT` + 13 `YAHOO_FINANCE`, the latter including 6 rows with a blank
+      `instrument_id` — redundant bookkeeping variants of the same shard) via a generation-matched CAS write (3 attempts
+      needed — 2 safely rejected by concurrent writer activity from other slots, 3rd succeeded: 6,414,541 → 6,414,507
+      rows). Fresh post-purge read confirms 0 rows with `venue` in `{SPOT, YAHOO_FINANCE}` remain. Quarantine was
+      considered and rejected — these were 100%-confirmed redundant duplicates of already-correctly-captured data, not
+      genuine residue worth preserving. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -152,3 +168,17 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
   panel. Root-caused via a bounded manifest read (7 rows, single object, no new walk) + content-verified GCS listing for
   one sampled date (3 real, identical-content objects across FX/SPOT/YAHOO_FINANCE partitions). Not fixed — read-only
   investigation.
+- **2026-08-04 (interactive session, same day, operator direct — "purge, don't just report")**: closed todos 2+3.
+  Content-verified all 7 affected dates (not just the original sample), deleted the 14 real duplicate GCS objects and
+  the 20 corresponding manifest rows, verified 0 remain. Todo 1 (tracing the exact 2026-07-20 writer) stays open — the
+  population is fully remediated but the root writer that created these duplicates was never identified, so a repeat
+  occurrence (a different instrument/date) would not be structurally prevented. Also triggered a fresh
+  `measure-honest-coverage` VM run (tradfi-scoped) so the deployment-ui distinct-values panel reflects this fix instead
+  of its previous (up to 24h-stale) cached rollup.
+- **2026-08-04 (AO dispatch agt-tradfi_fx_krw_usd_triplicate_venue_partitions-001, slot 2)**: closed todo 1. Code-traced
+  `migrate_tradfi_canonical_2026_07.py` (commit e16705db, 2026-07-19) as the exact writer for both wrong-venue GCS
+  objects. Root cause: missing `_VENUE_REMAP` dict — the July 2026 executor preserves source venue verbatim, unlike
+  `migrate_tradfi_to_hive.py` (has `_VENUE_REMAP = {"YAHOO_FINANCE": "FX"}` from inception). The `venue=YAHOO_FINANCE`
+  object (D_SINGLE_NOOP path) and `venue=SPOT` object (D_NONHIVE_EQ bare-segment extraction, ~7 min later) were both
+  produced by the same migration run. Manifest rows registered only on 2026-08-02 by the consolidation job (not on
+  2026-07-20 when the GCS objects were created). Investigation script committed: market-tick-data-service@332f405b.
