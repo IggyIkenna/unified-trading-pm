@@ -62,13 +62,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile source-doc checkboxes for all 5 batch-8 todos.** Each batch-8 todo ends with a `Source:`
-      line naming its specific section in `issues/sports_features_layer_findings_sweep_2026_07_18.md` — flip the
-      corresponding checkbox there, citing the batch-8 commit(s) that shipped it. Verify every cited commit/evidence
+- [x] ✅ [REVIEW] P1. **Reconcile source-doc checkboxes for all 5 batch-8 todos.** Each batch-8 todo ends with a
+      `Source:` line naming its specific section in `issues/sports_features_layer_findings_sweep_2026_07_18.md` — flip
+      the corresponding checkbox there, citing the batch-8 commit(s) that shipped it. Verify every cited commit/evidence
       actually exists before citing it (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`, or for the audit
       todo, re-run the stated read yourself rather than trusting the batch-8 todo's own claim). For the DIAG-verify todo
       (§E3), confirm it actually resolved to either a closed-with-citation state or a precisely-scoped new finding — not
-      left ambiguous. **Done when**: every Source-cited section in the doc is flipped with verified evidence.
+      left ambiguous. **Done when**: every Source-cited section in the doc is flipped with verified evidence. — **Done
+      2026-08-04 (slot-7):** All 5 Source:-bearing batch-8 todos reconciled. Source doc checkboxes already `[x]` and
+      cite batch-8. Verified commits on `origin/live-defi-rollout`: `instruments-service@453e76f1` (junk-symbol guard),
+      `@627fd31c` (venue case-mismatch), `@af4ce16d` (Vietnamese/Azerbaijani follow-up) — all ancestor-verified. §E3
+      properly resolved: closed-with-citation + precisely-scoped residual `[CONFIG] P2`. No code shipped
+      (verification-only reconciliation).
 - [ ] [DOC] P2. **Archive `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (and this finalize doc) once both are
       terminal**, per CLAUDE.md's plan-archival ritual: confirm the Deferred section's 3 items are still accurately
       described (re-verify, don't just carry forward) and migrate them to a tracked note for whichever future batch
