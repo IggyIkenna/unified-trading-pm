@@ -152,3 +152,11 @@ zero-non-canonical dispatch above and should not get lost in the volume of that 
    on the CeFi capture outage resolving).
 4. Archive this tracking doc once superseded by a clean final state — it is a dispatch-tracking doc, not a permanent
    record.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — live operator-session dispatch-tracking checkpoint for an
+  in-flight 9-way parallel dispatch, written today under context pressure; 0 tracked `- [ ]` todos by design (its "work
+  items" are a status table, not a checklist). Explicitly not archival-eligible yet (own § 4: "Archive this tracking doc
+  once superseded by a clean final state") and not AO-dispatchable (every row needs a live status check a
+  human/dispatching session must reconcile, not a worker-determinable outcome).
