@@ -229,3 +229,13 @@ production data.
 - **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (6 entries) — the
   `enumerate_expected_universe.py` entry already listed is confirmed to be the exact file the
   `_rollup_present_bundle_grain` fix landed in this session; `-001`/`-003` remain gated on the same operator decision.
+- **slot-7 2026-08-03 (pre-compact checkpoint)**: extended idle wait on `-001` — confirmed via repeated `/api/backlog`
+  polls it stayed `status: blocked` throughout, no operator ruling landed. Checkpoint audit: all four touched repos
+  (instruments-service, unified-trading-pm, unified-trading-library read-only, market-tick-data-service read-only)
+  clean, `ahead=0` against `origin/live-defi-rollout`; scratchpad empty (the one diagnostic script used mid-session was
+  deleted after its findings were folded into this doc's "What I found" section — nothing left pointing at it); no
+  chat-only findings outstanding — every discovery this session (prereq verification, the 17x population surprise, the
+  root-cause, the SSOT contradiction, the seeder fix, slot-11's present-set-rollup follow-up) already lives in a
+  committed+pushed doc or commit, not just this Progress Log. Nothing at risk from a compact/session-end here. `-001`
+  (casing direction) and `-003` (the `--apply`) remain the only open items, both genuinely operator-owned — next session
+  should resume by polling `/api/backlog` for `-001`'s status before doing anything else.
