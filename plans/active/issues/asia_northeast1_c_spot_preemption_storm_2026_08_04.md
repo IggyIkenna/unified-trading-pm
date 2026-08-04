@@ -160,7 +160,7 @@ to preemption with proportionally little forward progress while it lasts.
       exceeding the original 32/10min peak) landed well inside the originally-scheduled ~03:52-04:54Z recheck window
       itself. Do not treat that window as satisfied by pre-spike data — the next recheck should look for a genuinely
       clean window measured FROM the 03:10 spike, not from the original ~00:54Z filing time.
-- [ ] [SCRIPT] P2. **NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
+- [x] ✅ [SCRIPT] P2. ~~**NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
       `terminated = [name for name in prior if     name not in running]` diff (`exit_code_fleet_monitor.py:565`)
       requires a VM to have appeared in a PRIOR tick's `running` census before its disappearance can ever be detected. A
       VM whose entire lifetime (launch → preemption) falls inside one ~5-min `dp_exit_code_monitor_cron` tick window is
@@ -171,7 +171,15 @@ to preemption with proportionally little forward progress while it lasts.
       (faster than the 5-min tick), this makes the tick-based census structurally blind to a growing share of
       preemptions regardless of the prefix fix. Consider either (a) a shorter poll cadence during a detected storm, or
       (b) driving `running_vms` from a source that captures sub-tick churn (e.g. a Pub/Sub `compute.instances.preempted`
-      audit-log sink instead of a periodic list-and-diff) (repo: deployment-service).
+      audit-log sink instead of a periodic list-and-diff) (repo: deployment-service).~~ — **FIXED 2026-08-04**: went
+      with (a), implemented as a bounded in-process re-sweep rather than a Cloud Scheduler cadence edit (the latter is
+      an infra change outside this todo's scope). `cli.py`'s exit-code mode now re-sweeps at a 60s interval, still
+      inside the SAME Cloud Run Job invocation, whenever a pass observes ≥2 PREEMPTED verdicts (storm evidence) — capped
+      at 4 extra passes so the worst case stays under the 5-min gap to the next scheduled tick and the job's 900s
+      timeout. A VM captured RUNNING on an intra-loop pass becomes visible as `terminated` on the NEXT pass even if it
+      dies before the next external tick. Never triggers in `--dry-run`. 3 new unit tests cover storm-triggers-
+      resweep-then-caps, below-threshold-sweeps-once, and dry-run-never-resweeps —
+      `deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`.
 
 ## Progress Log
 
@@ -246,3 +254,20 @@ to preemption with proportionally little forward progress while it lasts.
   the older entries above. Whoever does the next recheck should pull the FULL trailing window fresh (not rely on this
   entry's numbers going stale) and confirm at least 30-60 clean minutes measured forward from whatever the actual latest
   event turns out to be at check time.
+- **2026-08-04 (slot 6)** — Direct dispatch of todo 3 (the sub-tick census-blindness gap). Read
+  `exit_code_fleet_monitor.sweep()` + its `cli.py` call site: `running_vms` is populated once per tick from
+  `_list_running_vms()` (Compute API `aggregated_list_instances`, RUNNING-only) and diffed against the persisted prior
+  census — a VM whose entire lifetime fits inside one tick literally never gets a chance to be recorded. Considered
+  driving detection from the Compute Operations API's `compute.instances.preempted` log instead (option b, already used
+  per-VM by `preemption_op_checker`) but a fleet-wide time-windowed query needs GCP filter/ordering semantics I couldn't
+  verify live within this task's scope, so implemented option (a) instead — NOT as a Cloud Scheduler cadence edit (infra
+  change, out of scope for a `[SCRIPT]` todo) but as a bounded in-process re-sweep loop inside `cli.py`'s existing
+  exit-code mode: on a pass with ≥2 PREEMPTED verdicts, re-sweep every 60s (cap 4 extra passes) within the SAME Cloud
+  Run Job invocation, so a VM captured RUNNING on an intra-loop pass is visible as `terminated` on the next pass even if
+  it dies before the next external 5-min tick. Hit the file's 930-line QG cap on first pass (931L) — trimmed the added
+  comment block, landed at 920L. 3 new unit tests (storm resweeps-then-caps at `_STORM_MAX_RESWEEPS`, below- threshold
+  sweeps once, `--dry-run` never resweeps); full `quality-gates.sh` green, sentinel verified against the commit SHA (ran
+  QG before committing the first time — wrong order per RULES.md — recommitted then re-ran QG on the correct HEAD).
+  Shipped `deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`, verified on `origin/live-defi-rollout`. Todo
+  flipped above. Did not touch todos 1-2 (already resolved) or the still-open recheck todo (separate,
+  operator-judgment-timing scoped).
