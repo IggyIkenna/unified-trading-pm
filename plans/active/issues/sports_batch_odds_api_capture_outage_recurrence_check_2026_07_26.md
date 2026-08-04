@@ -45,7 +45,11 @@ tags:
     manifest,
     investigation,
   ]
-related: [./mdt_legacy_canonical_row_gap_2026_07_16.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md]
+related:
+  [
+    /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
+    /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+  ]
 created: 2026-07-26
 last_updated: 2026-07-29
 parent_epic: sports_master
@@ -146,8 +150,8 @@ source:
 
 **Task**: determine whether the canonical `batch_odds_api` sports capture pipeline is still susceptible to the confirmed
 2022-09-07…2022-10-01 outage pattern (32 days / 550,062 legacy-only keys, per
-[`mdt_legacy_canonical_row_gap_2026_07_16.md`](./mdt_legacy_canonical_row_gap_2026_07_16.md)'s SUPERSEDED banner — the
-ground truth this doc cites, not the doc's own since-retracted 92%/14-month headline).
+[`mdt_legacy_canonical_row_gap_2026_07_16.md`](../../archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md)'s
+SUPERSEDED banner — the ground truth this doc cites, not the doc's own since-retracted 92%/14-month headline).
 
 ### (a) Inspected the adapter/scheduler for a silent-skip mechanism
 
