@@ -111,6 +111,42 @@ Hypothesis (3) is the most promising thread — a VM whose full lifetime is shor
 be structurally invisible to a diff-based detector, which would explain BOTH occurrences (both VMs died in ~6-17
 minutes, well under or barely past one 5-min tick).
 
+## ✅ RESOLVED 2026-08-04 — root cause: `af-backfill-`/`af-audit-` missing from `_DATA_VM_PREFIXES`
+
+Checked (1) directly first (`gcloud run jobs executions list --job=uts-prod-dp-exit-code-monitor`): every 5-min tick
+since 22:00Z **succeeded** (`SUCCEEDED_COUNT=1`, no failures) — the job runs fine, ruling out a silent Cloud Run
+execution failure.
+
+Read the actual `dp-fleet-monitor` logs for the ticks bracketing the 00:18:20-31Z preemption
+(`gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="uts-prod-dp-exit-code-monitor" ...'`
+— required switching the active gcloud identity from `github-deploy@...` to `unified-trading-sa@...`, which had the
+missing log-viewer capability; both are ambient worker identities per RULES.md §5, no new grant needed). The 00:20
+tick's `exit-code sweep: 10 terminated, 9 non-clean (...)` line **never mentions `af-backfill-20260804-001203` at all**
+— it's entirely absent from the sweep's classified-VM list. The ONLY mention of that VM anywhere in the monitor's logs
+is:
+
+```
+2026-08-04T00:25:47Z  reap_stale: archived ee6027ce-... (vm=af-backfill-20260804-001203, reason=vm_not_running)
+```
+
+— a completely SEPARATE code path (`DeploymentsRegistry.reap_stale()`, `cli.py:653`, wired to the UNFILTERED
+`all_running_vms` census) that only archives the stale deployment-registration JSON and has **zero relaunch logic**. The
+same pattern held for the first preemption (`af-backfill-20260803-233053` → `reap_stale` only, at 23:55:45Z).
+
+**Root cause found in `cli.py`**: `exit_code_fleet_monitor.sweep()` — the ONLY code path that can classify a VM
+`verdict=preempted` and trigger `RelaunchPreemptedVm` — is called with
+`running_vms=[vm for vm in all_running_vms if _is_data_vm(vm[0])]` (`cli.py:610`), a FILTERED subset. `_is_data_vm()`
+requires either an asset_group substring match (`_asset_group_for_vm`, checks for
+`cefi`/`defi`/`tradfi`/`sports`/`prediction` as a substring) OR a listed prefix in `_DATA_VM_PREFIXES`.
+**`af-backfill-*`/`af-audit-*` VM names contain neither** — no asset_group substring (the name is just
+`af-backfill-<timestamp>`) and the prefix list was missing `"af-backfill-"`/`"af-audit-"` entirely. So these VMs were
+**structurally invisible** to the classifier from day one — this had nothing to do with VM lifetime/tick-cadence timing
+(hypothesis 3 above); every single af-backfill-_/af-audit-_ preemption, ever, would have hit this same silent gap.
+
+**Fixed**: added `"af-backfill-"` and `"af-audit-"` to `_DATA_VM_PREFIXES`
+(`deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`), with a unit-test regression
+(`test_is_data_vm_filters_infra`) covering both prefixes. Full QG green, shipped via quickmerge.
+
 ## Why it matters
 
 - **Billing waste**: every preempted VM that silently dies burns SPOT compute for zero net progress until a human
@@ -132,17 +168,18 @@ changes, and should resolve which of them is the real cause.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Check Cloud Run Jobs execution history for `dp_exit_code_monitor_cron` covering
-      2026-08-03T23:45-00:05Z and 2026-08-04T00:15-00:35Z — did the job run, and did it error (repo:
-      deployment-service).
-- [ ] [SCRIPT] P1. Read the raw GCS objects under
-      `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260803-233053/` and
-      `.../af-backfill-20260804-001203/` — confirm whether a `PREEMPTED` signal blob was ever written, and its timestamp
-      relative to the instance-delete audit-log event (repo: deployment-service).
-- [ ] [SCRIPT] P1. If hypothesis (3) (sub-5-min-tick VM lifetime invisible to the census diff) is confirmed, fix
-      `exit_code_fleet_monitor`'s detection to not rely purely on prior-tick/this-tick presence diff for very
-      short-lived VMs — e.g. also read the durable `PREEMPTED` blob directly for any known-launched VM not currently
-      RUNNING, regardless of whether it appeared in a prior census (repo: deployment-service).
+- [x] ✅ [SCRIPT] P1. ~~Check Cloud Run Jobs execution history for `dp_exit_code_monitor_cron`~~ — DONE 2026-08-04:
+      every 5-min tick since 22:00Z succeeded (`gcloud run jobs executions list`, `SUCCEEDED_COUNT=1` throughout, no
+      failures) — ruled out a silent execution failure. See "RESOLVED" section above.
+- [x] ✅ [SCRIPT] P1. ~~Read the raw GCS objects for a PREEMPTED signal blob~~ — SUPERSEDED 2026-08-04: root cause found
+      via a more direct path (the monitor's own logs) before this check was needed — the VMs were never even reaching
+      the classification step that would read that blob. See "RESOLVED" section above.
+- [x] ✅ [SCRIPT] P1. **Root cause found + fixed 2026-08-04** — NOT hypothesis (3) (tick-timing); actual cause:
+      `af-backfill-`/`af-audit-` missing entirely from `_DATA_VM_PREFIXES` (`cli.py`), so `_is_data_vm()` excluded these
+      VMs from `exit_code_fleet_monitor.sweep()`'s classification universe — structurally invisible to
+      `verdict=preempted`, regardless of timing. Fixed: `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`
+      (added both prefixes + regression test `test_is_data_vm_filters_infra`). QG green, shipped via quickmerge,
+      verified on origin. See "RESOLVED" section above.
 - [ ] [SCRIPT] P2. Once root-caused, re-check whether the same gap affects other `VM_PREFIX_TO_BUCKET` families beyond
       `af-backfill-*` (cross-reference against `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s incident
       — same shape, different launcher) (repo: deployment-service).
@@ -153,3 +190,8 @@ changes, and should resolve which of them is the real cause.
   FIXTURE_STATS as `af-backfill-20260804-002608` (safe idempotent resume, no `--force`) to keep the sports campaign
   moving; did NOT chase the auto-recovery root cause further in that task (out of its scope) — filed here instead so
   it's tracked rather than re-discovered a third time.
+- **2026-08-04 (slot 6)** — Dispatched todo 1 of this doc. Root-caused and fixed in the same turn (see "RESOLVED"
+  section above): `af-backfill-`/`af-audit-` were entirely missing from `_DATA_VM_PREFIXES`, making these VMs invisible
+  to the exit-code sweep's classification regardless of timing — not the tick-timing hypothesis originally suspected.
+  Shipped `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`. Only the P2 cross-check todo (other
+  VM_PREFIX_TO_BUCKET families) remains open; this doc is not yet fully closed pending that.
