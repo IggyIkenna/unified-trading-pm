@@ -62,7 +62,7 @@ source: >-
 context_scope:
   [
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/base_prediction_adapter.py,
   ]

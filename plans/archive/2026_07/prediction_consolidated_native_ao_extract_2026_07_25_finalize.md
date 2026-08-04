@@ -12,7 +12,7 @@ summary: >-
   native todos (the former P3 duplicate-note — now merged into phase_ab's reconciliation todo — and the P1 POLYMARKET
   schema-extension) have newly cleared, and archives the EXTRACT batch doc itself (never the parent — the parent stays
   active with Phase B/C/D/E still open).
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -21,13 +21,13 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, native-extract, archival]
 related:
   [
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-04" # todo 2 (re-check 2 deferred native todos) DONE — (a) Phase B not landed, merged reconciliation-cadence todo deferred with re-check note; (b) PII/trader-identity RULED 2026-07-28 excluded, A2c [x] DONE 2026-07-30, no new todo. Prior: todo 1 (reconcile-checkboxes REVIEW pass) DONE — all 5 extract-batch updates verified at new homes; checkbox flipped. Prior: 2026-07-25 same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
+last_updated: "2026-08-04" # ARCHIVED alongside prediction_consolidated_native_ao_extract_2026_07_25.md — todo 3 (archive extract batch) DONE, 6-step ritual complete, corpus referrers updated, both docs moved to plans/archive/2026_07/
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,7 +48,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
@@ -57,6 +57,12 @@ context_scope:
 ---
 
 # Prediction consolidated closeout — native-todo AO extract finalize
+
+> **🟢 ARCHIVED 2026-08-04.** All 3 todos done: (1) 5 extract-batch checkboxes reconciled at new homes
+> (phase_ab_residuals + phase_d), (2) 2 deferred native todos re-checked — Phase B not landed, reconciliation deferred;
+> PII RULED excluded — (3) extract batch archived via the 6-step ritual, corpus referrers updated, both docs moved to
+> `/plans/archive/2026_07/`. The parent `prediction_consolidated_closeout_2026_07_18.md` stays `active` with Phase
+> B/C/D/E still open.
 
 > **Machine-gated on `prediction_consolidated_native_ao_extract_2026_07_25.md`** (`depends_on` +
 > `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan are `done`.
@@ -114,12 +120,13 @@ context_scope:
       checkbox in `prediction_phase_ab_residuals_2026_07_24.md` is `[x]` DONE (2026-07-30 reconciliation); issue doc
       `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` is
       `status: resolved` and archived. No new bounded todo needed — if a genuine future consumer emerges, re-open then.
-- [ ] [DOC] P2. **Archive `prediction_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual
-      (per CLAUDE.md's plan-archival rule): confirm the Deferred section above has nothing left unaddressed (todo 2
-      should have already resolved what it could) → add the archive banner → run the codex-alignment check → grep the
-      corpus for every referrer of `prediction_consolidated_native_ao_extract_2026_07_25` (including this finalize doc's
-      own filename and `prediction_consolidated_closeout_2026_07_18.md` if a forward-pointer was added there) and fix
-      each path to point at the archived location → clear `locked_by` (already empty here, confirm). **Do NOT** archive
+- [x] ✅ [DOC] P2. **DONE 2026-08-04 (slot-10). Archive `prediction_consolidated_native_ao_extract_2026_07_25.md`** via
+      the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm the Deferred section above has nothing
+      left unaddressed (todo 2 should have already resolved what it could) → add the archive banner → run the
+      codex-alignment check → grep the corpus for every referrer of
+      `prediction_consolidated_native_ao_extract_2026_07_25` (including this finalize doc's own filename and
+      `prediction_consolidated_closeout_2026_07_18.md` if a forward-pointer was added there) and fix each path to point
+      at the archived location → clear `locked_by` (already empty here, confirm). **Do NOT** archive
       `prediction_consolidated_closeout_2026_07_18.md` itself — it stays `active` with Phase B/C/D/E still open; only
       the extract batch (and this finalize doc) move to `plans/archive/2026_07/`. **Done when**: the extract batch is
       moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself

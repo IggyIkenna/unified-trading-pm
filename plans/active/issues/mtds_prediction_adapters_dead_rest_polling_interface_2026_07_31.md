@@ -24,7 +24,7 @@ related:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: 2026-07-31
 parent_epic: predictions_master
