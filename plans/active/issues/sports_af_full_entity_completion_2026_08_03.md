@@ -471,3 +471,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   back to PLAYER_STATS (3rd attempt, `af-backfill-20260804-114310`), confirmed RUNNING. Both entities' recent attempts
   are landing in the 3-14 min range — real but partial progress is plausible even from short runs once one lands mid-
   fetch-phase rather than during boot; will re-census whichever entity gets the next longer run.
+- **2026-08-04T12:12Z** — PLAYER_STATS's 3rd attempt ran ~9 min (10:43:55Z→10:52:56Z) — best PLAYER_STATS run yet, and
+  **real confirmed progress**: re-census shows PLAYER_STATS dropped 1,006→998 needed (8 shards resolved). First genuine
+  forward movement on PLAYER_STATS today. Given real progress, relaunched PLAYER_STATS again immediately (favoring it
+  over the strict alternation) — first attempt hit a genuine **STOCKOUT** (not a preemption):
+  `does not have enough resources available... 'NULL:0/NULL:0/NULL:0 (state:STOCKOUT...)'` for `e2-standard-8` in
+  `asia-northeast1-c` (error suggested `asia-northeast1-b`/`asia-northeast1-a` as alternatives — the launcher hardcodes
+  the zone, no CLI override available, not changed given this is a shared-launcher zone choice outside this task's scope
+  to unilaterally alter). Retried once — succeeded (`af-backfill-20260804-121224`, RUNNING), confirming the stockout was
+  momentary, not sustained. This STOCKOUT (as distinct from a post-launch preemption) is a genuinely new data point for
+  the zone's capacity pressure — worth a mention if anyone picks up the residual `expected-universe-v2-sports`
+  investigation again, though not pursued further here.
