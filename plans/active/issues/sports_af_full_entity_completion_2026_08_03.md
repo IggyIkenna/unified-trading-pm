@@ -64,30 +64,32 @@ does not close.
 
 Per `unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_ENTITY_LEAGUE_COVERAGE`:
 
-**⚠️ ALL "needed" figures below are STALE (2026-08-04) — the census scripts had a confirmed empty_confirmed blind spot,
-see the 08:31Z Progress Log entry. Do not launch or size work off these numbers; wait for the corrected re-census.**
+**✅ CORRECTED 2026-08-04T09:00Z** — both census scripts fixed to treat `empty_confirmed` as resolved (see Progress
+Log). Numbers below are the corrected re-census, shipped `instruments-service@579421bf`.
 
-| Entity           | Scope                        | Status (2026-08-03)                                                                                                   |
-| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                  |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes not a gap, same doc      |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | STALE — census: 69,171 non-MVP shards needed (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`, pre-fix)  |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | STALE — census: 69,165 non-MVP shards needed (pre-fix)                                                                |
-| **PLAYER_STATS** | **MVP-96**                   | STALE — 42,368 expected, 24,928 captured, **17,440 needed** (pre-fix)                                                 |
-| **INJURIES**     | **all-383**                  | STALE — 110,739 expected, 9,994 captured, **100,745 needed** (pre-fix)                                                |
-| **STANDINGS**    | **all-383**                  | STALE — 110,739 expected, 25,792 captured, **84,947 needed** (pre-fix)                                                |
-| **TEAMS**        | **all-383**                  | STALE — 110,739 expected, 42,998 captured, **67,741 needed** (pre-fix, likely closest to accurate — see 08:31Z entry) |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                           |
+| Entity           | Scope                        | Status (2026-08-04)                                                                                    |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                   |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,278 expected (non-MVP), 77,092 already resolved, **56,940 needed** (corrected; was 69,171 pre-fix)  |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,278 expected (non-MVP), 52,085 already resolved, **58,523 needed** (corrected; was 69,165 pre-fix)  |
+| **PLAYER_STATS** | **MVP-96**                   | 42,369 expected, 41,363 already resolved, **only 1,006 needed** — nearly done (corrected; was 17,440!) |
+| **INJURIES**     | **all-383**                  | 108,647 expected, 45,938 already resolved, **62,709 needed** (corrected; was 100,745 pre-fix)          |
+| **STANDINGS**    | **all-383**                  | 108,647 expected, 44,208 already resolved, **64,439 needed** (corrected; was 84,947 pre-fix)           |
+| **TEAMS**        | **all-383**                  | 108,647 expected, 43,924 already resolved, **64,723 needed** (corrected; was 67,741 pre-fix, small Δ)  |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.            |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
-`emit_empty_gaps_for_entity`'s own expected-set logic (`sports_reference_core.py:338-341`), so "needed" here means the
-same gap the writer's own empty-gap emission targets, not an invented denominator. Full census:
-`instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` (single UTL-client manifest read, same
-credential-safe pattern as the fixed `census_fixture_events_schema_variants_2026_07_25.py`).
+`emit_empty_gaps_for_entity`'s own expected-set logic (`sports_reference_core.py:338-341`); a shard is resolved (not
+needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
+`instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
+`census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed across the 4 in-scope entities: 270,873 shards** (PLAYER_STATS+INJURIES+STANDINGS+TEAMS; LEAGUES
-excluded per the resolved verdict below — confirmed unchanged for the other 4 after the LEAGUES manifest flip below).
+**Grand total needed, corrected: 192,877 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 270,873 pre-fix, a ~29%
+reduction) **+ 115,463 across FIXTURE_STATS+FIXTURE_LINEUPS** (was 136,574 pre-fix, a ~15% reduction). LEAGUES excluded
+per the resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon**
+since it could converge quickly once dispatched.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 
@@ -167,19 +169,22 @@ not urgent enough to block this campaign.
       correct rate-limit backoff handling). No duplicate VM launched — a second concurrent AF-consuming VM would violate
       the shared singleton lock / quota.
 - [ ] [SCRIPT] P1. **Launch FIXTURE_LINEUPS all-leagues backfill** the same way, after FIXTURE_STATS converges.
-- [ ] [SCRIPT] P1. **Launch PLAYER_STATS MVP-96 backfill** (`--entity PLAYER_STATS 2020-06-06 <today>`) once the
-      singleton lock frees up — 17,440 needed shards, same MVP scope as FIXTURE_EVENTS (worth checking this entity's
-      census script for the SAME fixture_id/af_fixture_id column bug already found + fixed in the FIXTURE_EVENTS census,
-      if a dedicated recovery-style census is ever built for it).
-- [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (100,745 needed shards) — likely per-fixture-date cadence,
-      apply the daily stop/resume discipline.
-- [ ] [SCRIPT] P2. **Launch STANDINGS all-leagues backfill** (84,947 needed shards) — same discipline.
-- [ ] [SCRIPT] P2. **Launch TEAMS all-leagues backfill** (67,741 needed shards, BUT likely 1 call/league not 1
-      call/shard — confirm real call cost before estimating timeline; may complete far faster than the shard count
-      implies).
+      Corrected: 58,523 needed (was 69,165 pre-fix).
+- [x] ✅ [SCRIPT] P0. ~~Recompute PLAYER_STATS/INJURIES/STANDINGS/TEAMS needed counts~~ — **CORRECTED 2026-08-04**: both
+      census scripts had an empty_confirmed blind spot, fixed (`instruments-service@579421bf`). See the corrected table
+      above. **PLAYER_STATS reprioritized to P0** — only 1,006 needed (was 17,440), genuinely near-complete.
+- [ ] [SCRIPT] **P0** (reprioritized, near-complete). **Launch PLAYER_STATS MVP-96 backfill**
+      (`--entity PLAYER_STATS 2020-06-06 <today>`) once the singleton lock frees up — only **1,006 needed shards**
+      (corrected), should converge fast.
+- [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, corrected) — likely per-fixture-date
+      cadence, apply the daily stop/resume discipline.
+- [ ] [SCRIPT] P2. **Launch STANDINGS all-leagues backfill** (64,439 needed, corrected) — same discipline.
+- [ ] [SCRIPT] P2. **Launch TEAMS all-leagues backfill** (64,723 needed, corrected — barely moved from the pre-fix
+      67,741 since TEAMS was already mostly `captured`, BUT likely 1 call/league not 1 call/shard — confirm real call
+      cost before estimating timeline; may complete far faster than the shard count implies).
 - [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved above: LEAGUES is a retired
       entity (no write path since 2026-05-07); there is nothing to launch. Excluded from this campaign's remaining scope
-      and from the grand-total needed count (270,873 across the 4 still-live entities).
+      and from the grand-total needed count.
 - [ ] [SCRIPT] P0. **Re-census the 8 in-scope entities once every backfill above completes** (FIXTURES, FIXTURE_EVENTS,
       FIXTURE_STATS, FIXTURE_LINEUPS, PLAYER_STATS, INJURIES, STANDINGS, TEAMS — LEAGUES permanently excluded, resolved
       above), confirm every needed-count converges to ~0 (accounting for genuine honest-absence floors per entity, same
