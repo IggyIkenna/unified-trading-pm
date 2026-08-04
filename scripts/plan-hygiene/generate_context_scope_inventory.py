@@ -12,8 +12,10 @@ Verdict per in-scope doc (status active/open/blocked/paused only — a draft/com
 cancelled/resolved/false-positive doc is dead weight, never scouted):
   - NEVER_SCOUTED  — no `context_scope` field, or present but empty
   - STALE          — has `context_scope`, but no dated `context-scout YYYY-MM-DD` Progress Log
-                     marker at or after the doc's last-touched date (frontmatter `last_updated`,
-                     falling back to the file's git last-commit date when absent)
+                     marker at or after the doc's last-touched date (MAX of frontmatter
+                     `last_updated`, when present, and the file's real git last-commit date --
+                     never `last_updated` alone, which nothing auto-bumps on edit and so silently
+                     goes stale; see `_last_touched`'s docstring)
   - UP_TO_DATE     — marker date >= last-touched date; skip (incremental mode)
 
 # Epic: agent_operating_framework_master
@@ -201,22 +203,37 @@ def _git_last_commit_date_accurate(path: Path) -> str | None:
 
 
 def _last_touched(fm: dict, path: Path, marker: str | None) -> str | None:
+    """Real edit signal is git's commit date; `last_updated` is a manually-maintained frontmatter
+    field nothing in this workspace auto-bumps on edit, so it silently goes stale (measured
+    2026-08-03: 390/435 corpus docs carrying it were behind their real last commit; for 200 of
+    those, trusting the stale value outright flipped the doc's verdict to a false UP_TO_DATE,
+    hiding real post-scout edits from the incremental sweep -- e.g.
+    `vol_dvol_backtestable_engines_2026_07_13.md` got genuine todo-flip commits after its scout
+    marker, but its unbumped `last_updated` still read UP_TO_DATE). Take the MAX of `last_updated`
+    and the best available git signal instead of trusting `last_updated` outright: a
+    legitimately-set `last_updated` (e.g. an edit not yet committed) still counts, but it can never
+    mask a later git-tracked edit the field was never updated to reflect."""
+    candidates: list[str] = []
     last_updated = fm.get("last_updated")
     if isinstance(last_updated, (dt.date, dt.datetime)):
-        return last_updated.isoformat()[:10]
-    if isinstance(last_updated, str) and last_updated.strip():
-        return last_updated.strip()[:10]
+        candidates.append(last_updated.isoformat()[:10])
+    elif isinstance(last_updated, str) and last_updated.strip():
+        candidates.append(last_updated.strip()[:10])
 
-    # No explicit last_updated -- fall back to git history. Walking back past reference-only
-    # commits (_git_last_commit_date_accurate) can only push this date EARLIER or leave it
-    # unchanged relative to the cheap single-commit date, never later -- so if the cheap date
-    # already satisfies UP_TO_DATE against the marker, the accurate date can only agree too.
-    # Skip the expensive walk entirely in that case -- it only needs to run for docs the cheap
-    # check would flag STALE, which is a minority of the corpus.
+    # Git signal: cheap single-commit date first; only pay for the multi-commit walk-back past
+    # reference-only-confined commits (_git_last_commit_date_accurate) when the cheap date doesn't
+    # already satisfy UP_TO_DATE against the marker -- walking back can only push the date EARLIER
+    # or leave it unchanged, never later, so if the cheap date already clears the bar the accurate
+    # date can only agree too.
     cheap_date = _git_last_commit_date_cheap(path)
     if marker is not None and cheap_date is not None and marker >= cheap_date:
-        return cheap_date
-    return _git_last_commit_date_accurate(path)
+        git_date = cheap_date
+    else:
+        git_date = _git_last_commit_date_accurate(path)
+    if git_date:
+        candidates.append(git_date)
+
+    return max(candidates) if candidates else None
 
 
 def _latest_marker(body: str) -> str | None:
