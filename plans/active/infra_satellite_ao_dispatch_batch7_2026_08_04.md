@@ -103,8 +103,8 @@ full:
 ## Conflict check (before drafting)
 
 Grepped all 13 existing infra covering docs (hub + batch1-6 + their finalize twins +
-`infra_capture_and_devops_ leftovers`/finalize) and the whole active corpus for both target file sets — no other
-covering doc or in-flight plan claims either:
+`infra_capture_and_devops_leftovers`/finalize) and the whole active corpus for both target file sets — no other covering
+doc or in-flight plan claims either:
 
 - `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` / `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s
   Phase 0 section — the only corpus hits outside the source doc itself are unrelated `related:`-list citations (e.g.
