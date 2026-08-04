@@ -271,7 +271,7 @@
         "cefi",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.91.0",
       "codebase_health": {
         "qg_red_reason": "qg",
@@ -885,7 +885,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "qg",
         "large_file_count": 0,
