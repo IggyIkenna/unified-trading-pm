@@ -119,9 +119,10 @@ context_scope:
       `exit_code_fleet_monitor`, and `heartbeat_stall_watcher`. Corrected
       `/codex/05-infrastructure/deployment-     observability.md` § "Slack parity + alert enrichment" to state both
       facts. Source doc's `[DOCS] P2` checkbox flipped in the same commit series (see below).
-- [ ] [SCRIPT] P2. **Delete the now-inert cefi pre-listing plumbing from MTDS.** With the pre-listing source retired,
-      `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}` → the
-      `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded parameter and the
+- [x] ✅ [SCRIPT] P2. **Delete the now-inert cefi pre-listing plumbing from MTDS.** — market-tick-data-service@d2366203
+      (catalog method + tests deleted; sentinel plumbing already removed in fc64e092) With the pre-listing source
+      retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}` →
+      the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded parameter and the
       write block are dead code across ~6 call sites in market-tick-data-service's `engine/orchestrator/sentinels.py`
       and `engine/orchestrator/__init__.py`. Remove them for a clean break per the workspace "delete deprecated code, no
       shims" rule — do NOT leave a stub or a feature flag. Repo: market-tick-data-service. **Coordination note
