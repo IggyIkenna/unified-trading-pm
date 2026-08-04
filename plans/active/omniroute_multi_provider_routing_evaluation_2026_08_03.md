@@ -18,6 +18,7 @@ tags: [omniroute, cost-optimization, llm-routing, claude-accounts, evaluation]
 related:
   - plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md
   - plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md
+  - plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md
 created: 2026-08-03
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -109,6 +110,82 @@ though both disqualifying numbers were already known and written down at suggest
 30-second check and MUST gate any future provider onboarding — capability and price are irrelevant if the model cannot
 hold the mandatory rules file.
 
+## Provider evaluation register (every provider assessed, with verdict)
+
+The single most useful output of this evaluation so far. **Read this before onboarding any new provider** — five of the
+ten below were rejected on numbers that were available before signup, and three of those were signed up for anyway.
+
+### Onboarded and measured on the operator's host
+
+| Provider            | Verdict                | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **DeepSeek V4 Pro** | ✅ **incumbent**       | $0.44/$0.87, 80.6% SWE-bench, 1M ctx, paid key already owned. Returned `DEEPSEEK_OK` routed in 1,979 ms. Spends real reasoning tokens (26 for a 2-word answer) — budget for it.                                                                                                                                                                                                                                                |
+| **Gemini**          | ✅ keep (Flash)        | Free AI Studio key serves `gemini-3-flash-preview` (`GEMINI_OK`). `gemini-3.1-pro-preview` is **listed but 429s** on `generate_content_free_tier_input_token_count` — free tier grants no usable Pro quota.                                                                                                                                                                                                                    |
+| **Mistral**         | ⚠️ marginal            | Free key valid, 54 models, `ROUTED_OK`. But ~1 req/sec — exhausted in 5 calls. Single-shot only; cannot sustain an agentic loop.                                                                                                                                                                                                                                                                                               |
+| **GLM-5.2 (`zai`)** | ⏳ **wired, unfunded** | Key wired into OmniRoute and **valid** — proven by error-code discrimination: real key → `1113 "Insufficient balance or no resource package"`, bogus key → `401 "token expired or incorrect"`. Both the Anthropic-compatible (`api.z.ai/api/anthropic/v1/messages`, `x-api-key`) and OpenAI-compatible (`api.z.ai/api/paas/v4/chat/completions`, bearer) endpoints return identically. Needs a **$5-10 top-up**, nothing more. |
+| **Groq**            | ❌ **dropped**         | 6,000 TPM vs `CLAUDE.md`'s 10,235 tokens → ~2 minutes of its entire budget just to read the mandatory rules file. Fastest measured (159 ms) and still unusable.                                                                                                                                                                                                                                                                |
+| **Cerebras**        | ❌ **dropped**         | 8,192 ctx — cannot hold `CLAUDE.md` at all. Also `402 payment_required` on inference (key authenticates, models list fine). Free tier retires 2026-08-17 regardless.                                                                                                                                                                                                                                                           |
+
+### Assessed on published numbers, deliberately NOT onboarded
+
+| Provider                | Verdict                     | Reason                                                                                                                                                                                                                                                                                                                              |
+| ----------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MiniMax M3**          | ❌ **rejected**             | **Strictly dominated by DeepSeek V4 Pro** — $0.60/$2.40 vs $0.44/$0.87 (36% pricier input, 2.8× pricier output), 80.5% vs 80.6% SWE-bench, same 1M ctx. Requires payment up front just to mint a key. No outcome could change a decision.                                                                                           |
+| **Kimi K3**             | ❌ rejected                 | $3/$15 — worse than Claude Sonnet 5 ($2/$10 intro) on price _and_ below it on capability. Dominated by the baseline itself.                                                                                                                                                                                                         |
+| **Kimi K2.6**           | ❌ rejected                 | $0.95/$4.00, 80.2%, 262K ctx — above DeepSeek on price, below on benchmark and context. No distinct hypothesis.                                                                                                                                                                                                                     |
+| **Qwen3.7 Max**         | ❌ rejected                 | $1.48/$4.43, 80.4% — 3.4× DeepSeek's input cost and 5× its output cost for a benchmark tie. No distinct hypothesis.                                                                                                                                                                                                                 |
+| **GPT-5.6 (Sol/Terra)** | ⏸️ deferred                 | Real frontier tier, but a **long-context pricing cliff above 272K input**: Sol $5/$30 → **$10/$45**, Terra $2/$12 → $4/$18. This workspace routinely exceeds 272K in agentic sessions, so headline pricing understates true cost badly. Revisit only if the frontier tier is specifically wanted.                                   |
+| **GLM-5.2 (`zai`)**     | ✅ **approved — now wired** | The **only** challenger with a falsifiable hypothesis rather than a coin-flip: top open-weight model on the Artificial Analysis Intelligence Index — a broader composite than SWE-bench's single-repo Python harness. $1.40/$4.40, ~$5 of tokens to falsify. Wired 2026-08-04; see the onboarded table above for its funding state. |
+
+## Wiring status — API-key onboarding PAUSED 2026-08-04
+
+The operator's candidate list was **gemini · deepseek · kimi · glm · qwen · openai**. Against it:
+
+| Requested   | Wired | Working | State                                                                          |
+| ----------- | :---: | :-----: | ------------------------------------------------------------------------------ |
+| gemini      |  ✅   |   ✅    | free key; Flash serves, `gemini-3.1-pro-preview` 429s on free-tier quota       |
+| deepseek    |  ✅   |   ✅    | paid, `DEEPSEEK_OK` routed in 1,979 ms — the incumbent                         |
+| glm (`zai`) |  ✅   |   ❌    | key valid, zero balance (`1113`) — one top-up from working                     |
+| kimi        |  ❌   |    —    | not wired; register recommends against (pricier than DeepSeek, no edge)        |
+| qwen        |  ❌   |    —    | not wired; register recommends against (3.4× input / 5× output vs DeepSeek)    |
+| openai      |  ❌   |    —    | not wired; **deferred, not rejected** — the 272K long-context cliff, see below |
+
+**3 of 6 wired · 2 of 6 working.** Also wired from the earlier round but not on the operator's list: `mistral`
+(marginal), `groq` (dropped), `cerebras` (dead) — six provider rows in OmniRoute total.
+
+**PAUSED HERE (operator decision, 2026-08-04).** No further API-key onboarding until the existing set is actually
+benchmarked. This is the right call: the evaluation currently has more wired providers than measured results, and the P0
+(`provider-matrix.sh`) blocks every quality run regardless of how many keys exist. Adding keys before the harness exists
+produces cost and ToS surface, not data.
+
+**When onboarding resumes**, the two pre-signup gates apply (context floor, dominance check) and only two candidates
+remain live: a **Z.ai top-up** to unblock the already-wired GLM-5.2, and **openai** if frontier-tier comparison is
+wanted — budgeted at the long-context rate ($10/$45 Sol above 272K input), not the headline. `kimi` and `qwen` stay
+rejected unless someone produces a hypothesis for what they would beat DeepSeek at.
+
+### The selection rule this register produced
+
+**A provider earns a slot only if it has a distinct hypothesis, not merely a competitive benchmark.** The 80% SWE-bench
+cluster (DeepSeek 80.6 · Gemini 3.1 Pro 80.6 · MiniMax M3 80.5 · Qwen3.7 Max 80.4 · Kimi K2.6 80.2) is a five-way tie
+within noise, spread over a **3.4× price range**. Inside a tie, price decides — and DeepSeek already wins it. So the
+question for any new entrant is not "is it good?" but **"what would it beat DeepSeek at, and why would we believe
+that?"** GLM-5.2 has an answer (different index, different measurement axis). MiniMax, Kimi and Qwen do not.
+
+**Two gates every future provider must clear BEFORE signup** (both were violated in this evaluation):
+
+1. **Context floor** — must comfortably exceed ~15.6k tokens (`CLAUDE.md` 10,235 + median plan ~5,394). Kills Groq and
+   Cerebras in 30 seconds.
+2. **Dominance check** — put its price and benchmark in one row next to DeepSeek V4 Pro. If it loses on both, there is
+   no experiment to run. Kills MiniMax, Kimi and Qwen before a payment method is entered.
+
+### Keyless / web-session providers
+
+Tested 4, **0 worked** — `duckduckgo-web` (anti-abuse challenge failed), `theoldllm` (Vercel IP block; the software's
+own error suggests buying residential proxies), `opencode` (401), `auggie` (stream EOF). The `*-web` providers that
+authenticate with the operator's own session cookies (`claude-web`, `gemini-web`, `chatgpt-web`, `ds-web`) are out of
+scope on ToS grounds — see the security section of the harness README. For `claude-web` specifically the upside is also
+nil: it authenticates as the existing Max subscription, so it returns the same quota already owned.
+
 ## Codex SSOTs
 
 - `/codex/06-coding-standards/model-tier-selection.md` — the qualitative `opus-required` contract any automated routing
@@ -132,8 +209,14 @@ hold the mandatory rules file.
   latency (fastest measured here) is irrelevant against that. Useful only as a latency reference point.
 - [ ] [SCRIPT] P1. **Quality run — gemini** (`gemini-3-flash-preview`, `gemini-3.5-flash`). Free tier is Flash-only;
       confirm whether any Pro variant is reachable or record the 429 metric name as proof it is not.
-- [ ] [SCRIPT] P1. **Quality run — deepseek** (`deepseek-v4-pro`, `deepseek-v4-flash`) — the frontier-class control and
-      the only paid key. Capture `reasoning_tokens` separately; it is real cost the others do not incur.
+- [ ] [SCRIPT] P1. **Quality run — deepseek** (`deepseek-v4-pro`, `deepseek-v4-flash`) — the incumbent and the model
+      every challenger must beat. Capture `reasoning_tokens` separately; it is real cost the others do not incur.
+- [ ] [SCRIPT] P1. **Quality run — GLM-5.2** via provider `zai` (`glm-5.2`; NOT the `glm` provider id, which points at
+      Z.ai's separate coding-plan subscription endpoint). The one approved challenger — testing the hypothesis that it
+      beats DeepSeek on axes SWE-bench does not measure. Needs a paid Z.ai key (~$5 of tokens to falsify).
+- ~~[SCRIPT] P1. Quality run — MiniMax M3~~ **NOT ONBOARDED 2026-08-03: strictly dominated, do not re-add.** $0.60/$2.40
+  vs DeepSeek's $0.44/$0.87 and 80.5% vs 80.6% SWE-bench, same 1M context — pricier on both token axes AND no capability
+  edge, with payment required up front merely to mint a key. See the provider register above.
 - [ ] [SCRIPT] P1. **Baseline run — Claude Sonnet 5** on the identical 3 tasks, so every number above has a reference
       point. Without this the matrix scores models against nothing.
 - [ ] [SCRIPT] P2. **Rate-limit characterisation — deepseek + gemini + mistral only** (groq/cerebras dropped, finding 7)
@@ -218,3 +301,41 @@ decommission todo — revoking the keys at source is the part that cannot be und
   `omniroute_llm_gateway_pilot_design_2026_07_30.md`, a sibling OmniRoute investigation (worker-fleet routing guardrail
   design) neither this doc nor that one cross-links in `related:` despite overlapping scope; flagging so the Phase-3
   go/no-go weighs its model-tier-risk guardrail too.
+
+### 2026-08-03 (later) — provider set narrowed from 10 assessed to 3 tested
+
+Added the **Provider evaluation register** above: ten providers assessed, five rejected, and — the point of writing it
+down — **three of the five rejections were on numbers available before signup, yet were signed up for anyway** (Groq,
+Cerebras, and nearly MiniMax). The register exists so the eleventh provider gets the two gates applied first.
+
+**MiniMax M3 removed before onboarding.** Operator found the M-series API requires payment up front merely to mint a
+key, which forced the dominance comparison that should have been run first: $0.60/$2.40 vs DeepSeek's $0.44/$0.87, 80.5%
+vs 80.6% SWE-bench, identical 1M context. Pricier on both token axes with no capability edge — no experimental outcome
+could change a decision, so there is no experiment. Not onboarded; no key created; no money spent.
+
+Also worth recording: MiniMax's developer docs are dominated by the Hailuo video/audio line, and the coding model lives
+separately under `minimax.io/models/text/m3` + `platform.minimax.io/docs`. The M-series exposes BOTH an
+OpenAI-compatible (`api.minimax.io/v1`) and an Anthropic-compatible (`api.minimax.io/anthropic/v1/messages`) endpoint —
+noted only so a future reader does not conclude the M-series is absent because the marketing site is about video.
+
+**Net effect on the plan**: the matrix shrank from five providers to a three-way test with a distinct rationale for each
+member — DeepSeek V4 Pro (incumbent to beat), GLM-5.2 (the only falsifiable challenger), Claude Sonnet 5 (baseline),
+with Gemini Flash as a free-tier extra since its key already exists and costs nothing to include. That is a smaller,
+cheaper and more decidable experiment than the original matrix, not a descope.
+
+### 2026-08-04 — Z.ai wired, API-key onboarding PAUSED
+
+GLM-5.2 wired via provider `zai`. Key verified valid at source before trusting the router, using error-code
+discrimination rather than assuming: the real key returns `1113 "Insufficient balance or no resource package"` while a
+deliberately bogus key returns `401 "token expired or incorrect"` — different codes, so auth passes and only billing
+fails. One `$5-10` top-up from usable. Both Z.ai endpoint styles behave identically.
+
+**Verify-at-source is now a standing rule for this evaluation**, promoted from habit after paying for itself three
+times: it caught Cerebras's `402` (dead free tier), Gemini's Pro-quota `429` (free tier grants no usable Pro despite
+`gemini-3.1-pro-preview` appearing in the model list), and Z.ai's zero balance — each _before_ any time went into router
+configuration that would have failed for reasons having nothing to do with the router.
+
+**Operator paused API-key onboarding here.** Status: 3 of the 6 requested providers wired (gemini, deepseek, glm), 2
+working. The evaluation now has more wired providers than measured results, and `provider-matrix.sh` (the P0) gates
+every quality run regardless of key count — so further onboarding would add cost and ToS surface without adding data.
+Remaining live candidates when it resumes: a Z.ai top-up, and `openai` if a frontier-tier comparison is wanted.
