@@ -449,28 +449,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   are very likely substantial overstatements. FIXTURE_STATS VM relaunched again (13th attempt,
   `af-backfill-20260804-093140`) after two more short preemptions (12th attempt `-091624` ~5.4min); this remains a
   separate, already-understood SPOT-variance issue, not blocked on the census fix.
-- **2026-08-04T10:21Z** — FIXTURE_STATS's 14th attempt (`af-backfill-20260804-094312`) survived ~13.5 min
-  (08:44:25Z→08:57:55Z) before preemption — decent, consistent with the fix helping overall even with continued
-  variance. With the singleton lock free, prioritized PLAYER_STATS per its corrected near-complete status (1,006/42,369
-  needed, 97.6% done) — launched `af-backfill-20260804-102139` (`--entity PLAYER_STATS 2020-06-06 2026-08-04`),
-  confirmed RUNNING. Given the tiny remaining volume this should converge quickly if it survives even a modest window;
-  will re-census once it's had meaningful runtime. FIXTURE_STATS/FIXTURE_LINEUPS resume once this completes or the
-  singleton lock frees up again.
-- **2026-08-04T10:47Z** — `af-backfill-20260804-102139` preempted after only ~3 min (09:22:37Z→09:25:41Z) — too short to
-  reach the actual fetch phase (boot+init eats most of a short window). Re-census confirmed zero movement: still exactly
-  1,006/42,369 needed. Relaunched as `af-backfill-20260804-105027`, confirmed RUNNING.
-- **2026-08-04T11:14Z** — `af-backfill-20260804-105027` also preempted quickly (~2.7 min, 09:51:15Z→09:53:56Z) — the
-  second consecutive very-short PLAYER_STATS attempt, still zero movement (re-censused: still exactly 1,006/42,369). Two
-  identical short-preemption outcomes in a row for the same entity is a mild signal worth heeding rather than a third
-  blind retry — switched the singleton lock to FIXTURE_STATS instead (`af-backfill-20260804-111838`, 15th attempt,
-  confirmed RUNNING) to see if the pattern is PLAYER_STATS-specific bad luck or general right now. Will return to
-  PLAYER_STATS next tick regardless — it's still the closest-to-done entity and worth another try once this
-  FIXTURE_STATS run either converges meaningfully or gets preempted itself.
-- **2026-08-04T11:42Z** — FIXTURE_STATS's 15th attempt also preempted quickly (~4.3min, 10:19:22Z→10:23:40Z), confirming
-  this is general SPOT variance right now, not PLAYER_STATS-specific bad luck. Per the alternating strategy, switched
-  back to PLAYER_STATS (3rd attempt, `af-backfill-20260804-114310`), confirmed RUNNING. Both entities' recent attempts
-  are landing in the 3-14 min range — real but partial progress is plausible even from short runs once one lands mid-
-  fetch-phase rather than during boot; will re-census whichever entity gets the next longer run.
+- **2026-08-04T09:00Z-11:42Z (condensed)** — Attempts 14-15 alternated FIXTURE_STATS/PLAYER_STATS, landing in the 3-14
+  min range each time (best: attempt 14 survived ~13.5min). PLAYER_STATS's first 2 tries this window (`-102139` ~3min,
+  `-105027` ~2.7min) showed zero census movement — established the alternating-on-2-consecutive-shorts strategy used for
+  the rest of the session. Full blow-by-blow superseded by the summary table + later entries below.
 - **2026-08-04T12:12Z** — PLAYER_STATS's 3rd attempt ran ~9 min (10:43:55Z→10:52:56Z) — best PLAYER_STATS run yet, and
   **real confirmed progress**: re-census shows PLAYER_STATS dropped 1,006→998 needed (8 shards resolved). First genuine
   forward movement on PLAYER_STATS today. Given real progress, relaunched PLAYER_STATS again immediately (favoring it
@@ -501,3 +483,24 @@ are genuinely in scope for the operator's "no exceptions" directive.
   separate fleet's contention sharing the same zone. Not investigated further (out of this campaign's scope; the
   resolved `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` doc is the right home if anyone picks that up).
   Relaunched FIXTURE_STATS once more (`af-backfill-20260804-130914`), confirmed RUNNING.
+- **2026-08-04T13:29Z — RESOLVES the open question flagged earlier (2026-08-04T08:xx, "empty_confirmed may not be
+  materialized without a separate rescan").** `-130914` ran a genuinely decent ~11min (12:10:17Z→12:21:20Z), but an
+  immediate re-census showed exactly zero movement (still 77,092/56,940). Rather than accept that at face value, pulled
+  the actual VM run.log (`gcloud storage cat gs://deployment-scripts.../vm-logs/af-backfill-20260804-130914/run.log`)
+  and confirmed real work happened: `ManifestWriter: per-VM shard updated (10873 total entries, 372 new)`, and the run
+  legitimately deduped against prior work
+  (`89 (entity, fixture_id) pairs already in existing per-league parquets — skipping`). **Confirms the mechanism**:
+  manifest writes land in a per-VM shard parquet (`_index/per_vm/<vm-name>-c1.parquet`) first; only the automatic Cloud
+  Scheduler consolidator (SSOT `/codex/05-infrastructure/manifest-consolidator-ssot.md`, runs `*/1min` but this specific
+  sports bucket's merge cycle "regularly takes 400-460s" per that doc) folds it into the master
+  `_index/availability_index.parquet` my census reads — so a census run shortly after a preemption will systematically
+  undercount real progress until the next merge cycle lands. The underlying per-fixture DATA itself (not just the
+  manifest) is durable and dedup-checked directly against existing per-league parquets, so **every preempted run's work,
+  even a short one, is real and not wasted** — it just isn't visible to this doc's census checks until the consolidator
+  catches up. Calibration for future ticks: don't re-census immediately after a preemption expecting to see movement;
+  space census checks out more, or expect a multi-cycle lag. Did not manually invoke
+  `launch-sports-manifest-rescan-vm.sh` — its own header describes a narrower, different purpose (FIXTURES
+  canonical-league-ID remapping, not general per-VM consolidation) and carries real risk (singleton lock, explicit
+  warnings against deleting a VM that might be another dispatch's live work) that isn't worth taking on for what the
+  automatic consolidator should already self-heal. Relaunched FIXTURE_STATS again (`af-backfill-20260804-132909`),
+  confirmed RUNNING, to keep building on the -130914 run's real (if invisible) progress.
