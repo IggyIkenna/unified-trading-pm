@@ -500,13 +500,30 @@ EXCLUDED from this cutover — still a separate, unresolved operator call.
 `market-tick-data-service@84154e1a` (`PolymarketAdapter` no longer drops `title`/`slug`/`eventSlug` at ingest;
 `eventSlug`→`event_slug`/`outcomeIndex`→`outcome_index` renamed to canonical snake_case). **Effective-from 2026-07-28
 for NEW writes only** — the historical legacy raw-tick objects (shapes #3/#3b `data_type=prediction_trades`, 2,477
-manifest rows/348 dates, and shape #4's 10-segment tree, corpus-wide extent unknown) are NOT yet migrated; see
-`plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and `non-canonical-path-inventory.md`'s
-prediction `prediction_trades` row for the still-open disposition.
+manifest rows/348 dates, and shape #4's 10-segment tree, corpus-wide extent NOW KNOWN — 348 days, 1,126,358 objects,
+563,173 unique condition_ids; 4b-ii enumeration COMPLETE 2026-08-04, slot-15, `market-tick-data-service@e46fb943`) are
+NOT yet migrated. Three legacy shapes, all in `market-data-tick-pred-prd-{pid}`:
 
-| asset_group | effective-from (new writes) | historical backfill state                                                           |
-| ----------- | --------------------------- | ----------------------------------------------------------------------------------- |
-| prediction  | 2026-07-28                  | NOT migrated — shapes #3/#3b/#4 still legacy-only; see plan todo 4b (multi-session) |
+- **Shapes #3/#3b** (`data_type=prediction_trades` bundle-per-underlying): 2,477 manifest rows, 348 dates (2025-03-14 →
+  2026-04-14), 14 `underlying` values, 100% `capture_status=captured`. Migration (4b-i) in progress:
+  `market-tick-data-service@e4acf0c4` (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`), **299/348 dates
+  enriched, 0 anomalies** (durable checkpoint at
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`).
+  Blocked on `uts-prod-manifest-consolidator-market-data-prediction-cron` (PAUSED per sibling plan
+  `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s Apply/Resume protocol). Delete pass gated on enrichment
+  completion + fresh `gcs_bucket_soft_delete_retention_seconds()` check.
+
+- **Shape #4** (10-segment `data_source=POLYMARKET_CLOB/.../data_type=trades/{cid}.parquet` tree under
+  `raw_tick_data/by_date/day=.../pipeline_mode=batch_polymarket_clob/asset_group=prediction/`): **1,126,358 objects,
+  563,173 unique condition_ids**, 100% of days have canonical flat twins. Merge+delete (4b-iii) is a separate follow-on,
+  gated on 4b-i completing (both share the same canonical target).
+
+See `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and
+`/codex/02-data/non-canonical-path-inventory.md` row 22 for the full disposition.
+
+| asset_group | effective-from (new writes) | historical backfill state                                                                                                |
+| ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| prediction  | 2026-07-28                  | NOT migrated — shapes #3/#3b (299/348 enriched, 4b-i) + shape #4 (1.13M objects enumerated, merge+delete pending 4b-iii) |
 
 ---
 
