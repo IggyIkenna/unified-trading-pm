@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-03"
+last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -46,7 +46,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
   ]
 supersedes:
 superseded_by:
@@ -483,3 +483,22 @@ not data-pipeline).
   own doing. Naming it here too (same conflict-gated status as its sibling — see this run's parked-findings doc finding
   context): it is a real, live data-pipeline-correctness gap (the honest-coverage data-status panel has been silently
   stale since ~2026-08-01) but conflict-gated against the same active P0 plan, not batchable this round either.
+- **2026-08-04** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 10). Re-derived the
+  candidate set (13 covering docs, unchanged; 50 members, up from 45 on 2026-08-03; 3 never-cited, all created
+  2026-08-03). Re-checked all 3 carried-forward findings from `ag_closeout_audit_infra_parked_2026_08_03.md` live: all 3
+  (the `ao_self_pull` mistag, batch3's blank `assigned_vm`, the missing stash-backup bundle) remain open, unchanged.
+  Classified the 3 net-new never-cited docs: `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` is genuinely
+  non-batchable (large, actively-executing human VM-migration plan);
+  `na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`'s 2 todos and
+  `deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s investigation-only half (its structural
+  decision half stays operator-gated) were conflict-clear and bounded. Drafted
+  [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
+  its finalize twin (3 todos, both `status: draft`). **New finding**: 4 drafted batches (4/5/6/7) now sit unreviewed,
+  oldest 4 days — see
+  [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
+  finding 14. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed 66 orphans corpus-wide (baseline
+  69, still improving) — exactly 1 carried `asset_group: [infrastructure]`:
+  `issues/fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md` (already `status: resolved`,
+  shipped `unified-trading-pm@ebc2075b9` same day — correctly excluded from this run's Phase-1 candidate set by the
+  generator's own `EXCLUDED_STATUS` filter, but still linkage-unlinked). Named here per the established discoverability
+  remedy.
