@@ -335,3 +335,41 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   currently-extractable work; today's fresh sweep found nothing new to add. 0 parked/BLOCKED-OPERATOR-DECISION findings
   this run (both corrections above were auto-resolvable on evidence, not judgment calls) — no separate
   `ag_closeout_audit_ci_parked_2026_08_03.md` issue doc needed.
+- **2026-08-04 — `/ag-closeout-audit ci` (autonomous, daily scheduled run, `ag_closeout_auditor` worker, slot 13).**
+  Re-checked this batch's own Deferred section first (iterative-drain step 1): D5-1/D5-2/D5-3 unchanged (batch4's todos
+  1/2/4 still un-landed, 0/9); D5-5/D5-6/D5-7 unchanged (batch4's D4-5..D4-18 still unruled;
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` still `status: open`; pnpm migration still has no
+  dedicated plan). D5-4 stays RESOLVED, todo 2 sub-item 2 stays MOOT (both from yesterday, unchanged). Corpus-wide date
+  stamps are dominated by the 2026-08-03 `context-scout` full-corpus re-scout (a mechanical `context_scope:`
+  frontmatter-only touch on nearly every doc in the repo) — spot-verified on a sample file and confirmed content-inert,
+  so NOT used as a change-detection signal; relied on `generate_ag_closeout_audit_candidates.py` + a fresh full Phase 1
+  sweep instead. Fresh-candidate sweep: **42 total members** (up from 40 yesterday: -1
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` shipped+archived since yesterday — was self-covering,
+  nothing lost; +3 new docs — `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
+  `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md`, `…continued3_2026_08_03.md`), **4
+  never-cited-in-an-active-covering-doc** (down from 7). **Full Phase 1 ran as a 42-agent `Workflow`** (one agent per
+  candidate doc, not just the 4 never-cited — 0 errors, all 42 settled): 0 `archivable_now`, 11
+  `archivable_after_planned_work`, 27 `orphaned_partial_coverage`, 4 `orphaned_never_touched`, 0 `exclude_cross_cutting`
+  → **31 orphaned total**. All 4 never-touched individually assessed for Phase-3 AO-eligibility, **none qualify**:
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` is itself an active human-driven LOCAL plan whose own
+  frontmatter says "each phase gate is a live judgment call, not a determinable worker todo" (operator-approved
+  2026-08-03); the two `pytest_timeout_60s_flaky_under_contention_continued2/3_2026_08_03.md` docs are further splits of
+  the SAME live incident chain D5-6 already tracks (matches batch3/4/5 precedent — too hot to batch while live);
+  `qg_host_adaptive_resource_governor_2026_07_14.md` sits under its own standing 2026-07-14 "human-driven, not
+  AO-ingested" operator ruling, independently re-confirmed KEEP-NA by two separate na-eligibility-audit passes
+  (2026-07-30 infra, 2026-08-03 ci). Spot-checked all 27 `orphaned_partial_coverage` reasoning texts for a hidden
+  bounded/conflict-clear candidate slipping through under an operator-gated label — found none; every item is either
+  already named in batch1/batch4/batch5's own Deferred tables (D4-x/D5-x style) or, in one case
+  (`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`'s dormant-cascade item), confirmed genuinely
+  too-open-ended to bound yet — that doc's own na-eligibility-audit verdict already says so; not a new finding, just
+  re-verified. **Verdict: no batch 6 drafted this round either** — batch1 (42/43 done)/batch4 (0/9, drafted)/batch5
+  (this doc, 0/6, drafted) still comprehensively cover the tranche's currently-extractable work, second day running. **0
+  new parked/BLOCKED-OPERATOR-DECISION findings this run** (ledger: 0 parked == 0 written) — no
+  `ag_closeout_audit_ci_parked_2026_08_04.md` issue doc needed. **One observation flagged, not acted on**:
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` carries `asset_group: [ci, infrastructure]` — a dual
+  specific- tranche tag structurally analogous to the Orthogonality HARD CHECK's mistag pattern (content reads
+  CI/CD-specific — GH-Actions self-hosted-runner fleet — so `ci` is likely primary), but its
+  `parent_epic: infrastructure_master` doesn't cleanly disambiguate ownership since that epic feeds both `ci` and
+  `infra` tranches, and per the concurrent-sharded- worker safety rule a non-owning tranche must not write a retag to a
+  doc it doesn't clearly own — left for a future corpus-wide retag pass (mirroring
+  `asset_group_ao_ci_infra_schema_expansion_2026_07_27`) or the `infra` tranche's own audit to resolve.
