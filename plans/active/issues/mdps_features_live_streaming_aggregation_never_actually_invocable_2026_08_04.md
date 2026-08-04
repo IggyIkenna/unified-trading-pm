@@ -224,11 +224,14 @@ OOM if left running). The named successor is this issue doc's Todos below.
       determine whether `calendar`/`commodity`'s live wiring was ever actually implemented as a subscribe-loop (per
       `features_service/common/live_cross_cutting.py`) or whether it silently falls back to the batch entrypoint when
       `--mode live` is passed without a supporting subscribe loop. Repo: features-service.
-- [ ] [BACKEND] P2. **Fix the `delta_one` live subscriber's unhandled Pub/Sub `subscribe_once` traceback**
+- [x] ✅ [BACKEND] P2. **Fix the `delta_one` live subscriber's unhandled Pub/Sub `subscribe_once` traceback**
       (`unified_trading_library/cloud_interface/providers/gcp.py:592`, surfaced via
       `features-service --feature-family delta_one --mode live`) — full traceback captured in this session's
       `/tmp/tradfi_run.log` scratch capture (not committed; re-triggerable by re-running the exact pilot command). Repo:
-      unified-trading-library (or features-service, depending on root cause).
+      unified-trading-library (or features-service, depending on root cause). — unified-trading-library@c50b3b89:
+      `subscriber.pull()` raises `RetryError`/`DeadlineExceeded` on an empty poll (not a failure — expected outcome of
+      `LiveDataSource.stream()`'s ~100ms polling loop); now caught and treated as empty-poll instead of crashing the
+      async generator, and `subscribe_once()`'s timeout param is now actually forwarded to `pull()`.
 - [ ] [BACKEND] P3. Fix `commodity`'s `publish_signal`:
       `[MEDIUM] validation error: asdict() should be called on     dataclass instances`. Repo: features-service.
 - [ ] [OPERATOR] P1. **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi
