@@ -231,7 +231,13 @@ OOM if left running). The named successor is this issue doc's Todos below.
       unified-trading-library (or features-service, depending on root cause). — unified-trading-library@c50b3b89:
       `subscriber.pull()` raises `RetryError`/`DeadlineExceeded` on an empty poll (not a failure — expected outcome of
       `LiveDataSource.stream()`'s ~100ms polling loop); now caught and treated as empty-poll instead of crashing the
-      async generator, and `subscribe_once()`'s timeout param is now actually forwarded to `pull()`.
+      async generator, and `subscribe_once()`'s timeout param is now actually forwarded to `pull()`. Complementary
+      hardening — unified-trading-library@8a89005a: `LiveDataSource.stream()` itself now also catches ANY
+      `subscribe_once()` failure (not just the empty-poll case above) — e.g. `NotFound`/`PermissionDenied`/transient
+      network errors — logs + skips the round instead of propagating out of the async generator, mirroring the identical
+      pre-existing fix in `alerting-service/alert_subscriber.py` (`dp_event_pubsub_delivery_gap_2026_06_22.md`).
+      Regression test added (`test_live_data_source_stream_recovers_from_pull_failure`); full quality-gates.sh green on
+      this SHA.
 - [ ] [BACKEND] P3. Fix `commodity`'s `publish_signal`:
       `[MEDIUM] validation error: asdict() should be called on     dataclass instances`. Repo: features-service.
 - [ ] [OPERATOR] P1. **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi
