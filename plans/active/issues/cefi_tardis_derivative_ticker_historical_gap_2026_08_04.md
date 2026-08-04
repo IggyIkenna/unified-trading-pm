@@ -106,3 +106,12 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   watchdog polling VM status until non-`RUNNING`, rather than continuous polling, per the async-wait-discipline HARD
   RULE. Will verify via manifest row counts once the VM reaches its final day / shuts down
   (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo + `/done`.
+- **slot-6 2026-08-04 ~08:39Z**: Picked up on resume dispatch. VM `cefi-fwd-20260804-021235` still `RUNNING`, now at
+  day=2026-06-12 (of the 2026-05-01→2026-08-02 range), fresh `PIPELINE_HEARTBEAT` at 08:38:21Z, RSS ~9.3GB/35.9% mem,
+  `run.log` actively writing real `derivative_ticker` shards across venues (COINBASE-FUTURES/… ~6-7 days/hr) — ~7-8h
+  likely remain. The recurring `okex-options/OPTIONS/options_chain exceeded 300s timeout` ERROR lines are correctly
+  isolated as retryable failed shards (a DIFFERENT data_type — `options_chain`, not this task's `derivative_ticker` —
+  and per shard-level failure isolation, not a crash/crashloop). No traceback signature. Armed a bounded (~12h-cap,
+  20-min-interval) `run_in_background` VM-status watchdog per the async-wait-discipline HARD RULE (polls until
+  non-`RUNNING`) rather than continuous polling; will verify via manifest row counts once the VM shuts down
+  (`VM_SHUTDOWN_ON_COMPLETION=true`), then flip the todo + `/done`.
