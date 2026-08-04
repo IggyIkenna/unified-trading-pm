@@ -195,3 +195,20 @@ changes, and should resolve which of them is the real cause.
   to the exit-code sweep's classification regardless of timing — not the tick-timing hypothesis originally suspected.
   Shipped `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`. Only the P2 cross-check todo (other
   VM_PREFIX_TO_BUCKET families) remains open; this doc is not yet fully closed pending that.
+- **2026-08-04 (slot 8)** — Answered todo #2's literal question directly (the checkbox was already flipped SUPERSEDED by
+  slot 6 before this read ran, so it stays flipped — this is the corroborating evidence, not a re-flip). Listed both
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/` prefixes: **NO `PREEMPTED` blob was ever written for
+  either VM** — each prefix holds only `LAUNCH_PARAMS.json` / `PROGRESS.json` / `WATCHDOG_TRACE.log` / `run.log`.
+  Confirmed the shutdown-script (`lc_write_preemption_signal_file`, `scripts/vm/lib/launcher_common.sh`) targets exactly
+  that path (`vm-logs/${VM_NAME}/PREEMPTED` in `deployment-scripts-${PROJECT}`), so the absence is genuine, not a
+  wrong-path lookup. Timestamps (relative to the delete/preempt audit-log op): `af-backfill-20260803-233053` last GCS
+  write 23:46:56Z → `compute.instances.preempted` op first=23:47:54.18Z / last=23:48:03.90Z (~58s gap);
+  `af-backfill-20260804-001203` last GCS write 00:17:56Z → op first=00:18:20.42Z / last=00:18:31.71Z (~24s gap). This is
+  DISTINCT from (and does not contradict) the `_DATA_VM_PREFIXES` root cause: even now that the classifier fix lets
+  these VMs be swept, their verdict will lack the clean `PREEMPTED` blob signal and must lean on the op-checker /
+  `PARTIAL_UNCONFIRMED` fallback. The marker is absent **2/2 even after** the 2026-07-26 switch to the hardened
+  `lc_write_preemption_signal_file` helper, so that hardening did not close the grace-period race. Not filing a new todo
+  — this is already the open P3 audit in
+  `/plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md` ("Audit whether the `PREEMPTED`
+  marker's shutdown-script grace period is survivable in practice"); appended these two datapoints as evidence to that
+  doc's Progress Log for the auditor.

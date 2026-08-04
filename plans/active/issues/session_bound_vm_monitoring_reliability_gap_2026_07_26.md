@@ -109,3 +109,14 @@ in the same way and at the same time when they're the same physical connection.
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added
   `deployment-service/scripts/vm/lib/launcher_common.sh`, the shutdown-script template the P3 todo names directly).
+- **2026-08-04 (slot 8)** — Fresh evidence for the open P3 "PREEMPTED marker grace-period survivability" audit: two more
+  af-backfill SPOT preemptions on 2026-08-03/04 (`af-backfill-20260803-233053`, `af-backfill-20260804-001203`) each
+  wrote **NO** `vm-logs/<vm>/PREEMPTED` blob — verified by direct `gcloud storage ls` of both
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/` prefixes (only `LAUNCH_PARAMS.json` / `PROGRESS.json` /
+  `WATCHDOG_TRACE.log` / `run.log` present). This is **2/2 misses AFTER** the switch to the hardened
+  `lc_write_preemption_signal_file` helper (baked VM_NAME/PROJECT + curl-retry upload), so that hardening did NOT close
+  the race — the marker write still loses to `--instance-termination-action=DELETE` inside the ~30s grace window (last
+  GCS write → `compute.instances.preempted` op start was ~58s and ~24s respectively). Strengthens the case that the
+  marker is not a reliable fleet-wide signal; a mitigation (write earlier/more defensively, or make the monitor rely on
+  the Compute Operations API `preemption_op_checker` fallback rather than the in-guest blob) is warranted. Cross-ref:
+  `/plans/active/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
