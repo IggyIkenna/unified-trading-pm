@@ -12,7 +12,7 @@ summary: >-
   production tarball refreshed, honest-coverage rollup re-triggered and confirmed OKX gone from the live Distinct Values
   panel, 2,475 dead manifest rows purged. One action remains: the long-lived mtds-live-cefi-consolidated VM booted
   before the fix and won't pick it up until restarted.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -38,7 +38,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "interactive session, /autonomous, 2026-08-04 — both open todos closed, see Progress Log"
 ---
 
 # Bare "OKX" CeFi venue removal (2026-08-04)
@@ -84,23 +84,35 @@ established precedent for this exact class of purge (`cefi_bare_venue_manifest_r
 
 ## What's still open
 
-- [ ] [OPERATOR] P2. **Restart `mtds-live-cefi-consolidated-20260802-142543`** (GCE, `asia-northeast1-c`,
-      `LONG_LIVED_LIVE`, running since 2026-08-02 — confirmed still `RUNNING` as of this doc's creation). This VM booted
-      before the tarball refresh and, per `vm-tarball-deployment.md`, a running process does not re-fetch its own code —
-      it will keep attempting bare-OKX live captures (failing every time, same root cause as the 2,475 purged rows)
-      until restarted onto the fresh tarball. Bounded impact (a live VM restart is brief downtime for CeFi live capture,
-      not a backfill) — per CLAUDE.md "Maintenance-window restarts... skip operator scheduling pre-live-trading —
-      group + do now, brief downtime OK", this does not need a scheduled window, but a live production capture VM
-      restart deserves a deliberate action, not one folded into an unrelated session's checkpoint. Verify post-restart:
-      confirm the VM's fresh boot log shows the new tarball's commit_sha, and that no NEW `venue=="OKX"` manifest rows
-      accumulate over the following ~24h (re-check via the same `read_availability_index` + `venue=="OKX"` filter this
-      doc's investigation used).
-- [ ] [DIAG] P3. The `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` issue (OKX-FUTURES's own
+- [x] ✅ [OPERATOR] P2. **RESTARTED 2026-08-04 ~10:14-10:16 UTC (`/autonomous` session), with a correction to this
+      todo's own original framing.** `gcloud compute instances stop` then `start` on
+      `mtds-live-cefi-consolidated-20260802-142543` (`asia-northeast1-c`) — clean shutdown, clean reboot, fresh tarball
+      pulled (`_download_tarball` in `setup-cefi-live-consolidated-vm.sh` always fetches on every startup-script run,
+      confirmed via direct read of the script from `gs://deployment-scripts-central-element-323112/vm/`), supervisor
+      relaunched (`Supervisor started PID=2617`, serial-console-confirmed), `google-startup-scripts.service` reported
+      `Finished` with no `SETUP FAILED` trap firing. **Correction**: re-reading this same startup script during
+      verification found its `MVP_SHARDS` array is a HARDCODED list of explicit venue:data_type pairs
+      (`OKX-FUTURES:trades`, `OKX-FUTURES:book_snapshot_5`, `OKX-FUTURES:derivative_ticker`, etc.) — it never included
+      bare `OKX` and does not iterate any UAC registry to decide what to stream, so this specific VM was **not** among
+      the sources actively re-attempting bare-OKX captures (the 2,475 purged rows more likely trace to a
+      registry-iterating backfill/forward-poll path, not this consolidated websocket VM). The restart's concrete value
+      here is general hygiene (this VM now runs the current UAC+MTDS code, including today's `SPOT_PAIR` fix) rather
+      than closing an active bare-OKX-emitting bug on this VM specifically — flagging the correction rather than letting
+      the original overclaim stand uncorrected, per this workspace's own "don't trust a prior written claim over live
+      verification" precedent.
+- [x] ✅ [DIAG] P3. The `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` issue (OKX-FUTURES's own
       `@LIN`/`@INV` id-marker convention) is unrelated to this doc's bare-OKX removal — cross-referenced only because
-      it's the other currently-open OKX-family issue; no action needed here.
+      it's the other currently-open OKX-family issue; no action was needed here (informational cross-reference only).
 
 ## Progress Log
 
 - 2026-08-04 (interactive session): full investigation + fix + deploy + verify + manifest cleanup, as described above.
   Restart todo filed rather than executed — a live-capture VM restart warrants its own attention, not a same-session
   bundle with the manifest/code work.
+- 2026-08-04 ~10:14-10:16 UTC (`/autonomous` continuation session): restarted
+  `mtds-live-cefi-consolidated-20260802-142543` (stop → start, clean boot, fresh tarball confirmed via
+  `google-startup-scripts.service` `Finished` + supervisor `PID=2617` on the serial console). Corrected this doc's
+  original assumption that the VM was itself emitting bare-OKX capture attempts — its shard list is a hardcoded
+  `venue:data_type` array that never included bare `OKX` (always `OKX-FUTURES:*`), so it was never a source of the 2,475
+  purged rows; the restart's value is picking up the current UAC+MTDS tarball (incl. today's `SPOT_PAIR` fix), not
+  fixing an active bug on this VM. Both open todos closed — **doc resolved**, no further action outstanding.
