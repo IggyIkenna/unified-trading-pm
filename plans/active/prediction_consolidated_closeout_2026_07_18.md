@@ -754,3 +754,9 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) -- coordination-hub doc (0 native todos,
   archive_exempt), codex-only list is correct/minimal; child-phase plans already machine-linked via depends_on.
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, valid — 0 native open todos (coordination hub by
+  design, `archive_exempt: true`, `gate_on_depends: false`; confirmed live via `grep -cE '^- \[ \]'` = 0). Only content
+  change since the 2026-07-31 marker is today's 07:48 commit adding an explicit report-path citation + a predating-run
+  confirmed-absent note to the Distinct Values section (a `prediction_phase_ab_residuals` todo-4 partial-slice
+  side-effect) — non-substantive to this doc's own classification. Still the live index for its 4 Phase A-E children
+  (all still open); not archived. Doc stays NA.

@@ -130,3 +130,8 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   Polymarket dead-fixture finding filed the same day: the doc's own "Recommended decision" section explicitly frames (A)
   delete vs (B) keep-and-document as a genuine judgment call, not auto-resolved. Doc stays NA.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, valid — 1 open, unchanged since the 2026-07-31
+  marker (only intervening commit is the 2026-08-03 context-scout refresh; live-verified the dead REST-polling methods
+  are still present unchanged in both adapters). Same shape as the sibling Polymarket dead-fixture finding: the doc's
+  own "Recommended decision" section frames (A) delete vs (B) keep-and-document as a genuine judgment call, not
+  auto-resolved. Doc stays NA.

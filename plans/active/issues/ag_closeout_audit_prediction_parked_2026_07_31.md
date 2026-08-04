@@ -283,3 +283,10 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` (today's data-correctness FAIL-verdict finding,
   `parent: predictions_master`) is `assigned_vm: planning` + actively worked (3/5 todos closed today by other slots) —
   self-dispatched, not an orphan, no action needed from this audit.
+
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, valid — 1 open (Finding 1's `[DOC] P3`
+  informational item; Finding 2 was independently flipped `[x]` DONE earlier today by the sibling
+  `/ag-closeout-audit prediction` run, cited above). Finding 1 remains purely explanatory ("No action needed...
+  unless/until an operator or the next worker... picks (A) or (B)") — no operator action taken on either linked adapter
+  dead-code doc since 2026-07-31, re-confirmed via direct read of both. Not reclassifiable: the doc's own text is the
+  citation (redirect + explicit non-actionable framing). Doc stays NA.

@@ -137,3 +137,9 @@ Not adjudicated here:
   architecture call needing operator/plan-owner input, not a fact a worker can determine by reading code alone. Doc
   stays NA.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, valid — 1 open, unchanged since the 2026-07-31
+  marker (only intervening commit is the 2026-08-03 context-scout context_scope backfill, no content change;
+  live-verified the dead code — `adapter.py`'s `_api_football_key`/`_fixture_cache`, `parsing.py`'s
+  `_cross_reference_fixture()` — is still present unchanged). The doc's own "Recommended decision" section still
+  explicitly states "Not adjudicated here" before laying out the (A) delete vs (B) keep-and-document tradeoff — a
+  genuine architecture call, not worker-determinable. Doc stays NA.
