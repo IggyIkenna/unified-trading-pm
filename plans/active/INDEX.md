@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 247 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -381,7 +381,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (33)
+### sports (31)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -473,14 +473,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch6_2026_07_26.md — machine-held via depends_on +
   gate_on_depends: true until all 9 of that plan's todos are done. Mirrors the batch3/batch4/batch5-finalize pattern
   (reconcile each…
-- [`sports_satellite_ao_dispatch_batch7_2026_07_27`](../archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md)
-  — Seventh AO-dispatch batch for sports, produced by an `/ag-closeout-audit sports` run 2026-07-27 (autonomous mode,
-  operator away) targeted specifically at `sports_consolidated_closeout_2026_07_19.md`'s own ~35 remaining open todos
-  (not a…
-- [`sports_satellite_ao_dispatch_batch7_2026_07_27_finalize`](../archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md)
-  — Gated closeout for sports_satellite_ao_dispatch_batch7_2026_07_27.md — machine-held via depends_on +
-  gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch3-6-finalize pattern: reconcile each
-  distinct source…
 - [`sports_satellite_ao_dispatch_batch9_2026_08_04`](./sports_satellite_ao_dispatch_batch9_2026_08_04.md) **[draft]** —
   Ninth AO-dispatch batch for sports, produced by a fresh `/ag-closeout-audit sports` run (2026-08-04): 57 sports
   AG-primary docs classified via a per-doc Workflow pass (Phase 1), 42 came back orphaned (23 partial coverage, 19 never
