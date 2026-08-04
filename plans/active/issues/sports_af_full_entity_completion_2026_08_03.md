@@ -182,6 +182,20 @@ not urgent enough to block this campaign.
       above), confirm every needed-count converges to ~0 (accounting for genuine honest-absence floors per entity, same
       pattern as FIXTURE_EVENTS' ~1,943-stub floor), and only then close this doc + notify the operator the full AF
       completion is genuinely done and the API-Football plan can be downgraded.
+- [ ] [SCRIPT] P1. **Implement the durable convergence-gate fix flagged 4 times in this doc's Progress Log (repo:
+      agent-orchestrator).** `sports_af_full_entity_completion-003` (Launch FIXTURE_LINEUPS) has now been dispatched **6
+      times** to 6 different slots (main/12, 4, 6, 6-continued, 5, 8) purely because `sequential:true` only encodes
+      dispatch ORDER, not the real gate ("after FIXTURE_STATS converges") — every dispatch redoes the identical
+      singleton-lock + census check and finds FIXTURE_STATS still not converged, then `skip-current-task`s. Fix: on the
+      live orchestrator (`data/config/backlog.yaml` for this task id), `POST /api/prerequisites/<name>` to create a
+      `false` condition (e.g. `sports-fixture-stats-af-widening-converged`), attach it via `prereqs.prerequisites` per
+      `agents/RULES.md` §4 "Adding new conditions mid-cycle" / "Park a task", set `priority: 999` +
+      `priority_override: true` so it stops being redispatched, then `POST /api/backlog/reload`. Flip the condition
+      `true` (and unpark) only once a fresh `census_fixture_stats_lineups_widening_volume_2026_07_31.py` run shows the
+      non-MVP FIXTURE_STATS gap at or near 0. **Not done by slot 8** — no local filesystem access to the live
+      `data/config/backlog.yaml` from this worker's `.tabs/8/agent-orchestrator` clone (only
+      `data/config/     backlog.test.yaml`, a test fixture, exists there) to safely apply/verify the edit; this needs
+      the main agent/operator, who has direct access to the orchestrator's runtime data dir.
 
 ## Sequencing note
 
@@ -274,3 +288,23 @@ are genuinely in scope for the operator's "no exceptions" directive.
   structural recommendation — but the storm, not the gate mechanism, is now the actual blocker for FIXTURE_STATS itself;
   a fifth dispatch should first check `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`
   before relaunching again.
+- **2026-08-04 (slot 8)** — Dispatched `sports_af_full_entity_completion-003` a sixth time
+  (`already_in_progress: true`/resume — this session had this task before, per an earlier turn). Per the storm doc:
+  confirmed via `gcloud artifacts docker images describe ...:latest` that the af-backfill/af-audit prefix fix IS
+  deployed (digest `sha256:1ba77ac3...`, matching what slot 5 already verified independently — my own first read of the
+  images-list table briefly pointed at the wrong row/timestamp before the digest check corrected it). Re-verified the
+  gate: singleton lock was occupied by `af-backfill-20260804-015704` (launched 00:58:21Z) when I first checked, so I
+  waited rather than launching a 2nd concurrent AF VM — it was preempted at 01:04:30-41Z (~6.2min lifetime), the **6th
+  FIXTURE_STATS launch and 5th-or-6th preemption today** (full today's timeline: `-233053` ~16.5min → `-001203` ~5.8min
+  → `-002608` ~12min → `-004955` ~1.5min → `-015704` ~6.2min; zero clean completions). Re-ran
+  `census_fixture_stats_lineups_widening_volume_2026_07_31.py`: still 125/68,284 non-MVP shards captured (0.18%,
+  byte-identical to every prior check today) — **zero net progress across 5 launch attempts and ~1.5h of wall-clock
+  storm exposure.** The `asia-northeast1-c` storm is confirmed STILL ACTIVE (this fresh preemption, ~4 min before this
+  check). Consistent with slot 5's judgment, did **NOT** attempt a 6th blind FIXTURE_STATS relaunch — the storm shows no
+  sign of subsiding and each attempt is now converting to preemption within single-digit minutes regardless. Did **NOT**
+  launch FIXTURE_LINEUPS (both gates still unmet). Filed the durable convergence-gate fix as a proper `- [ ]` todo above
+  (P1, repo: agent-orchestrator) instead of a 4th prose-only flag — this worker has no filesystem access to the live
+  `data/config/backlog.yaml` to implement it directly. `skip-current-task`'d `sports_af_full_entity_completion-003`
+  again. Recommend the next dispatch check both the storm doc's "re-check after several hours" todo (not yet due — only
+  ~15-20 min of storm-doc-tracked time has elapsed since it was filed) and this doc's new durable-gate-fix todo before
+  repeating the same manual check a 7th time.

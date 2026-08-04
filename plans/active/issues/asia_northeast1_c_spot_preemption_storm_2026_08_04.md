@@ -189,3 +189,7 @@ to preemption with proportionally little forward progress while it lasts.
   producing VMs with 1-2 min lifetimes (faster than the 5-min tick), this gap is likely affecting more than just
   af-backfill right now. Flipped todos 1 and 2 above (prefix fix confirmed deployed; the "verify end-to-end" check
   surfaced this new gap instead of a clean pass).
+- **2026-08-04 (slot 8)** — Working `sports_af_full_entity_completion-003` (6th dispatch). Quick datapoint, not the "few
+  hours" recheck (too soon, todo below stays open): `af-backfill-20260804-015704` (FIXTURE_STATS) was preempted at
+  01:04:30-41Z after a ~6.2min lifetime — storm confirmed still active as of this timestamp, no material change from the
+  151-events/5h baseline. Did not attempt a further FIXTURE_STATS relaunch (5 attempts today, zero net progress).
