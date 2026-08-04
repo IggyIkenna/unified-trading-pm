@@ -449,3 +449,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   are very likely substantial overstatements. FIXTURE_STATS VM relaunched again (13th attempt,
   `af-backfill-20260804-093140`) after two more short preemptions (12th attempt `-091624` ~5.4min); this remains a
   separate, already-understood SPOT-variance issue, not blocked on the census fix.
+- **2026-08-04T10:21Z** — FIXTURE_STATS's 14th attempt (`af-backfill-20260804-094312`) survived ~13.5 min
+  (08:44:25Z→08:57:55Z) before preemption — decent, consistent with the fix helping overall even with continued
+  variance. With the singleton lock free, prioritized PLAYER_STATS per its corrected near-complete status (1,006/42,369
+  needed, 97.6% done) — launched `af-backfill-20260804-102139` (`--entity PLAYER_STATS 2020-06-06 2026-08-04`),
+  confirmed RUNNING. Given the tiny remaining volume this should converge quickly if it survives even a modest window;
+  will re-census once it's had meaningful runtime. FIXTURE_STATS/FIXTURE_LINEUPS resume once this completes or the
+  singleton lock frees up again.
