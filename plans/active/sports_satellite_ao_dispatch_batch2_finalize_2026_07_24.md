@@ -95,7 +95,7 @@ context_scope:
       as numbered prose lists, a confirmed false-hygiene-flip trap this session already hit once). **Done when**: all 15
       source docs' corresponding checkboxes are flipped with verified evidence, and any doc that genuinely reaches 0
       open todos (checkbox + prose) is flipped to `status: resolved` with `resolved_by` citing the batch-2 commit(s).
-- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
+- [x] ✅ [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
       flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
       frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
       — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
@@ -107,7 +107,13 @@ context_scope:
       already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      to the archived path. — **Done unified-trading-pm@8563781d3 + evidence below.** Source:
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2. **Evidence**: 0 of 15 source docs
+      driven to resolved by todo 1 (12 still active/open with todos, 3 already archived by plan_health gate
+      auto-archival). Fixed 6 stale referrer paths across 3 files (sports_master.md,
+      sports_batch_odds_api_capture_outage_recurrence_check, sports_halftime_odds_sfi_vs_inplay). Hygiene sweep 4 hard
+      failures all pre-existing (15 non-sports terminal-status violations + NA corpus size + reference path baseline +
+      archive candidates ratchet), none caused by this plan's work.
 - [ ] [REVIEW] P1. **Resolve the 4 deferred-gate follow-ups from batch 2's own "Deferred" section.** For each: (1) the
       FSS↔ml-service↔strategy-service parity test (gated on 5 sibling naming-migration todos in batch 2 landing) — if
       all 5 shipped (per todo 1 above), add it as a new `- [ ]` todo in a follow-up plan (or this doc, if small enough —
