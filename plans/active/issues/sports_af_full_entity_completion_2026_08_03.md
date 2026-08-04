@@ -400,3 +400,21 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (up from the 2020-06-06 start). Re-census shows 125/68,284 non-MVP shards still (unchanged) — not yet concerning,
   since a fresh restart always re-walks already-captured early dates before reaching genuinely new ground; the
   durability itself is the real signal here. Continuing to monitor.
+- **2026-08-04T07:37Z** — `af-backfill-20260804-073723` was preempted at 07:16:29Z after a **38-minute lifetime** —
+  dramatically better than any of the 9 prior attempts (best before this was ~17min), strong confirmation the backoff
+  fix genuinely helped. No successor VM appeared after ~20 min (auto-recovery did not fire for this normal-tick
+  preemption; separate from the sub-tick gap already fixed — not investigated further here, flagged for whoever next
+  touches auto-recovery). Manually relaunched as `af-backfill-20260804-084714`, confirmed RUNNING. **Open question
+  raised, not yet resolved**: re-census after the 38-min run STILL showed 125/68,284 non-MVP shards — genuinely zero new
+  captures despite real fetch activity (run.log showed regular `EXPECTED_NO_PROVIDER_COVERAGE` skips for out-of-coverage
+  non-MVP league fixtures). Read `census_fixture_stats_lineups_widening_volume_2026_07_31.py`'s source: it only counts
+  `capture_status=="captured"` rows as done, with ZERO accounting for `empty_confirmed` (honest-absence) rows — the same
+  blind-spot class as the LEAGUES miscount resolved earlier in this doc. If a meaningful fraction of the 68,284 "needed"
+  shards are actually already-resolved `EXPECTED_NO_PROVIDER_COVERAGE` cases, the true remaining volume could be much
+  smaller than assumed all day. **Not yet confirmed** — a live `capture_status` value-count query for FIXTURE_STATS has
+  been running 10+ min without returning (heavy concurrent manifest-read contention today), so this is flagged as an
+  open investigation, not a confirmed finding. Also noted: the launcher's own output says "after completion, rerun the
+  rescan to materialise empty_confirmed rows" (`launch-sports-manifest-rescan-vm.sh`) — it's possible these gaps aren't
+  even materialized as `empty_confirmed` yet without that separate rescan step, which would mean the census isn't wrong
+  per se, just measuring a state that hasn't been finalized. Do not assume either direction until the pending query
+  resolves or someone re-checks.
