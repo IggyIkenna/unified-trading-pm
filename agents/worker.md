@@ -335,6 +335,40 @@ unrelated commit CAN land between resolution and your own fresh-pull and reintro
 ordinary trunk drift, not a signal bug: act on "resume" immediately (no need to preemptively re-run a full local QG
 first) and let your own quickmerge Pass-1 catch it if the trunk moved again.
 
+#### push_race — stuck behind sustained branch churn
+
+The separate case: your code IS green (Pass-1 QG passed on your exact HEAD), but quickmerge Stage 5's final `git push`
+keeps losing the non-fast-forward race because `origin/live-defi-rollout` is under sustained push churn (many concurrent
+slots landing commits faster than your QG re-run window). You've hit 3+ consecutive Stage-5 push failures on the same
+repo. Do NOT burn turns on blind retries — the BACKEND owns the cooldown-and-notify loop:
+
+1. CONFIRM the failures are pure push races, not a real conflict or QG failure: your tree is clean, QG green on your
+   HEAD, the ONLY rejection from quickmerge is the Stage-5 push's non-fast-forward.
+2. DECLARE the push_race blocker (idempotent — if one is already open for the repo you just join as a waiter):
+
+```bash
+curl -sS -X POST $SERVER_URL/api/repo-blockers \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "repo": "<the churning repo>",
+    "kind": "push_race",
+    "detail": "<3+ consecutive Stage-5 push failures, QG green on local HEAD>",
+    "slot_id": '$SLOT_ID',
+    "task_id": "<task.id>",
+    "escalate": false
+  }'
+```
+
+This dedupes per (repo, kind) — separate from any `qg_red` blocker for the same repo — registers you as a WAITER, and
+suppresses liveness kicks while your heartbeats stay fresh. The backend's RepoHealthWatcher resolves it after
+`push_race_cooldown_seconds` (default 120s) because push-churn windows are transient; there is no CI-state analog to
+poll (unlike `qg_red`), so the cooldown is the resolution mechanism. The resolution message says "push window likely
+open" — act on it immediately: fresh-pull the repo to `origin/live-defi-rollout`, then retry quickmerge push. No CI
+escalation fires for this kind (there's no CI failure to fix).
+
+3. Then: same posture as `qg_red` — if you have other dispatchable work, do that; otherwise send ONE heartbeat and WAIT
+   QUIETLY. The resolution arrives as an outbox message on your next `/progress` or `/heartbeat`.
+
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
 If your task PRODUCES FINDINGS you are NOT fixing inline in this same task (an audit, review, consistency-check,
