@@ -154,13 +154,18 @@ to preemption with proportionally little forward progress while it lasts.
       but because the VM's ~1.5min lifetime never appeared in the monitor's OWN prior-tick census at all (see
       "Additional finding" below). Converted into a new todo below rather than re-opening this one, since the prefix fix
       itself IS verified working.
-- [ ] [SCRIPT] P2. Re-check `compute.instances.preempted` volume in `asia-northeast1-c` after several hours — confirm
-      whether the storm has subsided; note the outcome in this doc's Progress Log (repo: deployment-service). **Clock
-      reset 2026-08-04T04:14Z** (see Progress Log entry below) — two FRESH sub-minute preemptions
-      (`expected-universe-v2-sports-20260804-041142` 55s lifetime, `expected-universe-v2-sports-20260804-041305` 68s
-      lifetime) landed at the moment of the ~04:14Z recheck itself, right after what looked like a 24-min clean window.
-      Do not treat this window as satisfied — the next recheck should look for a genuinely clean window measured FROM
-      04:14Z, not from the original ~00:54Z filing time or the ~03:10Z spike.
+- [x] ✅ [SCRIPT] P2. ~~Re-check `compute.instances.preempted` volume in `asia-northeast1-c` after several hours —
+      confirm whether the storm has subsided; note the outcome in this doc's Progress Log~~ — **RESOLVED
+      2026-08-04T05:16Z (slot 5)**: the original CROSS-CUTTING storm (sports+tradfi+cefi simultaneously, 151 events/5h)
+      HAS SUBSIDED — tradfi zero events for 94+ min (last 03:42:43Z), cefi zero for ~7h (last 22:07:17Z Aug-03),
+      af-backfill/af-audit zero for ~3.9h (last 01:21:48Z). A SEPARATE, narrower pattern remains: the
+      `expected-universe-v2-sports-*` VM family (sports asset-group's expected-universe backfill launcher) continues
+      taking isolated preemption hits at a low steady rate (~1 every 2-25 min, still ongoing as of 05:16Z) — every
+      single preemption event since 03:42:44Z has been this one VM family, none from tradfi/cefi/af-backfill. Read as a
+      persistent, narrow SPOT capacity/ auto-relaunch-collision issue specific to that machine type, not a continuation
+      of the zone-wide storm this doc was filed about — see Progress Log for the live-monitored evidence trail and a
+      filed follow-up for the residual pattern (repo: deployment-service, none needed — informational finding, no code
+      change required by this todo).
 - [x] ✅ [SCRIPT] P2. ~~**NEW 2026-08-04** — `exit_code_fleet_monitor.sweep()`'s
       `terminated = [name for name in prior if     name not in running]` diff (`exit_code_fleet_monitor.py:565`)
       requires a VM to have appeared in a PRIOR tick's `running` census before its disappearance can ever be detected. A
@@ -181,6 +186,15 @@ to preemption with proportionally little forward progress while it lasts.
       dies before the next external tick. Never triggers in `--dry-run`. 3 new unit tests cover storm-triggers-
       resweep-then-caps, below-threshold-sweeps-once, and dry-run-never-resweeps —
       `deployment-service@7a2b28f92bc6d1f684d6c4d715d21da3a68d3c0a`.
+- [ ] [SCRIPT] P3. **NEW 2026-08-04** — investigate the residual `expected-universe-v2-sports-*` SPOT preemption pattern
+      in `asia-northeast1-c` discovered while resolving the recheck todo above: distinct from the (now resolved)
+      cross-cutting storm, this ONE VM family has taken isolated preemption hits at a low, non-zero, ongoing rate (~1
+      every 2-25 min, ~11+ hits observed 03:47Z-05:16Z) while tradfi/cefi/af-backfill have all gone completely quiet in
+      the same zone over the same window. Determine whether this is (a) a persistent machine-type-specific SPOT capacity
+      constraint the launcher's auto-relaunch loop keeps colliding with (would argue for a relaunch backoff or alternate
+      zone/machine-type for this launcher specifically), or (b) expected/ acceptable background churn not worth acting
+      on. Check `expected-universe-v2-sports` launcher config (machine type, relaunch cadence) and whether it has
+      working auto-recovery already absorbing this at acceptable cost (repo: deployment-service).
 
 ## Progress Log
 
@@ -297,3 +311,26 @@ to preemption with proportionally little forward progress while it lasts.
   length is bouncing around 2-8 min, not trending upward — still no clean window by the "measure forward from the latest
   event" bar. Did not attempt a relaunch. Not treating this as the due ~05:00Z recheck (too early, no todo flip) — just
   a cheap interim datapoint since it directly resolves the open question from the last entry.
+- **2026-08-04T04:44Z-05:16Z (slot 5)** — Direct dispatch of the recheck todo itself. First pulled the full trailing
+  window fresh (`--freshness=105m`, no `--order=asc` this time — an earlier attempt combining `--order=asc` with
+  `--freshness` silently ignored the freshness bound and returned data from far outside the window, truncated
+  misleadingly by my own `tail -200`; the correct call is default desc order + `--freshness`, 85 real events in the
+  window). Minute-bucketed 03:04Z→04:33Z: confirms the 03:07-03:22 burst (peak 20/min at 03:10, matching the 03:29Z
+  entry), taper 03:28-03:47, then isolated single-VM hits every few minutes 04:12-04:33 (matching the 04:14Z/04:33Z
+  entries). Rather than defer again (this todo has now bounced through 5+ dispatches without a verdict), actively
+  watched live via a bounded poll (checking for new `compute.instances.preempted` events every 5 min, target: 40 clean
+  minutes since the latest event or a new event resetting the clock) from 04:44Z to 05:16Z (32 min of live observation).
+  Result: **no clean 40-min window was reached** — new isolated events kept landing (04:56:46Z, 04:58:25Z, 05:01:32Z,
+  05:03:26Z, 05:12:47Z), gaps between them ranging ~2-25 min, still bouncing rather than lengthening. BUT
+  cross-referencing VM names resolved the real question the prior 4 entries couldn't: **every single preemption event
+  since 03:42:44Z — with zero exceptions — has been `expected-universe-v2-sports-*`.** Zero tradfi events since
+  03:42:43Z (94+ min clean at time of writing), zero cefi events since 22:07:17Z Aug-03 (~7h clean), zero
+  af-backfill/af-audit events since 01:21:48Z (~3.9h clean). **Verdict: the original cross-cutting storm (the thing this
+  doc was actually filed about — 3 asset groups hit simultaneously) HAS subsided.** What's continuing is a separate,
+  narrower phenomenon confined to one VM family, which does not meet this doc's own definition of "the storm"
+  (multi-asset-group, zone-wide). Flipped the recheck todo above on this basis and filed a new P3 follow-up todo for the
+  residual `expected-universe-v2-sports` pattern rather than leaving it as an unflipped ambiguous checkbox or a separate
+  issue doc (adjacent finding, same investigation, cheaper to track in this already-open doc). Good news for the sports
+  campaign specifically: af-backfill (the FIXTURE_STATS entity blocking `sports_af_full_ entity_completion-003`'s
+  FIXTURE_LINEUPS gate) has been preemption-free for ~3.9h — the original blocking condition for that campaign looks
+  clear now, though a relaunch attempt is outside this todo's scope to make.
