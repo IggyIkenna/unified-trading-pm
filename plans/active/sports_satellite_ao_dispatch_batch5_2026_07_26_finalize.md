@@ -187,14 +187,15 @@ context_scope:
       (`batch4_finalize` todo 2) has not run — `batch4_finalize` is still `status: draft`, never dispatched. Confirmed
       still open. (3) `sports_catalog_league_grain_only_scope_2026_07_08.md` — still deferred; no operator ruling found
       on the Track S/E/V sequencing fork. Confirmed still open. (4)
-      `sports_legacy_fixtures_path_migration_2026_07_24.md` — still deferred;
-      `autonomous_session_operator_decisions_2026_07_25.md` (entry #7's host doc) is still `status: open` with no entry
-      #7 resolution found. Confirmed still open. **Operator-gated (11)**: (5) `data_completion_sports_2026_07_24.md` —
-      MIXED: the rate-limit calibration-probe todo (line 397) was already downgraded `[OPERATOR]`→`[SCRIPT] P1`
-      AO-dispatchable on 2026-07-27 (finding E, vm-launcher-runbook.md), independent of and predating batch5's
-      RULED-2026-07-28 note on it (redundant, not wrong). The API-Football quota-bump todo (line 801) is still plain
-      `[DATA] P2` text, NOT yet retagged to reflect the RULED "proceed with bump" decision + its operator-only
-      vendor-account residual. **Ready for `batch6` extraction** (the quota-bump retag half only). (6)
+      `sports_legacy_fixtures_path_migration_2026_07_24.md` (now archived at `/plans/archive/2026_08/`) — still
+      deferred; `autonomous_session_operator_decisions_2026_07_25.md` (entry #7's host doc) is still `status: open` with
+      no entry #7 resolution found. Confirmed still open. **Operator-gated (11)**: (5)
+      `data_completion_sports_2026_07_24.md` — MIXED: the rate-limit calibration-probe todo (line 397) was already
+      downgraded `[OPERATOR]`→`[SCRIPT] P1` AO-dispatchable on 2026-07-27 (finding E, vm-launcher-runbook.md),
+      independent of and predating batch5's RULED-2026-07-28 note on it (redundant, not wrong). The API-Football
+      quota-bump todo (line 801) is still plain `[DATA] P2` text, NOT yet retagged to reflect the RULED "proceed with
+      bump" decision + its operator-only vendor-account residual. **Ready for `batch6` extraction** (the quota-bump
+      retag half only). (6)
       `plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` — **ALREADY
       FULLY DONE, batch5's RULED-2026-07-28 note is stale.** Direct read: todos 12/13/14 are ALL `[x]` — 12 done
       2026-07-24 (found on HEAD 2026-07-27), 13 confirmed via behavioral evidence, 14 EXECUTED 2026-07-27T01:11:27Z; doc

@@ -65,7 +65,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md,
+    /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/sports-gcs-path-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

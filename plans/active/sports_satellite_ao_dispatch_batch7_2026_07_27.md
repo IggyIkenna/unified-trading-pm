@@ -215,7 +215,7 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
   (`sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`, itself still mid-dispatch). Re-check once both close.
 - **Track S — eliminate/document the legacy bare `entity=fixtures/` write path.** Confirmed live, unresolved three-way
   conflict (`sports_catalog_league_grain_only_scope_2026_07_08.md`'s active design still writes to the same path;
-  `sports_legacy_fixtures_path_migration_2026_07_24.md`'s fallback-removal scope may overlap) —
+  `/plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md`'s fallback-removal scope may overlap) —
   `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s own Deferred section already tracks this awaiting an operator
   ruling. Operator-gated, not re-drafted.
 - **Track E — repoint the 7 remaining stale `entity=fixtures` consumers.** Same conflict as above (shares the

@@ -213,10 +213,10 @@ read-only/diagnosis-only, cannot regress or race the R1/R2/R3 gate. No file edit
 
 ## 7. Fixtures legacy-path census vs. Track S/Track E/C1's entangled restamp residual (2026-07-25, sports)
 
-`sports_legacy_fixtures_path_migration_2026_07_24.md`'s one AO-eligible candidate (a read-only, no-write per-date/
-per-league census across all 2,319 post-floor dates, confirming the exact load-bearing legacy-`entity=fixtures/` subset
-via real GCS object reads) carries 3 flagged conflicts against `sports_consolidated_closeout_2026_07_19.md`'s own OPEN
-ground, all re-verified still open 2026-07-25:
+`sports_legacy_fixtures_path_migration_2026_07_24.md` (archived at `/plans/archive/2026_08/`)'s one AO-eligible
+candidate (a read-only, no-write per-date/ per-league census across all 2,319 post-floor dates, confirming the exact
+load-bearing legacy-`entity=fixtures/` subset via real GCS object reads) carries 3 flagged conflicts against
+`sports_consolidated_closeout_2026_07_19.md`'s own OPEN ground, all re-verified still open 2026-07-25:
 
 1. Track S (line 419-420): "Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path
    still active today alongside the canonical split writer (5-league subset)." — if this writer is still live, newly
@@ -246,9 +246,9 @@ until the operator rules on the 55,233-row DELETE-policy question in
 plan are designed together in one pass instead of the census possibly needing a re-run. Other: operator can type a
 custom answer
 
-**Status**: resolved — verified the census todo in `sports_legacy_fixtures_path_migration_2026_07_24.md` already
-requires a real GCS object read (not manifest-label-only) on the legacy side per its own text — the scope correction
-option A called for was already present. Dispatch as-is.
+**Status**: resolved — verified the census todo in `sports_legacy_fixtures_path_migration_2026_07_24.md` (archived at
+`/plans/archive/2026_08/`) already requires a real GCS object read (not manifest-label-only) on the legacy side per its
+own text — the scope correction option A called for was already present. Dispatch as-is.
 
 ---
 

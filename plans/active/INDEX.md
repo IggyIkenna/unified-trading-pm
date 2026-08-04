@@ -443,13 +443,14 @@ by hand._
   Scopes a `run_sports_backtest` CLI in execution-service, mirroring the 3 existing domain runners
   (run_cefi_backtest/run_tradfi_backtest/run_defi_backtest), so sports/predictions gets a real Group-C execution-alpha
   harness. Decided…
-- [`sports_legacy_fixtures_path_migration_2026_07_24`](./sports_legacy_fixtures_path_migration_2026_07_24.md) — Forked
-  from sports_consolidated_closeout_2026_07_19.md's "Live contradiction with this closeout's FROZEN-legacy-path
-  declaration" todo (operator ruling 2026-07-24: scope a real migration, do not grandfather). instruments-service's…
-- [`sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02`](./sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md)
-  — Gated closeout for sports_legacy_fixtures_path_migration_2026_07_24.md, reclassified `assigned_vm: NA -> planning`
-  (plus `execution_scope: local-only -> orchestrator-agent` and `sequential: true`) on 2026-08-02 per the operator
-  ruling of…
+- [`sports_legacy_fixtures_path_migration_2026_07_24`](../archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md)
+  — ✅ COMPLETE. Forked from sports_consolidated_closeout_2026_07_19.md's "Live contradiction with this closeout's
+  FROZEN-legacy-path declaration" todo (operator ruling 2026-07-24: scope a real migration, do not grandfather).
+  instruments-service's…
+- [`sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02`](../archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24_finalize_2026_08_02.md)
+  — ✅ COMPLETE. Gated closeout for sports_legacy_fixtures_path_migration_2026_07_24.md, reclassified
+  `assigned_vm: NA -> planning` (plus `execution_scope: local-only -> orchestrator-agent` and `sequential: true`) on
+  2026-08-02 per the operator ruling of…
 - [`sports_live_availability_and_source_latency_2026_07_24`](../archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md)
   — Sports-specific live/forward data-availability matrix (per data_type x source: availability phase, live
   timestamp/cadence, live feed status, gap + cheap-source recommendation) and the companion source-latency validation

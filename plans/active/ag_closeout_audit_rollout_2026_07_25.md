@@ -147,8 +147,8 @@ context_scope:
   `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`, `sports_catalog_league_grain_only_scope_2026_07_08.md`,
   `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`,
   `sports_group_c_execution_backtest_harness_2026_07_21.md`,
-  `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`,
-  `sports_legacy_fixtures_path_migration_2026_07_24.md`, `sports_live_availability_and_source_latency_2026_07_24.md`,
+  `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`, `sports_legacy_fixtures_path_migration_2026_07_24.md`
+  (archived `/plans/archive/2026_08/`), `sports_live_availability_and_source_latency_2026_07_24.md`,
   `sports_odds_feature_naming_canonicalization_2026_07_21.md`,
   `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
   `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`,

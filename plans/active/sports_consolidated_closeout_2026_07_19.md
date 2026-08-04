@@ -40,7 +40,7 @@ related:
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
-    /plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md,
+    /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
@@ -197,11 +197,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   `"FIXTURES"` umbrella** (§ C1). **✅ RESOLVED for reads (2026-08-04): the freeze is now TRUE — no live reads of the
   legacy bare `entity=fixtures/` path remain.** The read fallback `_read_fixtures_entity_with_schedule_fallback` and its
   4 call sites in `sports_fixtures.py` were removed (`instruments-service@333c35d2`,
-  `/plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md` todo 5); a full Phase-1 census across all 2,319
-  post-floor dates confirmed the fallback was never load-bearing (0 dates where canonical `fixtures_schedule/` was empty
-  and legacy `fixtures/` had real data). The two remaining write-side artifacts from the original 2026-07-23 NOTE are
-  still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of 07-17)
-  and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
+  `/plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md` todo 5); a full Phase-1 census across all
+  2,319 post-floor dates confirmed the fallback was never load-bearing (0 dates where canonical `fixtures_schedule/` was
+  empty and legacy `fixtures/` had real data). The two remaining write-side artifacts from the original 2026-07-23 NOTE
+  are still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of
+  07-17) and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
   `entity={fixtures,teams, injuries}/` under a different namespace) — tracked via Track S/E's todos below. **SECOND
   CROSS-LINK (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
   `sports_catalog_league_grain_only_scope_2026_07_08.md` also independently designs a manifest-schema extension for
