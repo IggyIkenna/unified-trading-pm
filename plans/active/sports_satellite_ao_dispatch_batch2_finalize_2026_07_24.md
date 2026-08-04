@@ -13,8 +13,8 @@ summary: >-
   the standard archival ritual on batch 2. This is the completeness pass — the goal is zero orphaned sports satellite
   work once this plan's own todos are done: every source doc's real remaining work is either shipped, re-tracked as a
   new explicit todo, or confirmed still correctly gated on a human decision.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [sports]
 stage: [data]
 repos: [unified-trading-pm, features-service, ml-service, strategy-service, instruments-service]
@@ -40,6 +40,10 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+resolved_by:
+  "6-step archival ritual executed; parent plan sports_satellite_ao_dispatch_batch2_2026_07_24.md archived alongside;
+  all referrers updated corpus-wide. Archived 2026-08-04."
+resolved_at: "2026-08-04"
 depends_on: [sports_satellite_ao_dispatch_batch2_2026_07_24]
 gate_on_depends: true
 source: >-
@@ -165,7 +169,7 @@ context_scope:
       O(entities×leagues)→O(entities). No VM run log accessible (no GCS creds on shared planning VM; running a real
       backfill directly would violate heavy-compute-on-shared-host HARD RULE). QG green (109s). Evidence recorded in
       source issue doc Progress Log (2026-08-04 entry).
-- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 3 above should have
       already cleared all 4 — verify none remain) → add the archive banner → run the codex-alignment check (do any codex
       docs need a status update now that these 37 items shipped — e.g. the WEATHER layout fix, the odds-feature naming
