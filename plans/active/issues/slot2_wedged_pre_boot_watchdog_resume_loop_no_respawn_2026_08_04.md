@@ -84,8 +84,27 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
       looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
       mismatch (the pane is past boot; the state says pre_boot). (repo: agent-orchestrator)
+- [ ] [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)**. Review #3662 + main confirmed
+      (2026-08-04 ~03:58Z): slot 3 (same host ip-172-31-5-118) is `worker_alive=false` + `tmux_alive=true` (dead worker,
+      live pane), `phase=working`, 6 `worker_kicked`/idle events over ~55min at ~10-11min cadence with **every** kick
+      `ping_advanced=false` (no progress despite `post_kick_classification=working`) — the same dead-worker-live-pane
+      wedge as slot 2 that the watchdog cannot escalate. Its task `tradfi_es_cme_ohlcv_zero_capture-008` is separately
+      gated on repo-blocker **RB-e7d79260** (the MTDS qg_red blocker), so even a live worker couldn't progress. Kill +
+      AutoSpawn clean start (operator-owned). **Before touching slot 3's mtds worktree**: it is diverged
+      ahead=1/behind=5 (`drift_violation=true`, stale since 2026-08-03T22:42Z) — verify whether the ahead=1 MTDS commit
+      is real unique work worth rescuing first (main did NOT inspect slot 3's worktree — not main's, and it is
+      drift-violating). NOTE: the separately-flagged unified-api-contracts orphan `ce7d7d1e2` ("chore(capability):
+      regenerate manifest…") is main-verified NOT-on-LDR but review flagged it **WOULD-REGRESS if applied** — do NOT
+      rescue/apply ce7d7d1e2; let drift-quarantine discard it. (repo: agent-orchestrator — operator action)
 
 ## Progress Log
+
+- **2026-08-04 ~04:00Z (main agt-1756f6)** — added slot 3 as a 2nd instance of the wedged-slot class (review #3662).
+  Same dead-worker-live-pane signature (`worker_alive=false`/`tmux_alive=true`), watchdog kicking with
+  `ping_advanced=false` and never escalating to respawn — corroborates the [BACKEND] watchdog-escalation todo above (now
+  two independent instances, slot 2 + slot 3). Slot 3 also carries a stale MTDS drift-violation (ahead=1/behind=5) + is
+  gated on RB-e7d79260; verified ce7d7d1e2 is a real orphan but WOULD-REGRESS so it must NOT be applied. Main did not
+  touch slot 3's worktree (not mine + drift-violating). Kill+respawn stays operator-owned.
 
 - **2026-08-04 ~02:47Z (main agt-1756f6)**: Filed after review #3653 handed the slot-2 decision to main. Main took the
   within-authority path first (concrete `/api/slots/2/message` nudge, since main cannot kill slots) — it did not clear
