@@ -85,7 +85,7 @@ for this exact multi-instrument-per-group shape.
 
 ## Todos
 
-- [ ] [DATA] P2. Fix `vault_share_price_handler.py::_write_group_shard`/`_record_shard_captured` to record ONE
+- [x] ✅ [DATA] P2. Fix `vault_share_price_handler.py::_write_group_shard`/`_record_shard_captured` to record ONE
       `record_captured` call PER WRITTEN SHARD (mirroring `_lst_rates_write._write_single_lst_group`'s loop), each with
       its own shard's real `instrument_id`, instead of one aggregate call per (protocol, chain) group. After shipping,
       re-run (or wait for the next natural cron cycle to organically produce) at least one day of fresh
@@ -93,7 +93,12 @@ for this exact multi-instrument-per-group shape.
       written GCS object's own `instrument_id` column. Does NOT require re-backfilling the already-captured 90-day
       window from `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` todo 3 — that data stays valid
       (source=onchain_rpc correctly tagged, capture_status=captured correctly recorded); only the `instrument_id` field
-      on NEW/future rows needs the fix. (repo: market-tick-data-service)
+      on NEW/future rows needs the fix. (repo: market-tick-data-service) — market-tick-data-service@b0909a5e. Loop now
+      mirrors `_write_single_lst_group`: one `record_captured` per written instrument shard with that shard's own
+      lowercased `instrument_id`. Regression test added (`test_process_record_captured_stamps_instrument_id_per_shard`)
+      asserting `record_captured` fires once per registry vault with a distinct non-blank `instrument_id`. Verification
+      of the next NATURAL fresh capture (cron-produced manifest row with non-null `instrument_id`) is still outstanding
+      — not yet observed live, since this fix only affects rows written going forward.
 
 ## Progress Log
 
@@ -103,3 +108,13 @@ for this exact multi-instrument-per-group shape.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped in the actual handler being fixed
   (`vault_share_price_handler.py`) plus the sibling file with the already-proven fix pattern (`_lst_rates_write.py`),
   dropped the archived origin plan (context now redundant with the body).
+- **2026-08-04 (slot-6, data_engineering craft)**: shipped the fix — `market-tick-data-service@b0909a5e`.
+  `_write_group_shard`/`_record_shard_captured` now loop each written instrument shard (same shape
+  `_lst_rates_write._write_single_lst_group` already proved) and call `record_captured` once per shard with that shard's
+  own lowercased `instrument_id`, instead of one aggregate (protocol, chain) call with a blank `instrument_id`. Added
+  `test_process_record_captured_stamps_instrument_id_per_shard` asserting `record_captured` fires once per registry
+  vault, each with a distinct non-blank `instrument_id`. Pass-1 `quality-gates.sh` green (sentinel = `b0909a5e`),
+  shipped via `quickmerge --agent`, verified on `origin/live-defi-rollout`. Does NOT include the todo's live
+  confirmation step (waiting for a natural fresh capture / next cron cycle to show a non-null `instrument_id` manifest
+  row) — that observation is still outstanding since it only affects rows written going forward; leaving `status: open`
+  until someone confirms a live post-fix manifest row.
