@@ -112,9 +112,17 @@ full `quality-gates.sh --no-fix` processes during this investigation).
       `tests/smoke/test_shard_combinatorics.py::test_cli_dry_run_all_category_venue_combos` runs**, OR mark that
       parametrized test `@pytest.mark.skipif` when the upstream `.seed-complete` marker is absent (a live-verified
       precondition it currently trusts silently) instead of failing all 135 combos with a raw `assert result == 0`.
-      Repo: market-data-processing-service (+ market-tick-data-service, instruments-service for the seed orchestration
-      option). Done when: 5 consecutive `bash scripts/quality-gates.sh` runs on an unchanged tree produce identical
-      pytest pass/fail counts (no more all-or-nothing flip).
+      **Confirmed the chain is currently un-seedable from a clean slot at all**: MTDS's `scripts/seed_mock_data.py`
+      requires an upstream `instruments-service` `.seed-complete` marker (`_get_upstream_dir()`/similar, line ~87-96),
+      but `instruments-service` has **no seed script of its own** anywhere in the repo (confirmed via corpus-wide search
+      — this is the root of the chain, not just a wiring gap). Fix needs a genuine
+      `instruments-service/scripts/seed_mock_data.py` (Layer 0/1) before MTDS's or MDPS's seed scripts can ever succeed
+      unassisted. Repo: instruments-service (new seed script) + market-tick-data-service +
+      market-data-processing-service (wiring/skipif fallback). Done when: **Pass-1 (`quality-gates.sh`) is deterministic
+      from a genuinely clean slot** (fresh `.tabs/<N>/` checkout, no pre-existing `.local-dev-cache/`) — i.e. no
+      `.seed-complete` dependency left un-resolved, or the dependent test explicitly skips instead of failing when
+      absent. Operator ruling 2026-08-04 (`BLK-0b3353db`): this is real 3-repo scope, decoupled from any single
+      adapter-registration task — do not fold it into an unrelated diff's shipping path.
 - [ ] [SCRIPT] P3. **Fix the stale `test_total_shard_combinations` threshold**
       (`tests/smoke/test_shard_combinatorics.py:92`) — either raise the hardcoded `< 10000` bound to reflect the real
       current combinatorics (27055+ headroom) or make it a documented ratchet rather than a magic number. Repo:
