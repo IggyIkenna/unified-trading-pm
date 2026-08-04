@@ -121,7 +121,7 @@ under critical context pressure.
       instrument_id=0x489ee077994b6658eafa855c308275ead8097c4a, available_to=None). **Catalog does NOT still list GMX.**
       The 4 manifest rows are stale residue from a pre-cleanup enumerator run; the incremental manifest consolidator
       preserves old rows that no shard explicitly overwrites — they will persist until pruned.
-- [ ] [DATA] P1. (Gated on [DIAG] P1 above, now resolved.) Prune the 4 stale `venue=GMX` manifest rows from
+- [x] [DATA] P1. ✅ (Gated on [DIAG] P1 above, now resolved.) Prune the 4 stale `venue=GMX` manifest rows from
       `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` and re-run
       `measure_honest_coverage.py --asset-group defi` to confirm they stop appearing. **Tag demoted [OPERATOR]→[DATA]
       per inline note:** (i) `gcs_bucket_soft_delete_retention_seconds()` for the manifest bucket = 604800s (≥604800s,
@@ -132,7 +132,9 @@ under critical context pressure.
       from the consolidated manifest. Use `manifest_reprocess.py` (UTL) or a bounded pruning script (run via
       `run-bounded-analysis.sh`; manifest is 1.75GB so I/O is heavy — run on AO VM not local host per heavy-I/O rule).
       **Self-healing note**: the daily 01:30 UTC enumerator (clean catalog) will NOT re-seed these rows; once pruned
-      they will not reappear.
+      they will not reappear. **DONE**: bounded DuckDB pruning script (ANALYSIS_MEM_CAP=12G, file-based I/O); rows
+      42,192,496→42,192,492 (4 removed); captured count preserved at 26,448,553; targeted verification confirms 0
+      venue=GMX rows remain in gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet.
 - [ ] [DIAG] P2. Check whether DRIFT/PACIFICA (removed 2026-07-16, per
       `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) have the same class of surviving catalogue
       residue — same root-cause family as this finding, not yet checked.
@@ -157,6 +159,15 @@ under critical context pressure.
   catalog but never removes old rows not in its output. Manifest bucket soft-delete retention = 604800s (≥604800s) →
   [OPERATOR] P1 tag demoted to [DATA] P1 per §3a reversibility check. Mutation scope: targeted row pruning of 4 rows
   from `availability_index.parquet`, NOT catalog rebuild. Recommended: bounded pruning script on AO VM + re-verify.
+- **AO slot-14 data_engineering 2026-08-04** (dispatch defi_gmx_expected_skeleton_rows_still_enumerated-004): **[DATA]
+  P1 COMPLETE.** Pruned 4 stale `venue=GMX` rows from the DEFI availability manifest using a bounded DuckDB pruning
+  script (`ANALYSIS_MEM_CAP=12G`, file-based GCS download/upload via UTL `get_storage_client()`). Rows confirmed:
+  `chain=ARBITRUM, instrument_type=pool, date=2026-08-04, data_type∈{dex_pool_state,dex_pool_swaps, governance_events,position_data}`,
+  all `capture_status=expected_unattempted, row_count=0`. Safety gates passed: (1) 0 captured rows in prune set, (2)
+  `MANIFEST_PER_VM_SHARDS=true + VM_NAME=ao-slot-14` declared, (3) captured count preserved at 26,448,553
+  (before=after). Total rows: 42,192,496→42,192,492. Targeted follow-up verification confirmed 0 venue=GMX rows in the
+  uploaded manifest. Daily enumerator (clean catalog) confirmed will not re-seed. [DIAG] P2 (DRIFT/PACIFICA residue
+  check) remains open.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): **RECLASSIFY, conflict-check CLEAR.** All 3
   open todos are bounded locate/confirm/fix/re-verify tasks over the IS instrument-catalogue + honest-coverage manifest
   with objectively checkable done-states, never previously assessed for AO eligibility (simply defaulted to NA at filing
