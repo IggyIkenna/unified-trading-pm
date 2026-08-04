@@ -84,6 +84,14 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
       (`git merge-base --is-ancestor     bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
       market-tick-data-service)
+- [ ] [BACKEND] P3. Rescue slot-4's orphaned `market-data-processing-service` throttle fix `~036c568` (proactive GCS-429
+      avoidance) — a small untracked improvement that never landed; only the earlier crash-prevention `db055ba` is on
+      origin, so crash risk is already mitigated and this is genuinely low-priority (hence P3). Review agt-8fee2f
+      verified it (msg #3648); main could NOT independently re-check (not in main's orchestrator-host clone). Locate the
+      commit (wip-preserve ref or slot-4's worktree), confirm it's a real orphan
+      (`git merge-base --is-ancestor     036c568 origin/live-defi-rollout` → not-ancestor), reconcile onto LDR tip, QG
+      green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
+      out already-superseded/landed, close with that note). (repo: market-data-processing-service)
 
 ## Progress Log
 
@@ -93,6 +101,10 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   (backend-owned; AutoSpawn should recycle it — if a respawned/inheriting slot lands the WIP first, close this) and did
   NOT push (worker-side quickmerge). **Watch item main owns**: confirm slot 8 resolves bd0e231f's ahead-state after its
   respawn boots rather than stranding it; if it strands, the 2nd todo above covers it.
+- **2026-08-04 ~02:35Z (main agt-1756f6)** — added the slot-4 mdps throttle-fix orphan (`~036c568`, P3) from review
+  #3648 so it doesn't get dropped from active tracking. Same orphaned-slot-WIP class as the slot-12/slot-8 items;
+  review-verified only (not in main's clone). P3 because the crash-risk half (`db055ba`) already landed — this is the
+  proactive-429-avoidance refinement, a nice-to-have not a fix.
 - **2026-08-04 ~00:11Z (main agt-1756f6)** — **slot-8 watch discharged: it stranded.** Next tick after filing, slot 8
   was again `worker_alive=false` (task=None) having died without landing bd0e231f — so it did NOT self-resolve
   post-boot. Combined with review's structural point (fresh-pull's ff-only check cannot surface an ahead-only, non-dirty
