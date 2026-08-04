@@ -226,17 +226,23 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
       `source=yahoo`/`pipeline_mode=batch_yahoo` not fully traced (honest boundary, see caveat 4 above).
       market-tick-data-service@84abe868 (investigation script; no writer-code change this todo — see the 2 follow-up
       todos below).
-- [ ] [DATA] P2. **Fix the underlying writer bug** — `rebuild_manifest_from_canonical_paths()` /
+- [x] ✅ [DATA] P2. **Fix the underlying writer bug** — `rebuild_manifest_from_canonical_paths()` /
       `merge_manifest_from_canonical_paths()` in
-      `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py` must stop silently hardcoding
-      `instrument_id=""` for a per-instrument-grain venue's canonical-path rebuild. Either (a) extend the path-parsing
-      regexes to also capture the filename stem and derive `instrument_id` for venues whose GCS layout embeds one
-      (mirrors the same filename-stem gap already tracked in
-      `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` for a different oracle), or (b)
-      have the rebuild refuse to emit a row for a shard it cannot resolve a per-instrument id for (skip + count, rather
-      than silently write a blank-id placeholder that later reads back as a false `capture_status=captured`). Add a
-      regression test proving a re-run of `--from-canonical` against a corpus with per-instrument-grain venues no longer
-      produces a blank-`instrument_id` row. (repo: unified-trading-library)
+      `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py` no longer silently hardcode
+      `instrument_id=""` for a per-instrument-grain venue's canonical-path rebuild. Implemented option (a): both writer
+      lanes that feed a candle/tick rebuild (MTDS `PartitionedTickWriter`, MDPS's `candle_leaf_filename`) already share
+      one convention — a per-instrument write names its GCS leaf file `{instrument_id}.parquet` verbatim (the FULL
+      canonical id, e.g. `FX:SPOT_PAIR:EUR-USD.parquet`), while a genuinely symbol-less bundle write always uses the
+      literal leaf `ticks.parquet`. New `_instrument_id_from_leaf()` reads that back (no parsing/guessing — the id was
+      already embedded by the writer) instead of hardcoding blank; `instrument_id` joined the shard-grouping key
+      (`_candle_shard_key_of` / `_walk_canonical_candle_shards`, now shared by BOTH rebuild and merge — closes a latent
+      drift risk where rebuild carried its own near-duplicate copy of the parse loop) so distinct per-instrument
+      captures on the same day no longer collapse into one phantom blank-id row with an inflated `instrument_count` (the
+      exact `instrument_count=5820.0` symptom this issue doc's own evidence section documented). Regression test
+      `test_rebuild_from_canonical_paths_recovers_per_instrument_id_no_blank_rows` proves two distinct FX pairs on the
+      same day get two distinct non-blank-id rows (rebuild + idempotent re-run), while a genuine symbol-less bundle
+      write still correctly stays blank. `unified-trading-library@64701222` (verified on origin; full `quality-gates.sh`
+      green, sentinel-verified quickmerge). (repo: unified-trading-library)
 - [ ] [DATA] P2. **Quarantine or delete the 1,812 existing phantom rows** confirmed to have zero backing GCS object
       (this todo's own evidence) — these are DIFFERENT rows from Defect 2's 1,958 collision candidates (those have a
       real, GCS-content-verified backing object; these do not), so this is a separate cleanup pass. Since
@@ -271,3 +277,11 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
   discarded by the crash-recovery reset when this slot's session died mid-task (waiting on a shared
   `market-tick-data-service` repo-blocker, `RB-e7d79260`, unrelated `cryptography` CVE) — recovered via
   `git cherry-pick` after resume, content verified byte-identical before re-shipping.
+- **2026-08-04 (slot 10, data_engineering)**: closed todo 2 (fix the underlying writer bug) — implemented option (a):
+  `_instrument_id_from_leaf()` reads the per-instrument id the writer already embeds in the GCS leaf filename (both MTDS
+  and MDPS writer lanes share the `{instrument_id}.parquet` vs. symbol-less-bundle `ticks.parquet` convention), and both
+  `rebuild_manifest_from_canonical_paths()`/`merge_manifest_from_canonical_paths()` now key discovered shards on it
+  instead of hardcoding blank. Added a regression test proving no blank-`instrument_id` row survives a rebuild (or
+  re-run) of a per-instrument-grain corpus, while a genuine symbol-less bundle still stays blank.
+  `unified-trading-library@64701222` (verified on origin). Follow-up todos 3 (quarantine the 1,812 phantom rows) and 4
+  (dedup the 1,958 collision rows) remain open — this todo's own scope was the writer fix only.
