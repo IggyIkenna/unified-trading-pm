@@ -482,3 +482,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
   momentary, not sustained. This STOCKOUT (as distinct from a post-launch preemption) is a genuinely new data point for
   the zone's capacity pressure — worth a mention if anyone picks up the residual `expected-universe-v2-sports`
   investigation again, though not pursued further here.
+- **2026-08-04T12:37Z** — Two more short attempts (`-121224` ~51s, `-121839` ~2.3min). Checked the broader zone-wide
+  preemption rate to rule out a resurging storm before continuing to just relaunch blindly: only 13 events in the
+  trailing 60min, no dense clustering — confirms this is still the same low, sustained background rate already
+  documented (not a new crisis). Relaunched PLAYER_STATS again (`af-backfill-20260804-123759`), confirmed RUNNING.
