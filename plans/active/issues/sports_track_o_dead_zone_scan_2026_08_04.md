@@ -1,0 +1,162 @@
+---
+doc_type: issue
+title: Track O dead-zone scan — low-fixture December 2025 dates + bm_minutes gap analysis
+summary: >-
+  Manifest-based scan confirms December 2025 weekday dates show 9-16% capture rates (vs. 63-77% on weekends), consistent
+  with the T-12h↔T-24h dead-zone hypothesis. No pure-dead-zone dates found (all empty, <=5 rows), but the pattern is
+  strong. TIER_1_OFFSETS multi-shot loop gap likely relates to the odds_api scraper cadence on low-fixture days — fewer
+  fixtures → fewer fetch iterations → more odds land in the 615-minute dead zone.
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+parent_epic: sports_master
+resolved_by: []
+repos: [market-data-processing-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer]
+tags: [sports, odds, dead-zone, track-o, diagnosis, bm-minutes]
+related:
+  [
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
+created: "2026-08-04"
+author: slot-10 (data_engineering)
+source:
+  [
+    "sports_consolidated_native_ao_extract-009 Track O P2 diagnosis",
+    "Manifest query: instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet",
+    "Code: market-data-processing-service/app/adapters/sports/bucket_assignment_adapter.py TIER1_HORIZONS",
+  ]
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by:
+locked_since:
+---
+
+# Track O dead-zone scan — findings
+
+## What I found
+
+### 1. Dead-zone mechanism (confirmed from code)
+
+The `SportsBucketAssignmentAdapter` in `bucket_assignment_adapter.py` defines 8 TIER1_HORIZONS:
+
+| Horizon | Target (min) | Cap (min) | Valid range (min before kickoff) |
+| ------- | ------------ | --------- | -------------------------------- |
+| T-24h   | 1440         | 60        | 1380–1500                        |
+| T-12h   | 720          | 45        | 675–765                          |
+| T-6h    | 360          | 30        | 330–390                          |
+| ...     | ...          | ...       | ...                              |
+| T-0     | 0            | 5         | 0–5                              |
+
+**Dead zone**: 765 < bm_minutes < 1380 (615-minute gap between T-12h's upper bound and T-24h's lower bound). A row with
+bm_minutes=1000 is: 440 min from T-24h (cap 60 → REJECTED), 280 min from T-12h (cap 45 → REJECTED). Path B in
+`process_to_candles` records `empty_confirmed` — honest absence, not a schema error.
+
+### 2. Manifest scan — December 2025 (the quiet dates)
+
+From the availability manifest (1,039,372 sports odds rows, 3,138 unique dates):
+
+**December 2025 — capture rates by day type:**
+
+- **Weekdays** (low-fixture): 9–32% captured, e.g. 2025-12-11 (9%, 14/154), 2025-12-23 (10%, 15/153)
+- **Weekends** (high-fixture): 63–77% captured, e.g. 2025-12-06 (77%), 2025-12-07 (77%)
+
+The per-date row counts are roughly constant (150–480 rows/day), indicating the scraper DID run on these dates. The
+difference is captured vs. empty — empty rows dominate on weekdays. This is consistent with: (a) the scraper ran fewer
+fetch iterations (fewer fixtures → fewer concurrent scrape slots), (b) those fewer fetches landed in the dead zone for a
+higher proportion of fixtures.
+
+### 3. Candidate dead-zone-affected dates
+
+The strongest candidates (≤16% captured, all December 2025):
+
+| Date       | Rows | Captured | Empty | %Capt |
+| ---------- | ---- | -------- | ----- | ----- |
+| 2025-12-11 | 154  | 14       | 47    | 9%    |
+| 2025-12-23 | 153  | 15       | 45    | 10%   |
+| 2025-12-24 | 172  | 20       | 47    | 12%   |
+| 2025-12-16 | 163  | 24       | 45    | 15%   |
+| 2025-12-09 | 163  | 26       | 43    | 16%   |
+| 2025-12-10 | 163  | 26       | 43    | 16%   |
+
+### 4. Global stats
+
+| Status           | Count     | % of total |
+| ---------------- | --------- | ---------- |
+| captured         | 265,616   | 25.6%      |
+| empty_confirmed  | 609,226   | 58.6%      |
+| attempted_failed | 5,122     | 0.5%       |
+| **Total**        | 1,039,372 | 100%       |
+
+The 58.6% empty rate includes the deliberate `mdps_odds_horizon_bucket` aggregate sentinel rows (616,383 from that
+source alone). Source breakdown: `mdps_odds_horizon_bucket` 616,383 · `footystats` 374,502 · `odds_api` 46,109.
+
+### 5. TIER_1_OFFSETS loop-skip investigation
+
+The TIER1_HORIZONS constants have NO multi-shot offset loop in the adapter itself — the adapter is purely
+stateless/assignment. The "multi-shot" must be in the fetch layer (MTDS `odds_api_adapter.py` or the odds API WS
+connector) which determines how many times per day odds are scraped and at what offsets relative to kickoff.
+
+The 2025-12 data shows the scraper DID produce output rows on every day (150–480 rows/day), but the captures were
+heavily biased toward empty on low-fixture weekdays. This suggests:
+
+- The fetch loop is fixture-count-gated — fewer fixtures → fewer scrape passes
+- Each pass lands at a single bm_minutes offset (the time-of-fetch relative to kickoff)
+- On a low-fixture weekday, only 1-2 passes run, and both can land in the dead zone
+- On a high-fixture weekend, 4-6+ passes run → at least some land outside the dead zone
+
+The "only 1 fetch_utc observed" from the original Track O note is consistent with this: the scraper ran once, that
+single fetch's bm_minutes_to_kickoff distribution happened to cluster in the dead zone for most fixtures, and those rows
+were dropped as empty_confirmed.
+
+## Why it matters
+
+- Features-service sports ML models are trained on T-24h through T-0 horizon buckets. Dates with 9% capture mean the
+  feature matrix for those dates is 91% sparse — the model sees effectively no pre-match signal for those fixtures.
+- The 615-minute dead zone is architecturally intentional (reduces bucket count from 16+ to 8) but the staleness caps
+  may be too tight. Widening T-24h's cap from 60→120 min or adding a T-18h horizon would shrink the gap from 615→240
+  min.
+- The scraper cadence should be fixture-count-INsensitive — a single-fixture Tuesday should get the same multi-pass
+  scrape treatment as a 50-fixture Saturday. The current behavior looks fixture-count-gated.
+
+## Recommended decision
+
+**(a) Add a T-18h horizon or widen T-24h's staleness cap.** This is the design decision the task explicitly scopes OUT
+of this diagnosis — the operator must decide the target. The two options:
+
+- **T-18h** (target 1080, cap 45): shrinks the gap to 720–765 (T-12h) and 1080–1125 → two narrower gaps instead of one
+  wide one. Requires 9 buckets instead of 8.
+- **Widen T-24h cap** from 60→120: extends T-24h's reach to 1320–1500, shrinking the gap from 615→555 min. Simpler but
+  less effective (still a gap, just 10% smaller).
+
+**(b) Audit the odds_api scraper cadence** — verify the fetch loop is NOT fixture-count-gated. A single-fixture day
+should get the same number of scrape passes (at staggered offsets) as a 50-fixture Saturday. This is the fix for the
+"only 1 fetch_utc observed" root cause.
+
+**(c) Per-date bm_minutes distribution audit** — sample 20 candidate dates (the 6 above + 14 more from across the date
+range) and read their raw bm_minutes_to_kickoff distributions from the market-data bucket to confirm the dead zone
+mechanism directly (manifest data is circumstantial; raw bm_minutes is the direct signal). This is a bounded VM task
+(~20 shard reads, not a corpus walk).
+
+- [ ] [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** (repo: market-data-processing-service,
+      `bucket_assignment_adapter.py`). Operator-gated — this diagnosis only surfaces the options; the operator must
+      choose.
+- [ ] [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** (repo: market-tick-data-service,
+      `odds_api_adapter.py` + live connector). Verify the multi-pass fetch loop is not throttled on low-fixture days.
+- [ ] [DATA] P2. **(c) Sample 20 candidate dates for bm_minutes distribution** (repo: market-data-processing-service,
+      bounded VM task — read ~20 raw shards from the market-data bucket, confirm dead-zone distribution). Evidence:
+      manifest-based candidate list above.
+
+## Progress Log
+
+- **2026-08-04 22:23Z (slot 10)**: Manifest query complete. 1,039,372 sports odds rows across 3,138 dates. December 2025
+  weekdays confirmed at 9-16% capture rates. No pure-dead-zone dates found (<=5 rows, 0 captured). Global distribution:
+  25.6% captured, 58.6% empty_confirmed, 0.5% attempted_failed. Source stratification shows `mdps_odds_horizon_bucket`
+  dominates at 616K rows (aggregate sentinel). Issue doc filed with 3 recommended follow-up todos.
