@@ -637,6 +637,38 @@ buildable or verifiable from a dev checkout. See each todo's own "Done when" bel
   - **Step 7 (monitor)**: **Next** — watch for the first real DeepSeek fleet spawn (`used_by_slots` was empty at step-6
     verification time). Not yet a tracked todo on this plan; add one if a follow-up check is needed.
 
+**2026-08-04 (later, separate interactive session, slot-2) — sandboxed DeepSeek pilot, 3 tasks via real
+`tmux_spawn.spawn()`. Reconciliation note + one new finding, not a repeat of Step 6 above.**
+
+- **Reconciliation**: this session was asked (fresh, no prior context on this plan) to register the same DeepSeek key
+  and pilot it. By the time it pulled `unified-trading-pm` (31 commits behind) the VM-side registration above was
+  already merged same-day. It had already registered `deepseek-v4-pro` **locally in its own dev checkout only**
+  (`agent-orchestrator/data/config/accounts.json`, gitignored — this checkout doesn't run a live orchestrator server, so
+  this had zero effect on the real fleet) before discovering the redundancy. Flagging for anyone reading
+  chronologically: that local registration is inert/duplicate, kept only because the pilot evidence below is new.
+- **Shared-balance flag**: this is the SAME key now live on the production VM as the default for ~80% of sonnet-tier
+  fleet dispatch. Balance read `$5.00` before this pilot and `$4.93` after — exactly the pilot's own $0.07 spend,
+  consistent with `used_by_slots` still being empty at last VM-side check (no live production DeepSeek spawn had drawn
+  on it yet at the time of this entry). This is a shared, actively-consumable resource going forward, not an isolated
+  test account — a future local check against this key should re-read the live balance immediately before and after,
+  since real production spend can land on it with zero warning to a local session.
+- **Pilot**: 3 real tmux sessions via `tmux_spawn.spawn()` (the same call the production spawn path uses), each in an
+  isolated scratch git repo (deliberately NOT the real trading-system repos, given `--dangerously-skip-permissions` + an
+  unvetted-for-this-workspace model) seeded with a real copy of CLAUDE.md, one task per difficulty (simple/medium/hard).
+  - Boot mechanics clean on all 3 — onboarding seed skipped the wizard, bypass-permissions warning auto-dismissed,
+    confirmed hitting `api.deepseek.com/anthropic`.
+  - CLAUDE.md compliance strong on all 3 — accurate rule summaries, correct implementations (independently re-verified
+    by re-running pytest, not trusting the agent's own claim), and on the hard task it correctly inferred and applied
+    the exact `ikennaigboaka [slot-N·host]` commit-attribution format unprompted, and correctly reasoned that
+    quickmerge/CI rules don't apply to a throwaway sandbox rather than inventing nonexistent tooling.
+  - **New finding, not previously tracked on this plan: `/pre-compact` (and likely Skill-tool invocation generally) does
+    not work under a DeepSeek-backed session.** Asked to invoke `/pre-compact` mid-task, the model reasoned it had no
+    way to invoke a slash command from within its own tool-use turn, shelled out to a _nested_ `claude /pre-compact`
+    subprocess (hung the full 2-minute bash timeout — no TTY), then fell back to describing what it believes
+    `/pre-compact` does from general knowledge — clearly labeled as such, not presented as real output, so not a silent
+    hallucination, but the skill never actually ran. Not isolated whether this is a DeepSeek reasoning gap specifically
+    or a harness-level thing (Skill-tool exposure to tmux-spawned interactive workers generally) — see new todo below.
+
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 
 Operator shared an external "AI Compute Optimisation Strategy" doc (generic, not written for this fleet) proposing 7→2
@@ -758,6 +790,16 @@ default from an external reference.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Touches
   agent-orchestrator's own live routing/billing/credential infra; repeated dated operator holds + 2 documented real
   safety incidents from testing this code; highest-stakes remaining items need operator-supervised rollout.
+- [ ] [REVIEW] P2. Investigate whether DeepSeek-backed sessions can invoke Claude Code Skills (e.g. `/pre-compact`) at
+      all — a 2026-08-04 sandboxed pilot found a DeepSeek worker asked to invoke `/pre-compact` had no working mechanism
+      to do so (attempted a nested `claude` subprocess shell-out instead, which hung on the missing TTY), and fell back
+      to describing the skill from general knowledge rather than running it. Matters because Tier 1/2
+      `context_lifecycle.py` proactive-compact guidance assumes the agent can act on a `/pre-compact` → `/compact` nudge
+      — if DeepSeek workers structurally can't, long-running DeepSeek main/review-loop agents may silently accumulate
+      context forever with no working escape hatch. Done when: confirmed whether the Skill-invocation path is exposed to
+      tmux-spawned interactive sessions at all (Claude-backed or DeepSeek-backed — isolate which side the gap is on),
+      and if it is, why the DeepSeek session didn't find/use it. See Progress Log 2026-08-04 (later entry) for the full
+      pilot writeup.
 
 ### Phase 2 todos (2026-07-30, added — none of the above touched or re-ordered)
 
