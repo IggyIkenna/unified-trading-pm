@@ -766,17 +766,18 @@ context_scope:
       stamped `empty_confirmed`/`EXPECTED_NO_FIXTURE` instead of `attempted_failed` — the exact honest-absence violation
       this campaign exists to fix. Full evidence:
       `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`
-      (`unified-trading-pm@9022488a2`, PR #1492). Filed `/blocked` (`BLK-78a76a51`); main ruled **A — stop the VM now**
-      (SPOT+idempotent, safe to relaunch; leaving it running keeps writing false `empty_confirmed`, which is WORSE than
-      `attempted_failed` since downstream won't retry it). **Fix shipped**: `instruments-service@f31fb2e9` — the 4
-      adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4 unit tests updated
-      (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing `get_injuries_error_propagates` precedent);
-      full `quality-gates.sh` green (109s); orchestrator-level `TestCF11PerFixtureEntityFailurePath` suite (already
-      correct) confirms `_fetch_one`/`_handle_empty_fixture_entity` now actually receive the failure signal. **Not an
-      operator gate (re-tagged 2026-07-28) — a transient local credential gap only**: this is the SAME ambient
-      `unified-trading-sa`/`uts-orchestrator-epic-role` identity every AO worker runs as, not a genuine cross-identity
-      authorization gap (`task_template.md` finding O/finding ii doesn't apply here). Could not execute the VM stop from
-      THIS slot — `gcloud` auth expired mid-session
+      (`unified-trading-pm@ac4ace8b9`, PR #1492 — corrected 2026-08-04, slot-8: prior citation `9022488a2` did not
+      resolve to any commit; `gh pr view 1492` confirms the real merge SHA). Filed `/blocked` (`BLK-78a76a51`); main
+      ruled **A — stop the VM now** (SPOT+idempotent, safe to relaunch; leaving it running keeps writing false
+      `empty_confirmed`, which is WORSE than `attempted_failed` since downstream won't retry it). **Fix shipped**:
+      `instruments-service@f31fb2e9` — the 4 adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4
+      unit tests updated (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing
+      `get_injuries_error_propagates` precedent); full `quality-gates.sh` green (109s); orchestrator-level
+      `TestCF11PerFixtureEntityFailurePath` suite (already correct) confirms `_fetch_one`/`_handle_empty_fixture_entity`
+      now actually receive the failure signal. **Not an operator gate (re-tagged 2026-07-28) — a transient local
+      credential gap only**: this is the SAME ambient `unified-trading-sa`/`uts-orchestrator-epic-role` identity every
+      AO worker runs as, not a genuine cross-identity authorization gap (`task_template.md` finding O/finding ii doesn't
+      apply here). Could not execute the VM stop from THIS slot — `gcloud` auth expired mid-session
       (`Unable to retrieve Identity Pool subject token: job is already     completed`, both available accounts,
       non-interactive reauth impossible this session) — dispatch to any worker/slot with a currently-valid `gcloud`
       session to run `gcloud compute instances stop af-backfill-20260725-032253     --zone asia-northeast1-c` directly;

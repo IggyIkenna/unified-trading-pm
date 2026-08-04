@@ -97,3 +97,15 @@ any other field either.
 - 2026-08-04 (slot-12): filed after reproducing the strip twice while shipping an unrelated LOCAL_DEPS `uv` fix
   (`qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md`); both times recovered via
   `git restore` before committing, so nothing shipped broken from this session.
+- 2026-08-04 (slot-8): fix implemented — `fix_active_plan()` now reads the doc's own `doc_type:` before calling
+  `remove_deprecated_fields()` and subtracts the new `ISSUE_REQUIRED_FIELDS` set (`title`/`created`/`author`/`source`/
+  `assigned_vm`) from `DEPRECATED_PLAN_FIELDS` when `doc_type == "issue"`, so `author` (and any future colliding field)
+  survives a fix pass on issue docs while still being stripped on `doc_type: plan` docs. Added
+  `tests/unit/test_fix_frontmatter_issue_author_field.py` (4 tests: issue-doc author survives, other deprecated fields
+  still stripped from issue docs, plan-doc author still removed, direct set-diff check) — all pass locally. Committed
+  locally (`unified-trading-pm@b263360`), **BLOCKED shipping via quickmerge**: `bash scripts/quality-gates.sh` fails an
+  UNRELATED pre-existing corpus check (`check_plan_commit_sha_evidence.py`, 23 unresolvable citations > baseline 22 —
+  confirmed pre-existing, not caused by this diff). Filed
+  `issues/plan_commit_sha_evidence_unresolvable_sports_citation_blocks_pm_qg_2026_08_04.md` + declared repo-blocker RB-
+  for `unified-trading-pm` per RULES.md § 4b; will resume shipping (Pass-2 quickmerge, push, flip this checkbox) once
+  the backend signals green.
