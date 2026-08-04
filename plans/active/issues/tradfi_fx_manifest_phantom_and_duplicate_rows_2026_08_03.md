@@ -143,15 +143,104 @@ being resolved first. This is a genuine scope-invalidating finding for that todo
 partial-fix shortcut — flagging per the workspace's "audit's issues are fixed in FULL, no partial deferral" rule: the
 FULL fix for Finding 2 now spans 3 scoped pieces of work (this todo's 25-row mechanical piece, done; + the 2 below).
 
+## Root-cause diagnosis (2026-08-03, slot 5)
+
+**Provenance correlation (live re-query, not the doc's original snapshot)**: a bounded, column-pruned read of
+`_index/availability_index.parquet` filtered to `venue=FX`, `data_type=ohlcv_24h`, `capture_status=captured`,
+`instrument_id==""` (confirmed live: "blank" is stored as an empty string, not a parquet NULL — an `is_null()` filter
+silently returns 0 rows) returns **2,787 rows** (2,812 minus the 25 already restamped by this doc's own parent todo —
+exact match). **100%** of these 2,787 rows share `service_name=market-tick-data-service`, `source=yahoo`,
+`pipeline_mode=batch_yahoo`, `row_count=None` — a cleaner, more precise result than the sibling doc's 97.9% figure
+(that population mixed in some non-FX rows). They split into exactly the 3 documented `written_at` clusters, and inside
+each cluster EVERY row shares the identical microsecond-precision timestamp (not just a tight window — a literal single
+shared value): batch 1 (804 rows, `2026-07-16T07:04:10.308211Z`, `instrument_type=''`), batch 2 (1,967 rows,
+`2026-07-18T15:04:25.190281Z`, `instrument_type='SPOT_PAIR'`), batch 3 (16 rows, `2026-04-06T08:43:54.282523Z`,
+`instrument_type=''`). No rows exist outside these 3 windows — the 3-timestamp characterization is exhaustive.
+Independently re-verified GCS-absence (not just trusting the parent doc) at 2 sample dates via direct
+`list_blobs()`: `raw_tick_data/by_date/day=2020-01-01/pipeline_mode=batch_yahoo/asset_group=tradfi/venue=FX/` and
+`.../day=2022-12-09/.../venue=FX/` both return **0 objects**, while the identical path shape at a real KRW-USD-backed
+date (`day=2020-04-24`) returns 1 real object — confirms the path template is correct and these dates are genuinely
+phantom, not a path-miss on this investigation's part. Script:
+`market-tick-data-service/scripts/investigate_fx_phantom_manifest_rows_provenance_2026_08_03.py`.
+
+**Writer MECHANISM confirmed (code-level, not just provenance-column inference)** — a genuinely different signature
+from the sibling MDPS finding (that one was a per-row write loop, distinct `written_at` per row; this one shares ONE
+timestamp across hundreds/thousands of rows, pointing to a single bulk-write call rather than a loop):
+
+`market-tick-data-service/scripts/rebuild_mtds_manifest.py`'s `--from-canonical` mode (a **permanent**, still-live
+production maintenance tool, not a one-off migration script) calls
+`unified_trading_library.manifest_writer._maintenance.rebuild_manifest_from_canonical_paths()` (pre-2026-07-27) or its
+07-27 additive replacement `merge_manifest_from_canonical_paths()` (post-`market-tick-data-service@de0ed32f`,
+`"fix(mtds): route rebuild_mtds_manifest.py --from-canonical through the safe additive merge helper"`) — **both share
+the identical bug**, confirmed by direct read of `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py`:
+
+1. Each function computes `now_iso = datetime.now(UTC).isoformat()` **once**, OUTSIDE the per-shard loop (lines 620 and
+   831 respectively), then stamps every discovered row's `"written_at": now_iso` inside the loop (lines 642, 851) — this
+   is exactly the "one shared timestamp across a whole batch" signature observed, as opposed to a per-row
+   `record_captured()` call which would naturally produce distinct timestamps.
+2. Both functions **hardcode `"instrument_id": ""`** in the row dict (lines 639, 848) — there is no
+   `instrument_id` derivation anywhere in either function. The row-key grain these helpers reconstruct is
+   `(date, venue, chain, instrument_type, data_type)` — genuinely correct for an aggregated/candle-shard rebuild, but
+   FX is a **per-instrument-pair** venue (each real object embeds the pair in the filename stem, e.g.
+   `FX:SPOT_PAIR:KRW-USD.parquet`) — confirmed by reading the path-parsing regexes directly
+   (`day_pat`/`venue_pat`/`chain_pat`/`itype_pat`/`dtype_pat` in `_maintenance.py:547-551`): none of them capture the
+   filename stem at all, so the per-pair id is silently dropped during rebuild. This is the SAME blind-spot class as
+   the already-tracked `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` finding (a different oracle, same
+   "path-structure readers ignore the filename stem where tradfi/FX encodes the real id" root defect shape) — worth
+   flagging as a recurring pattern, not a one-off coincidence.
+3. Neither record sets `row_count`/`capture_status`/`pipeline_mode`/`source` — `row_count` therefore reads back as
+   `None` (matches observed), and `capture_status=captured` is a **read-time coercion**, not a write-time claim:
+   `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:451-464` (`_backfill()`) —
+   "Legacy rows (no `capture_status` column) are coerced to `CAPTURED`: under pre-v5 schemas, presence of a row implied
+   a successful capture" — directly confirmed by reading this function. This is the exact mechanism that turns these
+   thin rebuild-placeholder rows into false `capture_status=captured` phantoms downstream.
+4. **Not fully traced** (same honest-boundary pattern as the sibling doc): exactly how `pipeline_mode=batch_yahoo` /
+   `source=yahoo` get attached to these rows — neither `_maintenance.py` function sets those fields, so they likely
+   come from a downstream consolidator-side derive/backfill keyed on `venue=FX`, not from the rebuild call itself. Not
+   pinned to an exact line this pass.
+5. **Batch 3's date (2026-04-06) predates `rebuild_manifest_from_canonical_paths`'s earliest confirmed appearance** in
+   UTL git history (`8249dfa5`, 2026-04-18) by ~12 days — most likely an earlier/local predecessor rebuild with the
+   same bug pattern (not pinned to an exact commit). Batches 1/2's `instrument_type` split (`''` vs `'SPOT_PAIR'`)
+   matches FX's legacy pre-hive path shape (no `instrument_type=` segment) vs the later canonical hive-path shape,
+   consistent with two separate rebuild runs against the corpus at different points in its own path-migration history.
+
+**Verdict**: a genuine, still-live **writer-mechanism bug** in a permanent production tool, not a deliberate seed
+script and not "this venue/data_type should never have been captured" — `rebuild_mtds_manifest.py --from-canonical`
+will reproduce this exact phantom-row shape again on any future run against FX (or any other per-instrument-grain
+tradfi venue) until the underlying UTL helper is fixed to actually recover the per-instrument id from the filename stem
+(or refuses to emit a blank-id row for a venue it can't resolve, rather than silently emitting one). Recommending BOTH
+a fix (prevent recurrence, todo below) and a quarantine/cleanup of the 1,812 existing rows (todo below) — same
+disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs Defect 2, and matching the "quarantine
++ fix code" combination the sibling MDPS finding's own todos 2+3 landed.
+
 ## Recommended next steps
 
-- [ ] [DATA] P2. Investigate the 1,812 phantom-captured FX rows' root cause — trace the 3 write-batch timestamps
-      (`2026-07-16T07:04:10Z`, `2026-07-18T15:04:25Z`, `2026-04-06T08:43:54Z`) against `market-tick-data-service` /
-      `instruments-service` / `market-data-processing-service` run logs or Cloud Run execution history (mirrors the
-      method that root-caused the sibling `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` finding —
-      correlate `written_at` + `service_name`/`job_id`/`source` provenance columns, not instrument_type/GCS-path
-      search). Once root-caused, decide: quarantine (if this venue/data_type combo should never have been
-      manifest-captured this way) or a fresh scoped fix. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **ROOT-CAUSED 2026-08-03 (slot 5)** — writer mechanism confirmed: `rebuild_mtds_manifest.py
+      --from-canonical`'s UTL helpers (`rebuild_manifest_from_canonical_paths`/`merge_manifest_from_canonical_paths` in
+      `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py`) hardcode a blank
+      `instrument_id` and stamp one shared `written_at` per rebuild run, structurally unable to recover FX's
+      per-instrument-pair filename-stem id. Full diagnosis in § "Root-cause diagnosis" above; exact upstream trigger
+      for `source=yahoo`/`pipeline_mode=batch_yahoo` not fully traced (honest boundary, see caveat 4 above).
+      market-tick-data-service@(no code change this todo — investigation only; see the 2 follow-up todos below).
+- [ ] [DATA] P2. **Fix the underlying writer bug** — `rebuild_manifest_from_canonical_paths()` /
+      `merge_manifest_from_canonical_paths()` in
+      `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py` must stop silently hardcoding
+      `instrument_id=""` for a per-instrument-grain venue's canonical-path rebuild. Either (a) extend the path-parsing
+      regexes to also capture the filename stem and derive `instrument_id` for venues whose GCS layout embeds one
+      (mirrors the same filename-stem gap already tracked in
+      `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` for a different oracle), or (b)
+      have the rebuild refuse to emit a row for a shard it cannot resolve a per-instrument id for (skip + count, rather
+      than silently write a blank-id placeholder that later reads back as a false `capture_status=captured`). Add a
+      regression test proving a re-run of `--from-canonical` against a corpus with per-instrument-grain venues no
+      longer produces a blank-`instrument_id` row. (repo: unified-trading-library)
+- [ ] [DATA] P2. **Quarantine or delete the 1,812 existing phantom rows** confirmed to have zero backing GCS object
+      (this todo's own evidence) — these are DIFFERENT rows from Defect 2's 1,958 collision candidates (those have a
+      real, GCS-content-verified backing object; these do not), so this is a separate cleanup pass. Since
+      `capture_status=captured` rows would be removed/re-flagged, the delete-safety 5-part proof pass applies
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) exactly as Defect 2's own todo already notes for
+      its population. Decide delete vs. a `capture_status=empty_confirmed`/`error_reason=PHANTOM_REBUILD_ARTIFACT`-style
+      flip (mirrors how the resolved LEAGUES finding and the sibling MDPS phantom-row finding were each handled) before
+      executing. (repo: market-tick-data-service)
 - [ ] [DATA] P2. Design + execute a de-duplication pass for the 1,958 FX rows spanning 664 dates with redundant
       per-shard-day manifest bookkeeping (up to 4 rows per date across pipeline_mode × instrument_type-blank variants).
       Requires a decision on which row is canonical (recommend: the row whose content resolves cleanly, i.e. what this
@@ -168,3 +257,10 @@ FULL fix for Finding 2 now spans 3 scoped pieces of work (this todo's 25-row mec
 - **2026-08-03 (slot 8, data_engineering)**: filed while executing `tradfi_fx_provenance_and_manifest_id_defects-002`.
   Full evidence above; 25 safely-resolvable rows applied under the parent todo (see its own Progress Log for the apply
   SHA/verification).
+- **2026-08-03 (slot 5, data_engineering)**: closed todo 1 (root-cause investigation) —
+  `market-tick-data-service/scripts/rebuild_mtds_manifest.py --from-canonical`'s UTL helpers confirmed as the writer
+  mechanism (hardcoded blank `instrument_id` + one shared `written_at` per rebuild run, structurally blind to FX's
+  per-instrument filename-stem id). Full diagnosis in § "Root-cause diagnosis" above. Added 2 scoped follow-up todos
+  (fix the writer, quarantine/delete the 1,812 existing phantom rows) — both left open, this todo's own scope was
+  investigation + decision, not execution, matching the sibling doc's own todo 2/3 split.
+  market-tick-data-service@(pending — see SHA below).
