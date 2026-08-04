@@ -18,7 +18,7 @@ summary: >-
   PR #729 already MERGED at 21:17:40Z, ~19min BEFORE this fix committed locally at 21:36:06Z — so lint-codex/pip-audit
   is either advisory-only in the LDR→main gate set or something else let it through; that stale claim does not diminish
   the fix (3 real CVEs still unpatched on origin).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -42,6 +42,10 @@ depends_on: []
 ---
 
 # Orphaned live CVE fix on dead slot 5 — mechanical worker rescue needed
+
+> **🟢 ARCHIVED 2026-08-04 (na-eligibility-audit).** Sole todo done — `d42fe0191bbe` independently re-verified as an
+> ancestor of `origin/live-defi-rollout`, the `aiohttp>=3.14.3` pin is live with its CVE-closing comment. No
+> `locked_by`.
 
 ## The finding (verified)
 
@@ -70,16 +74,12 @@ Hence this durable issue so a worker picks it up cleanly.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Rescue the orphaned CVE fix onto `origin/live-defi-rollout`. Clean mechanical path (deps+lockfile
-      only): (a) `cd unified-trading-library`,
-      `git fetch origin 'refs/wip-preserve/*:refs/remotes/origin/wip-preserve/*'`, confirm
-      `origin/wip-preserve/orchestrator-slot-5-d42fe019` resolves to `d42fe0191bbe`; (b) either
-      `git cherry-pick d42fe0191bbe` (or `format-patch` + `git am`) onto a fresh LDR-tip branch, OR re-derive the
-      pyproject.toml `aiohttp>=3.14.3` bump + `uv lock` if the patch conflicts; (c) run repo QG green
-      (`bash scripts/quality-gates.sh`); (d) ship via
-      `bash scripts/quickmerge.sh "fix(deps): bump aiohttp to >=3.14.3 (rescue orphaned slot-5 CVE fix; closes CVE-2026-59881/69243/69244)" --agent --files 'pyproject.toml uv.lock'`.
-      Verify d42fe019's intent lands (origin pin ≥3.14.3, uv.lock resolves aiohttp 3.14.3+). Done-when:
-      `aiohttp>=3.14.3` is an ancestor of origin/live-defi-rollout and the 3 CVEs are closed on origin. (repo:
+- [x] ✅ [BACKEND] P1. **DONE (na-eligibility-audit 2026-08-04)** — Rescue the orphaned CVE fix onto
+      `origin/live-defi-rollout`. Independently verified live: `git merge-base --is-ancestor d42fe0191bbe
+      origin/live-defi-rollout` in `unified-trading-library` confirms `d42fe0191bbe` (the exact named commit) IS an
+      ancestor, and `origin/live-defi-rollout`'s `pyproject.toml` carries `"aiohttp>=3.14.3,<4.0.0"` with an inline
+      comment explicitly citing "closes CVE-2026-59881/69243/69244". Done-when fully satisfied — the rescue already
+      happened (attribution to which slot/session executed it not determined, but the artifact is unambiguous). (repo:
       unified-trading-library)
 
 ## Progress Log

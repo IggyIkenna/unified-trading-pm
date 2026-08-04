@@ -22,7 +22,7 @@ related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
-    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+    /plans/archive/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
   ]
 created: 2026-08-03
 priority: P2

@@ -15,7 +15,7 @@ summary: >-
   `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
   re-running the same test against a `git stash`-clean HEAD (5d157d6) -- same failure, same StopIteration. Not fixed as
   part of that dispatch (out of its narrow scope); filed here per the outside-every-plan findings-triage rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -48,6 +48,9 @@ context_scope:
     /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04 (na-eligibility-audit).** Sole todo done — the fix landed the same day this doc was filed
+> (`deployment-api@cf553690`), just never back-flipped here until now. No `locked_by`.
 
 ## Problem
 
@@ -86,13 +89,14 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 > re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
 > had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
 
-- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
-      trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
-      (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
-      `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
-      `"2026-07-22T00:00:00+00:00"`. **Done-when**: the test passes on a clean tree AND still passes when the system
-      clock is moved forward a year (the whole point — it must stop aging out). Test-only, no production behaviour
-      change. (repo: `deployment-api`)
+- [x] ✅ [CODE] P3. **DONE (na-eligibility-audit 2026-08-04)** — De-flake
+      `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`. Already fixed the same day this doc was
+      filed: `deployment-api@cf553690` ("fix(test): make health() recent-failures test date relative to now",
+      2026-07-29) replaced the hardcoded fixture literal with `two_days_ago = (datetime.now(UTC) -
+      timedelta(days=2)).replace(microsecond=0)` — the test's own comment cites the exact aging-out failure mode this
+      issue describes. Confirmed on `origin/live-defi-rollout` (already CI-gated via `quality-gates-v2` to land there).
+      Done-when satisfied: computed relative to real `now()`, so it cannot re-age regardless of wall-clock drift.
+      (repo: `deployment-api`)
 
 ## Scope note
 
