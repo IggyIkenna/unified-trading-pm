@@ -314,7 +314,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
     preemption rate observed throughout this session (roughly 5-6 preemptions across ~20 total launch attempts) is NOT
     this campaign's own issue — a sibling slot independently confirmed a fleet-wide, ongoing `asia-northeast1-c` SPOT
     preemption storm (151 preemptions/5h across sports/tradfi/cefi simultaneously) and filed
-    `plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` as its own P1/big-finding; every
+    `plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` as its own P1/big-finding; every
     preemption hitting THIS backfill was correctly absorbed by fix 3, so this campaign stays unblocked regardless of
     that storm's own resolution timeline. **If this todo is picked up cold by a fresh session**: check
     `gcloud compute instances list --filter='name~"expected-universe-v2-sports-"'` for a currently-RUNNING VM first

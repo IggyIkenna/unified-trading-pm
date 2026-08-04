@@ -287,14 +287,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   than the last (17min→6min→1.5min). Investigated further and found this is **not af-backfill-specific**:
   `asia-northeast1-c` is in an active, sustained SPOT preemption storm — 151 `compute.instances.preempted` events over
   the prior 5h, hitting sports/tradfi/cefi concurrently, still firing as of the check. Filed
-  `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (P1, cross-cutting) with the full
+  `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (P1, cross-cutting) with the full
   evidence and a recommended decision (confirm the auto-recovery fix above is actually deployed to the live Cloud Run
   job image; re-check preemption volume in a few hours; do not keep blind-relaunching into an active storm). **Did NOT
   attempt a further relaunch** — burning more SPOT minutes into a confirmed active storm is not productive.
   `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once the storm subsides and
   FIXTURE_STATS can make real progress. The durable convergence-gate fix (flagged three times now) remains the standing
   structural recommendation — but the storm, not the gate mechanism, is now the actual blocker for FIXTURE_STATS itself;
-  a fifth dispatch should first check `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`
+  a fifth dispatch should first check `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`
   before relaunching again.
 - **2026-08-04 (slot 8)** — Dispatched `sports_af_full_entity_completion-003` a sixth time
   (`already_in_progress: true`/resume — this session had this task before, per an earlier turn). Per the storm doc:
@@ -323,9 +323,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   lifetime — the **7th FIXTURE_STATS preemption today**, zero clean completions across all 7 attempts. Re-ran
   `census_fixture_stats_lineups_widening_volume_2026_07_31.py` beforehand: still 125/68,284 non-MVP shards (0.18%,
   unchanged). Full analysis + revised recommendation in
-  `/plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s Progress Log — zone-wide aggregate rate
-  alone was NOT sufficient evidence to safely relaunch this `e2-standard-8` entity; a future dispatch should wait for a
-  longer confirmed-clean window before trying again. Did NOT attempt an 8th relaunch. **FIXTURE_LINEUPS remains
+  `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s Progress Log — zone-wide aggregate
+  rate alone was NOT sufficient evidence to safely relaunch this `e2-standard-8` entity; a future dispatch should wait
+  for a longer confirmed-clean window before trying again. Did NOT attempt an 8th relaunch. **FIXTURE_LINEUPS remains
   blocked** — gate still unmet; did NOT launch it. `skip-current-task`'d again so it requeues. The durable
   convergence-gate fix (now a proper `- [ ]` todo above, P1, repo: agent-orchestrator) is unchanged by this dispatch —
   confirmed (again) this worker has no filesystem access to the live orchestrator `data/config/backlog.yaml` from

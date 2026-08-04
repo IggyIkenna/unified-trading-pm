@@ -18,7 +18,7 @@ related:
   [
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
-    /plans/active/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md,
+    /plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md,
   ]
 created: 2026-08-04
 audited_scope:
