@@ -25,6 +25,7 @@ related:
     /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
   ]
 created: 2026-08-03
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 assigned_vm: NA

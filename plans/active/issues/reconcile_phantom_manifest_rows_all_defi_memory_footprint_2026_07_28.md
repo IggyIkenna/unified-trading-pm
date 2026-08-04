@@ -22,6 +22,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-28
+author: unknown
 source: ["mvp_backfill_defi_onchain_v10-002 / pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md, 2026-07-28"]
 assigned_vm: planning
 execution_scope: orchestrator-agent

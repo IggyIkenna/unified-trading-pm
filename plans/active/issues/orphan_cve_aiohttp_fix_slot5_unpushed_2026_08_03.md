@@ -27,6 +27,7 @@ scope: [admin]
 tags: [orphan-rescue, cve, security, deps, aiohttp, per-tab-worktrees, wip-preserve, git-health]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-08-03
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: NA

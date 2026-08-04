@@ -24,6 +24,7 @@ scope: [engineer]
 tags: [mdps, oom, manifest-cache, full-mode, reprocess, memory, vm]
 related: [/plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md]
 created: 2026-08-03
+author: unknown
 assigned_vm: planning
 parent_epic: sports_master
 execution_scope: orchestrator-agent

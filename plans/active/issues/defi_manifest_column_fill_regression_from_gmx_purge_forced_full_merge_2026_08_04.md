@@ -31,6 +31,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: "2026-08-04"
+author: unknown
 last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning

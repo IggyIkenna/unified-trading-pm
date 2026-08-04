@@ -30,6 +30,7 @@ related:
     /codex/04-architecture/strategy-execution-protocol.md,
   ]
 created: 2026-07-31
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source: "slot-3, codex freshness re-review shard-B, discovered re-reviewing order-state-machine.md, 2026-07-31"

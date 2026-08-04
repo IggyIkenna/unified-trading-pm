@@ -36,6 +36,7 @@ scope: [engineer, admin]
 tags: [drift-solana-cull, architecture-v2, leg-specs, strategy-archetype, venue-residue, ui-reference-data]
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-16
+author: unknown
 last_updated: 2026-07-26
 parent_epic: defi_master
 assigned_vm: NA

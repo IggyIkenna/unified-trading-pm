@@ -68,6 +68,7 @@ related:
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16
+author: unknown
 last_updated: 2026-07-25
 parent_epic: sports_master
 assigned_vm: NA

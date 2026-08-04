@@ -26,6 +26,7 @@ related:
     ../../../cursor-configs/skills/data-pipeline-check-features/SKILL.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 priority: P0
 source:

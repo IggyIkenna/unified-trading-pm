@@ -32,6 +32,7 @@ related:
     /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
   ]
 created: 2026-08-04
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

@@ -35,6 +35,7 @@ related:
     /plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md,
   ]
 created: 2026-07-29
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source: "Found while recording the operator's 2026-07-29 CeFi orphan-sweep authorization (interactive decision session)"

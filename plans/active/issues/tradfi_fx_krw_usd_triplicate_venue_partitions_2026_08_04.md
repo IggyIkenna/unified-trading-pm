@@ -39,6 +39,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: "2026-08-04"
+author: unknown
 last_updated: "2026-08-04"
 parent_epic: tradfi_master
 assigned_vm: planning

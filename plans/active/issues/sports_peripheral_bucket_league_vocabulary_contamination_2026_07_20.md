@@ -29,6 +29,7 @@ related:
     ../sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-20"
+author: unknown
 source: league_id relocation workflow wf_664f7ed4-df6 gcs-sizing verifier (2026-07-20)
 resolved_by:
 locked_by:

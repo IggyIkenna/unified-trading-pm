@@ -26,6 +26,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: defi_master
 priority: P3
 source:

@@ -36,6 +36,7 @@ related:
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
   ]
 created: "2026-07-27"
+author: unknown
 source:
   sports_closeout_track_s2_foldin_2026_07_25.md todo "Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe"
 resolved_by:

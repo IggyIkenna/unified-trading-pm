@@ -24,6 +24,7 @@ scope: [engineer]
 tags: [deployment-api, test-flake, date-drift, artifact-pipeline, ci]
 related: [/codex/12-agent-workflow/pre-task-plan-conflict-check.md]
 created: 2026-07-29
+author: unknown
 last_updated: 2026-07-29
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [tardis, lighter-zksync, hang, event-logging, diagnostics]
 related: [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
 created: 2026-07-28
+author: unknown
 parent_epic: infrastructure_master
 priority: P3
 source:

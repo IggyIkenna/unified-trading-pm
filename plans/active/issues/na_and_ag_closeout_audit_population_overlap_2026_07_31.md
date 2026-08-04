@@ -43,6 +43,7 @@ related:
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
   ]
 created: 2026-07-31
+author: unknown
 last_updated: "2026-07-31"
 parent_epic: agent_operating_framework_master
 priority: P2

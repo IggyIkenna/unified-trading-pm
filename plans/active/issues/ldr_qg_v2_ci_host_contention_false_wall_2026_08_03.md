@@ -31,6 +31,7 @@ related:
     /agents/cicd.md,
   ]
 created: "2026-08-03"
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 resolved_by:

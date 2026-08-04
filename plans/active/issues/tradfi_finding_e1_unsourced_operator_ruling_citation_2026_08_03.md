@@ -34,6 +34,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

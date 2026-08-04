@@ -25,6 +25,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: "2026-07-24"
+author: unknown
 last_updated: "2026-07-25"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

@@ -27,6 +27,7 @@ related:
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
   ]
 created: 2026-07-07
+author: unknown
 parent_epic: instruments_master
 priority: P1
 source:

@@ -26,6 +26,7 @@ related:
     /plans/active/task_template.md,
   ]
 created: 2026-07-24
+author: unknown
 last_updated: 2026-07-24
 priority: P1
 parent_epic: orchestrator_master

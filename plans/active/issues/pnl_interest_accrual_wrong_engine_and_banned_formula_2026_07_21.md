@@ -28,6 +28,7 @@ related:
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
   ]
 created: 2026-07-21
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

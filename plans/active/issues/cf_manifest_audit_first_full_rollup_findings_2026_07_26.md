@@ -29,6 +29,7 @@ related:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 source:

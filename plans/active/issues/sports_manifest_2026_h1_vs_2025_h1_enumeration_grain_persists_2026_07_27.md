@@ -46,6 +46,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

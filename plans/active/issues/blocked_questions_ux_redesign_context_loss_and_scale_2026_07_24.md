@@ -25,6 +25,7 @@ related:
     /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
   ]
 created: 2026-07-24
+author: unknown
 last_updated: 2026-07-24
 priority: P2
 parent_epic: escalation_and_disaster_recovery_master

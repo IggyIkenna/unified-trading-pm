@@ -26,6 +26,7 @@ related:
     /plans/active/data_completion_cefi_2026_07_15.md,
   ]
 created: 2026-07-26
+author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

@@ -30,6 +30,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

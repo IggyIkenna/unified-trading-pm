@@ -25,6 +25,7 @@ scope: [engineer]
 tags: [deployment-registry, crash-loop, observability, cloud-run, sigabrt]
 related: [deployment_registry_reaper_not_draining_stale_entries_2026_07_24]
 created: 2026-07-24
+author: unknown
 priority: P1
 parent_epic: observability_master
 source:

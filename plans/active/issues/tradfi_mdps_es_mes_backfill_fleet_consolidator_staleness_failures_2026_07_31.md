@@ -32,6 +32,7 @@ related:
     /plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
   ]
 created: 2026-07-31
+author: unknown
 parent_epic: infrastructure_master
 source:
   "data_pipeline_failure worker (slot 8, planning VM), escalation agt-c7efe2, 2026-07-31, dispatched to relaunch

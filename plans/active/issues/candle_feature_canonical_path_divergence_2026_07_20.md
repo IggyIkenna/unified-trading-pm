@@ -34,6 +34,7 @@ related:
     /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: 2026-07-20
+author: unknown
 last_updated: 2026-07-25
 parent_epic: infrastructure_master
 assigned_vm: NA

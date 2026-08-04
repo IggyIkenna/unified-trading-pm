@@ -25,6 +25,7 @@ related:
     /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
   ]
 created: 2026-07-20
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

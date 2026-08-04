@@ -24,6 +24,7 @@ related:
     /plans/archive/issues/sports_fixture_events_phantom_manifest_rows_2026_07_25.md,
   ]
 created: 2026-07-25
+author: unknown
 priority: P1
 parent_epic: sports_master
 assigned_vm: planning

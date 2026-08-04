@@ -28,6 +28,7 @@ related:
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-07-15
+author: unknown
 last_updated: 2026-07-16
 parent_epic: agent_operating_framework_master
 priority: P1

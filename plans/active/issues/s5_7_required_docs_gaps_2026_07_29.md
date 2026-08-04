@@ -23,6 +23,7 @@ scope: [engineer, admin]
 tags: [documentation-standards, s5-audit, required-docs, ssot, plan-hygiene]
 related: [/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md]
 created: 2026-07-29
+author: unknown
 parent_epic: plan_hygiene_master
 priority: P2
 source:

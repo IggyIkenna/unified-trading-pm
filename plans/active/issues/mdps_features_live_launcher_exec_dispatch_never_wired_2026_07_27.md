@@ -37,6 +37,7 @@ related:
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-07-27
+author: unknown
 last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: planning

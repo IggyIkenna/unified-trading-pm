@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: predictions_master
 priority: P1
 source: ["read-only manifest measurement, prediction_satellite_ao_dispatch_batch1-004, slot 15, 2026-07-27"]

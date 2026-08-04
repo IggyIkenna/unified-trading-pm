@@ -36,6 +36,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-08-01"
+author: unknown
 last_updated: "2026-08-01"
 parent_epic: infrastructure_master
 assigned_vm: NA

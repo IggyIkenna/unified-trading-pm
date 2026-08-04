@@ -26,6 +26,7 @@ related:
     /plans/active/task_template.md,
   ]
 created: "2026-07-23"
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA

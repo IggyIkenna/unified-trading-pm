@@ -27,6 +27,7 @@ related:
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 priority: P1
 parent_epic: cefi_master
 source:

@@ -29,6 +29,7 @@ scope: [engineer, admin]
 tags: [ci-cd, workflow-templates, drift, phase-7, self-hosted-runners, coordination]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-27
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source: "slot-3, infra, discovered while shipping unrelated plan-doc updates, 2026-07-27"

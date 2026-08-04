@@ -31,6 +31,7 @@ related:
     /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 created: 2026-08-03
+author: unknown
 priority: P1
 parent_epic: sports_master
 assigned_vm: planning

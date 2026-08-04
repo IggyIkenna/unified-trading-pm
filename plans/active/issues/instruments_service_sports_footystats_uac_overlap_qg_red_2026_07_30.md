@@ -10,6 +10,7 @@ scope: [engineer]
 tags: [qg-red, sports, footystats, golden-fixture, uac-invariant, duplicate]
 related: [/plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md]
 created: "2026-07-30"
+author: unknown
 assigned_vm: planning
 parent_epic: sports_master
 superseded_by: instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30

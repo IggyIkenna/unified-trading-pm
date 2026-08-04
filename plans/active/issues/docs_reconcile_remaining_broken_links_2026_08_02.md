@@ -18,6 +18,7 @@ scope: [engineer, admin]
 tags: [docs-reconcile, broken-links, retrieval-layer, readme, freshness-ratchet]
 related: [doc_body_link_checker_blind_to_backtick_citations_2026_08_02, docs_reconcile_operator_decisions_2026_08_02]
 created: 2026-08-02
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

@@ -15,6 +15,7 @@ scope: [engineer]
 tags: [cefi, manifest, coinbase-futures, instrument_type, data-correctness]
 related: [/plans/active/data_completion_cefi_2026_07_15.md]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

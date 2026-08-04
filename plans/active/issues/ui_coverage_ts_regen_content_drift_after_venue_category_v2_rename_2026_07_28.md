@@ -20,6 +20,7 @@ scope: [engineer]
 tags: [archetype, capability-registry, ui-sync, coverage-ts, follow-up]
 related: [/plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md]
 created: 2026-07-28
+author: unknown
 parent_epic: strategy_master
 priority: P3
 source:

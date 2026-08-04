@@ -45,6 +45,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
+author: unknown
 priority: P1
 parent_epic: tradfi_master
 source: "tradfi_consolidated_native_ao_extract_2026_07_25.md todo 4 — 3 parallel full-repo sub-agent audits, 2026-07-31"

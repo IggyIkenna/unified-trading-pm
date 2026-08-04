@@ -42,6 +42,7 @@ related:
     plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
   ]
 created: "2026-07-21"
+author: unknown
 parent_epic: infrastructure_master
 priority: P3
 assigned_vm: planning

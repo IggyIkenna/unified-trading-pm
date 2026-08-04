@@ -41,6 +41,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-08-03
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 source:

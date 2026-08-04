@@ -29,6 +29,7 @@ related:
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-07-21
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source: "review(slot1) msg 1538 to main orchestrator + main live diagnosis, 2026-07-21"

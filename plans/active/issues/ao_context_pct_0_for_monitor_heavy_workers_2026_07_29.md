@@ -40,6 +40,7 @@ related:
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
   ]
 created: 2026-07-29
+author: unknown
 last_updated: 2026-07-29
 priority: P2
 parent_epic: orchestrator_master

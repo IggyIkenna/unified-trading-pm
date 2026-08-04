@@ -21,6 +21,7 @@ scope: [engineer]
 tags: [quickmerge, ship-pipeline, sentinel-race, retry-storm, contention, quality-gates, throughput, efficiency, fleet]
 related: [plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md]
 created: "2026-07-21"
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA

@@ -30,6 +30,7 @@ scope: [engineer]
 tags: [quality-gates, performance, filesystem-walk, rglob, quickmerge-throughput, shared-host-io, git-red, ship-path]
 related: [plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md]
 created: "2026-07-31"
+author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: NA # left NA for the ao tranche's own dispatch call (per the ruling), not auto-flipped to planning here

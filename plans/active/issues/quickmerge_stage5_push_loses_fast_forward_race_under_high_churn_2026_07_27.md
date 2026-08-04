@@ -24,6 +24,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 created: 2026-07-27
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source: "slot-5, infra, discovered while shipping shared_host_ram_exhaustion_kills_background_qg-001, 2026-07-27"

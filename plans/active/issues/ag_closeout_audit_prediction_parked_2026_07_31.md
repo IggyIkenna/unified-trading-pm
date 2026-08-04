@@ -35,6 +35,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-31
+author: unknown
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only

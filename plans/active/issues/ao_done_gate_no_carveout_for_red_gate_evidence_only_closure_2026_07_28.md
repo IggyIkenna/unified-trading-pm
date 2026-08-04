@@ -30,6 +30,7 @@ related:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: 2026-07-28
+author: unknown
 priority: P2
 parent_epic: orchestrator_master
 source: "worker, slot 12, hit live while closing out data_completion_cefi-011 per main's BLOCKED-Q ruling"

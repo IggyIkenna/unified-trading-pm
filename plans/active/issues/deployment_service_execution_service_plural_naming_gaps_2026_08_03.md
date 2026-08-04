@@ -30,6 +30,7 @@ tags: [deployment-service, naming-drift, execution-service, shard-builder, fleet
 related:
   [/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/05-infrastructure/spot-vms-for-backfill.md]
 created: "2026-08-03"
+author: unknown
 last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 source:

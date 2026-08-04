@@ -57,6 +57,7 @@ related:
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
   ]
 created: 2026-08-02
+author: unknown
 parent_epic: sports_master
 priority: P1
 estimate_class: research

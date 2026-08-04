@@ -13,6 +13,7 @@ stage: [data]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 created: 2026-07-27
+author: unknown
 assigned_vm: planning
 assigned_role: data_engineering
 parent_epic: infrastructure_master

@@ -25,6 +25,7 @@ related:
     /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
   ]
 created: "2026-08-03"
+author: unknown
 parent_epic: sports_master
 priority: P3
 assigned_vm: planning

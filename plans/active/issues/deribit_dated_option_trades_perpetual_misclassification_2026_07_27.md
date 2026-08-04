@@ -31,6 +31,7 @@ related:
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: cefi_master
 priority: P1
 estimate_class: research

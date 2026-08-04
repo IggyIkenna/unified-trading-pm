@@ -20,6 +20,7 @@ scope: [engineer, admin]
 tags: [gcp, iam, service-account, least-privilege, security, registry-drift]
 related: []
 created: 2026-07-31
+author: unknown
 last_updated: 2026-07-31
 priority: P2
 parent_epic: infrastructure_master

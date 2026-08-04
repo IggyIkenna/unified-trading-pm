@@ -31,6 +31,7 @@ related:
     /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
   ]
 created: 2026-08-02
+author: unknown
 parent_epic: manifest_master
 assigned_vm: NA
 locked_by:

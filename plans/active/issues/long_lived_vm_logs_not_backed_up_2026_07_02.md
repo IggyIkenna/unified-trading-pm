@@ -17,6 +17,7 @@ scope: [engineer, admin]
 tags: [vm, logging, observability, gcs, s3, long-lived, orchestrator]
 related: [vm_launcher_durable_log_observability_2026_06_19]
 created: "2026-07-02"
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 source:

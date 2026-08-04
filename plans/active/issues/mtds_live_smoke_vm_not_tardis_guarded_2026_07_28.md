@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [tardis, concurrency-guard, mtds, live-leg, pipeline-e2e-check]
 related: [/plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md]
 created: 2026-07-28
+author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

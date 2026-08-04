@@ -28,6 +28,7 @@ scope: [engineer, admin]
 tags: [data-correctness, defi, pipeline-mode, manifest, source-desync, yearn-v3, honest-coverage, vault-share-price]
 related: [data_pipeline_reconciliation_defi_2026_07_20]
 created: 2026-07-21
+author: unknown
 last_updated: 2026-07-21
 parent_epic: infrastructure_master
 assigned_vm: NA

@@ -49,6 +49,7 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 created: 2026-07-17
+author: unknown
 parent_epic: manifest_master
 source:
   "data_engineering worker (slot-9, planning VM), 2026-07-17, AO task sports_manifest_canonicalisation-005 ([AUDIT] P2

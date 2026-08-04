@@ -16,6 +16,7 @@ scope: [engineer, admin]
 tags: [canonical-id, gcs-path, manifest, shard-atom, honest-coverage, massive-purge, orphan-proof, data-correctness]
 related: [tradfi_consolidated_closeout_2026_07_18, databento_future_option_blank_instrument_id_shard_atom_2026_07_19]
 created: 2026-07-19
+author: unknown
 priority: P0
 parent_epic: tradfi_master
 source: "Full physical GCS enumeration (bny7k1yk6) + investigation workflow (wlixucotm), 2026-07-19"

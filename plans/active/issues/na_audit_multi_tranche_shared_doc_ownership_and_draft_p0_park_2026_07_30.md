@@ -41,6 +41,7 @@ related:
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent

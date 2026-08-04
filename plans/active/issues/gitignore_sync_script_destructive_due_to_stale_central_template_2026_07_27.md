@@ -32,6 +32,7 @@ scope: [engineer]
 tags: [gitignore, sync-script, destructive, tooling-bug, template-drift, near-miss]
 related: []
 created: 2026-07-27
+author: unknown
 priority: P2
 parent_epic: infrastructure_master
 source: "Discovered while shipping an unrelated small fix (stray .claude/worktrees/ gitlinks), 2026-07-27 ~21:15 UTC"

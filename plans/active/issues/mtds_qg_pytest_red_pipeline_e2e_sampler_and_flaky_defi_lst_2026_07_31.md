@@ -10,6 +10,7 @@ status: resolved
 nature: record
 asset_group: tradfi
 created: 2026-07-31
+author: unknown
 tags: [mtds, qg, pytest, flaky, cefi, pipeline_e2e, repo-blocker]
 related: [tradfi_manifest_writer_legacy_id_regression_2026_07_21]
 stage: [data]

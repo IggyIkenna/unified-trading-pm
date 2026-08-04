@@ -32,6 +32,7 @@ related:
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-08-03
+author: unknown
 parent_epic: manifest_master
 priority: P2
 source:

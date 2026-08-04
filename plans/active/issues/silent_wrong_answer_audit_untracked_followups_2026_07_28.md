@@ -34,6 +34,7 @@ related:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
   ]
 created: 2026-07-28
+author: unknown
 last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: NA

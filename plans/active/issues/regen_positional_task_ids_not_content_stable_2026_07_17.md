@@ -35,6 +35,7 @@ related:
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-17
+author: unknown
 last_updated: 2026-07-31 # (RULED 2026-07-28: do rewrite via re-scope; assigned_vm REVERTED planning->NA 2026-07-31 per BLK-29884333 — see Progress Log)
 parent_epic: orchestrator_master
 assigned_vm: NA # NOT AO-dispatchable: banner-guarded, local-only-homed fleet-core rewrite (BLK-29884333 option A); na-audit 2026-07-30 misclassified NA->planning, reverted 2026-07-31

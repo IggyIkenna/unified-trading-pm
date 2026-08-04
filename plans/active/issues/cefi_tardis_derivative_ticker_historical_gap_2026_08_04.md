@@ -17,6 +17,7 @@ related:
     /plans/active/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
   ]
 created: 2026-08-04
+author: unknown
 priority: P1
 parent_epic: mtds_mdps_master
 assigned_vm: planning

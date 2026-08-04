@@ -25,6 +25,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-02
+author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

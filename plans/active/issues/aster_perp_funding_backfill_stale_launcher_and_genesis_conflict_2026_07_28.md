@@ -25,6 +25,7 @@ related:
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
   ]
 created: 2026-07-28
+author: unknown
 priority: P2
 parent_epic: mtds_mdps_master
 assigned_vm: planning

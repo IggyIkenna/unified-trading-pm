@@ -29,6 +29,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-08
+author: unknown
 parent_epic: instruments_master
 priority: P2
 source:

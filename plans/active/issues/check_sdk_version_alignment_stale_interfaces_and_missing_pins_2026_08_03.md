@@ -28,6 +28,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, version-alignment, stale-config, fleet-consolidation, schema-validation]
 related: [/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md]
 created: 2026-08-03
+author: unknown
 last_updated: 2026-08-03
 priority: P3
 parent_epic: infrastructure_master

@@ -29,6 +29,7 @@ related:
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-07-25
+author: unknown
 last_updated: 2026-07-25
 priority: P1
 parent_epic: orchestrator_master

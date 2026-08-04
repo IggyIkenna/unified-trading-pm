@@ -27,6 +27,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-25
+author: unknown
 last_updated: 2026-07-26
 priority: P3
 parent_epic: sports_master

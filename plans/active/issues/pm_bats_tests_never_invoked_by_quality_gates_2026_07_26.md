@@ -33,6 +33,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-26"
+author: unknown
 last_updated: "2026-07-26"
 parent_epic: infrastructure_master
 source: "slot-11 (infra), discovered while executing ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3"

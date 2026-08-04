@@ -43,6 +43,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
+author: unknown
 last_updated: 2026-08-03T02:56Z
 parent_epic: infrastructure_master
 assigned_vm: planning

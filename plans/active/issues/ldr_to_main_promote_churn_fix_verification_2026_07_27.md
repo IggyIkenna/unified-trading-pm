@@ -30,6 +30,7 @@ scope: [engineer]
 tags: [ci-cd, quality-gates-v2, quickmerge, promote-bot, verification, root-cause-correction]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 priority: P1
 source:

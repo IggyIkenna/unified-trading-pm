@@ -24,6 +24,7 @@ tags: [defi, oracle-prices, pyth, manifest, expected-unattempted, honest-absence
 related:
   [/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md, /plans/active/data_completion_defi_2026_07_15.md]
 created: 2026-08-03
+author: unknown
 parent_epic: defi_master
 priority: P1
 source:

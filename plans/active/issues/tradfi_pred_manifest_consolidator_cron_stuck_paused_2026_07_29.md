@@ -18,6 +18,7 @@ scope: [engineer, admin]
 tags: [data-correctness, manifest, consolidator, incident, cron, tradfi, prediction]
 related: [macro_micro_econ_data_capture_audit_2026_06_05]
 created: 2026-07-29
+author: unknown
 parent_epic: infrastructure_master
 priority: P1
 source:

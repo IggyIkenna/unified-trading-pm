@@ -38,6 +38,7 @@ scope: [engineer]
 tags: [ci-cd, promotion, ldr-main, manifest-cache, ci-status, backmerge, skip-ci]
 related: [/codex/08-workflows/ci-cd-flow.md, /codex/15-runbooks/devops-ci-walls.md]
 created: 2026-08-03
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

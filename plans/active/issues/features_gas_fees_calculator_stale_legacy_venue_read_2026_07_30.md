@@ -28,6 +28,7 @@ related:
     plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: defi_master
 source: [data_engineering slot-7, 2026-07-30]
 assigned_vm: planning

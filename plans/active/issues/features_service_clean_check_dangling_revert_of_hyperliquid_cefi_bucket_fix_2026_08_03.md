@@ -30,6 +30,7 @@ related:
   - /plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md
   - /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
 created: "2026-08-03"
+author: unknown
 source: [backlog task delta_one_candle_loader_no_pass_through_path_defi-003, slot 8]
 parent_epic: defi_master
 assigned_vm: planning

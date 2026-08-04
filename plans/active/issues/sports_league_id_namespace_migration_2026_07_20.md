@@ -24,6 +24,7 @@ related:
     /plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
   ]
 created: "2026-07-20"
+author: unknown
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:
 locked_by:

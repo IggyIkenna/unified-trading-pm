@@ -37,6 +37,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
+author: unknown
 priority: P1
 parent_epic: agent_operating_framework_master
 source:

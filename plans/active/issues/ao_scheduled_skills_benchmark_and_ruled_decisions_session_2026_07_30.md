@@ -28,6 +28,7 @@ related:
     /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

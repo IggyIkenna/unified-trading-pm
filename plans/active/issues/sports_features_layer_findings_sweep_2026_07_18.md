@@ -49,6 +49,7 @@ related:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
   ]
 created: 2026-07-18
+author: unknown
 source:
   - Operator questions 2026-07-18 ("so this is ultimately gonna solve leakage looking back for all sports related stuff?
     not just going forward?") - which forced a backward-completeness audit rather than accepting "the code is fixed" as

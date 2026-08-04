@@ -10,6 +10,7 @@ status: open
 nature: record
 asset_group: tradfi
 created: 2026-07-21
+author: unknown
 tags: [tradfi, manifest, canonical, writer-bug, data-correctness, backfill]
 related:
   [

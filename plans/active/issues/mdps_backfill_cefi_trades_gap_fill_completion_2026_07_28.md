@@ -34,6 +34,7 @@ related:
     /plans/archive/issues/lighter_zksync_trades_generic_tardis_path_bypasses_no_batch_source_2026_07_29.md,
   ]
 created: 2026-07-29
+author: unknown
 parent_epic: cefi_master
 priority: P3
 estimate_class: infra

@@ -20,6 +20,7 @@ scope: [engineer, admin]
 tags: [docs-reconcile, operator-decision, cursor-rules, locked-doc, retrieval-layer]
 related: []
 created: 2026-08-02
+author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

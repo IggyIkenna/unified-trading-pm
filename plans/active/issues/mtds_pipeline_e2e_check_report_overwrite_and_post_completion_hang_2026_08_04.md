@@ -39,6 +39,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: "2026-08-04"
+author: unknown
 last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning

@@ -38,6 +38,7 @@ related:
   - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
   - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 assigned_vm: NA

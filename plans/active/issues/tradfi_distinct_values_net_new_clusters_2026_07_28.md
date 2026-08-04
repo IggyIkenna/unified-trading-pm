@@ -25,6 +25,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
+author: unknown
 last_updated: "2026-07-28"
 parent_epic: manifest_master
 assigned_vm: NA

@@ -25,6 +25,7 @@ related:
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
   ]
 created: 2026-07-20
+author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

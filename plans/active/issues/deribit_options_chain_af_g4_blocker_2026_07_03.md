@@ -14,6 +14,7 @@ scope: [engineer]
 tags: [g4-gate, deribit, options_chain]
 related: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 created: 2026-07-03
+author: unknown
 parent_epic: cefi_master
 priority: P0
 source: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md]

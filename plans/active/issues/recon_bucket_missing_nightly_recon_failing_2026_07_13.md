@@ -27,6 +27,7 @@ related:
     /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
   ]
 created: "2026-07-13"
+author: unknown
 parent_epic: infrastructure_master
 priority: P0
 source:

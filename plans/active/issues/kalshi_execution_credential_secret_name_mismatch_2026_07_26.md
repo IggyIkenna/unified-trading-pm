@@ -27,6 +27,7 @@ related:
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 created: 2026-07-26
+author: unknown
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only

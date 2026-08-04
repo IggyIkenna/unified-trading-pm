@@ -35,6 +35,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-27
+author: unknown
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra

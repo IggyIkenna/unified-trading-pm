@@ -29,6 +29,7 @@ related:
     ../tradfi_v9_stage1_finish_2026_07_06.md,
   ]
 created: 2026-07-06
+author: unknown
 parent_epic: batch_live_symmetry_master
 priority: P2
 source: layer1_remeasure_and_certify_2026_07_06.md task 007 live-verify session (slot-9 planning)

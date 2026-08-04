@@ -44,6 +44,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 created: 2026-07-31
+author: unknown
 priority: P2
 parent_epic: orchestrator_master
 source:

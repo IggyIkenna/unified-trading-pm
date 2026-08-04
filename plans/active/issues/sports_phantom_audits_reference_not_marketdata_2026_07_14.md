@@ -48,6 +48,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-14
+author: unknown
 parent_epic: observability_master
 priority: P2
 source:

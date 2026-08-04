@@ -38,6 +38,7 @@ related:
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 created: 2026-07-30
+author: unknown
 parent_epic: observability_master
 priority: P2
 source: ["data_pipeline_failure escalation agt-029155, slot 5, 2026-07-30"]

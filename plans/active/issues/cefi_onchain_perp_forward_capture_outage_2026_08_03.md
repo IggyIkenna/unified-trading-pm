@@ -38,6 +38,7 @@ related:
     /plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
   ]
 created: 2026-08-03
+author: unknown
 priority: P1
 parent_epic: mtds_mdps_master
 assigned_vm: planning

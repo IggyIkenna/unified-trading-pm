@@ -27,6 +27,7 @@ tags: [defi, bridge-events, backfill, cli-convention, catalog-freshness, correct
 related:
   [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/pipeline-mode-partition.md]
 created: 2026-07-28
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: NA

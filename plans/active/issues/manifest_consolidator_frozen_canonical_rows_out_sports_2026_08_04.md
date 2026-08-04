@@ -36,6 +36,7 @@ related:
     /plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md,
   ]
 created: "2026-08-04"
+author: unknown
 parent_epic: infrastructure_master
 priority: P1
 assigned_vm: planning

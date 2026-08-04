@@ -36,6 +36,7 @@ related:
   - plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md
   - /codex/02-data/availability-manifest-and-data-status.md
 created: 2026-07-13
+author: unknown
 parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")

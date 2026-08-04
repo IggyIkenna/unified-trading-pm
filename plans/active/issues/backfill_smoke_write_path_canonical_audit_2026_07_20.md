@@ -41,6 +41,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-07-20
+author: unknown
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

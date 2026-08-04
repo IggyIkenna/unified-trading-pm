@@ -31,6 +31,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-07-31"
+author: unknown
 last_updated: "2026-07-31"
 parent_epic: defi_master
 assigned_vm: planning

@@ -24,6 +24,7 @@ related:
     /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
   ]
 created: 2026-07-28
+author: unknown
 parent_epic: execution_master
 assigned_vm: planning
 assigned_role: backend_engineer

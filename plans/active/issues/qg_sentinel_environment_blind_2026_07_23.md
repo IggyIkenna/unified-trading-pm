@@ -26,6 +26,7 @@ related:
   - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
   - /plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md
 created: 2026-07-23
+author: unknown
 priority: P1
 parent_epic: infrastructure_master
 assigned_vm: NA

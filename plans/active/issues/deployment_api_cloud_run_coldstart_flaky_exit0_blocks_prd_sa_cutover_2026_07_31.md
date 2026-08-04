@@ -36,6 +36,7 @@ related:
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
   ]
 created: "2026-07-31"
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
 assigned_vm: planning

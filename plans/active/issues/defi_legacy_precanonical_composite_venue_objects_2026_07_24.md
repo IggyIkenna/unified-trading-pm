@@ -31,6 +31,7 @@ related:
   - /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
   - /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md
 created: 2026-07-24
+author: unknown
 last_updated: "2026-08-02"
 parent_epic: defi_master
 assigned_vm: NA

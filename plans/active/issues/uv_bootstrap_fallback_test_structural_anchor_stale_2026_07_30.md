@@ -20,6 +20,7 @@ scope: [engineer]
 tags: [ci-cd, testing, staleness, setup-sh, uv]
 related: []
 created: 2026-07-30
+author: unknown
 priority: P3
 parent_epic: infrastructure_master
 assigned_vm: NA
