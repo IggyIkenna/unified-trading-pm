@@ -429,6 +429,12 @@ jobs:
           steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          # Self-hosted "glue" runners persist /tmp across jobs — a prior cache-miss run
+          # (or one that never reached the cache-save step) can leave this clone behind,
+          # which then fails EVERY subsequent run with "already exists and is not an empty
+          # directory" (exit 128) regardless of branch — confirmed 2026-08-04 on
+          # alerting-service main, both the tests and checks slices, identical failure.
+          rm -rf /tmp/bats-core
           git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
           /tmp/bats-core/install.sh ~/.local/act-tools
 
