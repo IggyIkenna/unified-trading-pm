@@ -118,14 +118,20 @@ context_scope:
       pending the mid-migration leg). Source: **corrected 2026-07-25** —
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
       `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
-- [ ] [DATA] P2. **`data-pipeline-check-mtds` — pre-Phase-B baseline checkpoint (partial slice).** Same structure as the
-      `-is` todo above: run `/data-pipeline-check-mtds --asset-group prediction` ONE time now as the pre-Phase-B
-      baseline (the MTDS prediction `-test-` bucket isolation fix already shipped per the parent doc's Ground-truth
-      verdict, so this is safe to run against `-test-` buckets only); the Phase-B mid-migration spot-check leg stays
-      blocked, tracked by the original todo. Repo: market-tick-data-service (`-test-` buckets only). **Done when**: the
-      run's report path + date is recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress
-      Log, explicitly labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-mtds`
-      3x-cadence-top-up checkbox. Source: **corrected 2026-07-25** —
+- [x] ✅ [DATA] P2. **`data-pipeline-check-mtds` — pre-Phase-B baseline checkpoint (partial slice) — DONE 2026-08-04
+      (slot 4).** Ran `/data-pipeline-check-mtds --asset-group prediction --day 2026-08-02` ONE time now as the
+      pre-Phase-B baseline (the MTDS prediction `-test-` bucket isolation fix already shipped per the parent doc's
+      Ground-truth verdict, so this was safe to run against `-test-` buckets only); the Phase-B mid-migration spot-check
+      leg stays blocked, tracked by the original todo. This is a partial-parallelism SPLIT per `task_template.md` §4 —
+      the mid-migration leg stays tracked by the ORIGINAL todo, unchanged. Repo: market-tick-data-service (`-test-`
+      buckets only, via the skill). **Result**: 4/8 real `no_parquet_under` force+skip failures + 1 confirmed genuine
+      SPOT preemption (Phase 1); 2 passed/2 failed on the live leg (Phase 2) — full breakdown in the Progress Log below.
+      Also found + filed 2 checker-script operational defects (report filename collision across separate leg
+      invocations; a post-completion process hang, confirmed twice) —
+      `mtds_pipeline_e2e_check_report_overwrite_and_post_completion_hang_2026_08_04.md`. **Done when**: the run's report
+      path + date is recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress Log, explicitly
+      labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-mtds` 3x-cadence-top-up
+      checkbox (it remains open pending the mid-migration leg). Source: **corrected 2026-07-25** —
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
       `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
 - [ ] [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass (no
