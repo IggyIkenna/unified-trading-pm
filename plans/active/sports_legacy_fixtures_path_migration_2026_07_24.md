@@ -23,7 +23,7 @@ summary: >-
   manifest-atom migration (`instruments-service@e19c5a7a`, 2026-07-24) — some of the 242,688 may already be
   canonically-pathed rows with a stale manifest label, not real legacy-path data. This plan's Phase 1 resolves both
   ambiguities with a real per-date diff before any migration executes.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -74,6 +74,10 @@ context_scope:
 ---
 
 # Sports legacy fixtures-path migration
+
+> **ARCHIVED 2026-08-04** — all 7 todos complete. The fallback `_read_fixtures_entity_with_schedule_fallback` was
+> removed (`instruments-service@333c35d2`), the Phase-1 census confirmed 0 load-bearing legacy fixtures, and the legacy
+> `entity=fixtures/` path is now truly frozen for both reads and writes.
 
 > **Why this exists.** `sports_consolidated_closeout_2026_07_19.md` declares the legacy bare `entity=fixtures/` GCS path
 > FROZEN since 2026-05-23, but `instruments-service@e1524d21` ships an active read fallback to it
