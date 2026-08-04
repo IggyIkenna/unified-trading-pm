@@ -22,7 +22,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [unified-trading-pm, instruments-service, market-data-processing-service, features-service]
+repos: [unified-trading-pm, instruments-service, market-data-processing-service, features-service, alerting-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, escalation-refire-waste]
 related:
@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-04T04:23Z
+last_updated: 2026-08-04T04:55Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -51,7 +51,8 @@ superseded_by:
 resolved_by:
 source:
   "cicd-role escalation agt-f90886 (WALL_TYPE=ldr_qg_failure, REPO=instruments-service, slot 8) — split of continued2 at
-  its line cap; also agt-edf42f (WALL_TYPE=ldr_qg_failure, REPO=features-service, slot 4)"
+  its line cap; also agt-edf42f (WALL_TYPE=ldr_qg_failure, REPO=features-service, slot 4); also agt-933d8f
+  (WALL_TYPE=main_ci_red, REPO=alerting-service, slot 8)"
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
@@ -224,3 +225,47 @@ here.
   **Disposition: no code or workflow change made or needed.** `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real
   numbered slot per `cicd.md`'s `^[0-9]+$` check) — skipped the authoring-slot ping. Slot left clean (`features-service`
   on `live-defi-rollout`, 0 commits ahead, no code changes made).
+
+- **2026-08-04 ~04:07-04:55Z (`cicd` escalation `agt-933d8f`, slot 8, `alerting-service`, `wall_type=main_ci_red`,
+  `pr_number=0`) — new repo for this doc-chain (5th); disposition: already resolved via re-fire, no code action needed,
+  but surfaced a second distinct root cause underneath the same symptom (single-runner queue starvation, not just the
+  flaky-timeout signature itself)**: `main`'s post-promote `quality-gates-v2` (run `30865808444`, headSha `0fbf9adb` —
+  the `chore(promote): LDR → main (Option-B direct)` push, PR#328 already `MERGED` at `00:30:39Z`) was `failure` on its
+  `QG slice (tests)` job — `pytest-timeout` fired `Failed: Timeout (>150.0s)` on
+  `tests/unit/test_main.py::test_main_runs_successfully` (`1 failed, 909 passed` in `1060.30s`), the same signature
+  class as every prior entry in this doc-chain. The escalation's own framing ("LDR is green, fix already exists there")
+  checked out: `main`'s content is byte-identical to LDR at that promote point (a direct promote, no intervening
+  commits), so there was no code difference to hunt for. Ran a local repro before touching anything: `uv sync --frozen`
+  then `tests/unit/test_main.py` in isolation — `7 passed in 0.63s`, no hang, confirming no code-level defect (the
+  test's own mocking of `AlertSubscriber`/`GracefulShutdownHandler`/ `_run_subscriber_until_shutdown` is correct;
+  nothing in the happy path can plausibly block for 150s). Re-triggered `quality-gates-v2` on `main`'s unchanged HEAD
+  (`gh workflow run quality-gates-v2.yml --ref main`, run `30876446174`) per this doc-chain's established `main_ci_red`
+  practice — but unlike prior entries (45s–20m fast green), this one sat `queued` for 9+ minutes before even starting a
+  job. Investigated rather than just waiting blindly: `gh api .../actions/runners` showed **alerting-service has exactly
+  ONE self-hosted runner** (`glue-ip-172-31-5-118-1`, `busy=true`), and a SEPARATE, older `quality-gates-v2` run
+  (`30865864841`, `workflow_dispatch` on LDR) had its own `tests` job `in_progress` since `00:31:52Z` — 3.5h+ elapsed at
+  investigation time, holding the repo's only runner and blocking my re-fire from even starting. Before treating this as
+  a stuck/ runaway process (which the workspace rules permit killing after confirmation), checked the QG host-governor
+  first (`qg-host-governor.sh --status` → zero live reservations, capacity free — ruling out the reservation-governor as
+  the blocker) and then inspected the actual runner process tree directly on the shared host
+  (`/opt/github-glue-runners-alerting-service/glue-1/`): the job was in its POST `actions/cache/v4` save step
+  (`tar ... --use-compress-program zstdmt` of the venv/uv cache), not hung — confirmed via `/proc/<pid>/io` showing
+  `wchar` actively increasing (~260MB/8s) across two samples, i.e. genuine forward I/O progress on an unusually large
+  cache under shared-host disk contention, not a stall. Correctly did NOT kill it (RULES.md's kill-permission requires
+  confirming genuine runaway/stalled state first, which this explicitly was not). Waited it out: the old run completed
+  `success` after the cache-save finished (its own LDR `quality-gates-v2` genuinely green, corroborating the
+  escalation's premise), the runner freed up, and my re-fire (`30876446174`) then ran cleanly — `tests` **passed**
+  (confirming the original timeout was the same host-contention flake this whole doc-chain documents) and `checks`
+  passed, run **`success`** in 52m16s wall-clock (mostly queue-wait, not execution). `main` is now green
+  (`gh run list --branch main` confirms `quality-gates-v2 success` at headSha `0fbf9adb`). **Disposition: no code or
+  workflow change made or needed.** New angle worth flagging to whoever next touches todo 1 (capacity-side root-cause
+  fix): this occurrence shows the fleet-wide contention manifests in at least TWO distinct ways — (a) the
+  already-documented xdist-worker/pytest-timeout false-failure signature itself, AND (b) a single-runner-per-repo
+  topology turning one slow-but-legitimate job (a large cache save under I/O contention) into a 30+ minute
+  queue-starvation for anything else targeting that repo's CI, including a re-fire meant to clear a wall. (b) is a
+  capacity/topology question (more runners per repo, or a smaller/streamed cache), not a code defect either — out of
+  scope for a one-shot wall-clearing session to fix, noted here for the capacity-side owner. No open `repo-blockers` for
+  `alerting-service` to fast-path. `git status` clean throughout (no `uv.lock` drift from the local `uv sync`/pytest
+  repro this time). `AUTHORING_SLOT=ci-reconcile` (sentinel, not a real numbered slot per `cicd.md`'s `^[0-9]+$` check)
+  — skipped the authoring-slot ping. Slot left clean (`alerting-service` on `live-defi-rollout`, 0 commits ahead, no
+  code changes made; only this doc entry in `unified-trading-pm`).
