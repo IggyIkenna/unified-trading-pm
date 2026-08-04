@@ -106,8 +106,17 @@ Make the halt provider-aware so it only fires when there is **no usable dispatch
 
 ## Follow-ups (tracked)
 
-- [ ] [BUG] P1. Make AutoSpawn critical-pool halt provider-aware so a healthy DeepSeek pool is not starved when Claude
-      is ≥90% (`agent-orchestrator/server/autospawn.py`; option A/B above). — owner: agent-orchestrator engineer
+- [x] [BUG] P1. ✅ Make AutoSpawn critical-pool halt provider-aware so a healthy DeepSeek pool is not starved when
+      Claude is ≥90% (`agent-orchestrator/server/autospawn.py`; option A above). Done when: the halt only fires when the
+      ENTIRE blended pool (Claude + every other registered provider) is exhausted, not Claude alone. —
+      `agent-orchestrator@3f06bea` on `live-defi-rollout`, `ahead=0`. `is_pool_critically_exhausted()` now also checks
+      the new `_non_anthropic_pool_has_capacity()` (usable + health-gate-clear + real dollar balance via the new
+      `_account_has_balance_headroom()`, populated by `DeepSeekBalancePoller`); the same balance check is also wired
+      into `select_account_for_spawn()`'s per-candidate DeepSeek eligibility check (proactive — skips a drained account
+      before ever attempting a spawn that would fail on auth, not just reactively after failures accumulate). 6 new unit
+      tests covering the halt (headroom present/absent/unusable/health-gate-tripped/ no-non-anthropic-registered) +
+      balance-headroom edge cases + the per-spawn balance-skip fallback chain; full suite green (2333 passed),
+      `basedpyright`/`tsc`/`vitest` clean.
 - [ ] [OPERATOR] P2. Top up the `deepseek-v4-pro` balance (currently `$0.34`) — even once the routing bug is fixed,
       DeepSeek dispatch fails-closed at zero balance.
 
@@ -116,3 +125,6 @@ Make the halt provider-aware so it only fires when there is **no usable dispatch
 Main agent (`agt-fdecde`) does not push code and did not modify `autospawn.py`; this doc records the diagnosis for an
 engineer worker / operator. The main agent's earlier "capacity halt is by-design, queue prereq-gated" read was
 **incorrect** — corrected here by the STEP 2.4 per-task readiness proof above.
+
+**2026-08-04 update**: `[BUG] P1` fixed and shipped (see checkbox above). `[OPERATOR] P2` (balance top-up) remains open
+— operator-owned, not something a worker can action.
