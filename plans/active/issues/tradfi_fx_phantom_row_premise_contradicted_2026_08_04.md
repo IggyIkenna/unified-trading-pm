@@ -144,13 +144,37 @@ variants) should be re-scoped to cover the full ~2,787-row population, not just 
 
 ## Recommended next steps
 
-- [ ] [DATA] P1. Root-cause why `pipeline_mode=batch_databento`-pathed FX objects contain `YAHOO_FINANCE`-sourced
-      content (a source/path mislabeling defect, separate from the already-fixed blank-`instrument_id` rebuild bug) — is
-      this a legacy migration artifact (`ticks_migrated_*` filenames suggest a 2026-04-18 migration run touched these)
-      that mis-stamped `pipeline_mode`, or a writer that never correctly set it? Check
-      `market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py` and whatever wrote the
-      `ticks_migrated_20260418T*.parquet` files first — the docstring already describes handling "symbol-less FX stems,"
-      suggesting this may be a known, partially-addressed shape. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **ROOT-CAUSED 2026-08-04 (slot 11, data_engineering) — a LEGACY MIGRATION ARTIFACT, not an active
+      writer defect; the FIX VEHICLE already exists but has not yet run against this population.** Confirmed:
+      `ticks_migrated_20260418T*.parquet` is a workspace-wide "an earlier migration/consolidation pass touched this
+      object" filename marker (same convention appears for defi/prediction objects from the same window, e.g.
+      `tests/unit/scripts/test_fold_legacy_composite_venue_objects_2026_07_31.py`'s `ticks_migrated_20260418T155218Z`
+      fixtures). **On 2026-04-18, none of today's source-aware pipeline_mode machinery existed yet** — verified via git
+      history in `unified-trading-library`: `pipeline_mode_resolver.py` (today's `derive_pipeline_mode_for_row` SSOT,
+      incl. its `_ASSET_GROUP_FALLBACKS` dict) was created **2026-05-28**; `unified-api-contracts`'s
+      `_source_priority_data.py` (the `SOURCE_PRIORITY` registry) was created **2026-05-06**, and the specific
+      `("tradfi","ohlcv_24h") → ["yahoo"]` entry was only added **2026-06-24** (`git log -S` on both files, both weeks
+      after 2026-04-18). So whatever pipeline_mode-assignment logic the April migration used had **no way to know FX
+      `ohlcv_24h` daily data is Yahoo-sourced** — that routing fact did not exist in the codebase yet — and fell back to
+      tradfi's general/dominant source, Databento (the same "most common source for the asset group" default
+      `_ASSET_GROUP_FALLBACKS["tradfi"] = PipelineMode.BATCH_DATABENTO` still encodes today), physically writing these
+      FX objects under a `pipeline_mode=batch_databento` path segment despite genuine Yahoo Finance content
+      (`instrument_key=YAHOO_FINANCE:...`). This is a **different, earlier, and now structurally-impossible-to-recur**
+      defect from the separately-already-root-caused-and-fixed 2026-07-26 live-write-path bug
+      (`tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` Finding 1 — the explicit-`--source`-trusted-
+      unconditionally bug in `derive_pipeline_mode_for_row`, fixed at `unified-trading-library@f237b75a`); that fix only
+      prevents the LIVE/current write path from mis-stamping FX going forward and does nothing for these pre-existing
+      April-2026 migration artifacts, which predate a source-aware resolver existing at all. **The fix vehicle already
+      exists and is already aware of this exact case**:
+      `market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py`'s `_pipeline_mode()` helper deliberately
+      RE-DERIVES (never preserves) the on-disk `pipeline_mode` segment via TODAY's fully source-aware resolver — its own
+      docstring names this precise case verbatim ("FX ohlcv_24h daily candles carry a stale `batch_databento` segment on
+      disk but derive to the correct `batch_yahoo`"). But per `tradfi_canonical_path_migration_design_2026_07_19.md`'s
+      own Progress Log, these exact objects (symbol-less `ticks_migrated_*` FX stems — 1,808 counted there on the full
+      corpus walk) were classified into the `MIGRATE_CONTENT_REPAIR` "content-needed" tail — deferred pending the
+      `--content-repair` gate + a second content-read reduce pass — which is why they still physically sit at the wrong
+      path today, 2026-08-04, and is exactly what this doc's own todo #2 below (re-stamp design+execute) is scoped to
+      finish. (repo: market-tick-data-service)
 - [ ] [DATA] P1. Design + execute a RE-STAMP (not delete) for the full ~2,787-row FX blank-`instrument_id` population
       (supersedes the parent doc's separate Defect 1 delete todo and Defect 2 dedup todo — now one unified population):
       recover `instrument_id` from each row's real backing object content (`instrument_key` field or `symbol`+`venue`
@@ -184,3 +208,14 @@ variants) should be re-scoped to cover the full ~2,787-row population, not just 
   parent doc's Defect-1 delete todo as done — instead leaving it for whoever picks up this doc's re-stamp todo, since
   the correct action is a re-stamp, not a delete-then-mark-done. market-tick-data-service@(pending — see this session's
   shipped commit for the diagnostic script + tests).
+- **2026-08-04 (slot 11, data_engineering)**: root-caused the first `[DATA] P1` todo above — see the todo's own text for
+  the full writeup + evidence. Summary: these are legacy 2026-04-18 migration artifacts written before ANY source-aware
+  pipeline_mode routing existed in the codebase (`pipeline_mode_resolver.py` created 2026-05-28, the `SOURCE_PRIORITY`
+  `("tradfi","ohlcv_24h")→["yahoo"]` entry added 2026-06-24 — both weeks after the objects' filename timestamp), so the
+  migration fell back to tradfi's dominant source (Databento) with no way to know FX daily OHLCV is Yahoo-only. Distinct
+  from, and unaffected by, the separately-fixed 2026-07-26 live-write-path bug. The designed fix vehicle
+  (`migrate_tradfi_canonical_2026_07.py`'s content-aware re-derivation) already exists but has not yet been run
+  (`--content-repair`) against this specific symbol-less-stem population — confirmed via
+  `tradfi_canonical_path_migration_design_2026_07_19.md`'s Progress Log, which already counted this exact ~1,808-object
+  tail as deferred. No code change was needed for this todo (pure investigation); the answer directly informs todo #2's
+  re-stamp design (still open). Read-only session — no GCS state changed.
