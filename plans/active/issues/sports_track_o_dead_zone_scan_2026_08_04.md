@@ -148,8 +148,13 @@ mechanism directly (manifest data is circumstantial; raw bm_minutes is the direc
 - [ ] [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** (repo: market-data-processing-service,
       `bucket_assignment_adapter.py`). Operator-gated — this diagnosis only surfaces the options; the operator must
       choose.
-- [ ] [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** (repo: market-tick-data-service,
-      `odds_api_adapter.py` + live connector). Verify the multi-pass fetch loop is not throttled on low-fixture days.
+- [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@f267bb19d
+      (audit-only; no MTDS code changes needed) (repo: market-tick-data-service, `odds_api_adapter.py` + live
+      connector). **VERDICT: NOT fixture-count-gated.** The fetch loop iterates over
+      `fetch_timestamps = _compute_fetch_timestamps(kickoffs, offsets)` where `kickoffs` = unique kickoff times, NOT
+      fixtures. API call count = `len(unique_kickoff_times) × 8 offsets` (minus 5-min dedup). Low-fixture days produce
+      MORE calls (scattered kickoffs → less dedup), not fewer. Root cause of low capture is likely bookmaker coverage /
+      update-frequency, not scraper throttling. See Progress Log.
 - [ ] [DATA] P2. **(c) Sample 20 candidate dates for bm_minutes distribution** (repo: market-data-processing-service,
       bounded VM task — read ~20 raw shards from the market-data bucket, confirm dead-zone distribution). Evidence:
       manifest-based candidate list above.
@@ -160,3 +165,24 @@ mechanism directly (manifest data is circumstantial; raw bm_minutes is the direc
   weekdays confirmed at 9-16% capture rates. No pure-dead-zone dates found (<=5 rows, 0 captured). Global distribution:
   25.6% captured, 58.6% empty_confirmed, 0.5% attempted_failed. Source stratification shows `mdps_odds_horizon_bucket`
   dominates at 616K rows (aggregate sentinel). Issue doc filed with 3 recommended follow-up todos.
+- **2026-08-04 ~23:XXZ (slot 11)**: **Audit (b) complete — odds_api scraper is NOT fixture-count-gated.** Full code
+  trace of `odds_api_adapter.py` (batch) + `odds_api_ws.py` (live connector):
+
+  **Batch path** (`_run_league_fetch_loop`): API call count = `len(_compute_fetch_timestamps(kickoffs, offsets))` where
+  `kickoffs` = unique kickoff datetimes from `_discover_fixtures`, NOT fixture count. `_compute_fetch_timestamps`
+  produces `unique_kickoffs × 8 offsets` raw timestamps, deduplicated by 5-min rounding. Fixture count never appears in
+  the loop bound — the loop iterates over `fetch_timestamps`, each covering ALL fixtures for that sport+timestamp.
+
+  **Counter-example proving the hypothesis wrong**: 3 fixtures at 3 scattered kickoff times (low-fixture Tuesday) →
+  3×8=24 unique fetch timestamps (no cross-kickoff dedup) → 24 API calls. 50 fixtures all at Saturday 15:00 → 1×8=8
+  unique fetch timestamps (heavy dedup) → 8 API calls. Low-fixture days actually produce MORE API calls because kickoffs
+  are more scattered. The scraper is **kickoff-diversity-gated**, not fixture-count-gated.
+
+  **Live connector** (`OddsApiWSFeedConnector`): Fixed 60-second poll interval per sport_key, calling
+  `/sports/{sport_key}/odds` which returns ALL live fixtures. No fixture-count dependency at all.
+
+  **What probably explains the 9-16% weekday capture rates instead**: (1) Lower-profile midweek fixtures have fewer
+  bookmakers offering odds → less data per API response. (2) Bookmaker odds update frequency is lower for obscure
+  fixtures → `bm_time` is more stale → more rows fall in the 615-minute dead zone (765<bm_minutes<1380). (3) These are
+  data-availability issues, not code throttling. **Recommendation**: the dead-zone fix (item a — T-18h horizon or
+  widened T-24h cap) is the correct lever; there is no scraper-cadence bug to fix here.
