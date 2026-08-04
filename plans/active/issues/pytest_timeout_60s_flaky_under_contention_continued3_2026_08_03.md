@@ -41,7 +41,7 @@ related:
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
   ]
 created: 2026-08-03
-last_updated: 2026-08-04T12:50Z
+last_updated: 2026-08-04T13:00Z
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -431,6 +431,40 @@ here.
   — further corroborates todo 1 (capacity-side root cause) and todo 2 (missing dispatch-time merge/HEAD-advancement
   check — this is the THIRD `features-service` occurrence where the escalating run's `createdAt` sits within
   single-digit seconds of the PR's own `mergedAt`).
+
+- **2026-08-04 ~12:47-13:00Z (`cicd` escalation `agt-43f424`, slot 7, `instruments-service`, `wall_type=ldr_qg_failure`,
+  `pr_number=1072`) — 4th occurrence for `instruments-service` (9th for the whole doc-chain), but a NEW signature within
+  the family: `checks`/`typecheck` (basedpyright) timeout, not `tests`/`pytest-timeout`; already self-resolved before
+  investigation, no code action needed**: escalation cited failing run `30868240796` (`QG slice (checks)` job
+  `91864635465`) — NOT the pytest-xdist signature every prior entry in this doc-chain documents. The `[4/6] TYPE CHECK`
+  phase itself timed out: `qg-governor` held the job in `WAIT_CPU` for 884s before admitting it
+  (`reserved 3657MB (ADMIT) after 884s`), then basedpyright ran from admission to
+  `❌ Type check FAILED/timeout (exit=124)` in exactly ~120.5s — i.e. it hit `PYRIGHT_TIMEOUT`'s 120s default budget
+  under live host contention, not a code-level type error (no basedpyright diagnostic output precedes the timeout line).
+  Checked the PR directly rather than trusting the escalation's staleness: `gh pr view 1072` → already **`MERGED`**,
+  `mergedAt=2026-08-04T01:16:25Z`; the escalating run's own `createdAt` = `01:16:26Z` — **1 second AFTER** the merge,
+  the tightest margin logged in this doc-chain yet (the confirmatory check was still queued/running when the PR
+  self-merged on an earlier signal). Verified nothing outstanding to ship: PR#1072's merge commit (`ebebd2e1`) is an
+  ancestor of BOTH `origin/main` and `origin/live-defi-rollout` (`git merge-base --is-ancestor` → yes/yes). Checked live
+  gate state instead of stopping at the PR check: LDR's own next completed `quality-gates-v2` (`30873658868`,
+  `03:04:09Z`, ~1h48m after the incident) = `success`; a later `workflow_dispatch` run against current LDR HEAD
+  (`96ea6c4b`) was `in_progress` at investigation time (`30906285537`, started `11:47:34Z`) with its `QG slice (checks)`
+  job (the exact job class that failed originally) already completed **`success` in 14m48s** — direct evidence the
+  typecheck leg passes fine on the current tree once actually scheduled; its `QG slice (tests)` job was still running at
+  ~60min elapsed (long but not itself a failure). Host state at investigation time: `uptime` load average
+  20.19/21.42/20.10 on an 8-core host, while `qg-host-governor.sh --status` showed `running heavy phases: 0` /
+  `live reservations: none` — the same governor-blind-to-actual-load signature todo 1 already flagged, now corroborated
+  for the `checks`/typecheck selector in addition to the `tests` selector every other entry covers (the governor's own
+  ledger and real host load diverge regardless of which QG leg is asking). `GET /api/repo-blockers` → `{"open": []}` —
+  nothing to fast-path for `instruments-service`. **Disposition: no code or workflow change made or needed** — the wall
+  was already fully cleared (PR merged 1s before its own confirmatory check began, LDR green ~1h48m later, current-HEAD
+  checks-leg green again now). `AUTHORING_SLOT=ci` (sentinel, fails `cicd.md`'s `^[0-9]+$` check) — skipped the
+  authoring-slot ping (the dispatch-time Slack alert already covers the FYI). Slot left clean (`instruments-service` and
+  `unified-trading-pm` both on `live-defi-rollout`, no code changes made in either repo — only this doc's own commit).
+  This is now the **4th occurrence for `instruments-service`** (3× `tests`/pytest-timeout, 1× `checks`/typecheck-timeout
+  — same capacity-side root cause, different QG selector) and **9th for the whole doc-chain**; extends todo 1's scope
+  (`PYRIGHT_TIMEOUT`, not just `pytest --timeout`, is exposed to the same governor-admission-vs-real-load gap) and
+  further corroborates todo 2 (single-digit-second merge/escalation race, now observed at 1s — the tightest yet).
 
 ## na-eligibility-audit verdict
 
