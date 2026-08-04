@@ -1,0 +1,118 @@
+---
+doc_type: issue
+title:
+  "AutoSpawn fleet-wide critical-pool halt is Claude-only and provider-blind — when the best Anthropic account crosses
+  90% it short-circuits the ENTIRE new-dispatch tick, starving the healthy DeepSeek pool (idle slots + 519 queued, ready
+  tasks confirmed) instead of routing new tasks to DeepSeek"
+summary: >-
+  Operator reported (2026-08-04, msg 3703) that new tasks stopped being allocated to DeepSeek agents after the DeepSeek
+  API integration. Confirmed root cause in `agent-orchestrator/server/autospawn.py`: the fleet-wide critical-pool halt
+  (`is_pool_critically_exhausted` → `best_account_used_pct`) ranks ONLY `provider == "anthropic"` accounts (line ~1013)
+  and fires at `_CRITICAL_POOL_HEADROOM_PCT = 90`. `_check_and_log_critical_pool_halt` runs BEFORE the backlog/prereq
+  read and, when halted, short-circuits the ENTIRE new-dispatch tick — so the provider-aware router
+  (`select_account_for_spawn(preferred_provider=None)`, which WOULD route to DeepSeek) never runs. Result at time of
+  filing: best Claude account (sub-b) at 92% weekly → halt engaged → DeepSeek slots 10/11/12 IDLE and Claude slots 13-16
+  IDLE, only 1 of 519 queued tasks dispatched, despite ≥10 confirmed READY (no-blocker) tasks in the first 118 queued
+  sampled. The DeepSeek account is `status: healthy`, has no weekly/5h limits populated, and shows
+  `balance_is_available: true` — it should be absorbing exactly this overflow. The halt was designed (operator ruling
+  2026-07-29) BEFORE the DeepSeek blended-routing integration (2026-07-28) and was never made provider-aware, so a
+  Claude-only exhaustion signal now incorrectly gates a mixed Claude+DeepSeek fleet.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, autospawn, dispatch, deepseek, provider-routing, capacity-halt, pool-exhaustion]
+related:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+  ]
+created: "2026-08-04"
+last_updated: "2026-08-04"
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+source: operator-report
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+resolved_by:
+---
+
+# AutoSpawn critical-pool halt starves the DeepSeek pool (provider-blind halt)
+
+## Reporter / trigger
+
+Operator message **3694/3703** (2026-08-04T13:52Z): _"we recently integrated deepseek api so that we can use it and new
+tasks should be allocated to them. did you stop dispatching new tasks to deepseek agents?"_ Filed by main orchestrator
+agent `agt-fdecde` after live investigation.
+
+## Observed state (evidence, 2026-08-04 ~13:52Z)
+
+- `GET /api/state` `backlog_summary`: **`queued: 519`, `dispatched: 1`**, done 1028.
+- Per-slot (`/api/state.slots`): slots **10, 11, 12 = IDLE, account `deepseek-v4-pro`**; slots 13-16 = IDLE (`sub-b`);
+  slots 2-9 = working (`sub-b`). So the whole DeepSeek pool is idle while 519 tasks queue.
+- `GET /api/accounts`: `deepseek-v4-pro` → `status: healthy`, `provider: deepseek`, `weekly_msg_limit: 0`,
+  `rate_limited_until: null`, `balance_is_available: true` (`balance_usd: 0.34`), `used_by_slots: [9]`,
+  `last_used_at: 13:45:53Z`. Best Anthropic account `sub-b` at **92% weekly** (≥ 90% halt threshold).
+- STEP 2.4 readiness proof: sampled blockers on the queued set — **≥10 tasks return `"ready (no blockers)"`** in the
+  first 118 checked (e.g. `cefi_satellite_ao_dispatch_batch3-002`, `cross_cutting_satellite_ao_dispatch_batch1-011`).
+  Ready work exists and is NOT being dispatched → this is a genuine dispatch stall, not prereq-gated saturation.
+
+## Root cause (code-grounded)
+
+`agent-orchestrator/server/autospawn.py`:
+
+1. `_CRITICAL_POOL_HEADROOM_PCT = 90` (line ~997).
+2. `best_account_used_pct(session)` (line ~1000) filters to
+   **`anthropic_accounts = [acc for acc in ... if acc.provider == "anthropic"]`** (line ~1013) — DeepSeek is invisible
+   to this signal by construction.
+3. `is_pool_critically_exhausted(session)` (line ~1029) returns `used >= 90`, i.e. True whenever the best _Claude_
+   account is ≥90% — regardless of DeepSeek health.
+4. `_check_and_log_critical_pool_halt` (line ~2110) is evaluated **before** the backlog/prereq read and, when halted,
+   short-circuits the whole tick: _"skip new-task spawning for this tick entirely."_
+5. Consequently the provider-aware router `select_account_for_spawn(preferred_provider=None)` (the
+   `deepseek_claude_blended_provider_routing_2026_07_28` path that WOULD send new tasks to DeepSeek first) never
+   executes on a halted tick.
+
+**Net:** a Claude-only exhaustion gate, authored under the 2026-07-29 operator ruling — one day AFTER the 2026-07-28
+DeepSeek blended-routing integration — halts ALL new dispatch for a fleet that now has a healthy non-Claude provider
+sitting idle. The two features were never reconciled.
+
+## Impact
+
+- New backlog work is fully stalled whenever Claude is ≥90% used, even though DeepSeek could absorb it — directly the
+  behavior the DeepSeek integration was meant to prevent.
+- The `resume` pass and in-flight tasks continue (halt only withholds NEW dispatch), so this presents as a slow bleed:
+  the fleet drains to idle and stays there until a Claude weekly window resets, not as an obvious hard failure.
+
+## Proposed remediation (for engineer review — NOT yet actioned)
+
+Make the halt provider-aware so it only fires when there is **no usable dispatch target of ANY provider**. Options:
+
+- **(A, preferred)** Gate `is_pool_critically_exhausted` on "no usable Claude headroom **AND** no usable DeepSeek
+  capacity" — i.e. only halt when the _entire blended pool_ is exhausted. When Claude is ≥90% but DeepSeek is healthy,
+  do NOT halt; let the existing `preferred_provider=None` router send new tasks to DeepSeek.
+- **(B)** On a Claude-only-exhausted tick, skip the fleet-wide short-circuit and instead force the spawn path with
+  `preferred_provider="deepseek"` so overflow explicitly routes to DeepSeek while Claude is throttled.
+- Either way: keep the alert, but reclassify it from "pool critically exhausted → halt" to "Claude pool exhausted →
+  routing overflow to DeepSeek" so the dashboard reflects reality.
+- Separately surface DeepSeek **balance** as a health gate (current balance `$0.34` is low — DeepSeek dispatch will
+  itself fail-closed soon; that is a distinct operator top-up concern, not the routing bug).
+
+## Follow-ups (tracked)
+
+- [ ] [BUG] P1. Make AutoSpawn critical-pool halt provider-aware so a healthy DeepSeek pool is not starved when Claude
+      is ≥90% (`agent-orchestrator/server/autospawn.py`; option A/B above). — owner: agent-orchestrator engineer
+- [ ] [OPERATOR] P2. Top up the `deepseek-v4-pro` balance (currently `$0.34`) — even once the routing bug is fixed,
+      DeepSeek dispatch fails-closed at zero balance.
+
+## Notes
+
+Main agent (`agt-fdecde`) does not push code and did not modify `autospawn.py`; this doc records the diagnosis for an
+engineer worker / operator. The main agent's earlier "capacity halt is by-design, queue prereq-gated" read was
+**incorrect** — corrected here by the STEP 2.4 per-task readiness proof above.
