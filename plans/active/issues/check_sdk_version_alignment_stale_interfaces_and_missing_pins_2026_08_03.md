@@ -125,14 +125,11 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
       (pydantic, requests, databento, tardis-client, ccxt, ib_insync). `check_sdk_version_alignment.py` → green ("SDK
       version alignment OK"); `quality-gates.sh` → green. Confirmed `tardis-client` had same gap (undetected because no
       surviving INTERFACES consumer pins it).
-- [ ] [INFRA] P3. Replace `check_sdk_version_alignment.py`'s hardcoded `INTERFACES` list with the fleet's real current
-      api-contracts consumers. Derive the list by grepping every repo in `workspace-manifest.json`'s `repositories{}`
-      for a `unified-api-contracts` dependency in its `pyproject.toml` (do not guess successor names from the old list —
-      verify each). Drop entries with no current-fleet repo; add any real consumer missing from the old list. **Done
-      when**: the list contains only real, existing repo paths confirmed via the manifest, a live
-      `uv run python scripts/check_sdk_version_alignment.py` run exercises all of them (no silent `continue`-skips on
-      missing paths — spot-check by temporarily logging skip count), and `quality-gates.sh` is green. Repo:
-      unified-api-contracts.
+- [x] ✅ [INFRA] P3. Replace `check_sdk_version_alignment.py`'s hardcoded `INTERFACES` list with the fleet's real
+      current api-contracts consumers. — **unified-api-contracts@19b992a8**: replaced the 16-entry hardcoded INTERFACES
+      list (11/16 stale) with 19 real api-contracts consumers derived by grepping every repo in
+      workspace-manifest.json's repositories{} for a unified-api-contracts dependency in its pyproject.toml. Verified
+      19/19 paths exercised (0 skipped), script passes ("SDK version alignment OK"), quality-gates.sh green.
 - [ ] [INFRA] P3. Harden `test_schema_validation_deps_match_schema_versions` (in
       `unified-api-contracts/tests/unit/test_schema_version_alignment.py`) to also assert every
       SCHEMA_VERSIONS.md-documented `[schema-validation]` package (except the already-special-cased `pydantic`) is
