@@ -23,7 +23,13 @@ summary: >-
   (FOOTBALL/LADBROKES_UK/SPORT888) until a historical re-stamp runs; see Todos.
 status: open
 nature: issue
-asset_group: [sports, cross-cutting]
+asset_group:
+  [sports] # was [sports, cross-cutting] -- retagged 2026-08-04 by /ag-closeout-audit sports tranche
+  # (Orthogonality HARD CHECK): every detail (SPORTS_VENUE_FOLD, sports distinct-values panel endpoint, MTDS/MDPS
+  # sports-only writer bugs) is single-AG-specific; the general cross-cutting deploy-freeze root cause is already
+  # tracked separately in deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md (related:
+  # above), and the sibling per-AG pattern (defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md) confirms
+  # this class is tracked one-doc-per-AG, not as one cross-cutting doc.
 stage: [data]
 repos:
   [
@@ -49,6 +55,7 @@ tags:
   ]
 related:
   [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
