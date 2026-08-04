@@ -92,3 +92,18 @@ re-discovering it and asking whether it's a decommissioned host whose worker WIP
   eligibility. Reclassifying this source doc directly would create a competing/duplicate dispatch claim against batch6
   once it activates — not flipped, per the shared conflict-check protocol
   (`ao-dispatch-batch-naming-and-conflict-check.md` § 3, surface (b)).
+- **2026-08-04 (main agt-1756f6) — NEW DISCREPANCY to confirm (review re-flag #3685)**: another review incarnation
+  re-flagged this host (now reading it as "dead/decommissioned, a retired/replaced prior instance") and asked whether to
+  recover slot-0's WIP or stop polling it. On re-verifying I hit a discrepancy with the 08-03 "RUNNING" finding: from my
+  `ikenna-worker` AWS identity (account 427895769566, ap-northeast-1)
+  `aws ec2 describe-instances --instance-ids i-0dd9812a96cdda5dc` returns EMPTY, and an unfiltered `describe-instances`
+  shows only `i-0c9b283b31d6b5ca7` (agent-orchestrator-vm-1 / 172.31.5.118, this host) and `i-042a6332509482556`
+  (ci-escalation-runner-vm-1 / 172.31.3.59) — NOT `i-0dd9812a96cdda5dc`. So my identity CAN see EC2 but NOT the
+  human-planning VM. This is **ambiguous**, two readings and I cannot disambiguate from the worker identity: (a) the VM
+  was terminated/replaced since the 08-03 verification (review's hypothesis), or (b) `ikenna-worker` has an
+  instance-visibility boundary and the 08-03 verification used broader (operator) creds. **Action: did NOT overturn
+  protect-not-inherit and did NOT rescue slot-0's WIP** — if it's still the operator's live box, rescuing clobbers live
+  work; if it was replaced, write-off needs operator confirmation first, not a worker-identity guess. Flagged to the
+  operator (via review reply to #3685) to confirm the human-planning VM's current state from operator creds; if
+  confirmed decommissioned, the slot-0 dirty repos (mtds/strategy-service/SIT/UAC/pm, frozen 07-22..24) get a real
+  recovery pass and the `[INFRA]` allowlist todo above should target the REPLACEMENT instance-id.
