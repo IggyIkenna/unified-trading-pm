@@ -174,11 +174,21 @@ counts are reproduced above in full so the check is independently re-runnable fr
       at 73.92%, net-new keys (1,273,231 rows, 0.60% filled) diluted the aggregate to exactly 71.71%, matching the
       guardrail's reported number with no unexplained residual). Candidate (a) (union/dtype merge bug nulling surviving
       rows) is ruled out — zero sampled previously-filled rows were nulled.
-- [ ] [DECISION] P1. (Gated on the DIAG above — now unblocked.) DIAG confirmed NOT a bug (see "## Root cause" section):
-      no rows lost data, the drop is 100% explained by net-new rows not yet enriched. Recommendation for whoever rules
-      this: accept as expected composition — no targeted re-fill and no restore needed on correctness grounds (a restore
-      would, per the "What I did NOT do" section below, also undo the legitimate GMX cleanup + discard ~1.27M
-      legitimately-new rows). Still an open decision to formally close (not decided by the DIAG worker).
+- [x] ✅ [DECISION] P1. (Gated on the DIAG above — now unblocked.) **RULING: ACCEPT AS EXPECTED COMPOSITION — no
+      targeted re-fill, no restore.** Independently re-confirmed the slot-8 DIAG verdict with my own bounded
+      before/after read (two single-object downloads — `_index/availability_index.parquet` +
+      `_index/snapshots/pre_gmx_venue_removal_20260804-013217.parquet`; no corpus walk): the 11-column block's exact
+      filled COUNT went 30,207,394 → 30,216,012 (**up**, not down) while total rows went 40,862,959 → 42,136,559
+      (+1,273,600) — mechanically confirms zero previously-filled rows were nulled and the whole ~2.2pp drop is dilution
+      from legitimately-unenriched net-new rows, matching the DIAG's anti-join reconstruction to the point. This is NOT
+      the sports_cf8 bug class (no `union_by_name`/dtype merge bug here); a restore would actively regress the bucket
+      (discards ~1.27M legitimate new rows + reverts the already-clean GMX purge). No further action needed on this
+      bucket's data. Shipped a small adjacent fix: `_check_column_fill_regression` /
+      `_check_captured_column_fill_regression` now carry the absolute filled-row counts (not just percentages) in their
+      `MANIFEST_COLUMN_FILL_REGRESSION`/`MANIFEST_CAPTURED_COLUMN_FILL_REGRESSION` alert payload + log line, so a future
+      firing of this same guardrail is self-diagnosing (dilution vs. real loss readable straight off the alert) instead
+      of needing this same manual two-file investigation again — unified-trading-library@2eefb006. Does NOT decide the
+      separate REVIEW P2 todo below (whether the guardrail should block, not just alert) — that remains open.
 - [ ] [DIAG] P3. Confirm whether the 4 residual `venue=GMX` manifest rows (found in the post-apply `--verify-only`
       check) clear on their own after 1-2 more incremental consolidator cycles (per the purge script's own recommended
       "run --verify-only at least twice, spaced apart" procedure) or need a follow-up manual sweep.
@@ -200,3 +210,15 @@ counts are reproduced above in full so the check is independently re-runnable fr
   legitimate dilution from net-new rows — NOT a merge/union bug. Full evidence in the new "## Root cause (2026-08-04,
   slot-8 DIAG)" section above. Todo 1 flipped; todo 2 (DECISION) left open for the actual ruling but annotated with a
   recommendation (accept as expected, no restore/re-fill needed).
+- **slot-12, 2026-08-04 (`defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge-002`, DECISION P1)**:
+  dispatched the DECISION todo, which is explicitly gated on the DIAG above (a cross-todo prose gate the dispatcher
+  doesn't enforce mechanically — no `sequential`/`gate_on_depends` on a single-doc todo pair — so it landed on this slot
+  before checking whether DIAG was actually done). Found slot-8's DIAG already complete + pushed by the time I read the
+  doc (fresh-pull picked it up mid-task). Independently re-ran the same class of check from scratch (own bounded
+  before/after download + column-pruned DuckDB aggregate, not a reuse of slot-8's numbers) before ruling, to avoid
+  rubber-stamping — got the same conclusion via absolute filled-count deltas (up, not down) rather than the anti-join
+  reconstruction slot-8 used; the two independent methods agreeing is itself useful confirmation. Ruled ACCEPT, no
+  remediation. Shipped `unified-trading-library@2eefb006`: both column-fill-regression guardrails now log/emit absolute
+  filled counts alongside percentages, so this exact "is it dilution or real loss" investigation is answerable from the
+  alert payload alone next time. Todo 2 flipped. Todos 3 (residual GMX rows, P3) and 4 (REVIEW: should the guardrail
+  block, P2) remain open — out of this todo's scope, not decided here.
