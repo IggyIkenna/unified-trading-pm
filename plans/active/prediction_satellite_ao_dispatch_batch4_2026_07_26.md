@@ -164,17 +164,31 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   > = a named retention gap + the specific scan-cadence/flush-window mismatch), committed to that doc's Progress Log.
   > Read-only verification — no data mutation.
 
-- [ ] [SCRIPT] P2. **cqg recent-window catalogue re-enumeration with the already-fixed classifier.** The cqg-partitioned
-      `instrument_availability` catalogue (instruments-store) is refreshed for 2026-06-23 only (34 groups verified);
-      re-enumerate the recent enumerated window (2026-06-20..22) with the fixed cqg classifier so those dates' catalogue
-      also carries real `canonical_question_group` values. This is an operational run of the ALREADY-FIXED classifier
-      over a bounded 3-day window (deep history is the bulk-tick-seed with no per-date catalogue — out of scope here).
-      This touches the IS cqg-catalogue enumeration module, DISTINCT from todo #1's adapter-lifecycle write path (no
-      file collision). Repo: instruments-service. Source: `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2
-      "cqg partition-completeness — recent-window catalogue re-enumeration"). **Done when**: the 2026-06-20..22 cqg
-      catalogue partitions are re-enumerated and a live read confirms each of those 3 dates now carries populated
-      `canonical_question_group` catalogue rows (count cited), with the run's evidence recorded in the source doc's
-      Progress Log.
+- [x] ✅ [SCRIPT] P2. **cqg recent-window catalogue re-enumeration with the already-fixed classifier — VERIFIED ALREADY
+      COMPLETE 2026-08-04 (slot 6), premise stale.** Live read of the prediction instruments-store
+      (`gs://instruments-store-pred-prd-central-element-323112/instrument_availability/by_date/canonical_question_group=*/day={D}/venue=*/`)
+      confirms all three target dates already carry the full real-cqg spread — **2026-06-20: 11,086 rows / 42 real cqg
+      groups; 2026-06-21: 12,052 rows / 42 groups; 2026-06-22: 9,986 rows / 40 groups** — vs the reference 2026-06-23
+      (15,330 rows / 41 groups). The premise ("refreshed for 2026-06-23 only") was stale: the same **2026-06-26 IS
+      enumeration VM run** (`instr-backfill-pred-20260621`) that wrote 2026-06-23 also enumerated 2026-06-20..22 with
+      the already-fixed classifier (catalogue objects created 2026-06-26 16:04–18:28 GMT, after the 2026-06-23 21:08Z
+      fix tarball); the target dates show the SAME ~22–29% OTHER-fraction profile as the verified-good baseline, so
+      OTHER is the expected unclassifiable residual, not a classifier failure. No code change and no re-run
+      (re-enumerating would only re-write byte-equivalent prod objects — data-engineering EFFICIENCY north-star).
+      Evidence recorded in `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s 2026-08-04 Progress Log entry (the
+      Done-when target); that doc's own cqg item flipped in the same commit. Closure mirrors this plan's todo #1
+      (premise-stale / already-shipped). Repo: none (verification-only, no mutation). Original text preserved below
+      (context only, not a re-derivable checkbox). **cqg recent-window catalogue re-enumeration with the already-fixed
+      classifier.** The cqg-partitioned `instrument_availability` catalogue (instruments-store) is refreshed for
+      2026-06-23 only (34 groups verified); re-enumerate the recent enumerated window (2026-06-20..22) with the fixed
+      cqg classifier so those dates' catalogue also carries real `canonical_question_group` values. This is an
+      operational run of the ALREADY-FIXED classifier over a bounded 3-day window (deep history is the bulk-tick-seed
+      with no per-date catalogue — out of scope here). This touches the IS cqg-catalogue enumeration module, DISTINCT
+      from todo #1's adapter-lifecycle write path (no file collision). Repo: instruments-service. Source:
+      `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2 "cqg partition-completeness — recent-window catalogue
+      re-enumeration"). **Done when**: the 2026-06-20..22 cqg catalogue partitions are re-enumerated and a live read
+      confirms each of those 3 dates now carries populated `canonical_question_group` catalogue rows (count cited), with
+      the run's evidence recorded in the source doc's Progress Log.
 
 - **[CODE] P1. Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
   population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b open; see below). Operator ruling 2026-07-25

@@ -70,6 +70,34 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-04 (slot 6, data_engineering, backlog `prediction_satellite_ao_dispatch_batch4-003`) — cqg recent-window
+  catalogue re-enumeration: VERIFIED ALREADY COMPLETE, premise stale (no re-run needed).** The `[SCRIPT] P2` "cqg
+  partition-completeness — recent-window catalogue re-enumeration" item's premise ("catalogue refreshed for 2026-06-23
+  only; 2026-06-20..22 need re-enumeration") is STALE: the same **2026-06-26 IS enumeration VM run**
+  (`instr-backfill-pred-20260621`, this Progress Log's 2026-06-26 entry) that refreshed 2026-06-23 also enumerated
+  2026-06-20..22 with the already-fixed classifier — the catalogue objects for all three target dates were created
+  2026-06-26 16:04–18:28 GMT, **after** the classifier-fix tarball shipped (2026-06-23 21:08Z). Live read of
+  `gs://instruments-store-pred-prd-central-element-323112/instrument_availability/by_date/canonical_question_group=*/day={D}/venue=*/instruments.parquet`
+  (`CLOUDSDK_CORE_ACCOUNT=unified-trading-sa`, parquet-footer row counts, cqg is the path partition key — readers
+  post-filter by path token, not an in-file column):
+
+  | day                    | files | rows   | real cqg groups | OTHER share |
+  | ---------------------- | ----- | ------ | --------------- | ----------- |
+  | 2026-06-20             | 56    | 11,086 | 42              | 25.7%       |
+  | 2026-06-21             | 57    | 12,052 | 42              | 23.5%       |
+  | 2026-06-22             | 59    | 9,986  | 40              | 28.7%       |
+  | 2026-06-23 (reference) | 62    | 15,330 | 41              | 21.6%       |
+
+  Each target date carries the full real-cqg spread (BTC_UP_DOWN_DAILY / CPI_PRINT_PER_MONTH /
+  FED_RATE_DECISION_PER_FOMC / SPORTS_MLB_MATCH / SPORTS_TENNIS_MATCH / WEATHER_TEMP_DAILY / …, 40–42 real groups per
+  date), with the **same OTHER-fraction profile (~22–29%) as the verified-good 2026-06-23 baseline** — i.e. the target
+  dates are not anomalous and OTHER is the expected residual for genuinely-unclassifiable markets, not a classifier
+  failure. Done-when ("each of those 3 dates now carries populated `canonical_question_group` catalogue rows, count
+  cited") is SATISFIED, verified live. **No code change and no re-run**: re-enumerating would only re-write
+  byte-equivalent objects against prod GCS (data-engineering EFFICIENCY north-star — don't re-scan when the target state
+  is already met). Closure mirrors this plan's todo #1 ("premise was stale — already shipped"). Deep history remains the
+  bulk-tick-seed with no per-date catalogue (out of scope, unchanged).
+
 - **na-eligibility-audit 2026-08-02 (prediction tranche, autonomous)**: KEEP-NA, **2 stale items cited** — 9 open, count
   unchanged, re-verified live (`grep -cE '^\s*- \[ \]'` = 9, matching the 9 verdicts below). In scope this run because
   of a real post-marker content change (`3798d1674`, 2026-07-31): the fixture-pairing residual todo gained a
@@ -749,12 +777,17 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
   non-OTHER, THEN `--apply` (local or VM ~5000s). Re-reads existing tick parquets; NOT a tick migration. Repo:
   market-tick-data-service (`scripts/rebuild_prediction_manifest.py`). Provenance: operator partition-completeness Q
   2026-06-23 + autonomous dry-run discovery 2026-06-24.
-- [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration**: the cqg-partitioned
-      `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified). Re-enumerate the recent
-      enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
-      (rides the 1.2 Kalshi recent-window enumeration). Deep history is the bulk-tick-seed (no per-date catalogue) →
-      covered by the BATCH re-walk above. Repo: instruments-service. Provenance: operator partition-completeness Q
-      2026-06-23. **EXTRACTED — sole executing owner is
+- [x] ✅ [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration — VERIFIED ALREADY COMPLETE
+      2026-08-04 (slot 6), premise stale.** The 2026-06-26 IS enumeration VM run enumerated 2026-06-20..22 (not just
+      2026-06-23) with the already-fixed classifier; a live read confirms all three dates carry 40–42 real cqg groups
+      (11,086 / 12,052 / 9,986 rows) with the same ~22–29% OTHER profile as the verified 2026-06-23 baseline. Full
+      evidence in this doc's 2026-08-04 Progress Log entry above; no re-run needed. Original text below (context only,
+      not a re-derivable checkbox). **cqg partition-completeness — recent-window catalogue re-enumeration**: the
+      cqg-partitioned `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified).
+      Re-enumerate the recent enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates'
+      catalogue also carries real cqg (rides the 1.2 Kalshi recent-window enumeration). Deep history is the
+      bulk-tick-seed (no per-date catalogue) → covered by the BATCH re-walk above. Repo: instruments-service.
+      Provenance: operator partition-completeness Q 2026-06-23. **EXTRACTED — sole executing owner is
       [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
       `[SCRIPT] P2` "cqg recent-window catalogue re-enumeration with the already-fixed classifier" todo**
       (`status: active`, `assigned_vm: planning`), which names this item verbatim as its `Source:`. batch6's duplicate
