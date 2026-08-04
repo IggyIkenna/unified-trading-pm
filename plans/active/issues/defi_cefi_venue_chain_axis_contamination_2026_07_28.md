@@ -178,10 +178,11 @@ in this read-only audit pass (time-bounded scope).
       (`test_defi_venue_chain_split_guarded_against_unknown_chain_suffix`) pinning the exact `BITGET-FUTURES` →
       `venue="BITGET-FUTURES", chain=""` (unsplit) behavior; existing `test_defi_combined_venue_chain_split`
       (`EIGENLAYER-ETHEREUM` → split) still passes unchanged. Full `quality-gates.sh` green.
-- [ ] [DATA] P1. **RE-SCOPED 2026-08-04 (interactive session) — the prior "safe cleanup" framing was WRONG; Part 4 of
-      the delete-safety five-part-proof FAILS with direct evidence, not merely unverified.** Live-code check
-      (`strategy-service`): `strategy_service/cli/handlers/paper_run_handler.py:1987-1988` — the CARRY_BASIS_PERP /
-      CARRY_FUNDING_DISPERSION tick-building path (`GroupBRunner`) instantiates
+- [x] ✅ [DATA] P1. **RE-SCOPED 2026-08-04 (interactive session) — the prior "safe cleanup" framing was WRONG; Part 4 of
+      the delete-safety five-part-proof FAILS with direct evidence, not merely unverified. Remaining repoint question
+      ANSWERED 2026-08-04 (see the tail of this entry) — no code change, disposition confirmed unchanged.** Live-code
+      check (`strategy-service`): `strategy_service/cli/handlers/paper_run_handler.py:1987-1988` — the CARRY_BASIS_PERP
+      / CARRY_FUNDING_DISPERSION tick-building path (`GroupBRunner`) instantiates
       `CanonicalPerpFundingProvider().funding_window(window_start, window_end, venue=venue)`, which per
       `strategy_service/engine/core/canonical_perp_funding_provider.py:142-150` reads `data_type=perp_daily_ctx` **ONLY
       from the shared DeFi bucket** (`resolve_bucket_name(kind="tick-data", asset_group="defi")`, no cefi-bucket
@@ -209,7 +210,35 @@ in this read-only audit pass (time-bounded scope).
       2026-07-24, `instruments-service@f651ff8b`) · **Part 4 readers: FAILS — `paper_run_handler.py:1987-1988` +
       `canonical_perp_funding_provider.py` confirmed live reader, see above** · Part 5 N/A (not a legacy-copy scenario).
       Disposition: `no-still-authoritative`. Hard stop: none crossed (disposition itself blocks action, not an
-      operator-approval gate).
+      operator-approval gate). **REPOINT QUESTION ANSWERED 2026-08-04 (interactive session) — NO, not viable today.**
+      Investigated whether `CanonicalDerivativeTickerFundingProvider` (reads `derivative_ticker` from the CeFi bucket)
+      could replace `CanonicalPerpFundingProvider` (reads `perp_funding`/`perp_daily_ctx` from the DeFi bucket) for the
+      6 `catalog_carry.py` venues, which would make the DeFi-bucket copies deletable per the Part-5 repoint-then-delete
+      recipe. Two independent blockers, both confirmed by direct evidence: 1. **Venue coverage gap**:
+      `CanonicalDerivativeTickerFundingProvider._VENUE_SYMBOL_TEMPLATE` only maps `DERIBIT`/`BYBIT` — 2 of the 6
+      contested venues (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`OKX-FUTURES`/ `BITFINEX-FUTURES`/`BITGET-FUTURES` have no
+      wire-symbol template; the module's own docstring says adding one "requires re-verifying its real GCS filename
+      shape"). 2. **The underlying data source is itself gapped since 2026-05-22, not just this doc's original discovery
+      window.** Bounded `gsutil ls` prefix probes (single-date, single-venue — not a corpus walk) against the LIVE CeFi
+      bucket confirm: on 2026-05-20, all 6 contested venues (+ DERIBIT/BYBIT) have real `derivative_ticker` objects
+      under `batch_tardis`; probing 2026-05-25, 2026-06-15, 2026-07-01, 2026-07-15, 2026-08-01, 2026-08-03 finds
+      **zero** `derivative_ticker` objects for ANY of the 8 venues on ANY of those dates. This exact cutoff is
+      independently corroborated by `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`'s own
+      2026-07-28 manifest census (line ~273: `BINANCE-FUTURES`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES` captured
+      through `2026-05-22`, `BYBIT`/`DERIBIT` through `2026-05-01`) — same population, same cutoff, two independent
+      methods (live GCS probe here vs. manifest census there). **Repointing to
+      `CanonicalDerivativeTickerFundingProvider` would not fix anything — its source is exactly as stale as
+      `CanonicalPerpFundingProvider`'s, because the DeFi-bucket copy is COMPUTED FROM this same CeFi `derivative_ticker`
+      corpus** (`perp_funding_corpus.py:254-255`'s own read side). Verified: the DeFi-bucket
+      `perp_funding`/`perp_daily_ctx` population for these venues also stops dead on **2026-05-22** (checked 2026-05-20
+      present, 2026-05-22 present, 2026-05-23 onward absent through 2026-08-03) — confirming the computed feed dried up
+      the same day its raw input did, not independently. **Disposition unchanged**: `no-still-authoritative` stands —
+      still do NOT delete the DeFi-bucket copies (no fresher alternative exists to repoint to). **New, more urgent
+      implication surfaced**: the live CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION strategy path has been reading a
+      completely frozen (zero new rows since 2026-05-22, over 2 months as of 2026-08-04) funding corpus for all 6
+      configured venues — this is a genuine live-data-staleness finding, not just a delete-safety question, and is filed
+      as a new todo in the doc that already owns this exact venue population + census
+      (`/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`) rather than duplicated here.
 - [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
@@ -478,3 +507,12 @@ in this read-only audit pass (time-bounded scope).
   `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (tangential to the two remaining `[OPERATOR]` items;
   covered the already-resolved BLAZESTAKE/HYPERLIQUID phase exception, not the physical-duplicate-delete or
   cross-AG-architecture questions still open).
+- **slot-4 2026-08-04 (data_engineering, AO dispatch)**: closed the P2(b) todo's remaining "repoint question" — answered
+  NO (see the checkbox). Bounded live GCS probes (not a corpus walk) additionally surfaced that the underlying CeFi
+  `derivative_ticker` capture for these exact 6-8 Tardis perp venues stopped dead on 2026-05-22 and has not resumed
+  through 2026-08-03, independently corroborated by
+  `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`'s own 2026-07-28 manifest census (same
+  cutoff date, same venue population). Filed as a new todo in that doc (which already owns this venue population +
+  cross-references the sibling `cefi_onchain_perp_forward_capture_outage_2026_08_03.md` silent-outage precedent) rather
+  than duplicated here — see that doc's Progress Log entry same date. No code changed in this doc's own scope;
+  disposition (`no-still-authoritative`, do not delete) is unchanged, just now evidenced further.
