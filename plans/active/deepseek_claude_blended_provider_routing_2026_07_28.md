@@ -480,10 +480,10 @@ this plan. `/autonomous` dispatch from earlier this session complete: all 4 loca
 - Evidence: `agent-orchestrator@ac70068` on `live-defi-rollout`, `ahead=0`. 1 file, +85. QG green (full suite still
   green; the new tests run within `test_regen_backlog_from_plan.py`'s own 168-test file, all passing).
 
-**Remaining on this plan — none locally doable.** `[INFRA] P0` (register the DeepSeek account on the real VM),
-`[REVIEW] P2` (one-week pilot comparison), and `[REVIEW] P1` (re-run pilot against the redesigned policy) all need real
-orchestrator-VM access, elapsed real-world time, or genuine Claude-account headroom respectively — none are buildable or
-verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
+**Remaining on this plan — none locally doable.** `[INFRA] P0` (register the DeepSeek account on the real VM) is now ✅
+DONE (2026-08-04). `[REVIEW] P2` (one-week pilot comparison) and `[REVIEW] P1` (re-run pilot against the redesigned
+policy) remain open — both need elapsed real-world time or genuine Claude-account headroom respectively, neither
+buildable or verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 
@@ -542,9 +542,8 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
   files hosting select_account_for_spawn/_pick_headroom_account/_resume_pass and the deepseek_route_fraction tuning
   knob.
 
-**2026-08-04 — `[INFRA] P0` VM-side registration IN PROGRESS, not yet complete. Core "Done when" bar is MET (AUTH_OK
-verified on the real planning VM); a follow-on DB-sync step is paused awaiting operator go-ahead. Do not flip this
-todo's checkbox until that's resolved one way or the other.**
+**2026-08-04 — `[INFRA] P0` VM-side registration ✅ COMPLETE. AUTH_OK verified, restart executed (operator-confirmed),
+`/api/accounts` confirms the DB sync. Checkbox flipped above.**
 
 - **What's actually done, on the REAL planning VM** (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`, EIP `13.113.200.22`), via
   AWS SSM `send-command` (`AWS-RunShellScript`) — no SSH, no inbound firewall change, every call audited in CloudTrail,
@@ -592,14 +591,19 @@ todo's checkbox until that's resolved one way or the other.**
     `KillMode=process`, a restart only signals the uvicorn main PID; tmux/claude workers "survive a backend restart and
     keep polling" per the unit file's own words. This is also the SAME restart `ao-self-pull.sh` already performs
     routinely on every FF pull that changes `HEAD` — not an exceptional action on this fleet.
-  - **Paused, not done**: the restart command was queued (`systemctl restart orchestrator && sleep 5 && ...`) but the
-    operator interrupted the tool call before it ran and asked to check in first — **no restart has occurred**. Resume
-    point: either run it (`aws ssm send-command` with the same `AWS-RunShellScript` document against
-    `i-0c9b283b31d6b5ca7`/`ap-northeast-1`, command body:
-    `systemctl restart orchestrator && sleep 5 && systemctl is-active orchestrator && curl -s -m 10 localhost:8765/api/mode`)
-    once the operator confirms, or explicitly decide dashboard-visibility can wait for a routine restart and flip this
-    todo now on the strength of the AUTH_OK bar alone — operator's call, not mine to make unilaterally given it touches
-    the live fleet.
+  - **Restart executed 2026-08-04, operator-confirmed after an initial pause.** The command was first queued, the
+    operator interrupted that tool call to ask a clarifying question ("which plan are you using?"), and it was re-queued
+    and run only after the operator explicitly said to continue in a later turn. Result, verified via SSM (not assumed):
+    - `systemctl is-active orchestrator` → `active`.
+    - Fleet survived exactly as predicted from `KillMode=process`: `tmux list-sessions` showed all 10 pre-restart
+      sessions present post-restart (`orch-agent-main` + 9 worker slots) — zero worker loss.
+    - `curl localhost:8765/api/mode` → `http_200`; `journalctl -u orchestrator` tail showed normal steady-state traffic
+      resuming immediately (slot heartbeats, `/api/state`/`/api/accounts` 200s, watchdog ticks) — no crash loop, no
+      restart storm.
+    - `curl localhost:8765/api/accounts` now includes
+      `"deepseek-v4-pro","label":"DeepSeek V4 Pro","tier":"api","provider":"deepseek",...,"status":"healthy"` — confirms
+      the `AccountRow` DB sync closed the dashboard-visibility gap described above. `used_by_slots` was empty at
+      verification time (no DeepSeek spawn had happened yet) — expected, not a fault.
 - **Not yet done, separate from the above (operator's own stated next step, not started)**: the operator said the
   DeepSeek key is also in Google Secret Manager and wants THAT to be the actual source of truth going forward — "for now
   use the key we have available on this pc, I will tell you the env-var name in some time." The env file deployed above
@@ -627,9 +631,11 @@ todo's checkbox until that's resolved one way or the other.**
   - **Step 5 (quickmerge)**: ✅ **SHIPPED** — `agent-orchestrator@7076283` on `live-defi-rollout`, ahead=0. 10 files,
     +918/-41 lines. `ao-self-pull.sh` will auto-deploy to the planning VM within ~15 min. Code merge does NOT activate
     DeepSeek — `accounts.json` is gitignored, and `has_deepseek` remains False on the real VM until step 6.
-  - **Step 6 (register on real VM)**: **Next** — add `deepseek-v4-pro` to the production VM's
-    `data/config/accounts.json`.
-  - **Step 7 (monitor)**: After step 6 — watch first real DeepSeek fleet spawns.
+  - **Step 6 (register on real VM)**: ✅ Done 2026-08-04 — `deepseek-v4-pro` added to the production VM's
+    `data/config/accounts.json`, `AUTH_OK` verified, `orchestrator.service` restarted, `/api/accounts` confirms
+    `status: healthy`. See Progress Log 2026-08-04.
+  - **Step 7 (monitor)**: **Next** — watch for the first real DeepSeek fleet spawn (`used_by_slots` was empty at step-6
+    verification time). Not yet a tracked todo on this plan; add one if a follow-up check is needed.
 
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 
@@ -685,12 +691,14 @@ default from an external reference.
       `_mark_auth_failed_db` call for it. Done when: a `provider: "deepseek"` test account survives several consecutive
       poller ticks without being marked `auth_failed`. — `agent-orchestrator@7076283`, covered by
       `test_deepseek_provider_routing.py`.
-- [ ] [INFRA] P0. Register the DeepSeek account end to end: create `~/.claude-accounts/deepseek-v4-pro.env`
+- [x] [INFRA] P0. ✅ Register the DeepSeek account end to end: create `~/.claude-accounts/deepseek-v4-pro.env`
       (`ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL=deepseek-v4-pro`, explicit
       `unset CLAUDE_CODE_OAUTH_TOKEN`), add the matching `accounts.json` entry with `provider: "deepseek"`, and push the
       env file to both creds buckets so `CredsEnvPoller` distributes it fleet-wide. Done when:
-      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`. — Local env +
-      creds buckets done. VM-side registration = rollout step 6 (next).
+      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`. — Done
+      2026-08-04: env file + `accounts.json` entry deployed to the real planning VM (`i-0c9b283b31d6b5ca7`) via SSM,
+      `AUTH_OK` verified, `orchestrator.service` restarted (operator-confirmed) to sync into `AccountRow`,
+      `/api/accounts` now lists `deepseek-v4-pro` with `status: healthy`. See Progress Log 2026-08-04 for full detail.
 - [x] [INFRA] P0. ✅ Implement `select_account_for_spawn()` — **redesigned 2026-07-29** per operator ruling, superseding
       the original eligibility/split/health-gate description (see Progress Log for the full design): DeepSeek is now the
       DEFAULT for sonnet-tier work (not a minority experiment), opus/fable is a HARD pin with no DeepSeek fallback ever
