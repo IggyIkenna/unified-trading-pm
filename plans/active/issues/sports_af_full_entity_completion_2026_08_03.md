@@ -456,3 +456,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   confirmed RUNNING. Given the tiny remaining volume this should converge quickly if it survives even a modest window;
   will re-census once it's had meaningful runtime. FIXTURE_STATS/FIXTURE_LINEUPS resume once this completes or the
   singleton lock frees up again.
+- **2026-08-04T10:47Z** — `af-backfill-20260804-102139` preempted after only ~3 min (09:22:37Z→09:25:41Z) — too short to
+  reach the actual fetch phase (boot+init eats most of a short window). Re-census confirmed zero movement: still exactly
+  1,006/42,369 needed. Relaunched as `af-backfill-20260804-105027`, confirmed RUNNING.
