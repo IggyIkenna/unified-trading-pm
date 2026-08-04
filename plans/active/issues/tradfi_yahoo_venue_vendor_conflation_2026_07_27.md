@@ -15,7 +15,7 @@ summary: >-
   precisely-scoped finding WITHOUT investigating or fixing it in this pass — the consumer-safety analysis (does anything
   filter on venue="YAHOO" specifically, is a real per-instrument venue/exchange even resolvable from Yahoo's API
   responses, what would the correct value be for an FX pair with no single exchange) has NOT been done.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -44,7 +44,7 @@ source: >-
   Found during `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s Phase 0 investigation of the sports
   odds_horizon_bucket venue=ODDS_API conflation, while confirming that fix's finding wasn't ALSO present elsewhere in
   the codebase. Not independently re-derived here beyond a direct code read of the cited file.
-resolved_by:
+resolved_by: interactive session, 2026-08-04, Phase-0 investigation only — 0 live rows, no code change needed
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -144,9 +144,19 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
 > (KEEP-NA-STALE, citation fix only) — if anything this strengthens the duplicate-coverage conclusion, since the live
 > copy is the one that will actually get worked.
 
-- [ ] [DATA] P2. **Run the Phase-0 investigation methodology** (reconcile real counts + trace consumers for a
-      `venue="YAHOO"` dependency) before deciding whether/how to fix the vendor-as-venue stamp — per "Recommended next
-      step," this has NOT been done yet.
+- [x] ✅ [DATA] P2. **Phase-0 investigation RUN 2026-08-04 — CONFIRMED DEAD CODE, no live data-correctness impact.** (1)
+      Real counts: a bounded, column-pruned read of the live-consolidated tradfi `_index/availability_index.parquet`
+      (6.6M rows) filtered to `venue="YAHOO"` returns **0 rows** — this stamp has never reached the manifest. (2)
+      Consumer/call-site trace: `_umi_yahoo.py` (the confirmed ACTIVE production Yahoo route for FX/KRX/ICE, per
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`) calls only `adapter.download_daily(...)` on
+      `YahooFinanceAdapter` — it never calls `write_canonical_shard()` (the method that stamps `venue="YAHOO"`). Instead
+      it builds each row itself and stamps the REAL venue directly (`rec["venue"] = "FX"` / `"KRX"` / `"ICE"`), then
+      writes via a separate `writer.write_chunk(df)` call that bypasses `write_canonical_shard()` entirely.
+      `write_canonical_shard()` is registered in `market_interface/factory.py`'s adapter registry (key
+      `"yahoo_finance"`) but has no confirmed live caller — the 0-row manifest count is the strongest possible empirical
+      proof nothing is invoking it in production. **No fix needed** — this was a structural-similarity concern
+      (correctly flagged given the sports precedent) that turned out not to be live. (repo: market-tick-data-service,
+      investigation only, no code changed)
 
 ## Progress Log
 
@@ -174,3 +184,8 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` todo 8 (line ~239): still `[ ]` open, still verbatim-covers this
   doc's Phase-0 investigation, still sequenced first among the 3 entangled Yahoo/venue todos. Disposition unchanged
   (KEEP-NA-STALE, `assigned_vm` stays NA).
+- **2026-08-04 (interactive session)**: ran the Phase-0 investigation directly — 0 live manifest rows carry
+  `venue="YAHOO"`, and the confirmed-active Yahoo route (`_umi_yahoo.py`) never calls the flagged
+  `write_canonical_shard()` method. Closed the sole todo, flipped `status: resolved`. Note for whoever next touches
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`: its todo 8 (same investigation, verbatim-cited from this doc) is
+  now also moot — this doc's own resolution supersedes it, no need to dispatch it separately.
