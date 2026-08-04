@@ -109,9 +109,11 @@ context_scope:
       plan's own golden-window audit only, not this closeout's canonical form — no unflagged "raw string is canonical"
       claim remains in either doc. Execution (building `LEAGUE_ID_TO_TIER` / extending `EXPECTED_BOOKMAKER_MARKET_SETS`)
       stays with the bookmaker plan's own P1 todos, unchanged — this todo was tracking reconciliation only.
-- [ ] [DATA] P2. **PARTIALLY DONE 2026-08-04 (slot-12) — root-cause + write-path fix SHIPPED; the historical migration
-      is deliberately NOT done and stays open (needs an `[OPERATOR]`/delete-safety gate).** Traced the writer:
-      `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
+- [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-12) — traced the writer, root-caused, fixed at the write path.** SPLIT off
+      the original bundled todo's trace/root-cause/write-path-fix scope from its migration scope (the migration is a
+      separate, `[OPERATOR]`-gated todo below — this split itself resolves the issue doc's own repeated
+      na-eligibility-audit blocker: "bundles an unbounded root-cause trace with a ... GCS migration carrying no
+      `[OPERATOR]` tag"). `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py`'s
       `normalize_api_football_fixture()` built `CanonicalLeague.league_id` from a bare `build_league_id(country, name)`
       slug of the RAW api-football country name ("England" → `ENGLAND_PREMIER_LEAGUE`) instead of the UAC league
       registry's canonical slug ("EPL") — a different, ungoverned vocabulary from every other sports write path.
@@ -125,18 +127,19 @@ context_scope:
       when the league genuinely has no registry entry. Closes the leak at its TRUE shared source for every consumer of
       `normalize_api_football_fixture`, not just the one write path that happened to lack a gate — 5 new regression
       tests lock in the fix (registered-league resolves via registry / non-lossy unregistered fallback / blank-league
-      no-op). **NOT done, deliberately**: migrating the 9,733 existing `instruments-store-sports-prd` objects. The issue
-      doc's own `na-eligibility-audit` passes (2026-07-30, 2026-08-01) already ruled this exact migration `KEEP-NA` — "a
-      GCS data migration is the dispatch atom here, so it needs an `[OPERATOR]`/delete-safety gate rather than a bare
-      flip" — and that reasoning still holds; an AO worker performing an ungated bulk historical-data migration would
-      violate `task_template.md` finding O. This todo's own "Done when" (0 contaminated objects in a fresh census) is
-      therefore NOT met yet — do not flip this checkbox to done until the migration lands. DISTINCT, DISTINCT from the
-      api-football-display-name axis the league_id relocation fixes (different population, different writer) — MUST NOT
-      be folded into that relocation, unchanged from the original scoping. Detail:
-      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` (updated with the same evidence +
-      a new, properly-scoped `[OPERATOR]`-gated migration todo). (repo: unified-api-contracts). **Done when** (revised,
-      migration-only remainder): the 9,733-object `instruments-store-sports-prd` migration lands under the delete-safety
-      protocol and a fresh census returns 0 contaminated objects across both buckets.
+      no-op); full existing api_football suite (95 tests) re-run clean. DISTINCT from the api-football-display-name axis
+      the league_id relocation fixes (different population, different writer) — MUST NOT be folded into that relocation,
+      unchanged from the original scoping. Detail:
+      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: unified-api-contracts).
+- [ ] [DATA] P2. **[OPERATOR] Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the
+      correct league vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. Split out
+      2026-08-04 from the original bundled todo — this is a GCS content/path rewrite over prod objects, so it needs the
+      delete-safety 5-part proof (fresh `gcs_bucket_soft_delete_retention_seconds()` check, snapshot-before-write,
+      CAS-safe apply, self-verify) per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — not a bare AO flip
+      (confirmed by two separate na-eligibility-audit passes, 2026-07-30 and 2026-08-01). Full detail + the concrete
+      migration-script design pointer: `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`.
+      (repo: instruments-service / market-tick-data-service). **Done when**: a fresh census of
+      `instruments-store-sports-prd` returns 0 objects carrying the country-prefixed contaminated vocabulary.
 - [ ] [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** (1)
       `deployment-service` — 3 launcher `START_DATE` clamp hardening edits + a new
       `launch-sports-league-id-relocation-vm.sh` launcher, in worktree `deployment-service-sports-wt`. (2)
