@@ -6,7 +6,7 @@ summary: >-
   true until all 4 of that plan's todos are done. Mirrors the batch3-6-finalize pattern: reconcile each distinct source
   doc's checkboxes once its batch-7 todo lands, then re-check the 7 Deferred items for any that have since cleared
   (extract into a future batch8 if so, do not draft here).
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-7, satellite-docs]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -23,8 +23,8 @@ related:
 created: "2026-07-27"
 last_updated: "2026-08-04"
 parent_epic: sports_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -43,7 +43,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
     /plans/archive/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md,
@@ -54,14 +54,10 @@ context_scope:
 
 # Sports satellite AO batch 7 — finalize
 
-> **✅ `status: active` — flipped 2026-07-27 in the same commit as its parent, on explicit operator approval.**
-> `gate_on_depends: true` (below) is the mechanism that actually holds this plan's todos back until the parent's 4 todos
-> are `done` — `status: active` alone does not bypass that gate.
-
-> **Machine-gated on `sports_satellite_ao_dispatch_batch7_2026_07_27.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 4 tasks in that plan are `done`. `sequential: true` because
-> todo 1 needs all 4 parent todos' evidence to reconcile source docs correctly, and todo 2 (Deferred re-check) reads
-> more cleanly once todo 1's flips are settled.
+> **🟢 ARCHIVED 2026-08-04** — all 3 todos `[x]`, `locked_by:` empty. Source-doc checkboxes reconciled (todo 1), 7
+> Deferred items re-checked (all genuinely blocked, zero qualify for batch8 extraction — todo 2), both batch7 docs
+> archived + referrers updated + hygiene sweep green (todo 3). Parent plan
+> (`/plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md`) also archived in the same pass.
 
 ## Todos
 
@@ -93,29 +89,29 @@ context_scope:
       Deferred items re-verified still genuinely blocked — zero qualify for batch8 extraction:
 
       1. **K1/K2 casing revert migration** — still blocked. The archive issue doc
-                                 (`sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`, `status: resolved`) has 1 remaining open todo
-                                 (the migration itself). No active plan for the migration; the ~260K-object conditional copy still needs a
-                                 dedicated VM launch. Not batch8-ready.
-                              2. **QG assertion (canonical axes)** — still blocked. Both sequence gates remain open:
-                                 `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` is `status: active` with 4 open todos (incl. one
-                                 HARD-GATED on venue→class mapping); `sports_consolidated_native_ao_extract_2026_07_25.md` is `status: active`
-                                 with 15 open todos. Neither prerequisite has closed. Not batch8-ready.
-                              3. **Track S — eliminate/document bare `entity=fixtures/` path** — still blocked. Three-way conflict unresolved:
-                                 `sports_catalog_league_grain_only_scope_2026_07_08.md` is `status: active` (4 open todos);
-                                 `sports_legacy_fixtures_path_migration_2026_07_24.md` is archived `complete` but did not resolve the bare-path
-                                 question; batch5's Deferred section still tracks this awaiting operator ruling. No operator ruling found. Not
-                                 batch8-ready.
-                              4. **Track E — repoint stale `entity=fixtures` consumers** — still blocked. Same unresolved conflict as item 3.
-                                 Not batch8-ready.
-                              5. **Track H — honest-coverage regrade + league_id namespace + fixture_stats 708** — still blocked. Zero active or
-                                 archived plans for league_id namespace reconciliation or fixture_stats 708 root-cause. Remains a human design
-                                 call needing scoping/splitting before any part is AO-dispatchable. Not batch8-ready.
-                              6. **Track H — cross-object-CAS (decision 12) + CF-8 maintenance window (decision 11)** — still blocked. Zero
-                                 active or archived plans for either. Both remain operator/design-gated per the parent doc's own text. Not
-                                 batch8-ready.
-                              7. **Track V — league_id-relocation DELETE + phantom manifest rows** — still blocked. Both gated on the K1/K2
-                                 casing revert migration (item 1 above), which has not executed. Not independently dispatchable. Not
-                                 batch8-ready.
+                                     (`sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`, `status: resolved`) has 1 remaining open todo
+                                     (the migration itself). No active plan for the migration; the ~260K-object conditional copy still needs a
+                                     dedicated VM launch. Not batch8-ready.
+                                  2. **QG assertion (canonical axes)** — still blocked. Both sequence gates remain open:
+                                     `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` is `status: active` with 4 open todos (incl. one
+                                     HARD-GATED on venue→class mapping); `sports_consolidated_native_ao_extract_2026_07_25.md` is `status: active`
+                                     with 15 open todos. Neither prerequisite has closed. Not batch8-ready.
+                                  3. **Track S — eliminate/document bare `entity=fixtures/` path** — still blocked. Three-way conflict unresolved:
+                                     `sports_catalog_league_grain_only_scope_2026_07_08.md` is `status: active` (4 open todos);
+                                     `sports_legacy_fixtures_path_migration_2026_07_24.md` is archived `complete` but did not resolve the bare-path
+                                     question; batch5's Deferred section still tracks this awaiting operator ruling. No operator ruling found. Not
+                                     batch8-ready.
+                                  4. **Track E — repoint stale `entity=fixtures` consumers** — still blocked. Same unresolved conflict as item 3.
+                                     Not batch8-ready.
+                                  5. **Track H — honest-coverage regrade + league_id namespace + fixture_stats 708** — still blocked. Zero active or
+                                     archived plans for league_id namespace reconciliation or fixture_stats 708 root-cause. Remains a human design
+                                     call needing scoping/splitting before any part is AO-dispatchable. Not batch8-ready.
+                                  6. **Track H — cross-object-CAS (decision 12) + CF-8 maintenance window (decision 11)** — still blocked. Zero
+                                     active or archived plans for either. Both remain operator/design-gated per the parent doc's own text. Not
+                                     batch8-ready.
+                                  7. **Track V — league_id-relocation DELETE + phantom manifest rows** — still blocked. Both gated on the K1/K2
+                                     casing revert migration (item 1 above), which has not executed. Not independently dispatchable. Not
+                                     batch8-ready.
 
 - [x] ✅ [DOC] P2. **Archived `sports_satellite_ao_dispatch_batch7_2026_07_27.md` (and this finalize doc) — both
       terminal**, per CLAUDE.md's plan-archival ritual: migrated any remaining Deferred items to a tracked

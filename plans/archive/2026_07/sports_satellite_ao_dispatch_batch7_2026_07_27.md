@@ -25,13 +25,14 @@ related:
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-08-04"
 parent_epic: sports_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.2
@@ -64,11 +65,10 @@ context_scope:
 
 # Sports satellite AO batch 7 — consolidated-closeout orphans
 
-> **✅ `status: active` — DISPATCHED 2026-07-27, operator-approved.** Drafted autonomously, then explicitly approved by
-> the operator the same session before flipping. Its gated companion,
-> `/plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md`, stays `status: draft` — it is
-> machine-gated on this plan's 4 todos completing (`depends_on` + `gate_on_depends: true`) regardless of its own
-> `status`, so it is flipped `active` in the same commit rather than waiting for todo 1-4 to land first.
+> **🟢 ARCHIVED 2026-08-04** — all 4 todos `[x]`, `locked_by:` empty. Gated companion finalize doc also archived
+> (`/plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md`). Batch 7 fully closed:
+> source-doc checkboxes reconciled, 7 Deferred items re-checked (all remain genuinely blocked, zero qualify for batch8
+> extraction), both docs archived per CLAUDE.md's plan-archival ritual.
 
 > **Why this is scoped narrower than batch2-6.** The operator's question was specifically about
 > `sports_consolidated_closeout_2026_07_19.md`'s OWN remaining todos, not a fresh full-corpus sweep (batch6 already did
