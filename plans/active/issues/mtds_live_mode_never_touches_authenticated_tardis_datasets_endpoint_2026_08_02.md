@@ -177,3 +177,6 @@ as this update.
   operator's explicit instruction to file it as its own separate, trackable item rather than folding it into the close.
   This doc stays `status: open` (one todo remains open, contingent on a future connector change) — no archival due yet.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid (first pass, no prior marker) — the
+  sole remaining open item is an explicitly non-actionable standing tripwire for a hypothetical future connector change,
+  not currently dispatchable work.

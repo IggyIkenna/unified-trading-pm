@@ -218,3 +218,6 @@ depend on.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the batch4 satellite dispatch plan where
   todos 1-2 were already extracted verbatim (per the 2026-08-01 na-eligibility-audit note).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the prior verdict; items
+  1-2 stay correctly held back from reclassify (batch4 still `status: draft`, duplicate-dispatch risk), items 3-5 remain
+  genuinely open corroborating data for the separate still-open shard-16 investigation. No reclassification.

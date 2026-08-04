@@ -215,3 +215,24 @@ context_scope:
   `unified-trading-sa`) rather than mutating shared state; second independent confirmation filed to
   `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`. **Report**:
   `/plans/audit/results/data_pipeline_e2e_check_is_2026_08_02.md` (+ sibling `.json`).
+- **2026-08-04 (slot 4, data_engineering) — `data-pipeline-check-mtds` pre-Phase-B baseline (1 of 2) RUN.** Executed
+  `/data-pipeline-check-mtds --asset-group prediction --day 2026-08-02` (same day as the `-is` pre-Phase-B baseline
+  above, chosen for a comparable pair, not an invented default) as the dispatchable pre-Phase-B leg of this doc's
+  `-mtds` 3x-cadence top-up todo (`prediction_consolidated_native_ao_extract_2026_07_25.md` todo 3 — that plan's own
+  checkbox is flipped for this partial slice; this checkbox stays open pending the mid-migration leg). **Result: mostly
+  failed, 2 real findings + 2 confirmed infra-noise items.** Phase 1 (force+skip, 5 shards): 4/8 real `no_parquet_under`
+  failures with `Exit=0` (VM launcher succeeded but no parquet landed at the expected test-bucket path — a genuine
+  finding, not yet root-caused, flagged for follow-up) + 1 confirmed genuine SPOT preemption
+  (POLYMARKET/prediction_trades skip-leg) + 2 `skipped` (book_snapshot_5 is batch-unfetchable by design). Phase 2 (live
+  leg, 4 shards, `--mvp-only`): 2 passed (POLYMARKET/KALSHI trades), 2 failed (book_snapshot_5 — no sampled instrument
+  available for a live shard-spec, same batch-unfetchable-by-design shape). **2 operational defects found in the checker
+  itself** (both confirmed live, filed as
+  `mtds_pipeline_e2e_check_report_overwrite_and_post_completion_hang_2026_08_04.md`): (1) running force+skip and live as
+  2 separate invocations silently overwrites the same day-keyed report file — the Phase 1 report was manually
+  reconstructed from this session's captured output before being lost for good; (2) the checker process hangs
+  post-completion (RSS climbing, no new log output, no VMs left to clean up) — hit TWICE, both times terminated via
+  exact-PID `SIGTERM` after independently confirming the report was already fully written, no data lost. Session also
+  died mid-Phase-2 for an unrelated reason (self-resumed cleanly, orphaned 2 harmless self-terminating `--test-run`
+  smoke VMs, re-ran Phase 2 fresh). **Report** (manually merged, see its own provenance note):
+  `/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_02.md` (+ sibling `.json`, live-leg-only content per the
+  overwrite defect above).

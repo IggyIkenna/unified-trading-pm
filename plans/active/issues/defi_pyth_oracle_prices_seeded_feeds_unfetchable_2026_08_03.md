@@ -343,3 +343,7 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   rediscovered from Progress Log prose on every future dispatch. **Checkbox stays UNFLIPPED** on `[DATA] P2` (plan) —
   released via `/skip-current-task` (reason_code=GATED). Recommend no further re-dispatch of the plan's `[DATA] P2`
   until the new `[OPERATOR] P2` todo here is actioned and a fresh Pyth VM reaches `EXIT_STATUS=0`.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — both remaining open items are
+  genuinely gated: `[OPERATOR] P2` is an explicit operator VM-launch authorization, `[DATA] P3` is real design/judgment
+  work reconciling 3 instrument_id naming conventions (a prior attempt already produced a false "77 gap days" result).
+  Doc stays `assigned_vm: NA`.

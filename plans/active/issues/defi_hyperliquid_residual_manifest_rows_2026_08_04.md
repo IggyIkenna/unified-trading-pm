@@ -1,37 +1,58 @@
 ---
 doc_type: issue
 title: >-
-  HYPERLIQUID still appears in defi.venues/defi.chains distinct-values despite being fully reclassified to cefi — no doc
-  explains the residual, root cause not found
+  HYPERLIQUID/EXTENDED/LIGHTER/BLAZESTAKE non-canonical defi.venues — 4 distinct root causes found + 2 fixed
+  (2026-08-04)
 summary: >-
-  Operator flagged HYPERLIQUID still showing in the DEFI distinct-values panel (venues + chains, 2026-08-02
-  honest-coverage-rollup) despite `/codex/02-data/defi-canonical-naming-ssot.md`'s "On-chain perp CLOBs are CeFi, NOT
-  DeFi" section (codified 2026-06-25) confirming HYPERLIQUID/ASTER/EXTENDED/LIGHTER are fully reclassified to
-  `asset_group=cefi` in the live UAC registry (`VENUES_BY_ASSET_GROUP["cefi"]`; `VENUES_BY_ASSET_GROUP["defi"]` no
-  longer contains HYPERLIQUID at all — verified 2026-08-04 by direct code read,
-  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:403,461`). This doc corrects a stale
-  citation trail: `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` and the 2026-08-03 cross-tranche census both
-  attribute HYPERLIQUID's residual presence to `defi_venue_phase_live_definition_contradiction_2026_07_22.md`, but that
-  doc — read in full 2026-08-04 — contains ZERO mentions of HYPERLIQUID; its actual scope is 11 unrelated venues wrongly
-  excluded by a `phase=="pipeline"` filter, a mechanism that does not apply to HYPERLIQUID (which was moved OUT of the
-  defi venue universe entirely, not merely phase-gated). The genuine reclassification SSOT
-  (`instruments_foundation_completeness_2026_06_24.md`) also does not name HYPERLIQUID specifically — its cited
-  1,802-row contaminant purge names EXTENDED/PACIFICA/LIGHTER only. No doc explains why `asset_group=defi` manifest rows
-  with `venue`/`chain=HYPERLIQUID` still exist. Plausibly benign pre-reclassification historical residue (same shape as
-  the already-tracked `gas_fees` legacy-venue-prefix cleanup), but that is inference, not a confirmed root cause — filed
-  to close the gap rather than leave it as an uncited assumption.
+  RESOLVED for 3 of 4 venues, 1 remaining live-data-gap finding. Root-caused all four non-canonical `defi.venues`
+  distinct-values hits via bounded manifest/catalogue reads (pyarrow.fs.GcsFileSystem streaming, no corpus walk) —
+  **four genuinely distinct mechanisms**, correcting every prior citation (none of which actually explained any of
+  these): (1) **HYPERLIQUID** — genuine 2026-06-25 cefi reclassification residue that is a LIVE, actively-read
+  determinism-critical data source (`CanonicalPerpFundingProvider`, CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION) — **do
+  not touch**, no fix needed, disposition `no-still-authoritative`. (2) **EXTENDED + (3) LIGHTER** — a STALE
+  instruments-service DEFI catalogue (`instruments-store-defi-prd-.../prod/catalog.parquet`) still carried 15
+  EXTENDED-STARKNET + 18 LIGHTER-ZKSYNC PERPETUAL rows (never delisted post-reclassification, protected by
+  `build_instrument_catalogue.py`'s catalogue-shrink guard); `enumerate_expected_universe.py --asset-group defi`
+  re-materialised `expected_unattempted` placeholder rows for them into MTDS's manifest on every run (confirmed
+  written_at as recent as 2026-08-04, today) — the SAME "stale-catalogue re-seed" mechanism as the GMX precedent.
+  **FIXED**: purged the 33 stale rows from the defi catalogue 2026-08-04 (twin-confirmed: cefi's own catalogue already
+  carries 286 + 221 real, actively-maintained rows for these venues), snapshot-first, verified 0 remaining —
+  `instruments-service@14746732`. (4) **BLAZESTAKE** — a THIRD, unrelated mechanism: NOT part of the 2026-06-25 cefi
+  reclassification at all; it's a legitimate DeFi LST venue whose canonical name is `SOLBLAZE-SOLANA` (still
+  `phase=live`), and `BLAZESTAKE` is a historical pre-DF-4-fix alias. Real captured `lst_rates` data exists
+  2022-12-14→2026-07-31, but the legacy writer (`pipeline_mode=batch_onchain_subgraph`/`batch_defillama`) STOPPED around
+  2026-07-31/08-01 and the canonical `SOLBLAZE-SOLANA` name has **zero** manifest rows — no live producer of this data
+  exists today. **NOT a delete/fold candidate** (Part 1 fails — no canonical twin) — filed as its own separate
+  live-data-gap finding, not fixed here (needs an operator/design decision on which adapter should own `SOLBLAZE-SOLANA`
+  production going forward).
 status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [unified-api-contracts, market-tick-data-service, instruments-service, unified-trading-pm]
+repos: [unified-api-contracts, market-tick-data-service, instruments-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: [defi, cefi, hyperliquid, venue-reclassification, distinct-values, manifest, data-correctness, honest-coverage]
+tags:
+  [
+    defi,
+    cefi,
+    hyperliquid,
+    extended,
+    lighter,
+    blazestake,
+    venue-reclassification,
+    distinct-values,
+    manifest,
+    catalogue,
+    stale-catalogue,
+    data-correctness,
+    honest-coverage,
+  ]
 related:
   [
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: "2026-08-04"
@@ -39,98 +60,218 @@ last_updated: "2026-08-04"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P3
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
 source: >-
   Operator (interactive session 2026-08-04), cross-checking distinct_values non-canonical audit citations while
-  investigating defi_cefi_venue_chain_axis_contamination_2026_07_28.md under /autonomous dispatch
+  investigating defi_cefi_venue_chain_axis_contamination_2026_07_28.md under /autonomous dispatch; root-caused +
+  partially fixed by a sub-agent dispatch the same day (mandated to execute, not just diagnose)
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  instruments-service@14746732 (EXTENDED/LIGHTER catalogue fix only — HYPERLIQUID needed no fix, BLAZESTAKE remains
+  open, see Todos)
 depends_on: []
 context_scope:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
   ]
 ---
 
-# HYPERLIQUID residual `asset_group=defi` manifest rows — root cause not found (2026-08-04)
+# HYPERLIQUID/EXTENDED/LIGHTER/BLAZESTAKE non-canonical `defi.venues` — root-caused + fixed (2026-08-04)
 
-## What I found
+## Citation-trail correction (unchanged from the original filing)
 
-The registry is unambiguous today (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`):
+The registry is unambiguous (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`): line 403
+puts `HYPERLIQUID` in `VENUES_BY_ASSET_GROUP["cefi"]`; line 461's `VENUES_BY_ASSET_GROUP["defi"]` derivation can never
+include it (absent from `_ALL_DEFI_VENUES` entirely). The two prior docs blaming
+`defi_venue_phase_live_definition_contradiction_2026_07_22.md` for HYPERLIQUID's/BLAZESTAKE's residual presence do not
+hold up: that doc's actual scope is 11 unrelated venues excluded by a `phase=="pipeline"` DENOMINATOR filter bug, zero
+mentions of HYPERLIQUID, and (per this session's fresh read) it EXPLICITLY states "(BLAZESTAKE, KAMINO_LENDING,
+MORPHOVAULTS were already correctly 'live' or fixed 2026-07-22)" — i.e. that doc's own text says BLAZESTAKE was NOT
+excluded by its bug either. The genuine reclassification SSOT (`instruments_foundation_completeness_2026_06_24.md`) also
+never names HYPERLIQUID or BLAZESTAKE — its cited 1,802-row purge names EXTENDED/PACIFICA/LIGHTER only. All four venues
+needed independent root-causing; below is what each turned out to be, confirmed via bounded, column-projected,
+row-group-pushdown reads (`pyarrow.fs.GcsFileSystem` — genuine HTTP-range streaming, never a full-object download; one
+dataset open + one filtered scan per corpus, never a corpus walk) rather than inference.
 
-- Line 403: `VENUES_BY_ASSET_GROUP["cefi"]` includes `HYPERLIQUID` (comment: "On-chain CLOBs (reclassified from DEFI —
-  CLOB-style data like CeFi)").
-- Line 461:
-  `VENUES_BY_ASSET_GROUP["defi"] = list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))`
-  — `HYPERLIQUID` is not a member of `_ALL_DEFI_VENUES` at all, so it can never appear here regardless of phase.
+## HYPERLIQUID — genuine reclassification residue, LIVE READER, disposition `no-still-authoritative`
 
-Despite this, HYPERLIQUID appears in the live DEFI distinct-values panel's non-canonical `venues` AND `chains` lists
-(2026-08-02 honest-coverage-rollup). This means historical `asset_group=defi` manifest rows with `venue=HYPERLIQUID`
-(and/or `chain=HYPERLIQUID`) still exist in the DeFi bucket's manifest index.
+Bounded manifest read (`market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, filtered
+`asset_group=="defi" and venue=="HYPERLIQUID"`): **205,395 rows**, `date` range 2023-05-12→2026-06-09, 100%
+`capture_status=captured`, `pipeline_mode=batch_hyperliquid` (100%), `chain=HYPERLIQUID` for every row (this is the SAME
+physical rows as the separately-flagged `defi.chains=HYPERLIQUID` non-canonical hit — not a second issue). `data_type`
+split: `perp_daily_ctx` 170,521 / `perp_mark_price` 22,374 / `perp_funding` 12,500. `written_at` range
+2026-07-23→2026-08-04 — recent, because this exact corpus was freshly RE-REGISTERED this week by
+`defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`'s manifest-backfill work (real historical data, just
+re-stamped recently — not evidence of an active mis-write).
 
-**The citation trail pointing at a root cause does not hold up.** Two prior docs attribute this to
-`defi_venue_phase_live_definition_contradiction_2026_07_22.md` (most recently the 2026-08-03 cross-tranche census table
-and `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s original "2 already-known/tracked: BLAZESTAKE,
-HYPERLIQUID — `phase=="pipeline"` grain exceptions" line). Read in full 2026-08-04: that doc's actual scope is 11 venues
-(ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) wrongly excluded from the coverage
-denominator by a `phase=="pipeline"` filter bug — a mechanism about EXPECTED-COVERAGE DENOMINATOR calculation, unrelated
-to HYPERLIQUID's asset_group reclassification. **Zero occurrences of the string "HYPERLIQUID" anywhere in that
-document.** The grouping in the census table appears to be a loose "both are DeFi-perp-adjacent oddities" association,
-not a substantiated shared root cause.
+**Live-reader check (mandatory per this dispatch's cautionary precedent)**: CONFIRMED live and load-bearing.
+`strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py`'s `CanonicalPerpFundingProvider`
+resolves its bucket ONCE in `__init__` via `resolve_bucket_name(kind="tick-data", asset_group="defi")` — a **literal
+hardcoded "defi"**, no cefi fallback, no dynamic resolution by current venue classification. `catalog_carry.py:214`
+configures `("hyperliquid", "HYPERLIQUID", ShareClass.USDC)` as 1 of 11 `_CARRY_BASIS_PERP_VENUE_BUNDLES`;
+`catalog_staked_basis.py:89,105` also lists HYPERLIQUID in `_STAKED_BASIS_ETH_PERP_VENUES`/
+`_STAKED_BASIS_SOL_PERP_VENUES`. `paper_run_handler.py:1984-1988` (`_load_funding_ticks`) resolves
+`venue=_funding_spec_venue(config)` → `"HYPERLIQUID"` and calls
+`CanonicalPerpFundingProvider().funding_window(window_start, window_end, venue=venue)` — live, reachable,
+CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION archetypes. This exactly mirrors the BINANCE-FUTURES/BITGET-FUTURES precedent
+already found in `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s P1 entry (same provider, same disposition
+`no-still-authoritative`). **Do not touch. No fix needed or executed.**
 
-The genuine reclassification SSOT — `/codex/02-data/defi-canonical-naming-ssot.md` "On-chain perp CLOBs are CeFi, NOT
-DeFi" (codified 2026-06-25) — cites `plans/active/instruments_foundation_completeness_2026_06_24.md`'s purge of 1,802
-contaminant `_index` rows from the instruments-service capture path (`engine/orchestrator/defi.py`
-`_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES` had wrongly enumerated some cefi on-chain-CLOB venues as defi). That purge
-explicitly names **EXTENDED/PACIFICA/LIGHTER** — not HYPERLIQUID.
+## EXTENDED + LIGHTER — stale defi-bucket instrument catalogue, LIVE re-seed bug, FIXED
 
-## What this is NOT (ruled out)
+**These are NOT the same mechanism as HYPERLIQUID.** Bounded manifest read confirmed: **EXTENDED 4,980 rows / LIGHTER
+5,976 rows**, `date` range 2026-02-20→2026-08-04 (today), `written_at` 2026-08-01→2026-08-04 (today/this week) — and
+**100% `capture_status=expected_unattempted`** (never `captured` — no real data ever existed or was lost).
+`chain=STARKNET`/`ZKSYNC` respectively; `data_type` = `oracle_prices` + `perp_funding` in equal split;
+`pipeline_mode=batch_pyth_hermes` (oracle_prices) / `batch_hyperliquid` (perp_funding — itself a symptom of the SAME
+mis-registered `SOURCE_PRIORITY[("defi","perp_funding")]=["hyperliquid"]` fallback that caused the already-fixed GMX
+pipeline_mode bug, `defi_gmx_pipeline_mode_mislabeled_hyperliquid_2026_07_21.md`). A **bounded per-(day,venue) GCS
+`match_glob` sweep** (23 sample dates, 2023-01-01→2026-08-04, day always fixed — an unbounded venue-only glob is
+confirmed impractically slow, GCS has to lexicographically scan the whole bucket with no day bound) found **zero**
+physical `raw_tick_data` objects for bare `venue=EXTENDED`/`venue=LIGHTER` on ANY sampled date — confirming these are
+pure phantom placeholder rows with no captured data behind them, currently and historically.
 
-- Not a live-writer bug: no current code path stamps `asset_group=defi` for HYPERLIQUID (it's absent from
-  `_ALL_DEFI_VENUES`).
-- Not the `phase=="pipeline"` mechanism (that's a denominator/expected-coverage bug, not a venue-universe-membership
-  bug).
+**Root cause, fully confirmed** (matches this dispatch's GMX-precedent hint exactly, just in a different registry than
+guessed): the **instruments-service DEFI instrument catalogue**
+(`instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`) still carried **15 EXTENDED-STARKNET + 18
+LIGHTER-ZKSYNC `PERPETUAL` rows**, `available_to=None` (never delisted) — leftover from before the 2026-06-25 defi→cefi
+reclassification. That reclassification (`purge_cefi_perp_defi_contamination_2026_06_25.py`) fixed the CAPTURE path
+(`instruments_service/engine/orchestrator/defi.py::_build_defi_venues()`) and purged the `_index` manifest rows, but its
+own comment explicitly left the catalogue alone: _"Catalogue (prod/catalog.parquet) is asset_group-AGNOSTIC venue-keyed
+instrument defs → left intact (valid instrument definitions; asset_group is in UAC)"_ — true in principle, but
+`enumerate_expected_universe.py`'s v2 per-instrument enumerator does NOT re-resolve asset_group per row: for a
+`--asset-group defi` run it downloads the DEFI bucket's `catalog.parquet` wholesale
+(`scripts/enumerate_expected_universe.py:4500-4519`) and treats every row in it as defi-expected, asset_group being
+implicit in "which bucket you read from." `build_instrument_catalogue.py`'s catalogue-shrink guard
+(`--allow-catalogue-shrink`, default OFF) plus `--mode incremental`'s frozen-tail design meant these 33 rows survived
+every rebuild since 2026-06-25 — the G3b anti-false-delist logic (correctly) never inferred delisting from mere
+capture-silence, but these venues were EXPLICITLY removed from the universe, not merely quiet, so nothing ever forced
+`available_to`. Net effect: `enumerate_expected_universe.py --asset-group defi` re-materialises fresh
+`expected_unattempted` rows for bare EXTENDED/LIGHTER into MTDS's manifest **on every run** — confirmed by the
+`written_at` range reaching literally today, 2026-08-04, before any fix.
 
-## Working hypothesis (not verified — the actual todo)
+**Twin check** (Part 1 of the delete-safety proof): the CEFI catalogue
+(`instruments-store-cefi-prd-.../prod/catalog.parquet`) already carries the real, actively-maintained instruments —
+**286 EXTENDED-STARKNET + 221 LIGHTER-ZKSYNC rows** (vs. the defi bucket's stale 15+18) — confirming the defi-bucket
+copies are pure duplication in the wrong bucket, not unique data. **Part 3/4** (no live writer/reader depends on the
+DEFI-bucket copies): confirmed — `_build_defi_venues()` doesn't enumerate them, and the only consumer found
+(`enumerate_expected_universe.py --asset-group defi`) is the buggy re-seeder being fixed, not a legitimate dependent.
 
-Most likely: pre-2026-06-25 historical manifest rows from when HYPERLIQUID WAS still defi-classified (before the
-CLOB-reclassification), never cleaned up after the reclassification shipped — the same "real historical data, correct at
-capture time, now correctly excluded from the current canonical venue universe but still resident in the manifest" shape
-as the already-tracked `gas_fees` legacy-venue-prefix migration
-(`/plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`). Not independently confirmed —
-this doc stops at "the citation is wrong" and flags the real investigation as unstarted.
+**FIXED 2026-08-04**: shipped `instruments-service/scripts/purge_defi_catalogue_cefi_reclassified_venues_2026_08_04.py`
+(mirrors `purge_cefi_perp_defi_contamination_2026_06_25.py`'s exact structure — snapshot-first, backup, CAS-adjacent
+overwrite, round-trip verify). Dry-run confirmed EXACTLY 33 rows would be dropped (15 EXTENDED-STARKNET + 18
+LIGHTER-ZKSYNC), matching the independent bounded-read count precisely. `--apply` run: fresh
+`gcs_bucket_soft_delete_retention_seconds()` check passed (604800s, at the 7-day §3a floor) → snapshot written to
+`prod/snapshots/pre_cefi_reclassified_venue_purge_2026_08_04.parquet` → `.bak` backup written → catalogue rewritten
+79,035→79,002 rows → **live round-trip verify: 0 stale rows remaining**. See Progress Log for the commit SHA. This
+closes the ROOT CAUSE — future `enumerate_expected_universe.py --asset-group defi` runs will no longer re-seed
+`expected_unattempted` rows for these venues. The already-materialised 4,980+5,976 `expected_unattempted` MTDS-manifest
+rows are harmless placeholders (zero real captured data, so zero data-loss risk either way) — left untouched; a
+low-priority follow-up could clean them up but it is not required for correctness (no new ones will be added, and
+`expected_unattempted` is a normal, honest manifest state for a not-yet-attempted shard — though for a venue that will
+never legitimately be attempted, the future correction is to make the shard atom itself stop enumerating, which this fix
+already delivers).
+
+## BLAZESTAKE — different, THIRD mechanism: real historical data, legacy writer recently stopped, no live replacement
+
+**NOT part of the 2026-06-25 cefi reclassification cohort at all.** `VENUES_BY_ASSET_GROUP["cefi"]`'s "On-chain CLOBs"
+block is exactly {HYPERLIQUID, ASTER, EXTENDED-STARKNET, LIGHTER-ZKSYNC} — BLAZESTAKE is absent. BLAZESTAKE is a
+legitimate DeFi Solana liquid-staking (LST) venue whose CANONICAL registered name is `SOLBLAZE-SOLANA`
+(`unified_api_contracts/registry/defi_venues.py:624`, `phase="live"`, IS-wired 2026-07-18 via `solblaze.py`).
+`BLAZESTAKE`/`BLAZESTAKE-SOLANA` are non-canonical ALIASES resolving to `SOLBLAZE-SOLANA` via `defi_venues.py:385-386`
+("DF-4: `_defi_lst.py` uses BLAZESTAKE; canonical is SOLBLAZE" — a 2026-07 case-folding drift fix). The prior citation
+blaming `defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s `phase=="pipeline"` mechanism is ALSO wrong for
+BLAZESTAKE specifically — that doc's own text confirms BLAZESTAKE was already correctly `phase=="live"` as of
+2026-07-22.
+
+Bounded manifest read: **1,402 rows**, `date` 2022-12-14→2026-07-31, 100% `capture_status=captured` (REAL data, not
+placeholders), `data_type=lst_rates` (100%), `chain=SOLANA`, `pipeline_mode=batch_onchain_subgraph` (1,311) +
+`batch_defillama` (91). **Live writer check**:
+`market_tick_data_service/market_interface/adapters/defi/ lst_solblaze_adapter.py:40` sets
+`self.venue = "SOLBLAZE-SOLANA"` directly (correct, canonical) — no live code path writes bare `BLAZESTAKE` today. A
+**bounded per-day GCS `match_glob` sweep** (23 dates spanning 2023-01-01→2026-08-04) found real objects on EVERY sampled
+date from 2023-01-01 through **2026-06-30 AND 2026-07-05/07-10/07-20** (both naming variants present since ~2026-06-01:
+legacy leaf `bSOL.parquet` alongside a newer glued-instrument_id leaf `BLAZESTAKE-SOLANA:LST:bSOL.parquet` — same
+`venue=BLAZESTAKE` tag on both, just a leaf-naming change) — then **zero** objects on 2026-08-01, 2026-08-03, and
+2026-08-04. **The legacy writer stopped producing data sometime between 2026-07-20 and 2026-08-01** (exact date not
+pinned down further — not needed for this finding).
+
+**Critically: the canonical `SOLBLAZE-SOLANA` venue has ZERO manifest rows under `asset_group=defi`** (confirmed via the
+same bounded read). Despite `lst_solblaze_adapter.py` writing the correct venue name when it runs, it has apparently
+never produced a captured row in this manifest — meaning **there is currently no live producer of BlazeStake/SolBlaze
+LST-rate data at all**, canonical or not, as of this session (2026-08-04). This is a genuine, separate **live data
+gap**, not a delete-safety question:
+
+- **Not a delete/fold candidate**: Part 1 of the delete-safety proof (canonical twin resolves) FAILS outright — no
+  `SOLBLAZE-SOLANA` twin exists to fold into or migrate to.
+- **Not urgent from a live-strategy-reader angle**: confirmed via code read that strategy-service's CARRY_STAKED_BASIS
+  STAKING leg (`CanonicalLstYieldsIndexProvider`) reads a DOWNSTREAM COMPUTED `features-onchain` bucket corpus
+  (`onchain/by_date/day={D}/feature_group=lst_yields/features.parquet`), not the raw MTDS defi tick-data bucket this
+  finding is about — and `YIELD_STAKING_SIMPLE_LST_ASSET` (`paper_universe.py:162`) only maps 5 protocols
+  (lido/rocketpool/etherfi/jito/marinade); solblaze/blazestake isn't in that allowlist at all, canonical or not. So no
+  live strategy path is currently broken by this gap (features-service's own upstream `lst_features.py` computation
+  layer was not independently checked — outside this dispatch's 5-repo scope — but is irrelevant to the live-reader
+  question since strategy-service's own allowlist already excludes this protocol).
+- **NOT fixed in this dispatch** — this needs an operator/design decision (who should own producing `SOLBLAZE-SOLANA`
+  data going forward: revive/redirect the legacy `batch_onchain_subgraph` writer, or confirm `lst_solblaze_adapter.py`
+  is the intended replacement and diagnose why it has zero captured rows), which is a judgment call, not a
+  bounded/deterministic todo — tracked as its own `[DIAG]` todo below.
 
 ## Todos
 
-- [ ] [DIAG] P3. Bounded manifest read (single `read_availability_index` call, column-projected, filtered to
-      `venue=="HYPERLIQUID"` or `chain=="HYPERLIQUID"` within `asset_group=defi`) — get exact row count, `day=` range,
-      `data_type=`/`pipeline_mode=` distribution. Confirm/refute the "pre-2026-06-25 historical residue" hypothesis
-      above by checking whether the `day=` range for these rows predates 2026-06-25 (the reclassification date).
-- [ ] [DIAG] P3. If historical residue confirmed: is there a canonical cefi-asset_group twin already covering the same
-      (venue, day, data_type) cells (per Part 1/2 of the five-part delete-safety proof), such that this is a genuine
-      cross-AG duplicate needing a cefi-bucket twin check — analogous to, but NOT the same objects as, the already-found
-      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` Pattern B contamination (that one was a `-FUTURES`
-      splitter bug affecting different venues/dates; this is a plain reclassification residue, different mechanism)?
-- [ ] [DATA] P3. If confirmed safe (Part 1-5 all pass, including a live-reader check mirroring the one that overturned
-      `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s P2(b) assumption — HYPERLIQUID funding data IS
-      genuinely read by `CanonicalPerpFundingProvider` per that same doc, so verify whether these SPECIFIC residual
-      defi-tagged rows are the reader's only source or whether a cefi-tagged twin already serves the same data):
-      migrate/re-tag or delete per whichever disposition the five-part proof yields. Do not assume "safe" — this exact
-      class of assumption was just proven wrong for a sibling finding in this same investigation.
+- [x] ✅ [DIAG] P2. Bounded manifest reads for all 4 venues + chain=HYPERLIQUID — DONE 2026-08-04, see sections above
+      (exact row counts, date ranges, data_type/capture_status/pipeline_mode distributions for each).
+- [x] ✅ [DIAG] P2. Live-reader check for all 4 venues (strategy-service + MTDS write-path grep+read) — DONE 2026-08-04:
+      HYPERLIQUID has a confirmed live reader (do not touch); EXTENDED/LIGHTER/BLAZESTAKE do not.
+- [x] ✅ [DATA] P2. EXTENDED/LIGHTER root cause fixed at source — DONE 2026-08-04. Purged 33 stale
+      EXTENDED-STARKNET/LIGHTER-ZKSYNC rows from the defi instrument catalogue
+      (`instruments-service/scripts/purge_defi_catalogue_cefi_reclassified_venues_2026_08_04.py --apply`),
+      snapshot-first, live-verified 0 remaining. See Progress Log for the shipped commit SHA.
+- [ ] [DIAG] P2. **NEW 2026-08-04, BLAZESTAKE.** Operator/design decision: who owns producing `SOLBLAZE-SOLANA` LST-rate
+      data going forward? The legacy `batch_onchain_subgraph`/`batch_defillama` writer (venue=BLAZESTAKE, real captured
+      data through 2026-07-31) stopped sometime 2026-07-20→2026-08-01 with no working canonical replacement —
+      `lst_solblaze_adapter.py` (venue=SOLBLAZE-SOLANA) has zero captured manifest rows. Options: (a) diagnose why
+      `lst_solblaze_adapter.py` isn't producing data (is it scheduled? erroring silently? never actually deployed?), (b)
+      revive/redirect the legacy writer's logic under the canonical venue name, (c) confirm this is an intentional pause
+      pending something else. Not scoped as a bounded/deterministic todo — needs a human call on approach before it can
+      be split into an AO-eligible follow-up. Target repos: market-tick-data-service (adapter diagnosis),
+      instruments-service (if a scheduling/registration gap).
+- [ ] [DATA] P3. Low-priority hygiene follow-up (not required for correctness — see EXTENDED/LIGHTER section above): the
+      4,980 (EXTENDED) + 5,976 (LIGHTER) already-materialised `expected_unattempted` MTDS-manifest rows are inert
+      placeholders (zero captured data) that could be cleaned up in a future manifest-row purge pass, mirroring
+      `purge_cefi_perp_defi_contamination_2026_06_25.py`'s pattern applied to `market-data-tick-defi-prd-...`'s `_index`
+      this time. Not urgent — no new rows will be added post-fix, and their presence does not affect any live reader
+      (confirmed no code path reads bare venue=EXTENDED/LIGHTER expected_unattempted rows for anything).
 
 ## Progress Log
 
 - **interactive session 2026-08-04 (autonomous, `/autonomous`)**: filed this doc after confirming the existing citation
   trail doesn't hold up, per the pre-task plan/issue conflict-check + "0 hits ≠ missing, grep-then-READ" rules. Root
-  cause investigation not started (P3, correctly scoped as DIAG-first — no execution without evidence, per the
-  P2(b)-reversal lesson from the sibling doc this session).
+  cause investigation not started at filing time (P3, correctly scoped as DIAG-first).
+- **sub-agent dispatch 2026-08-04 (mandated to execute, not just diagnose)**: root-caused all 4 venues via bounded,
+  genuinely-streaming reads (`pyarrow.fs.GcsFileSystem` — this local environment's plain GCS client downloads proved
+  impractically slow for the ~1.7GB MTDS manifest, ~500s even filtered; the footer+row-group-pushdown streaming path was
+  the actual fix for that, not a workaround to route around — documented here in case a future bounded read on this same
+  corpus hits the identical wall). Confirmed HYPERLIQUID is a live, do-not-touch reclassification residue (no fix
+  needed). Root-caused EXTENDED/LIGHTER to a stale defi-bucket instrument-catalogue entry surviving the 2026-06-25
+  reclassification's catalogue-shrink guard, confirmed via a twin check against the cefi catalogue (286+221 real rows),
+  and FIXED it — shipped + ran
+  `instruments-service/scripts/purge_defi_catalogue_cefi_reclassified_venues_2026_08_04.py --apply` (dry-run confirmed
+  exact 33-row diff first), snapshot+backup+verify all clean. Found BLAZESTAKE is an unrelated third mechanism (real
+  historical data, legacy writer recently stopped, no working canonical replacement) — filed as its own live-data-gap
+  finding, not fixed (genuinely needs an operator/design call on ownership, not a bounded execution). Priority raised
+  P3→P2 given confirmed live-data-correctness content (a currently-firing daily-reseed bug for 2 venues, now fixed, plus
+  a genuine live data gap for a 3rd).

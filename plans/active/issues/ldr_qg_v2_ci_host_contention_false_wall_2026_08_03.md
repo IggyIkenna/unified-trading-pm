@@ -156,3 +156,12 @@ and just burn more contended compute.
   no outstanding action), no repo-blockers open for deployment-service. The open questions in this doc (governor/CI
   glue-runner integration gap, required-check enforcement on `ldr_main`) remain unanswered and are the actual next step
   for whoever has host-capacity/governor context — this re-dispatch did not have new information to add there.
+
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc;
+  `grep -cE '^- \[ \]'` = 0 (this doc carries no real checkbox todos — its "Open questions for whoever picks this up"
+  and "What I did NOT do" sections are prose, not `- [ ]` items). Nothing exists here to RECLASSIFY. The 3 open
+  questions (does the CI glue-runner participate in the qg-host-governor reservation ledger; is the host undersized for
+  interactive-slot + glue-runner concurrent demand; why did #678 merge without a green required `quality-gates-v2` run)
+  are all genuinely investigative/judgment calls, not bounded worker-determinable facts — correctly homed NA even if
+  converted to checkboxes. Not in `/ag-closeout-audit ao`'s batch6 (no actionable content to extract), consistent with
+  this verdict.

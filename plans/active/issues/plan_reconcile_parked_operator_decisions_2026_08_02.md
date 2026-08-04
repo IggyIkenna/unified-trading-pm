@@ -324,11 +324,11 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       independently (option A) to actually fix the underlying `plans/archive/` reference-path defects rather than only
       exclude them from the ratchet — not urgent now that the ratchet itself is green, but still useful hygiene. (repo:
       `unified-trading-pm`)
-- [ ] [DOC] P2. **Name this register in the skill file** — `cursor-configs/skills/plan-reconcile/SKILL.md:301`'s
-      zero-checkbox section owns the sweep but never cites
-      `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`, so a fresh run only learns of the register
-      via the operator's invocation text. One-line edit; closes the other half of that register's todo 1. Done-when:
-      `grep -rn "zero_checkbox_sweep_all_tranches" cursor-configs/skills/` is non-empty. (repo: `unified-trading-pm`)
+- [x] ✅ [DOC] P2. **DONE (na-eligibility-audit 2026-08-04)** — Name this register in the skill file. Landed the same
+      day this todo was filed: `unified-trading-pm@d872efb3a` ("close 3 mechanical findings from the 2026-08-02 audit
+      parked-decision docs") added the "Standing register" line to `cursor-configs/skills/plan-reconcile/SKILL.md:371`,
+      citing `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md` by name. Done-when verified live:
+      `grep -rn "zero_checkbox_sweep_all_tranches" cursor-configs/skills/` returns a hit. (repo: `unified-trading-pm`)
 
 ## Progress Log
 
@@ -345,3 +345,7 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
   auto-resolved instead and are listed in § 5, not here.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04**: sole remaining open todo ([DOC] P2, "name this register") closed above with
+  evidence — the fix had already landed same-day as a sibling doc's Progress Log entry (`unified-trading-pm@d872efb3a`)
+  but was never back-flipped here. All todos now `[x]`, no `locked_by` — archival-eligible, routing through the standard
+  6-step ritual.

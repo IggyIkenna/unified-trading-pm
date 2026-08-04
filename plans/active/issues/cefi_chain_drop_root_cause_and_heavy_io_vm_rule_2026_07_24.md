@@ -543,3 +543,7 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   wraps prod GCS renames in a consolidator-cron pause/resume. Not worker-determinable.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
   still accurate.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict; the
+  sole todo still resumes a migration explicitly PAUSED on direct operator request and wraps prod GCS renames in a
+  manifest-consolidator pause/verify/apply/resume sequence — resuming is itself a judgment call, not
+  worker-determinable.

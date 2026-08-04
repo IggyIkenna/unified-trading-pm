@@ -207,3 +207,30 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — narrowed from the 2 now-archived/superseded plan
   refs to the concrete source files the 2026-08-03 marker points at (`autospawn.py`, `_branch_state.py`,
   `worker_liveness_watchdog.py`), matching the doc's narrowed remaining scope (the diverged sub-case only).
+
+- **2026-08-04 (main agt-1756f6, from review git-health #3677) — 2 new DIVERGED recurrences incl. the FIRST-EVER
+  unified-trading-library instance; fired during exactly the gate-dominated low-dispatch backlog the 2026-08-03 marker
+  predicts.** Both killed gracefully (`archived_lifecycle_complete=true`), clean trees, on live host ip-172-31-5-118.
+  Main confirmed read-only (did NOT push: slot-10's are CODE + not my worktree; slot-4's is another slot's worktree —
+  reclaim is the open `[INFRA]` diverged-heal work, not main's).
+  - **slot 4 — `unified-trading-pm` ahead=1 behind=4 (DIVERGED)**, `not_clean_since` 07:02Z, killed 08:33:38Z. Orphan:
+    `78a3d05fc` [slot-4·planning] "fix(plan-hygiene): clear plan_health gate — reference-path fixes, archive 20 done
+    docs, NA-corpus reviewed raise". **NOT preserved**: `git ls-remote origin` shows many older
+    `wip-preserve/orchestrator-slot-4-<sha>` refs but NONE for `78a3d05fc` — so this diverged orphan is genuinely
+    at-risk if the clone is reclaimed/wiped.
+  - **slot 10 — `unified-trading-library` ahead=2 behind=7 (DIVERGED)** — FIRST utl instance of this class (prior
+    recurrences were all PM/AO), confirming the gap is repo-agnostic, not PM-specific. `not_clean_since` 07:17Z, killed
+    08:33:42Z (2nd kill; the 1st was 07:41:30 mid-quickmerge — see
+    `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` 2026-08-04 entry). Orphans: `e86637c2`
+    [slot-10·planning] "fix(pipeline-e2e-check): tag empty-string fallbacks in report merge loader" + parent `8caed410`
+    "…merge same-day reports instead of overwriting". **These ARE preserved on origin**:
+    `refs/heads/wip-preserve/orchestrator-slot-10-e86637c2` exists (tip `e86637c2` → `8caed410` in ancestry), most
+    likely written by the 07:41:30 first-kill sweep. So the QG-green code is SAFE/recoverable from origin — the standing
+    drift_violation is a branch-not-realigned artifact, NOT data-loss.
+  - **Sharpened finding for the open `[INFRA]` diverged-heal item**: the preserve-half is UNRELIABLE for the diverged
+    case, not just absent. It fired for slot-10 (e86637c2 preserved) but did NOT fire for slot-4's current `78a3d05fc`
+    despite both being diverged and killed within 4s of each other — so `push_or_preserve_ahead_commits`' preserve
+    branch is not reliably covering diverged killed-slot orphans. The durable fix should (a) extend the unconditional
+    sweep to PRESERVE (not just attempt-push) every diverged dead-slot orphan, and (b) realign the local branch so the
+    drift_violation clears once preserved. Recovery of slot-4's `78a3d05fc` is the more urgent of the two (unpreserved);
+    slot-10's is safe on its wip-preserve ref.

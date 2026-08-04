@@ -150,3 +150,25 @@ than acted on:
   extraction itself is unaffected and stands: batch8 + its gated finalize twin were created normally.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the two
   prior over-cap-blocks-edit instances, the over-cap doc itself, and `check_line_caps.sh`).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — all 3 open todos are gated on
+  an explicit `[OPERATOR]` BLOCKED-OPERATOR-DECISION policy call (A/B/C/D on the line-cap hard-gate exception); nothing
+  here is worker-determinable absent the operator's ruling. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a, same run, separate discovery): a FOURTH
+  recorded instance of the over-cap-blocks-edit class hit while auditing `data_completion_defi_2026_07_15.md` — **1002L
+  at HEAD, 50 open todos, `assigned_vm: NA`**, so neither the 2026-07-30 zero-open-todo exception nor this doc's own
+  small-marker-append carve-out (operator ruling 2026-08-02, since shipped into `check_line_caps.sh`) could land the
+  verdict marker. Root cause was more specific than the general "any edit is over cap" framing above: the
+  small-marker-append carve-out DOES exist and DOES accept an insert-only, ≤10-line, zero-checkbox diff — but
+  `prettier-autostage`'s mandatory whole-file `--write` pass (unconditional on any staged touch, no diff-scoping
+  available) reformatted 3 unrelated pre-existing long-whitespace-run regions elsewhere in this specific file as a side
+  effect, which alone pushed the diff to 49 insertions / 45 deletions and disqualified the exception (requires
+  `DELETED == 0`). Confirmed empirically: reverted to HEAD, reapplied ONLY the 4-line marker, prettier reflowed the same
+  3 unrelated regions again on the next staged attempt — this is deterministic, not a one-off. So the general class
+  (A/B/C/D above) has (at least) two distinct sub-causes: (i) the hard cap itself with no exception path (the
+  `lst_rate_honest_coverage` case), and (ii) an exception path that exists but a MANDATORY, non-scopable formatting hook
+  can still defeat it on any file carrying pre-existing formatting debt (this case) — worth folding into whatever the
+  eventual A/B/C/D resolution designs, since option A's proposed "diff-shape check" alone would not have saved this
+  instance. Verdict (KEEP-NA valid — every remaining item gated on the still-open C0/C0f prerequisite, an operator/VM
+  long-wall-clock launch, or independent judgment) is recorded in the audit's own commit message
+  (`473cccf03`/`b381cbb11`) since it could not be persisted into the source doc; the doc's own content is unchanged from
+  HEAD.

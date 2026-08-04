@@ -177,3 +177,6 @@ of a venue-day outage.
   write-enforce.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
   body; no change needed.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
+  `nature: design`, remaining open work is closing 3 adversarially-confirmed architecture gaps before write-enforce, a
+  judgment/design call not bounded worker-determinable work.

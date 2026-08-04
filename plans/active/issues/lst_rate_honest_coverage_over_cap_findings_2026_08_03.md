@@ -121,3 +121,7 @@ for the compact pointer back to this doc.
   by name (`defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`,
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`) alongside the source plan, the line-cap script, and the
   STAKING-leg evidence doc.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — doc mixes two bounded
+  SCRIPT-tagged todos with one explicitly `[OPERATOR]`-tagged genuine judgment call (whether/how to relaunch a stalled
+  backfill VM pending an open OOM root-cause investigation); since not essentially all open work qualifies as bounded,
+  the whole doc stays NA per the mixing rule. Doc stays `assigned_vm: NA`.

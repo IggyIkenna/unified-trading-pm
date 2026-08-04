@@ -177,11 +177,11 @@ context_scope:
       duplication risk. 4 new regression tests incl. a monkeypatch proving the wiring is real (not just coincidental
       agreement). quality-gates.sh green. (repo: unified-api-contracts). Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [ ] [DATA] P1. **Curated-universe definition → backfill → residual drop (3-step ordered sequence, one worker, execute
-      in order).** (1) Define the curated ~300-league reference set (94 + the division below each country + continental
-      cups [Champions League, UEFA/UECL, Copa Libertadores/Sudamericana, AFC/CAF equivalents] + major internationals
-      [World Cup, Euros, Copa America…]) per the operator's Directive A/B + the 6M-call budget analysis, and widen the
-      write-gate (`_is_in_canonical_write_universe` / `get_expected_leagues_for_source`) to it. (2) THEN
+- [x] ✅ [DATA] P1. **Curated-universe definition → backfill → residual drop (3-step ordered sequence, one worker,
+      execute in order).** (1) Define the curated ~300-league reference set (94 + the division below each country +
+      continental cups [Champions League, UEFA/UECL, Copa Libertadores/Sudamericana, AFC/CAF equivalents] + major
+      internationals [World Cup, Euros, Copa America…]) per the operator's Directive A/B + the 6M-call budget analysis,
+      and widen the write-gate (`_is_in_canonical_write_universe` / `get_expected_leagues_for_source`) to it. (2) THEN
       curated-universe backfill (API-Football fixtures + enrichment, 2019→, burn ~6M over weeks; gated + honest-empty
       for no-enrichment leagues). (3) THEN drop residual out-of-curated rows/objects, snapshot-first, twin-verified. Do
       not run steps 2-3 before step 1 lands — same write-gate file, same manifest. (repo: unified-api-contracts league
@@ -334,8 +334,9 @@ context_scope:
       confirms the WALK finished, not that every league's data is honest-complete — a separate manifest-level check);
       (b) execute step 3 (drop residual out-of-curated rows/objects, snapshot-first, twin-verified per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`); (c) only then flip the prerequisite via the curl
-      command above. Next slot: steps (a)-(c) are now genuinely actionable (not a "still running, nothing to do"
-      check-in like every prior one) — this is the first check-in where real forward progress is possible.
+      command above. — **CLOSED 2026-08-04 (slot 16)**: BLK-aa587dbf ruling executed, fix
+      `instruments-service@0877f849`, snapshot-first drop of 8,937 rows; full evidence in
+      `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md`. AO prereq flipped `true`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

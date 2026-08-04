@@ -741,3 +741,6 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — added 3 real source paths (EXTENDED
   honest-absence adapter, capture-path wiring target, the stale-fallback launcher finding) that the prior codex-only
   list lacked.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  3 remaining open items (EXTENDED raise-vs-fallback judgment call, a consolidator-health-gated config revert, the G1
+  umbrella marker) are all still genuinely human/judgment/gated work.

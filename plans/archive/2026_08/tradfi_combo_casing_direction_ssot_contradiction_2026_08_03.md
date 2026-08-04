@@ -15,7 +15,7 @@ summary: >-
   tradfi combo-lowercase rows, matching that migration's 2026-07-29 post-apply total (1,339,306) plus organic growth.
   Re-running the UPPERCASE script now would flip these same 1.3M+ rows a THIRD time with no coordination between the two
   efforts. NOT executed — escalating instead.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [tradfi, casing, instrument-type, manifest, ssot-contradiction, combo, data-correctness]
 related:
   [
-    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     /plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -36,6 +36,8 @@ parent_epic: tradfi_master
 assigned_vm: planning
 source: [tradfi_casing_100pct_redrift_2026_07_27.md]
 resolved_by:
+  "market-tick-data-service@4cae1cb0 (ceiling raise) + the real --apply, 2026-08-04 -- 6,600,032 rows rewritten,
+  1,401,523 case-corrected, independently re-verified 0 residual"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: investigate
@@ -51,7 +53,7 @@ depends_on: []
 sequential: true
 context_scope:
   [
-    /plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     unified-api-contracts/unified_api_contracts/_instrument_enums.py,
     instruments-service/scripts/enumerate_expected_universe.py,
@@ -59,6 +61,16 @@ context_scope:
     market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-04** — status=resolved, all four todos done. Direction ruled UPPERCASE (operator, Option A);
+> seeding-function staleness fixed (`instruments-service@47a631ff`, `@d79b9d74`); the real `--apply` landed
+> (`market-tick-data-service@4cae1cb0` ceiling raise + apply) — 6,600,032 rows rewritten, 1,401,523 case-corrected,
+> independently re-verified 0 residual against the post-apply generation; cross-references added to the archived
+> `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` and
+> `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`. Codex-alignment: added a new lesson to
+> `/codex/02-data/availability-manifest-and-data-status.md` on seed/capture casing parity (a manifest-column casing
+> canon must be applied identically at every place that materializes a row for the same shard atom, not just the writer
+> seam). Archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## What I found
 
@@ -139,10 +151,17 @@ production data.
 4. Once (1)+(2) are resolved, `tradfi_casing_100pct_redrift-014`'s `--apply` can proceed against the now-understood
    ~1.4M-row population (with the script's STOP-ON-SURPRISE ceiling raised to match, citing this diagnosis).
 
-- [ ] [OPERATOR] P0. Decide the canonical casing direction for tradfi `combo` (and by extension every other
+- [x] ✅ [OPERATOR] P0. Decide the canonical casing direction for tradfi `combo` (and by extension every other
       instrument_type this affects) — UPPERCASE per UAC schema + the existing operator ruling in
       `tradfi_casing_100pct_redrift_2026_07_27.md`, or LOWERCASE per the archived 2026-07-29 migration's precedent. This
-      gates every todo below. (repo: unified-trading-pm)
+      gates every todo below. (repo: unified-trading-pm) — **RULED 2026-08-04 (direct operator confirmation, interactive
+      session): UPPERCASE.** Matches UAC's `InstrumentType.COMBO = "COMBO"` schema enum and the existing operator ruling
+      already on file in `tradfi_casing_100pct_redrift_2026_07_27.md`; the archived 2026-07-29 lowercase migration
+      (`tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md`) is the direction to reverse. This supersedes the
+      2026-08-03 slot-7 "interim guidance, not a final human sign-off" note below with a genuine operator answer.
+      Approved raising the script's STOP-ON-SURPRISE ceiling and re-running `--apply` against the now-understood
+      ~1.4M-row population — the seeding-function precondition (`-002`) was already satisfied before this ruling landed
+      (`instruments-service@47a631ff` + `d79b9d74`).
 - [x] ✅ [DATA] P1. Verify whether
       `instruments-service/scripts/enumerate_expected_universe.py::_canonical_writer_instrument_type` still seeds
       `expected_unattempted` rows in lowercase while MTDS's writer now captures in UPPERCASE (post
@@ -158,11 +177,26 @@ production data.
       output. Updated 4 existing tests whose `present_set` fixtures hardcoded the stale lowercase grain; added a
       regression test asserting the seeder can never re-diverge from the writer's canon. Full QG green (5195 tests,
       `.qg_last_passed_sha=47a631ff`).
-- [ ] [DATA] P1. Once the direction is ruled + the seeding function (if broken) is fixed: re-run
+- [x] ✅ [DATA] P1. Once the direction is ruled + the seeding function (if broken) is fixed: re-run
       `market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` (raising
       `_EXPECTED_CANDIDATE_MIN`/`_EXPECTED_CANDIDATE_MAX` to bracket the now-understood ~1.4M-row population) if
       UPPERCASE is ruled, OR write the equivalent lowercase-direction script update if LOWERCASE is ruled instead.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — DONE `market-tick-data-service@4cae1cb0` (ceiling raise,
+      `_EXPECTED_CANDIDATE_MAX` 500,000 → 2,000,000, full QG green) + the real `--apply`, run 2026-08-04. Fresh dry-run
+      immediately before applying confirmed the population was stable (1,401,523 changed vs the diagnosis's 1,401,491
+      the prior day — ~30 rows of ordinary organic growth, not runaway). First two `--apply` attempts hit the documented
+      CAS-write race (the manifest consolidator writes roughly every minute; this script's read-mutate-write window was
+      ~20-40s, close enough to collide twice in a row) — both aborted UNCHANGED-SAFE per the script's own CAS design, no
+      partial write. Per the script's own module docstring, paused
+      `uts-prod-manifest-consolidator-market-data-tradfi-cron` for the single write attempt, applied, then immediately
+      resumed it (confirmed `state=ENABLED` again). **Result**: 6,600,032 rows rewritten in place (row count preserved),
+      generation `1785833448588065` → `1785833526440245`, pre-migration snapshot at
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/backups/availability_index.pre_itype_casing_100pct_20260804T085152Z.parquet`,
+      1,401,523 `instrument_type` values case-corrected to UPPERCASE. Script's own self-verify: 5,860,660/5,860,660
+      canonical. **Independently re-verified with a genuinely fresh read** (not the script's in-memory frame, per this
+      repo's own established convention) against the confirmed post-apply generation: 5,860,660/5,860,660 canonical, 0
+      residual. The tradfi manifest `instrument_type` column is now literal-100% UPPERCASE (excluding the permanent
+      `futures_chain`/`options_chain` bundle-grain exclusion).
 - [x] ✅ [DATA] P2. Cross-reference this doc, `tradfi_casing_100pct_redrift_2026_07_27.md`, and the archived
       `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` from each other so future casing work sees all
       three. (repo: unified-trading-pm) — DONE. This doc already cited both in its own `related:` at filing time; added
@@ -239,3 +273,11 @@ production data.
   committed+pushed doc or commit, not just this Progress Log. Nothing at risk from a compact/session-end here. `-001`
   (casing direction) and `-003` (the `--apply`) remain the only open items, both genuinely operator-owned — next session
   should resume by polling `/api/backlog` for `-001`'s status before doing anything else.
+- **2026-08-04 (interactive session, operator direct)**: `-001` RULED — **UPPERCASE**, per the recommended-decision
+  section above (UAC schema enum + existing operator precedent). This is the genuine operator answer the 2026-08-03
+  slot-7 entry above was still waiting on. Todo `-003` (the actual `--apply` re-run, raising the script's
+  STOP-ON-SURPRISE ceiling to bracket the ~1.4M-row population) is now unblocked but was NOT executed this session — it
+  is a third mass rewrite of a contested, already-twice-flipped production population, requires loosening a safety
+  guard, and per this doc's own 2026-08-03 slot-7 note has no verifiable before/after evidence artifact yet
+  (`prod_mutation_evidence_artifact_gap_2026_08_03.md`). Left for a dedicated execution pass (VM/orchestrator dispatch,
+  since this doc is `assigned_vm: planning`) rather than run ad hoc from an interactive session.

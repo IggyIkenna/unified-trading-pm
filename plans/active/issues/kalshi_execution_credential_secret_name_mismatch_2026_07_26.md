@@ -161,3 +161,9 @@ Two directions, both viable, not adjudicated by this doc:
   duplicate against real credential material.
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, valid — 1 open, unchanged since the 2026-07-31
+  marker (only intervening commit is the 2026-08-03 context-scout refresh). The remaining `[DATA] P1` item stays
+  correctly `BLOCKED-OPERATOR-DECISION` and duplicate-tracked at `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  todo 5 (still open there, unresolved live/demo-host question) — flipping this doc would dispatch a duplicate against
+  real credential/exchange material. Doc stays NA.

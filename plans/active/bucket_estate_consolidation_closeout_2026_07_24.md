@@ -381,3 +381,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   still-open todos (recon-bucket E2E chain P0, `ml-models-store` prod delete P1, both otherwise blocked) rather than the
   whole original 6-todo spread; added 2 real source paths (`deployment_api_config.py`'s `ml_configs_store_bucket`
   resolver, BLRS's `config.py` recon resolver).
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — only 2 open todos remain, both genuinely NA: recon-bucket P0 is
+  explicit multi-repo feature work pending an operator kind-vs-prefix decision before any dispatch can even be scoped;
+  ml-models-store delete P1 is a fully-proven-safe disposition that is a human-only hard stop per
+  `gcs-and-manifest-delete-safety-protocol.md`.

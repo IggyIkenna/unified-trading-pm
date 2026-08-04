@@ -12,7 +12,7 @@ summary: >-
   coverage, the opposite pattern. This is far larger in scope than todo 7's already-fixed self-referential emission-gate
   lockout (which targeted only the trades-sourced ohlcv_1m/ohlcv_1h/book_snapshot_5 family) — this gap spans EVERY
   data_type/timeframe combination observed, across 4 of 5 asset_groups.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
@@ -27,7 +27,7 @@ related:
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,7 +41,7 @@ source: >-
   Surfaced 2026-07-27 (slot 9) running the first full-corpus validation of the newly-shipped candle_orphan_sweep.py tool
   (market-data-processing-service@d921823 + deployment-service@d75e8f3/@ff8eebe), via 4 real Tier-2 SPOT VMs, per main's
   ruling on BLK-c8936baa (this VM-launch was read-only/safe-idempotent/AO-eligible without operator gate).
-resolved_by:
+resolved_by: slot-15, mdps_candle_manifest_near_total_coverage_gap-008, 2026-08-04
 locked_by:
 locked_since:
 context_scope:
@@ -253,19 +253,20 @@ the candle layer instead of raw-tick.
       via a live prod run, and the campaign's current healthy in-progress state. This checkbox covers ONLY "design
       corrected + tool built/shipped + campaign launched and verified healthy" — full-corpus completion is the separate
       follow-up todo immediately below.
-- [ ] [DATA] P2. **Verify defi dex_pool_swaps source-correction campaign to completion** (follow-up to the todo above).
-      The `backfill-defi-dex-swaps-20260803-092530` VM (or its preemption-relaunch successor, same command, `--force`,
-      no `--day` — resumes from its own day-level checkpoint
-      `processed_candles/_index/_dex_swaps_source_correction_checkpoint.json`) is processing all 1,155 days of defi's
-      `processed_candles/` corpus (2023-01-01..2026-08-02); as of 2026-08-03T09:38Z, day `2023-01-01` (1,777 real gaps)
-      and `2023-01-02` (10,297 real gaps) completed clean (0 errors each). Remaining: (a) let the VM run to completion
-      (genuinely multi-hour at this corpus scale); (b) verify the final
-      `=== VERDICT defi-dex-swaps-source-correction: ... ===` line in
-      `gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-092530/run.log` (or its
-      successor VM's log) — acceptance is `copy_errors=0 footer_failed=0`; (c) spot-check the audit report
-      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`;
-      (d) OPTIONALLY re-run `--scope` or a fresh `candle_orphan_sweep.py --asset-group defi` to confirm the gap has
-      closed; (e) flip this checkbox citing the VERDICT line as evidence.
+- [x] [DATA] P2. **Verify defi dex_pool_swaps source-correction campaign to completion** (follow-up to the todo above).
+      ✅ 2026-08-04T08:53Z — the on-demand successor VM `backfill-defi-dex-swaps-20260803-221324` ran the full remaining
+      corpus to completion (resumed from checkpoint after the multiple preemption/crash cycles logged below) and emitted
+      the terminal VERDICT line in
+      `gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-dex-swaps-20260803-221324/run.log`:
+      `=== VERDICT defi-dex-swaps-source-correction: already_covered=6055 needs_copy=813150 copied=813150     recorded_cells=46683 footer_failed=0 copy_errors=0 ===`
+      — acceptance criterion (`copy_errors=0 footer_failed=0`) met exactly. Process exited `rc=0`; deployment archived
+      with `status=completed, exit_code=0`. Audit report spot-checked:
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/defi_dex_pool_swaps_source_correction.parquet`
+      confirmed present, 76.7 MiB, `Creation Time` matching the VERDICT timestamp (2026-08-04T08:53:03Z). Evidence:
+      `market-data-processing-service@db055ba` (checkpoint-write-rate-limit fix, verified working live in this VM's run
+      — dozens of "checkpoint write failed... continuing" WARNINGs absorbed, zero crashes). Step (d)
+      (`candle_orphan_sweep.py --scope`) was explicitly optional per this todo's own acceptance criteria and was not
+      run; the VERDICT + audit-report checks already satisfy the done-definition.
 
 ## Progress Log
 

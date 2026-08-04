@@ -104,11 +104,22 @@ once the corresponding todo below is actually done — not this plan.
       now-unused `source lib/launcher_common.sh` and `ON_DEMAND` var (both only consumed by the deleted body); kept a
       minimal usage-banner fallback for missing-args/missing-consolidated-launcher. 311→141 lines, `shellcheck` clean,
       `bash scripts/quality-gates.sh` green (sentinel=77c020626a02f65b0e8ab3d3fbfedcd7be29f456).
-- [ ] [SCRIPT] P3. **Delete 8 stale `features_*_service` keys from `setup-data-pipeline-vm.sh`'s `SERVICE_TARBALLS`**
+- [x] ✅ [SCRIPT] P3. **Delete 8 stale `features_*_service` keys from `setup-data-pipeline-vm.sh`'s `SERVICE_TARBALLS`**
       (post-2026-05-08 consolidation; only `features_service` is built now) and adjacently fix the stale `ml_*_service`
       keys in the same map. Repo: deployment-service. Source: `mdps_features_deadcode_consolidation_2026_07_20.md` #5.
       Done when: `SERVICE_TARBALLS` contains no `features_*_service`/`ml_*_service` key that doesn't map to a real,
-      currently-built tarball target — `bash scripts/quality-gates.sh` green.
+      currently-built tarball target — `bash scripts/quality-gates.sh` green. — deployment-service@d3b5a3f. Verified via
+      grep across every `scripts/vm/*.sh` launcher (GCP + AWS) that no live launcher sets `VM_SERVICE` to any of the 8
+      `features_*_service` or 2 `ml_*_service` keys anymore (only comments/deprecated-header prose referenced them).
+      Deleted all 10 from `SERVICE_TARBALLS`, the now-orphaned `TARBALL_DIRS` entries, the stale `features_*_service`
+      names in `MTDS_DEPENDENT_SERVICES`, the stale `ml-inference-service-code` literal in the synthetic-benchmark
+      tarball list (→ `ml-service-code`), a stale doc-comment example, and the AWS twin
+      (`setup-data-pipeline-vm-aws.sh`)'s one dead `features_sports_service` key. `quality-gates.sh` green
+      (sentinel=d3b5a3f84da65d3bf0476c80642b694eb15b418e). Filed
+      `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` for two
+      adjacent-but-out-of-scope broken launchers found while verifying (`launch-ml-training-vm.sh`,
+      `launch-prediction-pipeline-vm.sh`) — same consolidation-drift bug class, different files, needing a design
+      decision this todo didn't scope.
 - [ ] [SCRIPT] P3. **Delete 3 named MDPS one-off scripts past their `Delete-when` condition, after verifying each
       condition holds**: `reconcile_mdps_available_at_2026_05_13.py`,
       `reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py`, `reconcile_1440_nan_placeholders.py`. KEEP

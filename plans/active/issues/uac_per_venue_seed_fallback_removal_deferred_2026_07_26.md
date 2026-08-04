@@ -140,3 +140,7 @@ dangling inside a closed plan todo.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — prior list had grown to 6 plan/codex pointers with
   zero source paths; swapped in the fallback function itself + its 2 real call sites (the sole open todo wires a live
   provider into `venue_resolution.py`), kept the 3 revisit-trigger docs.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — a prior defi-tranche audit's
+  RECLASSIFY was explicitly REVERTED back to NA by the integrator over a contested reading of the 2026-07-26 operator
+  ruling's scope; per the never-re-litigate rule (citation class e) this is a standing revert ruling, not honored on a
+  fresh independent re-derivation. Unchanged since.

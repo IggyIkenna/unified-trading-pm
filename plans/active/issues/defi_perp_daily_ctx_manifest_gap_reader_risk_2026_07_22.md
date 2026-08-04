@@ -375,3 +375,7 @@ the same operator-gating precedent as RESULT 4's venue-axis finding.
 
 Full trace performed by a dispatched read-only Explore sub-agent (Sonnet); no files edited in
 instruments-service/unified-api-contracts/market-tick-data-service/features-service/strategy-service.
+
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — the only remaining open item
+  is the `[OPERATOR-DECISION] P3` todo, gated on a still-open, separately-owned `[DESIGN] P1` decision in another doc;
+  `[VERIFY]` and `[CODE]` are both already closed by citation. Doc stays `assigned_vm: NA`.

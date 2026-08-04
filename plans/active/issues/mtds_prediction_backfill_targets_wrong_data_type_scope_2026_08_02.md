@@ -175,3 +175,18 @@ for the parent-plan-side evidence. Remaining open work here is narrow: todo 3 (P
 whoever wants to close the loop.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: Classified RECLASSIFY-eligible in isolation — the sole open
+  todo ("Check whether any real downstream consumer reads `available_at` for `data_type in {trades, book_snapshot_5}`
+  ...") is a bounded, worker-determinable grep/report audit with a binary outcome, not a design decision (the doc's own
+  "Recommended decision" section already resolved the only real architecture question — by-design scope exclusion, not a
+  bug). **Conflict-check found CONFLICT, so NOT reclassified**: the SAME-DAY concurrent `/ag-closeout-audit prediction`
+  scheduled run (slot 11, ag_closeout_auditor, dispatch agt-a7e099) independently found this exact doc as its one new
+  orphan and already extracted this exact todo, verbatim, into `prediction_satellite_ao_dispatch_batch7_2026_08_04.md`
+  (`assigned_vm: planning`, `status: draft`, Source citing this doc explicitly) with a gated finalize twin
+  (`_finalize.md`, `status: active`) ready to reconcile this doc's checkbox once batch7 lands. Reclassifying this doc's
+  `assigned_vm` directly would create a second, competing dispatch surface for the identical work. Per the shared
+  conflict-check protocol, deferring to batch7 rather than guessing which vehicle should win — `assigned_vm` stays `NA`
+  here; batch7 is the correct, already-vetted path to dispatch, pending only an operator/main-agent flip from `draft` to
+  `active` (outside this audit's own mandate to perform). Doc stays NA (not because the work isn't AO-eligible — it is —
+  but because a parallel, already-conflict-checked vehicle already owns it).

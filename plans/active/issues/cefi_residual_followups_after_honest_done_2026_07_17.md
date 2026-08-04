@@ -229,7 +229,7 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Phase 0a — Contract locks (design lock, before any code)
 
-- [ ] [DOCS] P0. **Lock the two contracts**: single-instrument cefi filename stem = FULL `instrument_id`; shard atom
+- [x] ✅ [DOCS] P0. **Lock the two contracts**: single-instrument cefi filename stem = FULL `instrument_id`; shard atom
       WITH `pipeline_mode`. The contradicting codex docs get corrected in Phase 2, but the form is byte-locked now so
       writer/migration/reader agree. (repo: unified-trading-pm) **→ MERGED INTO Phase-2 §445 (2026-07-18, /autonomous
       sequencing decision):** the "lock BEFORE code" purpose is now moot — the writer (D2), all 4 migration scripts, and
@@ -241,7 +241,10 @@ pairs stay honest-unresolved (reported, never guessed).
       on-disk shapes are proven) is strictly better. The forms are already correct in code; this is a docs-consistency
       lock, not a code gate. **The single-instrument-stem vs aggregated-`underlying={U}/ticks.parquet`-bundle split MUST
       be stated explicitly** (the migration only renames single-instrument files; futures_chain/options_chain bundles
-      keep `ticks.parquet`).
+      keep `ticks.parquet`). **CLOSED 2026-08-04 (na-eligibility-audit)**: the merge target, Phase 2's "Resolve the
+      codex↔plan SSOT contradictions" item below, is itself `[x]` DONE (`unified-trading-pm@8e435b425`, both cited docs
+      — `per-asset-group-bucket-layouts.md` + `availability-manifest-and-data-status.md` — fixed) — nothing left for
+      this item to gate.
 
 ## Phase 0b — Code fixes (MUST land + DEPLOY to every writer AND every narrow-read consumer before any corpus rewrite)
 
@@ -730,3 +733,7 @@ pairs stay honest-unresolved (reported, never guessed).
 - **context-scout 2026-08-01**: populated context_scope (6 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the codex-only list for the binding
   blueprint doc, the live content-migration-fleet tracker, and two source targets (catalog reader, HL/ASTER launcher).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale item closed — Phase 0a's "Lock the two
+  contracts" checkbox was stale (its merge target, Phase 2's SSOT-contradiction item, is itself `[x]` DONE); closed with
+  citation. Doc stays NA overall — the 586-row blast-radius call, the features schema-shape gap, and the corpus-scale
+  `--apply` campaign remain genuine judgment/operator-gated work.

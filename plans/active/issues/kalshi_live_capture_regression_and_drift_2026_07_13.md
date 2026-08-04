@@ -249,7 +249,10 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
 
 - [ ] [DATA] P2. **Verify the Kalshi execution-service paper-order flow end-to-end** — still genuinely open: only the
       elections-subdomain URL swap shipped; no test/log/commit confirms the paper-order flow was ever actually verified
-      end-to-end.
+      end-to-end. **KEEP-NA-STALE-DUPLICATE (na-eligibility-audit 2026-08-04)**: this exact deliverable is owned by
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 (routed via
+      `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `[DATA] P1` todo, itself
+      `BLOCKED-OPERATOR-DECISION`) — not independently dispatchable here; do not reclassify this doc on this checkbox.
 
 ## Progress Log
 
@@ -262,3 +265,13 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped `predictions_master.md` epic for
   `execution-service/.../adapters/exchanges/kalshi.py`, the real source target of the sole open todo (verify the Kalshi
   paper-order flow end-to-end).
+
+- **na-eligibility-audit 2026-08-04 (prediction tranche)**: KEEP-NA, STALE-DUPLICATE citation fix — the sole open
+  checkbox (verify Kalshi paper-order flow end-to-end) is a verbatim duplicate of
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 (via
+  `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `[DATA] P1` todo, which states verbatim "this is
+  the ORIGINAL verification `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for"). The 2026-07-30 marker
+  already noted this as a CONFLICT in prose but never annotated the checkbox itself; annotated in place with the
+  citation now so a future run/dispatcher doesn't treat it as independent unclaimed work. Left unchecked — the
+  underlying verification genuinely hasn't happened (`BLOCKED-OPERATOR-DECISION` on the live-vs-demo-host question,
+  unresolved as of today). Not reclassified — this is a citation fix, not a scope change. Doc stays NA.

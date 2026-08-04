@@ -17,7 +17,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, blocked-queue, false-positive, safety, reconciler]
-related: [/plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
+related: [/plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
 created: 2026-08-03
 priority: P2
 parent_epic: infrastructure_master
@@ -33,7 +33,7 @@ context_scope:
   [
     agent-orchestrator/server/blocked_reconcile.py,
     /plans/archive/issues/ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
-    /plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
+    /plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md,
   ]
 ---
 

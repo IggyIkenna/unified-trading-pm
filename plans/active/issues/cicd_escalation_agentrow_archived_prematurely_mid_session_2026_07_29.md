@@ -330,3 +330,12 @@ cleanly instead of ending on an issue-doc corroboration.
   mid-flight; the declined P3 request-schema fix (`claude_session_id` on `DoneRequest` → treat "archived AND genuinely
   mine" as idempotent success) is the durable cure and is worth re-weighing against its declared cost given the
   recurrence rate.
+
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed. The sole open todo
+  remains the same explicitly-declined-for-now `/done`-endpoint identity-matching change (needs a `DoneRequest` schema
+  addition plus full slot-reuse-lifecycle tracing, touching every worker's completion path fleet-wide) — squarely
+  live-dispatch-critical-path machinery per the standing corpus ruling this tranche applies consistently (see
+  `boot_composer_misroutes...`'s marker today). The new 8th-recurrence entry above (restart-correlated) raises the fix's
+  urgency but does not change its eligibility — still a genuine design/risk call, not a bounded worker-executable todo.
+  Cross-validated: today's sibling `/ag-closeout-audit ao` batch6 run independently declined this doc into its
+  "too-large/unscoped-design" bucket.

@@ -180,3 +180,8 @@ this, each time invisible until someone reads the backlog by hand.
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (4 entries) — doc has 0 open todos
   and `archive_exempt: true` (archival routes via `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`); this list
   stays useful for whoever executes that archival.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, re-verified — citation still real
+  (`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md` confirmed `status: active`, `assigned_vm: planning`, and
+  still names this doc in its `[REVIEW] P0` archival todo). Not archived independently, per the established ruling.
+  Cross-validated: today's same-day sibling `/ag-closeout-audit ao` batch6 run reached the identical conclusion
+  independently ("already the named archival target of batch3_finalize's own gated todos").

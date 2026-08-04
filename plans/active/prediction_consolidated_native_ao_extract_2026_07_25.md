@@ -118,22 +118,28 @@ context_scope:
       pending the mid-migration leg). Source: **corrected 2026-07-25** —
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
       `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
-- [ ] [DATA] P2. **`data-pipeline-check-mtds` — pre-Phase-B baseline checkpoint (partial slice).** Same structure as the
-      `-is` todo above: run `/data-pipeline-check-mtds --asset-group prediction` ONE time now as the pre-Phase-B
-      baseline (the MTDS prediction `-test-` bucket isolation fix already shipped per the parent doc's Ground-truth
-      verdict, so this is safe to run against `-test-` buckets only); the Phase-B mid-migration spot-check leg stays
-      blocked, tracked by the original todo. Repo: market-tick-data-service (`-test-` buckets only). **Done when**: the
-      run's report path + date is recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress
-      Log, explicitly labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-mtds`
-      3x-cadence-top-up checkbox. Source: **corrected 2026-07-25** —
+- [x] ✅ [DATA] P2. **`data-pipeline-check-mtds` — pre-Phase-B baseline checkpoint (partial slice) — DONE 2026-08-04
+      (slot 4).** Ran `/data-pipeline-check-mtds --asset-group prediction --day 2026-08-02` ONE time now as the
+      pre-Phase-B baseline (the MTDS prediction `-test-` bucket isolation fix already shipped per the parent doc's
+      Ground-truth verdict, so this was safe to run against `-test-` buckets only); the Phase-B mid-migration spot-check
+      leg stays blocked, tracked by the original todo. This is a partial-parallelism SPLIT per `task_template.md` §4 —
+      the mid-migration leg stays tracked by the ORIGINAL todo, unchanged. Repo: market-tick-data-service (`-test-`
+      buckets only, via the skill). **Result**: 4/8 real `no_parquet_under` force+skip failures + 1 confirmed genuine
+      SPOT preemption (Phase 1); 2 passed/2 failed on the live leg (Phase 2) — full breakdown in the Progress Log below.
+      Also found + filed 2 checker-script operational defects (report filename collision across separate leg
+      invocations; a post-completion process hang, confirmed twice) —
+      `mtds_pipeline_e2e_check_report_overwrite_and_post_completion_hang_2026_08_04.md`. **Done when**: the run's report
+      path + date is recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress Log, explicitly
+      labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-mtds` 3x-cadence-top-up
+      checkbox (it remains open pending the mid-migration leg). Source: **corrected 2026-07-25** —
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
       `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
-- [ ] [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass (no
-      new live run needed).** (a) Search the corpus (`plans/audit/results/`, `plans/active/`, `plans/archive/`) for a
-      `/data-pipeline-reconciliation prediction` report dated BEFORE 2026-07-20 (the confirmed baseline,
-      `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`); record found-with-path or
-      confirmed-absent. (b) **This triage already found** a second, later dated pass that exists but is NOT yet cited
-      anywhere in `prediction_consolidated_closeout_2026_07_18.md`:
+- [x] ✅ [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass
+      (no new live run needed) — DONE 2026-08-04 (slot-4).** (a) Search the corpus (`plans/audit/results/`,
+      `plans/active/`, `plans/archive/`) for a `/data-pipeline-reconciliation prediction` report dated BEFORE 2026-07-20
+      (the confirmed baseline, `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`); record
+      found-with-path or confirmed-absent. (b) **This triage already found** a second, later dated pass that exists but
+      is NOT yet cited anywhere in `prediction_consolidated_closeout_2026_07_18.md`:
       `plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_24.md` — it explicitly diffs against the
       2026-07-20 baseline (reachable_coverage 95.82% vs 94.63%; F2 malformed `instrument_type` 76 `prediction` rows,
       unchanged, + 70 blank, was 30). Cite this report as the 2nd of the 3 required dated passes in the parent doc's
@@ -243,3 +249,15 @@ to every classification in this doc + the Deferred section above).
   Side findings filed to two existing issue docs rather than duplicated:
   `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (a false-positive PERMISSION_DENIED mid-run) and
   `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (extended scope to a 4th asset group + 2 more VM families).
+- **2026-08-04 (slot-4, data_engineering) — todo 4 (`/data-pipeline-reconciliation` verify predating run + cite) DONE.**
+  No new live reconciliation run — this was a doc-only discovery+citation task. (a) Corpus-wide search
+  (`plans/audit/results/`, `plans/active/`, `plans/archive/`) for a `/data-pipeline-reconciliation prediction` report
+  predating the 2026-07-20 baseline: **confirmed-absent** — only `data_pipeline_reconciliation_prediction_2026_07_20.md`
+  and `_2026_07_24.md` exist for this asset_group. (b) The 2026-07-24 pass was found ALREADY cited (by date, no explicit
+  path) in the parent doc's "Distinct Values / axis-value census" section as of the 2026-07-25 relocate-todos commit
+  (`41768ed9`) — added the explicit report path plus this todo's search result inline there. Both results also recorded
+  in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log per this todo's Done-when (its own merged Phase-B
+  `/data-pipeline-reconciliation` cadence todo stays open — the 3rd, post-Phase-B-migration pass is still genuinely
+  blocked, unaffected by this partial slice). Evidence: `prediction_consolidated_closeout_2026_07_18.md` "Distinct
+  Values / axis-value census" section + `prediction_phase_ab_residuals_2026_07_24.md` Progress Log, both this same
+  commit.

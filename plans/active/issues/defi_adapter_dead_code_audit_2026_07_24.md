@@ -478,3 +478,6 @@ files.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — dropped the archived
   `defi_governance_params_refresh_2026_06_20.md` plan reference (already fully quoted inline in this doc's own headline
   finding) to stay within the 2-6 entry budget; kept the 6 live-code targets for the 4 still-open section-6 decisions.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
+  re-read end to end, all 4 open items unchanged: wire-in-or-delete/consolidation product decisions with named
+  registry/billing/cross-repo blast radius, none worker-determinable. Doc stays `assigned_vm: NA`.

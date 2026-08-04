@@ -248,3 +248,7 @@ member, not just a retag.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-confirmed context_scope (4 entries, unchanged) -- process/audit-of-docs register, no
   code target; SKILL.md + conflict-check codex + the still-draft batch3 + linkage-gate issue remain the right reads.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the 3 remaining open todos (items 2, 4, 6) are `[DOCS]` P3
+  asset_group retags of docs owned by OTHER tranches (ao/infrastructure/tradfi), each explicitly scoped "leave to the
+  owning tranche's own audit" per the 2026-07-30 concurrent-sharded-worker rule cited in this doc's own `related`/
+  `source` — a redirect-banner case, not bounded AO-dispatchable work for this tranche.

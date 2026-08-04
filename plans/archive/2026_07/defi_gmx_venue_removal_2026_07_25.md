@@ -438,6 +438,53 @@ changelog/docstring comment describing the historical removal itself (never insi
     GMX entry. Not done this session — a prod catalogue rebuild deserves its own careful pass, not a rushed same-session
     change on top of everything else touched today.
 
+- **2026-08-04 (sub-agent dispatch, catalogue fix executed)**: root-caused further and fixed. Neither `--mode full` nor
+  `--mode incremental` would have fixed this on their own: `build_catalogue_dataframe`'s DeFi carve-out
+  (`asset_group == "defi"`) means a drop-out from the by_date snapshots NEVER auto-delists — treated as a TVL/source-set
+  capture gap, not a delisting, so even a from-scratch full rebuild keeps `available_to=None` for an instrument the code
+  stops seeing. GMX's removal was a business decision (unreliable historical funding data), not an on-chain fact, so it
+  also does not qualify for the `_load_defi_removal_map()` on-chain-absence probe (requires a positive
+  `eth_getCode`-absent confirmation — the GMX pool contract is still live). The correct, already-precedented mechanism
+  is `_REMOVED_VENUES` — the same denylist DRIFT/PACIFICA/MANGO/ZETA/FLASH were added to for identical operator-ruling
+  removals; rows for a denylisted venue are skipped entirely during by_date aggregation (never even materialise a row).
+  Added `"GMX"` + `"GMX-ARBITRUM"` (raw by_date `venue=` path segment confirmed live via GCS listing through 2026-07-22,
+  the last day a GMX-ARBITRUM by_date snapshot exists) to `_REMOVED_VENUES` — instruments-service@4a35fe53.
+  - **Live catalogue confirmed exactly 1 genuine `venue==GMX` row** (full-column substring scan, not just a venue-column
+    filter, to rule out other GMX pool instruments — the ~30 other substring hits were false positives: Solana pool
+    addresses containing "gmx" as a base58 substring, and Balancer LP-basket names listing GMX as a held token):
+    `instrument_id=0x489ee077994b6658eafa855c308275ead8097c4a`, chain=ARBITRUM, `available_from=2021-08-12`,
+    `available_to=None`, `mvp=True`. **Before: 79,036 total rows.**
+  - A local `--mode full` re-run was judged unsafe/inapplicable for this fix — both per the workspace's own
+    heavy-I/O-on-VM-only rule (2,408 by_date day-folders is a full-corpus GCS walk) and per the script's own documented
+    full-mode limitation (`_shrink_drop_diagnostics` docstring: "a `--mode full` rebuild UNDER-produces the CUMULATIVE
+    all-instruments-ever set the incremental frozen tail preserves" — a known root cause of prior shrink-guard
+    incidents, not a safe "clean re-derivation" tool for a single-row surgical fix). Went with a targeted rewrite
+    instead, using the script's OWN `promote_catalogue()` function (temp-object-first write → copy over canonical →
+    delete temp, monotonic-guard-gated) rather than a hand-rolled `gcloud storage cp`: read the live catalogue, dropped
+    exactly the 1 confirmed GMX row, called `promote_catalogue(..., allow_shrink=True, dry_run=True)` then
+    `dry_run=False`. Guard ACCEPTed cleanly on its own merits (`new=79035 >= current=79032` dedup-aware count,
+    `decision=monotonic_ok` — the `allow_shrink` override was never actually invoked). **After: 79,035 rows, promoted
+    2026-08-04T07:45:17Z.**
+  - **Verification (two independent methods, no live-manifest write, no waiting for the 01:30 UTC cron)**: (1)
+    re-downloaded the promoted live catalogue and confirmed 0 `venue==GMX` rows and 0 occurrences of the instrument_id
+    anywhere in the frame; (2) drove the REAL `enumerate_v2()`/`_enumerate_v2_defi()` functions from
+    `enumerate_expected_universe.py` directly (imported, not subprocessed) against both the OLD and NEW catalogue
+    snapshots over a 3-day window spanning today, with a synthetic `present_set=set()` to force the exact "alive AND no
+    manifest row → expected_unattempted" branch the real cron hits (no live manifest download needed — isolates the
+    catalogue-consumption path precisely) — **OLD catalogue yielded 12 GMX-referencing rows** (3 days x 4 data_types:
+    `dex_pool_state`/`dex_pool_swaps`/`position_data`/`governance_events`, matching the previously observed 4-rows/day
+    pattern exactly), **NEW catalogue yielded 0**, with total output row count dropping by exactly 12 (132,834 →
+    132,822) — confirming ONLY the GMX rows changed, nothing else was perturbed.
+  - **Shipped via the sanctioned dirty-deps direct-push carve-out** (quickmerge pre-flight blocked on a concurrent
+    agent's unrelated uncommitted WIP in `unified-api-contracts`, an OKX-SWAP venue rename —
+    `Quickmerge: direct-carveout-dirty-deps` trailer per `/codex/08-workflows/ci-cd-flow.md`). instruments-service QG:
+    5199 passed, 1 failed (`test_expected_matches_golden[cefi]`, OKX vs OKX-SWAP golden drift) — confirmed via
+    git-stash-and-rerun that this failure is pre-existing and caused by the SAME dirty UAC WIP leaking into this repo's
+    editable-path-dependency test view, unrelated to this change.
+  - **Net**: the GMX catalogue-residue root cause identified earlier this same day is now fully closed — the code-level
+    denylist prevents recurrence on any future roll-up, and the live prod catalogue is already fixed (no need to wait
+    for a future regen).
+
 ## Codex SSOTs
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- governs the GCS-purge todo.

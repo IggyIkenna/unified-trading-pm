@@ -159,3 +159,7 @@ Two independent fix directions, either or both:
   directly: `unified-trading-sa` genuinely holds `roles/compute.admin` + `roles/compute.instanceAdmin.v1` at the project
   level (confirmed via `gcloud projects get-iam-policy`) — this is conclusively an identity-selection race, never an IAM
   gap, in both independent occurrences now on record.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — brand-new doc (created 2026-08-04), 3 open `[INFRA]` todos under
+  an explicit "Recommended decision" header framing two independent fix directions as an open choice; todo 2 modifies
+  per-slot bootstrap tooling inherited by every slot at clone time, todo 1 modifies production VM-launcher scripts —
+  both are shared-blast-radius infra changes needing a direction decision first, not worker-determinable alone.

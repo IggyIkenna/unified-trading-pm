@@ -373,3 +373,6 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   spun-out or upstream context, not needed for the sole remaining open [CODE] P1 item); added
   `defi_venue_capabilities.py` (DEFI_VENUE_DATA_TYPE_CAPABILITIES — the durable HYPERLIQUID/ASTER declaration still
   needs both this and `defi_venues.py`'s ALL_DEFI_VENUES).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  the sole remaining todo (durable UAC registry declaration for HYPERLIQUID/ASTER) is still gated on the open CEFI/DEFI
+  dual-counting axis decision in a still-open sibling doc. Doc stays `assigned_vm: NA`.

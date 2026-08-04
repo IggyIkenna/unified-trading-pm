@@ -171,3 +171,10 @@ workspace).
   dispatch path via either doc — see this run's report.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the batch4 satellite-dispatch plan the
   extraction banner now points to.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
+  2026-08-02 verdict; banner and citations still accurate. **batch4 is STILL `status: draft` as of this run (stuck since
+  2026-07-31, now 4 days)** — this doc plus at least 2 siblings this same run
+  (`cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`,
+  `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`) have real, extracted,
+  ready-to-execute work sitting with no live dispatch path pending batch4's activation — flagged again in this run's
+  report per the 2026-08-02 pass's own note.

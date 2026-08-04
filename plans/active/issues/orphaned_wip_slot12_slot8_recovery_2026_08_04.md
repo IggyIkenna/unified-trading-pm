@@ -143,3 +143,12 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   state), repeated AutoSpawn respawns will keep stranding it, not fix it. **The 2nd todo's gate is therefore SATISFIED**
   — a worker should now reconcile bd0e231f per that todo (fresh successful QG to mint the missing `.qg_last_passed_sha`
   sentinel, then quickmerge). Still zero-loss (wip-preserved).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc (filed
+  ~03:33Z same day, no prior marker). All 3 open todos are bounded/mechanical git-rescue work in isolation, but todo 1
+  (the 3 slot-12 commits) is already extracted verbatim into
+  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 10, and todos 2-3 (slot-8's `bd0e231f`, slot-4's
+  `~036c568`) are explicitly listed in that same batch's own Deferred § "Conditionally gated" (their preconditions —
+  main confirming slot-8/slot-4 state — were not independently re-verifiable by that run). Per this tranche's standing
+  convention, batch6 itself stays `assigned_vm: NA` even for cleared-eligible content (see
+  `fleet_git_health_ip_185...`'s marker today for the citation). Not reclassified — would create a competing/duplicate
+  dispatch claim against batch6 once activated.

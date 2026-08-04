@@ -204,3 +204,6 @@ original audit and this measurement, not a discrepancy in method; both counts de
   `canonical_closeout_open_questions_2026_07_18.md` for
   `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`, the doc's own 2026-08-02 correction naming it
   as the actual executable-todo location.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
+  the single open todo still requires an undecided design choice (Option A subgraph augmentation vs Option B on-chain
+  RPC lookup) plus a cross-repo UAC registry addition. Doc stays `assigned_vm: NA`.

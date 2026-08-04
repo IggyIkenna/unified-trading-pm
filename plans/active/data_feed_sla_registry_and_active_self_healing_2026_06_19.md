@@ -314,3 +314,7 @@ droppability now rather than treated as still-gated.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (5 entries) -- added the UAC
   `data_freshness.py` SSOT the registry design centers on.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the vcrpy CVE-ignore-vuln item flipped DONE since the last pass
+  (archived `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`'s ARCHIVED-2026-07-27 banner confirms fleet-wide
+  closure), leaving 1 open todo: the fleet-wide msgpack >=1.2.1 bump on the last 2/20 repos, explicitly blocked on
+  foreign gates outside this plan's own repos and fix authority. `locked_by: live-defi-rollout` still applies.

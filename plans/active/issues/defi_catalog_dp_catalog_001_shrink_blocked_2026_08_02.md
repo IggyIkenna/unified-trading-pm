@@ -290,3 +290,6 @@ slow:
   nudge (not a worker-decidable action; noted for main/operator visibility only). Pinging `dp-fleet-monitor` (authoring
   slot) with the outcome and completing this one-shot escalation.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — all 3 open todos remain held
+  by the live, standing `[OPERATOR] P0` R3-relaunch gate (main's "standing escalation #1", still unresolved across 6+
+  dispatches) — nothing worker-determinable absent the operator ruling. Doc stays `assigned_vm: NA`.

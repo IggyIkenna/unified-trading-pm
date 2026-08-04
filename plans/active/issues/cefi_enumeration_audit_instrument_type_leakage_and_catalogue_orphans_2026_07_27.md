@@ -217,34 +217,34 @@ adjacent axis the same script happens to also report). **Both findings investiga
       both live, not inferred):
 
       **Class A — incomplete marker-format migration on the MANIFEST/writer side (BYBIT FUTURE, COINBASE-FUTURES
-                                                          PERPETUAL, and to a lesser extent BITGET-FUTURES PERPETUAL).** The catalogue is fully `@LIN`/`@INV` marker-format
-                                                          for these exact (venue, instrument_type) combos (BYBIT FUTURE 640/640, verified) — ruling out "stale catalogue"
-                                                          entirely. The MANIFEST, however, is a genuine MIX: BYBIT FUTURE only 248/516 distinct ids (48%) are
-                                                          marker-format, the rest are bare-wire symbols (`ADAUSDT`, `BTC`) or a raw-date dated-future convention
-                                                          (`BYBIT:FUTURE:BTC-01DEC23`) that never went through ANY marker migration — despite BYBIT being explicitly
-                                                          in-scope for `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, that migration evidently didn't cover this
-                                                          raw-date symbol shape. COINBASE-FUTURES PERPETUAL: 361/584 (62%) marker-format, rest bare `-PERP`-suffixed
-                                                          symbols (`1000BONK-PERP`) — COINBASE-FUTURES was never in scope for ANY marker migration (outside the
-                                                          2026-07-09 script's 6-venue list), so this is an un-started migration, not an incomplete one. BITGET-FUTURES
-                                                          PERPETUAL: 580/627 (92.5%) marker-format, smaller but same-class gap, also never in scope for a migration.
-                                                          **This class is a genuine, real, unresolved defect** — these ids will keep orphaning until a proper
-                                                          backup-first marker migration (matching the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`
-                                                          pattern) covers BYBIT's raw-date shape plus COINBASE-FUTURES/BITGET-FUTURES from scratch.
+                                                              PERPETUAL, and to a lesser extent BITGET-FUTURES PERPETUAL).** The catalogue is fully `@LIN`/`@INV` marker-format
+                                                              for these exact (venue, instrument_type) combos (BYBIT FUTURE 640/640, verified) — ruling out "stale catalogue"
+                                                              entirely. The MANIFEST, however, is a genuine MIX: BYBIT FUTURE only 248/516 distinct ids (48%) are
+                                                              marker-format, the rest are bare-wire symbols (`ADAUSDT`, `BTC`) or a raw-date dated-future convention
+                                                              (`BYBIT:FUTURE:BTC-01DEC23`) that never went through ANY marker migration — despite BYBIT being explicitly
+                                                              in-scope for `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, that migration evidently didn't cover this
+                                                              raw-date symbol shape. COINBASE-FUTURES PERPETUAL: 361/584 (62%) marker-format, rest bare `-PERP`-suffixed
+                                                              symbols (`1000BONK-PERP`) — COINBASE-FUTURES was never in scope for ANY marker migration (outside the
+                                                              2026-07-09 script's 6-venue list), so this is an un-started migration, not an incomplete one. BITGET-FUTURES
+                                                              PERPETUAL: 580/627 (92.5%) marker-format, smaller but same-class gap, also never in scope for a migration.
+                                                              **This class is a genuine, real, unresolved defect** — these ids will keep orphaning until a proper
+                                                              backup-first marker migration (matching the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`
+                                                              pattern) covers BYBIT's raw-date shape plus COINBASE-FUTURES/BITGET-FUTURES from scratch.
 
-                                                          **Class B — catalogue-completeness gap, format already fully converged both sides (KRAKEN-FUTURES PERPETUAL,
-                                                          HYPERLIQUID PERPETUAL).** Catalogue: KRAKEN-FUTURES PERPETUAL 501/501 marker-format (100%). Manifest:
-                                                          562/568 distinct ids (99%) marker-format. Both sides are essentially fully converged on FORMAT, yet the
-                                                          manifest still has ~60 more distinct ids than the catalogue carries for this combo (HYPERLIQUID PERPETUAL:
-                                                          345/346 manifest marker-format, catalogue not independently re-checked but the near-100% manifest convergence
-                                                          rules out a format explanation). This is NOT a marker-format problem — it's a genuine catalogue-completeness
-                                                          gap: real, captured, correctly-formatted instruments that were never added to the reference-data catalogue
-                                                          builder's coverage for these 2 venues (same class as the DERIBIT OPTION 93.8% finding's alternate hypothesis
-                                                          (a), just confirmed here rather than superseded by the id-form explanation).
+                                                              **Class B — catalogue-completeness gap, format already fully converged both sides (KRAKEN-FUTURES PERPETUAL,
+                                                              HYPERLIQUID PERPETUAL).** Catalogue: KRAKEN-FUTURES PERPETUAL 501/501 marker-format (100%). Manifest:
+                                                              562/568 distinct ids (99%) marker-format. Both sides are essentially fully converged on FORMAT, yet the
+                                                              manifest still has ~60 more distinct ids than the catalogue carries for this combo (HYPERLIQUID PERPETUAL:
+                                                              345/346 manifest marker-format, catalogue not independently re-checked but the near-100% manifest convergence
+                                                              rules out a format explanation). This is NOT a marker-format problem — it's a genuine catalogue-completeness
+                                                              gap: real, captured, correctly-formatted instruments that were never added to the reference-data catalogue
+                                                              builder's coverage for these 2 venues (same class as the DERIBIT OPTION 93.8% finding's alternate hypothesis
+                                                              (a), just confirmed here rather than superseded by the id-form explanation).
 
-                                                          **Not fixed in this pass** — tracing (this todo's actual scope) is complete; the fix is separate, properly
-                                                          scoped follow-up work (2 new todos below), not a quick inline change, matching how the original 2026-07-09/07-10
-                                                          migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
-                                                          Repos: instruments-service, market-tick-data-service.
+                                                              **Not fixed in this pass** — tracing (this todo's actual scope) is complete; the fix is separate, properly
+                                                              scoped follow-up work (2 new todos below), not a quick inline change, matching how the original 2026-07-09/07-10
+                                                              migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
+                                                              Repos: instruments-service, market-tick-data-service.
 
 - [ ] [DATA] P2. Write + backup-first apply a marker-format migration covering: BYBIT's raw-date dated-future symbol
       shape (`BYBIT:FUTURE:<SYM>-<DDMMMYY>` with no `@INV`/`@LIN` marker — the 2026-07-09 migration's regex evidently
@@ -288,3 +288,6 @@ adjacent axis the same script happens to also report). **Both findings investiga
   than prose. Restored to the standard 6-space list continuation; text content unchanged.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 4) — added `cefi_satellite_ao_dispatch_batch5`,
   the plan now carrying the extracted P3 todo verbatim.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale items — reaffirms the 2026-08-02
+  verdict (P3 citation banner still accurate; P2 stays KEEP-NA valid on the 2026-07-30 ruling), no content change since
+  besides the context-scout refresh.

@@ -99,3 +99,7 @@ not a code defect.
 - **context-scout 2026-08-03**: populated context_scope (4 entries) — the two SSOTs define the existing §8b
   evidence-backing contract this issue asks to extend, the QG script is the machine enforcer that would grow a
   prod-mutation branch, and the cited prediction incident doc is the precedent making the stakes concrete.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — brand-new doc; the sole open todo is explicitly `[OPERATOR]`-
+  tagged, a standards/scope-change ruling request (whether to extend PLAN_FORMAT.md §8b evidence-backing to prod
+  data-mutation completions) consolidating 3 independent review-flagged instances — a genuine policy decision, not a
+  worker-determinable fact.

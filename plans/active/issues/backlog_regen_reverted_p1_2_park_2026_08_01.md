@@ -154,3 +154,11 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   `p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` as the first entry: that sibling doc already reached a
   conclusive root-cause (this is NOT a `backlog_regen_drops_handtuned_prereqs`-class regression) and this doc's item 1
   duplicates its still-open `[OPERATOR]` todo verbatim — a worker must read it before acting here.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-verified against current state
+  (only 2 open items now; item 2 was closed today by the same-day `/ag-closeout-audit ao` run, citing the sibling doc's
+  root-cause, consistent with the 2026-08-03 marker's own prediction that item 2's premise was "likely moot"). Item 1
+  ([OPERATOR] P0, re-apply the park) stays a genuine operator-only backlog.yaml write and remains a duplicate claim
+  against `p1_2_backlog_hand_park_did_not_persist_2026_07_31.md`'s own still-open `[OPERATOR]` todo (also independently
+  listed operator-gated by batch6). Item 3 ([SCRIPT] P2, "consider a standing assertion...") remains an unscoped design
+  fork — repo ownership (agent-orchestrator vs. unified-trading-pm) and mechanism (hygiene sweep vs. periodic check)
+  both undecided; also independently declined by batch6 as "an unscoped design fork." Not reclassified.

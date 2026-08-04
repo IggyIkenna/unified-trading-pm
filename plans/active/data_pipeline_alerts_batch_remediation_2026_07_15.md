@@ -126,3 +126,6 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (5 entries, corrects the prior marker's
   stale count) -- unchanged; both remaining open todos (a docs-fix + a real-time observation window) are non-code, no
   source path applies.
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the only change since 2026-07-30 is a frontmatter `asset_group`
+  retag ([meta] -> [cross-cutting], 2026-07-31, confirmed a genuine mistag correction with no todo/content change).
+  Explicit operator instruction to run locally/autonomously still governs; both remaining open todos unchanged.

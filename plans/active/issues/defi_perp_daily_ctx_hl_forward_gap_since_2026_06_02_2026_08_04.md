@@ -128,3 +128,6 @@ is the open question below.
 
 - **2026-08-04**: Filed while executing `defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo -010 (manifest backfill
   for the historical `perp_daily_ctx` corpus). No code changed here — pure investigation + issue filing.
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — both open todos are an
+  explicit design/ownership decision (pick among 3 unnamed fix approaches) that the doc itself says must not be
+  dispatched as a bare AO todo until an operator/design pass names the approach. Doc stays `assigned_vm: NA`.

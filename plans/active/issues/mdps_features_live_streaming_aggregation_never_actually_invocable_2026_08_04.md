@@ -258,8 +258,13 @@ OOM if left running). The named successor is this issue doc's Todos below.
       pre-existing fix in `alerting-service/alert_subscriber.py` (`dp_event_pubsub_delivery_gap_2026_06_22.md`).
       Regression test added (`test_live_data_source_stream_recovers_from_pull_failure`); full quality-gates.sh green on
       this SHA.
-- [ ] [BACKEND] P3. Fix `commodity`'s `publish_signal`:
-      `[MEDIUM] validation error: asdict() should be called on     dataclass instances`. Repo: features-service.
+- [x] ✅ [BACKEND] P3. Fix `commodity`'s `publish_signal`:
+      `[MEDIUM] validation error: asdict() should be called on     dataclass instances`. Repo: features-service. —
+      features-service@9305dce3: root cause was `_serialise()` calling `dataclasses.asdict(signal)` on
+      `CommoditySignal`, which is a Pydantic `BaseModel`, not a dataclass — swapped to `signal.model_dump()`. Updated
+      `tests/commodity/unit/test_cli.py::TestSerialise` (previously patched the now-removed `asdict` import) to patch
+      `CommoditySignal.model_dump` instead, and added a real (unmocked) `_serialise` test in
+      `tests/commodity/unit/test_signal_publisher.py`. Full quality-gates.sh green on this SHA.
 - [ ] [OPERATOR] P1. **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi
       (3,535 shards — infeasible as one-process-per-shard on any single VM).** The 2026-07-29 topology ruling (option
       (a): one OS process per `(venue, data_type)` MDPS shard) does not scale past TradFi's 14 shards. Real options: (i)
@@ -293,3 +298,6 @@ OOM if left running). The named successor is this issue doc's Todos below.
 - **2026-08-04 (slot-3, backend_engineer)**: shipped todo 3 (features-service@aa5633f2) — fixed calendar's dead
   mode-dispatch (LiveHandler was unreachable from the real ServiceBootstrap entry point) and commodity's LiveHandler
   (never implemented as a loop — one-shot pass masquerading as live). See todo 3 above for full root-cause detail.
+- **2026-08-04 (slot-8, backend_engineer)**: shipped the `commodity.publish_signal` P3 todo (features-service@9305dce3)
+  — `_serialise()` called `dataclasses.asdict()` on `CommoditySignal`, a Pydantic `BaseModel`; swapped to
+  `signal.model_dump()` and fixed the two test files that assumed the old `asdict` import.

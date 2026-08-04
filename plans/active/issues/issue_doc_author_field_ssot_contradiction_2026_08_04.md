@@ -68,11 +68,12 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DOC] P3. **Fix the mis-cited source** in the 2 mutable places `ebc2075b9` landed (the commit message is
+- [x] ✅ [DOC] P3. **Fix the mis-cited source** in the 2 mutable places `ebc2075b9` landed (the commit message is
       immutable, leave it): the code comment in `scripts/docs/fix_frontmatter.py` and the regression-test docstring,
       changing "RULES.md §4.5 (Findings Closure)" → "worker.md §4.5 (FINDINGS CLOSURE, HARD RULE 2026-06-10)". Grep the
       repo for the literal `RULES.md §4.5` / `RULES.md 4.5` / `Findings Closure` strings to catch every landing site;
       done-when: no code/test/comment cites a non-existent RULES.md §4.5 for the author rule. Repo: unified-trading-pm.
+      — unified-trading-pm@9eddba7f7.
 - [ ] [SCRIPT] P3. **Reconcile the SSOT to match worker.md §4.5's existing HARD RULE (default = option a, the
       correctness-preserving path).** Add `author` to the issue spec so the schema enforces what worker.md already
       mandates: (i) add `author` to `scripts/docs/docspec.py` `PER_TYPE["issue"]` (required, matching worker.md §4.5 —
@@ -104,3 +105,11 @@ depends_on: []
   `[DOC]`/`[SCRIPT]` P3 todos (`assigned_vm: planning`) — both are deterministic, scoped, AO-eligible fixes with stated
   done-whens; the SSOT-reconciliation default is option (a) (make the schema match worker.md's existing HARD RULE),
   option (b) gated on positive evidence of deliberate exclusion. Did NOT revert `ebc2075b9` (the fix is correct).
+- **2026-08-04 (slot-9)** — Todo 1 done. Fixed the mis-cited source in the 2 mutable landing sites: the comment in
+  `scripts/plan-hygiene/fix_frontmatter.py` (~line 62) and the docstring in
+  `tests/unit/test_fix_frontmatter_issue_author_field.py` (line 7), both changed from "RULES.md § 4.5 (Findings
+  Closure)" to "worker.md § 4.5 (FINDINGS CLOSURE, HARD RULE 2026-06-10)". Grepped the repo for the literal strings
+  post-fix — zero remaining `.py`/code/test hits citing the non-existent RULES.md §4.5; other `.md` hits are
+  pre-existing unrelated issue docs and the immutable `ebc2075b9` commit message itself, out of this todo's scope. QG
+  green (sentinel `9eddba7f7`), shipped via quickmerge — unified-trading-pm@9eddba7f7. Todo 2 (the SSOT reconciliation)
+  remains open, untouched.

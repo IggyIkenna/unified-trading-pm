@@ -125,8 +125,13 @@ reasoning above.
 ## Follow-up todos (once the operator decides)
 
 - [ ] [OPERATOR] P1. Decide convention A vs B vs C-first for OKX-FUTURES canonical instrument_id (this doc).
-- [ ] [SCRIPT] P1. Whichever side loses: implement the reverse-mapper/builder fix in that repo (MTDS okx_futures_ws.py
-      for A, instruments-service tardis/parsing.py OKX branch for B) + update the stale module docstring claim.
+- [ ] [SCRIPT] P1. **CORRECTED 2026-08-04 (na-eligibility-audit) — the "whichever side loses, implement" framing is
+      stale.** Option A's reverse-mapper fix already shipped (`market-tick-data-service@8a6bbc97`, 2026-07-30 22:55 UTC
+      — landed BEFORE this operator decision, without the sign-off `[OPERATOR] P1` above requires). Remaining scope,
+      either branch: (a) reconcile the module docstring's now-conflicting "no marker" narrative in `okx_futures_ws.py`
+      against what actually shipped; (b) IF the operator instead ratifies Option B, revert this already-shipped change
+      and implement Option B in instruments-service's `tardis/parsing.py` OKX branch instead (the harder path now that A
+      is live). Not closed — real work remains on both branches.
 - [ ] [SCRIPT] P2. Add a live-vs-batch OKX-FUTURES instrument_id parity test (mirroring the existing
       BINANCE-FUTURES/KRAKEN-FUTURES parity tests) so this class of drift can't silently regress again.
 - [ ] [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe
@@ -155,3 +160,8 @@ reasoning above.
   data-capture code; operator should see this doc's `[OPERATOR] P1` item with the above context, not the original
   "nothing shipped yet" framing.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale items — reaffirms the 2026-08-01
+  verdict (nothing has changed in the doc since besides the context-scout refresh) and actually applies the correction
+  that entry only described in prose: rewrote `[SCRIPT] P1`'s text in place (still open — docstring reconciliation +
+  contingent Option-B revert remain live work). `[OPERATOR] P1` stays open and NA (genuine, now higher-stakes
+  ratification call); `[SCRIPT] P2`/`[RESEARCH] P2` unaffected.

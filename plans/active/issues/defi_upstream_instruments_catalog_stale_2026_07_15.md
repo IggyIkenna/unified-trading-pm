@@ -530,3 +530,7 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries, unchanged) — all resolve; still the right minimal
   set for the sole remaining [DESIGN] P3 nice-to-have (catalogue-completion-signal retry-sweep).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
+  sole remaining item ([DESIGN] P3, IS-catalogue completion-signal retry-sweep) stays an explicit lower-priority design
+  task with no concrete done-when and ambiguous ownership; all other items already done/resolved with evidence. Doc
+  stays `assigned_vm: NA`.

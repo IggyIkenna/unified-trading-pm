@@ -16,7 +16,7 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [quality-gates, ratchet, ldr_qg_failure, repo-blocker, market-tick-data-service]
-related: [/plans/active/issues/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
+related: [/plans/archive/2026_08/tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md]
 created: 2026-08-03
 priority: P1
 parent_epic: mtds_mdps_master

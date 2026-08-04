@@ -125,6 +125,13 @@ rows) is real but small and not urgent.
 - [x] [DOCS] P3. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md, see that doc for
       execution]** Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50%
       (1.33M)" figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
+
+> **📤 THE OPEN P3 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
+> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` `[DATA] P2` (`status: active`,
+> `assigned_vm: planning`) carries the same 9,743-row backfill + 7-row bare-`OKX` reclassify verbatim (same row split,
+> same framing, same done-when). Leave `assigned_vm: NA` here — flip this checkbox only by citing batch3's execution
+> once it lands, not independently.
+
 - [ ] [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no longer
       a cross-tranche operator-decision-gated conflict with
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
@@ -194,3 +201,6 @@ rows) is real but small and not urgent.
   already-`[x]`'d `[DOCS] P3` sibling todo's pattern ("already covered by ...batch3..., see that doc for execution").
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated — reaffirms the 2026-08-01
+  verdict (unchanged since) and actually applies the citation banner above the open `[DATA] P3` checkbox that entry only
+  described in prose. `assigned_vm` left `NA`.

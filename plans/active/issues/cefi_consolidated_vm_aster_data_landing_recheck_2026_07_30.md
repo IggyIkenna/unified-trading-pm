@@ -165,3 +165,5 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries, was 4) — added `cefi_satellite_ao_dispatch_batch5`
   (now the live claim for todo 3) and the real ASTER-liquidations connector source
   (`live/connectors/aster_book_liq_ws.py`) named in the 2026-08-02 investigation append.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
+  2026-08-02 verdict, banner and citations still accurate, no content change since besides the context-scout refresh.

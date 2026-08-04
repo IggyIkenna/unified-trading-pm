@@ -111,6 +111,20 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §G1). The bounded window seeds both the
 > > alive-no-data `expected_unattempted` cells (reason="") AND the lifecycle-boundary
 > > `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` `empty_confirmed` cells the v1 venue-grain pass did not reach.
+> >
+> > **Seed and capture must canonicalize identically, or dedup silently breaks (found 2026-08-04,
+> > `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`).** The manifest consolidator's dedup key
+> > (`unified_trading_library.manifest_consolidator._dedup_key_sql`) is a plain equality match on every dedup column
+> > including `instrument_type` — no `UPPER()`/`LOWER()` normalization. When the 2026-07-27 UTL casing-canon seam
+> > (`canonicalize_manifest_instrument_type`) started canonicalizing tradfi/cefi `instrument_type` to UPPERCASE at the
+> > writer's `record_captured`/`record_empty` seam, `enumerate_expected_universe.py`'s own seeding helpers
+> > (`_canonical_writer_instrument_type`, `_rollup_present_bundle_grain`) kept emitting the OLD lowercase grain — a
+> > newly-seeded `expected_unattempted` cell could never be superseded by its real (now-uppercase) capture, silently
+> > deflating honest-coverage. Fixed by routing the seeder's grain through the SAME canon function the writer calls
+> > (`instruments-service@47a631ff`, `@d79b9d74`) instead of re-deriving casing independently. **The general rule: any
+> > manifest-column canonicalization applied at the writer seam must be applied through the identical shared function at
+> > every OTHER place that materializes a row for the same shard atom (seeders, backfills, rebuild scripts) — a second
+> > hand-rolled implementation of "canonical" WILL drift from the first.**
 >
 > Every downstream consumer — the data-status coverage summary + drilldown, strategy/features pre-flight — **READS**
 > `capture_status` and the honest denominator

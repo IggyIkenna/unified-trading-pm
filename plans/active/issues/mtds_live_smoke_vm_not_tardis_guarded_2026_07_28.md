@@ -176,3 +176,5 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   the batch5 dispatch plan that now owns the only remaining open item (P3), reflecting the 2026-08-02 outcome; dropped
   `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` and `tardis-concurrency-guard.sh` (relevant to the original
   finding, less so now that P1/P2 resolved not-a-bug).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
+  2026-08-03 citation; sole open P3 item stays tracked as `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2.

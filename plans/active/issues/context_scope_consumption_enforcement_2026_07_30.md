@@ -143,3 +143,7 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   LOCAL-vs-AO track question; todo 2 is gated behind todo 1 shipping. In scope this run only because of the 2026-08-01
   prose correction (`307b55bd8`) and the 2026-08-02 retag sweep — neither changed the open todos.
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (4 entries).
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed. Todo 1 still requires an
+  operator pick among the 3 named consumption-mechanism design options plus the ask-before-creating LOCAL-vs-AO track
+  call; todo 2 stays gated behind it. Independently cross-validated: the same-day sibling `/ag-closeout-audit ao` batch6
+  run (`ao_satellite_ao_dispatch_batch6_2026_08_04.md`) also declined this doc as operator-gated. No content drift.

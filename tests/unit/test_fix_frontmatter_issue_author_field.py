@@ -4,7 +4,7 @@ plans/active/issues/fix_frontmatter_strips_required_author_field_from_issue_docs
 `DEPRECATED_PLAN_FIELDS` includes `author` (a legitimate deprecated field for `doc_type: plan`
 docs, whose canonical schema has no `author` field), but `remove_deprecated_fields()` was applied
 unconditionally to every doc under `plans/active/` — including `plans/active/issues/*.md` — even
-though `unified-trading-pm/agents/RULES.md` § 4.5 "Findings Closure" REQUIRES `author` on every
+though `unified-trading-pm/agents/worker.md` § 4.5 "FINDINGS CLOSURE" (HARD RULE 2026-06-10) REQUIRES `author` on every
 `doc_type: issue` doc. `fix_active_plan()` now gates the removal set on the doc's own `doc_type`.
 
 Guards, most-important first:

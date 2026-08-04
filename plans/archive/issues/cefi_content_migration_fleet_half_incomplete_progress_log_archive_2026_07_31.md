@@ -44,6 +44,14 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-04** — pure verbatim Progress-Log relocation appendix, zero checkboxes, zero prose remaining
+> work (confirmed full end-to-end re-read, 2026-08-01 and 2026-08-04 na-eligibility-audit passes agree). Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-immediately rule, independent of its
+> still-open parent `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (a companion appendix does not need its
+> parent done first). No deferrals to migrate. Corpus referrers fixed in the same commit:
+> `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`, `cefi_satellite_ao_dispatch_batch7_2026_08_03.md`,
+> `zero_checkbox_sweep_all_tranches_2026_07_31.md`.
+
 # Archived Progress Log detail: cefi content-migration fleet, 2026-07-26 → 2026-07-30T17:53Z
 
 This is a pure archival relocation of the parent doc's own text — no summarization, no rewording. See the parent doc
@@ -433,3 +441,5 @@ cause + fix shipped" section, and the continued Progress Log (2026-07-30T19:15Z 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (2 entries) — body unchanged (pure archival appendix, 0
   checkboxes), existing list still accurate.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): ARCHIVE — confirmed the 2026-08-01 verdict, executed
+  the deferred 6-step ritual (ARCHIVED banner added, 3 corpus referrers fixed, moved to `plans/archive/issues/`).

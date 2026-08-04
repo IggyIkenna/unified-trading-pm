@@ -10,7 +10,7 @@ summary: >-
   the 60s timeout fires and STEP 5.83 is treated as a HARD FAIL even though the check itself is logically green
   (`[check_adapter_contract_regression] OK`). This produced 2 of 4 full quality-gates.sh runs failing on an unrelated
   diff (features-service orchestrator.py pipeline_mode fix) purely due to this flake.
-status: open
+status: resolved # (was: open) 2026-08-04 -- all 3 todos done, doc archived per the 6-step ritual
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -54,6 +54,12 @@ context_scope:
 ---
 
 # QG STEP 5.83 (adapter contract-call regression ratchet) flakes under fleet-wide shared-host contention
+
+> **✅ ARCHIVED 2026-08-04 — all 3 todos done, doc unlocked.** Todo 1 (raise `run_timeout` 60→300s, all repos) done
+> 2026-07-28; todo 3 (CI single-tenancy check) done 2026-07-30; todo 2 (I/O-light scanner walk) confirmed already
+> resolved by `unified-trading-pm@91e9865b9` (2026-07-27) — verified live 2026-08-04 at 0.9s real vs. the doc's
+> originally-measured 2m21s. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## What was found
 
@@ -116,9 +122,18 @@ an adapter/handler file.
       last remaining repo: `market-tick-data-service@57dfccc7` (same fix, same commit message). Verified via corpus-wide
       grep for `run_timeout.*no_adapter_contract_regression` across every repo in the workspace — no other copies remain
       at 60s.
-- [ ] 2. [INFRA] P3. Consider whether `no_adapter_contract_regression.sh`'s per-file walk can be made faster/more
-      I/O-light (e.g. operating on `git     diff --name-only` against the baseline commit instead of a broader
-      filesystem walk, if it isn't already) so the check is less exposed to contention regardless of the timeout value.
+- [x] ✅ 2. [INFRA] P3. **ALREADY DONE — resolved by `unified-trading-pm@91e9865b9` (2026-07-27), same day this doc was
+      filed, just never looped back to check off this todo.** `check_adapter_contract_regression.py`'s non-regenerate
+      (CI/QG) path calls `read_baseline_files()` (added in that commit), which reads ONLY the ~330 baseline-listed files
+      by direct path — not `scan_workspace()`'s full per-repo `rglob("*.py")` walk (that full walk is now used ONLY for
+      the explicit, non-timed, operator-invoked `--regenerate-baseline` path). This is the exact fix the todo asked for
+      (a narrower-than-full-walk read), achieved more directly than the suggested `git diff --name-only` approach —
+      direct reads of a fixed, known file list rather than diffing against a baseline commit. **Verified live
+      2026-08-04**: `time bash unified-trading-pm/scripts/qg/no_adapter_contract_regression.sh <workspace>` →
+      `real 0m0.919s` / `user 0m0.156s` (328 baselined files, OK), vs. the doc's own originally-measured
+      `real     2m21.478s` for the pre-fix full-workspace walk under contention — a ~150x reduction, leaving enormous
+      headroom under the todo-1-raised 300s timeout even under heavy shared-host contention. No further code change
+      needed.
 - [x] 3. [INFRA] P3. **DONE 2026-07-30 — CI is NOT single-tenant; the fix already covers it.** Confirmed
       `quality-gates-v2.yml`'s `qg-slices` job runs the SAME `scripts/quality-gates.sh` file todo 1 already fixed (no
       separate CI-side invocation or CI-only timeout override exists for this step) — so there is no CI-vs-local split

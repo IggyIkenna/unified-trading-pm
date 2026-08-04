@@ -169,15 +169,39 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Todos
 
-- [ ] [CODE] P2. **Retire the `dex_pools` / `dex_swaps` SchemaContract keys in `_defi_v2_contracts.py`** (finding 6,
-      added 2026-07-31). `unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py:470-471`
-      still registers `("defi", "pool", "dex_pools")` and `("defi", "pool", "dex_swaps")`, but those data_type names
-      were RETIRED and collapsed to `dex_pool_state` / `dex_pool_swaps` at every layer (operator 2026-06-01, SSOT
+- [x] ✅ [CODE] P2. **Retire the `dex_pools` / `dex_swaps` SchemaContract keys in `_defi_v2_contracts.py`** (finding 6,
+      added 2026-07-31) — shipped `unified-api-contracts@aeb580ae` + `market-tick-data-service@59ce1129` (both verified
+      on `origin/live-defi-rollout`).
+      `unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py:470-471` still registered
+      `("defi", "pool", "dex_pools")` and `("defi", "pool", "dex_swaps")`, but those data_type names were RETIRED and
+      collapsed to `dex_pool_state` / `dex_pool_swaps` at every layer (operator 2026-06-01, SSOT
       [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md)). The canonical key
-      `("defi", "pool", "dex_pool_state")` DOES exist in `internal/schemas/contracts.py:1046`, so this is dead
+      `("defi", "pool", "dex_pool_state")` DOES exist in `internal/schemas/contracts.py:1046`, so this was dead
       dual-registration rather than a live lookup break — but it is exactly the declared-vs-real registry drift this
-      issue is about. Done-when: the two retired keys are gone (or explicitly commented as legacy-only) and no consumer
-      resolves a defi pool contract by the retired name.
+      issue is about. **Fix**: deleted both `SchemaContract` defs (`DEFI_POOL_DEX_POOLS`/`DEFI_POOL_DEX_SWAPS`), their
+      now-unused `_UNIV3_VENUES` helper, the two `CONTRACT_REGISTRY` entries, and the `contracts.py` re-exports +
+      `__all__` entries (no shim — per "delete deprecated code"). Grep-verified 0 remaining code consumers of either
+      symbol/key; the last live registration of the banned `dex_pools`/`dex_swaps` aliases for `instrument_type=pool` is
+      gone. Also fixed the one adjacent dangling reference the deletion created: `market-tick-data-service`
+      `solana_defi_amm.py` comments named the now-deleted `DEFI_POOL_DEX_POOLS` — retargeted to a neutral "Solana
+      pool-state SchemaContract" description (comment-only). QG green on both repos (sentinel-verified). Surfaced one
+      adjacent, out-of-scope drift (Solana pool contracts still keyed on the retired `dex_pools` data_type) — filed as
+      the follow-up todo below rather than absorbed here.
+
+- [ ] [CODE] P2. **Audit whether the Solana pool `data_type="dex_pools"` registrations are dead or a live drift**
+      (surfaced 2026-08-04 while shipping finding 6).
+      `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py` still keys
+      `("defi", "solana_vault", "dex_pools")` → `DEFI_SOLANA_VAULT_DEX_POOLS` and
+      `("defi", "solana_amm_pool", "dex_pools")` → `DEFI_SOLANA_AMM_POOL_DEX_POOLS` on the RETIRED `dex_pools`
+      data_type, and `unified_api_contracts/events/sink_matrix.py:82-83` (`("defi", "dex_pools")` /
+      `("defi", "dex_swaps")`) + `unified_api_contracts/registry/schema_spec.py:331,337` (`data_type="dex_pools"` /
+      `"dex_swaps"`) carry them too — yet the Solana handlers write `data_type=dex_pool_state` (per
+      `market-tick-data-service` `solana_defi_amm.py` module header + SSOT
+      [`/codex/02-data/defi-canonical-naming-ssot.md`](/codex/02-data/defi-canonical-naming-ssot.md): `dex_pool_state`
+      is the EVM+Solana union). Done-when: confirm via live manifest / writer-const check whether any consumer actually
+      resolves these `dex_pools`-keyed Solana contracts; if dead, retire them the same way finding 6 was; if a live
+      `dex_pool_state` lookup would miss its contract, add the canonical `dex_pool_state`-keyed entries instead. (repo:
+      unified-api-contracts)
 
 - [x] [CODE] P1. **Fix the live CME/ICE cell** (finding 1) — shipped `unified-api-contracts@fa9cece5`
       (`origin/live-defi-rollout`, verified post-push): `valid_data_types_for_venue_instrument_type` now actually uses

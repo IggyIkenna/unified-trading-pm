@@ -538,3 +538,6 @@ start.**
   `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4a (fingerprint cross-referencing, applies to the
   scheduled sweep too) and a `PLAN_FORMAT.md` `context_scope` comment pointing here. (repo: unified-trading-pm,
   docs-only, no code changed)
+- **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — this IS the plan-authoring template/guide itself (own banner
+  above: "This template is a LOCAL doc (not ingested)"), 0 tracked `- [ ]` todos. Structurally never AO-dispatchable and
+  never archivable while it remains the live authoring SSOT every plan/agent cites.

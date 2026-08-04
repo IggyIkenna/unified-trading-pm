@@ -126,3 +126,7 @@ context_scope:
 - **context-scout 2026-08-03**: re-verified context_scope, no content change (3 entries — the 2026-08-01 marker
   undercounted; list already carries the origin plan, the batch2 doc that scoped SUSHISWAP out, and the real
   `defi_venue_capabilities.py` registry source).
+- **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA, valid — re-read end to end; both P3
+  todos remain closed with hard evidence, the sole open checkbox (SUSHISWAP classic-vs-V3 venue-attribution) is still an
+  undecided data-semantics call per the doc's own text and `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s explicit
+  out-of-scope carve-out. Doc stays `assigned_vm: NA`.

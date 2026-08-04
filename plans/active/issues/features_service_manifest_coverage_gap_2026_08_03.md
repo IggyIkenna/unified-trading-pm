@@ -27,7 +27,7 @@ tags: [data-correctness, features, manifest-completeness, orphan-real, honest-ab
 related:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-08-03"
@@ -51,7 +51,7 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /codex/02-data/orphan-object-detection.md,
     features-service/scripts/feature_orphan_sweep.py,
   ]

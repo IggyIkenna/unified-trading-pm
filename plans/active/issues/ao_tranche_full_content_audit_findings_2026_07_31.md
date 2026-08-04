@@ -157,3 +157,7 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   instruction not to read or touch that file (under active concurrent edit by a different session).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries, unchanged) — all still resolve; this is a
   code-free tracker/audit-findings doc (no source-code target applies) so the codex+plan-doc list stands.
+- **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed, no content change (still
+  4 open todos: §1/§2 are explicit `[OPERATOR]` rulings, §3 self-states it needs a human read, §4 is the lone mechanical
+  item but the doc stays whole-NA since `assigned_vm` is doc-granular). Cross-validated: the same-day sibling
+  `/ag-closeout-audit ao` batch6 run also declined this doc as operator-gated.
