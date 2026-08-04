@@ -885,7 +885,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 83.65,
         "large_file_count": 0,
@@ -1109,7 +1109,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "warn_file_count": 0,
@@ -2195,8 +2195,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.73.1.dev2+ge4ecd8804",
-      "published_at": "2026-08-04T15:04:17Z",
+      "version": "0.73.1.dev3+g55941b776",
+      "published_at": "2026-08-04T21:15:45Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
