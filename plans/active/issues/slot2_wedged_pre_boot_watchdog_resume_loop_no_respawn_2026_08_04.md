@@ -1,0 +1,95 @@
+---
+doc_type: issue
+title:
+  "Slot 2 wedged 1.5h+ in a watchdog resume-kick loop: tmux_alive=true but worker_alive=false/phase=pre_boot — the
+  liveness watchdog keeps sending heartbeat-resume kicks instead of escalating to a clean kill+respawn, so dispatch
+  never routes it a task"
+summary: >-
+  Review (agt, msgs #3651 tick-39 then corrected #3653 tick-40, 2026-08-04 ~02:42Z) found AO slot 2 genuinely wedged,
+  not a fresh respawn. The SAME `claude_session_id` (525322cc-fea5-48e5-b352-1b5c1c493b4a) has received
+  `watchdog_heartbeat_resumed` kicks roughly every 17-18min going back past 00:45Z (a `spawn_retry_cap_reached` at
+  00:45:31Z already shows the identical pane_tail). `tmux capture-pane` full scrollback (24 lines) shows only a
+  continue/no-change loop — `{continue} -> No change; still complete, no action taken` repeated — sitting at an idle
+  bypass-permissions prompt. Main agt-1756f6 confirmed the server-side state: slot 2 = `tmux_alive=true`,
+  `worker_alive=false`, `phase=pre_boot`, `current_task=null`, `last_msg="↻ resumed after heartbeat-silence (context
+  intact)"`. So the pane is alive and past boot, but the backend bookkeeping is stuck at
+  `pre_boot`/`worker_alive=false`, which means the DISPATCH side will not route slot 2 a task. Main sent a concrete
+  task-oriented resume via `/api/slots/2/message` (not a bare `continue`) — it did NOT clear the wedge (still `pre_boot`
+  two ticks later), confirming this is a dispatch-side/backend-bookkeeping problem a worker-facing nudge cannot fix. NOT
+  on-fire: no orphaned WIP, no dirty repos for slot 2, and 11-12 other slots are healthy — but slot 2 has been
+  unproductive for 1.5h+ and the watchdog is not self-healing it.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [admin]
+tags: [worker-liveness-watchdog, slot-wedged, pre-boot, autospawn, dispatch, bookkeeping-mismatch]
+related:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
+created: 2026-08-04
+parent_epic: agent_operating_framework_master
+priority: P2
+assigned_vm: NA
+execution_scope: local-only
+resolved_by:
+locked_by:
+source:
+  "review msgs #3651/#3653 (2026-08-04 ~02:42Z, tick 40 correcting tick 39); server-side state + failed concrete-nudge
+  independently confirmed by main agt-1756f6 via /api/state + /api/slots/2/message"
+drift_direction: advance-process
+estimate_class: infra
+depends_on: []
+---
+
+# Slot 2 wedged in a watchdog resume-loop — needs kill+respawn (immediate) + a watchdog-escalation fix (durable)
+
+## The finding (confirmed both from the pane AND server-side)
+
+- **Pane** (review, `tmux capture-pane -S -`, 24 lines total): a bare continue/no-change loop —
+  `{continue} -> No change; still complete, no action taken` ×3 at an idle bypass-permissions prompt. Alive and
+  responsive, but believes there is nothing to do.
+- **Server** (main, `/api/state`): slot 2 = `tmux_alive=true`, `worker_alive=false`, `phase=pre_boot`,
+  `current_task=null`. The pane is past boot but the bookkeeping says `pre_boot`/dead.
+- **History**: same `claude_session_id` getting `watchdog_heartbeat_resumed` kicks ~every 17-18min back past 00:45Z
+  (`spawn_retry_cap_reached` 00:45:31Z, identical pane_tail). 1.5h+ unproductive.
+
+## Why a nudge can't fix it (main tried, it failed)
+
+Main sent a concrete task-oriented message via `/api/slots/2/message` (told it its task is complete, 500+ tasks are
+READY, re-poll + actively claim one). Two ticks later slot 2 is STILL `phase=pre_boot`/`worker_alive=false`. Root cause:
+the backend will not DISPATCH a task to a slot it marks `pre_boot`/`worker_alive=false`, so the worker can read "go
+claim a task" but can never be handed one. This is a **dispatch-side / backend bookkeeping** problem, not a worker-idle
+problem — worker-facing nudges are structurally the wrong tool.
+
+## The watchdog gap
+
+The WorkerLivenessWatchdog treats `tmux_alive=true` as "recoverable via a heartbeat-resume kick" and keeps sending
+`watchdog_heartbeat_resumed` — but the worker process behind the pane is wedged (`worker_alive=false`), so the resume
+kicks loop forever without ever escalating to a **kill + clean AutoSpawn respawn**. A slot stuck
+`tmux_alive=true`+`worker_alive=false`+`phase=pre_boot` past N resume kicks (or past a wall-clock bound like the 1.5h
+seen here) should escalate from resume → respawn, not resume indefinitely.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Immediate**: kill + let AutoSpawn give slot 2 a clean start (backend/operator-owned — main cannot
+      kill slots, and the concrete `/api/slots/2/message` nudge already failed to clear the wedge). This unblocks slot 2
+      to claim from the 500+ ready backlog. Low-risk: no orphaned WIP / no dirty repos for slot 2, so a clean respawn
+      loses nothing. (repo: agent-orchestrator — operator action, not a code change)
+- [ ] [BACKEND] P2. **Durable fix**: make the WorkerLivenessWatchdog ESCALATE a `tmux_alive=true` +
+      `worker_alive=false` + `phase=pre_boot` slot from repeated `watchdog_heartbeat_resumed` kicks to a kill+respawn
+      after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
+      looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
+      mismatch (the pane is past boot; the state says pre_boot). (repo: agent-orchestrator)
+
+## Progress Log
+
+- **2026-08-04 ~02:47Z (main agt-1756f6)**: Filed after review #3653 handed the slot-2 decision to main. Main took the
+  within-authority path first (concrete `/api/slots/2/message` nudge, since main cannot kill slots) — it did not clear
+  the wedge (still `pre_boot` two ticks later), which is itself the useful signal that this is dispatch-side, not
+  worker-idle. Remaining lever (kill+respawn) is backend/operator-owned → the two todos above. Not on-fire (11-12 other
+  slots healthy, no WIP at risk); P2. Main will keep watching slot 2 and will close this if AutoSpawn/watchdog or the
+  operator clears it.
