@@ -350,8 +350,8 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       steps 1-2 `[x]` (or an explicit measured statement that `0ded2449` is not merged) and step 3 as an unchecked
       `[OPERATOR]` item, and the parent plan's todo 4 matches whatever was actually measured.
 
-- [ ] [DOC] P2. **Cross-link the rebuild-delta todo in `sports_consolidated_native_ao_extract_2026_07_25.md` to its real
-      source issue doc.** Phase 3's conflict check found that
+- [x] ✅ [DOC] P2. **Cross-link the rebuild-delta todo in `sports_consolidated_native_ao_extract_2026_07_25.md` to its
+      real source issue doc — unified-trading-pm@a116ac7fa.** Phase 3's conflict check found that
       `issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`'s sole
       genuine open todo (`[VERIFY] P2` — reconcile the post-07-13 rebuild delta, `PLAYER_VALUES` −10,934 / `ODDS` −3,180
       captured cells vs the 2026-07-12 verified state, via a per-key manifest-vs-GCS diff, to determine
