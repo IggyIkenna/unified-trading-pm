@@ -135,15 +135,18 @@ context_scope:
       Closes the leak at its TRUE shared source for every consumer of `normalize_api_football_fixture`, not just the one
       write path that happened to lack a gate — 5 new regression tests lock in the fix; full existing api_football suite
       (95 tests) re-run clean.
-- [ ] [DATA] P2. **[OPERATOR] Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the
-      correct league vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. Split out
-      2026-08-04 from the original bundled todo — this is a GCS content/path rewrite over prod objects, so it needs the
-      delete-safety 5-part proof (fresh `gcs_bucket_soft_delete_retention_seconds()` check, snapshot-before-write,
-      CAS-safe apply, self-verify) per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — not a bare AO flip
-      (confirmed by two separate na-eligibility-audit passes, 2026-07-30 and 2026-08-01). Full detail + the concrete
-      migration-script design pointer: `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`.
-      (repo: instruments-service / market-tick-data-service). **Done when**: a fresh census of
-      `instruments-store-sports-prd` returns 0 objects carrying the country-prefixed contaminated vocabulary.
+- [ ] [DATA] P2. **Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the correct league
+      vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. **UPDATE 2026-08-04
+      (slot 5)**: the delete-safety gate is CLEARED (fresh `gcs_bucket_soft_delete_retention_seconds()` check on this
+      bucket returns 2,592,000s / 30 days, well above the 604800s/7-day bar — §3a reversibility-qualified
+      agent-autonomous path, no `[OPERATOR]` step needed) — the `[OPERATOR]` tag is REMOVED. Split further into 3
+      tracked sub-todos in the issue doc after a dry-run inspection surfaced real beyond-the-sibling-pattern complexity
+      (a corpus-scale census + a cross-entity resolution dependency; the feared content-column rewrite did NOT
+      materialize — confirmed path-only). Full detail + the current census/build/apply sub-todos:
+      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: instruments-service /
+      market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
+      carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
+      non-empty).
 - [ ] [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** (1)
       `deployment-service` — 3 launcher `START_DATE` clamp hardening edits + a new
       `launch-sports-league-id-relocation-vm.sh` launcher, in worktree `deployment-service-sports-wt`. (2)
