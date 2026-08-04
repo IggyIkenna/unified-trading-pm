@@ -165,11 +165,26 @@ production data.
       output. Updated 4 existing tests whose `present_set` fixtures hardcoded the stale lowercase grain; added a
       regression test asserting the seeder can never re-diverge from the writer's canon. Full QG green (5195 tests,
       `.qg_last_passed_sha=47a631ff`).
-- [ ] [DATA] P1. Once the direction is ruled + the seeding function (if broken) is fixed: re-run
+- [x] ✅ [DATA] P1. Once the direction is ruled + the seeding function (if broken) is fixed: re-run
       `market-tick-data-service/scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` (raising
       `_EXPECTED_CANDIDATE_MIN`/`_EXPECTED_CANDIDATE_MAX` to bracket the now-understood ~1.4M-row population) if
       UPPERCASE is ruled, OR write the equivalent lowercase-direction script update if LOWERCASE is ruled instead.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — DONE `market-tick-data-service@4cae1cb0` (ceiling raise,
+      `_EXPECTED_CANDIDATE_MAX` 500,000 → 2,000,000, full QG green) + the real `--apply`, run 2026-08-04. Fresh dry-run
+      immediately before applying confirmed the population was stable (1,401,523 changed vs the diagnosis's 1,401,491
+      the prior day — ~30 rows of ordinary organic growth, not runaway). First two `--apply` attempts hit the documented
+      CAS-write race (the manifest consolidator writes roughly every minute; this script's read-mutate-write window was
+      ~20-40s, close enough to collide twice in a row) — both aborted UNCHANGED-SAFE per the script's own CAS design, no
+      partial write. Per the script's own module docstring, paused
+      `uts-prod-manifest-consolidator-market-data-tradfi-cron` for the single write attempt, applied, then immediately
+      resumed it (confirmed `state=ENABLED` again). **Result**: 6,600,032 rows rewritten in place (row count preserved),
+      generation `1785833448588065` → `1785833526440245`, pre-migration snapshot at
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/backups/availability_index.pre_itype_casing_100pct_20260804T085152Z.parquet`,
+      1,401,523 `instrument_type` values case-corrected to UPPERCASE. Script's own self-verify: 5,860,660/5,860,660
+      canonical. **Independently re-verified with a genuinely fresh read** (not the script's in-memory frame, per this
+      repo's own established convention) against the confirmed post-apply generation: 5,860,660/5,860,660 canonical, 0
+      residual. The tradfi manifest `instrument_type` column is now literal-100% UPPERCASE (excluding the permanent
+      `futures_chain`/`options_chain` bundle-grain exclusion).
 - [x] ✅ [DATA] P2. Cross-reference this doc, `tradfi_casing_100pct_redrift_2026_07_27.md`, and the archived
       `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` from each other so future casing work sees all
       three. (repo: unified-trading-pm) — DONE. This doc already cited both in its own `related:` at filing time; added
