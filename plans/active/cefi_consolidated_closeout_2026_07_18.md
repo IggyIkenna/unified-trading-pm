@@ -578,3 +578,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — was codex-only; swapped 3 of the 5 codex docs for
   the migration-cutover critical-path child, the execution-log child, and a source path (the noncanonical
   manifest-enumeration audit script cited in the closeout's own body).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
+  still mixes genuinely bounded script work with real DESIGN/judgment calls (strategy-service archetype design,
+  hedge-venue choice), a BLOCKED-DATA Korea-equity vendor ask, and VM-preemption-gated backfill re-launches.

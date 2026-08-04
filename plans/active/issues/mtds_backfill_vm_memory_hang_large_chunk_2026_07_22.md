@@ -598,3 +598,6 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   given the doc has grown to cover a second, still-open sports/odds_api OOM investigation. The promoted
   `market-tick-data-service/scripts/profile_odds_api_backfill_memory_2026_07_31.py` profiling script no longer exists on
   disk (checked; likely deleted per the one-off-script lifecycle convention) — not added.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — all 4 open todos remain
+  judgment/design/blocked investigative work into an unresolved native-memory OOM root cause across CEFI/sports MTDS
+  backfills, not worker-determinable facts.

@@ -808,3 +808,7 @@ against the reproduction script.
   no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 21st+
   dispatch for this condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s
   still-open Option A recommendation for dedup at the orchestrator dispatch layer.
+
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict;
+  both remaining open todos are still explicit design/maintainer-judgment calls (features-service reader design gap;
+  error-truncation observability design question), neither worker-determinable.

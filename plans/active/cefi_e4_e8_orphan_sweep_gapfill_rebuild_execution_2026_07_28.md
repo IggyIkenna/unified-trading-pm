@@ -305,3 +305,6 @@ todo's isolated wording. No reclassification.
   dropped; added the two source-code entry points the now-actionable remaining phases actually invoke (Phase D's
   `rebuild_cefi_manifest.py`, Phase E's `cf_manifest_audit.py`) plus the audit-instructions doc Phase E requires
   editing.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict;
+  Phase C stays blocked-investigation and Phases D/E remain real-production, VM-scale manifest rebuild+verify prod-write
+  work despite Phase B's delete now completing. Not worker-determinable.

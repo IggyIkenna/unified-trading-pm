@@ -168,3 +168,6 @@ All three are real design/priority calls, not something determinable from code o
   judgment calls the doc itself labels as such.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the
   secret-naming SSOT, the archived source plan, and the `AdapterScope`/`ScopedCLOBAdapter` enforcement file).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict, all
+  3 open todos still explicitly [HUMAN]-tagged (one operator-only credential creation, two stated design/priority
+  calls); unchanged since.

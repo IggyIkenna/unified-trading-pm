@@ -120,3 +120,6 @@ run already covers them under different instrument routing), not a mechanical da
   parent plan `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` (lines 170-188): independently and
   currently parks P1.2 citing this exact doc. No reclassification.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
+  gating strategy-desk judgment call (whether/when to start a paper run) still holds, so the companion bounded [DIAG]
+  audit item stays whole-doc-NA (it only serves the gated decision).

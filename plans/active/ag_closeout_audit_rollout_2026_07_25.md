@@ -978,3 +978,5 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped stale Round-1 pointers (sports template,
   ci-cd-flow) for the Round-8 scope-widening triage + batch1 follow-on, matching current Deferred-work state; code-free
   meta-audit doc, no source path.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  sole open item remains the operator-gated mass-flip finalization, not a bounded worker-determinable task.

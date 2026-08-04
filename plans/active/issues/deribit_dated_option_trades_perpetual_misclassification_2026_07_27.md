@@ -169,3 +169,6 @@ reproduce.
   objects.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — all four still resolve and remain the
   right minimal set for the still-open writer root-cause todo.
+- **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
+  sole todo still bundles an unsolved writer root-cause, a corpus-wide census, and a reclassify migration, none of which
+  is worker-determinable alone.
