@@ -33,9 +33,13 @@ assigned_vm: NA
 source: [mvp_backfill_defi_onchain_v10-002]
 parent_epic: defi_master
 priority: P1
-resolved_by:
+resolved_by: >-
   hang root cause fixed + verified end-to-end live (47/47 dates), 70-call-site retry-safe audit completed, independently
-  corroborated by a second session
+  corroborated by a second session. retry_safe convention pinned via mtds_retry_safe_default_audit_2026_07_14 (all 5
+  todos closed 2026-08-04); fix shas: mtds@b8218f8a (2 live-gating sites — status-based 429/5xx fail-fast),
+  mtds@f82f29c1 (68 log-only sites — standardized to else False), mtds@0041a8a6 (2 residual transient-path sites
+  annotated # QG-allow: retry-safe), PM@4d3713ade (STEP 5.104 fleet-wide lint + codex SSOT
+  shard-level-failure-isolation.md retry_safe convention section)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
