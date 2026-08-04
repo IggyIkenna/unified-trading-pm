@@ -470,3 +470,43 @@ for the incumbent, and raises the bar any challenger has to clear.
   this doc showed 3 commits within the ~2h preceding this audit (each by the operator's own interactive session,
   `harshkantariya main·harsh_pc`) — genuinely live, hands-on iteration. This edit was deliberately kept small,
   additive-only, and isolated to its own commit to minimize collision risk with that in-progress work.
+
+### 2026-08-04 (final) — Sonnet 5 baseline landed: the three-way comparison
+
+Evidence + raw patches: `agent-orchestrator/scripts/orchestrator/omniroute-eval/results/` (`agent-orchestrator@8c89a77`)
+— read its README's caveats before quoting the table.
+
+| Model               | Result     | Wall clock | Cost      | Files | Churn (+/-) | Took the cheat |
+| ------------------- | ---------- | ---------- | --------- | ----- | ----------- | -------------- |
+| **DeepSeek V4 Pro** | ✅ PASS    | **301 s**  | **$0.36** | 19    | 54 / 54     | no             |
+| **Claude Sonnet 5** | ✅ PASS    | 1127 s     | $5.77     | 125   | 356 / 332   | no             |
+| Mistral Devstral    | ⏱️ timeout | 1501 s cap | n/a       | 28    | 94 / 95     | no             |
+
+**DeepSeek V4 Pro was 3.7× faster and 16× cheaper than Claude Sonnet 5 on the same task, both passing.** That is the
+first hard evidence for the routing thesis this whole evaluation exists to test.
+
+**Four caveats that must travel with that number:**
+
+1. **One task.** Bounded, well-specified, objectively gated — exactly the shape that _should_ route to a cheap model. It
+   says nothing about open-ended work, cross-repo judgment, or anything `opus-required` covers.
+2. **19 vs 125 files is unresolved, not a verdict.** DeepSeek landed existence at **exactly 86** — the baseline, the
+   precise minimum to pass. Sonnet fixed far more broadly. Minimum-to-pass is efficient AND gaming-adjacent (it
+   optimises for the gate, not the problem); 125 files is more valuable if correct and a far larger review surface if
+   not. **The patches have not been diffed for correctness.** An earlier note in this plan praised DeepSeek's "surgical
+   discipline" — that came from a two-way comparison against Devstral and reads differently against Sonnet. Treat it as
+   superseded.
+3. **Devstral is untested, not failed** — throughput-limited, see the previous entry.
+4. **DeepSeek's
+   $0.36 was hand-derived** because `deepseek-v4-pro` is absent from `measure-claude-usage-value.py`'s
+   `RATES`; the tool reports `$0.00`.
+   From its own totals at the published $0.435/$0.87: 266,542 input + 51,662 output + **4,535,808 cache-read** over 72
+   turns. That cache ratio is where the cheapness comes from — and it means cost is highly sensitive to cache behaviour,
+   so a workload with poorer cache locality will not be 16× cheaper.
+
+- [ ] [SCRIPT] P1. **Add `deepseek-v4-pro`/`deepseek-v4-flash` to `measure-claude-usage-value.py`'s `RATES`** — until
+      then every DeepSeek cost is reported as `$0.00` and must be derived by hand. Same gap flagged as an open todo in
+      `/plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md`; it is now actively blocking
+      comparison, not merely incomplete.
+- [ ] [REVIEW] P1. **Diff DeepSeek's 19-file patch against Sonnet's 125-file patch for correctness.** Both passed the
+      gate; whether Sonnet's extra 106 files are real fixes or churn decides whether "minimum to pass" is efficiency or
+      gaming. Both patches are preserved in the results dir. This is the single most decision-relevant open question.
