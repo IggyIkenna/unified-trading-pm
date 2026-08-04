@@ -93,18 +93,19 @@ context_scope:
       `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the COINBASE relabel
       premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is flipped `[x]` with
       the commit cited, and prek is green.
-- [ ] [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded range.**
-      The cefi instruments-service recon job runs on a hardcoded `--start-date`/`--end-date`, so it re-processes a fixed
-      historical window every day instead of doing true T+1 forward-fill. Implement EITHER (a) the IS CLI defaults
-      `--start-date`/`--end-date` to the run day (yesterday for true T+1) when `--run-tag=t1-recon` and both are unset,
-      OR (b) `t1_batch_scheduler.tf`'s scheduler injects `{start-date,end-date}` via `httpTarget.body` overrides — (a)
-      is preferred because it keeps the default in the CLI where every caller inherits it, but either satisfies this
-      todo; this is an implementation choice, not a design fork. Repos: instruments-service, deployment-service.
-      **Coordination note (conflict-check)**: `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` hygiene
-      sweep sub-item (c) already imported these t1-recon Cloud Run JOB specs into the shared prod tofu state
-      (`deployment-service@54aa6f5`, **already DONE/`[x]`** — verified re-plan clean). Build ON that state; do not
-      re-import or re-create the job specs. Sub-items (a)/(b) of that same sweep (dead-CLI daily Workflow; all-AG
-      producer crash) are also already closed — this todo is the remaining, uncovered date-default half. Source:
+- [x] ✅ [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded
+      range.** — instruments-service@2217756f The cefi instruments-service recon job runs on a hardcoded
+      `--start-date`/`--end-date`, so it re-processes a fixed historical window every day instead of doing true T+1
+      forward-fill. Implement EITHER (a) the IS CLI defaults `--start-date`/`--end-date` to the run day (yesterday for
+      true T+1) when `--run-tag=t1-recon` and both are unset, OR (b) `t1_batch_scheduler.tf`'s scheduler injects
+      `{start-date,end-date}` via `httpTarget.body` overrides — (a) is preferred because it keeps the default in the CLI
+      where every caller inherits it, but either satisfies this todo; this is an implementation choice, not a design
+      fork. Repos: instruments-service, deployment-service. **Coordination note (conflict-check)**:
+      `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` hygiene sweep sub-item (c) already imported
+      these t1-recon Cloud Run JOB specs into the shared prod tofu state (`deployment-service@54aa6f5`, **already
+      DONE/`[x]`** — verified re-plan clean). Build ON that state; do not re-import or re-create the job specs.
+      Sub-items (a)/(b) of that same sweep (dead-CLI daily Workflow; all-AG producer crash) are also already closed —
+      this todo is the remaining, uncovered date-default half. Source:
       `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (line ~167). **Done when**: a cefi t1-recon run with no
       explicit date arguments processes the run day (or run-day-minus-1) rather than the old hardcoded window,
       demonstrated by one real execution's logged date range; a unit test covers the defaulting branch; `tofu plan` is
