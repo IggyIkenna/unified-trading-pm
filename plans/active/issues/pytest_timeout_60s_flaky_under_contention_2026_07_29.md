@@ -191,17 +191,27 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       workspace-wide to warrant a new dedicated lint rule right now** — a manual grep-sweep found and fixed both real
       instances; recommend re-running this same grep the next time a 3rd instance surfaces before building a lint rule
       for a 2-repo pattern.
-- [ ] 3. [INFRA] P3. Once todo 1 ships, watch the next 5-10 GH Actions `quality-gates-v2` runs across a few repos for
+- [x] ✅ 3. [INFRA] P3. Once todo 1 ships, watch the next 5-10 GH Actions `quality-gates-v2` runs across a few repos for
       any recurrence of a `qg_red_reason=pytest` failure whose actual failing test, re-run in isolation, passes in well
       under the new budget — that would confirm the fix closes this specific flake class rather than just moving the
       threshold. **INVESTIGATED 2026-07-30 (autonomous marathon session, NOT closed — real recurrence confirmed) — see
-      Progress Log for full evidence + a correction of an earlier misread in this same pass.** First candidate (run
-      `30521493649`, instruments-service) turned out to be PR #1027's already-merged-via-independent-green-check run
-      (`merged_at=07:01:23Z`, base-service.sh's real `d4aaaf666` fix landed 07:14:18Z) — the exact "orphaned noise,
-      predates the actual full fix" pattern this doc's own 2026-07-30 entries already diagnosed twice for #1026/#1027;
-      NOT counted as post-fix evidence (self-corrected before drawing a conclusion from it). **Genuine post-fix
-      recurrence found instead**: instruments-service run `30526139426` (created `08:17:56Z`, well after BOTH
-      `cedef544b` 05:39:50Z and `d4aaaf666` 07:14:18Z) —
+      Progress Log for full evidence + a correction of an earlier misread in this same pass.** **FRESH SURVEY 2026-08-04
+      (~19:30-20:45Z, slot 10): 50 runs across 10 repos surveyed (5 LDR runs each). Zero direct pytest-timeout (>150s)
+      recurrences in this ~12h window — a notable quiet period vs this doc's prior cadence. Related contention-class
+      failures persist: MDPS run `30906289388` `OSError: cannot send (already closed?)` (xdist crash, same root cause),
+      features-service run `30939183259` `subprocess.TimeoutExpired` (test-level 60s, not pytest-timeout). Unrelated
+      failures dominate the landscape: unified-trading-pm 5× consecutive `checks`-slice failures (VERSION_SPLIT,
+      VESTIGIAL_SCALAR_DRIFT, reference_paths ratchet breaches — all unrelated). Many runs cancelled (capacity-crisis
+      intervention, not flake-class). The quiet period does NOT mean the fix closed the class (the Progress Log's
+      extensive prior evidence already refutes that) — it may reflect the `ci-failure-watcher` auto-cancel pattern
+      masking timeouts before they reach terminal failure, or genuine temporary quiet. Either way, this todo's watch
+      obligation is discharged; the class is confirmed NOT closed (see Progress Log 2026-07-30 through 2026-08-03).** —
+      unified-trading-pm@298060b37 (this flip). First candidate (run `30521493649`, instruments-service) turned out to
+      be PR #1027's already-merged-via-independent-green-check run (`merged_at=07:01:23Z`, base-service.sh's real
+      `d4aaaf666` fix landed 07:14:18Z) — the exact "orphaned noise, predates the actual full fix" pattern this doc's
+      own 2026-07-30 entries already diagnosed twice for #1026/#1027; NOT counted as post-fix evidence (self-corrected
+      before drawing a conclusion from it). **Genuine post-fix recurrence found instead**: instruments-service run
+      `30526139426` (created `08:17:56Z`, well after BOTH `cedef544b` 05:39:50Z and `d4aaaf666` 07:14:18Z) —
       `tests/unit/test_understat_adapter_coverage.py::     TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count`
       hit `Failed: Timeout (>150.0s)`. Isolated local re-run: **1.42s** (fully mocked `aiohttp.ClientSession`, no real
       I/O) — a >100x margin under the new 150s budget, matching the precedent bybit/ticker.yaml case's profile far more
@@ -611,3 +621,19 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   already on `live-defi-rollout`, 0 commits ahead of `origin` besides this doc edit). Pinging the authoring slot
   (`ci-reconcile`) with the outcome.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **slot-10 2026-08-04 ~19:30-20:45Z**: dispatched todo 3 (backlog task `pytest_timeout_60s_flaky_under_contention-003`)
+  — fresh survey of 50 `quality-gates-v2` LDR runs across 10 repos (5 runs each: unified-trading-pm,
+  unified-api-contracts, instruments-service, features-service, market-data-processing-service, unified-trading-api,
+  deployment-service, ml-service, client-reporting-api, market-tick-data-service). **Zero direct pytest-timeout (>150s)
+  recurrences** in the ~12h window ending ~20:30Z — the first extended quiet period since this doc's opening. Related
+  contention-class failures persist: MDPS run `30906289388` `OSError: cannot send (already closed?)` (xdist crash, same
+  root-cause contention, different failure signature), features-service run `30939183259` `subprocess.TimeoutExpired`
+  (test-level hardcoded 60s, not pytest-timeout). Unrelated failures dominate: unified-trading-pm 5× consecutive
+  `checks`-slice failures (VERSION_SPLIT=23 repos, VESTIGIAL_SCALAR_DRIFT=23 repos, reference_paths ratchet breaches —
+  all codex/lint/doc checks, not pytest), MTDS run `30939199258` `typecheck` failure. Many cancelled runs across repos
+  (capacity-crisis intervention pattern, possibly masking timeouts before terminal failure). The quiet period does NOT
+  refute this doc's already-established conclusion that the 60→150s raise did not close the flake class (the Progress
+  Log's extensive 2026-07-30 through 2026-08-03 evidence already confirmed that). Todo 3's watch obligation is
+  discharged; the class is confirmed NOT closed by the timeout raise alone — the underlying mechanism is
+  OS-scheduler/xdist contention, not an absolute wall-clock threshold that any single raise can fix. Checkbox flipped
+  with this entry. Slot left clean (0 commits ahead of `origin/live-defi-rollout` in every repo; only this doc touched).
