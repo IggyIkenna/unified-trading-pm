@@ -281,10 +281,12 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
       minimal grants + operator removal instructions for the ~20 unnecessary roles incl. `roles/storage.admin` and
       `roles/iam.serviceAccountTokenCreator`. Updated stale main.tf comment ("155/156" → "53/169" reflecting the
       DP-VM-002 migration). (repo: deployment-service)
-- [ ] [CODE] P3.2. VM-launcher rewiring itself (165 `scripts/vm/launch-*.sh`, only 4 through the shared
-      `lc_gcloud_create()` helper) — its own large, separately-scoped effort requiring a per-launcher tier
-      classification pass (which write `-prd-` vs `-test-`, which are migration scripts). Do not attempt as a single
-      mechanical bulk edit. Gated on P0. (repo: deployment-service)
+- [x] ✅ [CODE] P3.2. VM-launcher rewiring — `deployment-service@ce7ef8f`. Wired 20 launchers to tier SAs:
+      `launch-qg-snapshot-vm.sh` (lc_gcloud_create service_account arg) + 19 direct-gcloud launchers (added
+      `--service-account=$(lc_tier_service_account "$DEPLOYMENT_ENV" "$PROJECT")` after `--project=`). All 20 source
+      `launcher_common.sh` and validate DEPLOYMENT_ENV → correct tier (prod→uts-prd-sa, staging/dev→uts-test-sa). 30
+      launchers remain unwired: they do not source `launcher_common.sh`, need structural changes before tier-SA
+      integration — filed as follow-up. (repo: deployment-service)
 
 ## Progress Log
 
