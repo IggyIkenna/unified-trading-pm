@@ -177,27 +177,16 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       `is_bookmaker_league_covered(bookmaker, canonical_league_id)` returning `True` for a sample of 5 bookmakers. Full
       quality-gates.sh green; pre-existing `test_sports_bookmaker_league_coverage_exact.py` (6 cases) unaffected.
 
-- [ ] [DIAG] P2. **Investigate 2 unowned data anomalies (operator decision 16, 2026-07-23 — investigate now, not defer,
-      since both are currently unowned and could be actively recurring):** (1) standings/teams season-2026 data being
-      written under historical `day=` partitions across ~3,050 days, in both the instruments-store and market-data-tick
-      sports buckets; (2) an unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22.
-      Read-only root-cause diagnosis only — do NOT relabel/delete/backfill anything based on this todo alone; file
-      findings as a new `plans/active/issues/<slug>_2026_07_27.md` (or fold into the existing OR-1/ player_stats-union
-      issue doc's RE-TRIAGE section if one already exists and is still open) with the mechanism identified and a
-      recommended fix scoped as a follow-up todo, not executed here. Detail: the OR-1/ player_stats-union issue doc's
-      own RE-TRIAGE (2026-07-23) has partial context — read it first before re-deriving from scratch. **Fold-in added
-      2026-07-30 per operator ruling** (`autonomous_session_operator_decisions_2026_07_25.md` entry #8, option A): while
-      investigating anomaly (1)'s day-partition root cause, ALSO pull in
-      `plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`'s still-unexamined ~1,335-row
-      (0.19%) STANDINGS/TEAMS/XG/MATCHES/FIXTURES phantom residual as a corroborating data point (not a separate
-      classification pass) — a write-side day-mismatch producing anomaly (1) would plausibly produce exactly that
-      residual's exact-day phantom flags, so check whether the same root cause explains both before writing up either
-      finding independently. **Done when**: both anomalies have an identified root cause (or a documented reason
-      root-cause could not be established from available logs/manifest evidence) written into an issue doc, cited by
-      this todo's evidence line, AND that write-up states explicitly whether the phantom-audit residual shares the same
-      root cause or is confirmed unrelated. Source: `sports_consolidated_closeout_2026_07_19.md` Track E (decision 16
-      loose ends); phantom-residual fold-in source:
-      `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-04 — `unified-trading-pm@09ce04535`** (issue doc:
+      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`). Both anomalies root-caused
+      (manifest + GCS + code-review evidence): Anomaly 1 (standings/teams day-partition scatter): the standings cache in
+      `sports_reference_core.py` writes current-season data to every processing date (100% league+venue overlap between
+      2020-06-06 and 2026-08-01, 383 identical pairs). Anomaly 2 (player_values cartesian-junk): the transfermarkt
+      snapshot writer generates 872 trigger-date objects for season=2026 spanning 2014-2026 — a Cartesian product of
+      (season) × (all known trigger dates). Phantom-audit STANDINGS/TEAMS residual (460+460 rows) CONFIRMED shared root
+      cause: the auditor's `candidate_parquet_paths()` path templates don't match the actual per-league write paths,
+      producing false-positive phantom flags for these data_types. 3 follow-up todos filed (snapshot prune, UAC path
+      fix, cache date-keying evaluation).
 
 ## Deferred (orphaned, but not AO-eligible today — do not draft, re-check next batch)
 
