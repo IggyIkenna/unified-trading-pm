@@ -17,7 +17,7 @@ status: active
 nature: process
 asset_group: [sports]
 stage: [data]
-repos: [unified-trading-pm]
+repos: [unified-trading-pm, features-service, ml-service, strategy-service, instruments-service]
 scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-2, satellite-docs, archival]
 related:
@@ -114,11 +114,11 @@ context_scope:
       sports_batch_odds_api_capture_outage_recurrence_check, sports_halftime_odds_sfi_vs_inplay). Hygiene sweep 4 hard
       failures all pre-existing (15 non-sports terminal-status violations + NA corpus size + reference path baseline +
       archive candidates ratchet), none caused by this plan's work.
-- [ ] [REVIEW] P1. **Resolve the 4 deferred-gate follow-ups from batch 2's own "Deferred" section.** For each: (1) the
-      FSS↔ml-service↔strategy-service parity test (gated on 5 sibling naming-migration todos in batch 2 landing) — if
-      all 5 shipped (per todo 1 above), add it as a new `- [ ]` todo in a follow-up plan (or this doc, if small enough —
-      a single todo doesn't need its own plan) and dispatch it; (2) the `FixturesBrowser.tsx` relabel (gated on the
-      `fixtures_browser.py` backend todo) — same treatment; (3) the `sports_dependency_check` real-backfill timing
+- [x] ✅ [REVIEW] P1. **Resolve the 4 deferred-gate follow-ups from batch 2's own "Deferred" section.** For each: (1)
+      the FSS↔ml-service↔strategy-service parity test (gated on 5 sibling naming-migration todos in batch 2 landing) —
+      if all 5 shipped (per todo 1 above), add it as a new `- [ ]` todo in a follow-up plan (or this doc, if small
+      enough — a single todo doesn't need its own plan) and dispatch it; (2) the `FixturesBrowser.tsx` relabel (gated on
+      the `fixtures_browser.py` backend todo) — same treatment; (3) the `sports_dependency_check` real-backfill timing
       verification (gated on 2 sibling implementation todos) — same treatment; (4) the 3
       `sports_group_c_execution_backtest_harness_2026_07_21.md` todos (gated on the still-unmade
       SportsMatchingEngine-vs-L0Matcher human/operator decision) — check whether that decision has since been made (grep
@@ -126,7 +126,42 @@ context_scope:
       a resolution); if yes, extract those 3 as a new small AO batch; if no, leave them explicitly deferred and do NOT
       dispatch speculatively. **Done when**: each of the 4 deferred items has either (a) a new tracked todo/plan created
       and dispatched because its gate cleared, or (b) an explicit, re-verified confirmation that its gate is still open
-      (not just inherited from the original extraction — re-checked as of this todo's execution).
+      (not just inherited from the original extraction — re-checked as of this todo's execution). — **RESOLVED
+      2026-08-04 (slot 8)**: (1) FSS parity-test gate CLEARED — all 5 naming-migration todos done:
+      features-service@{b03a6de4, daa373bd,0ded2449,e240eca2,0ab873b3}, unified-api-contracts@689efa54,
+      ml-service@{91f031a,07976ae,10e219f}, strategy-service@4c55438c; new todo added below (P2a). (2)
+      FixturesBrowser.tsx relabel gate CLEARED AND ALREADY SHIPPED via batch5 — deployment-ui@66cc06d per
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`; confirmed `[x]` in
+      `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`; no new todo needed. (3) sports_dependency_check
+      timing-verification gate CLEARED — both implementation todos done: instruments-service@bd1da540 +
+      instruments-service@2be5698d; source doc `[VERIFY] P2` marked `[x]` deferred here; new todo added below (P2b). (4)
+      SportsMatchingEngine-vs-L0Matcher decision gate STILL OPEN — confirmed via direct read of
+      `sports_group_c_execution_backtest_harness_2026_07_21.md` (`[DESIGN] P3` todo 3 still `[ ]`) + batch5-finalize
+      (2026-07-28) + prediction batch6 (2026-07-29) + grep of plans/active/issues/ (0 results); explicitly not
+      dispatching 3 todos speculatively. — unified-trading-pm@(this commit)
+- [ ] [REVIEW] P2. **FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (P2a)** — gate from batch 2's
+      deferred section now cleared (all 5 naming-migration todos done 2026-08-04). Write the cross-repo parity test
+      requested in `sports_odds_feature_naming_canonicalization_2026_07_21.md` (line 197–200): against the now-real UAC
+      `OddsFeaturesMixin` contract, confirm that FSS's emitted `odds_decimal_*`/`prob_*`/`odds_moneyline_*` field set
+      fully overlaps with ml-service's `SportsFeatureLoaderMixin` expected fields AND strategy-service's
+      `SportsValueBettingEngine`/`SportsArbDutchingEngine` consumed fields — no consumer reads a field FSS doesn't
+      produce; no FSS field is orphaned with zero consumers. Read
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md` §Progress Log for the confirmed field set before
+      writing tests. (repos: features-service, ml-service, strategy-service). **Done when**: a regression test covers
+      the FSS→ml-service→strategy-service naming parity; passes against current HEAD of all 3 repos; quality-gates.sh
+      green on all 3. Source: `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+- [ ] [VERIFY] P2. **Real-backfill timing verification for manifest-slice + cached/batched fixes (P2b)** — gate from
+      batch 2's deferred section now cleared (instruments-service@bd1da540 + instruments-service@2be5698d both shipped).
+      Source doc `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`'s `[VERIFY] P2` was marked `[x]` as
+      "deferred to finalize plan" — this is that execution. Run a real sports backfill covering ≥3 months (or review an
+      existing VM run log ≤30 days old) and confirm: (a) manifest-slice path in `check_api_football_dependency()` is the
+      hot path (no raw GCS `_prefix_has_object()` calls on clean-manifest dates) and (b) cached/batched per-entity reads
+      in `sports_fixtures.py:356` are reducing call count (O(entities×leagues)→O(entities) expected). Record measured or
+      log-observed evidence in the source issue doc's Progress Log. No code change expected. (repo:
+      instruments-service). **Done when**: evidence recorded in
+      `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`; if direct before/after timing is infeasible
+      (no pre-fix baseline), document observed call-count reduction instead. Source:
+      `/plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 3 above should have
       already cleared all 4 — verify none remain) → add the archive banner → run the codex-alignment check (do any codex
