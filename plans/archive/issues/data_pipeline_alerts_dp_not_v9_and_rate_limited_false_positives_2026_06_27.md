@@ -37,7 +37,8 @@ last_updated: 2026-06-27
 
 > **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). All 3 open items verified migrated: Finding-1 operator-gated
 > schema_version cleanup + Finding-3 DP_VM_GONE_NO_CAPTURE debounce + Secondary str/int bug are all real dispatchable
-> `- [ ]` todos in [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
+> `- [ ]` todos in
+> [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
 > (re-verified 2026-07-28 before archival). Findings 1 (code fix) and 2 (classifier fix) already SHIPPED
 > (`e2e-testing@21ce846`, `deployment-service@d36f281`).
 
@@ -192,7 +193,7 @@ Both alert classes fired on healthy runs during normal backfill load. Recurrent 
 
 ### Finding 1 — DP_NOT_V9 (real residual — OPERATOR-GATED real-infra op)
 
-- [ ] [DATA] P2. **Operator decision (prod-manifest mutation):** clean the contaminated defi/tradfi `schema_version`
+- [x] ✅ [DATA] P2. **Operator decision (prod-manifest mutation):** clean the contaminated defi/tradfi `schema_version`
       rows. Recommended = re-run `populate_v9_index_columns_inplace.py --apply` on the defi + tradfi index buckets — BUT
       first verify a sample of contaminated rows is single-column (only `schema_version` wrong) and not a full-row
       positional shift (see Contamination root cause above). Needs GCS access + a snapshot before mutating. **Surfaced
@@ -200,8 +201,12 @@ Both alert classes fired on healthy runs during normal backfill load. Recurrent 
       `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11:
       "`populate_v9_index_columns_inplace.py     --apply`: APPROVED to run"). Now dispatchable as a real `[OPERATOR] P2`
       todo in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (snapshot + sample-verification prerequisites
-      staged there, citing `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s manifest-mutation gate). Leave
-      this checkbox unflipped until that todo's `--apply` run actually completes — approval is not execution.
+      staged there, citing `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s manifest-mutation gate). **DONE
+      2026-08-04, slot-7 (this commit).** The `--apply` had ALREADY been completed — pre-mutate snapshots exist for both
+      AGs and live indices are 100% `schema_version=9`: defi 42.2M rows, tradfi 6.4M rows, all with
+      `pipeline_mode`/`source`/`asset_group` fully populated. Single-column contamination verified from snapshots
+      (legacy numeric values 8/6/4 in schema_version only; all other columns correct — no positional shift). Full
+      evidence in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`.
 
 ### Finding 2 — DP_SOURCE_RATE_LIMITED (classifier — SHIPPED `deployment-service@d36f281`, QG green 98s)
 
