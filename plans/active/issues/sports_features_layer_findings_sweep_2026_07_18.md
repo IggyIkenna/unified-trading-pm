@@ -79,7 +79,7 @@ context_scope:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
     features-service/features_service/sports/data/gcs_normalizers.py,
   ]
 ---
@@ -292,30 +292,30 @@ A second hypothesis was also eliminated on the way: that the 18,480 rows were th
 `venue=ODDS_API` meta shape (`instrument_type=sport`). Measured — the raw is 468+ files of `instrument_type=odds` under
 real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consumable shape.
 
-- [x] [DIAG] P1. ✅ ROOT-CAUSED 2026-07-30 (`sports_satellite_ao_dispatch_batch8_2026_07_30.md` todo 1) — **NOT a
-      fixture-mapping join drop and NOT a hidden secondary guard.** Pulled the real raw `batch_odds_api` parquet for all
-      3 dates from `market-data-tick-sports-prd-central-element-323112` and replayed the adapter's exact guard chain
-      (`_materialise_fixture_identity` → causality → 48h zombie-staleness cap → 7-day kickoff-past cap →
-      `assign_horizon_buckets_vectorised`). Every one of the 316 (2025-12-18) / 310 (2025-12-31) in-window
-      (`0<=bm_minutes_to_kickoff<=1440`) rows survives ALL secondary guards intact (0 dropped by causality/staleness/
-      kickoff-past on either date) and reaches the per-bucket horizon-cap check — where 0/316 and 0/310 get assigned a
-      valid `horizon_idx`. Root mechanism: on BOTH dates `fetch_utc` has exactly **1 distinct value** (2025-12-18 12:00
-      UTC / 2025-12-31 12:00 UTC — a single daily fetch, confirmed live), and the ONLY fixtures kicking off within the
-      following 24h are exactly **2 A-League (`A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE`) matches per date** (12-18:
-      Macarthur FC v Brisbane Roar ko 2025-12-19T07:00Z + Western Sydney Wanderers v Auckland FC ko 2025-12-19T09:00Z;
-      12-31: Auckland FC v Newcastle Jets FC ko 2026-01-01T04:00Z + Western Sydney Wanderers v Macarthur FC ko
-      2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4** (12-18) and
-      **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380 min) between
-      `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`** (`bucket_assignment_     adapter.py`
-      `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of the 1440 pre-match minutes, by
-      design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct `fetch_utc` values** spread
-      across the day vs these 2 dates' single noon snapshot — with many more snapshots-per-fixture, far more land inside
-      SOME target's narrow cap by chance. So the "REAL BUG" framing holds exactly as originally measured: real, valid
-      pre-match odds WERE captured for those A-League fixtures, but the single-fetch cadence on these 2 quiet dates
-      combined with `TIER1_HORIZONS`' sparse target grid means literally none of it could ever land in a bucket — a
-      genuine capture-cadence/target-density interaction, not a join bug or an extra guard. **Manifest-state
-      correction**: queried the live availability manifest directly in BOTH candidate buckets
-      (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
+- [x] [DIAG] P1. ✅ ROOT-CAUSED 2026-07-30 (`/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`
+      todo 1) — **NOT a fixture-mapping join drop and NOT a hidden secondary guard.** Pulled the real raw
+      `batch_odds_api` parquet for all 3 dates from `market-data-tick-sports-prd-central-element-323112` and replayed
+      the adapter's exact guard chain (`_materialise_fixture_identity` → causality → 48h zombie-staleness cap → 7-day
+      kickoff-past cap → `assign_horizon_buckets_vectorised`). Every one of the 316 (2025-12-18) / 310 (2025-12-31)
+      in-window (`0<=bm_minutes_to_kickoff<=1440`) rows survives ALL secondary guards intact (0 dropped by
+      causality/staleness/ kickoff-past on either date) and reaches the per-bucket horizon-cap check — where 0/316 and
+      0/310 get assigned a valid `horizon_idx`. Root mechanism: on BOTH dates `fetch_utc` has exactly **1 distinct
+      value** (2025-12-18 12:00 UTC / 2025-12-31 12:00 UTC — a single daily fetch, confirmed live), and the ONLY
+      fixtures kicking off within the following 24h are exactly **2 A-League (`A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE`)
+      matches per date** (12-18: Macarthur FC v Brisbane Roar ko 2025-12-19T07:00Z + Western Sydney Wanderers v Auckland
+      FC ko 2025-12-19T09:00Z; 12-31: Auckland FC v Newcastle Jets FC ko 2026-01-01T04:00Z + Western Sydney Wanderers v
+      Macarthur FC ko 2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4**
+      (12-18) and **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380
+      min) between `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`**
+      (`bucket_assignment_     adapter.py` `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of
+      the 1440 pre-match minutes, by design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct
+      `fetch_utc` values** spread across the day vs these 2 dates' single noon snapshot — with many more
+      snapshots-per-fixture, far more land inside SOME target's narrow cap by chance. So the "REAL BUG" framing holds
+      exactly as originally measured: real, valid pre-match odds WERE captured for those A-League fixtures, but the
+      single-fetch cadence on these 2 quiet dates combined with `TIER1_HORIZONS`' sparse target grid means literally
+      none of it could ever land in a bucket — a genuine capture-cadence/target-density interaction, not a join bug or
+      an extra guard. **Manifest-state correction**: queried the live availability manifest directly in BOTH candidate
+      buckets (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
       `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` on all 3 dates — **no row of ANY capture_status exists** (not `captured`,
       not `attempted_failed`, not `empty_confirmed`); the shard is simply unregistered.
       `scripts/reprocess_sports_     odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
@@ -500,15 +500,15 @@ identity, not noise.
 - [x] [CODE] P1. ✅ Narrowed `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji
       ranges); added a regression test pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
       REJECTED — `instruments-service@453e76f1`, 7/7 tests green 2026-07-30. Tracked in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
+      `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4 (whose "not implemented" framing is itself
       stale — live-verified the guard already exists in code).
 - [x] ✅ [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
       date/league range once the guard is narrowed. **2026-07-30**: split into its own tracked todo (a single-date
       recapture takes >180s of real API-Football quota — VM-backfill-shaped, not an interactive call) in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DONE THERE 2026-07-31; closed here 2026-08-02 by
-      `/na-eligibility-audit` (sports tranche) as a KEEP-NA-STALE citation fix, not new work.**
-      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DONE THERE 2026-07-31; closed here
+      2026-08-02 by `/na-eligibility-audit` (sports tranche) as a KEEP-NA-STALE citation fix, not new work.**
+      [`/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
       `[DIAG] P1` is `[x]` and names this doc §D as its own `Source:`. Evidence there: 2021-11-26 re-validated **225 →
       225 instruments, 0 rejected** (was 225 → 203) against the live
       `instruments-store-sports-prd-central-element-323112`; a 2nd sample date (2021-11-20) surfaced a NEW residual
@@ -711,10 +711,10 @@ read is a coverage blind spot.
 - [x] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
       everything lands on one SSOT. **2026-07-30 batch8 triage**: extracted as a tracked todo in
-      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DE-DUPLICATED here 2026-08-02 by `/na-eligibility-audit`
-      (sports tranche), KEEP-NA-STALE citation fix. ⚠️ This `[x]` means "no longer tracked HERE", NOT "done"** — the
-      work is still genuinely OPEN as
-      [`/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/active/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
+      `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`. — **DE-DUPLICATED here 2026-08-02 by
+      `/na-eligibility-audit` (sports tranche), KEEP-NA-STALE citation fix. ⚠️ This `[x]` means "no longer tracked
+      HERE", NOT "done"** — the work is still genuinely OPEN as
+      [`/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`](/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md)'s
       `[ ] [AUDIT] P2`, which restates this item verbatim (all 3 identifier classes + the fold-into-Track-C step) and
       names this doc §F as its own `Source:`. That doc is `status: active`, `assigned_vm: planning`, so the item is live
       in the AO backlog; leaving it open here as well double-counted one piece of work in the NA corpus. Same convention
@@ -758,9 +758,9 @@ have moved; use the section index above to locate it.
   still-open `[DIAG] P2` by its own text ("Leave open until that todo resolves it one way or the other" — gate
   re-verified, that todo is still `[ ]`), and §E `[MODEL] P2` remains the modelling judgment call the 07-30 marker
   named. No RECLASSIFY: the doc's own remaining work is a gated item plus a design call, and every bounded piece has
-  already been extracted to `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (`assigned_vm: planning`) — flipping
-  this doc would dispatch duplicates of that batch
+  already been extracted to `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`
+  (`assigned_vm: planning`) — flipping this doc would dispatch duplicates of that batch
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `honest_coverage_report.py` (§C tooling
   gaps, already resolved/tracked in `sports_consolidated_closeout_2026_07_19.md`) for
-  `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, which now holds the gating todo for this doc's one genuinely open
-  item (§E's `[CONFIG] P1`).
+  `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`, which now holds the gating todo for this
+  doc's one genuinely open item (§E's `[CONFIG] P1`).
