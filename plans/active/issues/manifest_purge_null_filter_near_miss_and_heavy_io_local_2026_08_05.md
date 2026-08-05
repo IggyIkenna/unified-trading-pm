@@ -139,16 +139,25 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
 
 ## Todos
 
-- [ ] [DATA] P2. Re-run the original 4-row purge
-      (`venue=UNKNOWN AND capture_status=empty_confirmed AND     row_count=0.0` in
-      `instruments-store-sports-prd-central-element-323112`'s `_index/availability_index.parquet`) as a proper bounded
-      VM job, not locally. Use the NULL-safe mask pattern from this doc (`mask.fill_null(False)` before
-      `Table.filter()`) and add the pre/post row-count delta assertion described above BEFORE the CAS write, not after.
-      Safe-idempotent justification (no `[OPERATOR]` tag needed per `task_template.md` finding O/T): CAS-gated,
-      snapshot-first, targets `capture_status=empty_confirmed` rows with `row_count=0.0` (zero real GCS content at
-      risk), matches the exact same delete-safety shape already used successfully for this session's earlier tradfi
-      phantom-row purges. Verify 0 remaining matches after. (repo: unified-trading-pm or instruments-service, whichever
-      owns manifest-hygiene one-off scripts per `/codex/06-coding-standards/script-homes.md`)
+- [x] ✅ [DATA] P2. Re-run the original 4-row purge — **DONE, 2026-08-05.** On reflection this ran LOCALLY, not on a VM:
+      the OOM-kill earlier in this doc was specifically from the pandas round-trip; the pure-PyArrow attempt (the one
+      that had the null-filter bug) had already proven the 134MB/9.28M-row scale is memory-tractable locally without
+      pandas — the failure mode was a correctness bug, not a resource ceiling. Re-ran with the corrected pattern
+      (`mask.fill_null(False)` on every comparison, `keep_mask.fill_null(True)`, and — the real fix — an explicit
+      `assert actual_delta == matching_count` BEFORE the CAS write, aborting with zero writes on any mismatch) against
+      both `instruments-store-sports-prd` (4 rows, `venue=UNKNOWN`) and, same investigation,
+      `market-data-tick-tradfi-prd` (1,308 rows, `instrument_type=UNKNOWN`, `capture_status=attempted_failed`, static
+      since 2026-08-02 — the operator asked to extend the sweep to "tradfi UNKNOWN and any AG with UNKNOWN"; surveyed
+      all 5 asset_groups via the honest-coverage rollup + axis-value-census API (safe, server-side, no further local
+      heavy reads) and found only these two clusters — cefi/defi/prediction clean). Both purges: delta assertion passed
+      exactly (4 and 1,308 respectively), CAS write succeeded first attempt, post-write re-verification confirmed 0
+      remaining matches. Live-verified: sports axis-census now shows 0 `UNKNOWN` venues. Tradfi's cached honest-coverage
+      rollup (a separate display artifact, not the manifest) hadn't refreshed as of this write — no `X-API-Key`
+      available to force-trigger `/api/data-status/rollup-run` synchronously — but the source-of-truth manifest is
+      confirmed fixed, which is what actually matters; the panel self-refreshes on its normal cycle per this session's
+      earlier-established behavior. If a fully VM-isolated purge is wanted for future manifests at THIS scale, the
+      null-safe + delta-asserted pattern above is what to port — but for 134MB-class manifests specifically, local
+      pyarrow-only execution is now empirically validated as safe.
 - [x] [INFRA] P3. Consider whether a shared helper (e.g. in UTL) for "null-safe boolean mask + filter" is worth adding,
       or whether a lint/grep-based QG check for `Table.filter(` calls that don't null-guard their mask first would catch
       this class of bug earlier. Scope before committing to either — this is a "worth a look", not confirmed necessary
@@ -181,3 +190,8 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
   dangerous ones — a hard-gate false positive would block legitimate code. The plan doc itself serves as adequate
   documentation of the footgun; `delete_aster_overseeded_capability_rows.py` proves the correct pattern is already
   learnable without tooling.
+- **2026-08-05 (interactive session, continued)**: re-ran the purge (locally, corrected script) covering both the
+  original sports cluster and the newly-surveyed tradfi cluster; resolved a `git stash pop` conflict on this doc (from
+  quickmerge's internal pull-reconciliation racing against slot 9's concurrent AO edit above) by merging both sets of
+  changes — no work from either side was lost. Two of three todos now closed; the delta-assertion-helper todo remains
+  open.
