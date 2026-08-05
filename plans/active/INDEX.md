@@ -232,9 +232,10 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
-- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](./defi_satellite_ao_dispatch_batch8_2026_08_02.md) — Eighth
-  AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor` running `/na-eligibility-audit defi`
-  (2026-08-02). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
+- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](../archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md) —
+  ✅ **ARCHIVED 2026-08-05.** Eighth AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor`
+  running `/na-eligibility-audit defi` (2026-08-02). Todo completed 2026-08-05 (force+skip AAVE-oracle sample-download
+  verified). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
 - [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](./defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch8_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until that plan's todo is done. Mirrors batch1-7-finalize: reconcile the single source doc…
