@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                          chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                          pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                          `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                          the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                          chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                          2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                          6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                          timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                          `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                          **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                          `returns`/onchain reconfirmed). Evidence:
-                                                          `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                              `returns`/onchain reconfirmed). Evidence:
+                                                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -281,23 +281,15 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       = PRICE_ALPHA - FEES -
       GAS_COSTS`). The one architectural nuance: DeFi arb/carry **signal functions** (e.g.     `arbitrage_structural/price_dispersion.py:365`) compute gross spread before gas — gas cost is modeled pre-trade     (Path C) and subtracted post-trade (Paths A/B), not baked into the signal threshold. This is correct design: the     strategy finds positive-EV opportunities; execution costs are modeled and tracked separately at attribution time.     No issue doc filed — net-of-gas is definitively wired. Repo: strategy-service (cross-repo audit). Source:     `defi_migration_audit_log_2026_07_24.md`
 
-- [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-26 MTDS DeFi
-      code-motion splits, two independently-verified sub-parts committed together: (a) `dex_pools_handler.py` (9→5) +
-      new `_dex_pools_subgraph.py` (2→6) from the perf-bundle facade extraction — already grep-confirmed pure
-      code-motion, zero calls lost (5+6=11=pre-split total), safe to regen; (b) `_defi_manifest.py` (43→42) + new
-      `_defi_catalog_freshness.py` (6 calls, no prior baseline entry) from the merged sibling-slot
-      `assert_defi_catalog_fresh` extraction (commit `08439787`) — FIRST verify via `git show 08439787` that the 6 calls
-      moved out of `_defi_manifest.py` rather than being silently lost/duplicated (reconcile the −1 net drop against the
-      6 in the new file before blessing); if any sub-part shows real lost calls, do NOT regen it — file a P1/P2
-      regression issue and leave that WARN in place. Then run `check_adapter_contract_regression --regenerate-baseline`
-      (quality-gates.sh 5.70/6 flow) scoped to `market-tick-data-service`, keeping the regen limited to these four
-      confirmed-safe defi files (do NOT blanket-bless unrelated cefi/tradfi/solana_defi_drift entries in the shared YAML
-      — coordinate/sequence with `defi_satellite_ao_dispatch_batch2_2026_07_26.md` line ~495's sibling solana_defi_drift
-      regen since both rewrite the same file). Repo: unified-trading-pm (baseline YAML edit + commit) +
-      market-tick-data-service (verification reads). Done when: `bash scripts/quality-gates.sh --no-fix` on
-      `market-tick-data-service` no longer prints the ⚠️ "Adapter contract-call regression" for `dex_pools_handler.py`
-      or `_defi_manifest.py`, the YAML diff is committed, and this issue doc's `status:` is flipped to `resolved` (or a
-      regression issue filed for any unconfirmed sub-part). Source:
+- [x] ✅ [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-26 MTDS DeFi
+      code-motion splits — unified-trading-pm@967ade4a5. Verified sub-part (a): dex_pools_handler.py (actual=5,
+      baseline=5) + _dex_pools_subgraph.py (actual=6, baseline=6) = 11 calls, pre-split total preserved, zero lost.
+      Sub-part (b): _defi_manifest.py baseline 43→47 (actual 47 after legitimate additions post-extraction, not lost
+      calls), _defi_catalog_freshness.py (actual=6, baseline=6). The referenced commit 08439787 is a sports commit
+      unrelated to this extraction — verified via direct per-file grep counts instead. Manual baseline edit (43→47 for
+      _defi_manifest.py only, the other 3 files unchanged) rather than full --regenerate-baseline to avoid
+      blanket-blessing unrelated entries. check_adapter_contract_regression: OK (328/328 baselined files at or above
+      minimum). MTDS QG --no-fix: no adapter contract-call regression warnings printed for these files. Source:
       `mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md`
 
 - [ ] [DATA] P3. Two read-only reconciliation checks for `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`,

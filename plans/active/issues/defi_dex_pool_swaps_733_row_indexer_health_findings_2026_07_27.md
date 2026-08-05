@@ -183,16 +183,19 @@ change required.
       276-294) was independently flipped `[x]` by slot-11 in the same window, citing this doc directly ("folded as
       corroborating evidence into the existing 2026-07-27 (slot-2) scope-extension todo in the source issue doc") — no
       annotation needed, already cross-referenced both ways. Repo: unified-trading-pm.
-- [ ] [DATA] P3. **NEW finding, 2026-07-27 (slot-5 re-probe, see "Verified live (re-probe...)" below).**
-      UNISWAP_V4/ETHEREUM carries 7 `dex_pool_swaps` `attempted_failed` rows whose `error_reason` starts with
-      `build_instrument_id` — NOT a subgraph-query failure (the subgraph itself live-probed HEALTHY, fresh block, no
-      indexing errors). This looks like a generic instrument-id-construction error (likely from a shared UAC
-      `build_instrument_id()`-style helper, not `dex_swaps_handler.py`'s own cascade code — grep for
-      `build_instrument_id` inside `dex_swaps_handler.py` returns zero hits) being surfaced as the row's error_reason.
-      Root-cause not yet dug into — get the untruncated `error_reason` for these 7 rows from
-      `_index/availability_index.parquet` (venue=UNISWAP_V4, chain=ETHEREUM, data_type=dex_pool_swaps,
-      capture_status=attempted_failed, error_reason LIKE 'build_instrument_id%'), trace the actual raise site, and fix
-      or reclassify. Small blast radius (7 rows). Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **RESOLVED 2026-08-05 (slot 4, task -002).** UNISWAP_V4/ETHEREUM `build_instrument_id`
+      `attempted_failed` rows — root cause: some UNISWAP_V4/ETHEREUM pool on-chain symbols contain `:` (the canonical
+      ID's own `VENUE:TYPE:SYMBOL` delimiter). UAC `build_instrument_id()` (line 851-862 of `canonical_id_builder.py`)
+      raises `ValueError("build_instrument_id: symbol '...' for instrument_type=POOL     carries an embedded ':'...")`
+      for any non-sports/prediction symbol containing `:`. Before 2026-08-04, this ValueError propagated uncaught
+      through `write_defi_rows` → `_collect_one_shard`'s generic `except Exception` handler →
+      `record_failed(error=exc)`, producing `attempted_failed` rows with `error_reason="build_instrument_id"` (the
+      `classify_venue_error` code_token — first 80 chars of the exception message split on `:`). **Fix already
+      shipped**: `_safe_build_instrument_id` (`market-tick-data-service@badbcbde`, 2026-08-04) catches `ValueError` and
+      returns `None`, causing malformed-symbol rows to be silently skipped (correct — a symbol containing `:` can't be
+      safely canonicalized). Verified `badbcbde` is ancestor of `origin/live-defi-rollout`. The 8 current
+      `build_instrument_id` manifest rows (was 7, grew to 8 before the fix) all carry `attempted_at` ≤ 2026-07-31 —
+      pre-fix artifacts, zero new rows post-fix. No additional code change needed. Repo: market-tick-data-service.
 
 ## Verified live (2026-07-27)
 
