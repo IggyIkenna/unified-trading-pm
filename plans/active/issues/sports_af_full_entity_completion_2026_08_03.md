@@ -579,9 +579,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   converges or this run ends.
 - **2026-08-05T20:51Z** — `af-backfill-20260805-201310` still healthy, ~97min elapsed, left running. Dual progress
   continues: TEAMS 46,593→46,457 (-136), STANDINGS 50,628→50,359 (-269).
-- **2026-08-05T21:28Z-22:04Z (condensed)** — TEAMS/STANDINGS census flat for 4 CONSECUTIVE checks (~117min→170min
-  elapsed, all reading 46,457/50,359). Verified via run.log at checks 2, 3, and 4 that this is genuinely NOT a stall —
-  the VM kept advancing through real dates the whole time (2020-12-17→2021-02-13, ~60 days processed) and its per-VM
-  shard chunk (`-c3`) grew substantially (11,505→33,747+ entries) — this is the campaign's longest single stretch
-  without consolidator absorption, but the underlying mechanism is fully understood (same per-VM-shard-to-canonical lag
-  seen throughout this campaign) and not a new failure mode. Left running throughout.
+- **2026-08-05T21:28Z-22:28Z (condensed)** — TEAMS/STANDINGS census flat for 5 CONSECUTIVE checks now (~117min→194min
+  elapsed, all reading 46,457/50,359). Verified via run.log at checks 2-4 that this is genuinely NOT a stall — the VM
+  kept advancing through real dates the whole time (2020-12-17→2021-02-13, ~60 days processed) and its per-VM shard
+  chunk (`-c3`) grew substantially (11,505→33,747+ entries) — this is the campaign's longest single stretch without
+  consolidator absorption, but the underlying mechanism is fully understood (same per-VM-shard-to-canonical lag seen
+  throughout this campaign) and not a new failure mode. Per the accepted-characteristic rule, not re-verifying via
+  run.log every subsequent tick — VM confirmed still RUNNING as of 22:28Z, left running.
