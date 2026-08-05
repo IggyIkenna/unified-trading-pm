@@ -76,11 +76,11 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 15 distinct source docs.** For each of
-      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s now-done todos, flip or update the corresponding checkbox in
-      its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-5 commit(s) that shipped
-      it — verify the actual shipped commit exists before citing it. **Pay particular attention to todos 4/5/6** (the
-      FX/YAHOO_FINANCE coordination cluster): confirm the coordination actually happened as instructed (one
+- [x] ✅ [REVIEW] P1. **Reconcile all 15 distinct source docs.** — `unified-trading-pm@<sha>` (slot 3, 2026-08-05). For
+      each of `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s now-done todos, flip or update the corresponding
+      checkbox in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-5 commit(s)
+      that shipped it — verify the actual shipped commit exists before citing it. **Pay particular attention to todos
+      4/5/6** (the FX/YAHOO_FINANCE coordination cluster): confirm the coordination actually happened as instructed (one
       investigation cited by the other two, not three independent re-derivations) before flipping all three docs'
       checkboxes — if a worker duplicated the investigation instead of coordinating, note that as a process finding
       rather than silently accepting it. For every source doc: after reconciling, re-check whether it now has 0 open
@@ -146,3 +146,46 @@ No new durable contract is created by this plan. `/codex/11-project-management/`
   of the redundant finalize double-gate) changed frontmatter only and left the prose behind. No todo checkbox flipped;
   this plan's todos remain machine-gated on batch5's completion.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate, no changes needed.
+
+- **2026-08-05 (slot 3, infra→review, task `tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize-001`) — Todo 1
+  reconciliation complete.** All 15 source docs reconciled against batch5's shipped commits:
+
+  **Verified commits** (all confirmed on `origin/live-defi-rollout` or content-equivalent after squash-merge):
+  `deployment-service@c847395e`, `market-tick-data-service@11be9cfe`/`@41391cba`/`@c5152776`/`@4fdbcb0d`/`@c1e1de71`,
+  `market-data-processing-service@ca546fd→93e731b`/`@0671953→de8ea9f`/`@f179c96→f64acca` (squash-merge repo — SHAs
+  differ, content identical), `deployment-service@60b9d37`, `features-service@d06919bf`.
+
+  **15 source docs status after reconciliation:**
+  1. `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` — ARCHIVED, `status: resolved`, 4/4 todos done ✅
+  2. `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` — ARCHIVED, 0 open ✅
+  3. `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` — 3 open todos (operator-gated
+     `--apply`, naming drift, re-measure), status stays `open` ✅
+  4. `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` — 1 open todo (historical manifest repair),
+     status stays `open` ✅
+  5. `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md` — **FLIPPED `status: open → resolved`** (0 open
+     items, no `locked_by`) ✅
+  6. `issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` — Already `status: resolved`, 0 open ✅
+  7. `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md` — 0 open items, but
+     `locked_by: live-defi-rollout` → NOT TOUCHED per rule ✅
+  8. `issues/tradfi_backfill_oom_remediation_2026_06_24.md` — 0 open items, but `locked_by: live-defi-rollout` → NOT
+     TOUCHED per rule ✅
+  9. `/plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md` — ARCHIVED,
+     `status: resolved` ✅
+  10. `issues/mtds_combo_underlying_tests_stale_vs_uac_raw_root_2026_07_28.md` — ARCHIVED, `status: resolved` ✅
+  11. `issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` — Already `status: resolved`, 0 open ✅
+  12. `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` — ARCHIVED,
+      `status: resolved` ✅
+  13. `issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md` — **FLIPPED `status: open → resolved`**
+      (0 open items, no `locked_by`) ✅
+  14. `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` — 2 open todos (`[OPERATOR]` COMBO
+      scoping + P3 ETF/OPTION gap), status stays `open` ✅
+  15. `tradfi_backfill_throughput_followups_2026_07_24.md` — CME root-bundling checkbox already flipped
+      (`deployment-service@60b9d37`), covering plan (not issue doc) ✅
+
+  **FX/YAHOO_FINANCE coordination cluster (todos 4/5/6): CONFIRMED COORDINATED** — one investigation (todo 6,
+  `tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`) done first, cited by both todo 4 (item 3) and todo 5 (item 2),
+  not three independent re-derivations.
+
+  **Two docs flipped to resolved** (docs 5, 13). Two docs had `locked_by` set and were correctly left untouched (docs 7,
+  8). Two docs have genuinely open work remaining (docs 3, 4, 14). All commits verified on origin. No doc with non-empty
+  `locked_by` was touched.

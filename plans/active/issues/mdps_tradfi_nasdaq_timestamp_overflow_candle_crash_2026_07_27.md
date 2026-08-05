@@ -10,7 +10,7 @@ summary: >-
   aggregation before any parquet write. Distinct bug class from the derivative_ticker schema-violation issue: this is a
   raw-tick DATA-QUALITY defect, not a schema/contract gap, and it correctly reports failure (exit_code=1) — the
   observability half of the original issue does NOT reproduce here.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,9 +38,15 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineering
+resolved_by: >-
+  tradfi_satellite_ao_dispatch_batch5_2026_07_29.md todo 13 (slot-12, 2026-08-03; re-verified slot-6, 2026-08-05):
+  VERDICT SYSTEMIC — cross-repo naming collision (MTDS _COLUMN_ALIASES erases ns unit signal, MDPS generic timestamp
+  fallback defaults to us). Tactical fix `market-data-processing-service@f179c96` (magnitude heuristic ≥1e18 → ns) +
+  `market-data-processing-service@c10425d` (bounds-check NaT coercion). Raw source confirmed clean (IBIT 13,717 rows,
+  ETHA 4,891 rows, all timestamps in ns range, zero anomalous values — NOT a vendor glitch). Architectural fix (resolve
+  naming collision without magnitude inference) tracked as open P3 in this doc.
 drift_direction: advance-code
 depends_on: []
-resolved_by:
 locked_by:
 locked_since:
 context_scope:

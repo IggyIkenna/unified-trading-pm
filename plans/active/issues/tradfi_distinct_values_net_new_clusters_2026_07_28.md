@@ -10,7 +10,7 @@ summary: >-
   cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md's line-191 owning-plan-reconciliation todo, plus a third
   cluster (`UD` instrument_type) surfaced by the same 2026-07-28 re-run that the earlier entry did not name. None of the
   three fixes are executed here (read-only audit scope) — filed for the next session/operator to pick up.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -26,7 +26,7 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-07-28"
+last_updated: "2026-08-05"
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -38,12 +38,16 @@ source: >-
   distinct_values_noncanonical_audit_2026_07_20.md line-191 todo (owning-plan reconciliation of every current
   non-canonical value), dispatched via cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md
 assigned_role: data_engineering
+resolved_by: >-
+  tradfi_satellite_ao_dispatch_batch5_2026_07_29.md todo 5 (slot-7, 2026-08-04): all 3 clusters investigated against
+  live tradfi manifest (6.4M rows), zero code changes needed — ESM0/MIGRATED chain-axis gone, YAHOO_FINANCE venue
+  confirmed 0 live rows (dead code, cite sibling investigation), UD instrument_type root-caused to MDPS
+  canonical_writer.py + tracked in tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md.
 drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
 depends_on: []
 context_scope:
   [
