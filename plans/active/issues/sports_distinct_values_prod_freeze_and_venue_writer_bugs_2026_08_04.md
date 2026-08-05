@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  "Sports distinct-values panel: 4-day-frozen prod deploy + 2 venue writer bugs + a historical re-stamp — 44→1
-  non-canonical (only FOOTBALL residual left, tracked separately)"
+  "Sports distinct-values panel: 4-day-frozen prod deploy + 2 venue writer bugs + a historical re-stamp + FOOTBALL
+  phantom-row cleanup — RESOLVED, 44→0 non-canonical across every axis"
 summary: >-
   Operator flagged the deployment-ui Distinct Values panel (sports) still showing ~44 non-canonical values across
   venues/instrument_types/data_types despite prior sessions already having landed the fixes in UAC + deployment-api.
@@ -18,9 +18,13 @@ summary: >-
   `ladbrokes_uk`/`sport888` to canonical `LADBROKES`/`BET888SPORT` first) and `market-data-processing-service`'s
   `live_workers.py` did a raw `instrument_id.split(":")[0]` that grabbed the SPORT token ("FOOTBALL") instead of the
   bookmaker for sports' `SPORT:BOOKMAKER:MARKET:...` id shape (mirrors an already-fixed sibling bug class,
-  `_venue_token_from_canonical_id`, that just hadn't been applied at this one call site). Both writer fixes stop future
-  pollution but do NOT retroactively fix already-captured rows — venues stays at 3 non-canonical
-  (FOOTBALL/LADBROKES_UK/SPORT888) until a historical re-stamp runs; see Todos.
+  `_venue_token_from_canonical_id`, that just hadn't been applied at this one call site). Both writer fixes stopped
+  future pollution immediately, but did not retroactively fix already-captured rows — venues stayed at 3 non-canonical
+  (FOOTBALL/LADBROKES_UK/SPORT888) until (a) a historical GCS+manifest re-stamp ran for LADBROKES_UK/SPORT888 (31,118
+  objects, 30,912 manifest rows, plus a real manifest_swap casing bug found+fixed along the way — see Todos) and (b) a
+  manifest-only phantom-row cleanup ran for FOOTBALL's 194 always-failed, zero-real-data residual rows (also found no
+  retry mechanism covered them, explaining why they never self-healed). **RESOLVED 2026-08-05**: live panel confirmed at
+  venues/instrument_types/data_types/chains all 0/0 non-canonical.
 status: open
 nature: issue
 asset_group:
@@ -95,7 +99,7 @@ context_scope:
   ]
 ---
 
-# Sports distinct-values panel — 44→1 non-canonical (2026-08-04/05)
+# Sports distinct-values panel — 44→0 non-canonical, RESOLVED (2026-08-04/05)
 
 ## What was live when this session started (verified via the raw endpoint, not just the screenshot)
 
@@ -206,6 +210,24 @@ confirming before scoping a re-stamp for it.
   **Takeaway for next time**: a quickmerge run reporting exit 0 / "completed" is NOT proof the working tree is clean —
   always `git status --porcelain` (no path arg) after every quickmerge, especially when two commits touch overlapping
   files in quick succession on a shared checkout.
+- `market-tick-data-service@1c7edf32` — 2 more unrelated repo-wide-gate blockers hit while shipping the FOOTBALL cleanup
+  (see the completed FOOTBALL todo below): (1) `pyproject.toml` was missing
+  `[tool.ruff.lint] external = ["TID251", "DTZ"]` — without it, ruff's RUF100 rule flagged the QG's OWN documented
+  per-line opt-out (`# noqa: TID251` with a reason) as "unused", because TID251/DTZ aren't in this repo's default
+  `select` list (they're checked by QG STEP 5.95's separate `--isolated` ratchet scan instead) — a genuine contradiction
+  between the documented escape hatch and the actual ruff config, now fixed; (2)
+  `scripts/reset_source_returned_zero_manifest.py` had an un-suppressed deliberate `google.cloud` import pushing the
+  TID251 ratchet count 1 over baseline — added the noqa (now workable thanks to fix 1). **A THIRD blocker
+  (`DefiManifestRecorder.record_captured`/`_emit_captured_add` 1 line over the 50-line method cap) resolved itself**:
+  while I was mid-fix, TWO other concurrent sessions independently hit and fixed the exact same method-size violation
+  (`market-tick-data-service@cec16b74` then `@aafbbfdf`) — confirmed HEAD's landed version already satisfied the cap, so
+  I discarded my own overlapping edit via `git restore --source=HEAD` rather than ship a redundant/conflicting third
+  fix. **Lesson**: this repo had unusually heavy concurrent quickmerge traffic today (`ps aux` showed 5+ simultaneous
+  quickmerge processes from other slots at one point) — expect real, DIFFERENT blockers on consecutive attempts (not
+  just flaky repeats), and always re-check whether a blocker you're about to fix has already been fixed by someone else
+  before shipping your own version.
+- `market-tick-data-service@9d1d7441` — the FOOTBALL manifest-only phantom-row REMOVE script (see the completed FOOTBALL
+  todo below for the full account).
 
 ## Todos
 
@@ -274,10 +296,24 @@ confirming before scoping a re-stamp for it.
       rollup (`launch-measure-honest-coverage-vm.sh sports`) and confirmed on the LIVE panel: **venues non-canonical
       count 3 → 1** (only `FOOTBALL` remains, the separate pre-existing residual tracked below — LADBROKES_UK/SPORT888
       no longer appear in the non-canonical list at all). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Confirm FOOTBALL's 194 `attempted_failed` rows either clear naturally on a future retry or, if not
-      after another few days, scope why they're still failing post-fix (may be an unrelated failure cause, not just the
-      venue mis-stamp) before deciding whether they need a manifest phantom-row cleanup or are a separate live bug.
-      **Still open as of 2026-08-05** (confirmed NOT self-healed after 24h+). (repo: market-data-processing-service)
+- [x] ✅ [DATA] P3. Confirm FOOTBALL's 194 `attempted_failed` rows either clear naturally on a future retry or, if not
+      after another few days, scope why they're still failing post-fix — **DONE, 2026-08-05**. Investigated via Explore
+      agent: confirmed the ALREADY-fixed `live_workers.py::_eager_preprocess_and_recover_metadata` venue bug (see
+      Cause 3) is the SINGLE venue-derivation point for this candle family, for BOTH batch and live —
+      `CandleOrchestrationService` explicitly overrides the batch/live MRO to always route through
+      `LiveOrchestrationMixin._process_instrument_file`, so there is no separate, still-broken batch code path; the 194
+      rows (all `pipeline_mode=batch_footystats`, 2 distinct dates: 2021-11-26/2025-12-18) are confirmed **pure pre-fix
+      residue**, not a live second bug. Also confirmed **no retry mechanism in this codebase covers them** —
+      `reprocess_sports_odds.py` (the only standing retry job) targets a different data_type entirely
+      (`odds_horizon_bucket`) and only a rolling 2-day window, explaining why they never self-healed. Since all 194
+      carry `row_count=0`/`capture_status=attempted_failed` (0 real data, no GCS objects at risk) and `FOOTBALL` can
+      never legitimately recur as a venue value now that the bug is fixed, wrote a manifest-only CAS-protected REMOVE
+      script (`remove_football_phantom_rows_2026_08_05.py`, mirrors `manifest_swap_venue_restamp_2026_07_27.py`'s safety
+      shape: pre-write snapshot, generation-matched conditional upload, defensive re-check refusing to proceed if any
+      matched row is NOT `attempted_failed`, post-write verify) — `market-tick-data-service@9d1d7441`. Ran on a VM
+      (`canonical-migration-sports-football-cleanup-*`, registered prefix, SPOT, torn down after): dry-run confirmed
+      exactly 194/194 `attempted_failed`/0 non-phantom, apply removed all 194, verify re-download confirmed 0 remaining.
+      Fresh census re-run: **LADBROKES_UK/SPORT888/FOOTBALL all show 0 manifest rows.** (repo: market-tick-data-service)
 - [ ] [INFRA] P3. File (or fold into an existing infra doc) a proposal to default `mtds-live-*` VM relaunches to
       `LC_TARBALL_FRESHNESS=enforce` — see the trap noted in the VM-restart todo above; a live producer silently running
       stale code for days-to-weeks is a plausible root cause worth closing off generally, not just patching for this one
@@ -307,14 +343,26 @@ confirming before scoping a re-stamp for it.
   honest-coverage rollup shows the live panel at venues 3→1 non-canonical (only the pre-existing, separately-tracked
   `FOOTBALL` residual remains). Both VMs used (the manual re-stamp VM and the honest-coverage measurement VM) torn down
   after completion.
+- **2026-08-05 (same day, operator asked to also close out FOOTBALL "so it goes forever")**: investigated + resolved the
+  FOOTBALL residual (see the completed FOOTBALL todo above). Along the way hit 3 MORE unrelated repo-wide-gate blockers
+  on this heavily-concurrent shared checkout (import-pattern violation, TID251-ratchet-vs-RUF100 contradiction,
+  DefiManifestRecorder method-size cap) — all fixed or resolved by taking a concurrent session's already-landed fix (see
+  Shipped above). **Verification caught a real false alarm**: the live panel initially kept showing `FOOTBALL` as
+  non-canonical even after the fix + a fresh rollup completed; rather than trust that, downloaded the actual
+  `coverage.json` directly (`gsutil cat`) and confirmed **zero** mentions of `FOOTBALL` anywhere in the file — the panel
+  was serving a stale `deployment-api` in-process cache (30 min TTL, keyed independently per Cloud Run instance) that
+  hadn't caught up to the latest write yet, not a real data problem. Waited it out and re-confirmed live. **Final
+  verified state: sports distinct-values panel — venues/instrument_types/data_types/chains all 0/0 non-canonical across
+  the board** (started this session at 44 non-canonical). This doc's scope is now fully resolved; only 2 small,
+  unrelated follow-up todos remain (see below) — neither blocks anything or affects the panel.
 
 ## Deferred work after 2026-08-05
 
-| Item                                                              | State              | Blocked on                                                                                                          |
-| ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| FOOTBALL 194 `attempted_failed` phantom rows                      | Not done           | Nobody — confirmed NOT self-healing after 48h+; needs a short investigation into why the retry hasn't cleared them. |
-| `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                                                              |
-| LDR→main promotion of today's 6 shipped commits                   | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run.                                     |
+| Item                                                              | State              | Blocked on                                                                      |
+| ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------- |
+| `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                          |
+| LDR→main promotion of today's shipped commits                     | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run. |
 
-**Recommended next item**: the FOOTBALL phantom-row investigation (P3, small, self-contained) — everything else in this
-doc is now resolved or genuinely time-gated.
+**This doc's scope is fully resolved** — the sports distinct-values panel is 0/0/0/0 non-canonical across every axis,
+verified live. The one remaining todo (`LC_TARBALL_FRESHNESS=enforce`) is an unrelated small process-hardening proposal
+that doesn't block or affect anything here; pick it up whenever, no urgency.
