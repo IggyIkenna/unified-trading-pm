@@ -119,3 +119,4 @@ context_scope:
   `defi_perp_daily_ctx_manifest_gap_reader_risk` (todo 13 already cites batch-6). **Not annotated (not batch-6
   covered):** `defi_expected_unattempted_backlog_1m` (line 345 — explicitly deferred by batch-6 as operator-gated).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

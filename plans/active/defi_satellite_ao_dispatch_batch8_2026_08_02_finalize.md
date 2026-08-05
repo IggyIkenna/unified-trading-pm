@@ -35,7 +35,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /plans/active/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -105,3 +105,5 @@ these until batch8 is fully done.**
   still held (main's standing hold live, operator R3 decision pending). Todo 3 (archive batch8): 6-step ritual executed
   — batch8 moved to `plans/archive/2026_08/`, INDEX.md referrers updated. This finalize plan itself is now fully checked
   and eligible for archival (all 3 todos `[x]`, no `locked_by`).
+- **context-scout 2026-08-05**: refreshed context_scope (4 entries) -- fixed stale batch8 path (moved to
+  plans/archive/2026_08/ by this doc's own todo 3, was still pointing at the deleted plans/active/ path).

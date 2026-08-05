@@ -338,3 +338,4 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped 2 archived plan links, added 3 real
   source-code targets (breakdowns_core.py, _distinct_values.py, canonical_id_builder.py) the doc's own findings name.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

@@ -745,3 +745,4 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
   3 remaining open items (EXTENDED raise-vs-fallback judgment call, a consolidator-health-gated config revert, the G1
   umbrella marker) are all still genuinely human/judgment/gated work.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

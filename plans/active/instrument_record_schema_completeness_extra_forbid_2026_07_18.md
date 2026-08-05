@@ -154,4 +154,6 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still minimal and accurate.
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — re-confirms 2026-07-30; all 4 open todos are sequentially gated
   behind todo 2's still-open operator-judgment verdict on `min_order_size` (explicitly flagged ambiguous, not yet
-  resolved). No content change since the last pass beyond the context-scout re-scout.
+  resolved).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. No content change since
+  the last pass beyond the context-scout re-scout.

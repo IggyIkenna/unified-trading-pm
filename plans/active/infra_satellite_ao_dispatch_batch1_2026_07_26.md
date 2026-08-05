@@ -996,3 +996,5 @@ uncommitted WIP or force a red-QG ship. **Next pickup**: `git stash pop` in `.ta
 `df -h /` has real headroom (need enough for a fresh venv + ruff/basedpyright/pytest/unified-trading-library — budget at
 least a few hundred MB), then `bash scripts/setup.sh && bash scripts/quality-gates.sh` and ship the moment it's green.
 This is the LAST repo — closing it closes this todo.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

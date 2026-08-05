@@ -156,3 +156,4 @@ independently-startable item any session can pick up without waiting on the phas
   (`issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `strategy-service@a90e85eb`) — this
   doc's own text had not been updated to reflect it. Flipped `[x]` with citation; doc has zero remaining open scope
   (index/entry-point doc, `assigned_vm` unchanged).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

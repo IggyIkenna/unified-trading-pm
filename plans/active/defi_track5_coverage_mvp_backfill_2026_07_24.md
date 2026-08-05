@@ -166,3 +166,4 @@ the parent plan's Track 7 culled-venue ruling.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — fixed a duplicated entry (the same optimization
   issue doc was listed twice) and swapped in the real `dex_pools_handler.py` fan-out target named in the doc's own
   Track-5 async-fan-out todo.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

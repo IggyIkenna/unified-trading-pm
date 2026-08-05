@@ -502,3 +502,4 @@ not data-pipeline).
   shipped `unified-trading-pm@ebc2075b9` same day — correctly excluded from this run's Phase-1 candidate set by the
   generator's own `EXCLUDED_STATUS` filter, but still linkage-unlinked). Named here per the established discoverability
   remedy.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

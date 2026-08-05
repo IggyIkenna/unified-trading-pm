@@ -55,7 +55,7 @@ context_scope:
   [
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    unified_api_contracts/registry/defi_venue_capabilities.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
   ]
 ---
 
@@ -130,3 +130,5 @@ context_scope:
   todos remain closed with hard evidence, the sole open checkbox (SUSHISWAP classic-vs-V3 venue-attribution) is still an
   undecided data-semantics call per the doc's own text and `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s explicit
   out-of-scope carve-out. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: refreshed context_scope (3 entries) -- fixed a dead path (the
+  `defi_venue_capabilities.py` entry was missing the `unified-api-contracts/` sibling-repo prefix, resolved to nothing).

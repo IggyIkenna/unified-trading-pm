@@ -247,3 +247,4 @@ no drift:
   (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`,
   `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`) were in this run's candidate set and were read
   and verdicted, so the safety net held as designed.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

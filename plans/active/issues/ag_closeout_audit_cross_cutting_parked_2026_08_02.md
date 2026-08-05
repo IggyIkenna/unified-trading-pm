@@ -151,3 +151,4 @@ candidate for that tranche's next pass, not just a retag-only finding.
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
   to dispatch — not flipped by this run per the "ASK BEFORE CREATING"/never-auto-flip HARD RULE).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

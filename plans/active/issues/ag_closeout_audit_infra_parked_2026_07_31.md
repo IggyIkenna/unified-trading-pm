@@ -203,3 +203,4 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
   by the `/ag-closeout-audit` owning-tranche-writes-only rule — see the tranche-level `BLOCKED-OPERATOR-DECISION` on
   that rule's deadlock recorded in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker. This doc is a
   parked-findings register by construction, so NA remains the correct home for it as a whole.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
