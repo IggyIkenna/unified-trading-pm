@@ -44,7 +44,7 @@ context_scope:
     /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py,
   ]
 ---
@@ -91,7 +91,7 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 > `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2 (`assigned_vm: planning`, still `status: draft`
 > — activation is the operator's call, `unified-trading-pm@2d5fb4b59`); **todo 3** (the ASTER `liquidations` multi-hour
 > listen window, added 2026-07-31 and therefore not visible to batch4 when it was drafted) is claimed by
-> `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 4 `[DIAG] P3` (`status: active`,
+> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 4 `[DIAG] P3` (`status: active`,
 > `unified-trading-pm@766822efe`). This doc stays `assigned_vm: NA` deliberately — flipping it would create a second
 > dispatch path for checks already claimed twice over. Each batch's done-when includes flipping the source checkbox
 > here, so those workers own closing them.

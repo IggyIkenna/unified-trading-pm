@@ -8,7 +8,7 @@ summary:
   launch-mtds-backfill-vm.sh — a live-leg pipeline_e2e_check smoke test against a Tardis-sourced venue can contend for
   the shared single-IP Tardis key with an active real backfill, risking the same 403-storm/false-attempted_failed
   corruption the guard exists to prevent.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -22,12 +22,12 @@ parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
-resolved_by:
+resolved_by: cefi_satellite_ao_dispatch_batch5_2026_08_02
 locked_by:
 context_scope:
   [
     /plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-mtds-live.sh,
@@ -98,13 +98,13 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 > | skill `SKILL.md` Phase 2 (live leg)            | **THIS doc** (P3 below) — a different section, no overlap        |
 
 > **📤 THE TODOS BELOW ARE EXTRACTED AND DISPATCHED ELSEWHERE — do NOT dispatch from this doc (`/na-eligibility-audit`
-> 2026-08-02, tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`status: active`,
-> `assigned_vm: planning`, `parent_epic: cefi_master`, `unified-trading-pm@766822efe`) carries this doc's entire
-> remaining scope verbatim and Source-cites it: **batch5 todo 1 `[INFRA] P1`** covers P1 + P2 together (and widens P2
-> from the 2 siblings named below to all 8 `launch-*live*.sh` scripts), **batch5 todo 2 `[DOC] P3`** covers P3. This doc
-> stays `assigned_vm: NA` deliberately — flipping it would create a SECOND dispatch path for the same launcher edit. Any
-> checkbox still open below is genuinely unshipped; batch5's own done-when for each todo includes flipping it, so the
-> batch5 worker owns closing it.
+> 2026-08-02, tranche=cefi).** `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md`
+> (`status: active`, `assigned_vm: planning`, `parent_epic: cefi_master`, `unified-trading-pm@766822efe`) carries this
+> doc's entire remaining scope verbatim and Source-cites it: **batch5 todo 1 `[INFRA] P1`** covers P1 + P2 together (and
+> widens P2 from the 2 siblings named below to all 8 `launch-*live*.sh` scripts), **batch5 todo 2 `[DOC] P3`** covers
+> P3. This doc stays `assigned_vm: NA` deliberately — flipping it would create a SECOND dispatch path for the same
+> launcher edit. Any checkbox still open below is genuinely unshipped; batch5's own done-when for each todo includes
+> flipping it, so the batch5 worker owns closing it.
 >
 > One correction batch5 verified live on 2026-08-02 that this doc's older prose gets wrong — **trust batch5, not the
 > text below**: the skill path is `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/`, not the
@@ -159,12 +159,12 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   exact same-file collision that caused the 07-30 park, which on its own merits made all three todos a clean RECLASSIFY
   (bounded, named files, named helper, gap re-verified live). The Phase-2 conflict-check then found the scope had
   ALREADY been extracted verbatim, that same resolution having fed
-  `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`unified-trading-pm@766822efe`, active/planning) —
-  its todos 1 and 2 Source-cite this doc for P1+P2 and P3 respectively. Per the verdict rubric this is a
-  checkbox-citation fix, not a reclassification: flipping `assigned_vm` here would let backlog-regen derive a second
-  dispatch of the same launcher edit. Extraction banner added above the todos; `assigned_vm: NA` unchanged. (Superseded
-  in part the same day — see the next entry: batch5 todo 1 then closed P1+P2 NOT-A-BUG, so the banner's live scope
-  narrowed to P3.)
+  `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` (`unified-trading-pm@766822efe`,
+  active/planning) — its todos 1 and 2 Source-cite this doc for P1+P2 and P3 respectively. Per the verdict rubric this
+  is a checkbox-citation fix, not a reclassification: flipping `assigned_vm` here would let backlog-regen derive a
+  second dispatch of the same launcher edit. Extraction banner added above the todos; `assigned_vm: NA` unchanged.
+  (Superseded in part the same day — see the next entry: batch5 todo 1 then closed P1+P2 NOT-A-BUG, so the banner's live
+  scope narrowed to P3.)
 - **2026-08-02, slot 15** (`cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1): P1 + P2 closed NOT-A-BUG.
   Code-trace evidence showed MTDS live-mode capture never opens the authenticated `datasets.tardis.dev` connection —
   this doc's original contention claim (inferred from `VENUE_TO_ADAPTER_KEY == 'tardis'`) conflated the BATCH-mode
@@ -179,3 +179,6 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   finding, less so now that P1/P2 resolved not-a-bug).
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
   2026-08-03 citation; sole open P3 item stays tracked as `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2.
+- **batch5 finalize reconciliation 2026-08-05 (slot 2)**: all 3 checkboxes verified done — P1+P2 closed NOT-A-BUG
+  (unified-trading-pm@c34bfd176, verified on origin), P3 shipped (unified-trading-pm@509b2553c, verified on origin).
+  Remaining open items: 0. Flipped `status: resolved`.

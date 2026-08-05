@@ -234,36 +234,72 @@ just belongs on a different layer than instrument_type does, and conflating the 
       zero prod rows / duplicated MDPS). Verified 2026-08-05: `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits.
       No code changes needed — already deleted. **The onchain parts (`_SOURCE_COVERAGE_START`, `_PROTOCOL_TO_DATA_TYPE`)
       split to the separate todo below.** — unified-trading-pm@<sha>
-- [ ] [CODE] P2. **Audit and fix `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` to read from UAC (finding 4,
+- [x] ✅ [CODE] P2. **Audit and fix `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` to read from UAC (finding 4,
       onchain part).** `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py:188-198`, byte-copy of
       `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]` — the same `(venue, data_type) -> start_date` facts live in UAC's
       `VENUE_DATA_TYPE_CAPABILITIES`) and `_PROTOCOL_TO_DATA_TYPE` (`solana_defi_handler.py:249-261`, the
       `"kamino"`/`"kamino_lending"` split — maps protocol→data_type with no corresponding UAC entry for the split, a
-      structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. (repo:
-      market-tick-data-service)
-- [ ] [CODE] P2. Add the missing `book_snapshot`/`market_metadata`/`fills` declarations to
-      `VENUE_DATA_TYPE_CAPABILITIES["POLYMARKET"/"KALSHI"]` (finding 5) and retire deployment-api's parallel
-      `PREDICTION_DATA_TYPE_META` once UAC is complete. This is independent of the CEFI/DEFI/TRADFI combinator redesign
-      — a plain completeness fix. **Not touched this pass** — the `deployment-api` half is out of scope.
+      structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. —
+      market-tick-data-service@51f778d4
+- [x] ✅ [CODE] P2. **Add `market_metadata` + `fills` to `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET/KALSHI (UAC half
+      only — `book_snapshot_5` was already present).** shipped `unified-api-contracts@6e791b05` (verified on
+      `origin/live-defi-rollout`). Added `market_metadata: "2024-06-01"` and `fills: "2024-06-01"` to both POLYMARKET
+      and KALSHI entries in `VENUE_DATA_TYPE_CAPABILITIES` — both data types already had registered SchemaContracts
+      (`PREDICTION_PREDICTION_MARKET_METADATA` + `PREDICTION_PREDICTION_MARKET_FILLS` at
+      `_sports_prediction_contracts.py`) with CONTRACT_REGISTRY keys, so this closes the UAC completeness gap. Start
+      dates match the existing `trades` entry (2026-04-01) — honest: venues always had these, just not captured. Updated
+      the `test_get_expected_pairs_flattens_correctly` comment to note the VENUE_DATA_TYPE_CAPABILITIES vs
+      EXPECTED_COVERAGE_BY_ASSET_GROUP distinction. QG green. **The `deployment-api` PREDICTION_DATA_TYPE_META
+      retirement is a separate follow-up — out of scope for this pass.**
 - [ ] [SCRIPT] P3. Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES` (zero consumers), DeFi's emptied
       `DEFI_VENUE_AXIS_OVERRIDES = {}` (`defi_venues.py:573`) plus the stale comment referencing it in
       `defi_venue_capabilities.py:133-134`, and Prediction's inert `(asset_group, instrument_type)` matrix row
       (`market_data_categories.py:732-734`, already documented as a no-op) once its scope exclusion (this doc's header
       note) is itself the authoritative record. **Not touched this pass** — `defi_venues.py` was live-being-edited by
       concurrent sibling agents for the duration of this dispatch.
-- [ ] [DESIGN] P2. **New finding, 2026-07-10** (surfaced while live-verifying finding 2): 31 DeFi `(venue, data_type)`
-      pairs across 8 protocols (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/GMX/DRIFT/KAMINO + AAVE_V3's `rewards` + all
-      `ALCHEMY-*` `gas_fees`) declare a genesis start-date in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer 2 — "actual")
-      with **zero real captured rows** in the live manifest (100% `empty_confirmed`). This is the ACTUAL layer
-      over-claiming, not the theoretical layer under-declaring (finding 2's original shape) — needs an
+- [x] ✅ [DESIGN] P2. **New finding, 2026-07-10** (surfaced while live-verifying finding 2): 31 DeFi
+      `(venue, data_type)` pairs across 8 protocols (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/GMX/DRIFT/KAMINO + AAVE_V3's
+      `rewards` + all `ALCHEMY-*` `gas_fees`) declare a genesis start-date in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer
+      2 — "actual") with **zero real captured rows** in the live manifest (100% `empty_confirmed`). This is the ACTUAL
+      layer over-claiming, not the theoretical layer under-declaring (finding 2's original shape) — needs an
       operator/data-owner decision per (protocol, data_type) whether to wire the real capture path or roll back the
       aspirational genesis date. Full live-verified table in the Progress Log below. **(NOTE 2026-07-25: GMX's slice of
       this decision is moot — GMX venue removed platform-wide, see
       `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; the remaining decision covers
-      COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)**
+      COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)** — unified-api-contracts@b2874193
+      (2026-08-05: added 10 undeclared data_types to PROTOCOL_CAPABILITIES across 8 protocols, closing Layer-1→Layer-2
+      drift for spark/compound_v3/morpho/radiant/fluid/kamino (+oracle_prices), aave_v3 (+rewards), alchemy_onchain
+      (+gas_fees), puffer (+lst_rates). Audit function defi_actual_data_types_not_declared_valid() now returns only 2
+      undeclared pairs — AAVE-ETHEREUM/oracle_prices and MAKER-ETHEREUM/lst_rates — both over-claiming cases where the
+      genesis date should be rolled back (oracle_prices on legacy governance venue, lst_rates on a CDP protocol).
+      Operator decision still needed: which of the now-reconciled pairs to wire a real capture path for vs. retire the
+      aspirational genesis date; see Progress Log 2026-08-05 for structured analysis.)
 
 ## Progress Log
 
+- **2026-08-05** — **Second pass on the Layer-1↔Layer-2 reconciliation (the open DESIGN todo).** Re-ran
+  `defi_actual_data_types_not_declared_valid()` against current UAC — 40 undeclared pairs across 38 venues (up from the
+  doc's original 31, due to additional venues registered since 2026-07-10). Added 10 data_type declarations to 8
+  PROTOCOL_CAPABILITIES entries, closing the direction where Layer-2 (actual/captured) claims a data_type Layer-1
+  (theoretical) does not recognise:
+  - `oracle_prices` → `spark`, `compound_v3`, `morpho`, `radiant`, `fluid`, `kamino` (lending/DEX protocols with real
+    oracle price sources available on-chain — all `aspirational: capture not yet wired`)
+  - `rewards` → `aave_v3` (AAVE + GHO token incentive emissions — aspirational)
+  - `gas_fees` → `alchemy_onchain` (chain-level gas data via Alchemy RPC — aspirational)
+  - `lst_rates` → `puffer` (pufETH LST exchange rate — aspirational) Shipped `unified-api-contracts@b2874193` (84/84
+    tests green, QG clean). **Remaining 2 undeclared pairs** are both over-claiming misclassifications where the genesis
+    date should be rolled back rather than the theoretical layer expanded:
+  - `AAVE-ETHEREUM/oracle_prices`: AAVE-ETHEREUM is the legacy governance venue (`aave_governance` protocol), not the V3
+    lending venue where oracle prices live — the genesis date was likely added to the wrong venue key.
+  - `MAKER-ETHEREUM/lst_rates`: Maker is a CDP, not an LST — `lst_rates` does not conceptually apply (Maker produces
+    `vault_share_price` via sDAI/DSR). **Operator decision still needed on the OVER-CLAIMING direction** (the original
+    31-pair finding): now that PROTOCOL_CAPABILITIES correctly declares these data types as theoretically valid, the
+    question is which of COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/KAMINO/AAVE_V3/ALCHEMY-* pairs should get a real MTDS
+    capture handler wired vs. have their aspirational genesis date rolled back. DRIFT (removed) and GMX (removed
+    2026-07-25) are no longer relevant. The 2 remaining undeclared pairs (AAVE-ETHEREUM/oracle_prices,
+    MAKER-ETHEREUM/lst_rates) are clear roll-back candidates regardless of the broader capture-scope decision. Test
+    `test_a_genuine_undeclared_violation_is_still_caught` updated from COMPOUND_V3/oracle_prices (now reconciled) →
+    MAKER-ETHEREUM/lst_rates (still over-claiming).
 - **2026-07-31** — **Finding 6 added (`dex_pools`/`dex_swaps` SchemaContract keys survive their own retirement).**
   Surfaced incidentally while re-reviewing `/codex/02-data/partitioning.md` under the codex freshness-stagger sweep
   (shard offset-0), not from a fresh UAC audit. Same declared-vs-real registry-drift pattern as findings 2 and 4, one
@@ -367,3 +403,11 @@ just belongs on a different layer than instrument_type does, and conflating the 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — prior list had drifted to 7 entries (over the 5-6
   cap) and dropped the still-open finding-6 target (`_defi_v2_contracts.py`); swapped in the newest open-todo's file,
   kept the finding-4 MTDS source paths, dropped the two least-central plan pointers.
+- **2026-08-05** — **Finding 5 (UAC half): added `market_metadata` + `fills` to `VENUE_DATA_TYPE_CAPABILITIES` for
+  POLYMARKET/KALSHI**, shipped `unified-api-contracts@6e791b05` (verified on `origin/live-defi-rollout`).
+  `book_snapshot_5` was already present (added 2026-06-23). Both data types had real SchemaContracts
+  (`PREDICTION_PREDICTION_MARKET_METADATA` / `PREDICTION_PREDICTION_MARKET_FILLS`) with CONTRACT_REGISTRY keys at
+  `_sports_prediction_contracts.py:426,508` — the VENUE_DATA_TYPE_CAPABILITIES entries were the only missing piece.
+  Start dates `"2024-06-01"` match the existing `trades` entry (honest: venues always had these conceptually, just not
+  captured). Kept out of `EXPECTED_COVERAGE_BY_ASSET_GROUP` intentionally — that update belongs with the deployment-api
+  `PREDICTION_DATA_TYPE_META` retirement follow-up. QG green, 2 files touched (8 insertions).

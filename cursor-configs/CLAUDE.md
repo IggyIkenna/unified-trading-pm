@@ -336,8 +336,8 @@ architecture (L0–L4)".
   `/codex/02-data/live-data-persistence-and-event-log.md`.
 - **Writing STORAGE code?** Every bucket via `resolve_bucket_name(...)`, never inline `gs://` (QG 5.69); GCS object ops
   via UTL `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`, never subprocess `gcloud`/`gsutil`. SSOTs:
-  `/codex/05-infrastructure/bucket-isolation-model.md` (naming/tiers/folded Group-B),
-  `/codex/05-infrastructure/gcs-object-operations.md`.
+  `/codex/05-infrastructure/bucket-isolation-model.md` (naming/tiers/folded Group-B, IAM write-protection enforced via
+  per-tier SAs), `/codex/05-infrastructure/gcs-object-operations.md`.
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
 - **Launching VMs / infra?** **Heavy I/O never runs from the operator's local machine (HARD RULE, unconditional)** —

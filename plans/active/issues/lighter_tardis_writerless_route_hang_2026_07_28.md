@@ -92,15 +92,11 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
 
 ## Todos
 
-- [ ] [DIAG] P3. Root-cause the indefinite hang in the Tardis download post-processing path (in-flight registry /
+- [x] [DIAG] P3. Root-cause the indefinite hang in the Tardis download post-processing path (in-flight registry /
       `DomainValidationService` / event-logging consumer) when a caller invokes an adapter's `download_batch`/
-      `_route_*` with `writer=None` and no prior `setup_events()` call. Reproduce via a minimal standalone script
-      calling `_route_lighter(..., writer=None, ...)` for any Tardis-routed venue/data_type; use `asyncio.wait_for`
-      wrapping or `py-spy dump`/`faulthandler` to capture the exact await point causing the hang. Repo:
-      market-tick-data-service (adapter call site) / unified-trading-library (in-flight registry, event facade). **Done
-      when**: the exact blocking await is identified and documented (or fixed, if the fix is a clear one-line-class
-      bounded-timeout/fail-fast change — otherwise stop at the documented root cause for a human design decision on the
-      right fix).
+      `_route_*` with `writer=None` and no prior `setup_events()` call. — market-tick-data-service +
+      unified-trading-library root cause documented below; fix is a human design decision (see Progress Log §
+      2026-08-05).
 
 ## Progress Log
 
@@ -109,3 +105,56 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
   done-when (identify the blocking await) — AO-eligible per dispatch-scope eligibility
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **ROOT CAUSE ANALYSIS — slot-5, 2026-08-05**: two-phase failure identified via static trace of the `_route_lighter` →
+  `download_batch` → `_download_one_perp_symbol_streaming` → `_ensure_cols_and_finalise` (ThreadPoolExecutor) →
+  `finalise_and_write_cefi_shards_streaming` → `StreamingShardFinalizer.finalize()` → `_tardis_cefi_shard_router` →
+  `finalise_rows_and_path` call chain.
+
+  **Phase 1 — trigger**: `finalise_rows_and_path()` at `tardis_cefi_shards.py:818` calls
+  `log_event("SCHEMA_CONTRACT_VIOLATION", ...)` inside a schema-validation block. When `setup_events()` hasn't been
+  called and `_mode` is not `"local"/"test"` (default: `"batch"`), the `log_event()` in
+  `unified_trading_library/events_interface/__init__.py:274` raises
+  `RuntimeError("Event logging not initialized. Call setup_events() first.")`. Additional `log_event` sites in the
+  manifest-writer path (`_writer_validation.py:221,238`, `_rows.py:696`, `_queries.py:369`, `_state.py:554,577`) can
+  trigger the same failure.
+
+  **Phase 2 — the hang**: `StreamingShardFinalizer._route_row_groups()` at `streaming_shard_finalizer.py:220` catches
+  the router's exception and calls `_close_writers_on_exception()` (line 221) to close any `StreamingParquetWriter`
+  instances already created for prior row-groups. Each `writer.close()` → `_upload_to_gcs()` (via
+  `streaming_writer.py:417`) performs a **synchronous, unbounded** GCS upload on the executor thread. In a standalone
+  diagnostic script without proper cloud-credential/channel initialization, this GCS upload blocks indefinitely — the
+  executor thread is stuck, the `loop.run_in_executor` future at `tardis_batch_download.py:709-711` never resolves, and
+  the coroutine hangs forever on `await`. Same hazard exists in `_emit_per_symbol_manifest` → `ManifestWriter.flush()` →
+  `_write_to_gcs()` which also performs synchronous GCS operations.
+
+  **Exact blocking await**: `await loop.run_in_executor(finalise_executor, _ctx.run, _ensure_cols_and_finalise)` at
+  `tardis_batch_download.py:709-711` — the future never resolves because the executor thread is blocked inside
+  `StreamingParquetWriter.close()` → `_upload_to_gcs()` → `_upload_gcs_with_retry()` (unbounded synchronous GCS upload).
+
+  **Recommended fix (human design decision — 3 options)**:
+  1. **(Minimal/fail-fast)** Add `asyncio.wait_for(..., timeout=N)` around the `run_in_executor` call at line 709.
+  2. **(Robustness)** Add a configurable upload timeout to `_upload_gcs_with_retry()` in `streaming_writer.py`.
+  3. **(Graceful degradation)** Wrap `log_event()` calls in the Tardis processing path with the same
+     `try/except RuntimeError` pattern used by `_default_event_emitter` in `instruments_write_gate.py:147-153`. This
+     addresses the trigger (Phase 1) rather than the hang mechanism (Phase 2), but is the most targeted fix for the
+     specific "standalone diagnostic script without setup_events()" use case.
+
+  **Full call chain traced**: `_route_lighter(venue_upper="LIGHTER-ZKSYNC", writer=None, ...)` →
+  `tardis.download_batch(writer=_w=None, ...)` → `_run_per_symbol_batch(partition_writer=None, ...)` →
+  `_runner.run(tasks)` → `_safe_run_one` → `task.fn()` → `_download_one_perp_symbol` →
+  `_download_one_perp_symbol_streaming` → `await self.download_csv_streaming(...)` [SUCCEEDS] →
+  `await loop.run_in_executor(finalise_executor, _ctx.run, _ensure_cols_and_finalise)` **[HANGS]** where
+  `_ensure_cols_and_finalise` calls `finalise_and_write_cefi_shards_streaming` → `StreamingShardFinalizer.finalize()` →
+  `_route_row_groups` → `shard_router(rg_df)` → `_tardis_cefi_shard_router` → `finalise_rows_and_path` →
+  `log_event("SCHEMA_CONTRACT_VIOLATION", ...)` → `RuntimeError("Event logging not initialized...")` → caught →
+  `_close_writers_on_exception` → `StreamingParquetWriter.close()` → `_upload_to_gcs()` [BLOCKS INDEFINITELY].
+
+  **Evidence**: The observed WARNING
+  `"in-flight key=<key> failed: Event logging not initialized. Call setup_events() first."` at step 5 of the issue
+  report is `in_flight_registry.py:143` logging the `str(exc)` from the RuntimeError caught at
+  `tardis_batch_download.py:724` (`except Exception as _exc: registry.failed(in_flight_key, error=str(_exc))`). The
+  "DomainValidationService initialized" message (step 4) is the module-level
+  `_DOMAIN_VALIDATOR = DomainValidationService("market_data")` in `engine/orchestrator/__init__.py:133` executing at
+  first import of the orchestrator module (triggered by `finalise_rows_and_path` →
+  `_validate_canonical_path_at_write_time` in `symbol_rules.py`). The "Stage-0 OBSERVE" notice (step 4) is
+  `symbol_rules.py:420` logging non-canonical instrument-id forms.

@@ -125,9 +125,9 @@ launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HAR
       re-run this closer (the mirror rule should then fire on its own). **Scope now also covers** the 162 FIXTURE_EVENTS
       2026-07-12/13/14 cells found in the 2026-08-03 follow-up above (same root cause, 96 different leagues) — one fix
       closes both populations. (repo: instruments-service)
-- [ ] [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
+- [x] ✅ [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
       `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`, matching the pattern other backfill launchers use,
-      to close the SPOT-default gap. (repo: deployment-service)
+      to close the SPOT-default gap. — deployment-service@d683f80
 
 ## Progress Log
 

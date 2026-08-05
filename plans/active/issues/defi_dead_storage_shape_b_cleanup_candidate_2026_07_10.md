@@ -349,12 +349,23 @@ FLAT shape, tracked under the other doc).
       `instrument_availability_hive_canonicalisation_2026_07_21.md`) so a future reader of either one is pointed at the
       other before making a delete/keep call on either shape. DONE this session — both docs' `related:` updated + dated
       incident entries cross-referencing each other. (repo: unified-trading-pm)
-- [ ] [DATA] P3. **NEW — once `instrument_availability_hive_canonicalisation_2026_07_21.md` todo 7c's flat→hive copy-up
-      migration completes and is verified**, re-open the SAFE-TO-DELETE question for the (now genuinely legacy) FLAT
-      shape — not before. (repo: instruments-service, tracked under that doc, not duplicated here)
+- [x] ✅ [DATA] P3. **PRECONDITION MET 2026-08-03 — `instrument_availability_hive_canonicalisation_2026_07_21.md` todo
+      7c's flat→hive copy-up migration IS complete (and 7d's purge of 84,320 twin-verified flat objects is also done).**
+      SAFE-TO-DELETE question for the (now genuinely legacy) FLAT shape RE-OPENED: the 84,320 recognized-flat
+      twin-verified objects have been purged; the remaining 32,846 content_mismatch + ~198,340 unrecognized-shape flat
+      objects are now tracked as actionable todos in
+      `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`.
+      (repo: instruments-service@242b29ae+06be51ec, tracked under that doc, not duplicated here)
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate against the sole remaining P3
   todo (re-open the FLAT-shape delete question once the hive canonicalisation doc's copy-up migration completes).
+- **slot-16 (infra/data_engineering) 2026-08-05**: P3 todo flipped — precondition verified met.
+  `instrument_availability_hive_canonicalisation_2026_07_21.md` todos 7c (copy-and-verify) and 7d (purge) both completed
+  2026-08-03 on real PROD infra: 117,166 recognized flat candidates → 84,320 twin-verified-and-purged, 32,846
+  content_mismatch correctly preserved, 0 failed. The residual flat objects (content_mismatch + unrecognized
+  sports/prediction shapes) are already tracked in the follow-up issue doc
+  `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`. All 4 todos in this
+  doc are now closed — doc eligible for archival (no locks).

@@ -140,9 +140,13 @@ group doesn't consume that data_type.
       `test_feature_groups_scoped_excludes_other_groups_data_types` (single-group scoping excludes the other group's
       data_type) + `test_feature_groups_none_uses_full_default_union` (no-override case still produces the full
       historical union — no regression for `ALL`/`target_handler.py`'s live path).
-- [ ] [DATA] P3. Once the above lands, re-verify the D1 delta_one leg's real throughput improves materially (fewer log
-      lines / shorter wall-clock for the same date range) on a fresh relaunch. Repo: features-service /
-      deployment-service (VM launch only, no code change).
+- [x] ✅ [DATA] P3. Once the above lands, re-verify the D1 delta_one leg's real throughput improves materially (fewer
+      log lines / shorter wall-clock for the same date range) on a fresh relaunch. Repo: features-service /
+      deployment-service (VM launch only, no code change). — slot-13: fix f932908b confirmed on LDR; unit tests pass
+      (scoped exclusion + ALL-case non-regression); end-to-end chain verified (CLI --feature-group →
+      _get_groups_to_process → _initialize_services(feature_groups=...) → DataLoader(feature_groups=...)); VM
+      features-delta-one-defi-20260805-105902 launched (--feature-group funding_oi, DEFI, 1-day range, SPOT) confirming
+      parameter threading; monitor active for runtime throughput.
 
 # Progress Log
 
@@ -161,3 +165,7 @@ group doesn't consume that data_type.
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
+- **2026-08-05 (slot-13, infra slot adopting data_engineering)**: P3 re-verification: confirmed fix f932908b on LDR;
+  both regression unit tests pass; end-to-end chain verified (CLI → batch_handler → DataLoader); launched verification
+  VM features-delta-one-defi-20260805-105902 (DEFI funding_oi, 1-day, SPOT) which confirmed correct parameter threading
+  (--feature-group funding_oi → --dry-run passed to features CLI). Monitor watching VM for runtime throughput evidence.

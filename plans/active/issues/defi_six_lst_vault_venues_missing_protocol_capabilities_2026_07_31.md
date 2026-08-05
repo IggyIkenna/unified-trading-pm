@@ -116,12 +116,13 @@ guessed):
       data_type="lst_rates") and maker (instrument_type="yield_bearing", data_type="vault_share_price"); commit's own
       A-B test shows EXPECTED 102→108 (+6), matched 83→89 (+6), missing unchanged (19), stray 671→665 (-6), no
       regression.
-- [ ] [DATA] P3. Audit whether OTHER already-`phase="live"` DeFi venues have the same PUFFER-style declared-vs-actual
-      data_type mismatch in `PROTOCOL_CAPABILITIES` (a quick per-protocol cross-check: does the declared `data_types`
-      list match what the corresponding MTDS handler actually stamps via `write_defi_rows(data_type=...)`?) — this
-      session found ONE clear mismatch (PUFFER) while investigating a different question; there may be more contributing
-      to the system's current 57-missing/83-stray Layer-1 baseline. (repo: unified-api-contracts,
-      market-tick-data-service)
+- [x] ✅ [DATA] P3. Audit whether OTHER already-`phase="live"` DeFi venues have the same PUFFER-style declared-vs-actual
+      data_type mismatch in `PROTOCOL_CAPABILITIES` — filed
+      /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md with findings: **Finding A** — 13
+      venues/6 protocols (KELPDAO, RENZO, BEEFY, IDLE, PENDLE, YEARN_V3) write lst_rates but don't declare it; **Finding
+      B** — 5 protocols (BINANCE, COINBASE, ROCKETPOOL, SANCTUM, SOLBLAZE) have NO PROTOCOL_CAPABILITIES entry;
+      **Finding C** — LIDO/ETHERFI/EIGENLAYER declare "rewards" with no handler operation. 8 actionable fix todos filed.
+      (repo: unified-api-contracts, market-tick-data-service)
 
 ## Progress Log
 
@@ -135,3 +136,8 @@ guessed):
 - **slot-15 2026-08-02**: flipped todo 1's checkbox — code was already shipped by another slot
   (unified-api-contracts@314af7b8, confirmed on origin/live-defi-rollout) but the plan checkbox was never flipped. Todo
   2 (P3 audit) remains open, out of scope for this task.
+- **slot-7 2026-08-05 (data_engineering craft)**: completed todo 2 (P3 audit). Cross-referenced all 101 live DeFi
+  venues' PROTOCOL_CAPABILITIES declarations against expected_coverage.py + lst_rates_handler.py. Filed
+  /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md with 3 findings (A: 13 venues/6
+  protocols PUFFER-style lst_rates undeclared; B: 5 protocols missing entries entirely; C: 3 protocols with aspirational
+  rewards) + 8 actionable fix todos.

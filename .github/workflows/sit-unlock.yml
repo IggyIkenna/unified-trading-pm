@@ -31,6 +31,31 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      # Staging-shutdown waste fix (2026-08-05, ci_pipeline_speed_and_cost_redesign):
+      # full-workspace-sit dispatches sit-passed/sit-failed on EVERY completion (nightly +
+      # auto-retrigger) regardless of whether staging has anything locked — that signal is
+      # live/legitimate (feeds sit-gate/fleet-green) and must keep firing. But since the
+      # staging-machinery shutdown (2026-07-23, ldr-to-staging-promote/sit-gate stopped),
+      # staging_status.locked has stayed false — nothing is ever actually being unlocked here,
+      # yet the steps below unconditionally re-dispatched staging-validated (waking the
+      # otherwise-correctly-stopped staging-to-main.yml) and fanned out staging-unlocked to
+      # all ~24 repos, every single time. Gate those two steps on "was something genuinely
+      # locked" so this self-heals automatically if a repo's toggle ever routes back through
+      # staging (staging_status.locked would go true again and both steps fire normally).
+      - name: Check whether staging is actually in use
+        id: check
+        run: |
+          set -euo pipefail
+          WAS_LOCKED=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          print('true' if m.get('staging_status', {}).get('locked') else 'false')
+          ")
+          echo "was_locked=$WAS_LOCKED" >> "$GITHUB_OUTPUT"
+          if [ "$WAS_LOCKED" = "false" ]; then
+            echo "staging_status.locked is already false (staging-machinery shutdown, 2026-07-23) — nothing was actually locked, so this SIT completion has nothing to unlock. Skipping the staging-validated dispatch and the fleet-wide staging-unlocked fan-out below."
+          fi
+
       - name: Unlock staging on SIT completion
         env:
           SIT_EVENT: ${{ github.event.action }}
@@ -106,7 +131,7 @@ jobs:
       # staging-to-main.yml listens for `staging-validated`, which nothing sent on success
       # (only manual workflow_dispatch runs ever promoted). sit-passed → validate → promote.
       - name: Dispatch staging-validated (drives staging-to-main promotion)
-        if: github.event.action == 'sit-passed'
+        if: github.event.action == 'sit-passed' && steps.check.outputs.was_locked == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
@@ -171,6 +196,7 @@ jobs:
           # Telegram alert migrated to notify job
 
       - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
+        if: steps.check.outputs.was_locked == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |

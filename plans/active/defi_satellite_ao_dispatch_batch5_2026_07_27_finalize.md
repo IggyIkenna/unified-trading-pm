@@ -105,17 +105,23 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       `- [ ]` open — no one has picked it up. Per this todo's own instructions, did NOT re-draft a new todo or retag it
       here; the existing batch2-finalize todo remains the single tracked owner. Repo: unified-trading-pm. Done when: a
       verdict (retagged / still open, citing the batch2-finalize todo state) is recorded.
-- [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch5_2026_07_27.md` via the standard 6-step ritual (migrate any
+- [x] ✅ [DOC] P1. Archive `defi_satellite_ao_dispatch_batch5_2026_07_27.md` via the standard 6-step ritual (migrate any
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch5 is in
       `plans/archive/2026_07/` with a superseded_by/archived banner and zero remaining referrers to its old
-      `plans/active/` path.
+      `plans/active/` path. — unified-trading-pm@5486337b3
 
 ## Progress Log
 
 - 2026-07-27 (slot-4, scheduled `ag_closeout_auditor`): Drafted alongside batch5, both `status: draft`, gated on
   batch5's 7 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on operator approval of batch5
   first.
+- **2026-08-05 (slot-5, data_engineering)**: Todo 5 — archived batch5 via the standard 6-step ritual. (1) Migrated
+  DEFERRED items: all already carried forward into batch6 (verified batch6 § Deferred). (2) Added superseded_by +
+  archival banner. (3) Codex-alignment: no new contracts (process plan). (4) CLAUDE.md/codex: no new contract. (5)
+  Updated all 5 referrers: batch6, INDEX.md, defi_track5, ao_scheduled_skills, defi_swaps_ohlcv (archive docs already
+  frozen). (6) git mv → `plans/archive/2026_07/`. Shipped unified-trading-pm@5486337b3.
+
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - 2026-08-02 (worker, slot-3): De-staled the body banner + `summary:` — both still said `status: draft` while the
   frontmatter had been `active` since 2026-07-30. No todo/gating change: this plan stays machine-held on batch5 via

@@ -10,7 +10,7 @@ summary: >-
   only implementation for those 2 venues entirely, which is a materially different and higher-risk decision than the
   binance/bybit/okx case (where CCXT was already the live, working implementation) — needs its own scoped judgment call,
   not a reflexive deletion under a differently-scoped todo.
-status: open
+status: complete
 nature: issue
 asset_group: [cefi]
 stage: [execution]
@@ -38,7 +38,7 @@ source: >-
   unreachability signature, but were explicitly out of scope for that todo (BINANCE/BYBIT/OKX only).
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
@@ -47,11 +47,16 @@ context_scope:
     execution-service/execution_service/trade_execution/factory.py,
     execution-service/execution_service/trade_execution/adapters/bitfinex_native.py,
   ]
-locked_since: 2026-05-21
-resolved_by:
+locked_since:
+resolved_by: execution_service_bitfinex_bitget_native_unreachable_finalize_2026_08_05
 ---
 
 # execution-service bitfinex_native.py / bitget_native.py unreachable
+
+> **🟢 ARCHIVED 2026-08-05.** Single todo (factory.py wiring) shipped 2026-08-03 across execution-service@0f37ec8a +
+> unified-api-contracts@1ee4dbd5; both SHAs verified ancestors of `origin/live-defi-rollout`. Closed out via the
+> companion `execution_service_bitfinex_bitget_native_unreachable_finalize_2026_08_05.md`, which handled unlock + 6-step
+> archival ritual.
 
 ## What I found
 

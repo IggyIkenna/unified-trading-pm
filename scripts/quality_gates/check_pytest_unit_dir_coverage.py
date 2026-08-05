@@ -218,6 +218,14 @@ def _resolve_scopes(workspace_root: Path, scope: str | None) -> list[tuple[str, 
     for child in sorted(workspace_root.iterdir()):
         if not child.is_dir() or child.name.startswith("."):
             continue
+        # Backup/scratch copies left alongside the real sibling repos carry a `.git` dir too
+        # (a rename-aside during a history rewrite, or an agent-work clone) and would
+        # otherwise read as a real repo — same incident class as
+        # check_repo_docs_ssot.py's `_SCRATCH_CLONE_RE` (2026-07-30 agentwork clones,
+        # 2026-08-05 `.stale-pre-history-rewrite-<ts>` backups); no shared helper exists
+        # between the checkers yet, so this mirrors that exclusion locally.
+        if "-agentwork-" in child.name or "scratch-clone" in child.name or ".stale-" in child.name:
+            continue
         if (child / ".git").exists():
             out.append((child.name, child))
     return out

@@ -345,12 +345,12 @@ venue/instrument_type metric (used elsewhere, e.g.
 `n_expected=109`/`completeness_pct=2.75` figure) — the two share a name but different denominators/producers; flagging
 explicitly to avoid conflating them.
 
-**Answer to the gating question** (for `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s gated `[CODE]` todo): **the
-exclusion-guard IS required** — do not execute Path A's registry addition without first landing the
-`_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard in `enumerate_expected_universe.py`. The verification script
-was ad-hoc/scratch-only (not committed, per this todo's "ship no registry/code change" instruction) — the method above
-is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GROUP['defi']` import + the documented
-`enumerate_v2` cross-join contract).
+**Answer to the gating question** (for `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s gated `[CODE]` todo — plan
+ARCHIVED 2026-08-05): **the exclusion-guard IS required** — do not execute Path A's registry addition without first
+landing the `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard in `enumerate_expected_universe.py`. The
+verification script was ad-hoc/scratch-only (not committed, per this todo's "ship no registry/code change" instruction)
+— the method above is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GROUP['defi']` import +
+the documented `enumerate_v2` cross-join contract).
 
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, was 6) — Path A fully shipped 2026-08-02

@@ -245,10 +245,19 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       full-year sharded launch ever targeted it. Fix shipped (added `"2019"` + generalized `START_DATE` override) — full
       writeup + follow-up launch command in the sibling doc above. Evidence: `deployment-service@4fff44f`. (repo:
       market-tick-data-service backfill)
-- [ ] [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
+- [x] ✅ [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
       manifest (only 7 `attempted_failed` rows dated 2026-07-26) — the registered floor is unverifiable against measured
       reality because no real data exists yet. Investigate whether Binance COIN-M delivery contracts are actually being
-      fetched at all, or whether this is a dead/never-implemented shard. (repo: market-tick-data-service)
+      fetched at all, or whether this is a dead/never-implemented shard. (repo: market-tick-data-service) —
+      **unified-api-contracts@9241dc85**. INVESTIGATION COMPLETE: BINANCE-DELIVERY is conclusively a
+      dead/never-implemented shard. Added to MVP v9 (2026-06-24), removed by operator decision #3 in v10 (2026-06-27) —
+      has NEVER been fetched by any production pipeline. Every downstream system (MTDS cefi_catalog_reader.py:172,
+      _mvp_scope_rules.py:452-456, launch-mtds-live-cefi-consolidated.sh:30, liquid_representative.py:28) explicitly
+      excludes it per the MVP spec. No backfill launcher targets it; the live connector (binance_futures_ws.py)
+      references it only in comments. The 7 attempted_failed rows from 2026-07-26 were a one-off probe during the brief
+      v9 window. The Tardis binance-delivery endpoint is real and correctly registered, but the venue_start_dates entry
+      at 2020-01-01 is Tardis metadata only (unverifiable). Annotated the comment in venue_mapping.py to document this;
+      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse).
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
@@ -269,17 +278,31 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       denominator measures from first actual captured instrument, not venue/platform launch. Removed POLYMARKET from
       `check_coverage_floor_registry_drift.py`'s `KNOWN_DIVERGENCES` (now 9 baselined, down from 10). Falsifier confirms
       clean (0 new findings, 0 stale baseline). (repo: unified-api-contracts)
-- [ ] [DATA] P3. Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO) and
+- [x] ✅ [DATA] P3. Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO) and
       decide the AAVE_V3 chain-axis question — either add a per-chain axis to `DEFI_SOURCE_COVERAGE_START` (matching
       `venue_mapping.py`'s `PROTOCOL-CHAIN` grain) or explicitly document that the flat value is intended as the
-      min-across-chains and verify each current value actually is the min. (repo: unified-api-contracts)
-- [ ] [DATA] P3. Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys and
+      min-across-chains and verify each current value actually is the min. (repo: unified-api-contracts) — **DONE
+      2026-08-05 (slot-15) — unified-api-contracts@1e190b0b.** Updated `DEFI_SOURCE_COVERAGE_START` to match
+      `venue_mapping.py`'s manifest-verified ETHEREUM-chain dates: CURVE 2020-01-19→2020-01-20, UNISWAP_V2
+      2020-05-04→2020-05-06, UNISWAP_V4 2025-01-31→2025-01-30 (dropped TODO), BALANCER 2021-05-13→2021-04-22, LIDO
+      2020-12-19→2020-12-18. AAVE_V3 2022-03-16→2022-03-12 (min across POLYGON/AVALANCHE/ARBITRUM/OPTIMISM), documented
+      as min-across-chains. UNISWAP_V2/V4/LIDO fully resolved (single ETHEREUM chain, no remaining mismatch).
+      CURVE/UNISWAP_V3/BALANCER/AAVE_V3 re-baselined for non-min-chain differences (expected per-chain launch dates, not
+      registry errors). Falsifier KNOWN_DIVERGENCES: 7→4 DeFi entries (3 fully resolved, 4 narrowed to non-min-chain
+      differences). All 11 falsifier tests pass; full `quality-gates.sh` green.
+- [x] ✅ [DATA] P3. Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys and
       `venue_mapping.py`'s instrument-type/chain-suffixed keys (e.g. `BINANCE` →
-      `{BINANCE-SPOT, BINANCE-FUTURES,     BINANCE-DELIVERY}`, `CURVE` →
+      `{BINANCE-SPOT, BINANCE-FUTURES, BINANCE-DELIVERY}`, `CURVE` →
       `{CURVE-ETHEREUM, CURVE-AVALANCHE, CURVE-OPTIMISM}`) — a prerequisite for the P1 falsifier todo above to compare
-      the two registries key-by-key instead of by coincidental name match. (repo: unified-api-contracts)
+      the two registries key-by-key instead of by coincidental name match. (repo: unified-api-contracts) —
+      **unified-api-contracts@a9a27144**: Added `BARE_KEY_TO_VENUE_MAPPING_KEYS` dict in `coverage_starts.py` (12 CeFi +
+      9 DeFi entries); updated `check_coverage_floor_registry_drift.py` to resolve from explicit mapping (replacing
+      suffix-allowlist approach with lookup + exact-match fallback); added `_validate_mapping_completeness()` two-way
+      gate check (stale references + undeclared mappings); 5 new tests (16/16 pass); full `quality-gates.sh` green.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
+- **slot-6 2026-08-05** (coverage_floor_registries_no_cross_propagation-008): BINANCE-DELIVERY investigation complete —
+  conclusively dead/never-implemented. Annotated `venue_mapping.py` comment (unified-api-contracts@9241dc85).

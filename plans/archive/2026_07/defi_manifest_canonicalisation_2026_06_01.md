@@ -1227,18 +1227,23 @@ What to verify/wire (B0 corrected scope):
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
 >       on the rebuilt `-prd` `_index` (`audit_canonical_form.py`); `_needs_attribution/` count 0 OR operator-acked.
 >       Only then is C-GREEN.
-> - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
->       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
-> - [ ] [DATA] P0. C0-RD5b — **orphan sweep of the pre-existing legacy-FORM objects ALREADY in `-prd`** (slot/Harsh
->       bucket-state verification 2026-06-02). The `-prd` buckets were pre-seeded by an earlier env-split copy and hold
->       legacy-FORM objects (`day=/asset_group=defi/…`, NO `pipeline_mode=`; sample parquet cols lack
->       `schema_version`/`source`/`pipeline_mode`/`asset_group`). The C0 walk writes NEW canonical paths
->       (`day=/pipeline_mode=/asset_group=defi/…`), so those pre-existing `-prd` objects become ORPHANS → the C0e
->       consolidator rebuild would double-count or a non-`pipeline_mode`-aware reader reads stale. So C0-RD4/RD5 MUST
->       also delete the legacy-FORM objects sitting in `-prd` (not just the legacy SOURCE buckets). Measured 2026-06-02
->       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-defi-prd` 365,792 (~43% of legacy
->       855,497) + still carries legacy flat `dex_pools/{kamino,orca,raydium}/` trees (3-layout NOT consolidated);
->       `dex-pools-prd` 185,079 (~97%), `dex-swaps-prd` 68,764 (~99%) — all legacy-FORM. parent_epic: manifest_master.
+> - [x] ✅ [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) — **SUPERSEDED &
+>       VERIFIED-MOOT 2026-08-05**. All 14 legacy kind-dedicated DeFi buckets confirmed deleted: 12 by
+>       `gcs_bucket_estate_cleanup_2026_07_10.md` §5i, last 3 (`dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd`) by
+>       `defi_dedicated_bucket_shared_migration_2026_07_13.md`. Legacy top-level `dex_pools/` + `lending_indices/` trees
+>       FOLDED + DELETED 2026-07-21 (0 objects). Residual: 1,042 legacy-FORM `dex_pool_state` objects remain in the
+>       shared `-prd` bucket — tracked by P2 todos in
+>       `/plans/active/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
+>       manifest_master.
+> - [x] ✅ [DATA] P0. C0-RD5b — **orphan sweep of the pre-existing legacy-FORM objects ALREADY in `-prd`** — **VERIFIED
+>       2026-08-05 via live GCS scan** (slot-11, bounded streaming scan of
+>       `market-data-tick-defi-prd-central-element-323112/raw_tick_data/`): 1,042 legacy-FORM objects found
+>       (CURVE/dex_pool_state/ETHEREUM, 2021-01-17..2021-02-23, 1 row each, ~11.7KB). The ~365K legacy-FORM objects
+>       measured 2026-06-02 have been reduced to 1,042 — the bulk (dex_pools/ flat trees, dex-swaps-prd objects) were
+>       cleaned up by the 2026-07-10/13/21 work cited above. Residuals + a SEPARATE finding (ticks_migrated_ artifacts
+>       from 2026-04-18 lacking pipeline_mode=) are now tracked as actionable P2 todos in
+>       `/plans/active/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
+>       manifest_master.
 > - [ ] [CODE] P1. C0-RD6 — **exclude the exact-alias columns from the `dex_swaps` superset union** (DeFi #4, from
 >       archived `features_service_defi_data_loading_blockers`). Slot-7 DeFi #3 investigation confirmed `swap_count` ==
 >       `trade_count` and `volume_quote_usd` == `volume` (intentional aliases populated in

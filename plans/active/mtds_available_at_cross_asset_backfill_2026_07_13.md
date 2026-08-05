@@ -363,16 +363,17 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `gcloud scheduler jobs     describe`. This closes the fleet-wide tradfi backfill VM outage tracked in
       `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md` — the index
       will re-freshen every minute going forward, clearing the OOM-preflight guard for new VM launches.
-- [ ] [INFRA] P3. **NEW — 2026-08-02 (slot-3)**: `MANIFEST_COLUMN_FILL_REGRESSION` (the consolidator's
-      column-fill-regression guardrail) has no awareness of legitimately-blank-by-shape columns — tradfi's apply today
-      tripped a false-positive on `instrument_id` (84.16%→81.72% aggregate) explained entirely by ~614K newly-visible
-      underlying-bundle-shape rows that structurally never carry `instrument_id` (see Progress Log #11 for the full
-      investigation + methodology). Scope the check to exclude columns known-blank-by-shard-atom for the affected row's
-      `data_type`/`instrument_type` (e.g. via the same `BUNDLED_DATA_TYPES`/`BUNDLED_ITYPES` sets), so a real future
-      regression isn't buried in noise and a future apply session doesn't have to re-re-derive this same investigation.
-      Likely to false-positive again on this plan's own still-open prediction/defi apply todos (their bundled
-      `prediction_canonical_question_group`/`sports_fixture_bundle` shapes carry the same structural blankness) — check
-      before assuming a real regression there too. (repo: unified-trading-library)
+- [x] ✅ [INFRA] P3. **NEW — 2026-08-02 (slot-3) → SHIPPED 2026-08-05 (slot-6)**: `MANIFEST_COLUMN_FILL_REGRESSION` (the
+      consolidator's column-fill-regression guardrail) has no awareness of legitimately-blank-by-shape columns —
+      tradfi's apply today tripped a false-positive on `instrument_id` (84.16%→81.72% aggregate) explained entirely by
+      ~614K newly-visible underlying-bundle-shape rows that structurally never carry `instrument_id` (see Progress Log
+      #11 for the full investigation + methodology). Scope the check to exclude columns known-blank-by-shard-atom for
+      the affected row's `data_type`/`instrument_type` (e.g. via the same `BUNDLED_DATA_TYPES`/`BUNDLED_ITYPES` sets),
+      so a real future regression isn't buried in noise and a future apply session doesn't have to re-re-derive this
+      same investigation. Likely to false-positive again on this plan's own still-open prediction/defi apply todos
+      (their bundled `prediction_canonical_question_group`/`sports_fixture_bundle` shapes carry the same structural
+      blankness) — check before assuming a real regression there too. (repo: unified-trading-library) —
+      unified-trading-library@e8937794
 - [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
       (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
       each already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket
@@ -383,7 +384,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (`DefiManifestRecorder` in `_defi_manifest.py`) that never threads `available_at` at all (blanket `""` for all of
       them, not a per-data_type formula gap). A handful of non-defi files living in the same directory (cefi/tradfi) use
       different, unrelated write paths.
-- [ ] [DATA] P2. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate** (no specific operator
+- [x] ✅ [DATA] P2. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate** (no specific operator
       answer was given for this go/no-go; applying the standing workspace theme instead: full backfills/migrations get
       done — as long as not superseded by newer work — and this one isn't; cost is a one-time manifest-only compute
       pass, nowhere near the pre-approved $100 threshold; "audit-and-decide" was the only gate, not a real blocker).

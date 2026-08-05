@@ -15,7 +15,7 @@ summary: >-
   BLOCKED-OPERATOR-DECISION in the Deferred section. The remaining 24 orphaned-but-not-AO-eligible docs are
   non-batchable (operator-gated / time-gated / too-large-or-risky / human-only per the skill's taxonomy) and are listed
   in the Deferred section for the next iteration or an explicit operator ruling.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -55,7 +55,7 @@ estimate_calibrated_ai_days: 1.1
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: defi_satellite_ao_dispatch_batch5_2026_07_27_finalize
 depends_on: []
 source: >-
   `/ag-closeout-audit defi` run 2026-07-27 (autonomous, scheduled ag_closeout_auditor, tranche=defi) — Phase 1
@@ -77,6 +77,11 @@ context_scope:
 ---
 
 # DeFi satellite AO batch 5 — 2026-07-27
+
+> **ARCHIVED 2026-08-05** — superseded by
+> [`defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md`](./defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md).
+> All 7 todos completed, all deferred items re-checked and carried forward into batch6. This doc lives at
+> `plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md`.
 
 **status: active — operator-approved + dispatched 2026-07-30** (`unified-trading-pm@5a6bbefc3`, "activate 9 fresh
 ag-closeout-audit dispatch batches (operator go-ahead)"). Drafted autonomously by the scheduled `ag_closeout_auditor` on

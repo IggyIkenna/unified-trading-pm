@@ -22,7 +22,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 created: "2026-08-05"
-last_updated:
+last_updated: "2026-08-05"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -203,9 +203,12 @@ the orchestrator or tmux.
 
 ### Phase 4: Hardening (follow-up)
 
-- [ ] [SCRIPT] P3. Add Slack alerting for kills (dedup-keyed, cooldown-gated)
-- [ ] [SCRIPT] P3. Wire into `deployment-api` health endpoint so AO UI shows watchdog status
-- [ ] [SCRIPT] P3. Add a `--status` flag (like QG governor's `--status`) for operator introspection
+- [x] [SCRIPT] P3. Add Slack alerting for kills (dedup-keyed, cooldown-gated) — AO@quickmerged (slack.py +
+      resource_watchdog.py)
+- [x] [SCRIPT] P3. Wire watchdog status into AO UI dashboard panel (not deployment-api — operator directed AO UI surface
+      only) — AO@quickmerged (ResourceWatchdog.tsx + api.ts + types.ts + App.tsx)
+- [x] [SCRIPT] P3. Add status JSON file to watchdog script + `GET /api/resource-watchdog/status` endpoint + `--status`
+      flag (already shipped in Phase 1) wired for AO UI consumption — AO@quickmerged + PM@5d23e2779
 
 ---
 
@@ -230,6 +233,24 @@ the orchestrator or tmux.
 
 ## Progress Log
 
+### 2026-08-05 (later session) — Phase 4 hardening
+
+Completed all three hardening items:
+
+- **Slack alerting**: Added `notify_resource_watchdog_kill()` to `server/notifications/slack.py` following existing
+  state-transition-dedup pattern. Dedup-keyed by `(slot_id, reason_category)` with 4h cooldown between re-reminds. First
+  kill per category pages immediately; subsequent same-category kills within cooldown are suppressed. GCS alert ledger
+  persisted. Fired from `receive_kill_event()` in `resource_watchdog.py`.
+
+- **AO UI panel**: Created `ResourceWatchdog.tsx` dashboard component (top-row panel, 30s poll). Shows: service health
+  (live/stale/dead), pressure level (normal/high), cgroup memory % and GB, kill count with last-kill timestamp, and
+  uptime. Uses self-contained fetch+setInterval pattern (Pattern B). Wired into both DesktopLayout top-row sections in
+  App.tsx.
+
+- **Status endpoint + status file**: Watchdog writes `/dev/shm/resource-watchdog/status.json` each poll tick via
+  `_rw_write_status_file()`. Orchestrator `GET /api/resource-watchdog/status` reads it + checks systemd active state.
+  `--status` CLI flag was already functional from Phase 1.
+
 ### 2026-08-05 — Initial implementation + deploy (interactive session)
 
 Completed Phases 1–3. Watchdog is live on planning VM, killed its first violator within the first tick. Cgroup memory
@@ -239,14 +260,7 @@ stable at 13-23 GB. Orchestrator kill-relay endpoint deployed and tested. Bootst
 
 ## Deferred work after 2026-08-05
 
-| Item                     | State                   | Blocked-on                    |
-| ------------------------ | ----------------------- | ----------------------------- |
-| Slack alerting for kills | Not done — P3 hardening | Nothing; pick up next session |
-| Health endpoint in AO UI | Not done — P3 hardening | Nothing                       |
-| `--status` flag          | Not done — P3 hardening | Nothing                       |
-
-**Recommended next**: `--status` flag is the quickest win (one function already in the script, just needs a CLI flag
-wired). Then Slack alerting. Health endpoint is the largest — needs deployment-api changes.
+All Phase 4 hardening items completed. No deferred work remaining. Plan is ready for archival once deploy is verified.
 
 ---
 

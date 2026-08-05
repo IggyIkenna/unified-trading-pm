@@ -88,9 +88,14 @@ _EXCLUDED_REPOS = {"unified-trading-pm"}
 # Same intent as check_frontmatter_schema.py's `_CLAUDE_WORKTREE_PREFIX` exclusion (a live
 # agent's `.claude/worktrees/<id>/` copy is scratch space, never real corpus content) —
 # mirrored here on the directory NAME, which is the only signal available at this level.
-# Matches: `<repo>-agentwork-<anything>`, `scratch-clone*`, `*-scratch-clone*`, and any
-# `.`/`_`-prefixed dir (`.claude`, `.tabs`, `__pycache__`).
-_SCRATCH_CLONE_RE = re.compile(r"(-agentwork-|(^|-)scratch-clone)")
+# Matches: `<repo>-agentwork-<anything>`, `scratch-clone*`, `*-scratch-clone*`, any
+# `.`/`_`-prefixed dir (`.claude`, `.tabs`, `__pycache__`), and `<repo>.stale-*` (added
+# 2026-08-05, same incident CLASS as the agentwork fix above but a new naming convention:
+# a fleet-wide history-rewrite operation left `<repo>.stale-pre-history-rewrite-<ts>/`
+# backup copies alongside 5 repos' real checkouts, which then read as live corpus and
+# false-failed `test_live_corpus_has_zero_new_drift` — same root cause (this function's
+# iterdir() has no other signal than the directory name), same fix shape.
+_SCRATCH_CLONE_RE = re.compile(r"(-agentwork-|(^|-)scratch-clone|\.stale-)")
 # Path fragments that mark a vendored mirror / dependency tree / archived doc — excluded
 # per the audit method (Appendix B: ".cursor/* symlinks excluded as vendored mirrors in
 # every repo; docs/archive/* excluded").

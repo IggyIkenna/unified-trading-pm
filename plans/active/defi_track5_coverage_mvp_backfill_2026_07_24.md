@@ -137,9 +137,9 @@ context_scope:
       (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
       of either on record for defi today). Cite each run's report path + date. (repos: instruments-service,
       market-tick-data-service) **🟡 PARKED — batch5 2026-08-05:** moved to Conflict-gated item 3 in
-      `defi_satellite_ao_dispatch_batch5_2026_07_27.md` (BLOCKED-OPERATOR-DECISION, blocked question `BLK-d355f03a`).
-      Both skills' SKILL.md § 0 forbid synthesizing `--day` without operator input — 3 worker slots independently hit
-      this. Returns to active dispatch once the operator names the baseline/mid/final day(s).
+      `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md` (BLOCKED-OPERATOR-DECISION, blocked
+      question `BLK-d355f03a`). Both skills' SKILL.md § 0 forbid synthesizing `--day` without operator input — 3 worker
+      slots independently hit this. Returns to active dispatch once the operator names the baseline/mid/final day(s).
 
 ## MVP universe — proven-wired vs. merely-declared (gate-audit §14, 2026-07-24: no such section existed; this track is the closest source)
 

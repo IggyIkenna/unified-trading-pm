@@ -819,10 +819,16 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 
 **Pending after warm data confirmed**:
 
-- Enable BQ external tables:
-  `cd deployment-service/terraform/gcp/live_event_log && terraform apply -var="create_bq_external_tables=true" -var="warm_gcs_bucket=central-element-323112-events" -var="cold_gcs_bucket=central-element-323112-events" -var="compactor_sa_email=unified-trading-sa@central-element-323112.iam.gserviceaccount.com" -auto-approve`
-- Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` (needs admin):
-  `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
+- ✅ **Enable BQ external tables — DONE 2026-08-05 (`deployment-service@b94a6dd`, slot 13).** `terraform apply`
+  completed: 52 BQ external tables created in `live_events` dataset, including `prediction_book_snapshot`,
+  `prediction_book_snapshot_5`, `prediction_trades`. Two config fixes were required: (1) `source_format` changed from
+  PARQUET to NEWLINE_DELIMITED_JSON — the warm GCS sink writes flat JSON files misnamed `.parquet`; (2) removed
+  `hive_partitioning_options` — data files are flat timestamp-named, not Hive-partitioned. 46 sentinel NDJSON files
+  created for empty prefixes (sports, tradfi, all, commodity, defi) so BQ autodetect has at least one file per prefix.
+- ✅ Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` — **DONE
+  2026-08-05**: applied via `gcloud projects add-iam-policy-binding` as `unified-trading-sa` (verified live via
+  `get-iam-policy` — the binding is present). The workaround (`--service-account=unified-trading-sa`) is no longer
+  needed for new VM launches but is harmless to keep.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the depth-retention todo surfaces an
   architecture question about the live sink's rolling-window overwrite model (not a bounded verification), and the other

@@ -124,10 +124,22 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
       `instruments-service/.../adapters/defi/sanctum.py`'s own docstring, matching `jitoSOL`/`mSOL`/`bSOL`'s
       protocol/SOL convention). Test coverage extended in `tests/unit/test_lst_protocol_asset.py`; full QG green (0
       errors/warnings beyond pre-existing baselines).
-- [ ] [DATA] P3. Investigate whether `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` belong in
-      the MTDS `lst_rates`/`oracle_prices` feed at all — they read as Idle Finance / Pendle yield-tranche tokens, not
-      liquid-staking tokens, and may indicate upstream data-scope creep worth tightening at the MTDS handler rather than
-      silently filtering downstream forever. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. Investigate whether `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` belong
+      in the MTDS `lst_rates`/`oracle_prices` feed at all. **Verdict: NO — they are NOT LSTs and should be removed from
+      `_EVM_EXTENDED_RATE_CONFIGS`.** Evidence: (1) IS types all 4 as `YIELD_BEARING` (`idle.py`, `pendle.py`), not
+      `LST`; (2) UAC `LST_TOKEN_TO_PROTOCOL_ASSET` correctly excludes them; (3) MTDS `defi_catalog_reader.py` maps only
+      `LST→lst_rates` — `YIELD_BEARING` has no entry (falls to `oracle_prices` default); (4) they're already silently
+      dropped by features-service's `_drop_unmapped_tokens()` — the exact anti-pattern the plan calls out. Recommended
+      follow-up: remove from `_EVM_EXTENDED_RATE_CONFIGS`; if their rate data is genuinely useful, route through a
+      separate `yield_bearing_rates` data_type instead. (Repo: market-tick-data-service; investigation complete — no
+      code change needed for this todo; removal is a follow-up.)
+- [x] ✅ [DATA] P3. Remove `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` / `PENDLE-SY-weETH`
+      from `_EVM_EXTENDED_RATE_CONFIGS` in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/_lst_extended_rates.py` (and the sibling
+      `PENDLE-SY-weETH` which has the same structural issue — Pendle SY token, not an LST, also silently dropped by
+      `_drop_unmapped_tokens`). Per investigation above: all 4 are `YIELD_BEARING` instruments that produce `lst_rates`
+      data but are not LSTs, are absent from the UAC LST registry, and are already silently filtered downstream. Repo:
+      market-tick-data-service.
 - [ ] [DATA] P3. Consider whether `ServiceEmissionPolicy.STRICT_FAIL`'s all-or-nothing completeness semantics (no
       partial credit for a mostly-complete row) is the right policy for `lst_yields`/`lst_native_rates`, or whether
       `PARTIAL_OK` degraded-publish semantics (already used elsewhere per `WRITE_GATE_CONFIG`'s own comment re:
@@ -145,3 +157,11 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **data_engineering slot-2 2026-08-05**: investigated whether IDLEDAI-BEST/IDLEUSDC-BEST/IDLEUSDT-BEST/PENDLE-SY-wstETH
+  belong in `lst_rates`. Verdict: NO — all 4 are `YIELD_BEARING` instruments (per IS `idle.py`/`pendle.py`), NOT in the
+  UAC LST registry, hardcoded in MTDS `_lst_extended_rates.py:213,225,237,254` which bypasses the catalog's
+  `LST→lst_rates` mapping (YIELD_BEARING has no entry), and already silently dropped downstream by features-service's
+  `_drop_unmapped_tokens()`. Recommended removal from `_EVM_EXTENDED_RATE_CONFIGS` + routing through a proper
+  `yield_bearing_rates` data_type if the rate data is needed. Added follow-up removal todo; also flagged sibling
+  `PENDLE-SY-weETH` (same shape). Full trace: IS `YIELD_BEARING` → MTDS hardcoded `lst_rates` → UAC lookup miss →
+  features-service silent drop.

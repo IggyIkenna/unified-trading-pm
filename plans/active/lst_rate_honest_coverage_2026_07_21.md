@@ -62,7 +62,7 @@ superseded_by:
 # LST rate honest coverage — plan of record
 
 **Codex SSOT:** `/codex/02-data/lst-exchange-rate-surfaces.md` (the four surfaces, canonical homes, honest-coverage
-contract). **Audit:** `plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`.
+contract). **Audit:** `/plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md`.
 
 **Sequencing invariant (denominator-first):** register a verified feed/venue in the catalogue + expected registries so
 every un-captured LST rate renders `expected_unattempted` (honest RED) BEFORE any backfill. Verify on-chain reality
@@ -799,43 +799,12 @@ tarball once; always check the launcher's own freshness warning output, and if s
   isolate/stash someone else's active edit). MTDS's own quality-gates.sh + deployment-api's (for the distinct-values
   `futures_chain` fix) started running in parallel while waiting.
 
-- **2026-07-22 19:51 UTC (VM re-check — both healthy, climbing, nothing actionable)** —
-  `mtds-lst-rates-20260722-181845`: manifest at 3799 entries, real progress now at `2023-03-31` (from `2021-08-17`),
-  real EVM (stETH/wstETH/rETH/ cbETH/ankrETH/idle/pendle) + Solana (mSOL/sanctumSOL/jito/marinade) rows landing every
-  day, RSS 1365MiB (healthy). `mtds-dex-swaps-backfill`: manifest at 9323 entries, 183,634+ real swap records collected
-  so far across working shards, RSS ~1000MiB (healthy, nowhere near OOM). Both correctly left running — no intervention
-  needed.
-
-- **2026-07-22 20:35 UTC (VM re-check — both still healthy, climbing)** — `mtds-lst-rates-20260722-181845`: manifest at
-  6106 entries, now at `2023-09-19` (climbing from `2021-08-17`), RSS 885MiB (healthy). `mtds-dex-swaps-backfill`:
-  manifest at 16898 entries, 176,277+ swap records collected, RSS ~1073-1451MiB (healthy). Both correctly left running —
-  no intervention needed. Both are multi-hour runs; next check should be spaced out rather than polled tightly.
-
-- **2026-07-22 22:29 UTC (VM re-check — both healthy, good progress)** — `mtds-lst-rates-20260722-181845`: manifest at
-  13,829 entries, now at `2024-09-26` (from `2021-08-17` at launch ~18:18 — roughly 1136 days processed in ~4h10m, ~665
-  days remaining to `2026-07-22`, est. ~2.5h more at this pace). `mtds-dex-swaps-backfill`: manifest at 34,698 entries,
-  212,180+ swap records collected this pass, RSS 1113-1557MiB (healthy). Both correctly left running.
-
-- **2026-07-22 23:00 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: now at `2025-01-02`
-  (from `2024-09-26`, ~98 days in 30min), est. ~3h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: RSS stable
-  ~1326-1579MiB, heartbeats fresh, real rows still landing. Both correctly left running.
-
-- **2026-07-22 23:31 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: now at `2025-04-15`
-  (from `2025-01-02`, ~103 days in 30min), est. ~2.25h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: manifest
-  at 45,726 entries (up from 34,698), RSS stable ~1151-1596MiB. Both correctly left running.
-
-- **2026-07-23 00:02 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: manifest at 20,629
-  entries, now at `2025-07-20` (from `2025-04-15`, ~96 days in 30min), est. ~1.9h more to reach `2026-07-22`.
-  `mtds-dex-swaps-backfill`: manifest at 51,412 entries, RSS stable ~1148-1596MiB. Both correctly left running.
-
-- **2026-07-23 00:33 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: manifest at ~22,951
-  entries, now at `2025-10-29` (from `2025-07-20`, ~101 days in 30min), est. ~1.3h more to reach `2026-07-22`.
-  `mtds-dex-swaps-backfill`: RSS stable ~1423-1596MiB, heartbeats fresh. Both correctly left running.
-
-- **2026-07-23 01:04 UTC (VM re-check — both still healthy, LST-rates getting close)** —
-  `mtds-lst-rates-20260722-181845`: manifest at 25,169 entries, now at `2026-02-02` (from `2025-10-29`, ~96 days in
-  30min), est. under 1h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: manifest at 62,147 entries, RSS stable
-  ~1161-1596MiB. Both correctly left running; next check should catch LST-rates finishing.
+- **2026-07-22 19:51 → 2026-07-23 01:04 UTC (VM fleet re-checks — both healthy throughout, no intervention needed)** —
+  `mtds-lst-rates-20260722-181845` climbed continuously: 2023-03-31 (manifest 3,799 entries) → 2024-09-26 (13,829) →
+  2025-01-02 → 2025-04-15 → 2025-07-20 (20,629) → 2025-10-29 (22,951) → 2026-02-02 (25,169), with ~96-103 days processed
+  per ~30min window, est. under 1h to completion at final check. `mtds-dex-swaps-backfill` RSS stable ~800-1600MiB
+  throughout (nowhere near OOM), manifest climbing 9,323 → 62,147 entries, real rows landing across working shards. Both
+  correctly left running.
 
 - **2026-07-23 01:26 UTC (mtds-dex-swaps-backfill VM vanished — likely preempted, resumed)** — at the 01:25 check, the
   VM was no longer in `gcloud compute instances list` output at all (confirmed via `get-serial-port-output` → "resource

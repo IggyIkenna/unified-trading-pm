@@ -1,12 +1,12 @@
 {
   "service": "data_pipeline_e2e_check_features",
   "run_date": "2026-07-26",
-  "legs": ["force"],
+  "legs": ["force", "skip"],
   "started_at": "2026-07-28T13:29:14.223564+00:00",
-  "finished_at": "2026-07-28T13:33:07.750988+00:00",
-  "total": 1,
+  "finished_at": "2026-08-05T12:32:23.989149+00:00",
+  "total": 2,
   "passed": 0,
-  "failed": 1,
+  "failed": 2,
   "ambiguous": 0,
   "skipped": 0,
   "results": [
@@ -15,7 +15,7 @@
       "leg": "force",
       "status": "failed",
       "reason": "vm_not_success:vm_exit_nonzero=1",
-      "vm_name": "features-e2e-prediction-20260728-132926-0f2a85",
+      "vm_name": "features-e2e-prediction-20260805-122709-6f1ca2",
       "exit_status": 1,
       "write_verified": false,
       "parquet_count": 0,
@@ -25,11 +25,37 @@
       "skip_proof": "not_applicable",
       "fingerprint_before": null,
       "fingerprint_after": null,
-      "attempt_ts": "2026-07-28T13:29:25.616086+00:00",
-      "duration_sec": 220.846576,
+      "attempt_ts": "2026-08-05T12:27:08.247051+00:00",
+      "duration_sec": 219.294137,
       "parquet_bucket": "features-pred-test-central-element-323112",
       "manifest_bucket": "features-pred-test-central-element-323112",
-      "parquet_uri": ""
+      "parquet_uri": "",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    },
+    {
+      "shard_label": "PREDICTION:delta_one",
+      "leg": "skip",
+      "status": "failed",
+      "reason": "vm_not_success (exit=None)",
+      "vm_name": "features-e2e-prediction-20260805-123049-6f1ca2",
+      "exit_status": null,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-08-05T12:30:48.669078+00:00",
+      "duration_sec": 94.107167,
+      "parquet_bucket": "features-pred-test-central-element-323112",
+      "manifest_bucket": "features-pred-test-central-element-323112",
+      "parquet_uri": "",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
     }
-  ]
+  ],
+  "orphaned_vms_still_running": []
 }

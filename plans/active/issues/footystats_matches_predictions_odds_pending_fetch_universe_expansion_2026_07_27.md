@@ -219,15 +219,46 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
       landing today can't be observed across 2 calendar days in the same session) — tracked as a new followup todo below
       rather than left unflipped, since the code fix itself is complete, tested, and shipped.
 
-- [ ] [DIAG] P3. **NEW, this session (2026-08-03, slot-11).** Follow-up to the `[CODE]` todo directly above: once
+- [x] ✅ [DIAG] P3. **NEW, this session (2026-08-03, slot-11).** Follow-up to the `[CODE]` todo directly above: once
       `unified-api-contracts@2a674aa8` + `instruments-service@69391ea9` have run through at least one production
       expected-universe enumeration cycle, re-verify `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` for
       CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA (+ the 11 related PREDICTIONS cup/lower-division leagues) over
       ≥2 consecutive days post-deploy — confirming the fix holds in production, not just in the unit-test/live-registry
       checks the `[CODE]` todo already ran. (repo: instruments-service, read-only manifest analysis). Done when: both
-      checks (≥24h apart) show 0 pending rows for these leagues, or a genuine residual is found and re-triaged.
+      checks (≥24h apart) show 0 pending rows for these leagues, or a genuine residual is found and re-triaged. —
+      **GENUINE RESIDUAL FOUND 2026-08-05 (slot-3).** 113 post-fix `expected_unattempted` rows across all 15 target
+      leagues over 3 consecutive days (23 on Aug 3, 45 on Aug 4, 45 on Aug 5). The fix is NOT holding: the
+      `entity_coverage` gate is not firing in production — ZERO `EXPECTED_NO_PROVIDER_COVERAGE` rows exist for any
+      target league despite the UAC code being correct (v0.95.0+ `_FOOTYSTATS_LEAGUE_COVERAGE` properly excludes all 15
+      leagues). Root cause: the production Cloud Run job (`expected-universe-v2-sports-daily`, 01:30 UTC,
+      `instruments-service:latest` image) still emits `expected_unattempted` rows from
+      `enum-universe-sports-2026080X-013038` — the deployed Docker image likely predates the fix. Re-triage needed:
+      rebuild + redeploy the `instruments-service:latest` Docker image to pick up the UAC fix, then re-verify. See
+      Progress Log for full production evidence.
 
 # Progress Log
+
+- **2026-08-05 (slot-3, data_engineering craft, DIAG follow-up)**: re-verified `(footystats, MATCHES/PREDICTIONS/ODDS)`
+  `pending_fetch` for all 15 target leagues against the production
+  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`. **The fix is NOT
+  holding.** Findings: (a) 113 post-fix `expected_unattempted` rows across all 15 target leagues over 3 consecutive
+  days: 23 on 2026-08-03, 45 on 2026-08-04, 45 on 2026-08-05 — the ~45/day rate is consistent with a daily enumerator
+  cycle seeding 1 row per league per data_type for every excluded league. (b) ZERO `EXPECTED_NO_PROVIDER_COVERAGE` rows
+  exist for any target league — the `entity_coverage` gate in `_enumerate_v2_sports` (line 2576-2596) is simply not
+  firing. (c) The UAC code is CORRECT: `_FOOTYSTATS_LEAGUE_COVERAGE` (v0.95.0, `provider_league_ids.py:839`) properly
+  excludes all 15 target leagues; `get_entity_league_coverage("MATCHES")` returns a 49-league frozenset that does not
+  include CHILE_PRIMERA/K_LEAGUE_1/LIGA_MX/ARGENTINA_PRIMERA or any of the 11 cup leagues. (d) The production Cloud Run
+  job `expected-universe-v2-sports-daily` runs at 01:30 UTC (`schedule = "30 1 * * *"`) with the
+  `instruments-service:latest` Docker image — the `enumerator_run_id` values (`enum-universe-sports-2026080X-013038`)
+  match this schedule exactly. (e) The `reason` column is always blank (empty string) for ALL 1,310,964 footystats rows
+  — the enumerator writes `reason=""` regardless of `capture_status`, which means `EXPECTED_NO_PROVIDER_COVERAGE` is
+  also not persisted even when the gate fires (a separate, smaller issue). **Root cause assessment**: the
+  `instruments-service:latest` Docker image used by the Cloud Run job likely predates the UAC fix — the image needs to
+  be rebuilt from a post-fix `live-defi-rollout` checkout and redeployed. **Re-triage**: file a new `[INFRA]`/`[CODE]`
+  todo to rebuild + redeploy the `instruments-service:latest` image, then re-verify. The pre-fix rows (399, written
+  2026-07-13 through 2026-08-02) are expected — they predate the fix and would need a re-apply of the non-covered-league
+  typing scripts to clean up. No code changes this session (read-only manifest analysis). All evidence live-verified
+  against prod manifest.
 
 - **2026-08-03 (slot-14, data_engineering craft)**: dry-ran both existing typing scripts against the live manifest
   (bounded single-file reads, `scripts/dev/run-bounded-analysis.sh`, 28G cap — the ~250MB/11.85M-row/~20GB-in-memory

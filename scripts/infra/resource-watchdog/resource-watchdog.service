@@ -27,9 +27,10 @@ Environment=RW_MIN_PROCESS_AGE_SEC=30
 Environment=RW_MAX_KILLS_PER_MIN=1
 Environment=RW_ORCHESTRATOR_URL=http://localhost:8765
 Environment=RW_MARKER_DIR=/dev/shm/resource-watchdog/kills
+Environment=RW_STATUS_FILE=/dev/shm/resource-watchdog/status.json
 Environment=RW_LOG_FILE=/var/log/resource-watchdog.log
 Environment=RW_DRY_RUN=false
-Environment=RW_ALLOWLIST=orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc
+Environment="RW_ALLOWLIST=orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc"
 
 # Security hardening
 NoNewPrivileges=yes

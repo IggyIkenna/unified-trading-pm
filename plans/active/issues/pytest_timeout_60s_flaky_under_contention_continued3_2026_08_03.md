@@ -482,3 +482,21 @@ logic for the same root-cause family. No RECLASSIFY, no ARCHIVE. **Note**: this 
 997/1000 lines (its own self-imposed hard cap) — too close to the cap to safely receive an incremental-skip marker this
 pass without risking `check_line_caps.sh`'s HARD gate (the small-marker-append exception only forgives docs already OVER
 cap, not ones a marker would push over); flagged for a future pass rather than risking the gate.
+
+- **2026-08-05 (interactive session) — 4 MORE test files confirmed hit by this exact class, found via an unrelated
+  re-run of the test-impact-selector backtest**
+  (`/plans/active/issues/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran
+  `test_impact_backtest.py` against `features-service` now that the CI-runner fleet split
+  (`/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) has meaningfully reduced (not eliminated)
+  fleet contention — got a usable sample for the first time (5, up from 0) and all 5 flagged as "selector divergences"
+  (narrowed test set missed the actual failing test). Investigated each one's real CI log directly rather than trusting
+  the backtest's naive attribution: **all 5 show the identical `pytest-timeout` `+++++ Timeout +++++` marker this
+  doc-chain already tracks** — `test_numba_kernels.py`, `test_feature_touchup.py`, `test_momentum.py`,
+  `test_cross_timeframe_sanity.py` (the doc-chain's already-named test), and `test_anomaly.py` (all under
+  `features-service`, 2026-08-03/04). **This is NOT a selector safety bug** — the selector correctly narrowed the test
+  set based on the diff's actual content; these tests then separately, coincidentally timed out under load, unrelated to
+  what the diff touched. It IS new evidence that this flakiness class isn't confined to `test_cross_timeframe_sanity.py`
+  specifically — under sufficient contention it can fire on essentially any test that happens to be running when the
+  60/150s per-test timeout elapses, expanding the known blast radius. No new todo filed here (same root cause, same
+  `[OPERATOR]`-gated capacity question already tracked) — noted for whoever next re-derives the residual-contention
+  baseline.

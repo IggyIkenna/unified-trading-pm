@@ -141,9 +141,11 @@ overhead.
   per this workspace's SSOT-direction rule; this issue doc is the resolution record — no edit made to the archive
   itself).
 
-- [ ] [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards —
-      gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data would be
-      misleading). (repo: deployment-api)
+- [x] ✅ [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards
+      — deployment-api@c250348 + evidence: AXIS_CENSUS_COLUMNS extended,
+      get_schema/get_data_status_manifest/get_schema_for_shard params added, manifest service plumbing wired, 8 files +
+      tests — gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data
+      would be misleading). (repo: deployment-api)
 
   **BLOCKED on dependency (2026-07-21, BLK-3f4c6134, confirmed by main)**: dispatched to a worker who checked
   `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` and found todos 5-8 (prove W1 emits v6, migrate v5→v6 objects,
@@ -172,9 +174,9 @@ overhead.
   deployment-api response) has not been implemented; this is still genuinely open, just no longer blocked. Same applies
   to the UI todo below (transitively gated on this one).
 
-- [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
-      them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
-      (transitively blocked on the API todo, which is blocked on the v6 migration).
+- [x] ✅ [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
+      them — deployment-ui@e2d109a | pw:L2 ✓ | regression: tests/e2e/data-status-axis-value-census.spec.ts (repo:
+      deployment-ui)
 
   **Re-dispatched a THIRD time despite `gate_on_depends: true` (2026-07-21, slot 2)**: re-verified fresh —
   `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` todos 5-8 are STILL open/unchecked, the block genuinely still

@@ -112,18 +112,13 @@ across every future incremental inventory run.
       `/plans/archive/2026_08/fleet_wide_qg_capacity_crisis_continues_day2_progress_log_history_2026_08_03.md`, kept
       only the 2 most recent live entries, re-applied `context_scope` (5 entries) — `unified-trading-pm@fcfd66f5e`.
       Verified via word-level (whitespace-normalized) diff: zero content removed across live+archive vs the original.
-- [ ] [SCRIPT] P3. **`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — STILL OPEN,
-      deliberately not attempted mechanically 2026-08-03.** This doc already went through TWO prior line-cap extraction
-      rounds (2026-07-23 umbrella-split, 2026-07-24 second-tier extraction) — every major section is already down to a
-      short verdict-pointer stub pointing at an archive doc. What remains is either (a) a LIVE operational runbook (the
-      "Pre-migration drain" section's exact resume commands — 48 GCP schedulers + 26 AWS EventBridge rules to re-enable
-      post-migration, still needed, not history) or (b) active coordination content (Gate-State Board, Dispatch waves,
-      Sub-plan registry, Master coordination todos) that the orchestrator reads as current state, not narrative history.
-      Forcing a mechanical trim here risks removing something still load-bearing rather than genuine closed history.
-      **Needs a dedicated, careful read-through by whoever picks this up next — not a mechanical batch trim** — to find
-      a genuinely safe extraction candidate (or conclude none exists and this doc needs a different remediation shape,
-      e.g. promotion to `plans/epics/` at the 2000L epic cap instead of the 1000L active-plan cap, given its role as the
-      migration's own coordinator).
+- [x] ✅ [SCRIPT] P3. **`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — DONE 2026-08-05
+      (slot-14).** Extracted the closed R5 smoke ledger (~125 lines, every todo done, one-time probe data from
+      2026-06-11) to
+      `/plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_r5_smoke_ledger_history_2026_08_05.md`;
+      expanded `context_scope` from 2→5 pre-computed entries; added Progress Log marker. Doc now 896L (well under 1000L
+      cap). The pre-migration drain RESUME runbook, Gate-State Board, Dispatch waves, Sub-plan registry, and Master
+      coordination todos are all untouched — only genuinely closed history was extracted.
   - **Interim partial fix 2026-08-03 (same-day residual context-scout pass, 646-doc corpus)**: `context_scope` was
     successfully populated (2 minimal entries: `/codex/02-data/pipeline-mode-partition.md`,
     `/plans/active/instruments_completion_tracker_2026_07_06.md`) without a Progress Log marker — the doc sits at
@@ -331,3 +326,9 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
     be at HEAD instead of committing your files. Caught before any content was lost (post-hoc `git show --stat`
     verification after every batch), but cost 2 wasted quickmerge cycles before switching to space-separation.
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
+- **2026-08-05 (slot-14) — DONE.** Closed the one remaining open todo: extracted the R5 smoke ledger from
+  `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (every R5-fix todo `[x]` done, one-time probe data
+  from 2026-06-11 is stale history) to
+  `/plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_r5_smoke_ledger_history_2026_08_05.md`,
+  expanded `context_scope` from 2→5 pre-computed entries, and added a Progress Log marker. Result: 896L, well under the
+  1000L hard cap — `check_line_caps.sh` passes. All 11 docs in this issue are now resolved; all checkboxes flipped.

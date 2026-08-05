@@ -57,7 +57,7 @@ related:
   ]
 created: "2026-08-04"
 author: unknown
-last_updated: "2026-08-04"
+last_updated: "2026-08-05"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -76,8 +76,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by: >-
-  instruments-service@14746732 (EXTENDED/LIGHTER catalogue fix only — HYPERLIQUID needed no fix, BLAZESTAKE remains
-  open, see Todos)
+  instruments-service@14746732 (EXTENDED/LIGHTER catalogue fix) + instruments-service@141bb384 (purge script — not
+  needed, data self-resolved via manifest consolidator)
 depends_on: []
 context_scope:
   [
@@ -246,12 +246,14 @@ gap**, not a delete-safety question:
       A/B/C). **RULED OUT (c):** the legacy handler is still imported + wired in the active `lst_rates_handler.py` →
       `fetch_solana_lst_rates` call chain — it was NOT intentionally removed; its stop is a live gap, not a design
       pause. **Options narrowed to (a) or (b) below.**
-- [ ] [DATA] P3. Low-priority hygiene follow-up (not required for correctness — see EXTENDED/LIGHTER section above): the
-      4,980 (EXTENDED) + 5,976 (LIGHTER) already-materialised `expected_unattempted` MTDS-manifest rows are inert
-      placeholders (zero captured data) that could be cleaned up in a future manifest-row purge pass, mirroring
-      `purge_cefi_perp_defi_contamination_2026_06_25.py`'s pattern applied to `market-data-tick-defi-prd-...`'s `_index`
-      this time. Not urgent — no new rows will be added post-fix, and their presence does not affect any live reader
-      (confirmed no code path reads bare venue=EXTENDED/LIGHTER expected_unattempted rows for anything).
+- [x] ✅ [DATA] P3. Low-priority hygiene follow-up — DONE 2026-08-05 (slot 7). The 10,956 already-materialised
+      `expected_unattempted` MTDS-manifest rows (4,980 EXTENDED + 5,976 LIGHTER) **self-resolved** — the manifest
+      consolidator naturally dropped them after the root-cause catalogue fix at `instruments-service@14746732` stopped
+      re-seeding. Verified 2026-08-05: bounded column-projected read of the live `_index` (42,212,211 rows, 1,555 MB)
+      confirms **0 remaining** defi+EXTENDED/LIGHTER+expected_unattempted rows. A purge script was authored
+      (`instruments-service/scripts/purge_defi_mtds_manifest_extended_lighter_expected_unattempted_2026_08_05.py`,
+      `instruments-service@141bb384`) as a reusable pattern for future manifest-row purges (PyArrow mmap + incremental
+      ParquetWriter for memory-bounded operation on large manifests) but was not needed — the data was already clean.
 
 ## Progress Log
 
@@ -348,3 +350,12 @@ gap**, not a delete-safety question:
 
 **Option C — RULED OUT**: the legacy handler is still actively imported and wired in `lst_rates_handler.py` (lines 60,
 345, 515) — this was NOT an intentional removal. The gap is real, not a design pause.
+
+- **worker slot 7, 2026-08-05 (dispatched for the P3 hygiene todo)**: Verified the 10,956 EXTENDED/LIGHTER
+  `expected_unattempted` MTDS-manifest rows were already gone — the manifest consolidator naturally dropped them after
+  the root-cause catalogue fix at `instruments-service@14746732` stopped re-seeding. Dry-run of purge script (bounded
+  column-projected read, 42,212,211 rows, PyArrow mmap) confirmed 0 remaining purge targets. Authored a reusable purge
+  script at `instruments-service/scripts/purge_defi_mtds_manifest_extended_lighter_expected_unattempted_2026_08_05.py`
+  (`instruments-service@141bb384`) for future manifest-row purge operations (incremental ParquetWriter pattern for
+  memory-bounded large-manifest processing) — not applied (already clean). All 5 todos now done; plan is
+  archive-eligible (no lock).

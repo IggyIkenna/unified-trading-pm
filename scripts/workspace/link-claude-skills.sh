@@ -7,6 +7,8 @@
 #   2. `<root>/.claude/skills`             → unified-trading-pm/cursor-configs/skills/   (ONE dir link)
 #   3. `<root>/.claude/settings.json`      → unified-trading-pm/cursor-configs/settings.json
 #   4. `<root>/.claude/hooks`              → unified-trading-pm/cursor-configs/hooks/   (ONE dir link)
+#   5. `<root>/.claude/settings.local.json`  — strips duplicate UserPromptSubmit/PreCompact
+#      hooks already covered by (3)'s settings.json (stale duplicates cause double-firing)
 # so Claude Code (a) auto-loads the PM ruleset at startup when an agent's CWD is the root, and
 # (b) surfaces each `/<name>` slash-command, and (c) picks up team policy (permissions,
 # bypassPermissions default, MCP servers, the destructive-command hook) at the project-settings
@@ -136,6 +138,27 @@ else
         echo "[link-claude-skills] ensured ${_settings_dest} → ${_settings_target}"
     else
         echo "[link-claude-skills] could not link ${_settings_dest} (non-blocking)" >&2
+    fi
+fi
+
+# ── (4.5) Heal settings.local.json — strip duplicate hooks already covered by settings.json ──
+# The SSOT settings.json (linked above) already registers UserPromptSubmit and PreCompact
+# hooks. A stale settings.local.json that ALSO registers them causes the hook to fire TWICE
+# on every prompt — once from the canonical script, once from a potentially-stale local copy.
+# This step strips those duplicates so only the SSOT registration runs.
+_local_settings="${WORKSPACE_ROOT}/.claude/settings.local.json"
+if [ -f "$_local_settings" ] && command -v jq >/dev/null 2>&1; then
+    _cleaned="$(jq '
+      if .hooks then
+        .hooks |= (
+          del(.["UserPromptSubmit"])
+          | del(.["PreCompact"])
+          | if (. | length) == 0 then empty else . end
+        )
+      else . end
+    ' "$_local_settings" 2>/dev/null)" || true
+    if [ -n "$_cleaned" ] && ! echo "$_cleaned" | jq --slurpfile orig "$_local_settings" '. == $orig[0]' 2>/dev/null | grep -q true; then
+        echo "$_cleaned" > "$_local_settings" && echo "[link-claude-skills] stripped duplicate hooks from ${_local_settings} (UserPromptSubmit + PreCompact already in SSOT settings.json)"
     fi
 fi
 

@@ -142,12 +142,10 @@ rows, that's a separate write-path bug to diagnose via its logs.
       `gcloud scheduler jobs list`) — it is simply PAUSED, per the P1 finding above, pending the same Track 1 R3/R4
       gate. No new automation is needed; un-pausing IS the standing mechanism once the gate clears. (repo:
       deployment-service)
-- [ ] [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — it still points
-      at `/plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md` (now archived to
-      `/plans/archive/issues/...`), but that file is already at 1001 lines (over the 1000-line hard cap with no baseline
-      exemption for a touched file — `check_line_caps.sh`), so the referrer fix could not be committed alongside the
-      archival. Trim the plan below the cap first, then fix the two stale path references (frontmatter `related:` + the
-      body "Audit:" line). (repo: unified-trading-pm)
+- [x] ✅ [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — fixed body
+      "Audit:" line `plans/active/issues/`→`/plans/archive/issues/` (frontmatter `related:`+`context_scope:` were
+      already correct); condensed 8 repetitive VM health re-check entries into one summary to bring file from 1017 to
+      986 lines (below 1000-line cap). — `unified-trading-pm@4718f3532` (repo: unified-trading-pm)
 
 ## Progress Log
 
