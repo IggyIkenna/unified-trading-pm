@@ -249,10 +249,15 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
       `record_zero_rows` instead of `record_failed` — fixed market-tick-data-service@2b6d9e6b (see § 6.2 below, whose
       own "once § 6.1 lands" precondition is now met for the leaf-name verification, though the classification bug found
       here was a different, more urgent defect than what § 6.2 anticipated).
-- [ ] [SERVICE] P3. Once § 6.1 lands and the handler actually runs, verify the real per-venue shard leaf names match
-      expectation (`stETH.parquet` / `weETH.parquet` / `EIGEN.parquet` via the sanitized-symbol path) and either wire
-      the `file_name="ticks.parquet"` argument to do something real or remove the dead parameter at
-      `staking_yields_handler.py:137` (currently a documented no-op per `write_defi_rows`'s own contract — see § 3).
+- [x] ✅ [SERVICE] P3. **DONE 2026-08-05 (slot-11, batch5) — market-tick-data-service@1564a983.** Once § 6.1 lands and
+      the handler actually runs, verify the real per-venue shard leaf names match expectation (`stETH.parquet` /
+      `weETH.parquet` / `EIGEN.parquet` via the sanitized-symbol path) and either wire the `file_name="ticks.parquet"`
+      argument to do something real or remove the dead parameter at `staking_yields_handler.py:137` (currently a
+      documented no-op per `write_defi_rows`'s own contract — see § 3). GCS evidence: EIGENLAYER objects present with
+      canonical instrument_key filenames (`EIGENLAYER-ETHEREUM:STAKING:EIGEN.parquet` on 2026-07-28→08-03;
+      `EIGEN.parquet` on 2026-07-26). LIDO/ETHERFI zero objects (DNS failures per §6.1, classification fix shipped
+      earlier). Plan's bare-symbol expectation was pre-launch estimate — actual instrument_key format IS canonical per
+      `write_defi_rows` line 414. Dead `file_name="ticks.parquet"` argument removed.
 - [ ] [SERVICE] P3. `StakingYieldsHandler` implements 3 of the 14 protocols the UAC capability registry declares for
       `collect-staking-yields` (LIDO/ETHERFI/EIGENLAYER only — missing YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/
       SYMBIOTIC/KARAK/RENZO/KELPDAO/PUFFER/JITORESTAKING). Scope a capability-completion pass once § 6.1 confirms the 3
