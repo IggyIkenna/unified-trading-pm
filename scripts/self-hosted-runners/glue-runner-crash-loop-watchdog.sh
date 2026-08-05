@@ -74,14 +74,21 @@ touch "$STATE_FILE"
 
 log() { echo "[glue-runner-watchdog] $*"; }
 
-# Resolve a GH token the same way glue-runner-run.sh does for this exact repo: read
-# GH_TOKEN_SECRET/GCP_PROJECT/GLUE_GCLOUD_CONFIG from PM's own env file, fetch from Secret
-# Manager via the isolated per-pool gcloud config. Never logs the token itself.
+# Resolve a GH token the same way glue-runner-run.sh does for this exact repo. GH_TOKEN_SECRET/
+# GCP_PROJECT/GLUE_GCLOUD_CONFIG come from the environment, NOT a direct read of PM_ENV_FILE --
+# that file is 0600 root:root (same as every per-repo one), unreadable by this unit's own
+# User=ubuntu. The systemd unit's `EnvironmentFile=` directive is what actually reads it (at
+# root, before the privilege drop) and injects these as env vars; a bare sed-parse here silently
+# failed on every tick (2026-08-05 finding -- see the .service file's own comment). Falls back
+# to parsing PM_ENV_FILE directly only for a manual/local run outside systemd, where no
+# EnvironmentFile injection happens and the invoking user presumably already has read access.
 resolve_gh_token() {
-  local secret project gcloud_cfg
-  secret="$(sed -n 's/^GH_TOKEN_SECRET=//p' "$PM_ENV_FILE" | head -1)"
-  project="$(sed -n 's/^GCP_PROJECT=//p' "$PM_ENV_FILE" | head -1)"
-  gcloud_cfg="$(sed -n 's/^GLUE_GCLOUD_CONFIG=//p' "$PM_ENV_FILE" | head -1)"
+  local secret="${GH_TOKEN_SECRET:-}" project="${GCP_PROJECT:-}" gcloud_cfg="${GLUE_GCLOUD_CONFIG:-}"
+  if [ -z "$secret" ] && [ -r "$PM_ENV_FILE" ]; then
+    secret="$(sed -n 's/^GH_TOKEN_SECRET=//p' "$PM_ENV_FILE" | head -1)"
+    project="${project:-$(sed -n 's/^GCP_PROJECT=//p' "$PM_ENV_FILE" | head -1)}"
+    gcloud_cfg="${gcloud_cfg:-$(sed -n 's/^GLUE_GCLOUD_CONFIG=//p' "$PM_ENV_FILE" | head -1)}"
+  fi
   gcloud_cfg="${gcloud_cfg:-/opt/github-glue-runners/.gcloud}"
   CLOUDSDK_CONFIG="$gcloud_cfg" gcloud secrets versions access latest \
     --secret="$secret" --project="$project"

@@ -12,6 +12,15 @@ Description=Page #ci-failures when a self-hosted glue-runner unit crash-loops
 [Service]
 Type=oneshot
 User=ubuntu
+# Same file the github-glue-runner@.service template itself loads (0600 root:root) -- systemd
+# reads it at the privilege level THIS unit runs at (root, before the User=ubuntu drop) and
+# injects GH_TOKEN_SECRET/GCP_PROJECT/GLUE_GCLOUD_CONFIG as env vars. Found missing live
+# 2026-08-05 on a fresh VM install: without this, the script tried to `sed` the file itself as
+# `ubuntu`, which the file's own permissions correctly refuse -- every alert dispatch silently
+# died on "Permission denied" / "project property is set to the empty string", so NO alert (not
+# even the original crash-loop one) had ever actually been able to fire. Leading `-` = don't
+# fail the unit if the file is momentarily absent.
+EnvironmentFile=-/etc/github-glue-runner.env
 ExecStart=/usr/local/sbin/glue-runner-crash-loop-watchdog.sh
 # A failed watchdog tick must be visible in `systemctl status`, not silently retried forever.
 Restart=no
