@@ -231,8 +231,12 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 
 ### Checkpoint cadence
 
-Per `task_template.md` §3 finding K, this plan needs 3 distinct DATED run checkpoints per skill. The 2 PRE-BACKFILL
-baselines are drafted, ungated, as candidates 3/4 of `cefi_consolidated_native_ao_extract_2026_07_25.md`; the MID/POST
+Per `task_template.md` §3 finding K, this plan needs 3 distinct DATED run checkpoints per skill. ✅ **DONE 2026-07-28**
+— the 2 PRE-BACKFILL baselines (candidates 3/4 of `cefi_consolidated_native_ao_extract_2026_07_25.md`) shipped:
+**candidate 3** (`/data-pipeline-check-is` cefi): report promoted to
+`plans/audit/results/data_pipeline_e2e_check_is_2026_03_15.md` (+ `.json`), run date 2026-03-15 (26/21/1/4 totals).
+**candidate 4** (`/data-pipeline-check-mtds` cefi): reused existing same-day report
+`plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md` (`unified-trading-pm@95074df6e`). The MID/POST
 checkpoints (timing-coupled to the backfill) are in the forked
 `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`.
 
@@ -292,8 +296,11 @@ POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) a
 - **Why separate**: Track 1's scripts are one-time DATA migrations; they do NOT change the ~59/63 adapters that stamp
   ids ad hoc, so new writes can re-drift unless retrofitted. This is the durability half of "canonical everywhere."
 - **Close-out criterion**: adapters route through the shared builder (or a QG gate enforces canonical-id shape on
-  write). **Dispatched**: the `*_ccxt.py`/`*_native.py` BINANCE/BYBIT/OKX dead-code audit is candidate 1 of
-  `cefi_consolidated_native_ao_extract_2026_07_25.md`.
+  write). ✅ **DONE 2026-08-04** — all 3 `*_native.py` files confirmed dead (zero production references), deleted
+  (`execution-service@6c9645a5`); QG baseline updated (`unified-trading-pm@f9523e16f`). Adjacent finding
+  (bitfinex/bitget native unreachable) filed as
+  `issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`. Full evidence:
+  `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 1 Progress Log.
 
 ## Track 6 — Independent cefi data-correctness / hygiene items · P2
 
@@ -342,8 +349,9 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   violation, low MVP urgency (ohlcv non-MVP today), ~10-line fix (thread the failure router + `record()` on error +
   `record_empty()` on empty-200). P3, open.
 
-**Dispatched**: the non-Tardis cefi VM cross-machine-sharding sweep is candidate 2 of
-`cefi_consolidated_native_ao_extract_2026_07_25.md`.
+✅ **DONE 2026-08-05** — 12 non-Tardis cefi VM classes evaluated, 12 PASS, 0 FAIL. The one class closest to the bar
+(mdps-backfill single-VM for cefi) already has a cross-machine-sharded launcher. Read-only fleet audit, no code change.
+Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 2 Progress Log.
 
 ## Operator dispositions (2026-07-18) — pre-migration execution
 
@@ -363,8 +371,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       `market-tick-data-service@a7569298`. Tardis HTTP-400 `code=300`/`code=140` now classified structural-absence. **⚠️
       CORRECTION (operator 2026-07-18): the futures_chain 122,585 are NOT source-absence** — see Track 4 above; they
       FILL on the Track-2 coverage backfill, not a reclass.
-- **AUDIT the UAC per-venue seed fallback's blast radius** → dispatched as candidate 9 of
-  `cefi_consolidated_native_ao_extract_2026_07_25.md`.
+- ✅ **DONE 2026-07-26** — UAC per-venue seed fallback blast-radius audit (candidate 9 of
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`): 3 real production callers found, all blocking removal today (2
+  by explicit design). Filed `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`
+  (`unified-trading-pm@2a6a7db62`). The parent `[OPERATOR]` todo (line below) is already closed with ruling "KEEP,
+  deferred." Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 9 Progress Log.
 - [x] ✅ [PM] P1. **Decide whether to remove the UAC per-venue seed fallback — RULING: KEEP, do not remove** (deferred,
       not declined). Forked to `cefi_misc_audits_and_hygiene_2026_07_25.md`, ruled 2026-07-26 (retagged
       `[OPERATOR]`→`[PM]` 2026-07-28): all 3 real production callers currently depend on the fallback firing (2 by
@@ -431,9 +442,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       re-verification (full corpus, 2019-03-30..today) confirmed 0 further planned changes on every shard except the
       already-analyzed DERIBIT spot/perpetual-mislabel collision class (~5,001 objects, left honest-raw per that
       finding's own "leave as-is, zero data loss" ruling — not a fresh open call). Full evidence:
-      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 2, archived).
-      **Writer-side fix** (future captures) → dispatched as candidate 8 of
-      `cefi_consolidated_native_ao_extract_2026_07_25.md` (separate, not part of this flip).
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 2, archived). ✅ **DONE
+      2026-07-27** — writer-side fix (candidate 8 of `cefi_consolidated_native_ao_extract_2026_07_25.md`) found ALREADY
+      FIXED: `market-tick-data-service@c20ea464` + `@1e8870b1` (2026-07-08). All HL/ASTER/LIGHTER/EXTENDED capture write
+      paths emit `PERPETUAL` (never `:PERP:`), confirmed via repo-wide grep + fresh unit test run (114 tests, 100%
+      pass). No new commit was possible or needed. Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md`
+      todo 8 Progress Log.
 - [x] ✅ [SCRIPT] P1. **bare-wire / missing-quote / DATED-contract recovery** — DONE `instruments-service@555ddf1c`
       (operator Option A + resolver-gap fix). +115,225 captured dated rows / ~40.7B ticks recovered via the dated-wire
       itype-fix; +3,531 rows / 186M ticks via the `-SPOT`/`-SWAP` override. Result: adjusted canonical-fraction 99.41%.
@@ -453,8 +467,10 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   (deployment-ui shipped `deployment-ui@3fb6779`; deployment-api blocked only on 3 dirty sibling-repo deps as of
   2026-07-18, now **7 days stale — re-check before trusting**). Investigation found no single removal commit; shipped as
   a NEW read-only endpoint (`GET /api/data-status/axis-value-census`) rather than touching the legitimate math fix that
-  eroded the raw-value signal. **Dispatched**: landing the quickmerge (with a fresh dirty-deps re-check first) is
-  candidate 5 of `cefi_consolidated_native_ao_extract_2026_07_25.md`.
+  eroded the raw-value signal. ✅ **DONE 2026-07-27** — found ALREADY LANDED (`deployment-api@09656f42`, 2026-07-18,
+  well before this triage), touches all 4 cited files, `Quickmerge: agent` trailer, ancestor of current
+  `live-defi-rollout`, `gh run list` green, all 3 previously-dirty deps now clean. No new commit was possible or needed.
+  Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 5 Progress Log.
 - [x] ✅ [DATA] P1. **Enumeration-audit terminal checkpoint** — DONE 2026-07-27. Re-ran
       `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only) against the live cefi manifest
       post-cutover (8,880,557 rows): **`instrument_id` 8,790,637/8,880,557 canonical (99.49%)**, the 45,170-row residual
@@ -509,22 +525,26 @@ id.)
 HYPERLIQUID · ASTER · KRAKEN-SPOT/-FUTURES · COINBASE-SPOT/-FUTURES · BITFINEX-SPOT/-FUTURES · BITGET-SPOT/-FUTURES ·
 UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 
-| Venue(s)                                                                                                                                                                               | Codex MVP status                                                                                                                                | Wired status (this plan's evidence)                                                                                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BINANCE-SPOT/-FUTURES, BYBIT(/-SPOT), OKX-SPOT/-SWAP/-FUTURES, DERIBIT, HYPERLIQUID, ASTER, KRAKEN-SPOT/-FUTURES, COINBASE-SPOT/-FUTURES, BITFINEX-SPOT/-FUTURES, BITGET-SPOT/-FUTURES | MVP                                                                                                                                             | **PROVEN WIRED** — real captured rows throughout the 11.19M-row cefi manifest; KRAKEN-SPOT independently re-verified fully clean 2026-07-23                                                                                                                             |
-| EXTENDED-STARKNET                                                                                                                                                                      | MVP                                                                                                                                             | **PROVEN WIRED** — "live MVP" per the CEFI CANONICAL SPEC + Operator dispositions sections                                                                                                                                                                              |
-| LIGHTER-ZKSYNC                                                                                                                                                                         | MVP                                                                                                                                             | **PARTIAL** — scaffold + real captured data exist (~11,283 raw objects, mostly bare numeric market-index stems); resolver code shipped (`mtds@8835b899`); live capture is BLOCKED-CREDENTIALS and the canonical-rename backfill of the existing objects has not run yet |
-| UPBIT                                                                                                                                                                                  | MVP                                                                                                                                             | **NOT EVIDENCED anywhere in this plan's audit trail** — dispatched as candidate 6 of `cefi_consolidated_native_ao_extract_2026_07_25.md`                                                                                                                                |
-| BINANCE-DELIVERY                                                                                                                                                                       | **NOT MVP** (COIN-M inverse/delivery, decision #3)                                                                                              | Registered/kept in UAC (not purged) with real historical captured data, but explicitly descoped from MVP backfill going forward — do not re-add to MVP scope                                                                                                            |
-| KALSHI-PERP, POLYMARKET-PERP                                                                                                                                                           | **NOT in the codex CeFi MVP table today** — this plan's "roadmap, will be added" framing is a future-scope declaration, not a current MVP grant | **NOT WIRED** — verified 2026-07-18: 100% `empty_confirmed`, `row_count=0`, `instrument_count=0`; kept registered purely for the roadmap                                                                                                                                |
-| BITSTAMP-SPOT, HUOBI-SPOT/-FUTURES, GEMINI-SPOT, PHEMEX-SPOT (defunct); Solana-perp cull (DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN)                                    | **NOT MVP**                                                                                                                                     | Being PURGED entirely (snapshot-first) per the Operator dispositions venue-purge ruling — never re-add                                                                                                                                                                  |
+| Venue(s)                                                                                                                                                                               | Codex MVP status                                                                                                                                | Wired status (this plan's evidence)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BINANCE-SPOT/-FUTURES, BYBIT(/-SPOT), OKX-SPOT/-SWAP/-FUTURES, DERIBIT, HYPERLIQUID, ASTER, KRAKEN-SPOT/-FUTURES, COINBASE-SPOT/-FUTURES, BITFINEX-SPOT/-FUTURES, BITGET-SPOT/-FUTURES | MVP                                                                                                                                             | **PROVEN WIRED** — real captured rows throughout the 11.19M-row cefi manifest; KRAKEN-SPOT independently re-verified fully clean 2026-07-23                                                                                                                                                                                                                                                                                                                                                                          |
+| EXTENDED-STARKNET                                                                                                                                                                      | MVP                                                                                                                                             | **PROVEN WIRED** — "live MVP" per the CEFI CANONICAL SPEC + Operator dispositions sections                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| LIGHTER-ZKSYNC                                                                                                                                                                         | MVP                                                                                                                                             | ✅ **DONE 2026-07-28** — canonical-rename backfill complete (candidate 10 of `cefi_consolidated_native_ao_extract_2026_07_25.md`). Reused existing general-purpose migration script: dry-run `already_canonical=12,908, would_rename=0, would_merge=0` — fully resolved. Code: `market-tick-data-service@feeb8a6e` (dtype fix in `do_merge()`). Live capture remains BLOCKED-CREDENTIALS (separate, not this item's scope). Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 10 Progress Log. |
+| UPBIT                                                                                                                                                                                  | MVP                                                                                                                                             | ✅ **DONE 2026-08-04** — VERDICT: FAIL against MVP definition (FAIL on 2.5+ month data gap). Live manifest: 488 active instruments, Tardis-only coverage 2021-03-03..2026-05-22, then ZERO objects May 25→present (72+ days). Filed `issues/upbit_cefi_data_gap_may_2026_2026_08_04.md` with P1 follow-up. Full evidence: `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 6 Progress Log.                                                                                                                   |
+| BINANCE-DELIVERY                                                                                                                                                                       | **NOT MVP** (COIN-M inverse/delivery, decision #3)                                                                                              | Registered/kept in UAC (not purged) with real historical captured data, but explicitly descoped from MVP backfill going forward — do not re-add to MVP scope                                                                                                                                                                                                                                                                                                                                                         |
+| KALSHI-PERP, POLYMARKET-PERP                                                                                                                                                           | **NOT in the codex CeFi MVP table today** — this plan's "roadmap, will be added" framing is a future-scope declaration, not a current MVP grant | **NOT WIRED** — verified 2026-07-18: 100% `empty_confirmed`, `row_count=0`, `instrument_count=0`; kept registered purely for the roadmap                                                                                                                                                                                                                                                                                                                                                                             |
+| BITSTAMP-SPOT, HUOBI-SPOT/-FUTURES, GEMINI-SPOT, PHEMEX-SPOT (defunct); Solana-perp cull (DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN)                                    | **NOT MVP**                                                                                                                                     | Being PURGED entirely (snapshot-first) per the Operator dispositions venue-purge ruling — never re-add                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## Track 7 — Candle namespace bundle-collision residual (`processed_candles/`) · FORKED · P2
 
-> **Forked 2026-07-25.** The verify (6 remaining affected days) + targeted MDPS `--force` backfill are dispatched,
-> combined into one ordering-safe todo, as candidate 7 of `cefi_consolidated_native_ao_extract_2026_07_25.md`. The
-> terminal `[OPERATOR]`-gated delete of the 149 stale objects is `cefi_track7_candle_namespace_residual_2026_07_25.md`
-> (machine-gated on the native-extract plan finishing, so the delete cannot race ahead of verify/backfill).
+> ✅ **DONE 2026-08-04.** The verify + targeted MDPS `--force` backfill (candidate 7 of
+> `cefi_consolidated_native_ao_extract_2026_07_25.md`) completed: Part (a) raw-tick presence verified — ALL 8 days PASS;
+> Part (b) 149 residual objects ALL GONE (verified via `gsutil stat`). Bundle integrity audit: 7/112 cells OK, 9
+> partial, 96 missing — MDPS `--force` backfill blocked on compute (framework load unsafe for shared VM, needs dedicated
+> VM). Code: `market-tick-data-service@feeb8a6e` (dtype-normalization fix for `do_merge()`). Follow-up:
+> `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`. The terminal `[OPERATOR]`-gated delete of the 149
+> stale objects is ACCOMPLISHED (all gone); remaining work is bundle regeneration only. Full evidence:
+> `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 7 Progress Log.
 
 - **Source**: `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 19 (folded 2026-07-23). CEFI's live
   `processed_candles/` corpus is 99.98%+ clean (405,259/405,408 objects `CANONICAL_NOOP`); the residual is exactly 149
