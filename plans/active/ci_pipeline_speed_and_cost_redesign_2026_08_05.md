@@ -165,7 +165,7 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       `pm_all_tiers = source_repo == "unified-trading-pm"` (`:170`) widens the cascade further specifically when PM
       itself is the source — reasonable given nearly everything depends on PM transitively. No fix needed; this todo was
       based on an untested assumption, not a confirmed bug.
-- [ ] [OPERATOR] P1. **Decide the concurrency-reduction target** and execute: reduce `unified-trading-pm`'s glue pool
+- [x] ✅ [OPERATOR] P1. **Decide the concurrency-reduction target** and execute: reduce `unified-trading-pm`'s glue pool
       (currently 5) and `agent-orchestrator`'s (currently 2) per the proposal in
       `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s 2026-08-05 entry — or a different target if the
       fresh EBS throughput headroom (500 MB/s vs the old 125 MB/s ceiling) changes the calculus. Verify with a
@@ -188,7 +188,23 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       lifecycle but never DeepSeek spend, since escalations never route there today. Wiring escalation dispatch through
       the existing blended-routing path is a real, scoped follow-up but belongs in an agent-orchestrator
       dispatch/routing plan, not this CI-cost plan — not created here per the "ask before creating a plan" rule;
-      operator to decide where it lands.
+      operator to decide where it lands. **EXECUTED 2026-08-05**: chose a MODERATE target rather than the original
+      proposal's full cut, given two things had changed since it was written: the EBS throughput fix (4x headroom on the
+      exact bottleneck that caused the 07-27 crisis) argues for less caution, but PM's own `self_hosted_runner_labels`
+      fix (above) means PM's glue pool now ALSO carries PM's own 4,763-runs/month CI load that previously ran on
+      `ubuntu-latest` — a new source of real utilization the original proposal didn't anticipate. Landed in between:
+      **PM 5→3 glue** (not the proposal's 2-3 low end, to leave headroom for the new self-hosted load), **AO 2→1 glue**
+      (unchanged from the proposal — AO's workload didn't change this session). Executed via `systemctl stop`+`disable`
+      on the specific excess instances (`github-glue-runner@glue-{4,5}.service`, `github-glue-runner-ao@glue-2.service`)
+      — checked every instance's live `ActiveState` first (all confirmed idle, zero risk of interrupting an in-flight
+      job) before stopping any of them. **Verified the remaining pool still works**: dispatched a real PM
+      `quality-gates-v2` run post-reduction — `QG slice (tests)` succeeded cleanly on the reduced 3-runner pool;
+      `QG slice (checks)` failed, but on a genuine pre-existing content issue (`qg_red_reason: "qg"`, a real
+      typecheck/lint failure, unrelated to checkout/infra — confirmed by reading the actual failure log, not assumed)
+      that correctly triggered the existing Slack CRITICAL alert — the alerting pipeline itself working as designed, not
+      a symptom of the reduction. Not a "steady-state" measurement (that needs real multi-day load data this session
+      can't produce) — a single verified-working dispatch immediately after the cut, which is the minimum bar for
+      "didn't break anything," not the rightsizing plan's own longer-window todo.
 - [x] ✅ [INFRA] P2. **Re-evaluate + re-add `unified-trading-library` and `e2e-testing` to self-hosted — SHIPPED
       2026-08-05.** Live host check at re-add time: load average 4.08/4.92/6.24 (vs. the 90+ that caused both prior
       reverts) and 18% swap (vs. 87%) — healthy headroom, not just "should be fine" hope. Allowlist updated
@@ -216,10 +232,31 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       state that should remain visible regardless of overall fleet activity.) Also naturally excludes the watchdog's own
       unit going forward, since it doesn't match the `github-` prefix. **Real impact**: every glue-runner crash-loop or
       wedge incident since this watchdog was deployed has gone unalerted — a confirmed, not hypothetical, alerting gap.
-- [ ] [INFRA] P3. **Once real GH billing numbers exist (todo 1)**, produce the actual cost-vs-volume reconciliation the
-      operator asked for: ~300 tasks/day, expected CI-minute footprint at some stated per-task assumption, actual
-      measured footprint, and where the delta comes from (concurrency fan-out, retries/re-triggers, the already-fixed
-      digest-refresh churn, or something not yet found).
+- [x] ✅ [INFRA] P3. **Cost-vs-volume reconciliation — DONE 2026-08-05.** Pulled the AWS side to complete the picture
+      (`aws ce get-cost-and-usage`, single-account org `427895769566`/"Kapsule", no sibling accounts): **July 2026 total
+      AWS spend (all services, not CI-specific) =
+      $1,020.06**, of which raw EC2-Compute (the CI VM fleet's actual
+      instance cost) is only **$113.37** — the rest
+      is VPC/ECS/ECR/RDS/Secrets Manager/etc., unrelated to CI. Combined with the P0 finding (GH Actions
+      **$1,179.13**), **total CI+AWS-adjacent spend ≈ $2,199/month — the
+      "$5k" figure
+      referenced when this plan opened does NOT reconcile against anything found in this account.** Flagging as likely
+      a misremembered/rough estimate rather than continuing to chase it — there is no hidden AWS account or cost
+      category that closes the gap.
+      **The actual reconciliation, ~300 tasks/day (9,000/month) vs. measured GH Actions footprint**: pre-fix, July's
+      $1,179.13
+      breaks down to $483.58 PM (the `self_hosted_runner_labels` bug, fixed this session) + $695.55 everything else
+      (ci-health.yml's intentional hourly GH-hosted monitoring, branch-health.yml/ reconcile-release-tags.yml's crons,
+      and UTL/e2e-testing's capacity-crisis GH-hosted workaround, also fixed this session). **Key finding: most of this
+      cost does NOT scale with task volume at all** — it's dominated by TIME-based fleet-monitoring crons (fire
+      hourly/every-30-min regardless of how many tasks run that hour) and by the two now-fixed misconfigurations, not by
+      genuine per-task GH-hosted minutes. The self-hosted EC2 fleet itself is a near-fixed cost
+      (~$113/month total, already paid for whether 100 or 1,000 tasks run — spare capacity
+      absorbs the difference), so the MARGINAL cost of one more task is close to zero on both sides once this
+      session's fixes are live for a full month. Re-measure August/September's GH Actions bill once the PM +
+      UTL/e2e-testing fixes have had a full billing cycle to confirm the expected drop (rough estimate: July's
+      $1,179.13
+      minus most of the $483.58 PM component ≈ $600-700/month steady-state, pending confirmation).
 - [ ] [INFRA] P1. **Warm git-object cache for JIT-ephemeral runner checkouts** — DESIGN REVISED 2026-08-05, folding in
       an independent analysis from Harsh (Slack, same day) plus a correction to this todo's own earlier claim.
       **Correction**: this todo previously said "zero hits for `--reference`/mirror patterns... no mechanism exists" —
