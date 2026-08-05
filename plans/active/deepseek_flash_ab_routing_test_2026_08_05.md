@@ -71,44 +71,70 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 
 ## Todos
 
-- [ ] [INFRA] P1. Add an optional `variant: Literal["pro", "flash"] | None` field to `AccountDef` in
+- [x] 1. ✅ [INFRA] P1. Add an optional `variant: Literal["pro", "flash"] | None` field to `AccountDef` in
       `server/accounts.py` so two DeepSeek accounts can be told apart by declared model — today the schema has no such
       field and the model lives only in the account's own env file, invisible to AutoSpawn. Done-when: `basedpyright`
-      clean, existing `AccountDef` tests still pass.
-- [ ] [INFRA] P1. In `server/autospawn.py`, at the point where `provider == "deepseek"` and
+      clean, existing `AccountDef` tests still pass. — `agent-orchestrator@7d73ded`, basedpyright 0 errors, full pytest
+      suite (2431 passed) green.
+- [ ] 2. [INFRA] P1. In `server/autospawn.py`, at the point where `provider == "deepseek"` and
       `_pick_headroom_account(..., provider="deepseek")` is called (~line 1316), split the candidate pool by `variant`
       and deterministically alternate between the pro and flash sub-pools — reuse the same style of persistent,
       debuggable accumulator `_deepseek_should_route()` already uses (not an in-memory-only counter that resets on
       restart; key off a real persisted count, e.g. total DeepSeek dispatches so far mod 2, or hash on `task_id`).
       Accounts with `variant: None` (the default/unset case) are treated as pro. Done-when: a unit test proves N
       consecutive DeepSeek dispatches split ~50/50 across variants and the split is reproducible across a process
-      restart.
-- [ ] [BACKEND] P1. Extend `GET /api/backlog/usage/windows` (and whatever backs `TaskUsageWindowsPanel`) to break down
-      spend/tokens by exact `model`, not just `provider` — return per-model rows (deepseek-v4-pro, deepseek-v4-flash)
-      AND a combined/aggregated deepseek row, for every window (1h/5h/24h/7d/lifetime). Done-when: hitting the endpoint
-      with the two DeepSeek accounts live shows both models' rows separately and summed.
-- [ ] [UI] P2. Extend `dashboard/src/TaskUsageWindows.tsx` (or add a sibling panel) to render the per-model breakdown
+      restart. **PARTIAL — shipped in `agent-orchestrator@7d73ded` and verified working live (see Progress Log), but NO
+      dedicated unit test was written proving the ~50/50 ratio/reproducibility** — the full QG pass being green does not
+      satisfy this todo's own stated done-when, since no new test exercises `_deepseek_flash_should_route` or the
+      variant filter in `_pick_headroom_account`. Left unchecked deliberately; real remaining work, see Deferred table.
+- [x] 3. ✅ [BACKEND] P1. Extend `GET /api/backlog/usage/windows` (and whatever backs `TaskUsageWindowsPanel`) to break
+      down spend/tokens by exact `model`, not just `provider` — return per-model rows (deepseek-v4-pro,
+      deepseek-v4-flash) AND a combined/aggregated deepseek row, for every window (1h/5h/24h/7d/lifetime). Done-when:
+      hitting the endpoint with the two DeepSeek accounts live shows both models' rows separately and summed. —
+      `agent-orchestrator@7d73ded`; verified live via
+      `curl localhost:8765/api/backlog/usage/windows?model=deepseek-v4-pro` vs `?model=deepseek-v4-flash` on the
+      orchestrator VM, both returning distinct per-window rows.
+- [ ] 4. [UI] P2. Extend `dashboard/src/TaskUsageWindows.tsx` (or add a sibling panel) to render the per-model breakdown
       from the previous todo — pro and flash visible side-by-side, not just folded into one DeepSeek row. Playwright
-      regression spec per `/codex/06-coding-standards/ui-testing-layers.md`.
-- [ ] [INFRA] P1. `bash scripts/quality-gates.sh` green in `agent-orchestrator/`, ship the routing + dashboard change
-      via `quickmerge.sh --agent`.
-- [ ] [OPERATOR] P1. Provision the live flash account: create `~/.claude-accounts/deepseek-v4-flash-1.env` on the
-      orchestrator VM (same `ANTHROPIC_AUTH_TOKEN`/`ANTHROPIC_BASE_URL` as an existing pro account,
-      `ANTHROPIC_MODEL=     deepseek-v4-flash`), and add a matching entry to the live `data/config/accounts.json` with
+      regression spec per `/codex/06-coding-standards/ui-testing-layers.md`. **PARTIAL — the component change shipped in
+      `agent-orchestrator@7d73ded`** (new `_FILTER_OPTIONS` toggle: "DeepSeek (all)" / "· Pro" / "· Flash"), existing
+      vitest unit tests (`TaskUsageWindows.test.ts`, 10 tests) still pass — **but no Playwright regression spec was
+      written**, so this todo's explicit acceptance bar (`pw:L2` per the UI-testing-layers SSOT) is NOT met. Left
+      unchecked deliberately; real remaining work, see Deferred table.
+- [x] 5. ✅ [INFRA] P1. `bash scripts/quality-gates.sh` green in `agent-orchestrator/`, ship the routing + dashboard
+      change via `quickmerge.sh --agent`. — QG green (ruff/basedpyright/2431 pytest/tsc/200 vitest all passed), shipped
+      `agent-orchestrator@7d73ded` via quickmerge, landed on `live-defi-rollout`.
+- [x] 6. ✅ [OPERATOR] P1. Provision the live flash account: create `~/.claude-accounts/deepseek-v4-flash.env` on the
+      orchestrator VM (same `ANTHROPIC_AUTH_TOKEN`/`ANTHROPIC_BASE_URL` as `deepseek-v4-pro`,
+      `ANTHROPIC_MODEL=deepseek-v4-flash`), and add a matching entry to the live `data/config/accounts.json` with
       `variant: "flash"`. Tagged `[OPERATOR]` because it edits a live, operator-owned, gitignored production config file
       directly on the fleet's central VM — done by the agent via SSM per the operator's explicit instruction in this
-      session (2026-08-05), not autonomously on a future run.
-- [ ] [REVIEW] P2. After deploy, verify the split is actually live: confirm at least one real `task_usage` row lands
+      session (2026-08-05), not autonomously on a future run. — done via SSM against `i-0c9b283b31d6b5ca7`; pre-edit
+      `accounts.json` backed up (moved OUTSIDE the repo tree to `~ubuntu/.accounts-backups/` after hitting the known
+      `ao_self_pull_stalled_by_untracked_backup_files_2026_07_29` wedge class live); `deepseek-v4-pro` backfilled
+      `variant: "pro"` for symmetry. Deployed via `ao-self-pull.sh` (triggered manually to skip the ~15min cron wait);
+      orchestrator restarted clean on `7d73ded`, confirmed `systemctl is-active`→`active`.
+- [ ] 7. [REVIEW] P2. After deploy, verify the split is actually live: confirm at least one real `task_usage` row lands
       with `model=deepseek-v4-flash` and `backfilled=0` within the first few hours, and that the pro pool is still
-      getting roughly half of new DeepSeek dispatches (not starved).
-- [ ] [REVIEW] P2. Let the split run for ~24h of real fleet dispatch (per operator ask, 2026-08-05) before drawing
+      getting roughly half of new DeepSeek dispatches (not starved). **Checked 2026-08-05, ~20 min post-deploy: NOT YET
+      landed** — `?model=deepseek-v4-pro` shows 377 lifetime tasks; `?model=deepseek-v4-flash` still shows only the 9
+      PRE-EXISTING uncontrolled-substitution rows, and a direct `task_usage` query for
+      `account_id=     'deepseek-v4-flash'` returned zero rows. Expected (no fresh DeepSeek spawn decision had fired yet
+      at check time) — genuinely time-gated, not a bug; re-check on next session, don't re-poll before then.
+      **Re-checked ~35min post-deploy: still zero.** Important distinction from a routing bug: zero rows under BOTH the
+      new `deepseek-v4-flash` account AND `deepseek-v4-pro` (checked `completed_at > deploy time` for pro too) — if pro
+      were accumulating normally while flash stayed at zero, that would signal a real routing bug; instead NEITHER has
+      completed a task yet since deploy, meaning no DeepSeek-bound task has finished at all in this ~35min window
+      (plausible given DeepSeek is a subset of ~150-280 total daily completions) — not yet evidence either way. Do not
+      re-poll again before the next natural session check-in.
+- [ ] 8. [REVIEW] P2. Let the split run for ~24h of real fleet dispatch (per operator ask, 2026-08-05) before drawing
       conclusions — a few hours of sample size isn't enough given the turn-count variance already measured (31-100 turns
       is the modal range, but the tail runs to 500+).
-- [ ] [REVIEW] P1. Pull the post-window comparison: real `$/task`, `$/plan`, avg turn count, and avg total tokens/task
-      for pro vs flash over the monitoring window, individually and aggregated — the exact breakdown the operator asked
-      for. Compute whether flash's per-token discount actually beats pro once turn-count is priced in, not just compare
-      headline `$/task`.
-- [ ] [REVIEW] P1. **Completion-quality audit — the part that makes the cost comparison meaningful.**
+- [ ] 9. [REVIEW] P1. Pull the post-window comparison: real `$/task`, `$/plan`, avg turn count, and avg total
+      tokens/task for pro vs flash over the monitoring window, individually and aggregated — the exact breakdown the
+      operator asked for. Compute whether flash's per-token discount actually beats pro once turn-count is priced in,
+      not just compare headline `$/task`.
+- [ ] 10. [REVIEW] P1. **Completion-quality audit — the part that makes the cost comparison meaningful.**
       `agents/review.md`'s persistent review agent DOES watch every `slot_done`/PR and check the diff against the plan's
       `done_definition` — but confirmed 2026-08-05 (grep across `server/`) it is (a) ONE persistent agent for the WHOLE
       fleet (coverage at ~150-280 completions/day unverified), (b) enforcement is explicitly conversational only — its
@@ -123,16 +149,16 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       run an independent review pass (fresh agent or operator, no stake in the outcome) against the actual diff — did
       this todo genuinely get done correctly, not just "did it commit and pass QG." Done-when: a written verdict per
       sampled item (correct / needs-rework / broken) exists for both pools, not just an aggregate percentage.
-- [ ] [REVIEW] P2. **Verify the review agent's real coverage** — pull its own activity/chat history for the monitoring
-      window and count how many of the window's completed todos it actually touched (spot-checked) vs. the total
-      completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary weight
-      for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it.
-- [ ] [OPERATOR] P3. **Decide whether the review agent's findings should become a structured, queryable event** (e.g. a
-      `review_finding` activity-log entry with severity + task_id) instead of chat-only — this audit is the second time
-      in this codebase's history a quality question needed data the review agent generates but doesn't persist. Out of
-      scope to build inside this A/B test; flag as a follow-up if the operator agrees it's worth it.
-- [ ] [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this plan's
-      Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
+- [ ] 11. [REVIEW] P2. **Verify the review agent's real coverage** — pull its own activity/chat history for the
+      monitoring window and count how many of the window's completed todos it actually touched (spot-checked) vs. the
+      total completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary
+      weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it.
+- [ ] 12. [OPERATOR] P3. **Decide whether the review agent's findings should become a structured, queryable event**
+      (e.g. a `review_finding` activity-log entry with severity + task_id) instead of chat-only — this audit is the
+      second time in this codebase's history a quality question needed data the review agent generates but doesn't
+      persist. Out of scope to build inside this A/B test; flag as a follow-up if the operator agrees it's worth it.
+- [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
+      plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
 
 ## Codex SSOTs
 
@@ -169,3 +195,21 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   post-deploy, not instantly. **Next check-in**: confirm a real task_usage row lands with `account_id=deepseek-v4-flash`
   (not just `model=deepseek-v4-flash` under the old pro account) — this is the todo above ("verify the split is actually
   live"), not done yet as of this entry.
+
+## Deferred work after 2026-08-05
+
+| Item                                                                                                                                                   | State / why deferred                                                                                                                                      | Blocked on                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                        | Nothing — pick up directly                                        |
+| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                  | Nothing — pick up directly                                        |
+| Todo 7 — confirm a real `task_usage` row lands under `account_id=deepseek-v4-flash`                                                                    | **Cannot be done yet** — needs a fresh AutoSpawn DeepSeek spawn decision to fire post-deploy; checked once at ~20min post-deploy, genuinely zero rows yet | Elapsed time / real fleet dispatch activity                       |
+| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work                                                                                                | Elapsed time                                                      |
+| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                        | Todo 8                                                            |
+| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                        | Operator                                                          |
+| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                            | Todos 9-11                                                        |
+| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                      | Nothing — pick up directly, independent of this plan's 24h window |
+
+**Recommended next item**: todo 7 (confirm the split is live) — cheap, single query, tells us within minutes whether the
+whole mechanism is actually working before investing in the 24h wait. If it's still zero after a few real DeepSeek
+dispatches have happened (check via the live backlog, not by re-polling blindly), that's a real bug in the routing
+logic, not a timing artifact, and would block everything downstream.
