@@ -280,12 +280,27 @@ recently as 2026-07-23 and is expected to resume once the indexer heals (mirrors
 self-heal in this doc's first pass) — the alert is correctly surfacing a real, current capture gap, not a false
 positive.
 
-- [ ] [DATA] P2. **Extends the existing P2 todo above (still open).** Re-probe UNISWAP_V3/OPTIMISM AND
+- [x] ✅ [DATA] P2. **Extends the existing P2 todo above (still open).** Re-probe UNISWAP_V3/OPTIMISM AND
       VELODROME_V2/OPTIMISM (subgraph `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`, correct query = `messari_from`) on
-      a later date — if `0xf92f430dd8567b0d466358c79594ab58d919a6d4` is still serving both and still unhealthy after a
-      multi-day window, this crosses from "transient dip" into "file an upstream/Graph-Protocol-side report and consider
-      whether our indexer-preference/allowlist options (if any exist at the gateway API level) can steer routing away
-      from it" — out of scope to research further in this one-shot escalation. Repo: market-tick-data-service.
+      a later date — **RESOLVED 2026-08-05 (slot 15, task -003)**: re-probed both subgraph IDs live 2026-08-05 (~9 days
+      after the 2026-07-28 escalation that filed this extended todo, ~8 days after VELODROME_V2 first joined the
+      bad-indexers bucket). **UNISWAP_V3/OPTIMISM: the OLD subgraph (`Cghf4Lf...`) is STILL dead** — identical 3-indexer
+      bad-indexers fingerprint (incl. `0xf92f430d...`) across 9+ days → CONFIRMED PERMANENT/STRUCTURAL beyond any
+      reasonable doubt. **But the fix was ALREADY SHIPPED independently** (`unified-api-contracts@516ae7bb`, 2026-08-04,
+      slot-12, task `defi_satellite_ao_dispatch_batch6-021`): the UAC `SUBGRAPH_IDS` entry was swapped to a vetted,
+      healthy replacement (`EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9`) confirmed working (live swap data returned,
+      `hasIndexingErrors=false`, `block.timestamp` within seconds of now), schema-compatible via cascade self-heal, and
+      historically complete back to 2023-01-01 at 7 checkpoints. The 513 `attempted_failed` manifest rows (freshest
+      2026-08-05T00:08Z) are pre-fix backfill-VM residue (VMs launched pre-swap, don't live-reload — same stale-tarball
+      pattern as CURVE/OPTIMISM's P3). **VELODROME_V2/OPTIMISM: SELF-HEALED** — same subgraph ID (`A4Y1A82Y...`), now
+      returning real swap data with current timestamps (`block.timestamp=1785891627`, `hasIndexingErrors=false`,
+      `deployment=QmbNRbpEZyRVxjKSuFASm2S1g4fuHZ2oMxkuAEQcaRAYoJ`). The 704 manifest rows (max `attempted_at`
+      2026-08-03) are historical residue from the ~7-day bad-indexers window (2026-07-27→2026-08-03); the subgraph is
+      healthy now — retry-fixable, no code fix needed. **`0xf92f430d...`**: still present in the old-UNISWAP_V3 error
+      fingerprint (unchanged), but no longer relevant for VELODROME_V2 (self-healed to a different indexer set) or the
+      new UNISWAP_V3 deployment (different subgraph entirely). No upstream Graph-Protocol report or indexer-allowlist
+      research needed — the UNISWAP_V3 fix side-steps the unhealthy indexer via deployment-ID swap, and VELODROME_V2's
+      condition resolved on its own. (repo: market-tick-data-service)
 - [ ] [DATA] P3. **Now 122 rows (was 4, 2026-07-28; confirmed still live 2026-08-01, see "Verified live (2026-08-01"
       below) — growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL
       generating fresh `attempted_failed` rows with the pre-fix error signature, a full week after the
@@ -570,15 +585,16 @@ absorb the actual remediation work.
       **PANCAKESWAP_V3/BSC: bad-indexers condition itself CONFIRMED TRANSIENT/RESOLVED** (self-healed 2026-07-27, no
       repeat since) — but see the NEW, separate stalled-indexer-head finding filed as its own todo below; do not
       conflate the two. (repo: market-tick-data-service)
-- [ ] [DATA] P2. **NEW, 2026-08-02 (slot 8).** Fix or replace UNISWAP_V3/OPTIMISM's dead subgraph deployment
-      (`Cghf4LfVqPiFw6fp6Y5X5Ubc8UpmUhSfJL82zwiBFLaj`) — confirmed structural "bad indexers" condition (6+ days,
-      identical fingerprint, 495+ growing `attempted_failed` rows). Either (a) research a replacement subgraph
-      deployment ID via The Graph Explorer/Network Subgraph for uniswap_v3/OPTIMISM, or (b) add a distinct taxonomy
-      reason + runtime detection for "bad indexers" (mirroring, NOT reusing, `EXPECTED_SUBGRAPH_DEINDEXED` — the
-      semantics differ: this subgraph HAS allocations, the serving indexers are unhealthy) so future backfill attempts
-      record an honest `empty_confirmed`-class outcome instead of accumulating `attempted_failed` forever. Out of scope
-      for this investigation pass (root-causing != safely fixing, same reasoning this doc has applied to every other
-      finding). Repo: market-tick-data-service, unified-api-contracts.
+- [x] ✅ [DATA] P2. **NEW, 2026-08-02 (slot 8).** Fix or replace UNISWAP_V3/OPTIMISM's dead subgraph deployment
+      (`Cghf4LfVqPiFw6fp6Y5X5Ubc8UpmUhSfJL82zwiBFLaj`) — **RESOLVED 2026-08-04 (slot-12)**: swapped to a vetted, healthy
+      replacement subgraph deployment (`EgnS9YE1avupkvCNj9fHnJxppfEmNNywYJtghqiu2pd9`) in
+      `unified-api-contracts@516ae7bb` (task `defi_satellite_ao_dispatch_batch6-021`). The replacement was confirmed
+      working on all 3 vetting axes: (a) schema-compatible via cascade self-heal (Messari schema succeeds where UniV3
+      schema drifts), (b) historically complete back to 2023-01-01 at 7 checkpoints, (c) healthy
+      (`hasIndexingErrors=false`, head lag ~1s). Re-confirmed independently 2026-08-05 (slot 15, task -003): live swap
+      data returned, `block.timestamp=1785891627`, `hasIndexingErrors=false`. The 513 residual `attempted_failed`
+      manifest rows are pre-fix backfill-VM artifact (same stale-tarball pattern as CURVE/OPTIMISM's P3 below). (repo:
+      unified-api-contracts)
 - [ ] [DATA] P2. **NEW, 2026-08-02 (slot 8).** Investigate PANCAKESWAP_V3/BSC's stalled indexer head — the subgraph
       (`Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ`) has not advanced past block 95170462 / 2026-04-28T12:27:06Z in
       over 3 months (`hasIndexingErrors=true`, confirmed byte-identical head across 2026-07-27 and 2026-08-02 probes).
@@ -624,6 +640,23 @@ absorb the actual remediation work.
   with the resolved bad-indexers finding. See "Verified live (2026-08-02...)" section above for full evidence. No
   service code changed this pass (root-causing != safely fixing, per this doc's established practice) — this commit is
   doc-only (unified-trading-pm).
+- **2026-08-05T~01:00Z (slot 15, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-003`)**:
+  resolved the EXTENDED P2 re-probe todo (UNISWAP_V3/OPTIMISM + VELODROME_V2/OPTIMISM, filed 2026-07-28 escalation).
+  Re-probed both subgraphs live via the sanctioned `scripts/subgraph_health_probe.py --dry-run` tool + direct Gateway
+  GraphQL queries (both `_meta` and swaps) using the production API-key path, ~9 days after the original escalation.
+  **UNISWAP_V3/OPTIMISM**: the OLD subgraph (`Cghf4Lf...`) is still dead (identical 3-indexer bad-indexers fingerprint
+  across 9+ days, incl. `0xf92f430d...`) — but the fix was ALREADY SHIPPED independently by slot-12
+  (`unified-api-contracts@516ae7bb`, 2026-08-04): UAC `SUBGRAPH_IDS` entry swapped to a healthy replacement
+  (`EgnS9YE1...`), independently re-confirmed working this session (live swap data, `hasIndexingErrors=false`,
+  `block.timestamp` within seconds of now). The 513 residual `attempted_failed` manifest rows are pre-fix backfill-VM
+  artifact. **VELODROME_V2/OPTIMISM**: SELF-HEALED — same subgraph ID (`A4Y1A82Y...`), now returning real swap data with
+  current timestamps, `hasIndexingErrors=false`. The 704 manifest rows are historical residue from the ~7-day
+  bad-indexers window — retry-fixable, no code fix needed. Flipped both this extended todo AND the related P2 "Fix or
+  replace" todo (line 573, resolved by slot-12's subgraph-ID swap). Also read the live prod manifest
+  (`_index/availability_index.parquet`, `market-data-tick-defi-prd-central-element-323112`): 1530 total `dex_pool_swaps`
+  `attempted_failed` rows (VELODROME_V2/OPTIMISM=704, UNISWAP_V3/OPTIMISM=513, CURVE/OPTIMISM=154,
+  PANCAKESWAP_V3/BSC=51, + smaller-count buckets). No service code changed this pass — this commit is doc-only
+  (unified-trading-pm).
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
   diagnostics / a VM restart onto current code; no design or authority call left
