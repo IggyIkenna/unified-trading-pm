@@ -77,22 +77,21 @@ context_scope:
       documented remaining work (part2 7 open, part3 3 open, odds_api_outage 1 open — backfill not yet launched,
       odds_api_raw_ingestion already resolved).
 
-- [ ] [REVIEW] P1. **Re-check the 8 Deferred items from batch6's own doc** — 2 conflict-gated + 6 operator-gated, the
-      latter being 4 doc-level items plus 2 meta-parks (generalise todo 7's finalize-plan fix workspace-wide; assign an
-      owning tranche to `sports_prediction_mvp_writetime_precompute_2026_07_24.md`). **Count the bullets in batch6's two
-      Deferred sections rather than trusting this number** — it drifted once already during authoring and a restated
-      count re-stales on every edit. Now that batch6's todos have landed, some blockers may have cleared as a side
-      effect. Specifically: the § Z matchday-recovery ordering conflict may be settled by whatever Track F's re-run
-      status is at that point (re-read the closeout's Track F rather than assuming); the
-      reconcile-in-place-vs-archive-as-history question may be moot once todos 1 and 2 have actually run and the
-      surviving-open count is known (if it drops to ~4 items, the archive-as-history option becomes concretely cheap to
-      evaluate — state the measured number); and the two meta-parks are pure operator rulings that no batch6 todo can
-      clear, so expect them to still be open unless the operator answered in the interim. For each item: if the blocker
-      cleared, extract it as a new tracked todo in a follow-up `batch7` (do not draft it here — this plan's scope is
-      reconciliation, not fresh drafting); if still genuinely unresolved, leave it explicitly deferred and do NOT re-ask
-      an operator question that has already been asked, just record that the re-check happened. **Done when**: every
-      bullet in batch6's Deferred sections has either (a) a note that it is ready for `batch7` extraction because its
-      blocker cleared, or (b) an explicit re-verified confirmation the conflict/decision is still open.
+- [x] ✅ [REVIEW] P1. **Re-check the 8 Deferred items from batch6's own doc** — unified-trading-pm (this commit).
+      **COUNT CORRECTION: 5 items, not 8** (the finalize plan's "8" was stale — it drifted during authoring). 2
+      conflict-gated + 3 operator-gated (1 doc-level + 2 meta-parks). **Conflict-gated (both still unresolved):** (1)
+      part3 §Z matchday-recovery vs Track F — Track F re-scoped to post-floor only but not yet executed; ordering
+      conflict persists, neither superseded nor sanctioned-interim decision made by the closeout. (2) Reconcile-in-place
+      vs archive-as-history — measured 10 surviving open items (part2: 7, part3: 3), well above the ~4-item threshold
+      for cheap archive-as-history, so in-place remains the working assumption. **Operator-gated:** (3)
+      ml_service_sports_clv `[CODE] P3` — still genuinely unresolved, pure design decision (wire `--family` vs drop
+      validation), no operator ruling found. (4) Generalise todo 7's finalize-plan fix workspace-wide (meta-park) —
+      still parked, awaiting operator approval, no ruling found. (5) Tranche ownership for
+      `sports_prediction_mvp_writetime_precompute` (meta-park) — **RESOLVED by CORRECTION 2026-08-05**: cross-cutting
+      batch2 finalize confirmed the doc IS already cross-cutting-owned via Track 23 in
+      `cross_cutting_consolidated_closeout_2026_07_25.md`; original "invisible to every tranche" premise was measurably
+      wrong. No batch7 extraction needed — ownership is already correct. **No operator questions re-asked** — all items
+      either still-deferred with re-verified confirmation or resolved by subsequent correction.
 
 - [ ] [REVIEW] P1. **Verify batch6 todo 7's fix actually closed the loop it was written to close, and re-run the gate
       that caught it.** Todo 7 adds a source-doc-archival todo to 5 sports `*_finalize` plans. Confirm (a) all 5 carry
