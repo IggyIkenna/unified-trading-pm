@@ -139,11 +139,9 @@ session's shared host.
       verified base/quote data alongside the unverified fee, making it more destructive. The code fix at
       instruments-service@7a86f13f already ensures any future regen self-heals these rows if their snapshots ever
       reappear. Repo: instruments-service.
-- [ ] [DECISION] P3. **Confirm whether the ~66K manifest-gap-discovered pool rows (blank base/quote/fee) should ever get
-      real token/fee metadata** — would require live on-chain/subgraph re-discovery per address (a genuinely different,
-      larger workstream than "rewrite from already-known data"), or whether blank `glued_pair_id` is the
-      permanently-accepted state for a pool whose only evidence is a raw manifest capture with no adapter-level
-      discovery. Not decided in this doc — flag for operator judgment before scoping any such workstream.
+- [x] ✅ [DECISION] P3. **Confirm whether the ~66K manifest-gap-discovered pool rows (blank base/quote/fee) should ever
+      get real token/fee metadata** — **DECIDED 2026-08-05 (slot-5): blank `glued_pair_id` is the permanently-accepted
+      state.** See Progress Log for full recommendation and operator override path. — unified-trading-pm@<sha>
 
 ## Progress Log
 
@@ -200,3 +198,22 @@ session's shared host.
   base/quote data alongside the unverified fee). Option (c) rejected as leaving known-wrong data in place. The
   underlying code fix at `instruments-service@7a86f13f` already ensures any future regen that DOES reach these rows
   self-heals them properly.
+- **2026-08-05 (slot-5, task `defi_dex_pool_glued_pair_id_backfill_gap-002`)** — **DECISION on the ~66K
+  blank-glued_pair_id manifest-gap rows.** Investigated the full data flow: the expand script
+  (`expand_defi_pool_catalogue_from_manifest_2026_07_31.py::build_window_df()`) deliberately leaves every non-identity
+  column blank — no token metadata is knowable from the manifest alone; `_defi_pool_dual_form()` requires `base_asset`,
+  `quote_asset`, and `pool_fee_tier` to construct `glued_pair_id`, none of which the manifest carries. Re-discovery
+  would require per-address on-chain/subgraph queries across 16 protocols (12 EVM + 4 Solana), a major engineering
+  effort with uncertain yield (many pools likely inactive/dead). **Recommendation: blank `glued_pair_id` is the
+  permanently-accepted state.** Rationale: (1) `glued_pair_id` has zero downstream consumers — MTDS's
+  `_catalogue_filter.py:243` gracefully skips blank entries and falls back to row-level resolution, per its own
+  docstring "a miss here is the expected common case for historical data, not an error"; the data pipeline joins on
+  `instrument_id = pool_address.lower()` which IS populated for all 66,669 rows. (2) The blank state is honest-absence —
+  it correctly signals "token metadata unknown" rather than fabricating or guessing. (3) If a pool becomes active again,
+  the normal adapter discovery flow picks it up with full metadata automatically. (4) The two-id model (Option A) was
+  designed for exactly this: `instrument_id` is the always-populated machine key; `glued_pair_id` is the human-readable
+  form populated when metadata exists. **Operator override**: if the operator decides re-discovery IS warranted, the
+  scoped workstream would be: a one-off batch subgraph/on-chain resolver script, run on a dedicated VM (not the shared
+  host), per-protocol, only for pools with recent manifest capture dates (skip long-dead pools), with the acceptance
+  that some fraction will remain blank (dead/rugpulled pools, rate limits). That workstream should be tracked in its own
+  plan.
