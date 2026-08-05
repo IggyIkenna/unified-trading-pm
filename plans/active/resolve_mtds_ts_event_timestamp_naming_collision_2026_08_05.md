@@ -20,8 +20,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
   ]
 created: 2026-08-05
-last_updated:
-author: slot-4 (data_engineering)
+last_updated: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
