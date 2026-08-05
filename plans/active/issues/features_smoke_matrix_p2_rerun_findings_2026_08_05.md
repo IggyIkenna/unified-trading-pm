@@ -156,14 +156,15 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       `defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`), which is required for
       DEFI:onchain's `market-tick-data-service-perp` dependency (and hence the onchain smoke) to pass despite
       HYPERLIQUID/KALSHI-PERP being captured. (repo: features-service and/or market-tick-data-service)
-- [ ] [SCRIPT] P2. **e2e-testing** — fix multi_timeframe `smoke_matrix.py` verifier (the two-bug class already fixed for
-      cross_instrument/onchain/sports/volatility in `e2e-testing@fbaa722` but MISSED for multi_timeframe): (1)
+- [x] ✅ [SCRIPT] P2. **e2e-testing** — fix multi_timeframe `smoke_matrix.py` verifier (the two-bug class already fixed
+      for cross_instrument/onchain/sports/volatility in `e2e-testing@fbaa722` but MISSED for multi_timeframe): (1)
       `_verify_gcs_parquet` prefix is `features/by_date/day={date}/` but the real writer path is
       `delta_one/by_date/day={date}/feature_group={g}/feature_group_version={N}/timeframe={tf}/data.parquet` (verified
       via `features_service/multi_timeframe/engine/orchestrator.py`); (2) `_verify_test_manifest` filters by
       `asset_group` but multi_timeframe manifest rows carry blank `asset_group` (write-sites never pass it) — switch to
-      a `feature_group` filter. Note: this makes the harness HONEST, but the cell will still FAIL until the delta_one
-      input (Finding 2) is available, since all 36 current rows are `attempted_failed`. (repo: e2e-testing)
+      a `feature_family` filter (mirrors cross_instrument fix pattern). Both bugs fixed — e2e-testing@4de46e8. Note:
+      this makes the harness HONEST, but the cell will still FAIL until the delta_one input (Finding 2) is available,
+      since all 36 current rows are `attempted_failed`. (repo: e2e-testing)
 - [ ] [SCRIPT] P2. **e2e-testing** — extend `sports/smoke_matrix.py`'s `MANIFEST_ALLOW_STALE_FALLBACK=true` to the
       `_invoke_cli()` subprocess env (currently set only in the verifier's post-CLI read path at line ~295). The sports
       CLI's own dependency check fail-closes with `ManifestConsolidatorStaleError` on `features-sports-test-*` (whose
