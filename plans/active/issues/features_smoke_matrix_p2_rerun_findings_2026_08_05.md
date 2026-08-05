@@ -126,11 +126,28 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       too and filters by `service_name="market-data-processing-service"` AND `data_type` starting with `"ohlcv_"`.
       Verified live against CEFI PRD manifest: returns 2026-05-23 (was None); TRADFI: returns 2026-08-04 (was None). All
       9 existing tests pass.
-- [ ] [DATA] P1. **market-tick-data-service / operator** — determine whether cefi `processed_candles` production
+- [x] ✅ [DATA] P1. **market-tick-data-service / operator** — determine whether cefi `processed_candles` production
       genuinely stalled ~2026-07-15 (0 blobs observed for 2026-07-31/2026-08-01 in `market-data-tick-cefi-prd-...`). If
       MDPS output stopped, that is a live upstream availability gap starving production delta_one/cross_instrument/
       volatility feature compute, not just the smoke matrix. (repo: market-data-processing-service; scope: MDPS
-      production health)
+      production health) — **DETERMINED 2026-08-05 (slot-2): GENUINELY STALLED for recent dates — CONFIRMED.** Last
+      full-corpus cefi batch production = the 2026-07-28 `mdps-backfill-cefi-20260728-*` run (RESUME_END_DATE=
+      2026-07-25; venues HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET; data_type=trades; every 07-15→07-28 write is
+      timestamped 07-28/07-29Z). Since then NO full-corpus recent-date backfill was launched: the only cefi MDPS VMs are
+      ASTER-only historical (08-02, at 2025-11-06 as of 08-05T21:48Z), BYBIT/DERIBIT options-chains (08-04), and
+      manifest-merge (08-05). GCS `processed_candles` gap: 07-26, 07-27, 07-29→08-02, 08-04, 08-05. The finding's exact
+      date "~07-15" was imprecise (production wrote through 07-28 on 07-28/29), but the core concern is confirmed:
+      upstream `raw_tick_data` EXISTS for every missing day (07-26: 1696 objects, 07-29: 2841, 07-31: 2815, 08-01: 2733,
+      08-02: 2101) and the live raw VM `mtds-live-cefi-consolidated-20260802` actively records 08-02→08-05 — so this is
+      an MDPS processed_candles DERIVATION gap, NOT upstream absence. Live availability gap starving production
+      delta_one/cross_instrument/volatility feature compute, as hypothesized.
+- [ ] [DATA] P1. **market-data-processing-service / operator** — launch a cefi `processed_candles` recent-date catch-up
+      backfill to close the confirmed gap (2026-07-26 → today; data_type=trades; full cefi venue set
+      HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET). Safe-idempotent justification: RESUME_MODE=full skip-enabled re-run
+      under `launch-mdps-backfill-vm.sh` (skip-enabled shards re-run on preemption per spot-vms-for-backfill);
+      re-running skips already-processed dates, so no data is destroyed or duplicated — reversibility is inherent. Use
+      RESUME_START_DATE=2026-07-26, RESUME_END_DATE=$(date +%F). This closes the delta_one/cross_instrument/ volatility
+      upstream starvation identified above. (repo: market-data-processing-service / deployment-service)
 - [ ] [DATA] P2. **market-tick-data-service / features-service** — root-cause BINANCE-DELIVERY `perp_funding`
       `attempted_failed` on every date 07-24→08-04 in the cefi PROD manifest (persistent, not transient). Decide between
       (a) fixing BINANCE-DELIVERY perp_funding collection and (b) adding BINANCE-DELIVERY to
@@ -169,3 +186,13 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
 - 2026-08-05 (slot-5, data_engineering): All 8 families run for real; contract confirmed; 6 findings filed (see checkbox
   evidence in `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md` P2). No code shipped in this doc —
   findings are todos for the fleet.
+- 2026-08-05 (slot-2, data_engineering): **Finding 2 (cefi processed_candles production) DETERMINED — genuinely stalled
+  for recent dates, CONFIRMED.** Evidence: GCS `processed_candles` partitions present daily 07-15→07-28 (all written by
+  the 2026-07-28 `mdps-backfill-cefi-20260728-*` catch-up run, timestamps 07-28/07-29Z), then only 08-03 (batch_tardis,
+  written 08-04, unregistered in the manifest); missing 07-26/27, 07-29→08-02, 08-04, 08-05. Upstream `raw_tick_data`
+  present for every missing day + live raw VM `mtds-live-cefi-consolidated-20260802` active through 08-05 → gap is MDPS
+  processed_candles derivation, NOT upstream. No full-corpus recent-date backfill launched since the 07-28 run (end date
+  07-25). Remediation tracked as the new P1 todo above (launch 07-26→today catch-up backfill). Note: the consolidated
+  `availability_index.parquet` records the candle layer under `data_type=trades` (MDPS service_name + pipeline_mode
+  set), NOT `data_type=processed_candles` — relevant to Finding 1's "zero processed_candles rows" read
+  (data_type-naming, not absence).
