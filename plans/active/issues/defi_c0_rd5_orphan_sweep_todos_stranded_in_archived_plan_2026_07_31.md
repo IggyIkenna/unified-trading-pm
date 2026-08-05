@@ -102,7 +102,7 @@ checked, not assumed.
 - [x] ✅ [DATA] P2. Audit the `ticks_migrated` writer for canonical v9 path compliance — **FINDINGS: NOT a current
       writer defect; the fold already ran + manifest coverage is complete. See Progress Log for full audit.** —
       market-tick-data-service@13f14b78 (fold script, the canonical resolution)
-- [ ] [DATA] P3. Close C0-RD5/C0-RD5b checkboxes on the archived `defi_manifest_canonicalisation_2026_06_01.md` — per
+- [x] ✅ [DATA] P3. Close C0-RD5/C0-RD5b checkboxes on the archived `defi_manifest_canonicalisation_2026_06_01.md` — per
       the corpus's existing precedent, edit the two `- [ ]` checkboxes (lines ~1230 and ~1232) directly in the archived
       doc to note their resolution: C0-RD5 (legacy bucket deletion) was subsumed by
       `gcs_bucket_estate_cleanup_2026_07_10.md` + `defi_dedicated_bucket_shared_migration_     2026_07_13.md`; C0-RD5b
