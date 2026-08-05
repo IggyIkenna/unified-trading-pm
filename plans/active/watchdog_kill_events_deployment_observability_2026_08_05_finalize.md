@@ -63,4 +63,7 @@ Machine-held (`depends_on` + `gate_on_depends: true`) until every todo in
       `plans/archive/2026_08/`, fix every corpus referrer path, flip `status: complete`) per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Done when
       `regenerate_active_plan_inventory.py` shows zero orphaned referrers to the archived slug. —
-      unified-trading-pm@a5b5ff1fb
+      unified-trading-pm@246123093 (verified on origin/live-defi-rollout; the prior citation of
+      `unified-trading-pm@a5b5ff1fb` in this line did not resolve to any real commit — a second fabricated-evidence SHA
+      introduced by the same 7ea0dca64 commit that fixed P1/P2's fabricated citations, caught 2026-08-06 by direct git
+      verification, not by the review agent)
