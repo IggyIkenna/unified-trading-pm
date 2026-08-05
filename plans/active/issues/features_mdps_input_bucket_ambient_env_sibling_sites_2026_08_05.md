@@ -133,6 +133,33 @@ Benchmark relaunch for DEFI:onchain is therefore gated twice: (a) the perp_fundi
 at features-service@cc5c52b8). Left -004 checkbox `[ ]` — not false-completing a gated relaunch. Evidence:
 `_defi_onchain_gate_check_2026_08_05.py` / `_perp_funding_manifest_dump_2026_08_05.py` (scratch, deleted after run).
 
+### 2026-08-05 (slot-9, data_engineering) — -004 re-verified after the sibling sweep shipped: gate STILL CLOSED (stray BINANCE-DELIVERY rows confirmed); -005 in-flight elsewhere
+
+Sibling sweep (-001, features-service@ba385100) + tarball (-002) are now shipped, so re-ran the -004 re-verify fresh
+(`DependencyChecker("central-element-323112").check_dependencies(date, "DEFI")`, features-service `.venv`, read-only
+manifest reads, memory-bounded via `run-bounded-analysis.sh`, no VM launch) over 2026-07-29→2026-08-05 + a
+`read_manifest_rows` dump on `market-data-tick-cefi-prd-central-element-323112`:
+
+- **2026-07-29→08-04**: vault_share_price/lst_rates/lending_indices/oracle_prices all AVAIL (captured/empty_confirmed);
+  **perp_funding `required_available=False` every day** — exactly one `BINANCE-DELIVERY` `attempted_failed` shard/day.
+- **2026-08-05**: no perp_funding rows yet (today's capture not in the index); 4/4 other required deps AVAIL.
+
+**perp_funding dump (08-01→08-04, n=4/day)**: `HYPERLIQUID=captured`, `KALSHI-PERP=captured`,
+`POLYMARKET-PERP=attempted_failed` (excluded by known-outage tolerance), **`BINANCE-DELIVERY=attempted_failed`** (NOT
+tolerated → tanks the gate).
+
+**Diagnosis (confirms finding 6's stray/misclassified branch, for -005)**: BINANCE-DELIVERY is NOT a perp_funding
+protocol — MTDS `perp_funding_handler.py` `DEFAULT_PROTOCOLS` = `{hyperliquid, kalshi_perp, polymarket_perp}`;
+`symbol_rules.py:168` maps `BINANCE-DELIVERY → futures_chain`; `cefi_catalog_reader.py:172` "removed from cefi MVP
+entirely (mvp_scope.py v10 #3)". The DEFI:onchain consumer `perp_funding_rates_defi.py` reads **HYPERLIQUID only** ("MVP
+scope: Hyperliquid + ETH only", "only live venue"). So perp_funding data IS available (HYPERLIQUID captured on every
+day); the gate is closed purely by stray/misclassified rows, not a real capture gap.
+
+**Disposition**: -004 gate re-verify DONE — still CLOSED. Benchmark relaunch blocked on the BINANCE-DELIVERY fix (-005),
+which is `dispatched` to another slot this session — did NOT duplicate it. Left -004 `[ ]`, declined via skip GATED;
+re-dispatches once -005 lands and the gate reopens on recent days. No heavy local compute run (run-bounded-analysis
+wrapper used; OOM directive 2026-08-05 acknowledged).
+
 ## Todos
 
 - [ ] [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
