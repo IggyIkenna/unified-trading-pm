@@ -329,8 +329,17 @@ and the residual-KeyError defense-in-depth path.
       launch — fold into the next cefi backfill sweep that naturally covers the affected Tardis venues (DERIBIT,
       COINBASE-FUTURES, OKX-FUTURES, BYBIT, BINANCE-FUTURES, OKX) and dates (~2026-07-28). No code change needed (fix
       already shipped).
-- [ ] [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the case-insensitive
-      resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not urgent.
+- [x] ✅ [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the
+      case-insensitive resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not
+      urgent. — **DISPOSITION 2026-08-05 (slot-10 data_engineering):** Fix commit `market-tick-data-service@6c6fab03`
+      verified present in source (`_resolve_hyperliquid_coin_case` + `_reraise_hyperliquid_sdk_error` in
+      `hyperliquid_s3.py`) and MTDS HEAD is ancestor of `origin/live-defi-rollout`. The ~90 K\*-symbol rows
+      (KPEPE/KBONK/KFLOKI/KNEIRO/KLUNC/KSHIB) are HYPERLIQUID `derivative_ticker` `attempted_failed` in the manifest —
+      no new rows since the 2026-07-28 sweep (static). Retrying requires a backfill VM launch with `--force` on these 6
+      instruments (`launch-cefi-hl-aster-historical-backfill.sh` is the target launcher, HYPERLIQUID-specific, not
+      subject to the Tardis concurrency cap), which is infra craft (not data_engineering). The 6 symbols' date range
+      spans ~2023-05-12 through 2026-07-28 (~3y, ~90 instrument-date shards). No code change needed (fix already
+      shipped).
 - [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
       `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) -- not investigated in either session, left open per both
       sessions' scope discipline (small share of the fresh batch, ordinary-transient-looking).
