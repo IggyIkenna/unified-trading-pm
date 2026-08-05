@@ -2,10 +2,20 @@ name: ci-status-consolidator
 
 # WS-A Phase-3 consolidator (GHA hourly cron). Projects the Firestore ci_status aggregate —
 # the live SSOT, written by ci-status-update.yml's set_status CAS (one doc per repo) — into
-# workspace-manifest.json once per hour: ONE [skip ci] commit/interval instead of the
-# per-transition manifest commit that is the dominant PM-LDR commit-noise / manifest-race
-# class (D2 / D11). Keeps the manifest a FRESH offline-fallback cache (quickmerge /
-# deployment-api read the manifest copy when Firestore is unavailable) without the churn.
+# workspace-manifest.json once per hour: ONE commit/interval instead of the per-transition
+# manifest commit that is the dominant PM-LDR commit-noise / manifest-race class (D2 / D11).
+# Keeps the manifest a FRESH offline-fallback cache (quickmerge / deployment-api read the
+# manifest copy when Firestore is unavailable) without the churn.
+#
+# NOTE (2026-08-05): the commit message used to carry a blanket `[skip ci]` marker to avoid
+# re-running quality-gates-v2 on a manifest-only diff. GitHub's `[skip ci]` suppresses EVERY
+# push-triggered workflow on that commit, not just quality-gates-v2 — including
+# main-backmerge-to-ldr.yml's `on: push: branches:[main]` trigger, which has no schedule
+# fallback. That silently starved the main->LDR sync bridge every time this was the last
+# commit on main (plans/active/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md).
+# Fixed by dropping `[skip ci]` here and adding a `paths-ignore` for workspace-manifest.json to
+# quality-gates-v2.yml's push trigger instead — a targeted skip that doesn't collaterally
+# suppress every other push-triggered workflow.
 #
 # Idempotent + replayable: a skipped/evicted/failed run is harmless — the next hourly run
 # re-projects (Firestore is the SSOT, the manifest is only the cache). During the dual-write
@@ -87,7 +97,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add workspace-manifest.json
-          git commit -m "ci: consolidate ci_status from Firestore [skip ci]"
+          git commit -m "ci: consolidate ci_status from Firestore"
           # Retry-with-rebase: a concurrent manifest writer (version bump / backmerge /
           # ci-status-update) can land between checkout and push. Same proven loop as
           # ci-status-update.yml. A final failure is non-fatal (next hourly run re-projects).
