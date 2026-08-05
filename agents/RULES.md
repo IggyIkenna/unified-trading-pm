@@ -73,6 +73,21 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   `SIGTERM` for 12+ seconds, needing `SIGKILL`); use `timeout --kill-after=<n>` if you need a hard wall-clock cutoff,
   and bound memory separately regardless. Full SSOT: `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy
   COMPUTE/MEMORY on the shared planning-vm".
+- **Re-Read immediately before Edit/Write — never reuse an earlier turn's Read (pattern identified from a DeepSeek
+  flash-vs-pro transcript comparison, 2026-08-05).** A file can change between your Read and a LATER Edit/Write of the
+  same file within one task — a pre-commit hook reformatted it, an earlier Edit/Write this same turn already touched it,
+  or a sibling process wrote to it. Reusing memorized content from a stale Read is the direct cause of two of the most
+  common wasted-turn errors: `File has been modified since read` (Write refused) and
+  `String to replace not found in file` (Edit's `old_string` no longer matches the live content). Re-Read the exact file
+  immediately before any Edit/Write that isn't its first touch this turn — one cheap tool call beats a retry cycle.
+- **The guardrail-blocked command list is knowable in advance — don't discover it by trial.**
+  `agent-orchestrator/scripts/hooks/block_destructive_commands.py` hard-blocks (exit 2, every time, no exceptions for an
+  autonomous worker) a fixed set of irreversible patterns: `git stash drop/clear`, `git reset --hard`,
+  `git push --force`, `git clean -f/-d/-x`, `git branch -D`, `rm -rf`/`find -delete`, any `gsutil`/`gcloud storage`/
+  `aws s3` delete verb, `dd of=`, `chmod`/`chown -R`, disk-wipe utilities (full list + rationale in that file). If your
+  plan seems to call for one of these, that IS the signal to use the sanctioned alternative — GCS/S3 deletes go through
+  UTL's `gcs_delete_object()`, never a subprocess CLI call; an unwanted stash gets inspected or escalated via a
+  blocked-question — rather than attempting the blocked form and burning a turn on the recovery.
 
 ---
 

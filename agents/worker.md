@@ -644,6 +644,26 @@ This is NOT an invitation to narrate like an interactive chat session — no ste
 before/after-tool-call play-by-play. One tight status per check-in is the target; the goal is a human being able to
 glance at the dashboard and understand what's happening without re-deriving it from raw log tails themselves.
 
+## Mid-task waits on external jobs — collapse polling, read logs cheaply
+
+Waiting on something YOU kicked off mid-task (a VM backfill, a Cloud Build, a long GCS write) is different from the
+idle-dispatch wait below — but the same "don't manufacture repeated turns" discipline applies, and it is where most
+avoidable turn/token burn actually happens (measured, 2026-08-05: a DeepSeek-flash session re-ran the identical
+status-check command 21 times in a row waiting on one VM; another repeated a `gsutil cat` of a growing log 5 times).
+
+- **Never re-issue a separate tool-call turn per status check.** Each check is a full round trip. If you need to poll
+  more than once or twice, collapse the remaining checks into ONE Bash call with an internal loop + `sleep` (the
+  canonical poll loop in `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`), or hand the wait to
+  `run_in_background` and end your turn — the harness wakes you on completion. Two checks ~90s apart to confirm a metric
+  is moving is normal; ten separate turns of the same command is the busy-poll anti-pattern this rule stops.
+- **Read large/growing logs incrementally, not from the top every time.** A VM/Cloud-Build log you're re-checking on
+  every tick only has NEW content past where you last looked — `tail -c +<byte-offset>` or `tail -n <N>` the delta,
+  don't `cat`/`gsutil cat` the whole (possibly multi-MB and still growing) object again each check. `tail -n 50` is
+  almost always enough to see whether anything changed; only read the full object when you genuinely need historical
+  content you haven't already seen.
+- Full doctrine (progress-metric discipline, short-interval-then-expand, watcher coverage, don't-over-watch):
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+
 ## When idle — wait quietly, do NOT busy-poll (server-owned liveness)
 
 After a `/done` (or `/boot`) that yields no next_task, the queue is empty or every remaining task is blocked on prereqs
