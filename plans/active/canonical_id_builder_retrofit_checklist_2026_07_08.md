@@ -227,17 +227,26 @@ context_scope:
       `instrument_key` evidence per adapter touched (same evidence pattern as the CCXT plan's per-venue table). Batch by
       asset-group-cluster (todo 1+2 together, todo 4 alone, todo 6 alone, etc.) rather than one giant commit. — **Batch
       3 (P3 ccxt_adapter): instruments-service@70eaaa4a; Batch 4 (P3 MTDS callers): market-tick-data-service@2d59869f.**
-- [ ] [SCRIPT] P2. **Migrate the 1,330 stale-colon MORPHO catalog rows found during the finding-6 verify pass
+- [x] ✅ [SCRIPT] P2. **Migrate the 1,330 stale-colon MORPHO catalog rows found during the finding-6 verify pass
       (2026-08-01)** — `prod/catalog.parquet`'s MORPHO A_TOKEN/DEBT_TOKEN rows still carry an embedded colon before the
-      market-key hex suffix for 1,330 of 2,753 real rows (e.g. `MORPHO-BASE:A_TOKEN:ACBBTC-USDC:0x125081`, should read
-      `...:ACBBTC-USDC-0x125081`), because `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py:106`
-      forwarded the stale pre-`af05ece3` `pair_key` string verbatim (via `instrument_id.split(":", 2)`) instead of
-      re-deriving it from source columns. Fix: a dedicated migration script (same backup/`--dry-run`/`--apply` pattern
-      as the 2026-07-13 script) that re-derives each affected row's `pair_key` from its own already-persisted
-      `base_asset`/`quote_asset`/`pool_address` columns (all present per-row — no resynthesis from an external source)
-      rather than string-splitting the stale id. Scope check first: confirm whether the same defect recurs for the 6
-      FLUID rows the 2026-07-13 script also split (same `split(":", 2)` code path, same `_SPLIT_PREFIXES` list) — not
-      verified in this pass, FLUID wasn't queried.
+      market-key hex suffix for 1,330 of 2,753 real rows (e.g. `MORPHO-BASE:A_TOKEN:ATOKEN1-TOKEN2:MARKET01`, should
+      read `...:ATOKEN1-TOKEN2-MARKET01`), because
+      `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py:106` forwarded the stale pre-`af05ece3`
+      `pair_key` string verbatim (via `instrument_id.split(":", 2)`) instead of re-deriving it from source columns. Fix:
+      a dedicated migration script (same backup/`--dry-run`/`--apply` pattern as the 2026-07-13 script) that re-derives
+      each affected row's `pair_key` from its own already-persisted `base_asset`/`quote_asset`/`pool_address` columns
+      (all present per-row — no resynthesis from an external source) rather than string-splitting the stale id. Scope
+      check first: confirm whether the same defect recurs for the 6 FLUID rows the 2026-07-13 script also split (same
+      `split(":", 2)` code path, same `_SPLIT_PREFIXES` list) — not verified in this pass, FLUID wasn't queried. **DONE
+      2026-08-05 (slot-5, `data_engineering`), instruments-service@0247912d.** Migration script
+      `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` applied to prod: 1,293 duplicate rows (clean counterpart
+      already existed) deleted, 37 unique LENDING rows fixed in place (last `:` → `-` via `rsplit`). Post-migration: 0
+      stale MORPHO rows, all 1,454 rows have exactly 2 colons. FLUID scope check: 0 stale rows (all 18 already clean).
+      Backup:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260805-054303.morpho-colon-fix.bak.parquet`.
+      Note: `base_asset`/`quote_asset`/`pool_address` columns were empty for the stale rows (contrary to plan
+      assumption), so the fix used mechanical `rsplit(':', 1)` → join with `-` instead, verified byte-identical against
+      the existing clean counterparts.
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
@@ -270,5 +279,14 @@ context_scope:
   catalog-regeneration gap (1,330/2,753 real rows still stale) — added as a new todo above, correctly scoped out of this
   pass (needs its own migration script, not a code change).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **2026-08-05 (slot-5, `data_engineering`)** — Closed the stale-colon MORPHO catalog migration todo. Wrote and ran
+  `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` (`instruments-service@0247912d`) using the same
+  backup/`--dry-run`/`--apply` pattern as the 2026-07-13 script. Real catalog query found 1,330 stale rows (3 colons):
+  1,293 were duplicates of already-existing clean rows → deleted; 37 unique LENDING rows had no clean counterpart →
+  fixed in place (`rsplit(':', 1)` → join with `-`). FLUID scope check: all 18 rows already clean. Post-migration
+  verification: 0 stale MORPHO rows, all 1,454 rows have exactly 2 colons. Backup:
+  `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260805-054303.morpho-colon-fix.bak.parquet`.
+  Note: plan assumed `base_asset`/`quote_asset`/`pool_address` columns were populated per-row, but they were empty for
+  the stale rows — the mechanical `rsplit` approach was verified byte-identical against clean counterparts instead.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
   canonical_id_builder.py source path and all entries still resolve.
