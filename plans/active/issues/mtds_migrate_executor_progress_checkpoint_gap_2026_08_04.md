@@ -90,9 +90,9 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 ### Category A — Date-loop scripts: adopt `record_vm_progress` directly (10 scripts)
 
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_aster_cefi_defi_bucket_2026_07_13.py`, mirroring
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_aster_cefi_defi_bucket_2026_07_13.py`, mirroring
       `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s pattern (per-day `Counter` +
-      `record_vm_progress(day)` gated on `apply`). Repo: market-tick-data-service.
+      `record_vm_progress(day)` gated on `apply`). Repo: market-tick-data-service@28860a63.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, same
       pattern — market-tick-data-service@e58592a5.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_tardis_filename_canonical_2026_07_17.py`, same
