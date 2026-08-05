@@ -23,7 +23,7 @@ summary: >-
   rule) exists precisely for manifest-index rewrites like this one, and both failure modes here (the OOM-kill AND the
   null-filter bug going unnoticed for a full write cycle) are exactly the kind of thing a bounded, single-purpose VM job
   with proper pre/post row-count assertions would have caught before ever touching the live object.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, infrastructure]
 stage: [data]
@@ -61,7 +61,9 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  All 3 todos done 2026-08-05: purge executed + verified (interactive session), null-safe-filter scoping (slot 9,
+  concluded no helper needed), row-count-delta assertion helper shipped (unified-trading-library@e4f136a9).
 depends_on: []
 context_scope:
   [
@@ -193,5 +195,6 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
 - **2026-08-05 (interactive session, continued)**: re-ran the purge (locally, corrected script) covering both the
   original sports cluster and the newly-surveyed tradfi cluster; resolved a `git stash pop` conflict on this doc (from
   quickmerge's internal pull-reconciliation racing against slot 9's concurrent AO edit above) by merging both sets of
-  changes — no work from either side was lost. Two of three todos now closed; the delta-assertion-helper todo remains
-  open.
+  changes — no work from either side was lost. All 3 todos now closed (the third — the delta-assertion helper — landed
+  from a separate concurrent worker, `unified-trading-library@e4f136a9`, picked up on the next pull). Flipping
+  `status: resolved`.
