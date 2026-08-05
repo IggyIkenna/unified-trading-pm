@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                                  chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                                  pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                                  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                                  the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                                  chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                                  2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                                  6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                                  timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                                  `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                              `returns`/onchain reconfirmed). Evidence:
-                                                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                                  **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                                  `returns`/onchain reconfirmed). Evidence:
+                                                                  `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -292,10 +292,11 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       minimum). MTDS QG --no-fix: no adapter contract-call regression warnings printed for these files. Source:
       `mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md`
 
-- [ ] [DATA] P3. Two read-only reconciliation checks for `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`,
-      combined into ONE todo (both append findings to that doc's Progress Log — must not race): (a) reconcile the three
-      independent `_DEFAULT_PROTOCOLS` lists in market-tick-data-service (`lending_indices_handler.py:176`,
-      `risk_params_handler.py:107`, `liquidations_handler.py:149`) against each other and against `SUBGRAPH_IDS`
+- [x] ✅ [DATA] P3. Two read-only reconciliation checks for
+      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`, combined into ONE todo (both append findings to that
+      doc's Progress Log — must not race): (a) reconcile the three independent `_DEFAULT_PROTOCOLS` lists in
+      market-tick-data-service (`lending_indices_handler.py:176`, `risk_params_handler.py:107`,
+      `liquidations_handler.py:149`) against each other and against `SUBGRAPH_IDS`
       (`unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py:62-217`) — produce a
       written mismatch report (which protocol appears in which list vs SUBGRAPH_IDS); (b) confirm whether
       `vault_share_price_handler.py` has actually run/been scheduled for FRAX-ETHEREUM (`_VAULTS["sFRAX"]`) by reading
@@ -654,3 +655,20 @@ part of this plan was migrated elsewhere.
   escalating the repeated-dispatch waste itself: recommend the operator action the `[OPERATOR] P2` VM launch directly
   (fastest fix) or main park this task in the backlog against that todo so it stops re-dispatching until the VM has run.
   **Checkbox stays UNFLIPPED.** Releasing via `/skip-current-task`.
+- **2026-08-05 (slot-5, data_engineering craft) — CLOSED, both checks already completed by prior dispatches; the source
+  doc is archived.** This todo (`defi_satellite_ao_dispatch_batch3-009`) asks for two read-only reconciliation checks
+  against `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. That doc is archived (`status: resolved`,
+  2026-07-29) with both follow-up P3 todos already `[x] ✅` done — check (a) by slot-10 on 2026-07-26, check (b) by
+  slot-11 on 2026-07-26, with the P1 vault_share_price follow-up closed by slot-8. A fresh current-state re-read of the
+  handler lists confirms both original gaps have since been fixed:
+  - **Check (a) `_DEFAULT_PROTOCOLS` vs `SUBGRAPH_IDS`**: Current state (2026-08-05) differs from the 2026-07-26
+    snapshot — `fluid` is now in `lending_indices_handler.py:182`'s `_DEFAULT_PROTOCOLS` (was slot-10's finding #1), and
+    `solend`/`marginfi` are now in `risk_params_handler.py:108`'s `_DEFAULT_PROTOCOLS` (was finding #2). Only unchanged
+    delta: `liquidations_handler.py:150` still has no Solana protocol coverage (`kamino_lending`/`solend`/`marginfi`
+    absent — finding #3, no rationale comment), same status as 2026-07-26. All 3 lists + `SUBGRAPH_IDS` otherwise
+    consistent for the 5 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`/`fluid`).
+  - **Check (b) vault_share_price FRAX-ETHEREUM**: Already confirmed resolved per the archived doc — slot-8 found 7,321
+    rows (7,225 captured + 96 honest empty_confirmed), all 8 vaults including `sFRAX`/FRAX-ETHEREUM, from a 2026-07-23
+    bulk backfill + daily forward-poll. No further manifest read needed (would duplicate the 2026-07-26 confirmation).
+    No code changed (read-only, per this todo's own guardrail). The source doc is archived so findings cannot be
+    appended to its Progress Log; this entry serves as the closure record. Repo: unified-trading-pm (plan flip only).
