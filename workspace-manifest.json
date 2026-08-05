@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "coverage_pct": 83.9,
@@ -763,7 +763,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 91.03,
         "large_file_count": 8,
@@ -1017,7 +1017,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 5,
         "coverage_pct": 85.98,
