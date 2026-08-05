@@ -117,14 +117,14 @@ launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HAR
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Extend `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s (or its underlying
+- [x] ✅ [DATA] P3. Extend `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s (or its underlying
       `instruments_service.engine.orchestrator.sports_reference_core._close_stale_enrichment_expected_unattempted_cells`)
       independently-provable bar to also close a cell when FIXTURES' OWN row for the identical (date, league) is
       `expected_unattempted` with zero fixtures scheduled that day per the provider's schedule endpoint (not just
       `empty_confirmed`) — OR file a targeted FIXTURES honest-absence backfill for the 4 Christmas dates first, then
       re-run this closer (the mirror rule should then fire on its own). **Scope now also covers** the 162 FIXTURE_EVENTS
       2026-07-12/13/14 cells found in the 2026-08-03 follow-up above (same root cause, 96 different leagues) — one fix
-      closes both populations. (repo: instruments-service)
+      closes both populations. (repo: instruments-service) — instruments-service@a24b7f2f
 - [x] ✅ [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
       `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`, matching the pattern other backfill launchers use,
       to close the SPOT-default gap. — deployment-service@d683f80
