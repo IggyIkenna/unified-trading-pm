@@ -76,9 +76,19 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
   deselected-but-actually-impacted test is a false green). Also: quickmerge's local Pass-1 QG run happens on each
   agent's own machine, not the shared CI VM, so scoping it wouldn't have addressed the capacity crisis regardless.
   Recorded here so it isn't re-investigated from scratch next time someone has the same instinct.
-- **Not yet measured**: actual GitHub Actions billing (`$1k`/`$5k` figures from the operator) — the working `gh` token
-  here only carries `repo`/`read:org`/`gist` scope, not the `user` scope the billing API requires, and granting it needs
-  an interactive OAuth prompt not available in an unattended session.
+- **CORRECTED 2026-08-05 (was wrong when this plan was opened)**: the interactive `gh` CLI session indeed lacks billing
+  scope, but that was never the real path — `deployment-api` already holds a dedicated fine-grained PAT
+  (`github-billing-token`, GSM secret in project `central-element-323112`, Account permission "Plan: Read-only" only)
+  that has been used successfully in at least 3 prior sessions to pull real Actions spend (2026-07-10/11, 2026-07-23,
+  2026-07-30 — see `plans/archive/issues/github_billing_dashboard_access_2026_07_09.md`). No operator OAuth needed. Also
+  note the classic `/users/{user}/settings/billing/actions` endpoint this todo originally named is deprecated
+  (`410 Gone`); the working replacement is the Enhanced Billing endpoint `GET /users/{username}/settings/billing/usage`
+  (filter `product=actions`), which is exactly what `github-billing-token` reaches. Fastest path: read
+  `deployment-api`'s own `/costs/summary`/`/costs/breakdown` routes (`deployment_api/routes/costs.py`) or check
+  deployment-ui's `/ops/costs` page directly — both already surface this live. Direct `gcloud secrets versions access`
+  also works but needs a live `gcloud auth login` session (hit intermittent human-account reauth failures 2026-08-05
+  fetching it from an agent session — not a permission problem, just a stale local gcloud session; the `github-token-sa`
+  service-account key sidesteps this entirely, see the resolved todo below).
 - **Concrete, evidenced but NOT yet decided**: reducing per-repo self-hosted runner slot counts as the direct
   concurrency lever (unified-trading-pm has 5 glue + 3 writer; agent-orchestrator has 2 glue + 1 writer; the other 23
   repos already have the minimum, 1 each) — proposed in the issue doc, needs an explicit target before touching
@@ -96,28 +106,63 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Get real GitHub Actions billing numbers.** Either grant the working `gh` CLI expanded scope
-      (`gh auth refresh -h github.com -s user`, interactive) so `gh api /users/IggyIkenna/settings/billing/actions`
-      resolves, or pull the numbers directly from github.com → Settings → Billing, for the last full month: total
-      Actions minutes consumed, split by runner type (GitHub-hosted `ubuntu-latest` vs self-hosted — only the former
-      bills against Actions minutes), and the actual $ figure to reconcile against the "$1k"/"$5k" estimate referenced
-      when this plan was opened.
-- [ ] [INFRA] P1. **Measure current LDR→main wall-clock, per repo, for a genuinely small/no-op change** — not the Aug-5
-      numbers (those were mid-incident). Pick 4-5 repos spanning the fleet (a heavy one like `execution-service`, a
-      light one, PM itself, agent-orchestrator) and time an actual promote-PR from open to merged under normal
-      (non-incident) load. This is the baseline the 3-5min target gets measured against — without it, "should take 3-5
-      min" is a goal, not yet a gap.
-- [ ] [INFRA] P1. **Audit the `update-dependency-version.yml` fan-out**: does every UTL/UAC/PM bump currently dispatch
-      to literally every repo in `workspace-manifest.json`'s `dependency_caps`/dep-graph, or only repos that actually
-      declare that dependency? If it's unconditional, that's the direct fix for "should only trigger other repo flows if
-      those are really needed" — scope the dispatch to the real dependency graph. If it's already scoped, document that
-      (closes this todo as "already true", not a re-investigation).
+- [x] ✅ [INFRA] P0. **Get real GitHub Actions billing numbers.** — Pulled live 2026-08-05 via `github-token-sa`'s GCP
+      service-account key (sidesteps the human-account's intermittent gcloud MFA-reauth failures hit mid-session) →
+      `github-billing-token` GSM secret → `GET /users/IggyIkenna/settings/billing/usage`. **July 2026:
+      $1,179.13 total**
+      (100% `sku=Actions Linux`, i.e. 100% GitHub-hosted `ubuntu-latest` billing — self-hosted runners bill $0
+      against this API by design). Confirms the operator's "~$1k" recollection almost exactly; the "$5k" figure
+      referenced when this plan opened does not match GH Actions billing specifically (likely conflated with AWS
+      self-hosted infra spend, which is a separate cost surface — `deployment-api`'s `/costs/summary` covers both, worth
+      cross-checking if the $5k figure still needs reconciling). **August 2026 (partial, through day 5): $89.44.**
+      **Unexpected finding — by-repo breakdown**: `unified-trading-pm` alone is **41.0% of July's total**
+      ($483.58) and
+      **59.4% of August's partial total** ($53.15) — more than every actual trading-service repo
+      combined, despite PM being a coordination/docs/CI-tooling repo, not a service. Spawned a follow-up investigation
+      (see new todo below) rather than assume the cause.
+- [x] ✅ [INFRA] P1. **Measure current LDR→main wall-clock, per repo** — measured 2026-08-05 against `execution-service`
+      (heavy), `greeks-service` (light), `agent-orchestrator`, `unified-trading-pm`, sampling 08-02/03/04 PRs (excludes
+      the 08-05 incident). **Result: the 3-5min target is already beaten by 10-50x for most of the fleet** —
+      PR-open-to-merge is 4-16 seconds for every repo running "direct" mode (execution-service #544/#541, greeks-service
+      #404/#402, agent-orchestrator #781/#774), because the required checks
+      (`quality-gates-v2`/`sit-gate/fleet-green`/`quickmerge-provenance`) reference/reuse QG state that already ran when
+      the commit landed on LDR — the heavy test/lint slices (1-2+ hrs sometimes) are NOT re-run inside the promotion
+      PR's lifetime. **The real structural floor is invisible to "open→merge"**: it's the ~15-min promotion-cron cadence
+      that decides WHEN a PR gets opened at all (before `createdAt`), giving an average ~7.5min PRE-PR latency not
+      captured by this metric. **Outlier: PM runs a different "auto-drain" mode** with genuine 4s-34min variance even on
+      clean days (PM #2088 = 4s, #2199 = 14m52s, #2266 = 33m48s) — looks like real retry/backoff churn in that mode, not
+      cron-related; worth checking `ldr-to-main-promote-fleet.yml`'s auto-drain retry logic if a tight fleet-wide floor
+      matters, separate from PM's ubuntu-latest billing-driver investigation above (different root cause, same repo).
+- [ ] [INFRA] P1. **Find PM's dominant GitHub-hosted (`ubuntu-latest`) cost driver.** Follow-up from the P0 billing
+      finding above (41-59% of ALL fleet Actions billing lands on `unified-trading-pm` specifically). First-pass grep
+      (2026-08-05) found ≥18 PM workflow files with at least one `ubuntu-latest` job, incl. `branch-health.yml` (hourly
+      cron, 3 ubuntu-latest jobs/tick), `ci-health.yml` (hourly, 1 job, intentionally GH-hosted per its own comment),
+      and — the strongest suspect — `python-quality-gates-v2.yml`, a `workflow_call` reusable template: if OTHER repos'
+      CI calls into it and its internal jobs hardcode `ubuntu-latest` for specific steps, billing attributes to PM (the
+      file's home repo) even though the WORK is fleet-wide. Investigation in progress; done when the actual top 3-5
+      cost-driving workflows are named with real July run-count evidence (`gh run list`), not just grep.
+- [x] ✅ [INFRA] P1. **Audit the `update-dependency-version.yml` fan-out** — CLOSED as "already true", 2026-08-05.
+      `update-repo-version.yml` (the sender, `.github/workflows/update-repo-version.yml:294-310`) computes
+      `/tmp/dependents.txt` by walking `workspace-manifest.json`'s `repositories.<name>.dependencies` list and only
+      including repos whose `dependencies` array actually names the bumped repo — a MINOR/PATCH bump's
+      `repository_dispatch` (`:668-672`) fires ONLY to those real dependents, never the whole fleet. A MAJOR/breaking
+      bump additionally triggers `cascade-qg-ordering.yml` (`:717` on), which does a topological forward-walk of
+      "transitively affected repos" via the manifest's `topologicalOrder.levels` (`cascade-qg-ordering.yml:150-210`) —
+      broader than direct dependents (by design — breaking changes legitimately need wider validation, matching this
+      plan's own "done" criteria), but still graph-derived, not an unconditional blast. One deliberate special case:
+      `pm_all_tiers = source_repo == "unified-trading-pm"` (`:170`) widens the cascade further specifically when PM
+      itself is the source — reasonable given nearly everything depends on PM transitively. No fix needed; this todo was
+      based on an untested assumption, not a confirmed bug.
 - [ ] [OPERATOR] P1. **Decide the concurrency-reduction target** and execute: reduce `unified-trading-pm`'s glue pool
       (currently 5) and `agent-orchestrator`'s (currently 2) per the proposal in
       `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s 2026-08-05 entry — or a different target if the
       fresh EBS throughput headroom (500 MB/s vs the old 125 MB/s ceiling) changes the calculus. Verify with a
       steady-state (not spot-check) load measurement before and after, matching the rightsizing plan's own unfinished
-      "longer-window measurement" todo.
+      "longer-window measurement" todo. **Open question raised 2026-08-05, investigation in progress**: does AO's glue
+      pool still serve its own repo CI only, or has it (also/instead) become the runner capacity for escalation-dispatch
+      work (BLOCKED-worker questions routed to a DeepSeek-backed agent)? If escalation dispatch is real and consumes
+      this same pool, a naive CI-only concurrency cut could starve escalation throughput — the reduction target must
+      account for both workloads, not just CI, before executing.
 - [ ] [INFRA] P2. **Re-evaluate whether `unified-trading-library` and `e2e-testing`** (reverted to GitHub-hosted
       `ubuntu-latest` specifically due to the capacity crisis — see `self-hosted-qg-repos.txt`'s own changelog comments)
       can return to self-hosted now that the EBS throughput ceiling is raised. If yes, that's a direct GH Actions
