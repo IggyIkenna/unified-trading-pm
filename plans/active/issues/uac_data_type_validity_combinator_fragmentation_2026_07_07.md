@@ -189,8 +189,16 @@ just belongs on a different layer than instrument_type does, and conflating the 
       adjacent, out-of-scope drift (Solana pool contracts still keyed on the retired `dex_pools` data_type) — filed as
       the follow-up todo below rather than absorbed here.
 
-- [ ] [CODE] P2. **Audit whether the Solana pool `data_type="dex_pools"` registrations are dead or a live drift**
-      (surfaced 2026-08-04 while shipping finding 6).
+- [x] ✅ [CODE] P2. **Audit whether the Solana pool `data_type="dex_pools"` registrations are dead or a live drift** —
+      unified-api-contracts@90262d27 (surfaced 2026-08-04 while shipping finding 6). **Audit result (2026-08-05):
+      CONFIRMED DEAD.** The Solana handler maps all pool protocols to `InstrumentType.POOL` and passes
+      `data_type="dex_pool_state"`, so `lookup_contract` resolves `("defi", "pool", "dex_pool_state")` →
+      `DEFI_DEX_POOL_DEX_POOL_STATE` (the canonical EVM+Solana union contract). The `solana_vault`/`solana_amm_pool`
+      CONTRACT_REGISTRY entries were unreachable on TWO axes (wrong data_type `dex_pools` instead of `dex_pool_state`;
+      wrong instrument_type since the handler never passes `InstrumentType.SOLANA_AMM_POOL`/`SOLANA_VAULT`). Also fixed
+      SINK_MATRIX (retired `dex_pools`/`dex_swaps` → canonical `dex_pool_state`/`dex_pool_swaps`) and SchemaSpec
+      (deleted retired entries, added Solana/swap columns to canonical `DEFI_POOL_WINDOW_COLUMNS` union). QG green, 0
+      remaining consumers of deleted symbols.
       `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py` still keys
       `("defi", "solana_vault", "dex_pools")` → `DEFI_SOLANA_VAULT_DEX_POOLS` and
       `("defi", "solana_amm_pool", "dex_pools")` → `DEFI_SOLANA_AMM_POOL_DEX_POOLS` on the RETIRED `dex_pools`
