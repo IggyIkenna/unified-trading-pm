@@ -953,3 +953,4 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — sole open item remains a
   `gate_on_depends` citation on `data_completion_defi_2026_07_15` (independently re-verified still `assigned_vm: NA`,
   status:active with open todos) — the gate has not cleared. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

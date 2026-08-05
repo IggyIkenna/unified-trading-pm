@@ -178,3 +178,4 @@ vault-share-price collector) end-to-end:
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
   todo 4 remains an explicit `[DECISION]` on adding a second SOURCE_PRIORITY source (multi-source cell + backfill on
   7,476 existing rows); todo 5 is a minor P3 that doesn't outweigh it. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

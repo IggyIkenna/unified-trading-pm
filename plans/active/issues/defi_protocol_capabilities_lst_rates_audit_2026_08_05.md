@@ -157,3 +157,4 @@ for the 5 missing protocols). Finding C is a separate, lower-priority wiring ite
   handler which writes both `rewards` + `eigenlayer_rewards` data_types). LIDO/ETHERFI had no `collect-rewards` handler
   (ETHERFI's WS connector is BLOCKED-CREDENTIALS scaffold); wiring one would require new API credentials + handler
   implementation not in scope for this P3. All 8 todos now done.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

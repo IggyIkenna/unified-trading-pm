@@ -359,3 +359,4 @@ gap**, not a delete-safety question:
   (`instruments-service@141bb384`) for future manifest-row purge operations (incremental ParquetWriter pattern for
   memory-bounded large-manifest processing) — not applied (already clean). All 5 todos now done; plan is
   archive-eligible (no lock).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -348,3 +348,4 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   genuinely gated: `[OPERATOR] P2` is an explicit operator VM-launch authorization, `[DATA] P3` is real design/judgment
   work reconciling 3 instrument_id naming conventions (a prior attempt already produced a false "77 gap days" result).
   Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

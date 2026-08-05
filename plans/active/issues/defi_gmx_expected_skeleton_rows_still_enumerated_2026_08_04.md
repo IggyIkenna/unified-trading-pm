@@ -197,3 +197,4 @@ under critical context pressure.
   removal left catalogue residue → stale manifest skeleton), the 2026-07-16 DRIFT/PACIFICA removal was more thorough (11
   repos) and no residue survived. No further action needed. All todos in this doc are now done; doc is archival-eligible
   (no `locked_by`, all checkboxes flipped).
+- **context-scout 2026-08-05**: re-scouted; all todos now closed; context_scope re-verified (4 entries), unchanged.

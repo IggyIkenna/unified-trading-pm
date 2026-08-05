@@ -179,3 +179,6 @@ rows, that's a separate write-path bug to diagnose via its logs.
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — still accurate against the sole remaining todo
   (fix the stale referrer in `lst_rate_honest_coverage_2026_07_21.md`, gated on a line-cap trim).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged. All 3 todos are now
+  checked (the stale-referrer fix landed `unified-trading-pm@4718f3532`) — doc may be archive-eligible, not verified
+  further here (out of scope for this pass).

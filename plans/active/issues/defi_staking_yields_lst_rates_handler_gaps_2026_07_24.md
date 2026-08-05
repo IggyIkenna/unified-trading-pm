@@ -357,3 +357,5 @@ independent plans.
   capability declarations. Key finding: all 11 protocols already have IS adapters; 8 use DefiLlama public yields (free,
   no auth), 3 use AAVE Oracle + DefiLlama fallback (Alchemy key exists). Zero credential blockers. Estimate ~4
   calibrated AI days split across two phases. Full scoping in §7 above.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged. All §6 residual todos are
+  now checked done — doc appears eligible for closeout review (not this skill's scope to act on).

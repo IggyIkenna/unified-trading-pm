@@ -380,3 +380,4 @@ instruments-service/unified-api-contracts/market-tick-data-service/features-serv
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — the only remaining open item
   is the `[OPERATOR-DECISION] P3` todo, gated on a still-open, separately-owned `[DESIGN] P1` decision in another doc;
   `[VERIFY]` and `[CODE]` are both already closed by citation. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

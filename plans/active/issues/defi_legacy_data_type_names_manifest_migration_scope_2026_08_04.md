@@ -72,7 +72,7 @@ context_scope:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
   ]
@@ -193,3 +193,6 @@ context_scope:
   DATA-migration item gated on their outcome and likely needing delete-safety/[OPERATOR] handling; the
   content-equivalence judgment call is the exact risk class this doc's own cited R5 precedent shows can be wrong, so it
   stays genuine-caution NA rather than a clean mechanical RECLASSIFY. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope's `defi_dex_pools_delete_order_stale_2026_07_20.md` reference
+  had moved to `/plans/archive/issues/` since it was written (RESOLVED, archived) — corrected the path in place, now 5
+  entries.

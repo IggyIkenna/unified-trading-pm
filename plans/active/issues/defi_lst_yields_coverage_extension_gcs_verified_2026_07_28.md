@@ -212,3 +212,4 @@ structural limitation.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 7) — trimmed the archived batch1 dispatch doc
   and the naming-ssot codex (less load-bearing than the sibling writegate-fix issue, which carries the LIVE backfill
   status the sole remaining [DATA] P1 todo needs to check before re-running).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

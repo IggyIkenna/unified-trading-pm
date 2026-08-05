@@ -241,3 +241,4 @@ counts are reproduced above in full so the check is independently re-runnable fr
   incremental consolidator cycles since the 2026-08-04 full-merge — they were a transient resurrection-window artifact
   (a shard written between the CAS-rewrite snapshot generation and the full-merge's shard-scan). No manual sweep needed.
   Single-object download + column-pruned query, no corpus walk. Todo 3 flipped.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

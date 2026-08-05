@@ -141,3 +141,4 @@ guessed):
   /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md with 3 findings (A: 13 venues/6
   protocols PUFFER-style lst_rates undeclared; B: 5 protocols missing entries entirely; C: 3 protocols with aspirational
   rewards) + 8 actionable fix todos.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged. Both todos now done.

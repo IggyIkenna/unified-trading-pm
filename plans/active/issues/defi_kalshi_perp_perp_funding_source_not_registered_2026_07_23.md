@@ -159,3 +159,4 @@ concrete, currently-failing symptom; the classification question is the census a
   above (not reclassified — flipping `assigned_vm` here would dispatch a duplicate). The doc's central prose-only
   (a)/(b)/(c) operator-design decision on the 567 already-written manifest-absent objects remains genuine NA judgment
   work, unchanged. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
