@@ -148,7 +148,7 @@ mechanism directly (manifest data is circumstantial; raw bm_minutes is the direc
 - [ ] [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** (repo: market-data-processing-service,
       `bucket_assignment_adapter.py`). Operator-gated — this diagnosis only surfaces the options; the operator must
       choose.
-- [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@f267bb19d
+- [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@5fe93fbec
       (audit-only; no MTDS code changes needed) (repo: market-tick-data-service, `odds_api_adapter.py` + live
       connector). **VERDICT: NOT fixture-count-gated.** The fetch loop iterates over
       `fetch_timestamps = _compute_fetch_timestamps(kickoffs, offsets)` where `kickoffs` = unique kickoff times, NOT
