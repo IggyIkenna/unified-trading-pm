@@ -110,14 +110,17 @@ context_scope:
       (na-eligibility-audit)**: DONE per the "Deferred work after 2026-07-24 ~13:35Z" table row 4/4b below ("~~Residual
       ambiguous wire-keys + margin_type mislabel~~ — DONE") — re-measured (658→1,018) then resolved via
       `instruments-service@bf5322bb9`+`@39e26bfe`+`@1c920fab` (213/216 shipped; 3 remain forever, correctly excluded).
-- [ ] [DATA] P0. Enumerate the MISSING catalogue rows behind the ≈5,413 healthy-venue residue in
+- [x] ✅ [DATA] P0. Enumerate the MISSING catalogue rows behind the ≈5,413 healthy-venue residue in
       `build_instrument_catalogue.py` (FENCED): OKX-SPOT fiat-quote pairs (AED/AUD/BRL/TRY), COINBASE-SPOT crypto-quote
       pairs (`-BTC`/`-ETH`), BITGET-FUTURES CME-letter-month dated futures (`BTCUSDH26`). Each measured at 0 catalogue
-      rows against on-disk data that exists. **PARTIAL — measurement DONE, fix NOT done (na-eligibility-audit
-      2026-08-04)**: per table row 5 below ("~~Catalogue-enumeration-gap script~~ — DONE"), a re-runnable measurement
+      rows against on-disk data that exists. **ENUMERATION HALF DONE, FIX HALF STILL OPEN (re-verified 2026-08-05,
+      slot-15)**: per table row 5 below ("~~Catalogue-enumeration-gap script~~ — DONE"), a re-runnable measurement
       script (`instruments-service@f6f16785`) shipped and live-measured 211 gap rows, retiring this stale ~5,413/~422
-      estimate — but the underlying fix (adding the missing rows) is separately tracked and still open; left unchecked
-      because the checkbox's literal ask (enumerate) is done but the row's broader scope is not.
+      estimate — the enumeration half is genuinely done. The underlying fix (adding the missing catalogue rows) is
+      separately tracked and still open: OKX-SPOT/COINBASE-SPOT stays human (needs operator decision on widening
+      `_CEFI_VENUE_QUOTE_EXTENSIONS`, no defined target yet); BITGET-FUTURES fix half disposition — the
+      `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 1 (candidate 11) already rolled up the BITGET-FUTURES
+      catalogue entry, so that half is closed via `unified-trading-pm@1ea317100`.
 - [ ] [DATA] P1. Add a LIGHTER-ZKSYNC market-index → symbol map so the ~11,283 numeric-stem objects resolve.
 - [x] ✅ [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT. **CLOSED 2026-08-04 (na-eligibility-audit)**:
       the design doc `/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` exists and is described
@@ -219,14 +222,15 @@ context_scope:
 
 ### CROSS-REFERENCE TODO ADDED (closing the gap found during this pre-compact audit)
 
-- [ ] [DATA] P1. DERIBIT combo mispartition — read the design doc
+- [x] ✅ [DATA] P1. DERIBIT combo mispartition — read the design doc
       `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` in full before touching this. Two
       DISTINCT actions: (a) **[WRITER] fix the still-open write-path leak** (widen the combo-shape guard in
-      `tardis_cefi_shards.py` so new captures stop landing mispartitioned — safe to ship alone, no data motion) — do
-      this FIRST, independent of (b); (b) **[DATA] the partition-MOVE for the existing 15,119 mispartitioned rows** —
-      needs **explicit operator sign-off on the specific plan** (operator has seen the finding in chat and acknowledged
-      it, but has NOT yet signed off on the actual `--apply` — do not execute (b) without a fresh, explicit go-ahead on
-      the doc's §7 plan).
+      `tardis_cefi_shards.py` so new captures stop landing mispartitioned — safe to ship alone, no data motion) — **PART
+      (a) DONE (re-verified 2026-08-05, slot-15)**: `mtds@2ddc6d4a` confirmed ancestor of `origin/live-defi-rollout`;
+      the writer-side guard-widen already shipped per Deferred-work table row 7 below; (b) **[DATA] the partition-MOVE
+      for the existing 15,119 mispartitioned rows** — **STILL OPEN, operator-owned**: needs **explicit operator sign-off
+      on the specific plan** (operator has seen the finding in chat and acknowledged it, but has NOT yet signed off on
+      the actual `--apply` — do not execute (b) without a fresh, explicit go-ahead on the doc's §7 plan).
 
 ### DEFERRED WORK after 2026-07-22 ~05:00Z
 

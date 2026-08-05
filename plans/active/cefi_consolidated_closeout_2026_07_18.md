@@ -601,3 +601,14 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
   still mixes genuinely bounded script work with real DESIGN/judgment calls (strategy-service archetype design,
   hedge-venue choice), a BLOCKED-DATA Korea-equity vendor ask, and VM-preemption-gated backfill re-launches.
+- **stale-checkbox reconciliation 2026-08-05** (slot-15, review): all 5 stale-checkbox findings identified by
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`'s triage re-verified against live state — (1) KRAKEN-SPOT
+  `_PATH_RE`: Surface A still clean, 155,872 objects auto-renamed, execution-log checkbox stays `[x]`; (2) 658 wire
+  keys: 213/216 shipped + 3 permanent terminal state confirmed, execution-log checkbox stays `[x]`; (3) ≈5,413
+  catalogue-gap: enumeration half flipped to `[x]` (`instruments-service@f6f16785` shipped, 211 gap rows measured),
+  OKX-SPOT/COINBASE-SPOT fix half stays open (needs operator decision on `_CEFI_VENUE_QUOTE_EXTENSIONS`), BITGET-FUTURES
+  fix half already closed via todo 1 (candidate 11) of the extraction plan; (4) COMBO-in-perp design: design doc exists,
+  execution-log checkbox stays `[x]`; (5) DERIBIT combo mispartition part (a): `mtds@2ddc6d4a` confirmed ancestor of
+  `origin/live-defi-rollout`, flipped to `[x]`, part (b) stays operator-owned. Plus `_DRYRUN_COLS` P0: `"chain"`
+  confirmed in `_DRYRUN_COLS` at `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`,
+  `1284606a` on LDR — fix predates the triage. All evidence in `cefi_4surface_migration_execution_log_2026_07_24.md`.
