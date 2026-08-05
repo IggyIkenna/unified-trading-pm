@@ -66,20 +66,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 4 distinct source docs' checkboxes.** Batch 3's 5 todos draw from 4 source docs:
-      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` (1 todo),
-      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (3 todos),
-      `issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md` (1 todo), plus the edit target
-      `data_completion_cefi_2026_07_15.md`. For each landed batch-3 todo, flip the corresponding checkbox/section in its
-      named source doc citing the shipping commit — **verify the commit exists and is reachable on
-      `origin/live-defi-rollout` before citing it**. Then, per source doc, re-check whether it now has 0 open items
-      remaining in **both** checkbox AND prose form (this corpus's confirmed trap: real work expressed as prose with no
-      checkbox), and only flip `status: resolved` on a genuine zero. Note in advance:
-      `cefi_hl_aster_batch_data_gaps_2026_06_22.md` will NOT reach zero (it retains ~11 open items, several
-      operator-gated or month-stale), and `cefi_backfill_per_day_catalogue_reload_2026_07_20.md` will NOT reach zero
-      (its A/B architectural fork stays operator-gated — batch 3 only added read-only evidence for it). **Done when**:
-      every landed todo's source checkbox is flipped with a verified commit, and each source doc's remaining-open count
-      is explicitly re-stated rather than assumed.
+- [x] ✅ [REVIEW] P1. **Reconcile all 4 distinct source docs' checkboxes.** — unified-trading-pm@7ce17e4d5 All 5
+      shipping commits verified reachable on `origin/live-defi-rollout` before citing: `unified-trading-pm@4d90eeefe` ·
+      `instruments-service@2217756f` · `unified-trading-pm@66fa926d5` · `market-tick-data-service@d2366203` ·
+      `market-tick-data-service@fc64e092`. **Source-doc reconciliation:** -
+      `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`: both checkboxes flipped with verified commits,
+      `status→resolved` (0 open — genuine zero in both checkbox and prose form). -
+      `cefi_hl_aster_batch_data_gaps_2026_06_22.md`: 3 batch3 checkboxes already flipped; line 854 now cites both
+      `d2366203`+`fc64e092`. ~15 open checkboxes remain — does NOT reach zero. -
+      `cefi_backfill_per_day_catalogue_reload_2026_07_20.md`: profile findings appended (batch3 todo 5 deliverable);
+      `[BACKEND] P2` stays open (operator-gated). 1 open — does NOT reach zero. - `data_completion_cefi_2026_07_15.md`:
+      E6 CF-7 edit verified landed (corrected 11.61% figure + COINBASE=0 + link). Many open checkboxes remain — does NOT
+      reach zero.
 - [ ] [REVIEW] P1. **Re-check batch3's own Deferred items for cleared gates.** Walk each Deferred entry in
       `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` and re-verify its specific blocking condition: (a) the PARKED
       cross-tranche blank-`data_type` conflict — has the operator ruled which disposition wins (backfill per-row vs
