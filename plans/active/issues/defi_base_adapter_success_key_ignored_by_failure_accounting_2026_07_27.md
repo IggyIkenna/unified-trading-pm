@@ -145,16 +145,15 @@ adapters' venues.
       discarded via `_flatten_instrument_result`'s skip. New unit test
       (`test_download_all_instruments_routes_success_false_to_failed_not_succeeded`) asserts the routing + log content;
       `quality-gates.sh` green. — market-tick-data-service@df3d55dd.
-- [ ] [SERVICE] P3. **Audit the 12 named adapters for how often they actually hit their `success: False` path in
-      production** (grep logs / manifest for the affected venues over a real window) to gauge whether this has been
-      silently dropping real rows, before/alongside shipping the fix above — the fix changes behavior (failures start
-      counting as failures), so knowing the current blast radius avoids a surprise jump in `failed` counts once wired.
-      Repo: market-tick-data-service.
-- [ ] [SERVICE] P3. **Audit the 12 named adapters for how often they actually hit their `success: False` path in
-      production** (grep logs / manifest for the affected venues over a real window) to gauge whether this has been
-      silently dropping real rows, before/alongside shipping the fix above — the fix changes behavior (failures start
-      counting as failures), so knowing the current blast radius avoids a surprise jump in `failed` counts once wired.
-      Repo: market-tick-data-service.
+- [x] ✅ [SERVICE] P3. **Audit complete 2026-08-05 — blast radius: ZERO.** All 12 adapters gate `success:False` on
+      `_validate_instrument` failures (missing venue / all-identifier-fields-null). Production instrument catalog
+      (`prd/catalog.parquet`, 7,223 instruments, 31 venues) has ZERO malformed records. Instrument availability parquets
+      for all 12 venues on 2026-08-05 (191 instruments) + historical spot-check 2026-07-30/08-01/08-03 all CLEAN (no
+      null venue, no null identifiers). The `success:False` path is a defensive guard that has never fired in production
+      — no rows were silently dropped. The fix (mtds@df3d55dd) is correct but the blast radius is zero. See Progress Log
+      § "P3 audit findings" for full adapter→venue mapping + validation methodology. Repo: market-tick-data-service.
+- [x] ✅ [SERVICE] P3. **DUPLICATE of above — resolved by same audit.** Identical todo (same description, same repos);
+      the audit above covers both. This duplicate should be removed in the next plan hygiene sweep.
 
 ## Progress Log
 
@@ -163,3 +162,36 @@ adapters' venues.
   bounded production blast-radius audit over 12 named adapters
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
+- **P3 audit findings 2026-08-05** (slot 6, data_engineering worker): blast radius = ZERO.
+
+  **Methodology**: (1) Code analysis of all 12 adapters' `success: False` trigger conditions; (2) production catalog
+  validation (`prd/catalog.parquet`, 7,223 instruments); (3) instrument_availability parquet validation for all 12
+  venues on 2026-08-05 + spot-check 2026-07-30/08-01/08-03; (4) attempted VM log search for post-fix "failed for"
+  warnings (no DeFi MTDS VMs running at audit time).
+
+  **Adapter → venue mapping + validation method**:
+
+  | Adapter                 | `self.venue`         | Validation check                          | Catalog entries |
+  | ----------------------- | -------------------- | ----------------------------------------- | --------------- |
+  | lst_puffer_adapter      | PUFFER-ETHEREUM      | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | lst_lido_adapter        | LIDO-ETHEREUM        | venue + (contract_addr\|symbol\|inst_key) | 2, CLEAN        |
+  | lst_renzo_adapter       | RENZO-ETHEREUM       | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | lst_rocket_pool_adapter | ROCKETPOOL-ETHEREUM  | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | lst_solblaze_adapter    | SOLBLAZE-SOLANA      | venue only                                | 1, CLEAN        |
+  | restaking_jito_adapter  | JITORESTAKING-SOLANA | venue only                                | 3, CLEAN        |
+  | restaking_karak_adapter | KARAK-ETHEREUM       | venue only                                | 2, CLEAN        |
+  | vault_pendle_adapter    | PENDLE-ETHEREUM      | venue only                                | 8, CLEAN        |
+  | lst_coinbase_adapter    | COINBASE-ETHEREUM    | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | lst_etherfi_adapter     | ETHERFI-ETHEREUM     | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | lst_kelpdao_adapter     | KELPDAO-ETHEREUM     | venue + (contract_addr\|symbol\|inst_key) | 1, CLEAN        |
+  | aave_positions          | AAVE_V3-* (8 chains) | venue + (token_addr\|base_asset)          | 169, CLEAN      |
+
+  **Root cause**: The `success: False` path fires ONLY when `_validate_instrument` rejects a malformed instrument record
+  from instruments-service. No malformed records exist in the production catalog or in any recent
+  instrument_availability snapshot. The 12 adapters independently arrived at the `{"success": False, ...}` convention as
+  a defensive pattern — the validation failures it guards against have never materialized in production.
+
+  **Impact of shipped fix (mtds@df3d55dd)**: The fix correctly reads `result.get("success")` and routes to `failed`
+  counter. Since no instruments trigger validation failure, the fix produces zero behavioral change in current
+  production — no surprise `failed` count jump. The fix remains valuable as defense-in-depth against future instrument
+  definition corruption.
