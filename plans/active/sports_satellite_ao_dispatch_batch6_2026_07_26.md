@@ -502,7 +502,7 @@ otherwise-independent P3 todos over one soft file-overlap risk).
 - **batch5's own 16 Deferred items** (4 conflict-gated + 12 operator-gated). `batch5_finalize` todo 2 owns their
   re-check verbatim and names `batch6` as the extraction destination for any that clear. Drafting them here would
   front-run that gated todo and duplicate its work. Their docs therefore classify orphaned-but-owned, not fresh orphans.
-- **`issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s `[ML] P2`** and
+- **`/plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s `[ML] P2`** and
   **`issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`'s `[ML] P2`** —
   both are the same retrain, the latter explicitly marked SUPERSEDED and pointing at the former, and both sit inside the
   chain batch5's open `[CODE] P1` PARTIAL todo tracks. Already covered.

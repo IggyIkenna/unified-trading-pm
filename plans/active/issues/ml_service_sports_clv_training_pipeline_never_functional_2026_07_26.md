@@ -51,7 +51,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     ml-service/ml_service/training/app/core/cloud_feature_provider.py,
     ml-service/ml_service/training/cli/handlers/pipeline_handler.py,

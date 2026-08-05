@@ -47,7 +47,7 @@ related:
     /plans/active/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
     /plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
     /plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /plans/active/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md,
@@ -248,8 +248,9 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       Source: `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`. Done when: `pipeline_e2e_check.py`'s
       SPORTS/ODDS_API enumeration no longer yields an `odds_horizon_bucket` cell, and a quality-gates-green commit lands
       in `market-tick-data-service`.
-- [ ] [DOCS] P3. Archive `plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` per
-      the 6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): `git mv` it to
+- [x] ✅ [DOCS] P3. Archive
+      `plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` per the 6-step
+      archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): `git mv` it to
       `plans/archive/2026_08/`, add an archived/superseded banner citing the archive date and reason (all todos done,
       doc unlocked), then fix every corpus referrer that still points at the old active path (the doc's own 2026-08-03
       note enumerates 10). Source: `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`. Done when:
@@ -585,7 +586,7 @@ re-triage. Too-large-or-risky entries need their own dedicated plan.
 - **ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md** — [ML] P2 — retrain 3 CLV model variants
   (doc's own checkbox still unflipped; underlying work completed via a sibling doc): Verified the underlying work is
   fully DONE: the sibling doc
-  plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md's own [ML] P2 todo…
+  plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md's own [ML] P2 todo…
 - **mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md** — [OPERATOR] P2 the-odds-api.com
   credential/quota-exhaustion ask (checkbox unflipped): Verified in the live doc: the unchecked `[OPERATOR] P2` item at
   lines 182-187 asks for a credential check + quota top-up/key rotation for the `the-odds-api.com`…
