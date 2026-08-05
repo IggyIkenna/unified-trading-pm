@@ -93,6 +93,66 @@ Run a fresh orphan sweep for tradfi and compare the class-B population against b
 - If it's ~995: the 2026-07-30 dry-run had a data issue and the 995 figure is still authoritative.
 - Either way, the root cause of the delta must be documented so nobody re-investigates this.
 
+## Root cause determination (2026-08-05)
+
+**Conclusion: (d) PRIMARY — two different report generations are being conflated. (b) SECONDARY — the 95-object delta
+reflects real GCS/manifest state changes between the two sweep dates (2026-07-10 → 2026-07-30). Explanations (a) and (c)
+are ruled out.**
+
+### Evidence
+
+1. **The report was regenerated, not mutated in-place.** The GCS object
+   `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` has modification
+   date **2026-07-30T04:08:14Z** — it was overwritten ~20 days after the original 2026-07-10 sweep. The 2026-07-10
+   version no longer exists as a separate object. This is documented in
+   `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md` todo 2's investigation ("the
+   report was regenerated … GCS mtime 2026-07-30T04:08:14Z, after the 2026-07-10 sweep that produced 995"). **→
+   Explanation (d) CONFIRMED.**
+
+2. **No taxonomy or classification code changed between sweeps.** The orphan sweep classification logic is stable across
+   the relevant window:
+   - `_is_canonical_shape()` (line 275 of `migration_orphan_sweep.py`): checks for `pipeline_mode=` segment starting
+     with `batch_`/`live_`/`replay_` — unchanged since initial creation.
+   - `classify_object()` (line 306): class-B = legacy shape (`!_is_canonical_shape`) + manifest coverage
+     (`is_covered`(manifested_cells, key, day)) — unchanged.
+   - `is_valid_shard_key()` and `canonical_path_templates` from `unified_api_contracts` — no changes to the canonical
+     path shapes for tradfi in this window.
+   - The only commits touching `migration_orphan_sweep.py` between 2026-07-10 and 2026-07-30 were: checkpoint/resume
+     support, parallelization fixes, column-projection of the manifest read, and a defi-only venue-chain split guard —
+     none affect tradfi class-B classification. **→ Explanation (a) RULED OUT.**
+
+3. **The report loader does NOT silently drop rows.** `cleanup_legacy_twins.py` (line 128) loads the report parquet and
+   filters on `obj_class == "B_legacy_duplicate"` — no other filtering, no malformed-row handling that could silently
+   drop data. Verified by code read (2026-08-05, batch5 finalize plan). The 900 count faithfully reflects the report
+   content. **→ Explanation (c) RULED OUT.**
+
+4. **A fresh sweep (2026-08-05) confirms the current population is 900**, matching the 2026-07-30 report, not the
+   2026-07-10 figure. See todo 1 above (instruments-service@2ff3aa80: B_legacy_duplicate=900 over ~8.74M classifiable
+   objects). The 2026-07-30 report is authoritative; the 2026-07-10 figure of 995 is stale and has been corrected
+   everywhere per todo 2 above.
+
+### What explains the 95-object delta? (Explanation b)
+
+Between 2026-07-10 and 2026-07-30, real data pipeline activity changed the tradfi GCS/manifest state. 95 legacy-shaped
+objects that were class-B in the 2026-07-10 sweep were no longer class-B in the 2026-07-30 sweep. The possible
+transitions:
+
+- **Class B → Class A**: objects migrated from legacy path shapes to canonical v9 path shapes (their manifest coverage
+  persists, but `_is_canonical_shape` now returns True).
+- **Class B → Class D/E**: objects whose manifest rows were removed or that were deleted from GCS, losing coverage.
+- **Absent from the sweep**: objects physically deleted between the two dates.
+
+**Without the original 2026-07-10 report file (it was overwritten at the same GCS URI), the exact per-object accounting
+cannot be reconstructed.** The 95-object identity list that constituted the 2026-07-10 class-B population is lost.
+However, the mechanism is clear: the two sweeps are different generations 20 days apart, and normal manifest/GCS churn
+between them accounts for the delta. The 2026-07-30 (and now 2026-08-05) population of 900 is internally consistent and
+authoritative.
+
+### Bottom line
+
+The 995 figure should never have been cited as current after the report was regenerated. The fix (todo 2 above) —
+updating all operational references from 995→900 in the signoff plan — closes the conflation. No further action needed.
+
 ## Todos
 
 - [x] ✅ [DATA] P1. **Run a fresh tradfi orphan sweep and record the current class-B population.** —
@@ -105,6 +165,7 @@ Run a fresh orphan sweep for tradfi and compare the class-B population against b
       `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` — unified-trading-pm@1b0f98c82. All 5
       operational references updated from 995→900; historical quote (line 79) preserved with editorial note pointing to
       this issue doc.
-- [ ] [DATA] P2. **Document the root cause of the 995→900 delta** — which of the 4 candidate explanations (a-d) above is
-      correct, with cited evidence. If the cause cannot be determined, state that explicitly and explain why. (repo:
-      unified-trading-pm)
+- [x] ✅ [DATA] P2. **Document the root cause of the 995→900 delta** — (d) primary: two different report generations
+      conflated (the report was regenerated 2026-07-30, overwriting the 2026-07-10 version at the same GCS URI). (b)
+      secondary: 95-object delta from real GCS/manifest state changes between the two sweep dates. (a) and (c) ruled
+      out. The 2026-07-10 per-object identity list is unrecoverable (report overwritten). (repo: unified-trading-pm)
