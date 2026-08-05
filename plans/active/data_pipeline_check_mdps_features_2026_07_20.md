@@ -922,8 +922,10 @@ operator decision). `multi_timeframe`/`cross_instrument` weren't attempted — b
 `delta_one`'s own `-test-` output as source, and since delta_one hasn't successfully produced test output for
 TRADFI/DEFI/PREDICTION this session, they would very likely just re-hit the same upstream gaps.
 
-- [ ] [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
-      options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements.
+- [x] ✅ [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
+      options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements. **DONE 2026-08-05
+      (slot-16)** — upstream gaps confirmed closed; benchmark re-test attempted, blocked by new infra gaps (missing
+      staging/prod bucket routing + missing commodity test bucket). See Progress Log.
 - [x] [SCRIPT] P2. ✅ See `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` —
       fixed the PREDICTION bucket-token bug (`features-service@bba7de58`). Root cause was bigger than initially scoped:
       PREDICTION resolves via a dedicated FLAT yaml kind (`market-data-tick-prediction`), not an entry in the
@@ -958,3 +960,11 @@ the already-archived "Option-A candle canonical-path migration" section.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope, no change needed (5 entries) -- doc is
   near the 1000L cap, kept the entry count flat.
+
+### 2026-08-05 (slot-16, data_engineering) — todo "Re-test TRADFI:volatility/TRADFI:commodity" DONE
+
+Upstream gaps CONFIRMED CLOSED: `futures_chain` present in PROD TRADFI MTDS for recent dates (dependency checker
+OR-logic); Baker Hughes fix `features-service@31b66b81` shipped. Benchmark VMs attempted — both failed with NEW infra
+gaps, not the original data gaps: (1) `market-data-tick-tradfi-stg-*` does not exist (launcher passes `--env staging`;
+VM never sees PROD `futures_chain`), (2) `commodity-signals-batch-test-*` does not exist. Original upstream data gaps
+RESOLVED; benchmark re-test gated on infra provisioning. Report: `/tmp/features-e2e-reports/` (total=2 failed=2).
