@@ -191,3 +191,10 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   (two different checks both print "STEP 5.94"/"STEP 5.95") but functionally harmless, and consistent with this file's
   pre-existing convention. Todo 3 (operator policy call) remains open, not in this task's scope.
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.
+- **2026-08-05 (slot-7)**: Ratchet's first real catch. STEP 5.94 flagged blanket-header count 237→238; the +1 was
+  slot-6's new `cli/handlers/lending_rewards_handler.py` scaffold (mtds@968db86e, 08-05 13:56) carrying the blanket
+  header. Verified the header is GRATUITOUS — a header-stripped copy passes basedpyright
+  `0 errors / 0 warnings / 0 notes` — so deleted it (the codex's own sanctioned path: "delete the header if the
+  underlying type errors are actually fixed"). Ratchet count back to 237; full MTDS QG re-gate pending. This is the
+  first evidence the freeze-and-shrink ratchet (todo 2) actively catches net-new suppressions even when the
+  mirror-the-dominant-convention instinct produces one — relevant context for the operator's open todo-3 policy call.
