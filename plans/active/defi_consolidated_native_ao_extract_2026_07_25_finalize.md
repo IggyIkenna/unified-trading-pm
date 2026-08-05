@@ -67,19 +67,17 @@ context_scope:
       Track-1/2 + the migration VM) — the codex-drift-doc sub-clause also stays open. (4) The bottom-of-file `[DOC] P1`
       digest-entry todo was **already flipped `[x]`** 2026-07-28 (slot 8) — verified, no further edit needed. Evidence:
       this commit's diff to `defi_consolidated_closeout_2026_07_18.md` (Track 8 annotation) in `unified-trading-pm`.
-- [ ] [DIAG] P3. **Re-check the 2 staleness findings recorded in the extraction plan's "Conflicts / staleness found"
-      section for whether they're now independently actionable.** (a) Re-verify whether
-      `issues/defi_adapter_dead_code_audit_2026_07_24.md` is still the complete, current answer to Track 8's "audit defi
-      adapters" native todo (line ~609) — if so, flip that native checkbox to `[x]` citing the audit doc directly (this
-      is a pure staleness correction, not new work, so it's safe to do here even though it wasn't part of the gated
-      extraction plan's own scope); if a NEWER audit superseded it, note that instead. (b) Re-read
-      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3" in full —
-      if it now contains (or a sibling doc now contains) a concrete, scoped design for the "manifest-row-level purge" it
-      recommends, draft a scoped `defi_satellite_ao_dispatch_batch2`-style candidate item for it (with the standard
-      finding-O delete/apply tagging, since a manifest-row purge is real prod-manifest mutation); if it's still
-      unscoped, record that and leave it for a future check. **Done when**: both (a) and (b) have an explicit recorded
-      verdict (fixed-here / still-stale / now-scoped-into-a-new-candidate), with (a)'s checkbox flip actually applied if
-      warranted.
+- [x] ✅ [DIAG] P3. **Re-check the 2 staleness findings — BOTH RESOLVED 2026-08-05 (slot-9, data_engineering).** (a)
+      `issues/defi_adapter_dead_code_audit_2026_07_24.md` IS the complete, current answer to Track 8's "audit defi
+      adapters" native todo — the closeout doc's checkbox at line 626 is **already flipped `[x] ✅`** (resolved
+      2026-08-01, citing the audit doc + batch7 incremental re-verification). No further action needed — the staleness
+      finding was correct on 2026-07-25 but independently resolved since. (b) Tick 3 addendum does NOT contain a
+      concrete, scoped design for a standalone manifest-row-level purge — it recommends either (a) a one-off delete of 9
+      specific stale `_index` rows keyed on old glued `instrument_id`s, or (b) confirming whether a full-corpus rebuild
+      regenerates from scratch — neither is a general purge mechanism. However, the closeout doc's glued-id todo at line
+      736 is **already flipped `[x] ✅`** (resolved 2026-08-01): all 19 remaining rows confirmed phantom, folded into
+      the existing `:401` P0 purge. Still unscoped as a standalone mechanism, but moot — the rows have a disposition
+      path. No new candidate item to draft. **Evidence**: `unified-trading-pm` plan-only edit (this flip).
 - [ ] [DOC] P3. **Archive `defi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no remaining Deferred items need migrating (this plan's Deferred table is
       a reference classification, not open work — verify none of it silently needs a new todo) → add the archive banner
