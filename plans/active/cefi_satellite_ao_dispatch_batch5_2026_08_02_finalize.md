@@ -92,7 +92,8 @@ context_scope:
       marker-format migration — no separate follow-up todo is needed beyond the existing Deferred P2. **Verdict**: dated
       re-confirmation that the gate is still blocked; batch6 candidacy recorded.
 
-- [ ] [DOC] P2. **Author the missing gated finalize sibling for the bitfinex/bitget reclassified doc.**
+- [x] ✅ [DOC] P2. **Author the missing gated finalize sibling for the bitfinex/bitget reclassified doc.** —
+      unified-trading-pm@4d1335744
       `/plans/active/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md` was flipped
       `assigned_vm: NA` → `planning` in place by the 2026-07-30 na-eligibility-audit, but never received the paired
       `_finalize` sibling that both the naming SSOT's shape (b) and `task_template.md` § 4's finalize-plan-coverage rule
