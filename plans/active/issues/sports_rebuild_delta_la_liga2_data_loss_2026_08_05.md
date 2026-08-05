@@ -95,7 +95,8 @@ the live bucket, same session.
 2. Re-run the manifest rebuild (or targeted re-emission) for `LA_LIGA_2` ODDS cells to restore the 846 missing rows
 3. After the fix, re-verify the manifest-vs-GCS cross-reference confirms 0 GCS-only cells
 
-- [ ] [DATA] P1. Add `LA_LIGA_2` to the instruments-service sports league catalogue. (repo: instruments-service)
+- [x] ✅ [DATA] P1. Add `LA_LIGA_2` to the instruments-service sports league catalogue. — unified-api-contracts@b4bac708
+      (note: SSOT is in UAC, not instruments-service)
 - [ ] [DATA] P1. Re-emit LA_LIGA_2 ODDS manifest rows for the 846 (date, league) cells with real GCS objects. (repo:
       instruments-service)
 - [ ] [VERIFY] P2. Re-run manifest-vs-GCS cross-reference for ODDS to confirm 0 GCS-only cells remain. (repo:
