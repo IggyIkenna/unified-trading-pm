@@ -982,8 +982,10 @@ CLOSED (slot-16) but the re-test hit a NEW infra blocker: the MDPS input bucket 
 never-provisioned `market-data-tick-tradfi-stg-*` → 404. FIXED + shipped `features-service@cc5c52b8` (forces
 `deployment_env="prod"` in `resolve_mdps_candle_bucket` + volatility `get_input_bucket`, mirrors the delta_one fix; QG
 green; verified on origin). Still pending before a TRADFI re-run: features-e2e code-tarball rebuild (manual build) +
-`commodity-signals-batch-test-*` bucket not provisioned. **DEFI:onchain** — gate OPEN (perp_funding resolved 08-01,
-live-verified available=True 07-29/30); benchmark not yet re-run; `onchain/config.py:109` same-class stg risk under
+`commodity-signals-batch-test-*` bucket not provisioned. **DEFI:onchain** — gate RE-CLOSED 2026-08-05 (slot-12) on a
+BINANCE-DELIVERY perp_funding attempted_failed regression (issue
+`features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` finding 6 + Progress Log; the 08-01 available=True
+07-29/30 verification predates those rows); benchmark not yet re-run; `onchain/config.py:109` same-class stg risk under
 staging launch. Measurement (multi-hour benchmark VMs) cannot complete in a bounded session → declined via
 skip-current-task GATED, per plans-run-to-actual-completion. Filed
 `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` (sibling same-class sweep, 11 sites +

@@ -79,10 +79,21 @@ locked_since:
    writer at a `-test-` bucket that was never created — TRADFI:commodity re-test fails on this even after the MDPS
    bucket fix. Whether this is a code mis-resolution or a pure provisioning gap needs a short diagnosis.
 
-5. **DEFI:onchain gate is recorded OPEN** (perp_funding dependency resolved 2026-08-01 via the CEFI-bucket repoint +
-   POLYMARKET-PERP known-outage tolerance; live-verified `available=True` 2026-07-29/30). The DEFI:onchain benchmark has
-   NOT been re-run — and its `onchain/config.py:109` is a same-class stg risk under a staging launch, so it should be
-   swept (item 2) before that benchmark relaunch.
+5. **DEFI:onchain gate — CORRECTED 2026-08-05 (slot-12) by a fresh re-verify: now CLOSED.** The "gate OPEN /
+   perp_funding resolved 08-01 / live-verified `available=True` 07-29/30" framing from 2026-08-05 (slot-8) is STALE: a
+   `DependencyChecker("central-element-323112")` sweep over 2026-07-31→2026-08-05
+   (`features_service.onchain.app.core. dependency_checker`) shows perp_funding (required=True, the one dep that was
+   "resolved") is MISSING on every recent day — see finding 6. The DEFI:onchain benchmark has NOT been re-run, and its
+   `onchain/config.py:109` is a same-class stg risk under a staging launch, so it should be swept (item 2) before that
+   benchmark relaunch.
+6. **NEW 2026-08-05 (slot-12): DEFI:onchain gate re-closed by a BINANCE-DELIVERY perp_funding regression.** The CEFI
+   manifest (`market-data-tick-cefi-prd-central-element-323112`) now carries a `BINANCE-DELIVERY` `attempted_failed`
+   shard for perp_funding on EVERY day 2026-07-29→2026-08-04, plus NO manifest rows at all for 2026-08-05. The gate only
+   tolerates `POLYMARKET-PERP` (`_KNOWN_OUTAGE_VENUES_BY_SVC`); BINANCE-DELIVERY is not among the perp_funding handler's
+   3 live protocols (HYPERLIQUID/KALSHI_PERP/POLYMARKET_PERP — Aster/Lighter retired, GMX removed), so it looks like a
+   stray/misclassified manifest row that tanked the whole dependency. At the 08-01 verification the same days had only 3
+   rows (1 POLYMARKET attempted_failed → excluded → `available=True`); the BINANCE-DELIVERY rows were added afterwards.
+   Every other required dep (vault_share_price/lst_rates/lending_indices/oracle_prices) is available on all recent days.
 
 ## Why it matters
 
@@ -98,11 +109,37 @@ is gated on the sibling sweep + a benchmark run. None of these are done, so the 
 2. Rebuild the features-service code tarball (`create-code-tarballs.sh`) before any benchmark relaunch so the fix
    actually reaches the VM.
 3. Diagnose/provision the commodity test bucket so the TRADFI:commodity re-test can proceed.
-4. Then relaunch the TRADFI:volatility benchmark (unblocked) and the DEFI:onchain benchmark (gate open) to measure the
-   real per-family numbers — tracked by -056 itself.
+4. Then relaunch the TRADFI:volatility benchmark (unblocked) and the DEFI:onchain benchmark (gate re-closed on the
+   BINANCE-DELIVERY perp_funding regression — fix finding 6's todo first) to measure the real per-family numbers —
+   tracked by -056 itself.
+
+## Progress Log
+
+### 2026-08-05 (slot-12, data_engineering) — DEFI:onchain gate re-verified CLOSED on all recent days (perp_funding BINANCE-DELIVERY regression)
+
+Ran `DependencyChecker("central-element-323112").check_dependencies(date, "DEFI")` (features-service, repo `.venv`,
+GCP_PROJECT_ID=central-element-323112; read-only manifest reads, no VM launch) over 2026-07-31→2026-08-05 + a
+perp_funding manifest dump (`read_manifest_rows` on `market-data-tick-cefi-prd-central-element-323112`). Result:
+
+- **2026-07-29→08-04**: vault_share_price (24-35 rows), lst_rates (36-74), lending_indices (1959-2124), oracle_prices
+  (1749-1815) all AVAIL (captured/empty_confirmed); **perp_funding MISS every day** — exactly one `BINANCE-DELIVERY`
+  `attempted_failed` shard on each day (POLYMARKET-PERP also attempted_failed but is excluded by the gate's known-outage
+  tolerance). → `required_ok=False` on every day.
+- **2026-08-05**: no perp_funding manifest rows at all in the CEFI bucket (today's capture not yet in the index); 4/4
+  other required deps AVAIL; MDPS (optional for DEFI) has no 08-05 rows yet either.
+
+Benchmark relaunch for DEFI:onchain is therefore gated twice: (a) the perp_funding regression above (new P2 todo), and
+(b) the sibling MDPS-input sweep (-001) + tarball rebuild (-002) not yet shipped (`onchain/config.py:109` still un-swept
+at features-service@cc5c52b8). Left -004 checkbox `[ ]` — not false-completing a gated relaunch. Evidence:
+`_defi_onchain_gate_check_2026_08_05.py` / `_perp_funding_manifest_dump_2026_08_05.py` (scratch, deleted after run).
 
 ## Todos
 
+- [ ] [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
+      re-closed the DEFI:onchain gate (repo: features-service gate + market-tick-data-service/manifest) — determine
+      whether the rows are stray/misclassified (remove/clean them or scope the gate's perp_funding probe to the venues
+      the DEFI:onchain consumer actually reads, i.e. HYPERLIQUID per `perp_funding_rates_defi.py`) or a real capture gap
+      (backfill), then re-verify the gate reopens on recent days. See finding 6 + Progress Log.
 - [ ] [DATA] P2. Sweep MDPS-input `kind="market-data"` sites in features-service to force `deployment_env="prod"` (repo:
       features-service) — the 11 sites listed in What I found §2; mirror `resolve_mdps_candle_bucket`, add per-site
       regression tests.
