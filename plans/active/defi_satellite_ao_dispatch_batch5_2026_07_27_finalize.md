@@ -105,11 +105,11 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       `- [ ]` open — no one has picked it up. Per this todo's own instructions, did NOT re-draft a new todo or retag it
       here; the existing batch2-finalize todo remains the single tracked owner. Repo: unified-trading-pm. Done when: a
       verdict (retagged / still open, citing the batch2-finalize todo state) is recorded.
-- [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch5_2026_07_27.md` via the standard 6-step ritual (migrate any
+- [x] ✅ [DOC] P1. Archive `defi_satellite_ao_dispatch_batch5_2026_07_27.md` via the standard 6-step ritual (migrate any
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch5 is in
       `plans/archive/2026_07/` with a superseded_by/archived banner and zero remaining referrers to its old
-      `plans/active/` path.
+      `plans/active/` path. — unified-trading-pm@<sha>
 
 ## Progress Log
 

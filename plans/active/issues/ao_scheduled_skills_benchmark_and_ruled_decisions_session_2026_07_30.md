@@ -188,8 +188,8 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       -- CLOSED (na-eligibility-audit 2026-08-01): directly verified
       `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` is status:active, assigned_vm:planning, and already
       contains the Kalshi-CQG fix plus the "batch4 todo 3 is the single owner going forward" dedup language; also
-      confirmed status:active + assigned_vm:planning on `defi_satellite_ao_dispatch_batch5_2026_07_27.md`,
-      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, and
+      confirmed status:active + assigned_vm:planning on `defi_satellite_ao_dispatch_batch5_2026_07_27.md` (ARCHIVED
+      2026-08-05), `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, and
       `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md` -- this item's content has already
       landed via the standard per-tranche batch-dispatch pipeline, not via the abandoned workflow script.
 - [x] [DOC] P2. **per-tranche-integrate (retry)**: after the 8 tranches above land (each in its own worktree,
