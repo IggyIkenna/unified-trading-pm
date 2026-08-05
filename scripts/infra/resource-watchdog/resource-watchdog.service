@@ -1,8 +1,7 @@
 [Unit]
 Description=Resource Watchdog — cross-process guardian for the planning VM
 Documentation=https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/scripts/infra/resource-watchdog/config.yaml
-After=network.target
-Before=orchestrator.service
+After=network.target orchestrator.service
 
 [Service]
 Type=simple
