@@ -119,9 +119,17 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
 - **2026-08-05 (data_engineering slot-12)**: found while shipping the gas_fee P3 dead-code removal. Pass-1-with-diff QG
   red (coverage 76.21% + 3 tests). Clean-tree verification QG at LDR HEAD (stash@{0} removed) → **corrected picture**:
   coverage 80.65% PASSES clean; 2 test failures are pre-existing; aster was flaky; the coverage shortfall was slot-12's
-  own diff. Declared repo-blocker RB (mtds qg_red) for the 2 pre-existing failures. Slot-12's diff sits in `stash@{0}`
-  (gas_fee dead-code removal), NOT shipped; P3 checkbox NOT flipped. Restoring coverage is slot-12's in-flight
-  obligation (P2 todo above).
+  own diff. Declared repo-blocker RB (mtds qg_red) for the 2 pre-existing failures. Slot-12's diff is in the
+  **`market-tick-data-service` WORKING TREE** (3 files: `cli/handlers/gas_fee_handler.py`,
+  `tests/unit/test_gas_fee_handler.py`, `tests/unit/test_gas_fee_handler_coverage.py`), NOT shipped; P3 checkbox NOT
+  flipped. Restoring coverage is slot-12's in-flight obligation (P2 todo above).
+- **2026-08-05 (data_engineering slot-12) RB GREEN — UAC-side resolution shipped**: the 2 pre-existing failures are
+  resolved by the operator-ruled UAC-side removals at `unified-api-contracts@5f441e0d` (AAVE `collect-rewards` +
+  POLYMARKET `fills` declarations removed — see `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`). This is
+  the repo-blocker unblock: MTDS re-gate (full `bash scripts/quality-gates.sh` WITH slot-12's gas_fee diff) started
+  ~14:04Z, log `/tmp/qg_green_ship.log`; editable-install now includes `5f441e0d`, so both failures should clear. **On
+  green**: ship slot-12's 3 code files via `quickmerge --agent --files`, flip the P3 checkbox in
+  `features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md` same-turn, verify SHA on origin, POST /done.
 - **2026-08-05 (data_engineering slot-12) PUSH-BLOCKED NOTE**: this issue doc could NOT be pushed via quickmerge at
   filing time. PM quickmerge ran the FULL gate (not prek-only) because a concurrent session's live edit to
   `plans/active/issues/dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md` (mtime 12:54) dirtied the tree;

@@ -148,13 +148,27 @@ green.
   `_collect_latest_fees`/`_write_latest_fees_shard`, rewrote `_collect_one_evm_chain` to always run the date-scoped
   path; test_gas_fee_handler.py + test_gas_fee_handler_coverage.py updated: removed TestCollectLatestFees, repointed
   patches to `_collect_for_date`). Module imports clean, methods confirmed removed. **NOT SHIPPED — blocked.** The diff
-  sits in `market-tick-data-service` `stash@{0}`. Two blockers, fully documented in
-  `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md`: (1) MTDS has 2 PRE-EXISTING test failures
-  on a clean tree (collect_handler_schema `[lending]`, orchestrator tier3_polymarket) that block ALL MTDS commits under
-  the green-tree rule — repo-blocker RB (mtds qg_red) declared. (2) **COVERAGE NON-ISSUE (corrected 2026-08-05)**: the
-  earlier "this diff drops coverage 80.65%→76.21%" claim was a TRUNCATED-RUN artifact — the authoritative full
-  quality-gates.sh run WITH the diff is 80.63% (PASSES the 79% gate, −0.02pt vs clean); no compensating coverage needed,
-  P2 in the blocker doc dismissed. The ONLY remaining blocker is the 2 pre-existing failures. P3 checkbox NOT flipped
-  (correct — not shipped, green-tree rule holds). The blocker issue doc itself was unpushable via quickmerge at filing
-  time because the PM full gate is red on a pre-existing `agent-rules-size-cap` (cursor-configs/CLAUDE.md 48 B over cap)
-  and a concurrent session's live edit dirtied the tree — see that doc's Progress Log.
+  is in the **`market-tick-data-service` WORKING TREE** (3 files: `cli/handlers/gas_fee_handler.py`,
+  `tests/unit/test_gas_fee_handler.py`, `tests/unit/test_gas_fee_handler_coverage.py`; the 3
+  `tests/schema_artifacts/*.json` trailing-newline regens are regenerable and deliberately excluded). Two blockers,
+  fully documented in `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md`: (1) MTDS has 2
+  PRE-EXISTING test failures on a clean tree (collect_handler_schema `[lending]`, orchestrator tier3_polymarket) that
+  block ALL MTDS commits under the green-tree rule — repo-blocker RB (mtds qg_red) declared. (2) **COVERAGE NON-ISSUE
+  (corrected 2026-08-05)**: the earlier "this diff drops coverage 80.65%→76.21%" claim was a TRUNCATED-RUN artifact —
+  the authoritative full quality-gates.sh run WITH the diff is 80.63% (PASSES the 79% gate, −0.02pt vs clean); no
+  compensating coverage needed, P2 in the blocker doc dismissed. The ONLY remaining blocker is the 2 pre-existing
+  failures. P3 checkbox NOT flipped (correct — not shipped, green-tree rule holds). The blocker issue doc itself was
+  unpushable via quickmerge at filing time because the PM full gate is red on a pre-existing `agent-rules-size-cap`
+  (cursor-configs/CLAUDE.md 48 B over cap) and a concurrent session's live edit dirtied the tree — see that doc's
+  Progress Log.
+- **2026-08-05 (data_engineering slot-12) RB GREEN — UAC removal shipped, MTDS re-gate in progress**: the two
+  pre-existing failures were resolved by the UAC-side operator decision — `unified-api-contracts@5f441e0d` removed AAVE
+  `collect-rewards` + POLYMARKET `fills` declarations (fleet doc
+  `plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`). Blocker RB-04b8981e unblock
+  criterion (MTDS QG green on LDR baseline) is being re-checked: full `bash scripts/quality-gates.sh` WITH the gas_fee
+  diff running (started ~14:04Z, log `/tmp/qg_green_ship.log`) — the editable-install view now includes `5f441e0d`, so
+  the 2 failures should clear. **NEXT STEP (the only remaining work)**: when that QG is green, ship the 3 code files via
+  `bash scripts/quickmerge.sh "<msg>" --agent --files "cli/handlers/gas_fee_handler.py tests/unit/test_gas_fee_handler.py tests/unit/test_gas_fee_handler_coverage.py"`
+  (quickmerge auto-stamps `Quickmerge: agent`), flip THIS P3 checkbox `[ ]`→`[x]` in the SAME turn with the landed SHA,
+  push the docs flip via the PM docs-only carve-out (docs commits are exempt from strict-quickmerge), verify
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout`, then POST /done.
