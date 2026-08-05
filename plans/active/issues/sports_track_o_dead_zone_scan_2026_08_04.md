@@ -145,9 +145,10 @@ range) and read their raw bm_minutes_to_kickoff distributions from the market-da
 mechanism directly (manifest data is circumstantial; raw bm_minutes is the direct signal). This is a bounded VM task
 (~20 shard reads, not a corpus walk).
 
-- [ ] [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** (repo: market-data-processing-service,
-      `bucket_assignment_adapter.py`). Operator-gated — this diagnosis only surfaces the options; the operator must
-      choose.
+- [x] ✅ [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** —
+      market-data-processing-service@814ead6. Operator chose Option A (T-18h, target=1080, cap=45) via BLK-cd0e638f.
+      Added T-18h between T-24h and T-12h in TIER1_HORIZONS, shrinking the 615-min dead zone into two gaps
+      (270+255=525min, >55% reduction). 9 buckets now.
 - [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@5fe93fbec
       (audit-only; no MTDS code changes needed) (repo: market-tick-data-service, `odds_api_adapter.py` + live
       connector). **VERDICT: NOT fixture-count-gated.** The fetch loop iterates over
