@@ -134,13 +134,13 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
       venues, or no market-data ingestion at all — see the finding doc's "What I found" for the per-launcher verdict).
       Same resolution as P1:
       `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
-- [ ] [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk and
-      recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is confirmed
-      running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`)
-      **na-eligibility-audit 2026-08-03**: already tracked (still open, `- [ ]`) as todo 2 `[DOC] P3` in
-      `plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md:149` (Source-cites this exact item as "P3 of 3");
-      not closing here — that batch's own done-when includes flipping this checkbox once it ships. **Scope-fenced
-      2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
+- [x] ✅ [DATA] P3. Update `data-pipeline-check-mtds` skill's **Phase-2 (live leg)** section to note the guard-gap risk
+      and recommend deferring live-leg checks for Tardis-sourced venues while a real Tardis backfill/sharded VM is
+      confirmed running, until P1 above ships. (repo: unified-trading-pm, `.claude/skills/data-pipeline-check-mtds/`) —
+      shipped unified-trading-pm@509b2553c **na-eligibility-audit 2026-08-03**: already tracked (still open, `- [ ]`) as
+      todo 2 `[DOC] P3` in `plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md:149` (Source-cites this exact
+      item as "P3 of 3"); not closing here — that batch's own done-when includes flipping this checkbox once it ships.
+      **Scope-fenced 2026-07-31**: **Phase-2 ONLY.** The same file's **§ 3 (Tardis cap)** section is owned by
       `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`'s `[DATA] P3`,
       which is already **done** — read what it wrote and cross-link it rather than restating or editing it.
 

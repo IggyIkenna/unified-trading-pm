@@ -479,12 +479,11 @@ already on LDR.
 
 **Tracked tail (judgment-heavy, NOT silently deferred):**
 
-- [ ] [UAC] P2. **Politics/geo cross-venue canonicalization** — Kalshi Politics (2049 series: electoral-college
-      KXECDJT/KXECKH, KXTRUMPPUTIN, KXSWINGSTATES, KXMAG, geo) don't cleanly align with Polymarket's TRUMP_STATEMENTS /
-      TRUMP_APPROVAL / ELECTION_PRESIDENT_2028 / GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE groups — the specific events +
-      settlement wording differ, so blanket mapping would create FALSE arb pairs. Needs per-family arbability analysis
-      (which Kalshi political series resolve on the SAME event+criteria as a Polymarket group) + possibly the World
-      category
+- [x] ✅ [UAC] P2. **Politics/geo cross-venue canonicalization** — `unified-api-contracts@6c11d0d5`. KXECDJT/KXECKH,
+      KXTRUMPPUTIN, KXSWINGSTATES, KXMAG, geo) don't cleanly align with Polymarket's TRUMP_STATEMENTS / TRUMP_APPROVAL /
+      ELECTION_PRESIDENT_2028 / GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE groups — the specific events + settlement wording
+      differ, so blanket mapping would create FALSE arb pairs. Needs per-family arbability analysis (which Kalshi
+      political series resolve on the SAME event+criteria as a Polymarket group) + possibly the World category
   - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
     "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23. **EXTRACTED —
     sole executing owner is

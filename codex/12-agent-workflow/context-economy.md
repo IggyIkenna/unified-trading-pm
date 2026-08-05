@@ -59,6 +59,13 @@ touches a plan doc.
 - **This is a judgment call, not a hard cap** — a genuine full-file review (code review, adversarial audit, "read this
   doc end to end before touching it") legitimately needs the whole file. The failure mode this rule targets is reading
   whole files as the DEFAULT move when a scoped read would have answered the same question.
+- **The same discipline applies to Bash/tool COMMAND OUTPUT, not just file reads.** `tail -60`/`cat` on a VM run.log, a
+  quickmerge log, or a `tofu plan` — dumping the whole thing into context by default is the same failure mode as an
+  unscoped file Read. Default to `grep -c`/`grep -n -A5` for an existence/count/exit-code check; use a small
+  `tail -5`/`head -5` window to confirm a step finished; only pull a larger excerpt once something looks wrong and the
+  detail is actually needed to diagnose it. Operator finding 2026-08-05: a session running several VM launches +
+  quickmerge ships in one turn repeatedly dumped 30-60-line log tails and full `cat`s of run logs when a `grep -c`
+  existence check or a 5-line tail would have answered the same question.
 
 ### 2. Default chat responses to plain, short prose
 

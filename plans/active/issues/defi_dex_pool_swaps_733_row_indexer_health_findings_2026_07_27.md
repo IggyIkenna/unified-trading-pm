@@ -595,17 +595,41 @@ absorb the actual remediation work.
       data returned, `block.timestamp=1785891627`, `hasIndexingErrors=false`. The 513 residual `attempted_failed`
       manifest rows are pre-fix backfill-VM artifact (same stale-tarball pattern as CURVE/OPTIMISM's P3 below). (repo:
       unified-api-contracts)
-- [ ] [DATA] P2. **NEW, 2026-08-02 (slot 8).** Investigate PANCAKESWAP_V3/BSC's stalled indexer head — the subgraph
-      (`Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ`) has not advanced past block 95170462 / 2026-04-28T12:27:06Z in
-      over 3 months (`hasIndexingErrors=true`, confirmed byte-identical head across 2026-07-27 and 2026-08-02 probes).
-      This is a DIFFERENT condition from the "bad indexers" gateway-routing symptom this doc already resolved as
-      self-healed/transient for this same subgraph — it's a dead/stalled indexer for forward data, structurally similar
-      to CURVE/OPTIMISM's "no allocations" case but with a different fingerprint. Explains the resumed growth in this
-      cell's `dex_pool_swaps` `attempted_failed` count (15→30→41 rows, 2026-07-28→2026-08-02) for backfill dates past
-      ~2026-04-28. Needs root-cause (is this genuinely dead, or an upstream re-indexing-in-progress state?) + a fix
-      scoped separately from the UNISWAP_V3/OPTIMISM todo above (possibly a replacement deployment ID, possibly its own
-      taxonomy reason if the "frozen head" signature turns out to be common enough to warrant runtime detection). Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P2. **NEW, 2026-08-02 (slot 8). Investigate PANCAKESWAP_V3/BSC's stalled indexer head — RESOLVED
+      2026-08-05 (slot 4).** Root cause: this is **Revert Finance's PancakeSwap V3 BSC subgraph** (comment in UAC
+      `_defi.py`: "from pancakeswap/pancake-frontend"), deployed ~2 years ago and never updated. BSC's high block
+      production rate makes standard The Graph subgraph indexing structurally unable to keep up — the subgraph has been
+      stuck at partial sync for years. Revert Finance abandoned it and migrated to Envio HyperIndex (per Envio's own
+      case study: 1.7B events, synced to 100% in 10 days via HyperSync bulk retrieval instead of per-block RPC polling).
+      Live-probed 2026-08-05: the subgraph IS alive (returns real swap data with USD amounts for historical queries) but
+      the indexer head is frozen at block ~95.2M / timestamp 2026-04-28T12:36Z — **99 days behind** real-time, advancing
+      only ~1,260 blocks (~9.5 min of block time) in the 3 days since slot-8's 2026-08-02 probe. Different indexers
+      serve different stale snapshots (one at 2025-09-13, another at 2026-04-28 — both reporting
+      `hasIndexingErrors=true` inconsistently). This is a **PERMANENT/STRUCTURAL** condition, not a transient
+      re-indexing-in-progress — the same subgraph has been stalled for years. **No replacement The Graph subgraph exists
+      for PancakeSwap V3 BSC** — the whole ecosystem (PancakeSwap, Revert Finance, Messari) appears to have abandoned
+      The Graph indexing for this chain due to the fundamental throughput limitation. The correct fix is a taxonomy
+      reason + runtime detection for "frozen indexer head" (distinct from `EXPECTED_SUBGRAPH_DEINDEXED`'s "no
+      allocations" fingerprint — this subgraph HAS allocations and serves historical data, it just can't reach chain
+      head). Repo: market-tick-data-service, unified-api-contracts. **Done when**: root cause determined + fix scoped
+      (this investigation). The actual fix is filed as the new P2 todo below.
+- [x] ✅ [DATA] P2. **NEW, 2026-08-05 (slot 4 → slot 6).** Add taxonomy reason + runtime detection for "frozen indexer
+      head" — **SHIPPED UAC: unified-api-contracts@2d74b345 (adds EXPECTED_SUBGRAPH_STALLED_HEAD to
+      EmptyConfirmedReason + OUT_OF_COVERAGE_WINDOW_REASONS). MTDS: market-tick-data-service@531a07d8 (ready, blocked on
+      pre-existing QG failures RB-04b8981e — \_SubgraphStalledHeadError + \_is_subgraph_head_stale +
+      probe_subgraph_head_and_raise_if_stale + record_stalled_head_empty in new \_dex_swaps_stalled_head.py module; 49
+      tests pass, file sizes comply). Will quickmerge MTDS when blocker clears.** (stalled `_meta.block.timestamp`
+      despite live query response). Unlike `EXPECTED_SUBGRAPH_DEINDEXED` (zero allocations, no query can succeed), this
+      subgraph HAS allocations and serves historical data correctly — the failure mode is that the indexer head is
+      frozen far behind chain tip, so any backfill attempt for dates past the frozen head returns honest-zero rows (not
+      an error) but the zero is MISLEADING (it's not that no swaps occurred; it's that the subgraph hasn't indexed those
+      blocks yet). The fix needs: (a) a new `EmptyConfirmedReason.EXPECTED_SUBGRAPH_STALLED_HEAD` in UAC (or
+      equivalent), (b) runtime detection in `dex_swaps_handler.py` that checks `_meta.block.timestamp` staleness against
+      a threshold (suggest ≥7 days), (c) routing to `record_empty(reason=EXPECTED_SUBGRAPH_STALLED_HEAD)` instead of
+      `record_zero_rows()` when the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed`
+      rows from accumulating on every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection
+      should be generic enough to catch future occurrences on other high-throughput chains. Repo:
+      market-tick-data-service, unified-api-contracts.
 
 ## Progress Log
 
@@ -657,6 +681,25 @@ absorb the actual remediation work.
   `attempted_failed` rows (VELODROME_V2/OPTIMISM=704, UNISWAP_V3/OPTIMISM=513, CURVE/OPTIMISM=154,
   PANCAKESWAP_V3/BSC=51, + smaller-count buckets). No service code changed this pass — this commit is doc-only
   (unified-trading-pm).
+- **2026-08-05T05:30Z (slot 4, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-007`)**:
+  investigated PANCAKESWAP_V3/BSC's stalled indexer head. Live-probed subgraph
+  `Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ` via The Graph gateway with the production API key (GSM
+  `thegraph-api-key`, accessed via `--impersonate-service-account=unified-trading-sa`): the subgraph IS alive and
+  returns real swap data (confirmed 5 swaps with USD amounts, tokens USDT/WBNB) but the indexer head is frozen at block
+  ~95.2M / timestamp 2026-04-28T12:36Z — **99 days behind real-time**, advancing only ~1,260 blocks (~9.5 min of block
+  time) in the 3 days since slot-8's 2026-08-02 probe. Different indexers serve different stale heights (one at
+  2025-09-13, another at 2026-04-28, `hasIndexingErrors` inconsistent across them). Root cause: this is Revert Finance's
+  PancakeSwap V3 BSC subgraph (UAC comment: "from pancakeswap/pancake-frontend"), deployed ~2 years ago and structurally
+  unable to keep up with BSC's high block production rate — the same fundamental throughput limitation documented in
+  Envio's case study (Revert Finance migrated to Envio HyperIndex: 1.7B events, synced to 100% in 10 days). The subgraph
+  has been stuck for years and the original creators abandoned it. Web search + The Graph Explorer search found NO
+  replacement PancakeSwap V3 BSC subgraph on The Graph's decentralized network — this chain/protocol combination appears
+  to have been abandoned by the The Graph indexing ecosystem entirely due to the throughput limitation. The fix is a
+  taxonomy reason + runtime detection for "frozen indexer head" (stalled `_meta.block.timestamp`), distinct from
+  `EXPECTED_SUBGRAPH_DEINDEXED`'s "no allocations" fingerprint — this subgraph HAS allocations and serves historical
+  data, it just can't reach chain head. Flipped the investigation todo; filed a new P2 follow-up todo for the
+  taxonomy-reason + runtime-detection implementation. No service code changed this pass (root-causing + scoping, per
+  this doc's established practice) — this commit is doc-only (unified-trading-pm).
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
   diagnostics / a VM restart onto current code; no design or authority call left

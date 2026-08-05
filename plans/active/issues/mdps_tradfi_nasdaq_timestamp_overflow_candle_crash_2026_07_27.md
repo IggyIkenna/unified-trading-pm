@@ -153,3 +153,13 @@ dropped/flagged as a single bad-row anomaly.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `market-tick-data-service`'s
   `symbol_rules.py`, the confirmed root of the `ts_event`→`timestamp` naming collision the open P3 todo targets; the 4
   pre-existing entries were unchanged/still accurate).
+
+- **2026-08-05 (slot-6, data_engineering) — independent re-verification of todo 2's trace.** Downloaded + inspected both
+  raw prod parquet files directly (`NASDAQ:EQUITY:{IBIT,ETHA}-USD.parquet`, day=2026-05-07): IBIT 13,717 rows, ETHA
+  4,891 rows, ALL timestamps in ~1.778e18 ns range, ZERO anomalous values — confirms NOT a vendor glitch. Re-verified
+  root cause in current code: `symbol_rules.py:60-61` (`_COLUMN_ALIASES = {"ts_event": "timestamp"}`) +
+  `_apply_column_aliases` (lines 94-106) erases unit signal; `base_adapter.py:213-228` (`_get_local_timestamp_column`)
+  falls through to generic `timestamp` (priority 4) since `ts_event` was renamed; pre-fix `base_adapter.py:291` assigned
+  `unit="us"` to generic `timestamp`. Confirmed both fixes present in current code: `base_adapter.py:285-314` (magnitude
+  heuristic, `market-data-processing-service@f179c96`) + `base_adapter.py:317-319` (NaT coercion, `@c10425d`). Batch5
+  plan todo 13 flipped citing this verification. No code changed — the trace was already complete and correct.

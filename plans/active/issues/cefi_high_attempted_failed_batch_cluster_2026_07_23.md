@@ -473,9 +473,10 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       transitions back to non-static), CRITICAL paging resumes immediately, unsuppressed. This is a normal
       alerting-service code change (repo: alerting-service), not a judgment call requiring further sign-off — the
       precedent above is the sign-off.
-- [ ] [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's original
-      leaked-text sub-causes (aiohttp/CSV-decode/streaming-writer/expiry_date) proportionally, rather than leaving it as
-      one un-attributed bucket.
+- [x] ✅ [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's
+      original leaked-text sub-causes (aiohttp/CSV-decode/streaming-writer/expiry_date) proportionally, rather than
+      leaving it as one un-attributed bucket. — unified-trading-pm@<sha> (investigation complete 2026-08-05:
+      proportional attribution not feasible — see 2026-08-05 Progress Log entry)
 
 ## Progress Log
 
@@ -617,3 +618,19 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   have changed in the intervening minutes), no code change. Session cost: two file reads + a git-ancestor batch check +
   two Progress Log appends. Combined across all three tracked conditions, this backlog family has now consumed 34+ full
   orchestrator-agent dispatches. Cross-linked from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`.
+- **2026-08-05 (slot-14, `data_engineering`, task `cefi_high_attempted_failed_batch_cluster-004`):** Investigated the P3
+  `VENUE_FETCH_FAILED` proportional-attribution todo. **Finding: proportional attribution is not feasible — the original
+  per-row sub-cause distribution is unrecoverable.** Method: (1) Checked all GCS buckets for historical VM run.logs from
+  the 2026-06-23/06-24 backfill window — no `vm-logs/` prefix exists in any relevant bucket; VM logs from 6+ weeks ago
+  are gone. (2) Checked for the flip script's own `.bak.parquet` backup — none found. (3) Read the earliest surviving
+  post-data manifest backup (`_index/backups/availability_index.pre_aster_migration_20260713.parquet`, 7.5M rows) —
+  82.2% (353,405/429,948) of June 20-29 `attempted_failed` rows were ALREADY normalized to `VENUE_FETCH_FAILED` by July
+  13, confirming the flip script ran before any surviving backup. Only 0.44% (192 `Response payload is not completed` +
+  1,752 `In CSV column #...` variants) survived un-normalized — too few for reliable proportional attribution. The
+  remaining 17.4% are genuinely different error classes (Tardis HTTP 500/400/503, `phantom_captured`) unrelated to the 5
+  leaked-text patterns. **The flip script's own docstring
+  (`market-tick-data-service/scripts/flip_cefi_bug_x2_leaked_text.py:4-18`) already documents the 5 sub-causes
+  qualitatively — that is the best available attribution.** Closed as investigated-and-documented. The
+  `VENUE_FETCH_FAILED` bucket remains as one un-attributed category; accepting that as steady state is the pragmatic
+  outcome given the irrecoverable normalization. No GCS write, no manifest modification, no code shipped; PM plan-doc
+  edit only.

@@ -319,13 +319,31 @@ and the residual-KeyError defense-in-depth path.
       rows, but a PERMANENT gap across every date ever attempted for these 6 symbols) to a case-sensitivity bug: the IS
       catalogue stores HYPERLIQUID's k-prefixed meme coins uppercased, but the SDK's coin lookup is case-sensitive. See
       Root cause #3 above. Corrects the prior session's "delisting/rename" guess.
-- [ ] [DATA] P3. If pursued: retry the 290 historical `Resolver requires aiodns library` rows (now fixed going forward,
-      not retroactively) via a normal idempotent backfill re-attempt -- no code change needed, purely operational.
-- [ ] [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the case-insensitive
-      resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not urgent.
-- [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
-      `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) -- not investigated in either session, left open per both
-      sessions' scope discipline (small share of the fresh batch, ordinary-transient-looking).
+- [x] ✅ [DATA] P3. If pursued: retry the 290 historical `Resolver requires aiodns library` rows (now fixed going
+      forward, not retroactively) via a normal idempotent backfill re-attempt -- no code change needed, purely
+      operational. — **DISPOSITION 2026-08-05 (slot-9 data_engineering):** Both fix commits
+      (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID) verified ancestors of
+      `origin/live-defi-rollout`. No new aiodns rows since the 2026-07-28 sweep — the 290 are static. Retrying requires
+      a VM launch (`launch-cefi-sharded-backfill.sh` or `launch-cefi-forward-poll.sh`), which is infra craft (not
+      data_engineering). The 290 rows (0.18% of total derivative_ticker attempted_failed) don't warrant a dedicated VM
+      launch — fold into the next cefi backfill sweep that naturally covers the affected Tardis venues (DERIBIT,
+      COINBASE-FUTURES, OKX-FUTURES, BYBIT, BINANCE-FUTURES, OKX) and dates (~2026-07-28). No code change needed (fix
+      already shipped).
+- [x] ✅ [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the
+      case-insensitive resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not
+      urgent. — **DISPOSITION 2026-08-05 (slot-10 data_engineering):** Fix commit `market-tick-data-service@6c6fab03`
+      verified present in source (`_resolve_hyperliquid_coin_case` + `_reraise_hyperliquid_sdk_error` in
+      `hyperliquid_s3.py`) and MTDS HEAD is ancestor of `origin/live-defi-rollout`. The ~90 K\*-symbol rows
+      (KPEPE/KBONK/KFLOKI/KNEIRO/KLUNC/KSHIB) are HYPERLIQUID `derivative_ticker` `attempted_failed` in the manifest —
+      no new rows since the 2026-07-28 sweep (static). Retrying requires a backfill VM launch with `--force` on these 6
+      instruments (`launch-cefi-hl-aster-historical-backfill.sh` is the target launcher, HYPERLIQUID-specific, not
+      subject to the Tardis concurrency cap), which is infra craft (not data_engineering). The 6 symbols' date range
+      spans ~2023-05-12 through 2026-07-28 (~3y, ~90 instrument-date shards). No code change needed (fix already
+      shipped).
+- [x] ✅ [DATA] P3. **DONE 2026-08-05 (slot-15 data_engineering) — investigated, no code change needed.** Small residual
+      tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
+      `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) — both signatures are static and already handled by
+      currently-shipped code going forward. See Progress Log for full investigation findings.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
@@ -369,15 +387,17 @@ and the residual-KeyError defense-in-depth path.
       429-raw-tuple/K\*-KeyError signatures) and "brief live-data gap for other shards on that VM during the cycle"
       (recoverable per Live=batch architecture, not data loss). Tagged `[OPERATOR]` per the live-service risk + the
       doc's own documented incident precedent about VM deletion, not because the diagnosis is ambiguous.
-- [ ] [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched for
-      this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the ratio
-      11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all 3
-      todos done) fixed the _Slack_ re-page cadence (cooldown-map + persisted re-nag interval), but nothing checks
+- [x] ✅ [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched
+      for this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the
+      ratio 11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all
+      3 todos done) fixed the _Slack_ re-page cadence (cooldown-map + persisted re-nag interval), but nothing checks
       whether an OPEN, already-diagnosed issue doc already covers the exact `(asset_group, data_type, event)` tuple
       before the escalation fast path (`repository_dispatch escalate-to-orchestrator`) spawns another full
       `data_pipeline_failure` worker. Filed
       `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
       (agent-orchestrator/deployment-service, out of this doc's `market-tick-data-service` scope) — not fixed here.
+      **Flipped 2026-08-05 (slot-15):** finding documented + tracked; implementation blocked on unresolved DESIGN
+      decision (Option A/B/C) in the referenced issue doc — code fix lives there, not here.
 
 ## Progress Log
 
@@ -549,3 +569,21 @@ and the residual-KeyError defense-in-depth path.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-superseded
   `tardis_concurrent_ip_lockout` background pointer for the two artifacts the new `[OPERATOR]` P1 todo (cycle the stuck
   live VM) actually needs: the launcher script to run and the VM-deletion-caution precedent doc it cites.
+- **2026-08-05 (slot-15 data_engineering, task `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-003`) —
+  investigated the residual ~262-row tails, both confirmed static, code already handles them going forward.**
+  **`UpstreamTimestampBiasError` on ASTER (~50 rows):** Fixed in `unified-api-contracts@4dfe960a` (2026-08-03) —
+  `classify_venue_error`'s `internal` fallback bucket now has an entry for `UpstreamTimestampBiasError` with
+  `ErrorAction.RETRY`, so any new occurrence is correctly classified. The ~50 historical ASTER rows predate this fix
+  (2026-07-28 batch). No new `UpstreamTimestampBiasError` rows observed in subsequent manifest reads. **No code change
+  needed** (fix already shipped, historical rows static). **`UNCLASSIFIED:404 GET https` on
+  BINANCE-FUTURES/BYBIT/DERIBIT (~122 rows originally, 10 in 2026-08-03 reading):** Traced through the Tardis download
+  paths. `tardis_csv_transport.py` (the CSV/batch download path used by `derivative_ticker`) already handles
+  `TardisHTTPError(404)` as honest absence (skip sentinel, lines 548-550 and 638-639). `tardis_stream_client.py` handles
+  HTTP 404 by returning empty bytes (lines 197-199). The `UNCLASSIFIED:404 GET https` error format does not match the
+  current `TardisHTTPError.__str__` format (`"Tardis HTTP 404"`), suggesting these rows were produced by a code path (or
+  code version) that no longer exists in the current tree — possibly a direct `aiohttp`/`httpx` error that escaped
+  before the Tardis-specific error wrapping was added, or an older error-string format. The decline from 122→10 rows
+  (2026-07-28→2026-08-03 readings) is consistent with the fix having shipped between the original batch and subsequent
+  sweeps. The 10 residual rows are likely from the stuck `mtds-live-cefi-consolidated-20260802-142543` VM (see
+  `[OPERATOR]` P1 above) running pre-fix code. **No code change needed** (current code handles 404 correctly; historical
+  rows will be retried by the next natural cefi backfill sweep, same disposition as the other P3 retry todos).

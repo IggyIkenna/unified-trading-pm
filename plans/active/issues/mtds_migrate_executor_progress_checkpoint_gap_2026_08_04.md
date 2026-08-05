@@ -90,26 +90,27 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 ### Category A — Date-loop scripts: adopt `record_vm_progress` directly (10 scripts)
 
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_aster_cefi_defi_bucket_2026_07_13.py`, mirroring
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_aster_cefi_defi_bucket_2026_07_13.py`, mirroring
       `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s pattern (per-day `Counter` +
-      `record_vm_progress(day)` gated on `apply`). Repo: market-tick-data-service.
+      `record_vm_progress(day)` gated on `apply`). Repo: market-tick-data-service@28860a63.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, same
       pattern — market-tick-data-service@e58592a5.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_tardis_filename_canonical_2026_07_17.py`, same
       pattern — market-tick-data-service@9acc780e.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_dex_pool_symbol_shape_2026_07_09.py`, same pattern —
       market-tick-data-service@a4b26ff7.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_legacy_gas_fees_venue_2026_07_30.py`, same pattern.
-      Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`, same
-      pattern. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_prediction_trades_legacy_bundle_2026_07_28.py`, same
-      pattern. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
-      `sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`, same pattern. Repo:
-      market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
-      `sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`, same pattern. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_legacy_gas_fees_venue_2026_07_30.py`, same pattern —
+      market-tick-data-service@ecca299a.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`,
+      same pattern — market-tick-data-service@9134ff7e.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_prediction_trades_legacy_bundle_2026_07_28.py`, same
+      pattern — market-tick-data-service@9ba50aa0 (slot-4) + @ad9de1ac (slot-7, race — both landed).
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
+      `sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`, same pattern —
+      market-tick-data-service@6ddb0374 (peer slot-8).
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
+      `sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`, same pattern —
+      market-tick-data-service@c98e0abb.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`, same pattern. Repo:
       market-tick-data-service.
@@ -132,3 +133,8 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 - [x] ✅ `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` — already has `record_vm_progress` checkpoint
       (reference implementation).
+
+## Progress Log
+
+- [x] ✅ [DATA] P3. Slot 7 (2026-08-05): shipped `migrate_prediction_trades_legacy_bundle_2026_07_28.py` checkpoint
+      (market-tick-data-service@ad9de1ac), raced with slot-4 (@9ba50aa0) — both landed; idempotent change.

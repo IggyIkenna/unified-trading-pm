@@ -1,0 +1,48 @@
+[Unit]
+Description=Resource Watchdog — cross-process guardian for the planning VM
+Documentation=https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/scripts/infra/resource-watchdog/config.yaml
+After=network.target orchestrator.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/resource-watchdog.sh
+Restart=always
+RestartSec=10
+
+# Run in the same cgroup slice as the orchestrator so we monitor the right processes
+Slice=system.slice
+# Attach to the orchestrator's cgroup for memory accounting
+# (systemd drops us into system.slice by default; we read from the orchestrator's
+# cgroup paths directly in the script — no cgroup nesting needed)
+
+# ── Thresholds (keep in sync with config.yaml) ────────────────────────────────
+Environment=RW_POLL_INTERVAL_SEC=10
+Environment=RW_PRESSURE_HIGH_PCT=80
+Environment=RW_RSS_LIMIT_NORMAL_GB=10
+Environment=RW_RSS_LIMIT_HIGH_GB=4
+Environment=RW_CPU_MAX_PCT=95
+Environment=RW_CPU_WINDOW_MIN=10
+Environment=RW_SWAP_LIMIT_GB=4
+Environment=RW_MIN_PROCESS_AGE_SEC=30
+Environment=RW_MAX_KILLS_PER_MIN=1
+Environment=RW_ORCHESTRATOR_URL=http://localhost:8765
+Environment=RW_MARKER_DIR=/dev/shm/resource-watchdog/kills
+Environment=RW_LOG_FILE=/var/log/resource-watchdog.log
+Environment=RW_DRY_RUN=false
+Environment=RW_ALLOWLIST=orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=no
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log /dev/shm /tmp
+ReadOnlyPaths=/proc /sys/fs/cgroup
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=resource-watchdog
+
+[Install]
+WantedBy=multi-user.target

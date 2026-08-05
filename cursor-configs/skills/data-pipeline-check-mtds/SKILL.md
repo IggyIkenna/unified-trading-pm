@@ -431,6 +431,32 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
 - Same launcher, `--test-run`, scoped to MVP venues covering **both** IS + MTDS MVP scope. No separate force/skip split
   on this leg — `--mode live` already always forces.
 
+### 4a. Live-leg Tardis guard-gap — defer Tardis-sourced venues while a backfill VM is running
+
+> **The live leg's launcher (`launch-mtds-live.sh`) does NOT source `tardis-concurrency-guard.sh`**, unlike the batch
+> force/skip launcher (`launch-mtds-backfill-vm.sh`). So a live-leg smoke check against a Tardis-sourced
+> `(asset_group=cefi, venue=...)` cell can launch a VM concurrently with an active Tardis backfill/sharded VM, with no
+> guard coordination between them.
+>
+> **Mitigation verified 2026-08-02 (BLK-5aa3ce78):** MTDS's live-mode capture path — both `--live-source native`
+> (per-venue native WS connectors) and `--live-source tardis-machine` (the free, unauthenticated `stream-normalized`
+> sidecar) — never opens the authenticated `datasets.tardis.dev` connection the N=1 IP cap protects. So the live VM does
+> NOT materially contend for the shared Tardis IP with a concurrent backfill, and the measured 403-storm /
+> false-`attempted_failed` corruption risk (see § 3 above) has not been observed in live-leg usage. The structural gap
+> remains: the launchers are not coordinated, and if a future live connector change ever routes through the paid
+> endpoint, it would contend.
+>
+> **Operational recommendation:** prefer deferring live-leg checks for Tardis-sourced venues while a real
+> Tardis-consuming backfill/sharded VM is confirmed running. Scoping to cap-exempt venues only (`--tardis-only` is a
+> batch-force flag — live-leg MVP scoping to HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET
+> is manual) avoids the question entirely. If a live-leg check against a Tardis venue is needed concurrently with an
+> active backfill, monitor the backfill VM's `run.log` for 403s during the live VM's window — a zero count confirms no
+> contention this run, but does not structurally guarantee it for future connector changes.
+>
+> Full evidence: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1/P2 closed NOT-A-BUG
+> 2026-08-02; P3 tracked here),
+> `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
+
 ## 5. Write + present the report — do not just point at the file
 
 `report.write_report()` emits a markdown + sibling JSON pair; the script itself prints the **full rendered report**

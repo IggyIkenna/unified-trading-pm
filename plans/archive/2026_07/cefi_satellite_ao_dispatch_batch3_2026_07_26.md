@@ -12,7 +12,7 @@ summary: >-
   named. One genuine cross-tranche conflict was found and initially PARKED for the operator; **ruled 2026-07-28**
   (operator gate-cleanup pass, general design-choice theme applied) and promoted to a 6th dispatchable todo — see
   "Deferred — BLOCKED-OPERATOR-DECISION" below for the resolution record.
-status: active
+status: complete # (was: active) 2026-08-05 -- all 6 todos done, finalized + archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -29,7 +29,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-05"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,7 +53,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
     /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
@@ -63,10 +63,16 @@ context_scope:
 
 # CeFi satellite AO batch 3 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was autonomous with the
-> operator unreachable, so the flip is explicitly reserved for operator review. Flip this frontmatter's `status` to
-> `active` only after that review.
+> **✅ ARCHIVED 2026-08-05 — all 6 todos DONE.** Reconciled all 4 source docs' checkboxes, re-checked all 6 Deferred
+> items (2 gates cleared → batch4 candidates, 4 still blocked with dated re-verification notes), handed the 2
+> provably-shipped stale checkboxes in the deribit-combo doc to a reconcile pass, and archived the parent plan alongside
+> its companion finalize doc in the same commit. See the finalize plan
+> (`/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`) for the full closure trail.
+
+> **Status: draft — NOT dispatched (historical).** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit
+> skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was autonomous
+> with the operator unreachable, so the flip is explicitly reserved for operator review. Flip this frontmatter's
+> `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively:
 > `plans/active/data_completion_cefi_2026_07_15.md` · instruments-service CLI + `t1_batch_scheduler.tf` ·
@@ -78,21 +84,21 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOCS] P3. **Retire the stale "~50% attempted_failed (1.33M)" cefi figure at its source.**
-      `data_completion_cefi_2026_07_15.md`'s E6 CF-7 line item (line ~277) still reads "Investigate the 50%
-      `attempted_failed` rows (1.33M)". That figure was re-measured against the live cefi availability index on
-      2026-07-26 (9,138,791 rows, single read) as **11.61% / 1,060,613 rows** — the denominator grew ~3.5x while the
-      numerator fell, so the "~50%" framing overstates a correctness problem that is already ~95% attributed to open P0
-      work. Edit that line item to (a) strike the stale ~50%/1.33M figure, (b) cite 11.61% / 1,060,613 as the current
-      measurement, and (c) link `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`
-      as the measurement + attribution record. Also strike the same line's "COINBASE↔COINBASE-SPOT mismatch" relabel
-      premise — that doc measured bare `venue == "COINBASE"` at **0 rows** (already fully canonical), so there is no
-      relabel to do. Do NOT touch the blank-`data_type` half of that line item — it is PARKED as a cross-tranche
-      conflict (see Deferred). Repo: unified-trading-pm. Source:
-      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`. **Done when**:
-      `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the COINBASE relabel
-      premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is flipped `[x]` with
-      the commit cited, and prek is green.
+- [x] ✅ [DOCS] P3. **Retire the stale "~50% attempted_failed (1.33M)" cefi figure at its source.** —
+      unified-trading-pm@4d90eeefe `data_completion_cefi_2026_07_15.md`'s E6 CF-7 line item (line ~277) still reads
+      "Investigate the 50% `attempted_failed` rows (1.33M)". That figure was re-measured against the live cefi
+      availability index on 2026-07-26 (9,138,791 rows, single read) as **11.61% / 1,060,613 rows** — the denominator
+      grew ~3.5x while the numerator fell, so the "~50%" framing overstates a correctness problem that is already ~95%
+      attributed to open P0 work. Edit that line item to (a) strike the stale ~50%/1.33M figure, (b) cite 11.61% /
+      1,060,613 as the current measurement, and (c) link
+      `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` as the measurement +
+      attribution record. Also strike the same line's "COINBASE↔COINBASE-SPOT mismatch" relabel premise — that doc
+      measured bare `venue == "COINBASE"` at **0 rows** (already fully canonical), so there is no relabel to do. Do NOT
+      touch the blank-`data_type` half of that line item — it is PARKED as a cross-tranche conflict (see Deferred).
+      Repo: unified-trading-pm. Source: `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
+      **Done when**: `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the
+      COINBASE relabel premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is
+      flipped `[x]` with the commit cited, and prek is green.
 - [x] ✅ [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded
       range.** — instruments-service@2217756f The cefi instruments-service recon job runs on a hardcoded
       `--start-date`/`--end-date`, so it re-processes a fixed historical window every day instead of doing true T+1
@@ -198,6 +204,11 @@ context_scope:
 and promoted to a dispatchable todo above (backfill the resolved-venue majority, reclassify the bare-venue residual);
 this section is retained only as the original conflict record for provenance:
 
+> **🟢 Gate cleared → batch4 candidate (re-verified 2026-08-05, slot-7 finalize todo 2).** Todo 6 executed 2026-07-31
+> (`unified-trading-pm@a3922f9c9`); E6 CF7 doc confirms 0 blank-`data_type` `captured` rows in live manifest,
+> bare-`OKX`×7 reclassified, cross-cutting COINBASE(7) independently verified at 0. Nothing left to extract here — the
+> conflict was fully resolved within batch3 itself.
+
 - **Blank-`data_type` cefi manifest rows — two docs in two tranches claim overlapping ground with different
   dispositions.** `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` proposes
   root-causing **9,750** blank-`data_type` `captured` rows and "either backfill the correct `data_type` per row or
@@ -244,22 +255,53 @@ operator-gated ground confirmed this run:
   open todo in **another tranche** (`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`, `[INFRA] P1`, "Restore
   the manifest consolidator (R5-fix-5)"). Reverting first would re-break every cefi backfill launch. Extract in a later
   batch once that todo lands.
+
+  > **🟢 Gate cleared → batch4 candidate (re-verified 2026-08-05, slot-7 finalize todo 2).** The batch1b `[INFRA] P1`
+  > consolidator-restore todo is ✅ DONE (2026-07-26): all 6 consolidator crons ENABLED, ≥5 consecutive successful runs
+  > each, IS CLI succeeds without `MANIFEST_ALLOW_STALE_FALLBACK` across all 5 `instruments-store-*` buckets. The cefi
+  > backfill launcher (`launch-cefi-instruments-backfill.sh`) no longer carries the flag — verified absent on disk
+  > (2026-08-05). The flag remains in other launchers (`launch-mtds-live.sh`, `launch-features-vm.sh`,
+  > `launch-mtds-backfill-vm.sh`, `launch-instruments-backfill-vm.sh`) only behind `$TEST_RUN` guards (test tier only).
+  > The blocking condition ("consolidator healthy") is satisfied — the revert is effectively done. A batch4 todo can now
+  > extract this: remove the flag from the GCS-uploaded `setup-data-pipeline-vm.sh` if it still carries it, and verify
+  > the cefi launcher's test-tier path is also clean.
+
 - **features-service raw cefi day-scan is unbounded** (`issues/cefi_residual_followups_after_honest_done_2026_07_17.md`,
   `[BACKEND] P2`). The doc itself sequences it AFTER its sibling `[BACKEND] P1` schema-gap todo — and that sibling is
   operator-gated, not AO-eligible: shaping the flat L5 MTDS schema into the calculators' `bids`/`asks`/`mid_price`
   contract is a **feature-definition change** (formula-hash, `/codex/02-data/feature-formula-versioning.md`), which the
   doc explicitly declines to invent. Both stay deferred until that definition is ruled.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** Both `[BACKEND] P1` (schema-gap —
+  > feature-definition change) and `[BACKEND] P2` (day-scan unbounded) remain OPEN (`- [ ]`) in the source doc. No
+  > feature-definition shaping decision has been ruled since the doc was authored (2026-07-17). The 5 raw feature groups
+  > still cannot consume real MTDS data, and the day-scan remains unbounded. The gate condition ("that definition is
+  > ruled") has not been met.
+
 - **`create-code-tarballs.sh` per-repo dirty-tree SKIP** (`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`
   `[SCRIPT] P3`). Cross-plan file collision: `prediction_cross_venue_arb_and_coverage_2026_07_24.md:102` and
   `prediction_consolidated_closeout_2026_07_18.md:406` both carry an OPEN `[OPS] P2` on the **same script** for a
   different defect (the concurrent-fleet tarball-overwrite race). Two live claims on one file across two tranches —
   bundle them, don't race them.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** Both prediction-tranche `[OPS] P2` claims
+  > remain OPEN (`- [ ]`): `prediction_cross_venue_arb_and_coverage_2026_07_24.md:172` (tarball-overwrite race) and
+  > `prediction_consolidated_closeout_2026_07_18.md:449` (same defect). Neither shipped, neither withdrawn. The two live
+  > claims on one file across two tranches still need bundling before this can be drafted as a cefi batch item.
+
 - **cefi zero-capture data_type gaps** (`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` `[SCRIPT] P2`,
   "`perp_funding`=0 captured, `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738"). Measured 2026-06-24; the
   2026-07-26 live re-read in `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` reports a
   materially different picture, and the `futures_chain`/`options_chain` population is the already-P0-tracked DERIBIT
   Tardis-403 backlog. Re-measure before drafting, or it dispatches a worker against month-stale numbers into contested
   ground.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** The 2026-06-24 numbers are now 6 weeks stale.
+  > The E6 CF7 doc's 2026-07-26 broader re-measurement confirms the DERIBIT `futures_chain`/`options_chain` population
+  > (~112-124K each) is already P0-tracked (Tardis-403 backlog), but the specific `perp_funding=0` / `ohlcv_1m=738`
+  > counts have NOT been re-measured against the live index since 2026-06-24. A fresh `data_type`-level census against
+  > the current availability index is still needed before a batch4 todo can be scoped — without it, a worker would be
+  > dispatched against 6-week-stale numbers.
 
 ## Deferred — too-large-or-risky-for-a-batch-todo
 
@@ -270,6 +312,10 @@ operator-gated ground confirmed this run:
   Dated Findings 8/9/10 supersede each other inside the same file and the file's own table is self-labelled STALE.
   `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` already excluded this doc on live-conflict grounds; that exclusion
   still holds. Needs its own dedicated session, not a batch slot.
+
+  > **🔴 Still too-large/risky for a batch todo (re-verified 2026-08-05, slot-7 finalize todo 2).** Doc `status: open`
+  > with 1 open todo and 0 completed — the migration is still live and actively draining. The batch1 exclusion rationale
+  > (live-conflict, prose-only residual, needs dedicated session) still holds unchanged.
 
 ## Reconciliation
 

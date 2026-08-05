@@ -224,9 +224,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                                                                                      todos 6 and 7 below.
+                                                                                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -401,22 +401,15 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       from 2026-07-20). Added `STALL_PROGRESS_REGEX=progress [0-9]+/[0-9]+ files scanned` for the category. Updated
       tests: removed `tradfi-catalogue-canon` from the no-stall-regex guard, added it to the positive regex-verification
       parametrize with the exact expected regex value.
-- [ ] [INFRA] P3. **`*-iah`/`*-iah-purge`'s progress marker is gated on a per-asset_group candidate_count that is
-      unverified per bucket — setting the regex blind risks a WORSE false-kill than today's fallback** (found during
-      todo 5's sweep). `migrate_instrument_availability_hive_2026_08_03.py` /
-      `purge_flat_instrument_availability_hive_2026_08_03.py` both log
-      `"  progress: {done:,}/{scanned.candidate_count:,} objects processed"` gated `done % 5000 == 0` — a genuine
-      per-item marker in principle, but the doc's own todo 7c/7d sizing found only 452,793 `instrument_availability` +
-      12,582 `market_lifecycle` objects total split across the 5 asset_group buckets (`cefi`/`defi`/`tradfi`/`sports`/
-      `prediction`) — the `market_lifecycle` share alone averages well under 5,000/bucket, so any asset_group whose
-      candidate_count for a given run never reaches 5000 would NEVER emit a single matching line. Setting
-      `STALL_PROGRESS_REGEX` on a marker that can structurally never fire is WORSE than leaving it unset: the watchdog's
-      stall timer would then never reset at all (regex-mode ignores byte growth entirely), guaranteeing a false kill at
-      exactly `STALL_TIMEOUT_SEC` regardless of real progress — the exact bug class this whole issue doc exists to fix,
-      reintroduced via a different category. Fix: get the REAL per-asset_group candidate_count for each bucket (a cheap
-      one-time census, not a full migration run) before deciding whether 5000 is safe per-AG, or lower the modulus in
-      the target script itself so it fires reliably regardless of AG size, before ever setting this launcher's metadata.
-      (repo: deployment-service, instruments-service)
+- [x] ✅ [INFRA] P3. **`*-iah`/`*-iah-purge`'s progress marker is gated on a per-asset_group candidate_count that is
+      unverified per bucket — FIXED** — `instruments-service@5406f207` (lowered progress modulus from `done % 5000 == 0`
+      to `done == 1 or done % 500 == 0` in both `migrate_instrument_availability_hive_2026_08_03.py` and
+      `purge_flat_instrument_availability_hive_2026_08_03.py` — guarantees at least one progress line on the first
+      object, then every 500 thereafter, safe for arbitrarily small per-AG populations) + `deployment-service@e09080c`
+      (added `STALL_PROGRESS_REGEX=progress: [0-9,]+/[0-9,]+ objects processed` for all 10 `*-iah`/`*-iah-purge`
+      categories, removed `cefi-iah` from the negative test guard, added `cefi-iah` and `defi-iah-purge` to the positive
+      regex-verification parametrize). Both repos `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`,
+      SHAs verified ancestor of origin.
 - [x] ✅ [INFRA] P2. **`sports` category invocation is broken independent of the stall-regex gap — needs a design
       decision, not a mechanical rename** (incidental finding, todo 5's sweep). `_script_for()`
       (launch-canonical-migration-vm.sh:1164) invokes

@@ -47,13 +47,6 @@ by hand._
   — The "Aggregated source docs" discoverability index extracted verbatim from
   cefi_consolidated_closeout_2026_07_18.md's 2026-07-24 line-cap trim (2nd pass -- the umbrella:true exemption was
   removed same-day, flat 1000L hard cap now applies…
-- [`cefi_consolidated_native_ao_extract_2026_07_25`](./cefi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
-  AO-eligibility triage of cefi_consolidated_closeout_2026_07_18.md's OWN 32 native `- [ ]` todos (not the satellite-doc
-  digest, already covered by cefi_satellite_ao_dispatch_batch1_2026_07_25.md). Classified every open native todo…
-- [`cefi_consolidated_native_ao_extract_2026_07_25_finalize`](./cefi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for cefi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 12 of that plan's todos are done. Mirrors the batch1_finalize pattern, plus one extra:
-  because the…
 - [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -65,13 +58,14 @@ by hand._
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
-- [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](./cefi_satellite_ao_dispatch_batch3_2026_07_26.md) — Third
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode) immediately
-  after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic) and…
-- [`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26`](./cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md)
+- [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md) —
+  Third AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode)
+  immediately after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic)
+  and… **[ARCHIVED 2026-08-05]**
+- [`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md)
   — Gated closeout for cefi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch1/batch2 finalize pattern: reconcile each source
-  doc's…
+  doc's… **[ARCHIVED 2026-08-05]**
 - [`cefi_satellite_ao_dispatch_batch4_2026_07_31`](./cefi_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** —
   Fourth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-31 (scheduled autonomous
   dispatch, tranche=cefi). Phase 0 re-derived the covering-plan set via `generate_ag_closeout_audit_candidates.py` (101…
@@ -192,12 +186,11 @@ by hand._
 - [`defi_consolidated_closeout_2026_07_18`](./defi_consolidated_closeout_2026_07_18.md) — Single coordination plan that
   AGGREGATES (references, does NOT duplicate) every open defi + defi-touching IS/MTDS plan/issue into ONE ordered pass,
   mirroring cefi_consolidated_closeout_2026_07_18.md /…
-- [`defi_consolidated_native_ao_extract_2026_07_25`](./defi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
-  AO-eligibility triage of defi_consolidated_closeout_2026_07_18.md's OWN native `- [ ]` todos (not its satellite source
-  docs — those already got the defi_satellite_ao_dispatch_batch1_2026_07_25.md treatment). Of 19 open native todo…
-- [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](./defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for defi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each shipped todo's evidence back into…
+- [`defi_consolidated_native_ao_extract_2026_07_25`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md)
+  — **[ARCHIVED 2026-08-05]** — Fresh AO-eligibility triage of defi_consolidated_closeout_2026_07_18.md's OWN native
+  `- [ ]` todos. All 5 todos shipped; evidence reconciled back into defi_consolidated_closeout_2026_07_18.md.
+- [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
+  — **[ARCHIVED 2026-08-05]** — Gated closeout, all 3 todos complete. Archived alongside its parent extraction plan.
 - [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04`](./defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md)
   — Operator corrected this session's initial posture (treating several findings as "low priority, scope only, defer") —
   the actual bar is ZERO non-canonical values across every axis, permanently, with live writers and backfills verified
@@ -239,9 +232,10 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
-- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](./defi_satellite_ao_dispatch_batch8_2026_08_02.md) — Eighth
-  AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor` running `/na-eligibility-audit defi`
-  (2026-08-02). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
+- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](../archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md) —
+  ✅ **ARCHIVED 2026-08-05.** Eighth AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor`
+  running `/na-eligibility-audit defi` (2026-08-02). Todo completed 2026-08-05 (force+skip AAVE-oracle sample-download
+  verified). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
 - [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](./defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch8_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until that plan's todo is done. Mirrors batch1-7-finalize: reconcile the single source doc…

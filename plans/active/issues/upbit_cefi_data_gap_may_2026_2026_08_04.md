@@ -16,7 +16,7 @@ repos: [market-tick-data-service, instruments-service]
 scope: [engineer]
 tags: [upbit, cefi, data-gap, mvp, tardis, coverage]
 related:
-  - /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md
+  - /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md
   - /plans/active/cefi_consolidated_closeout_2026_07_18.md
   - /codex/02-data/mvp-scope-canonical.md
 created: "2026-08-04"

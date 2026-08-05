@@ -21,9 +21,11 @@ summary: >-
   vantage: both scripts exist; the readable crontabs (ubuntu/root) show no invocation (no-access, INCONCLUSIVE —
   per-slot clones may carry their own crontab); and the github-glue-slot-refresh.timer that IS firing is unrelated (it
   refreshes the GitHub-glue runner's clone to main, not worker-slot LDR ff-pull). P2.
-status: open
+status: resolved
 assigned_vm: NA
 resolved_by:
+  "interactive session, 2026-08-05 — VM confirmed terminated 2026-08-03 without the WIP-preservation pass; escalated to
+  operator as likely-permanent loss (no snapshot/volume survives)"
 locked_by:
 context_scope:
   [
@@ -175,30 +177,26 @@ uncommitted work above must be preserved before any decommission/reclaim action 
       / next step" above). — ✅ 2026-07-30, slot 4: confirmed firing (live process + log evidence) on both worker-fleet
       hosts (`ip-172-31-5-118`, `hk`); fleet-wide 19/19 has self-resolved to 3/36, all 3 isolated to the human-planning
       VM, not the worker fleet — nothing to re-arm on the hosts this worker could reach.
-- [ ] [OPERATOR] P1. **Preserve the human-planning VM's (`i-0dd9812a96cdda5dc`, `172.31.0.185`) unpushed WIP BEFORE any
-      decommission/teardown/reclaim action touches it** — escalated 2026-08-02 (review role, corroborating main
-      agt-cb1851's independent read; see "Update 2026-08-02" above for the full evidence). Per the inherited-dirty-WIP
-      rule (CLAUDE.md § Multi-agent safety: a dead claim means inherit + commit, not discard), this needs a preservation
-      pass, not a decommission decision made blind to it. Checklist (needs direct/console/SSM access this worker session
-      does not have — see the P3 item below for the same access gap): 1. Confirm liveness first: is the instance
-      actually stopped/terminated, or running-but-unreachable from worker sessions only (e.g. a network/IAM gap, not a
-      dead box)? 2. For each of the 5 dirty repos (`market-tick-data-service` 2 files, `strategy-service` 1 file,
-      `system-integration-tests` 2 files, `unified-api-contracts` 1 file, `unified-trading-pm` 5 files — see the
-      inventory above for exact dates), run `git -C .tabs/0/<repo> status` + `diff` on that VM: if it's real work,
-      commit + push to `live-defi-rollout`; if genuinely disposable scratch, note that explicitly rather than silently
-      dropping it. 3. Only after preservation is confirmed (or the content is confirmed disposable), proceed with
-      whatever liveness/decommission call the P3 item below resolves to. P1 rather than P0: nothing is actively broken
-      today (no live traffic depends on this host) — the risk is irreversible loss of real work the moment anyone
-      reclaims/wipes the instance without first checking it.
-- [ ] [OPERATOR] P3. **Check cron/ff-pull health on the human-planning VM (`i-0dd9812a96cdda5dc`) for slots 0-2** —
-      `slot 0` stale since 2026-07-25, `slot 1`/`slot 2` since 2026-07-28T14:02Z per `GET /api/fleet/git-health`. Needs
-      either (a) SSM/direct access to that VM to confirm whether `slot-cron-ff-pull.sh`/ `slot-git-status-report.sh` are
-      wired there at all (plausibly they're not, since it's an interactive-only VM per CLAUDE.md, not a standing worker
-      host) and re-arm if genuinely dropped, or (b) a ruling that this staleness is expected/accepted for that VM's
-      slots and the git-health aggregator should exclude/label them differently. A worker session here (AWS IAM user
-      `ikenna-worker`) could not reach it: `ssm:SendCommand` and `sts:AssumeRole` onto `uts-orchestrator-epic-role` were
-      both denied — this is a genuinely different identity than the ambient orchestrator role, so it doesn't qualify for
-      the IAM self-service rule (repo: `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`).
+- [x] [OPERATOR] P0. **RESOLVED (badly) 2026-08-03/05 — the VM was terminated WITHOUT this preservation pass running,
+      and the WIP flagged above is now very likely PERMANENTLY LOST.** A separate, unrelated session executed
+      `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s human-planning-VM-retirement todo on 2026-08-03,
+      terminating `i-0dd9812a96cdda5dc` after only a `who`/`w`/`tmux`/`uptime` idleness check — it did NOT cross-check
+      this doc's already-filed (2026-08-02, one day earlier) P1 warning about the 5-repo/11-file uncommitted WIP before
+      acting, a pre-task plan/issue-conflict-check miss. Re-verified 2026-08-05:
+      `aws ec2 describe-instances     --instance-ids i-0dd9812a96cdda5dc` returns EMPTY (fully terminated, not just
+      stopped), and NO EBS snapshot/volume for it exists anywhere in the account
+      (`describe-snapshots`/`describe-volumes` both checked, the only snapshot in the account is unrelated, dated
+      2026-06-02). **There is no recovery path** — if the uncommitted diffs in `market-tick-data-service` (2 files),
+      `strategy-service` (1 file), `system-integration-tests` (2 files), `unified-api-contracts` (1 file), and
+      `unified-trading-pm` (5 files, dated 2026-07-22..24) were never pushed or replicated elsewhere, they are gone.
+      **Escalated directly to the operator in the same session that found this** (2026-08-05) rather than silently
+      closing the todo — flagging this as a real, if now-unfixable, process gap: decommission actions must grep
+      `plans/active/issues/` for the target resource ID before acting, not just check live-session idleness.
+- [x] [OPERATOR] P3. **MOOT 2026-08-05** — the human-planning VM no longer exists (terminated 2026-08-03, confirmed
+      above), so there is no cron/ff-pull health left to check or re-arm on it. The fleet git-health scanner will
+      naturally stop reporting slots 0-2 once its own stale-host cache ages out; no scanner-side allowlist action is
+      needed for THIS host (contrast: `fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md`'s allowlist todo,
+      also mooted for the same reason).
 
 ## Progress Log
 
@@ -223,3 +221,9 @@ uncommitted work above must be preserved before any decommission/reclaim action 
   does not apply. The new P1 adds a WIP-preservation requirement over 5 dirty repos on that host; still operator-only.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the 2
   per-slot cron scripts + the 2 codex SSOTs covering the access-denial and the multi-agent worktree model).
+- **2026-08-05 (interactive session)**: while cleaning up dangling references to the terminated human-planning VM (per
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own follow-up todo), found this doc's P1 WIP-preservation
+  warning had never been actioned before that VM's 2026-08-03 termination. Re-verified live: instance fully gone, no
+  snapshot/volume survives anywhere in the account — the flagged WIP (if never pushed elsewhere) is unrecoverable.
+  Resolved both todos above with the honest outcome (P0: likely-lost WIP, escalated to operator directly; P3: moot, host
+  no longer exists) rather than leaving them open against a VM that can no longer be checked.

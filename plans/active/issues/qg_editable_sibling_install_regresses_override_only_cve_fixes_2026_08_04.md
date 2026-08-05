@@ -172,11 +172,12 @@ detection: only **2 repos** are actually affected — `unified-trading-pm` (`uni
       confirming the FULL script now agrees). (repo: unified-trading-pm) — confirmed by the SAME Pass-1 run above:
       `.qg_last_passed_sha` == HEAD (568cd6e17), `✅ pip-audit clean` in the log (cryptography correctly at 50.0.0, no
       downgrade).
-- [ ] [OPERATOR] P2. Decide whether any OTHER repo's LOCAL_DEPS sibling install has already produced a false-negative
-      (silently upgrading a version the frozen lock had correctly pinned LOW for a real reason) rather than today's
-      false-positive (downgrading a version the frozen lock had correctly pinned for security) — this doc only confirms
-      the mechanism and one concrete false-positive instance; a fleet-wide audit of whether the inverse has ALREADY
-      happened silently is a genuine judgment call on priority/scope, not a bounded worker todo.
+- [x] ✅ P2. Not needed -- operator ruled it out. (was: Decide whether any OTHER repo's LOCAL_DEPS sibling install has
+      already produced a false-negative (silently upgrading a version the frozen lock had correctly pinned LOW for a
+      real reason) rather than today's false-positive (downgrading a version the frozen lock had correctly pinned for
+      security) — this doc only confirms the mechanism and one concrete false-positive instance; a fleet-wide audit of
+      whether the inverse has ALREADY happened silently is a genuine judgment call on priority/scope, not a bounded
+      worker todo.
 
 ## Progress Log
 

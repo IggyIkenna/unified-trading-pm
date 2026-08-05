@@ -109,11 +109,19 @@ context_scope:
       (then `LAUNCH_GROUPS=light` once heavy completes/frees the Tardis slot). Evidence: `deployment-service@4fff44f`
       (quickmerge-landed, verified ancestor of `origin/live-defi-rollout`). (repo: market-tick-data-service backfill /
       deployment-service)
-- [ ] [DATA] P3. **BINANCE-DELIVERY has zero real data.** `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`)
-      has ZERO real captured rows in the manifest — only 7 `attempted_failed` rows dated 2026-07-26. The registered
-      floor is unverifiable against measured reality because no real data exists yet. Investigate whether Binance COIN-M
-      delivery contracts are actually being fetched at all, or whether this is a dead/never-implemented shard. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P3. **BINANCE-DELIVERY — investigated 2026-08-05 (slot-5).** NOT a dead/never-implemented shard — the
+      code is fully wired (venue_mapping.py, symbol_rules.py, Tardis adapter) and Tardis has real data (availableSince
+      2020-06-16, 18 perpetuals + dated futures). But the venue is a ZOMBIE: deliberately removed from MVP scope
+      (operator decision #3, 2026-06-27, mvp_scope.py v10), so the instrument catalog returns zero instruments. The
+      forward/cron pipeline STILL attempts it daily (704 manifest rows: 669 attempted_failed + 35 empty_confirmed,
+      2026-05-01..2026-08-04, 6 data_types, ALL with instrument_count=0.0) — the venue is in VENUES_BY_ASSET_GROUP so
+      it's iterated, but catalog-tagging is MVP-gated so every shard fails. The backfill launcher
+      (launch-cefi-sharded-backfill.sh) does NOT include it in default VENUES or _venue_years(), so no backfill has ever
+      targeted it. **Resolution options: (1) remove from VENUES_BY_ASSET_GROUP["cefi"] to stop the zombie** (cleanest —
+      keeps the code wiring for if/when COIN-M delivery becomes MVP); (2) operator re-adds to MVP scope + tags
+      instruments (reverses #3); (3) do nothing (not recommended — 704 wasted rows and Tardis API quota burn for a venue
+      nobody consumes). The venue_mapping.py coverage_start of 2020-01-01 slightly overstates vs Tardis's measured
+      2020-06-16 but is cosmetic for a non-MVP venue. (repo: market-tick-data-service / unified-api-contracts)
 
 ## Progress Log
 
@@ -127,3 +135,13 @@ context_scope:
   cefi_consolidated_closeout) dropped since only the open BINANCE-DELIVERY P3 investigation remains; swapped in
   `symbol_rules.py` (where BINANCE-DELIVERY is coded) and the sharded-backfill launcher (the DERIBIT fix's precedent the
   next launch would follow).
+- **slot-5 2026-08-05**: closed the BINANCE-DELIVERY P3 investigation. Root cause: venue is a zombie — fully wired code
+  (venue_mapping, symbol_rules, Tardis adapter), real Tardis source data exists (binance-delivery, availableSince
+  2020-06-16, 18 perps + dated futures), but deliberately removed from MVP scope (operator decision #3, 2026-06-27,
+  mvp_scope.py v10). The venue IS in VENUES_BY_ASSET_GROUP["cefi"] so the forward/cron pipeline attempts it daily, but
+  catalog-tagging is MVP-gated → zero instruments → 704 attempted_failed/empty_confirmed rows (2026-05-01..2026-08-04,
+  all with instrument_count=0.0). The sharded backfill launcher does NOT include it. Resolution: remove from
+  VENUES_BY_ASSET_GROUP["cefi"] to stop the zombie (cleanest — keeps code wiring for future); OR operator re-adds to MVP
+  (reverses #3). All 3 todos in this doc now closed; doc archival eligible but header note says fold into parent doc +
+  delete — out of scope for this task. Evidence: manifest query (bounded column-projected read, features-service venv),
+  Tardis API probe, code audit of venue_mapping.py, symbol_rules.py, mvp_scope.py v10, launch-cefi-sharded-backfill.sh.

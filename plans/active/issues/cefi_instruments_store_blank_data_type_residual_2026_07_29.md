@@ -114,7 +114,11 @@ downloaded index copy; no prod manifest writes were made).
 > shared tooling (resolved + archived, 4/4 done), which shipped the instruments-service `--operation reprocess-shards`
 > CLI. Prefer that over a fresh one-off script if the `record_captured` path below turns out not to be enough.
 
-- [ ] [DATA] P3. Execute the correction for the single known row
+- [x] ✅ [DATA] P3. Execute the correction for the single known row — instruments-service@bef3a001 + evidence:
+      `scripts/correct_cefi_bitfinex_spot_blank_data_type_2026_08_05.py --apply` (Step 1: wrote correctly-keyed row with
+      `data_type=instruments` via `record_captured_from_counts` per-VM shard; Step 2: removed orphaned blank-key row
+      from canonical index via CAS-safe read→filter→write; verification: 0 `captured`+blank `data_type` rows remain in
+      `instruments-store-cefi-prd-central-element-323112`, confirmed via `read_availability_index` spot-check)
       (`date=2023-12-16, venue=BITFINEX-SPOT,     capture_status=captured, row_count=284`, target
       `data_type=instruments` — matching all 2,398 sibling BITFINEX-SPOT captured rows): write a correctly-keyed row via
       `NormalisingManifestWriter.record_captured(...)` (NOT a raw parquet overwrite — `data_type` is a row-key column,

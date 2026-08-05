@@ -409,10 +409,12 @@ not a mechanical column-list copy.
       (`plans/audit/results/     available_at_fill_rate_audit_2026_07_13.py:51`,
       `scripts/qg/honest_coverage_ratchet.py:66`): all projected to downstream column usage per direct read.
       e2e-testing@460270b + unified-trading-pm@87c8aa2b7.
-- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9)** — `unified-trading-pm@dbce7a24c`.
-      **unified-trading-pm** — added `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk,
-      production-code-only, mirrors `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern
-      exactly: `Finding`/`BaselineEntry` dataclasses, `baseline_key = (repo, file, line, function)`,
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-31 (slot-5, checkbox flip verified slot-9); QG baseline re-synced 2026-08-05
+      (slot-13, data_engineering, batch-6 todo 25)** — `unified-trading-pm@dbce7a24c` (original QG check) +
+      `unified-trading-pm@d987f9a08` (batch-6 baseline sync). **unified-trading-pm** — added
+      `scripts/quality_gates/check_bare_read_availability_index.py` (AST-walk, production-code-only, mirrors
+      `check_manifest_writer_missing_write_before_return.py`'s shrinking-ratchet pattern exactly:
+      `Finding`/`BaselineEntry` dataclasses, `baseline_key = (repo, file, line, function)`,
       `# QG-allow: bare-read-availability-index` inline escape) + a bootstrapped 24-entry
       `read_availability_index_bare_call_baseline.yaml` (classified `wrapper_alias_already_projected_internally` /
       `intentionally_bare_verbatim_schema_required` / `pending_triage`) + `test_check_bare_read_availability_index.py`

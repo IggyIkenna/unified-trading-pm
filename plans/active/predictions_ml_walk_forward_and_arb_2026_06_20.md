@@ -104,13 +104,10 @@ downstream of the sports-half FSS feature production (the Group E gate).
       `ETH_UP_DOWN_INTRADAY`, `ELECTION_PRESIDENT_2028`, `OSCARS_BEST_PICTURE`) — have **ZERO** manifest rows in the
       live prediction manifest as of 2026-07-27T16:01:28Z; completion % for the todo's own named HOURLY/ELECTION
       examples is undefined (0/0), not merely low.
-- [ ] [DIAG] P2. Investigate why
-      `BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/`ELECTION_PRESIDENT_2028`/ `OSCARS_BEST_PICTURE`
-      have zero `prediction_canonical_question_group` manifest rows (captured, empty_confirmed, attempted_failed, AND
-      expected_unattempted all zero) — is this a genuinely-not-yet-listed market (honest-absence, no action needed) or a
-      classifier/writer gap silently dropping these 8 groups before any manifest row is ever emitted (a correctness
-      bug). Repo: market-tick-data-service. Source: this todo's completion-% slice, recorded 2026-07-27 (slot-6) in the
-      Progress Log below.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-05 (slot 15, data_engineering) — verdict recorded, both checkboxes flipped.**
+      Investigate why 8 registered CQGs have zero manifest rows. **Verdict**: 6 are genuinely-empty-by-design (markets
+      don't exist) + 2 are classifier gaps (taxonomy→CQG underlying-key mismatch). Full evidence below in the Progress
+      Log. Repo: unified-trading-pm (diagnostic only, no code change). Source: batch6 plan todo 10.
 
 ## Success criteria
 
@@ -187,3 +184,40 @@ recorded; the Group-F gate decision is made from the real AUC/calibration number
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added 3 source paths (Model 2A acceptance metrics,
   FSS `arb_calculator`, and the MTDS manifest-finalize orchestrator the open `[DIAG]` zero-manifest-rows todo targets),
   previously codex+epic only.
+
+### 2026-08-05 (slot 15, data_engineering, dispatch `prediction_satellite_ao_dispatch_batch6-010`) — [DIAG] P2 verdict
+
+**Investigation scope**: why `BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/
+`ELECTION_PRESIDENT_2028`/`OSCARS_BEST_PICTURE` (8 groups) have zero manifest rows across all capture_status columns.
+
+**Method**: read the full UAC registry (`canonical_groups.py` — all 8 are properly registered with complete
+`CANONICAL_GROUP_METADATA`), the classifiers (`classifiers.py` — Polymarket slug→CQG and Kalshi ticker-prefix→CQG
+routing), the MTDS writer (`manifest_finalize.py`'s `_finalize_prediction_bundles` — handles zero-count CQGs correctly
+via the zero-trading-day sentinel fan-out at lines 501-522), and the taxonomy (`_prediction_market_taxonomy.py` — slug
+prefixes + resolution-period inference). Then live-queried both exchanges: Kalshi's public `/trade-api/v2/series/`
+endpoint (verified working — `KXBTCD` returns a real series object) and Polymarket's Gamma API.
+
+**Per-group verdict**:
+
+| Group                     | Verdict                              | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BTC_UP_DOWN_HOURLY`      | Genuinely-empty-by-design            | Kalshi `KXBTCI` → `{"error":"not_found"}` — series never existed. The classifier prefix entry (`KXBTCI`→`BTC_UP_DOWN_HOURLY`) is dead code: preemptive registration for a series Kalshi never created. Kalshi's actual BTC markets (`KXBTCD`/`KXBTC`) map to DAILY/PRICE_RANGE groups. No Polymarket hourly-BTC markets found.                                                                                                                                                                                                                                    |
+| `ETH_UP_DOWN_HOURLY`      | Genuinely-empty-by-design            | Kalshi `KXETHI` → `{"error":"not_found"}` — same pattern as BTC. The classifier prefix entry (`KXETHI`→`ETH_UP_DOWN_HOURLY`) is dead code.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `BTC_UP_DOWN_5MIN`        | Genuinely-empty-by-design            | Kalshi's shortest BTC interval is 15min (`KXBTC15M` → `BTC_UP_DOWN_15MIN`, which HAS data). No Kalshi 5min BTC series exist (confirmed via full Crypto category listing: 272 series, 0 with 5min frequency). Kalshi classifier has no 5min prefix mapping at all (a minor gap if 5min series ever launch, but currently no-op). No Polymarket 5min BTC markets found.                                                                                                                                                                                             |
+| `ETH_UP_DOWN_5MIN`        | Genuinely-empty-by-design            | Same as BTC 5min. Kalshi has `KXETH15M` (→ `ETH_UP_DOWN_15MIN`, has data) but no 5min series.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `BTC_UP_DOWN_INTRADAY`    | Genuinely-empty-by-design            | No Kalshi intraday-BTC series exist. No Polymarket intraday-BTC markets found. The Polymarket taxonomy CAN classify intraday-resolution markets (detects "minute"/"intraday" tokens in slugs), but no such slugs exist for BTC.                                                                                                                                                                                                                                                                                                                                   |
+| `ETH_UP_DOWN_INTRADAY`    | Genuinely-empty-by-design            | Same as BTC intraday.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `ELECTION_PRESIDENT_2028` | **Classifier gap** (Polymarket side) | The `_prediction_market_taxonomy.py` slug prefix map routes `presidential-`/`us-president-` → `(POLITICS_US, "US_ELECTION")`, but `classifiers.py`'s `_CATEGORY_UNDERLYING_TO_EVENT_GROUP` expects key `(POLITICS_US, "PRESIDENT_2028")`. These don't match — all Polymarket presidential election markets (e.g., real live market `will-gavin-newsom-win-the-2028-democratic-presidential-nomination`) fall to OTHER. Kalshi has no presidential ticker prefix mapping. **Impact**: real presidential-2028 markets exist but are silently mis-bucketed to OTHER. |
+| `OSCARS_BEST_PICTURE`     | **Classifier gap** (Polymarket side) | Same pattern: taxonomy maps `oscars-`/`oscar-` → `(CULTURE, "OSCARS")`, but the CQG event group map expects key `(CULTURE, "OSCARS_BEST_PICTURE")`. All Polymarket Oscars markets fall to OTHER.                                                                                                                                                                                                                                                                                                                                                                  |
+
+**Root cause summary**: not a writer gap (the manifest writer's zero-trading-day sentinel correctly handles absent CQGs)
+and not registry drift (all 8 groups are fully registered). The 6 sub-daily BTC/ETH groups are honest absence — the
+markets simply don't exist on either venue. The 2 event groups (ELECTION_PRESIDENT_2028, OSCARS_BEST_PICTURE) are
+classifier gaps: the taxonomy emits a different `underlying` value than the CQG event-group map expects, so real markets
+route to OTHER instead.
+
+**Recommendation**: fix the 2 classifier gaps (add `"US_ELECTION"`→`ELECTION_PRESIDENT_2028` and
+`"OSCARS"`→`OSCARS_BEST_PICTURE` entries to `_CATEGORY_UNDERLYING_TO_EVENT_GROUP`, or align the taxonomy to emit the
+expected keys). The 6 dead Kalshi ticker-prefix entries (`KXBTCI`/`KXETHI`) are harmless dead code — remove or annotate
+as preemptive. The existing `[UAC] P2` politics/geo canonicalization todo in batch6 already covers the
+ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a follow-up in the batch6 plan.

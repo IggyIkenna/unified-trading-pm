@@ -556,7 +556,9 @@ sports's own consolidated closeout plan; short digest only:
   (6 open, all `[OPERATOR]/[INFRA]/[DATA]/[REVIEW] P3`) — top: decide whether to pursue a live sports-odds ingestion
   path at all (the structural blocker); once that's a yes, scope the MTDS live-odds connector. +4 more — see file.
 - [`plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
-  — 0 open todos (closed/archived/record-only)
+  — 0 open todos. **DECIDED 2026-07-23**: naming scheme canonicalized per
+  [`sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
+  (Option A, UAC-as-SSOT); scoped 3-repo migration in flight — do not re-litigate.
 - [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
   (resolved) — 0 open todos (closed/archived/record-only)
 

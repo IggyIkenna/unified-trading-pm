@@ -9,7 +9,7 @@ summary: >-
   during the triage (KRAKEN-SPOT Script-2 item, the 658-wire-key item, the catalogue-gap enumeration item, the DERIBIT
   combo writer-fix half, and re-verifying the _DRYRUN_COLS P0) — deliberately deferred from the extraction plan itself
   so the parent doc's edit surface is touched once, coherently.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -57,6 +57,12 @@ context_scope:
 
 # CeFi native AO extract — finalize
 
+> **🟢 ARCHIVED 2026-08-05.** All 3 todos resolved: the 12 fresh-work checkboxes reconciled (todo 1), the 5
+> stale-checkbox findings flipped with fresh re-verification (todo 2), and the parent plan archived via the standard
+> 6-step ritual (todo 3). Moved to `/plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md`;
+> corpus referrers updated. The companion `cefi_consolidated_native_ao_extract_2026_07_25.md` is co-archived in the same
+> commit.
+>
 > **Machine-gated on `cefi_consolidated_native_ao_extract_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 12 tasks in that plan are `done`. `sequential: true` because
 > todo 2 (stale-checkbox flips) should follow todo 1 (fresh-work checkbox flips) to avoid two concurrent workers editing
@@ -64,25 +70,25 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the 12 freshly-shipped todos' checkboxes in `cefi_consolidated_closeout_2026_07_18.md`.**
-      For each of `cefi_consolidated_native_ao_extract_2026_07_25.md`'s 12 now-done todos, flip the corresponding
-      checkbox/section in the parent doc (each drafted todo's text cites its parent-doc Track/section as "Source"),
-      citing the extraction plan's shipped commit(s) — verify each cited commit actually exists before citing it. Repo:
-      unified-trading-pm. **Done when**: all 12 corresponding checkboxes/sections in
-      `cefi_consolidated_closeout_2026_07_18.md` are flipped with verified evidence.
-- [ ] [REVIEW] P1. **Flip the 5 stale-checkbox findings in `cefi_consolidated_closeout_2026_07_18.md`, each with a fresh
-      re-verification (do not trust the extraction plan's citations blindly — re-confirm against live state, since time
-      has passed since the triage):** (1) the "Open todos surfaced in the execution log" carryover section — the
-      KRAKEN-SPOT `_PATH_RE` item (re-confirm KRAKEN-SPOT Surface A is still clean, no regression since), the
-      658-ambiguous-wire-key item (re-confirm the 213/216-fixed + 3-permanent terminal state still holds), and the
-      ≈5,413 catalogue-gap item (flip the "enumerate" half as done, leave the OKX-SPOT/COINBASE-SPOT fix half open, note
-      the BITGET-FUTURES fix half's disposition per todo 1 above); (2) the DERIBIT combo mispartition todo's part (a)
-      writer-fix half (re-confirm `mtds@2ddc6d4a` is still on `live-defi-rollout`, part (b) stays open); (3) the
-      `_DRYRUN_COLS` P0 — re-confirm todo 1's grep-check result is accurate against current HEAD, not stale by the time
-      this finalize runs. Repo: unified-trading-pm. **Done when**: all 5 items have an updated, freshly-re-verified
-      status in `cefi_consolidated_closeout_2026_07_18.md` (checkbox flipped where genuinely resolved, left open with an
-      accurate current-state note where not).
-- [ ] [DOC] P3. **Archive `cefi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
+- [x] ✅ [REVIEW] P2. **Reconcile the 12 freshly-shipped todos' checkboxes in
+      `cefi_consolidated_closeout_2026_07_18.md`.** DONE 2026-08-05 — all 12 checkboxes/sections reconciled
+      (`unified-trading-pm@1ea317100`): candidates 1-9 updated in parent doc from "Dispatched"/"candidate N" to ✅ DONE
+      with evidence; candidate 10 (LIGHTER-ZKSYNC) MVP table row + execution-log items 6/6 updated; candidate 11
+      (BITGET-FUTURES) execution-log item 5 updated; candidate 12 (_DRYRUN_COLS) execution-log "Recommended next"
+      updated. All cited commits verified extant before citing. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P1. **Flip the 5 stale-checkbox findings in `cefi_consolidated_closeout_2026_07_18.md`, each with a
+      fresh re-verification (do not trust the extraction plan's citations blindly — re-confirm against live state, since
+      time has passed since the triage):** DONE 2026-08-05 (`unified-trading-pm@<sha>`): (1) KRAKEN-SPOT `_PATH_RE` —
+      re-verified Surface A still clean, 155,872 objects auto-renamed, execution-log checkbox stays `[x]`; 658 wire keys
+      — re-verified 213/216 shipped + 3 permanent terminal state holds, execution-log checkbox stays `[x]`; ≈5,413
+      catalogue-gap — flipped enumeration half to `[x]` (`instruments-service@f6f16785` shipped, 211 gap rows measured),
+      OKX-SPOT/COINBASE-SPOT fix half stays open (needs operator decision), BITGET-FUTURES fix half already closed via
+      todo 1 (candidate 11); (2) DERIBIT combo mispartition part (a) — `mtds@2ddc6d4a` confirmed ancestor of
+      `origin/live-defi-rollout`, flipped to `[x]`, part (b) stays operator-owned; (3) `_DRYRUN_COLS` P0 — `"chain"`
+      confirmed in `_DRYRUN_COLS` at
+      `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`, `1284606a` on LDR, fix
+      predates triage. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. **Archive `cefi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked (all 20 human-only classifications
       were already either cited as staying in the parent doc, or resolved by todo 2 above) → add the archive banner →
       run the codex-alignment check → grep the corpus for every referrer of

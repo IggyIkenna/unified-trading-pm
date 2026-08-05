@@ -237,6 +237,14 @@ resets (the persistent-session `/boot`→`/done` design means nothing else ever 
 `/heartbeat` hand a saturated slot a brand-new task 88 seconds after `/done` had correctly withheld one for that same
 slot — the `directive` field is the server-side fix for both; the honor-system prose line alone was not enough.
 
+**Backend force-inject at `context_worker_force_compact_pct` (default 60, operator ruling 2026-08-05 — separate from the
+`directive` gate above and NOT something you opt into).** Once your self-reported `context_used_pct` crosses this
+threshold, the keeper injects `/pre-compact` then `/compact` directly into YOUR OWN pane, unconditionally — it does NOT
+wait for you to look idle the way the main/review agents' equivalent does, because you run one bounded task, not a
+multi-day loop. If you see `/pre-compact` or `/compact` text appear and submit in your pane that you didn't type, this
+is why — it is expected, not an intrusion or a bug. Finish whatever the checkpoint skill asks, then continue your task
+normally once `/compact` completes.
+
 **`directive: "reset_before_next"`** (`/done` only). A SECOND, independent reason `next_task` can come back withheld —
 now the COMMON case, not the exception:
 

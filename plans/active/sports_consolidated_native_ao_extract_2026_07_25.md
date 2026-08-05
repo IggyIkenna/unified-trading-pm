@@ -339,32 +339,26 @@ context_scope:
       `BLK-2f9e7680`) the actual denominator todo is split out into its own plan with a real machine dispatch gate,
       rather than staying a bouncing checkbox here. See the extracted plan for current status. Source:
       `sports_consolidated_closeout_2026_07_19.md:536-541`.
-- [ ] [CODE] P2. **Track H — implement RAISE-on-all-NaT for `AvailableAtStampingError`** (operator-ruled: fail loud at
-      the shard that can't be stamped, not skip-with-record) at the CF-8 fix's own code path
-      (`market-tick-data-service@af627b5b`). **Scoping note**: only the CODE change ships via this todo — the CF-8
-      production maintenance-window RUN itself stays human/operator-gated (needs an operator to lift stop `BLK-d9137d48`
-      and schedule the window), so this candidate does not require that window to have run; it just needs to exist and
-      be tested against the already-shipped CF-8 fix's code path. (repo: market-tick-data-service). **Done when**: a
-      test demonstrates an all-NaT shard raises `AvailableAtStampingError` instead of silently skip-recording. Source:
+- [x] ✅ [CODE] P2. **Track H — implement RAISE-on-all-NaT for `AvailableAtStampingError`** —
+      market-tick-data-service@84ee34f2. Removed `AvailableAtStampingError` from `_stamp_sports_shard_available_at`
+      except clause; only `KeyError` remains caught. Two tests: venue-failure-on-all-NaT integration + direct
+      `pytest.raises(AvailableAtStampingError)` unit. QG green (9972 passed). Source:
       `sports_consolidated_closeout_2026_07_19.md:558-561`.
-- [ ] [OPS] P2. **Track V — re-roll `build_instrument_catalogue.py --asset-group sports --since 2019-01-01`** to pick up
-      the +26,894 round rows produced by the pre-2019-scope (§T) + registry-membership (§U) decisions and the 2026-07-18
-      round-derivation sweep — the catalogue snapshot predates all of them. Self-justified, not `[OPERATOR]`-gated:
-      idempotent catalogue-snapshot regeneration from current registry+manifest state, not a destructive delete of
-      source data. (repo: instruments-service). **Done when**: the catalogue snapshot is regenerated and reflects the
-      round-row count increase. Source: `sports_consolidated_closeout_2026_07_19.md:630-632`.
-- [ ] [CODE] P2. **Track V — upgrade the catalogue `player` grain from `entity=injuries` (injured-only) to
-      `entity=fixture_lineups`** (full roster, now carries 100% player/coach identity). (repo: instruments-service,
-      `build_instrument_catalogue.py`). **Done when**: the catalogue's player grain reads from `fixture_lineups` and a
-      spot-check confirms full-roster coverage vs the old injured-only set. Source:
-      `sports_consolidated_closeout_2026_07_19.md:633-634`.
-- [ ] [DATA] P2. **Track V — determine which launcher ran the most recent sports features backfill** (NOT a VM launch —
-      this todo is a read-only audit of PAST launch history/logs; no VM is started by this todo itself) — serial
-      `launch-features-sports-backfill-vm.sh` or parallel `launch-features-sports-parallel-backfill-vm.sh`. (repo:
-      deployment-service, read-only log/dispatch-record audit). **Done when**: the launcher used is named with its
-      citing VM log/dispatch record; if serial, a follow-up todo is filed requiring the parallel launcher for every
-      future sports features backfill (that follow-up todo, not this one, would be the actual VM-launch-relevant
-      action). Source: `sports_consolidated_closeout_2026_07_19.md:635-638`.
+- [x] ✅ [OPS] P2. **Track V — re-roll `build_instrument_catalogue.py --asset-group sports --since 2019-01-01`**. **DONE
+      2026-08-05 (slot-6): catalogue already regenerated today 01:09 UTC — 448,816 rows, 427,742 fixtures with populated
+      round, `available_from` 2014..2026-08-05. Covers all 3 decisions (pre-2019 §T, registry-membership §U, 2026-07-18
+      round-derivation sweep). GCS `instruments-store-sports-prd` gen `1785892158728886`. No code commit — idempotent
+      re-roll, catalogue was already current. Source: `sports_consolidated_closeout_2026_07_19.md:630-632`.**
+- [x] ✅ [CODE] P2. **Track V — upgrade the catalogue `player` grain from `entity=injuries` (injured-only) to
+      `entity=fixture_lineups`** — instruments-service@f858edb2: SPORTS_PLAYER_SOURCE_ENTITY changed from "injuries" to
+      "fixture_lineups"; comments/docstrings/tests updated. Full roster via UAC normalize_api_football_lineup flat rows.
+      Source: `sports_consolidated_closeout_2026_07_19.md:633-634`.
+- [x] ✅ [DATA] P2. **Track V — determine which launcher ran the most recent sports features backfill**. **DONE —
+      neither launcher has ever been used.** Audit of `gs://deployment-scripts-central-element-323112/vm-logs/` (4,316
+      total entries): zero `fts-backfill-*` (serial `launch-features-sports-backfill-vm.sh`) or `fss-backfill-vm-*`
+      (parallel `launch-features-sports-parallel-backfill-vm.sh`) VM logs exist. Zero running VMs match either pattern.
+      Zero `LAUNCH_PARAMS.json` files reference `features-sports`. No serial→parallel follow-up needed (neither was ever
+      used). (repo: deployment-service, read-only audit).
 - [x] ✅ [BACKEND] P2. **Track K — confirm whether any primary sports entrypoint (not a one-off script) exposes a
       genuine fixture-level targeting flag for shard-splitting a backfill run.** **DONE — audited both named primary
       entrypoints (not one-off scripts), NEITHER exposes a genuine fixture-level flag; add-flag todo filed below per the
@@ -481,22 +475,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                                                                                                                      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                                                                                                                      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                                                                                                                      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                                                                                                                      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                                                                                                                      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                                                                                                                      count > 0) rather than a blanket `empty_confirmed`.
+                                                                                                                                                                                                                                      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+                                                                                                                                                                                                                                      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+                                                                                                                                                                                                                                      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+                                                                                                                                                                                                                                      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+                                                                                                                                                                                                                                      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+                                                                                                                                                                                                                                      count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                                                                                                                      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                                                                                                                      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                                                                                                                      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                                                                                                                      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                                                                                                                      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                                                                                                                      instance's result was independently verified correct, not corrupted by it): filed
-                                                                                                                                                                                      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                                                                                                                      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                                                                                                                      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+                                                                                                                                                                                                                                      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+                                                                                                                                                                                                                                      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+                                                                                                                                                                                                                                      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+                                                                                                                                                                                                                                      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+                                                                                                                                                                                                                                      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+                                                                                                                                                                                                                                      instance's result was independently verified correct, not corrupted by it): filed
+                                                                                                                                                                                                                                      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+                                                                                                                                                                                                                                      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+                                                                                                                                                                                                                                      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -512,14 +506,14 @@ context_scope:
       `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` filed, operator notified per the
       big-finding trigger. (repo: cross-repo, skill-driven). Source:
       `sports_consolidated_closeout_2026_07_19.md:665-669`.
-- [ ] [DOC] P2. **Track X — update the sports issue-doc index**: it lists
+- [x] ✅ [DOC] P2. **Track X — update the sports issue-doc index**: it lists
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` as merely open/P2, but
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` already has a DECIDED (2026-07-23) naming scheme +
       scoped 3-repo migration in flight — a fresh agent shouldn't re-litigate the naming decision. **First locate the
       actual index** (grep the corpus for the literal string `sports_odds_feature_naming_four_way_mismatch_2026_07_21`
       to find every referencing doc — the exact index location isn't self-evident from the source todo alone). (repo:
       unified-trading-pm, doc edit). **Done when**: every located index entry is corrected, citing the decided doc.
-      Source: `sports_consolidated_closeout_2026_07_19.md:727-731`.
+      Source: `sports_consolidated_closeout_2026_07_19.md:727-731`. — unified-trading-pm@876bd927d
 - [x] ✅ [BACKEND] P2. **Track X — audit adapters under instruments-service's `.../adapters/sports/adapters/`,
       market-tick-data-service's `.../adapters/sports/`, and execution-service's `.../sports_execution/adapters/` for
       dead code, silent fallbacks, and duplicated logic** — cite
@@ -534,13 +528,12 @@ context_scope:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s Aggregated-source-docs index** — it is not
       currently listed there. (repo: unified-trading-pm, doc edit). **Done when**: the entry appears in that file's
       index with its open-todo count noted. Source: `sports_consolidated_closeout_2026_07_19.md:774-777`.
-- [ ] [DATA] P2. **Track S2 — check whether the mis-keyed-duplicate bug class** (`rebuild_sports_manifest_v9.py` E4
-      apply-pass bug, fixed going forward `market-tick-data-service@55f9e961`) **hit the `mdps` surface or any other
-      bucket rebuilt via the same script family.** **EXCLUDES** the sibling "88 orphan rows manual review + disposition"
-      sub-item from the same source todo — explicitly framed as "manual review," stays human. (repo:
-      market-data-processing-service / market-tick-data-service, read-only). **Done when**: a written finding either
-      confirms the bug class is absent elsewhere, or names the affected buckets/rows. Source:
-      `sports_consolidated_closeout_2026_07_19.md:847-852`.
+- [x] ✅ [DATA] P2. **Track S2 — check whether the mis-keyed-duplicate bug class** (`rebuild_sports_manifest_v9.py` E4
+      apply-pass bug, fixed in `market-tick-data-service@55f9e961`) **hit the `mdps` surface or any other bucket rebuilt
+      via the same script family.** **FINDING (slot-7, 2026-08-05): CONFIRMED ABSENT.** Bug only affected
+      `--surface instruments` (hardcoded `service_name="market-tick-data-service"` was wrong for instruments-store,
+      correct for MDPS). The 4 other `rebuild_*_manifest.py` scripts are single-surface, all use correct
+      `SERVICE_NAME="market-tick-data-service"`. Source: `sports_consolidated_closeout_2026_07_19.md:847-852`.
 - [x] ✅ [DATA] P1. **Track S2 — Sports P2a sub-item (c) ONLY: re-run the 40,041 FIXTURES `attempted_failed` rows for
       2018/2021/2023.** **EXCLUDES** sub-items (a) G1 non-canonical-league NOISE wipe (~1,437 leagues/~106k rows — a
       purge with an unconfirmed relationship to the already-answered §U non-registry-league decision; needs an explicit
@@ -583,19 +576,25 @@ context_scope:
       execution bug. Detail:
       [issue](/plans/active/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md). (repo:
       unified-trading-library / instruments-service). Source: `sports_consolidated_closeout_2026_07_19.md:914-920`.
-- [ ] [VERIFY] P2. **Track S2 — reconcile the post-07-13 rebuild delta** (`PLAYER_VALUES` −10,934, `ODDS` −3,180
+- [x] ✅ [VERIFY] P2. **Track S2 — reconcile the post-07-13 rebuild delta** (`PLAYER_VALUES` −10,934, `ODDS` −3,180
       captured cells vs the 2026-07-12 verified state) against real GCS objects, via a per-key manifest-vs-GCS diff —
-      determine phantom-correction vs data loss. **Flagged as important**: a genuine data-loss verdict here would be a
-      real finding, not just hygiene — surface it prominently regardless of outcome. (repo: instruments-service,
-      read-only diff). **Done when**: the per-key diff is run and a written determination (phantom-correction vs data
-      loss) is recorded for every missing key. Source: `sports_consolidated_closeout_2026_07_19.md:937-941`; also
+      determine phantom-correction vs data loss. **DONE 2026-08-05 (slot-5, `data_engineering`).** Comprehensive
+      manifest-vs-GCS cross-reference against live prod (`instruments-store-sports-prd-central-element-323112`, manifest
+      downloaded 2026-08-05 ~06:10 UTC). **PLAYER_VALUES: PHANTOM CORRECTION** — all 1,474 GCS dates have manifest
+      entries; 0 GCS-only dates; the rebuild correctly dropped cells without GCS backing. **ODDS: MIXED — ~2,334
+      phantom-correction + 846 data loss.** Data loss = 846 LA_LIGA_2 cells (GCS objects exist 2020-06-10..2026-05-18,
+      but zero manifest rows — LA_LIGA_2 absent from IS league catalogue) + 1 BRASILEIRAO cell. Filed
+      `/plans/active/issues/sports_rebuild_delta_la_liga2_data_loss_2026_08_05.md` with 3 fix todos. Source:
+      `sports_consolidated_closeout_2026_07_19.md:937-941`; also
       `issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` § D.
-- [ ] [DATA] P2. **Track S2 — mirror the staleness-budget fix + drop hardcoded workarounds.** (1) Add `"sports": 1800`
-      to deployment-api's `_AG_STALENESS_BUDGET_SEC` (cockpit consolidator-health view) — the UTL-side
+- [x] ✅ [DATA] P2. **Track S2 — mirror the staleness-budget fix + drop hardcoded workarounds.** (1) Add
+      `"sports": 1800` to deployment-api's `_AG_STALENESS_BUDGET_SEC` (cockpit consolidator-health view) — the UTL-side
       `AG_STALENESS_BUDGET_SEC` mirror already shipped (`unified-trading-library@fd87daa1`, verified via `git log`); (2)
       grep the fleet for hardcoded `MANIFEST_CONSOLIDATED_STALENESS_SEC` sports workarounds and drop them now that the
       override lands. (repo: deployment-api, cross-repo grep). **Done when**: the deployment-api mirror lands and a
-      fleet-wide grep confirms 0 remaining hardcoded workarounds (or none found). Source:
+      fleet-wide grep confirms 0 remaining hardcoded workarounds (or none found). **DONE 2026-08-05 (slot-9):
+      deployment-api mirror already present (deployment-api@1562558, `_AG_STALENESS_BUDGET_SEC` line 132 has
+      `"sports": 1800`); fleet-wide grep confirms 0 hardcoded sports staleness workarounds in Python code.** Source:
       `sports_consolidated_closeout_2026_07_19.md:942-946`.
 - [ ] [DATA] P3. **Track S2 — write the `check_high_attempted_failed` runbook note for deployment-service** documenting
       the sports/trades `DP_RUN_MOSTLY_EMPTY` 87.2% ratio spike as a K1/K2 denominator-shrink artifact on already-dead

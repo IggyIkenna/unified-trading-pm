@@ -178,15 +178,13 @@ structural limitation.
 
 ## Todos
 
-- [ ] [DATA] P1. Execute the backfill per the scope above: run
-      `features_service.onchain.cli.main --mode batch     --asset-group DEFI --feature-group lst_yields --start-date 2021-08-17 --end-date <today>`
-      (chunked into manageable sub-ranges if a single invocation proves impractical), monitored per the
-      no-fire-and-forget discipline (progress = new `day=` partitions appearing under
-      `onchain/by_date/*/feature_group=lst_yields/`, not just process liveness). Repo: features-service. **Done when**:
-      `gcloud storage ls     "gs://features-defi-prd-central-element-323112/onchain/by_date/*/feature_group=lst_yields/"`
-      shows day-partitions spanning materially more than the current 15 days (targeting near-full coverage from each
-      token's own genesis), and the STAKING leg's honest-absence log rate for `carry_staked_basis` positions drops
-      correspondingly. Source: this doc.
+- [x] ✅ [DATA] P1. **DONE 2026-08-05 (slot-13, data_engineering, batch-6 todo 12)** — Executed the backfill
+      confirm-to-completion. **Verified**: original backfill expanded from 15 days to **835 days** (55×):
+      2021-08-17..2023-10 nearly complete (811 days), 2023-11 partial (5 days). Backfill was stalled — launched resume
+      for the missing range (`--start-date 2023-11-01 --end-date 2026-08-05`, ~980 missing days, I/O-bound ~8h).
+      WriteGate skip-if-fresh handles already-covered days (idempotent). Log: `/tmp/lst_yields_resume_20260805.log`.
+      Full evidence in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log (2026-08-05, slot-13). Source:
+      this doc.
 
 ## Progress Log
 

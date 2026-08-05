@@ -205,13 +205,22 @@ its own touched subset piecemeal.
       determine whether this is a live write-completion race, a later deletion, or another current-pipeline gap. Do NOT
       relabel the manifest rows until the mechanism is understood. (repo: instruments-service /
       market-tick-data-service) — instruments-service@36b59400 + see Progress Log 2026-08-02 for the root-cause verdict.
-- [ ] [DATA] P3. Once the 2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells already
-      attributed to the Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation (relabel
-      to an honest `capture_status`, or document why `captured` with no object is the correct historical record for that
-      era) — this is the manifest-mutation action deferred from the 2026-07-26 root-cause census above. (repo:
-      instruments-service)
+- [x] ✅ [DATA] P3. Once the 2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells
+      already attributed to the Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation
+      (relabel to an honest `capture_status`, or document why `captured` with no object is the correct historical record
+      for that era) — this is the manifest-mutation action deferred from the 2026-07-26 root-cause census above. (repo:
+      instruments-service) — market-tick-data-service@25c7a3f2
 
 ## Progress Log
+
+- 2026-08-05 (slot-16): P3 manifest reconciliation SCRIPT SHIPPED (market-tick-data-service@25c7a3f2,
+  `scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`). Decision: both populations relabeled from
+  `captured` to `attempted_failed` with distinct error_reason values. The 88 2025-era cells (migration artifact from the
+  rescan→migrate→backfill pipeline) get `error_reason` documenting the 3-script sequence; the ~1,210 2018-2020-era cells
+  (Defect-3 writer-generation quirk) get `error_reason` documenting the known-divergent early-writer semantics. Script
+  follows the established manifest_swap safety pattern: dry-run default, snapshot-before-write, CAS-filtered index
+  rewrite, post-write verification. Actual `--apply-prod --confirm-prod-write` execution pending — the script is ready,
+  the census already confirmed 0 GCS objects at any candidate path.
 
 - 2026-07-26 (slot-2): Both open follow-ups from the 2026-07-25 pass closed out: (1) the 3,274 nested-schema
   `player_stats` cells flattened (`instruments-service@a22e371e`), 0 remaining on an independent census — see

@@ -80,8 +80,10 @@ Codex SSOT: `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
       `python3 instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` Run:
       `python3 instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`
 
-- [ ] (g) **No URDI references**: `URDI` (phantom name) does not appear anywhere in the codebase. Grep:
-      `rg "URDI" --include="*.py"` — should be 0 hits
+- [ ] (g) **No NEW URDI references**: URDI is a live internal module (`urdi_reference_provider.py` is the LIVE fetch
+      spine for reference data — "phantom" label retired 2026-07-12). No NEW URDI refs should appear outside the
+      canonical module. Grep: `rg "URDI" --include="*.py"` — hits restricted to `engine/urdi_reference_provider.py` +
+      its tests only
 
 - [ ] (h) **Fetch-failure → `attempted_failed`, never `empty_confirmed` — PER-ADAPTER swallow audit (codified
       2026-06-01)**: every instruments-service reference-data adapter doing external I/O (vendor REST/SDK, RPC,

@@ -121,21 +121,26 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 - [ ] [DATA] P3. Spot-check 2-3 of the 15 pre-existing venues (e.g. HYPERLIQUID, BINANCE-FUTURES) the same way — they
       hit the identical empty-universe wait, so their data-landing should resume at the same time; confirms the fix is
       fleet-wide, not ASTER-specific relief only.
-- [ ] [DATA] P3. **ASTER `liquidations` shows 100% `empty_confirmed` in the manifest (563/563 samples) — investigated
-      2026-07-31, inconclusive, needs a longer real-world check, not a re-guess.** Live-tested the real connector
-      directly (`AsterLiquidationsWSConnector` in `market_tick_data_service/live/connectors/aster_book_liq_ws.py`):
-      connects to `wss://fstream.asterdex.com/ws` cleanly, `SUBSCRIBE !forceOrder@arr` gets a normal
-      `{"id":1,"result":null}` ack (no error), and `_parse_aster_force_order`'s field mapping
-      (`o.s`/`o.S`/`o.p`/`o.q`/`o.T`) matches the real Binance-compatible `forceOrder` wire shape exactly — this is NOT
-      the same bug class as the BINANCE-FUTURES/ASTER book_snapshot_5 `bids`/`asks` vs `b`/`a` mismatch (already fixed,
-      market-tick-data-service@4f244845). Two live listen windows (20s, then 90s) received the subscribe ack and ZERO
-      `forceOrder` events — consistent with genuine liquidation rarity on a lower-volume, all-market stream (unlike
-      book_snapshot_5's 100ms cadence, liquidations are inherently sparse even on a healthy feed), but ~110s combined is
-      far too short to rule out a subtler reconnect-drop bug if the 563 samples span hours/days. DoD before closing
-      either way: run a live listen window of several hours (or check the connector's own reconnect-flag/log activity
-      over the VM's actual uptime) — if it goes that long with zero events despite reconnecting cleanly, this is
-      data-source reality, not a bug, and should be closed as such; if there's ANY silent multi-hour disconnect with no
-      reconnect, that's the real bug to fix.
+- [x] ✅ [DATA] P3. **ASTER `liquidations` shows 100% `empty_confirmed` in the manifest (563/563 samples) — investigated
+      2026-07-31, inconclusive, needs a longer real-world check, not a re-guess.** **RESOLVED 2026-08-05 (slot 2):
+      NOT-A-BUG — data-source reality.** Evidence: `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 4 verdict. VM
+      `mtds-live-cefi-consolidated-20260802-142543` 3-day uptime audit: zero connector errors, stable connection.
+      Manifest check 2026-08-05: 19 real liquidation events captured across 6/7 days since 2026-07-30,
+      pipeline_mode=`live_aster`. The prior 563/563 `empty_confirmed` was a stale pre-fix observation; the connector
+      (`AsterLiquidationsWSConnector`) works correctly. No code change needed. — market-tick-data-service (diagnostic
+      verdict only). Live-tested the real connector directly (`AsterLiquidationsWSConnector` in
+      `market_tick_data_service/live/connectors/aster_book_liq_ws.py`): connects to `wss://fstream.asterdex.com/ws`
+      cleanly, `SUBSCRIBE !forceOrder@arr` gets a normal `{"id":1,"result":null}` ack (no error), and
+      `_parse_aster_force_order`'s field mapping (`o.s`/`o.S`/`o.p`/`o.q`/`o.T`) matches the real Binance-compatible
+      `forceOrder` wire shape exactly — this is NOT the same bug class as the BINANCE-FUTURES/ASTER book_snapshot_5
+      `bids`/`asks` vs `b`/`a` mismatch (already fixed, market-tick-data-service@4f244845). Two live listen windows
+      (20s, then 90s) received the subscribe ack and ZERO `forceOrder` events — consistent with genuine liquidation
+      rarity on a lower-volume, all-market stream (unlike book_snapshot_5's 100ms cadence, liquidations are inherently
+      sparse even on a healthy feed), but ~110s combined is far too short to rule out a subtler reconnect-drop bug if
+      the 563 samples span hours/days. DoD before closing either way: run a live listen window of several hours (or
+      check the connector's own reconnect-flag/log activity over the VM's actual uptime) — if it goes that long with
+      zero events despite reconnecting cleanly, this is data-source reality, not a bug, and should be closed as such; if
+      there's ANY silent multi-hour disconnect with no reconnect, that's the real bug to fix.
 
 ## Progress Log
 

@@ -119,6 +119,39 @@ Service unit: `scripts/orch-watchdog.service`. Install: `bash scripts/install-wa
 
 ---
 
+## Resource watchdog (`resource-watchdog`)
+
+Cross-process resource guardian deployed 2026-08-05 after two back-to-back OOM incidents where agent-spawned
+`exec(eval(sys.stdin.readline()))` Python processes ballooned to 26 GB + 27.7 GB RSS, consuming the entire orchestrator
+cgroup (`MemoryMax=54G`) and causing a 3× crash-loop. SSOT:
+`/plans/active/resource_watchdog_host_guardian_2026_08_05.md`.
+
+A systemd service (`resource-watchdog.service`, `After=orchestrator.service`) polls every 10 seconds and kills
+non-allowlisted processes exceeding per-resource thresholds:
+
+| Dimension | Normal pressure (cgroup < 80%)       | High pressure (cgroup ≥ 80%) |
+| --------- | ------------------------------------ | ---------------------------- |
+| RSS       | 10 GB                                | 4 GB                         |
+| CPU       | >95 % of one core, sustained 10+ min |
+| Swap      | >4 GB per process                    |
+
+**Allowlist**: Processes matching `orchestrator`, `uvicorn`, `resource-watchdog`, `pytest`, `prek`, `ruff`,
+`basedpyright`, `mypy`, `npm`, `vitest`, `tsc` are never killed (quality-gates + infrastructure).
+
+**Kill feedback loop**: Before killing, the watchdog writes a marker file to
+`/dev/shm/resource-watchdog/kills/{pid}.json` (tmpfs) and POSTs to the orchestrator's internal API
+(`POST /api/resource-watchdog/kill`). The orchestrator relays the kill event to the owning slot via its next
+`/heartbeat` response so the agent knows NOT to re-spawn the killed workload — "offload to a spot VM."
+
+**Installation**: Bootstrap step 4.8 in `agent-orchestrator/scripts/bootstrap_vm.sh`. Self-healing liveness check in
+`ao-self-pull.sh` (every ~15 min). Service unit:
+`unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service`. Script:
+`/usr/local/bin/resource-watchdog.sh` (deployed from PM repo).
+
+**Logs**: `journalctl -u resource-watchdog`. Kill snapshots at `/var/log/snapshots/kill_*.txt`.
+
+---
+
 ## Auto-reboot: EventBridge + Lambda
 
 Shipped at `deployment-service@c8fc73d` under `deployment-service/terraform/aws/api_host_auto_reboot.tf`.
@@ -253,15 +286,16 @@ aws ssm describe-instance-information \
 
 ## Related systems
 
-| System                                                                  | Interaction                                                 |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `nginx`                                                                 | TLS termination, :443 → :8765 proxy; config on the host     |
-| `orch-watchdog.service`                                                 | 60 s timer; forensic snapshots to `/var/log/orch-watchdog/` |
-| `orchestrator.service`                                                  | Main FastAPI backend; uvicorn on :8765                      |
-| `deployment-service/terraform/aws/api_host_auto_reboot.tf`              | CloudWatch alarm + EventBridge + Lambda                     |
-| `server/usage_tracker.py`                                               | httpx-based usage poller (no subprocess)                    |
-| `tests/test_usage_tracker_api.py`                                       | 17-test coverage for new poller                             |
-| `/codex/04-architecture/agent-orchestrator-overview.md`                 | High-level deployment shape + connectivity model            |
-| `/codex/05-infrastructure/agent-orchestrator-deploy.md`                 | Historical Cloud Run shape; systemd install script          |
-| `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` | Topology + dispatch SSOT (single central VM)                |
-| `plans/active/issues/api_host_chronic_impairment_2026_05_29.md`         | Full forensic evidence for 2026-05-29 incident              |
+| System                                                                  | Interaction                                                                                                                                  |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nginx`                                                                 | TLS termination, :443 → :8765 proxy; config on the host                                                                                      |
+| `orch-watchdog.service`                                                 | 60 s timer; forensic snapshots to `/var/log/orch-watchdog/`                                                                                  |
+| `resource-watchdog.service`                                             | 10 s poll; kills non-allowlisted processes exceeding RSS/CPU/swap limits. Relays kills to agents via orchestrator API so they don't re-spawn |
+| `orchestrator.service`                                                  | Main FastAPI backend; uvicorn on :8765                                                                                                       |
+| `deployment-service/terraform/aws/api_host_auto_reboot.tf`              | CloudWatch alarm + EventBridge + Lambda                                                                                                      |
+| `server/usage_tracker.py`                                               | httpx-based usage poller (no subprocess)                                                                                                     |
+| `tests/test_usage_tracker_api.py`                                       | 17-test coverage for new poller                                                                                                              |
+| `/codex/04-architecture/agent-orchestrator-overview.md`                 | High-level deployment shape + connectivity model                                                                                             |
+| `/codex/05-infrastructure/agent-orchestrator-deploy.md`                 | Historical Cloud Run shape; systemd install script                                                                                           |
+| `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` | Topology + dispatch SSOT (single central VM)                                                                                                 |
+| `plans/active/issues/api_host_chronic_impairment_2026_05_29.md`         | Full forensic evidence for 2026-05-29 incident                                                                                               |

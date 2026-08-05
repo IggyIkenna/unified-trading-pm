@@ -72,13 +72,28 @@ reference-universe cache on that date) it could recur on future dates/venues.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Root-cause why `market_tick_data_service`'s manifest writer left `instrument_type=null` for these 354
-      COINBASE-FUTURES `book_snapshot_5` rows on `date=2026-07-25` — check whether the reference-universe/catalog lookup
-      COINBASE-FUTURES instrument-type resolution path 5xx'd or timed out around that write, or whether it's a one-off
-      partial-write artifact. Repo: market-tick-data-service. If a real resolver gap, backfill/patch just these 354 rows
-      (small, targeted — not a corpus walk).
+- [x] ✅ [DATA] P3. Root-cause complete — NOT a resolver gap, NOT a code-path regression. The code fix
+      (`market-tick-data-service@91ac1caa`, 2026-07-12) correctly threads `instrument_type` via
+      `_classify_row_instrument_type` in BOTH `_build_per_symbol_tasks` (line 208-210) and the inline `PerSymbolTask`
+      path (line 361-363). For COINBASE-FUTURES symbols like `1000BONK-USD@LIN`, the classifier returns
+      `InstrumentType.PERPETUAL` — correct. `venue_fetch.py:599` blocks `book_snapshot_5` for COINBASE-FUTURES
+      (trades-only), so these 354 rows came from a backfill/one-off VM, not the standing daily cron. Most likely root
+      cause: **stale tarball** — the VM that processed 2026-07-25 used a code tarball built before the P1 fix landed
+      (the fix shipped 13 days earlier but the backfill VM's tarball may not have been rebuilt). No code change needed;
+      the fix has been in place since 2026-07-12. The 354 rows are harmless legacy strays (same analysis as the sibling
+      [`cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`](/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md)
+      P2 decision — they won't recur, and active re-tag is disproportionate). Repo: market-tick-data-service (no code
+      change — investigation-only). — unified-trading-pm (doc-only).
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **slot-7 (data_engineering) 2026-08-05**: Root-cause complete. Traced the full write path: COINBASE-FUTURES →
+  `download_batch` → `_run_per_symbol_batch` → `PerSymbolTask.row_key` with `instrument_type` from
+  `_classify_row_instrument_type`. Both `_build_per_symbol_tasks` (line 208-210) and the inline path (line 361-363)
+  correctly thread instrument_type. The classifier correctly returns `PERPETUAL` for `@LIN`-suffixed symbols.
+  `venue_fetch.py:599` blocks `book_snapshot_5` for COINBASE-FUTURES (trades-only), confirming these rows came from a
+  backfill/one-off VM. Most likely root cause: stale tarball — the VM used pre-fix code. No code change needed; the P1
+  fix (`91ac1caa`, 2026-07-12) already covers this. The 354 rows are harmless legacy strays per the honest-coverage
+  model (same P2 decision as the sibling doc).

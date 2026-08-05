@@ -316,3 +316,13 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   Filed a new P3 follow-up todo to bundle this cleanup into that same future maintenance-window pass rather than a
   separate production touch now. No code shipped this touch — read-only diagnostic + this doc edit only.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries).
+- **data_engineering slot-16, 2026-08-05T09:33Z**: dispatched onto the P3 "bundle backfill into maintenance window" todo
+  (`cf_manifest_audit_first_full_rollup_findings-007`, dispatch_reason=resume). Checked the gate:
+  `sports-cf8-maintenance-window-scheduled` is still **FALSE** (set 2026-07-14T10:44Z, never flipped, 22 days).
+  `sports-cf8-maintenance-window-run` also FALSE (set 2026-07-27). The backfill cannot proceed — it requires production
+  writes to `instruments-store-sports-prd`, which carries a standing operator STOP (`BLK-d9137d48`) imposed after two
+  prior regressions on this surface, and the todo's own text gates on this exact maintenance window opening. Filed
+  blocked-question `BLK-40c4da25` recommending option C: park this task behind the gate as a formal prereq so it only
+  dispatches when the gate actually opens (currently `gates_queued=0` on the condition — no formal prereq linkage
+  exists, which is why the task was dispatched despite the gate being closed). No code shipped this touch — read-only
+  gate check + this doc edit only.

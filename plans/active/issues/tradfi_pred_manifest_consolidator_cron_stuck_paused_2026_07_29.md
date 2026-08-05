@@ -139,13 +139,14 @@ codebase).
       `scheduler_maintenance.maintenance_status()` check that downgrades to INFO when a live maintenance window covers
       the paused job. No further root-cause work needed; this todo's original "find the broken coordinator" framing
       doesn't describe reality.
-- [ ] [INFRA] P3. **Extend `uts-prod-consolidator-liveness-watchdog` from detect-only to bounded auto-resume** — after N
-      consecutive DOWN cycles (e.g. 5, ~10 min) for a bucket whose Scheduler job state is `PAUSED` (not genuinely
-      mid-migration-drain), auto-`ResumeJob` it and emit an actionable alert, mirroring the auto-park/auto-recovery
-      pattern already used elsewhere (e.g. `agent-orchestrator/server/auto_park.py`). **2026-07-30 update: the "how to
-      distinguish stuck from intentionally paused" blocker this todo originally flagged is now SOLVED** — the sibling
-      DP-WATCHER-003 fix (`deployment-service@3a1cf3a`, see the P2 todo above) already wired exactly this distinction
-      via `deployment-service`'s `scheduler_maintenance.maintenance_status()` (a live, CAS-backed maintenance-window
+- [x] ✅ [INFRA] P3. **Extend `uts-prod-consolidator-liveness-watchdog` from detect-only to bounded auto-resume** —
+      unified-trading-library@b7e5e554 + deployment-service@b2ec819. After N consecutive DOWN cycles (e.g. 5, ~10 min)
+      for a bucket whose Scheduler job state is `PAUSED` (not genuinely mid-migration-drain), auto-`ResumeJob` it and
+      emit an actionable alert, mirroring the auto-park/auto-recovery pattern already used elsewhere (e.g.
+      `agent-orchestrator/server/auto_park.py`). **2026-07-30 update: the "how to distinguish stuck from intentionally
+      paused" blocker this todo originally flagged is now SOLVED** — the sibling DP-WATCHER-003 fix
+      (`deployment-service@3a1cf3a`, see the P2 todo above) already wired exactly this distinction via
+      `deployment-service`'s `scheduler_maintenance.maintenance_status()` (a live, CAS-backed maintenance-window
       primitive); this todo's own auto-resume logic could check the identical primitive before acting. **Not implemented
       in this pass**: the watchdog's actual runtime logic is `unified_trading_library.monitors.consolidator_liveness`
       (confirmed via `deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf`'s own docstring — the Cloud

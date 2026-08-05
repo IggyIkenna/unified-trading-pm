@@ -105,8 +105,10 @@ service-vs-trading contrast:
 One **central orchestrator VM** (id `planning`, AWS EC2 ap-northeast-1, EIP `13.113.200.22`, instance
 `i-0c9b283b31d6b5ca7`) runs the uvicorn backend (`:8765`) **and** all N slot workers as in-process tmux sessions
 (`orch-slot-N`). There are **no epic VMs** — the prior 10-epic-VM fleet (`vm-defi` / `vm-cefi` / … one VM per epic) was
-retired 2026-06-27; do not stand up a new epic VM or treat that fleet as current. The separate `human-planning` VM (id
-`i-0dd9812a96cdda5dc`, interactive-only) is unaffected — it never executes backlog tasks.
+retired 2026-06-27; do not stand up a new epic VM or treat that fleet as current. The separate interactive-only
+`human-planning` VM (id `i-0dd9812a96cdda5dc`) was **terminated 2026-08-03** (confirmed idle, no live traffic depended
+on it) — do not reference it as a live host; any future operator-interactive box would be a fresh instance, not this
+one.
 
 ## The two worker classes
 
@@ -276,6 +278,23 @@ dead worker's task or process stranded.
   same-slot-affinity preference (`state_store/slots.py::_claim_plan_for_slot`) — that's about dispatch ORDER and
   worktree-reuse efficiency, not context continuity, and is unaffected by this rule. Set
   `one_task_per_session_enabled=False` to fall back to the pre-2026-08-04 behavior (debugging/comparison only).
+- **Mid-task UNCONDITIONAL force-compact, no idle check** (operator ruling 2026-08-05, "the guidance isn't useful if it
+  doesn't force" — `tuning.context_worker_force_compact_pct`, default 60). All three gates above only ever withhold the
+  NEXT task; none of them touches a worker mid-task even while it climbs past 90%+ context on one long-running task.
+  `ContextLifecyclePolicy` (`server/context_lifecycle.py`, originally main/review-only) now ticks EVERY
+  `status == "working"` slot too — the moment a worker's self-reported `context_used_pct` crosses this threshold, the
+  keeper injects `/pre-compact` then `/compact` directly into its pane, unconditionally: no idle-pane classification, no
+  deadline wait, unlike the idle-gated forced fallback main/review still use (guidance at 60%, force after 2 min unacked
+  IF genuinely idle — tightened from 50%/~45min the same ruling). Rationale for the asymmetry: a worker runs ONE bounded
+  task, not a multi-day loop, so there's no safe multi-tick window to wait for a natural checkpoint the way the
+  idle-gated path assumes; the operator explicitly accepted the risk of interrupting a worker mid-action. Re-armable
+  within a single long task: an observed compaction (context% drops sharply) resets the force gate, so a task that
+  climbs, compacts, and climbs again gets forced again rather than staying spent for the rest of the episode. A worker
+  whose task just finished is never a target: it drops out of the `status == "working"` query that same tick, and the
+  one-task-per-session rule above already hands its next task a brand-new session. Supersedes the old large-plan-only
+  carve-out keyed on `model_tier.LARGE_PLAN_TODO_THRESHOLD` — see
+  [model-tier-selection.md](/codex/06-coding-standards/model-tier-selection.md). Operator-facing note:
+  `unified-trading-pm/agents/worker.md`.
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:

@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [cefi, track-7, candle-bundle, mdps-backfill, vm-required]
 related:
   [
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
   ]

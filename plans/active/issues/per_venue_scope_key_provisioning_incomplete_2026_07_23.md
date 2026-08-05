@@ -16,7 +16,7 @@ asset_group:
   # Aster/Upbit/Kraken/Bitfinex/Bitget) is a CeFi venue, `repos:` is execution-service, `parent_epic` is
   # execution_master, and `tags:` already carries `cefi`. `infrastructure` read as a second peer-tranche marker only
   # because the mechanism is Secret Manager; the infra tranche's own charter is generic repo/dependency/terraform/org
-  # hygiene, not per-venue trading credentials. Already covered by cefi_satellite_ao_dispatch_batch3_2026_07_26.md, so
+  # hygiene, not per-venue trading credentials. Already covered by cefi_satellite_ao_dispatch_batch3_2026_07_26.md (now archived at /plans/archive/2026_07/), so
   # this retag creates no new orphan (linkage check re-run, still 0).
 stage: [meta]
 repos: [execution-service, unified-trading-pm]

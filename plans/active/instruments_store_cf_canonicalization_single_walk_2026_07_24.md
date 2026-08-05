@@ -144,10 +144,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-                                                                                                                                                                                              finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-                                                                                                                                                                                              `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-                                                                                                                                                                                              UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-                                                                                                                                                                                              (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+                                                                                                                                                                                                  finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+                                                                                                                                                                                                  `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+                                                                                                                                                                                                  UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+                                                                                                                                                                                                  (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -188,19 +188,34 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
 
 ### From `issues/instruments_service_audit_findings_2026_06_08` (archived — IS download→manifest audit)
 
-- [ ] [UTL] P2. **Confirm UTL `record_captured_from_counts` auto-stamps `default_source` for single-source cells** —
-      else 9 IS callsites (`orchestrator.py:1730,1916,2080,2693,3588,6910,7702,7895,8137`) write blank-source captured
-      cells (CF-4 RED); thread `source=` per callsite if not. Repo: unified-trading-library + instruments-service.
-      (MIGRATED FROM: `issues/instruments_service_audit_findings_2026_06_08`.)
-- [ ] [MTDS] P2. **`engine/orchestrator.py:4271` `_af_record_empty(reason="")`** — make `reason` a required typed
-      `EmptyConfirmedReason` (latent `LegacyBlankErrorReasonError`). Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [MTDS] P2. **Narrow the broad excepts at `orchestrator.py:3794, 7821`** — `:3794` swallows all on a
-      canonical-vs-legacy GCS blob probe then returns legacy (catch `NotFound` only; fix `:3791`
-      `# type: ignore[union-attr]`); `:7821` swallows weather-merge errors then writes new-only. `:7673` is NOT a bug
-      (safe fallback). Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [UTL] P2. **Confirm UTL `record_captured_from_counts` auto-stamps `default_source` for single-source cells** —
+      CONFIRMED 2026-08-05 (slot 11). UTL `_writer_captured.py:501-511`: `record_captured_from_counts` accepts
+      `asset_group` + `source` params; when `asset_group` is supplied, single-source cells are auto-stamped from UAC
+      `SOURCE_PRIORITY` via the same `_resolve_and_validate_source` gate as `record_captured`. The 9 old
+      `orchestrator.py` blank-source callsites were removed by the orchestrator split (`instruments-service@cb51c98a0`);
+      current `process_write.py` already threads `source=` via `source_string_for()` at every callsite (lines 305, 369,
+      382, 484, 539, 579, 875). Repo: unified-trading-library + instruments-service. (MIGRATED FROM:
+      `issues/instruments_service_audit_findings_2026_06_08`.)
+- [x] ✅ [MTDS] P2. **`engine/orchestrator.py:4271` `_af_record_empty(reason="")`** — DONE via orchestrator split
+      (`instruments-service@cb51c98a0`). The old untyped `_af_record_empty` was removed; current code in
+      `process_write.py`, `footystats.py`, `sfi.py`, `transfermarkt.py`, `sports_reference_core.py`, and
+      `process_completeness.py` all use `reason=_orch.EmptyConfirmedReason.<MEMBER>` with the typed enum. Zero untyped
+      string-reason calls remain. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [MTDS] P2. **Narrow the broad excepts at `orchestrator.py:3794, 7821`** — DONE via orchestrator split
+      (`instruments-service@cb51c98a0`). The old monolithic file no longer exists; `:3794` (canonical-vs-legacy GCS blob
+      probe) and `:7821` (weather-merge error swallowing) were both removed in the split. Current broad excepts in the
+      orchestrator package (`sports_fixture_prefetch_skip.py:68`, `venue_core.py:239`, `sports.py:347`,
+      `weather.py:179/285/376/459/518`) are documented fail-open patterns for per-shard failure isolation — the
+      architecture's SSOT rule (`/codex/04-architecture/shard-level-failure-isolation.md`). `:7673` was already
+      confirmed NOT a bug (safe fallback). Repo: instruments-service. (MIGRATED FROM: same.)
 - [ ] [MTDS] P2. **Residual bar-edge fallback-to-open** — `cefi/hyperliquid.py:257`, `cefi/ccxt_adapter.py:310-312`,
       `tradfi/polygon.py:243` fall to the open edge on unknown timeframe; make close-edge derivation total (raise/skip).
-      Repo: instruments-service. (MIGRATED FROM: same.)
+      **FIX COMMITTED `instruments-service@20a92886` (2026-08-05, slot 11):** `ccxt_adapter.py:451-458` now raises
+      `ValueError` on unsupported timeframe instead of silently falling to open edge. `hyperliquid.py` (line 357) uses
+      `T or t` (close-edge-or-open-edge from API response) — structurally different from the timeframe fallback, not
+      modified. `polygon.py`: no bar-edge fallback pattern found. **BLOCKED on pre-existing QG failure**
+      (`test_sports_fixture_stamps_canonical_instrument_id`, repo-blocker RB-d3bb9020) — fix committed locally, cannot
+      quickmerge until IS QG is green again. Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [MTDS] P2. **De-duplicate the IS venue universe** — make the cefi/tradfi/prediction fetch path read UAC
       `VENUES_BY_ASSET_GROUP` instead of hardcoded mirrors. **SHIPPED by `instrument_universe_registry_consolidation`
       Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED from
@@ -219,21 +234,35 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `lib/types/defi.ts:226` comment names the deleted `CANONICAL_VENUE_TO_ADAPTER` — update on next touch. Repo:
       market-tick-data-service (+ UI comment). (Provenance: `instrument_universe_registry_consolidation_2026_06_29`
       close-out.)
-- [ ] [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
-      `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). Repo:
-      instruments-service (+ UTL if the param doesn't exist). (MIGRATED FROM: same.)
-- [ ] [MTDS] P2. **IBKR systemic-failure hardening (LATENT)** — `tradfi/ibkr.py:337-348` per-symbol isolation is
-      correct; harden the systemic case (`_ib is None`/all-fail → `[]` no raise) when/if IBKR becomes a live reference
-      venue (not in `_TRADFI_VENUES` today). Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** —
-      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf:40-44` targets `instruments-store-prediction-…`
-      vs SSOT `instruments-store-PRED-…`; reconcile to the SSOT bucket. Repo: deployment-service. (MIGRATED FROM: same.)
-- [ ] [CLAUDE-MD] P2. **Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`" line** —
-      `InstrumentRecord` carries only `source_archive_url_template` + coverage windows; live REST/WS endpoints are UAC
-      registries. (MIGRATED FROM: same.)
-- [ ] [AUDIT] P2. **Fix `instruments_master_audit_instructions.md` item (g)** — "`rg URDI` → 0 hits" is wrong;
-      `urdi_reference_provider.py` is the LIVE fetch spine. Replace with "no NEW URDI refs" + fix the stale error
-      message at `urdi_reference_provider.py:116` (points to a deleted repo). (MIGRATED FROM: same.)
+- [x] ✅ [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
+      `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). DONE via
+      orchestrator split (`instruments-service@cb51c98a0`). The old `orchestrator.py:8033-8041` block was removed;
+      `sports_dependency.py:90-98` no longer carries the mutation (verified 2026-08-05: zero
+      `os.environ["DEPLOYMENT_ENV"]` hits in IS source, excluding test/scripts). Repo: instruments-service (+ UTL if the
+      param doesn't exist). (MIGRATED FROM: same.)
+- [x] ✅ [MTDS] P2. **IBKR systemic-failure hardening (LATENT)** — DONE. The current `ibkr.py` (634 lines) already
+      hardens both paths: `_get_ib()` raises `RuntimeError` with a clear message when `_ib is None` (programming error —
+      caller must inject a connected IB instance); `get_instruments()` logs an explicit warning + returns `[]` for the
+      unactivated case (adapter not in `_TRADFI_VENUES`). Per-symbol isolation is correct in `_fetch_all_symbols`. The
+      old `:337-348` silent-fallback was removed by the adapter's full rewrite. LATENT: no test coverage exercisable
+      until IBKR is added to `_TRADFI_VENUES`. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [INFRA] P2. **Prediction catalogue bucket mismatch** — RESOLVED 2026-07-06.
+      `lifecycle_catalogue_scheduler.tf:40-44` comment confirms reconciliation complete: `cloud-providers.yaml` maps
+      `instruments-store-prediction` → canonical short-key, and the sibling schedulers
+      (`instrument_catalogue_scheduler.tf` + `catalogue_regen_scheduler.tf`) were reconciled to the same SSOT bucket
+      (`is_catalogue_completion_2d_2026_07_06` P2 fix). No terraform change needed. Repo: deployment-service. (MIGRATED
+      FROM: same.)
+- [x] ✅ [CLAUDE-MD] P2. **Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`"
+      line** — FIXED `unified-trading-pm@54c13dd62` (2026-08-05, slot 11). CLAUDE.md § "Working on a SERVICE?" now
+      reads: "instruments-service owns reference data (`InstrumentRecord` carries `source_archive_url_template` +
+      coverage windows; live REST/WS endpoints are in UAC registries, not InstrumentRecord)". (MIGRATED FROM: same.)
+- [x] ✅ [AUDIT] P2. **Fix `instruments_master_audit_instructions.md` item (g)** — FIXED `unified-trading-pm@54c13dd62`
+      (2026-08-05, slot 11). Audit instructions item (g) now reads: "No NEW URDI references: URDI is a live internal
+      module (`urdi_reference_provider.py` is the LIVE fetch spine for reference data — 'phantom' label retired
+      2026-07-12)". The stale error message at `urdi_reference_provider.py:116` (old line ref) was verified: current
+      `engine/urdi_reference_provider.py:112-113` correctly references
+      `unified_api_contracts/registry/venue_adapter_keys.py` (confirmed existing). Message itself is not stale — URDI is
+      the canonical module name. (MIGRATED FROM: same.)
 - [ ] [MTDS] P3. **Investigate systemic schema-drift dup** (`scripts/dedupe_manifest_schema_drift.py`): 16% of shards
       have >1 manifest row (multi-schema-version + `instrument_type` casing + capture_status collisions). Fix
       WRITER-side row-key idempotency + instrument_type normalization so the ~76/96 repair scripts stop being needed.
@@ -247,9 +276,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `get_storage_client()`; ~30 inline legacy bucket literals → `resolve_bucket_name`;
       `enumerate_expected_universe.py:1381` hardcoded `/tmp/` → `tempfile.gettempdir()`. Repo: instruments-service.
       (MIGRATED FROM: same.)
-- [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_builder.py`
-      `CatalogueBuilder` + `orchestrator.py refresh_catalogue`) — superseded by `build_instrument_catalogue.py`, no
-      CLI/TF/test caller. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** — ALREADY DELETED (verified 2026-08-05, slot
+      11). `reference_data/catalogue/catalogue_builder.py` not found anywhere in the IS tree; `CatalogueBuilder` and
+      `refresh_catalogue` have zero grep hits in the current `engine/orchestrator/` package. The live path is
+      `build_instrument_catalogue.py` as expected. Repo: instruments-service. (MIGRATED FROM: same.)
 
 ## Progress Log
 

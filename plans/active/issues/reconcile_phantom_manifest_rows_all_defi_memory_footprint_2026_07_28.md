@@ -110,28 +110,28 @@ Given this session's actual task resolved via other means (see
 resolved/archived), this doc is filed to prevent the same wall from blocking the next defi manifest-recon need, not
 because it is currently blocking anything urgent.
 
-- [x] ✅ [INFRA] P2. **DONE 2026-07-30 — deployment-service@6bfeae2bc.** Chose the VM-machine-type-bump half of
-      direction 1 (not the Cloud Run migration — a materially bigger lift than this P2's scope, and the existing VM
-      launchers already have the singleton-lock/metadata/shutdown machinery a fresh Cloud Run job would need to
-      rebuild). All three manifest-recon launchers that run `reconcile_phantom_manifest_rows_all.py`/its chain
-      (`launch-manifest-recon-all-vm.sh`, `launch-manifest-recon-apply-vm.sh`, `launch-defi-phantom-recon-vm.sh`) now
-      default `MACHINE_TYPE` to `e2-highmem-8` (8vCPU/64GB) specifically when `ASSET_GROUP=defi` — other asset_groups
-      are unaffected and keep the existing `e2-standard-4` default. `e2-highmem-8` was chosen over a minimal 32Gi box
-      because it's the largest size this incident actually tested (it stalled at 96% mem under the heavier
-      chained-script load but did NOT hard kernel-OOM-kill, unlike `e2-standard-4` at 15.4GB RSS) — comfortably clears
-      `cf_manifest_audit.py`'s proven 32Gi/8vCPU precedent on the same corpus. Documented in each script's header
-      comment that this bumped default is NOT a guaranteed-sufficient floor for the full 3-4-script chain (per the
-      incident's own 64GB-stall data point) — the real fix is this doc's P3 follow-on (column-pruned read path), left
-      open/out of scope for this todo (different repos: instruments-service, unified-trading-library). The
-      `MACHINE_TYPE` env-var override added by the prior ad-hoc fix (`deployment-service@420c8be`) still works unchanged
-      (`${MACHINE_TYPE:-$_DEFAULT_MACHINE_TYPE}`).
-- [x] ✅ [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above.** Add a lighter-weight,
-      column-pruned read path to `merge_canonical_with_outstanding_shards` (or a scoped sibling helper) for callers that
-      only need a handful of columns / a single (venue, data_type) slice — mirroring the ad-hoc 6-column pyarrow read
-      this session used for verification (completed in well under a minute with no memory pressure on the same 27.3M-row
-      file). Reserve the expensive full-frame path for callers that genuinely need to WRITE back the whole index (the
-      real `--apply` mutation path, which needs full-frame safety guarantees regardless). —
-      unified-trading-library@c1ec7311
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30 — deployment-service@6bfeae2bc; batch-6 verified 2026-08-05 (slot-2, infra,
+      batch-6 todo 26).** Chose the VM-machine-type-bump half of direction 1 (not the Cloud Run migration — a materially
+      bigger lift than this P2's scope, and the existing VM launchers already have the singleton-lock/metadata/shutdown
+      machinery a fresh Cloud Run job would need to rebuild). All three manifest-recon launchers that run
+      `reconcile_phantom_manifest_rows_all.py`/its chain (`launch-manifest-recon-all-vm.sh`,
+      `launch-manifest-recon-apply-vm.sh`, `launch-defi-phantom-recon-vm.sh`) now default `MACHINE_TYPE` to
+      `e2-highmem-8` (8vCPU/64GB) specifically when `ASSET_GROUP=defi` — other asset_groups are unaffected and keep the
+      existing `e2-standard-4` default. `e2-highmem-8` was chosen over a minimal 32Gi box because it's the largest size
+      this incident actually tested (it stalled at 96% mem under the heavier chained-script load but did NOT hard
+      kernel-OOM-kill, unlike `e2-standard-4` at 15.4GB RSS) — comfortably clears `cf_manifest_audit.py`'s proven
+      32Gi/8vCPU precedent on the same corpus. Documented in each script's header comment that this bumped default is
+      NOT a guaranteed-sufficient floor for the full 3-4-script chain (per the incident's own 64GB-stall data point) —
+      the real fix is this doc's P3 follow-on (column-pruned read path), left open/out of scope for this todo (different
+      repos: instruments-service, unified-trading-library). The `MACHINE_TYPE` env-var override added by the prior
+      ad-hoc fix (`deployment-service@420c8be`) still works unchanged (`${MACHINE_TYPE:-$_DEFAULT_MACHINE_TYPE}`).
+- [x] ✅ [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above; batch-6 verified
+      2026-08-05 (slot-2, infra, batch-6 todo 26).** Add a lighter-weight, column-pruned read path to
+      `merge_canonical_with_outstanding_shards` (or a scoped sibling helper) for callers that only need a handful of
+      columns / a single (venue, data_type) slice — mirroring the ad-hoc 6-column pyarrow read this session used for
+      verification (completed in well under a minute with no memory pressure on the same 27.3M-row file). Reserve the
+      expensive full-frame path for callers that genuinely need to WRITE back the whole index (the real `--apply`
+      mutation path, which needs full-frame safety guarantees regardless). — unified-trading-library@c1ec7311
 
 ## Progress Log
 

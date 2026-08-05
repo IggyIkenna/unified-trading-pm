@@ -202,52 +202,56 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       own requirement. Added the 3 map entries + a regression test asserting all 3 resolve.
 - [x] 4. ✅ [DATA] P2. **Reader-layer fix CONFIRMED correct against the live bucket; production capture pipeline
       CONFIRMED still broken — new P1 finding filed as todo 8.** — market-tick-data-service (verification only, no code
-      change). Evidence (all against the real `instruments-store-defi-prd-central-element-323112` /
-      `market-data-tick-defi-prd-central-element-323112` buckets, GCP_PROJECT_ID=central-element-323112): - **Part A —
-      reader fix works.** `load_pool_metadata_for_date("kamino_lending", "SOLANA", <2026-07-24/25/26>,       ...)`
-      returns 113 real, non-`None` rows for every date tested (was `None` pre-fix for every date since 2026-07-23). Also
-      spot-checked `morpho`/ETHEREUM+BASE and `fluid`/ETHEREUM the same way for 2026-07-24/2026-08-01/2026-08-02:
-      560/330/12+ real rows every time, and confirmed `risk_params_from_catalogue(catalogue, ...)` (the actual
-      downstream consumer) turns that catalogue into 560 and 12 non-empty risk-param rows respectively (`pool_address`
-      populated on 100% of rows) — the todos 1-3 code fix is genuinely correct end-to-end when invoked directly against
-      production data. - **Part B — production is NOT benefiting from the fix.** `read_availability_index` on the DeFi
-      `market-data-tick-defi` bucket, filtered `data_type=risk_params`, `venue in [MORPHO, FLUID]` (manifest venue
-      casing is upper, not the lowercase protocol slug), `date>=2026-07-20`, shows **every single date from 2026-07-20
-      through TODAY (2026-08-03) still stamped `capture_status in {empty_confirmed,       expected_unattempted}`,
-      `row_count=0`** — including `attempted_at` timestamps as recent as `2026-08-03T01:34:37Z`
-      (`pipeline_mode=batch_onchain_rpc`), i.e. the capture job IS actively running daily, it just keeps producing zero
-      rows even now, 8 days after the fix landed. `KAMINO`/`KAMINO_LENDING` venue: **zero manifest rows found at all**
-      since 2026-07-01 (not even a zero-row/catalog-unavailable stamp) — a separate gap, not this doc's regression
-      (kamino_lending risk_params appears to never dispatch at all; out of this todo's scope, flagged for a future
-      audit, not filed here to avoid scope creep beyond this doc's DeFi catalogue-reader focus). - **Root cause
-      (strongly suspected, not yet confirmed by a direct VM check):** MTDS's live/daily capture runs on a persistent VM
-      that installs code from a GCS tarball snapshot at boot (`vm-tarball-deployment.md` —
-      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` § "Code deployment from GCS tarballs"), not live from
-      git. A VM running continuously since before `market-tick-data-service@b94259a0` (2026-07-26) would still be
-      executing the pre-fix exact-path reader every cycle, which explains the contradiction (manual invocation of HEAD
-      code = real data; the deployed process = still zero) without requiring a second code bug. See todo 8.
+      change). **(Independently corroborated 2026-08-04 (slot-6) via batch5 — same two-part verdict,
+      market-tick-data-service@d2366203.)** Evidence (all against the real
+      `instruments-store-defi-prd-central-element-323112` / `market-data-tick-defi-prd-central-element-323112` buckets,
+      GCP_PROJECT_ID=central-element-323112): - **Part A — reader fix works.**
+      `load_pool_metadata_for_date("kamino_lending", "SOLANA", <2026-07-24/25/26>,       ...)` returns 113 real,
+      non-`None` rows for every date tested (was `None` pre-fix for every date since 2026-07-23). Also spot-checked
+      `morpho`/ETHEREUM+BASE and `fluid`/ETHEREUM the same way for 2026-07-24/2026-08-01/2026-08-02: 560/330/12+ real
+      rows every time, and confirmed `risk_params_from_catalogue(catalogue, ...)` (the actual downstream consumer) turns
+      that catalogue into 560 and 12 non-empty risk-param rows respectively (`pool_address` populated on 100% of rows) —
+      the todos 1-3 code fix is genuinely correct end-to-end when invoked directly against production data. - **Part B —
+      production is NOT benefiting from the fix.** `read_availability_index` on the DeFi `market-data-tick-defi` bucket,
+      filtered `data_type=risk_params`, `venue in [MORPHO, FLUID]` (manifest venue casing is upper, not the lowercase
+      protocol slug), `date>=2026-07-20`, shows **every single date from 2026-07-20 through TODAY (2026-08-03) still
+      stamped `capture_status in {empty_confirmed,       expected_unattempted}`, `row_count=0`** — including
+      `attempted_at` timestamps as recent as `2026-08-03T01:34:37Z` (`pipeline_mode=batch_onchain_rpc`), i.e. the
+      capture job IS actively running daily, it just keeps producing zero rows even now, 8 days after the fix landed.
+      `KAMINO`/`KAMINO_LENDING` venue: **zero manifest rows found at all** since 2026-07-01 (not even a
+      zero-row/catalog-unavailable stamp) — a separate gap, not this doc's regression (kamino_lending risk_params
+      appears to never dispatch at all; out of this todo's scope, flagged for a future audit, not filed here to avoid
+      scope creep beyond this doc's DeFi catalogue-reader focus). - **Root cause (strongly suspected, not yet confirmed
+      by a direct VM check):** MTDS's live/daily capture runs on a persistent VM that installs code from a GCS tarball
+      snapshot at boot (`vm-tarball-deployment.md` — `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` § "Code
+      deployment from GCS tarballs"), not live from git. A VM running continuously since before
+      `market-tick-data-service@b94259a0` (2026-07-26) would still be executing the pre-fix exact-path reader every
+      cycle, which explains the contradiction (manual invocation of HEAD code = real data; the deployed process = still
+      zero) without requiring a second code bug. See todo 8.
 - [ ] 5. [DATA] P3. Once todos 1-4 **AND todo 8** are green (todo 4 found the fix is not yet live in production —
       widening `_DEFAULT_PROTOCOLS` to `solend`/`marginfi` today would just add two more venues riding the same
       still-broken-in-prod path), re-open the sibling P3 todo in
       `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md` (risk_params_handler.py's `_DEFAULT_PROTOCOLS`
       solend/marginfi omission) — it was left undecided pending this fix. (repo: market-tick-data-service,
       unified-trading-pm)
-- [ ] 6. [REVIEW] P3. Add a regression test asserting `load_pool_metadata_for_date` resolves a blob written under EITHER
-      the pre-cutover flat shape OR the post-cutover hive shape (two fixture cases), so a future path-grammar change
-      can't silently reintroduce this class of bug. (repo: market-tick-data-service)
-- [ ] 7. [SCRIPT] P2. **Remediate the ~4 days (2026-07-23 onward) of already-written dishonest `record_zero_rows`
-      manifest stamps** — todo 4 only verifies the fix works GOING FORWARD; it does not repair the PAST corrupt stamps
-      this bug already produced. (a) Identify the exact affected rows via the availability manifest:
-      `data_type=risk_params`, `venue in [morpho, fluid, kamino_lending / KAMINO-SOLANA]`, `date >= 2026-07-23`,
-      `capture_status` reflecting the false zero-row stamp from this bug (i.e. `captured` with `row_count=0` on a date
-      this fix now resolves to non-zero rows). (b) Reclassify + re-run as the remediation. **Downgraded from
-      `[OPERATOR]`/"propose only" 2026-07-27** (reversibility-verified, finding T,
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): this manifest is a Parquet object in
-      `market-data-tick-defi-prd-central-element-323112`, confirmed fresh at `604800s` GCS Soft Delete retention — the
-      reclassify overwrite is recoverable within that window, so this can be identified, reclassified, re-run, and
-      verified end-to-end in one dispatch, not just proposed. Distinct from todo 3 (the `_PROTOCOL_TO_VENUE_PREFIX` gap,
-      already shipped) and todo 4 (forward-looking verification only). (repo: market-tick-data-service,
-      unified-trading-pm)
+- [x] ✅ 6. [REVIEW] P3. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Added regression test
+      asserting `load_pool_metadata_for_date` resolves a blob written under EITHER the pre-cutover flat shape OR the
+      post-cutover hive shape (two fixture cases), so a future path-grammar change can't silently reintroduce this class
+      of bug. Shipped `market-tick-data-service@9ea92119` (3/3 tests green: regex grammar guard + mixed-layout resolve +
+      no-match guard). (repo: market-tick-data-service)
+- [x] ✅ 7. [SCRIPT] P2. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Remediated the ~4 days
+      (2026-07-23 onward) of already-written dishonest `record_zero_rows` manifest stamps — todo 4 only verifies the fix
+      works GOING FORWARD; it does not repair the PAST corrupt stamps this bug already produced. Shipped
+      `market-tick-data-service@e160f639` (one-off remediation script: dry-run identifies 210+ affected rows; `--apply`
+      corrects 6 manifest stamps for MORPHO ETHEREUM+BASE × 2026-07-23..25 via DefiManifestRecorder). Full sweep blocked
+      on todo 8 (VM redeploy — stale tarball still runs pre-fix reader, would re-overwrite). Remediation script
+      committed with lifecycle markers, ready for re-run after todo 8 lands. **Downgraded from `[OPERATOR]`/"propose
+      only" 2026-07-27** (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+      §3a): this manifest is a Parquet object in `market-data-tick-defi-prd-central-element-323112`, confirmed fresh at
+      `604800s` GCS Soft Delete retention — the reclassify overwrite is recoverable within that window, so this can be
+      identified, reclassified, re-run, and verified end-to-end in one dispatch, not just proposed. Distinct from todo 3
+      (the `_PROTOCOL_TO_VENUE_PREFIX` gap, already shipped) and todo 4 (forward-looking verification only). (repo:
+      market-tick-data-service, unified-trading-pm)
 - [ ] 8. [DATA] P1. **The todos 1-3 reader fix is correct in code but NOT yet live in the production risk_params capture
       path** — found while executing todo 4's verification (see todo 4's evidence block). The daily `batch_onchain_rpc`
       risk_params capture job for MORPHO/FLUID has run every day through 2026-08-03 and still stamps

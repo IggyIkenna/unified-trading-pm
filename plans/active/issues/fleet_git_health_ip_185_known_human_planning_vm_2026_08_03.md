@@ -13,7 +13,7 @@ summary: >-
   as the real orchestrator host ip-172-31-5-118). The 5 dirty repos are the OPERATOR's own interactive working state —
   do NOT rescue/inherit them (that would clobber the operator's in-progress work). Filed durably so the next fleet
   git-health incarnation inherits this instead of re-flagging it every recycle.
-status: open
+status: resolved
 nature: notes
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. AO fleet git-health
@@ -29,7 +29,7 @@ parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: "interactive session, 2026-08-05 — confirmed VM terminated 2026-08-03 (not replaced), allowlist todo moot"
 locked_by:
 source:
   "recurring review fleet-git-health re-flags (msgs #3552, #3581, #3585, 2026-08-03), each independently re-discovering
@@ -69,10 +69,14 @@ re-discovering it and asking whether it's a decommissioned host whose worker WIP
 
 ## Todos
 
-- [ ] [INFRA] P3. Add `i-0dd9812a96cdda5dc` (ip-172-31-0-185) to the fleet git-health scanner's known-hosts allowlist /
-      annotate it as the human-planning VM, so it stops surfacing as a stale worker host and reviewers stop re-flagging
-      it. (repo: the scanner's home — deployment-service or agent-orchestrator; worker/operator change, not main's —
-      main cannot push code.)
+- [x] [INFRA] P3. **MOOT 2026-08-05 — the VM this todo was allowlisting no longer exists.** Definitively resolved the
+      "is it terminated or replaced" ambiguity raised in the 2026-08-04 discrepancy entry below: `i-0dd9812a96cdda5dc`
+      was deliberately terminated 2026-08-03 (operator-approved retirement,
+      `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`), NOT replaced — re-confirmed 2026-08-05
+      (`aws ec2 describe-instances` returns empty for the instance ID). No allowlist entry is needed for a host that no
+      longer exists; the scanner will naturally stop reporting it once its stale-host cache ages out. **Separately, real
+      bad news**: `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md`'s P1 WIP-preservation warning
+      for this same host was never actioned before termination — see that doc for the (likely unrecoverable) outcome.
 
 ## Progress Log
 
@@ -108,3 +112,9 @@ re-discovering it and asking whether it's a decommissioned host whose worker WIP
   operator (via review reply to #3685) to confirm the human-planning VM's current state from operator creds; if
   confirmed decommissioned, the slot-0 dirty repos (mtds/strategy-service/SIT/UAC/pm, frozen 07-22..24) get a real
   recovery pass and the `[INFRA]` allowlist todo above should target the REPLACEMENT instance-id.
+- **2026-08-05 (interactive session)**: definitively resolved the (a)/(b) ambiguity above — **(a) confirmed**, the VM
+  was deliberately terminated 2026-08-03 by a separate session executing
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s operator-approved retirement todo, not replaced. There is
+  no replacement instance-id to redirect the (now-moot) allowlist todo to. The real fallout is documented in
+  `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md`: the slot-0 WIP-recovery pass this doc's 08-04
+  entry called for never happened before termination, and no snapshot/volume survives to attempt it now.

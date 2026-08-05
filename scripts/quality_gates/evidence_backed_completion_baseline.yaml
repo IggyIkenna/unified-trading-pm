@@ -4,7 +4,7 @@ source: "plans/PLAN_FORMAT.md \xA7 Evidence-backed completion"
 baseline_files:
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md
     line: 72
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md
     line: 127
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 102
