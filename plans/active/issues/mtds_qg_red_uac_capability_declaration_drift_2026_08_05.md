@@ -88,8 +88,12 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   6e791b05 commit declared a venue capability for a data type the same registry says prediction venues cannot emit, with
   no MTDS fills-capture wiring (only `scripts/` rebuild/migrate one-offs reference POLYMARKET). The UAC
   `book_snapshot_5` comment documents the convention: a declaration is legitimate only when capture is wired (cites
-  `mtds@7c849d7`). `market_metadata` from the same commit is NOT broken — the sentinel maps it to the
-  `prediction_market_metadata` family — so it stays.
+  `mtds@7c849d7`). **CORRECTION (08-05 14:30Z)**: `market_metadata` from the same commit was ALSO unwired — my earlier
+  "so it stays" judgment was wrong. Removing `fills` unmasked it: the MTDS Tier-3 sentinel then failed on the
+  instrument-less `market_metadata` row (row_key `{'data_type': 'market_metadata', 'instrument_type': ''}`). It is not
+  in `DATA_TYPES_BY_ASSET_GROUP["prediction"]`; `data_type_capability.py:1026` states "POLYMARKET book_snapshot /
+  market_metadata excluded — adapters do not yet write those data_types to the manifest"; MTDS has ZERO
+  `market_metadata` wiring. Same declared-but-unwired class, same operator ruling → removed at `ce9d8f12`.
 - **#1 collect-rewards is declared-but-unwired across THREE surfaces**: PROTOCOL_CAPABILITIES data_types `rewards` +
   `mtds_operations` `collect-rewards` (`_defi.py`, added by b2874193), `defi_venue_capabilities.py` `rewards` on all 10
   AAVE_V3 chains (e.g. ETHEREUM `2023-01-27`), and `defi_prediction_instrument_seeds.py` AAVE_V3 `rewards` seed. MTDS
@@ -105,13 +109,19 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   commit):
   - `_defi.py` — removed AAVE `rewards` data_type + `collect-rewards` mtds_operation (matches bc397b93 shape).
   - `market_data_categories.py` — removed `fills` from POLYMARKET + KALSHI `VENUE_DATA_TYPE_CAPABILITIES`.
+- **UAC removal SHIPPED `unified-api-contracts@ce9d8f12`** (08-05, LDR, green-tree verified — UAC QG exit 0 before
+  commit): `market_data_categories.py` — removed `market_metadata` from POLYMARKET + KALSHI
+  `VENUE_DATA_TYPE_CAPABILITIES` (the fills-unmasked second unwired declaration, see CORRECTION above). Both POLYMARKET
+  and KALSHI now declare only `trades` + `book_snapshot_5`.
 - **CONSISTENCY FOLLOW-UP (tracked todo, not a blocker)**: UAC QG came back GREEN **with** the AAVE `rewards` seed
   (`defi_prediction_instrument_seeds.py:153`) and the 10-chain AAVE_V3 `rewards` entries in `defi_venue_capabilities.py`
   still present — so no UAC seed↔data_types consistency check fires on them; they are orphaned-but-unflagged by the
   gate. The audit precedent (`bc397b93`, LIDO/ETHERFI seeds cleaned) says these surfaces should be cleaned too, but that
   is UAC-owner consistency work, separate from the MTDS unblock — logged as `- [ ]` below.
-- **Blocker for MTDS shipping**: MTDS re-gate (08-05, after `5f441e0d` landed) — the editable-install view now includes
-  the removal; expect green, then ship the staged iterrows fix.
+- **Blocker for MTDS shipping**: MTDS re-gate (08-05, after `5f441e0d` landed) came back RED on the SAME sentinel test —
+  `market_metadata` (fills-unmasked). After the `ce9d8f12` removal, MTDS re-gate is running against the full-removal
+  view; on green, ship the staged iterrows fix (5 files, `fred_backfill_early_date_indefinite_stall_2026_07_30.md`
+  deferred table has the exact command).
 
 ## Follow-ups (tracked)
 

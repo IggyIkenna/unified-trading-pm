@@ -266,8 +266,16 @@ minute once actually applied.
     the exact scenario the 3900s headroom fix exists for: NOT a repeat of the false-stall-kill, a correctly bounded wait
     now with margin past its own horizon. Leaving it running unattended per the established pattern above — no further
     action needed unless it re-fails past 3900s (would then indicate a NEW, different issue).
-
-## Open follow-up: exit-code monitor mislabels a stall-kill as OOM
+- **2026-08-05 (slot 7) — market_metadata unmasking + QG-kill incident** (both documented in the deferred table + the
+  issue doc `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`): (1) my first UAC removal (`5f441e0d`,
+  POLYMARKET/KALSHI `fills`) passed the UAC QG but the MTDS re-gate STILL failed — the SAME `6e791b05` commit's
+  `market_metadata` was equally unwired, masked by `fills` failing first. Lesson: **one declared-but-unwired dt can mask
+  the next; re-gate after each removal, don't assume the first fix lands green** — my earlier "market_metadata stays"
+  claim (now CORRECTED in the issue doc) was wrong. (2) A detached `nohup … quality-gates.sh` was killed mid-pytest at
+  ~85% during a fleet-wide QG wave (no exit file); re-ran via harness `run_in_background`, which had completed reliably
+  earlier. Lesson: prefer tracked `run_in_background` for long QGs on this shared host. (3) The killed run regenerated 3
+  `tests/schema_artifacts/*_schema_health.json` trailing-newline diffs (byte-identical content) — restored to HEAD with
+  `git checkout -- <file>`, not committed.
 
 Not fixed in this pass (found live, evidence-backed, but a distinct component from anything above) — the fleet monitor's
 `exit_code_fleet_monitor._finding_for()` computes `oom = result.exit_code == 137` as a PURE exit-code equality check,
@@ -378,14 +386,23 @@ anywhere.
 
 ## Deferred work after 2026-08-05
 
-| Item                                                                                       | State / why deferred                                                                                                                                     | Blocked-on                                                                                   |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| ~~Ship UAC removal commit (AAVE `rewards`/`collect-rewards` + POLYMARKET/KALSHI `fills`)~~ | ✅ DONE `unified-api-contracts@5f441e0d` (08-05) — UAC QG green, quickmerged, verified on origin LDR                                                     | —                                                                                            |
-| Ship P3 iterrows fix (5 MTDS files: 2 readers + 3 tests)                                   | Cannot ship yet — committed-ready, MTDS `quality-gates.sh` re-running on the editable-install view that now includes the UAC removal (bg task bopfllz4h) | MTDS re-gate result (expect green), then quickmerge `--agent` the 5 files                    |
-| Flip P3 checkbox (`- [ ]` → `- [x] ✅`) in this doc with `market-tick-data-service@<sha>`  | Cannot be done yet — requires the code to actually ship first                                                                                            | Same blocker (checkbox flip happens in the SAME turn as the code push, per commit+push+flip) |
+| Item                                                                                       | State / why deferred                                                                                                                                                 | Blocked-on                                                                                   |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ~~Ship UAC removal commit (AAVE `rewards`/`collect-rewards` + POLYMARKET/KALSHI `fills`)~~ | ✅ DONE `unified-api-contracts@5f441e0d` (08-05) — UAC QG green, quickmerged, verified on origin LDR                                                                 | —                                                                                            |
+| ~~Ship UAC removal commit (POLYMARKET/KALSHI `market_metadata`)~~                          | ✅ DONE `unified-api-contracts@ce9d8f12` (08-05) — fills removal unmasked `market_metadata` as equally unwired (see issue doc CORRECTION); UAC QG green, quickmerged | —                                                                                            |
+| Ship P3 iterrows fix (5 MTDS files: 2 readers + 3 tests)                                   | Cannot ship yet — committed-ready, MTDS `quality-gates.sh` re-running on the editable-install view that now includes BOTH UAC removals (bg task bel9crire)           | MTDS re-gate result (expect green), then quickmerge `--agent` the 5 files                    |
+| Flip P3 checkbox (`- [ ]` → `- [x] ✅`) in this doc with `market-tick-data-service@<sha>`  | Cannot be done yet — requires the code to actually ship first                                                                                                        | Same blocker (checkbox flip happens in the SAME turn as the code push, per commit+push+flip) |
 
-**Recommended next item**: on the MTDS re-gate's green verdict (bg task `bopfllz4h`), run
+**Recommended next item**: on the MTDS re-gate's green verdict (bg task `bel9crire`, log
+`/home/ubuntu/.cache/qg-tmp/mtds-qg-slot7-marketmeta-remove.log`), run
 `bash scripts/quickmerge.sh "perf(catalog): per-date cached-row-dict reads (iterrows fix)" --agent --files 'market_tick_data_service/engine/cefi_catalog_reader.py market_tick_data_service/engine/defi_catalog_reader.py tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py tests/unit/engine/test_cefi_catalog_reader_margin_gate.py tests/unit/engine/test_defi_catalog_reader.py'`,
 verify SHA on origin, flip the checkbox in this doc, `/done` task `fred_backfill_early_date_indefinite_stall-008`.
 Consistency follow-up (AAVE `rewards` seed + venue-capability surfaces, not gate-blocking) is tracked in
 `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` → Follow-ups.
+
+**Operational lesson (08-05, slot-7)**: a detached `nohup … bash scripts/quality-gates.sh` on this shared host was
+killed mid-pytest at ~85% (log ends abruptly, no exit file) — the fleet was running 5+ QGs in a wave (14:03Z). Re-ran
+via the harness `run_in_background` mechanism (which completed reliably the first time) → still running. Prefer tracked
+`run_in_background` for long QGs; and the killed run regenerated 3 `tests/schema_artifacts/*_schema_health.json`
+trailing-newline diffs (`\ No newline at end of file`) — restored to HEAD with `git checkout -- <file>` before re-gating
+(byte-identical content, QG side-effect, not deliberate WIP).
