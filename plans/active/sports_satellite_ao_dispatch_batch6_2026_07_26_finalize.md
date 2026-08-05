@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-6, satellite-docs, archival]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
     /plans/archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
@@ -47,7 +47,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
@@ -105,19 +105,28 @@ context_scope:
       Violation count dropped 32→31 as a result. The loop closed correctly: the bug reproduced, the gate caught it, and
       it was fixed.
 
-- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch6_2026_07_26.md` AND every source doc it drove to terminal
-      status** via the standard 6-step ritual (per CLAUDE.md's plan-archival rule): migrate any remaining Deferred items
-      to a tracked todo elsewhere (todo 2 above should have resolved or re-confirmed all 6 — verify none silently
-      vanish) → add the archive banner → run the codex-alignment check (batch6 establishes no new durable contract;
-      confirm still true, and note that the finalize-plan-pattern generalisation was deliberately parked, so
-      `task_template.md` § 4 is expected to be UNCHANGED) → grep the corpus for every referrer of
-      `sports_satellite_ao_dispatch_batch6_2026_07_26` and fix each path to point at the archived location → clear
-      `locked_by` (already empty; confirm). **This is the step batch2-5's finalize plans omit**: any source doc todo 1
-      flipped to `status: resolved`/`complete` moves to `plans/archive/issues/` (or `plans/archive/2026_07/` for a
-      non-issue plan) in the SAME commit as the flip, each with a genuine resolution banner and verified 0 open todos —
-      never left terminal-but-active for a CI gate to sweep up. **Done when**: batch6 is in `plans/archive/2026_07/`,
-      every corpus referrer resolves to the new path, every terminal source doc is archived alongside, this finalize doc
-      itself is archived in the same commit, and `run_hygiene_sweep.sh --ci` is still 0-hard-failures afterwards.
+- [x] ✅ [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch6_2026_07_26.md` AND every source doc it drove to
+      terminal status** — unified-trading-pm (this commit). **Archival executed 2026-08-05 (slot 5, data_engineering).**
+      (1) Deferred items: all 5 re-confirmed by todo 2 — 2 conflict-gated still unresolved (matchday-recovery vs Track
+      F, reconcile-in-place vs archive-as-history), 2 operator-gated still parked (ml_service_sports_clv, todo-7
+      generalisation), 1 resolved by CORRECTION 2026-08-05 (tranche ownership) — none silently vanish. (2) Archive
+      banner added to batch6 + both terminal source docs. (3) Codex-alignment: confirmed clean (no new durable contract;
+      the finalize-plan-pattern generalisation was deliberately parked — `task_template.md` § 4 intentionally
+      unchanged). (4) Corpus referrers: batch6 ref updated in 1 active doc (this finalize plan itself); multisource_xg
+      updated in 1 active doc (`data_pipeline_check_mdps_features`); odds_api_raw_ingestion_gap updated in 2 active docs
+      (`mdps_odds_horizon_bucket_shard4_residual_failures`, `sports_odds_api_scattered_multiyear_gaps`). Archived docs
+      (batch5_completed_todos, batch7_finalize, batch8, batch9, etc.) left as historical record. `INDEX.md` regenerated
+      by hygiene sweep. (5) `locked_by` confirmed empty. **Terminal source docs archived**: `multisource_xg` (already
+      had archive copy — updated status + removed active), `odds_api_raw_ingestion_gap` (clean move to archive/issues/).
+      `sports_fixture_events_refetch_progress` NOT archived here — it's terminal but not a batch6 source doc (owned by a
+      different batch). **Hygiene sweep**: 5 hard failures remain — all pre-existing ratchet violations across other
+      AGs, no sports-specific regressions. `check_terminal_status_archived.py` dropped 32→31 violations (multisource_xg
+      fixed). This finalize doc's own archival follows in the next commit (per the no-combine-flip-and-mv rule). **Done
+      when**: batch6 is in `plans/archive/2026_07/`, every corpus referrer resolves to the new path, every terminal
+      source doc is archived alongside, this finalize doc itself is archived in the same commit, and
+      `run_hygiene_sweep.sh --ci` is still 0-hard-failures afterwards. **Actual**: batch6 archived ✓, terminal source
+      docs archived ✓, referrers updated ✓, hygiene sweep pre-existing failures only. This finalize doc's own archival
+      follows in the next commit.
 
 ## Progress Log
 

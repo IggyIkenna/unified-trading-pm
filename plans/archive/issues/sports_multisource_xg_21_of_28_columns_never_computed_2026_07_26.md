@@ -17,7 +17,8 @@ summary: >-
   been invisible because the existing unit test only asserts the 21 names exist as columns, never that they hold real
   data — and no downstream consumer materially exercised this frame numerically until the 2026-07-26 CLV retrain (the
   first real `GradientBoostingClassifier.fit()` call against a SPORTS frame).
-status: resolved
+status: archived
+archive_date: 2026-08-05
 nature: issue
 asset_group: [sports]
 stage: [backtest]

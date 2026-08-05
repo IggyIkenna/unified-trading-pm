@@ -10,7 +10,8 @@ summary: >-
   classification during the MDPS `odds_horizon_bucket` league_id-casing-migration reprocess — the reprocessor correctly
   refused to fabricate output rather than treat the meta-only shape as real odds data. This is escalation/documentation
   only; no backfill or re-derivation was attempted.
-status: resolved
+status: archived
+archive_date: 2026-08-05
 nature: issue
 asset_group: [sports]
 stage: [data]
