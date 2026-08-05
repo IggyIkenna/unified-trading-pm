@@ -162,6 +162,22 @@ stabilizes (no further LDR commits expected / audit verdict locked):
   line `"Done. N/M cells written (K failed). Manifest closed..."`).
 - **Full `--apply` launch**: pending smoke confirmation of the dispatch path.
 
+### 2026-08-05 (slot-14) — smoke PASSED; full `--apply` VM launched
+
+- **Smoke test PASSED (13:33:30Z)**: `instr-backfill-sports-teams-20260805-133011` logged
+  `Done. 232/232 cells written (0 failed). Manifest closed (per-VM shard drained).` then **self-deleted**
+  (`VM_SHUTDOWN_ON_COMPLETION` path verified — the instance is gone from the fleet list). This proves the novel
+  `VM_TASK=sports-gap-fill` dispatch, the `python`→`$VENV/bin/python` rewrite, the Secret Manager api_football key, and
+  the GCS+manifest write path all work end-to-end on real prod infra.
+- **Full backfill VM launched 13:36:52Z**: `instr-backfill-sports-teams-20260805-133652` (SPOT, e2-standard-4, RUNNING)
+  via `launch-sports-teams-full-history-backfill-vm.sh --force` →
+  `python scripts/backfill_teams_full_history_2026_08_05.py --apply --concurrency 32` (322 leagues / 67,782 cells). All
+  4 tarballs verified fresh at launch (instruments-service@8a6597db, UAC@6e791b05, UTL@0b957b4a,
+  deployment-service@e1e475d). `--force` past the singleton lock: safe (cross-slot stalled VM makes 0 api_football
+  calls). Watcher armed (`/tmp/slot14_full_backfill_watch.sh` → FULL-COMPLETE / FULL-ABORT / FULL-VM-EXITED /
+  FULL-TIMEOUT). Estimated 40-80 min to completion.
+- **T+10min verify (mandatory)**: confirm the full VM is still RUNNING and the run.log is progressing.
+
 ### 2026-08-05 (slot-14) — BLOCKED-OPERATOR-DECISION (escalated → BLK-2b07d861)
 
 **Escalated via `/api/slots/14/blocked` (2026-08-05 ~12:45Z → `BLK-2b07d861`, "Escalated to dashboard. Main/review agent
@@ -178,13 +194,13 @@ will answer.")**. Decision required from the operator / defi-track owner before 
 
 ## Deferred work after 2026-08-05 (blocked on BLK-2b07d861)
 
-| Item                                                                                                                   | State / why deferred                                                                                                  | Blocked-on                              |
-| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Ship `instruments-service/scripts/backfill_teams_full_history_2026_08_05.py` via quickmerge `--agent`                  | **DONE** — `instruments-service@8a6597db` (golden cleared 13:07:59Z)                                                  | —                                       |
-| Launch SPOT backfill VM (`--apply`, `launch-sports-teams-full-history-backfill-vm.sh`, `instr-backfill-sports` prefix) | Launcher written + dry-run-validated; VM launch **in progress** (`--force` past the cross-slot singleton-lock holder) | launcher committed + tarballs refreshed |
-| Post-backfill coverage census (expected_unattempted→0, bounded)                                                        | Not run                                                                                                               | VM `--apply` run completes              |
-| Flip plan checkbox (plan line 561, Track S2) + `docs(plans):` commit SAME turn                                         | Not flipped (correctly — not done)                                                                                    | backfill + census complete              |
-| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | Not posted                                                                                                            | all above                               |
+| Item                                                                                                                   | State / why deferred                                                                                                                                                       | Blocked-on                                    |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Ship `instruments-service/scripts/backfill_teams_full_history_2026_08_05.py` via quickmerge `--agent`                  | **DONE** — `instruments-service@8a6597db` (golden cleared 13:07:59Z)                                                                                                       | —                                             |
+| Launch SPOT backfill VM (`--apply`, `launch-sports-teams-full-history-backfill-vm.sh`, `instr-backfill-sports` prefix) | Smoke PASSED (232/232 cells) + full VM `instr-backfill-sports-teams-20260805-133652` launched 13:36:52Z, **running** (`--force` past the cross-slot singleton-lock holder) | backfill `--apply` run completes (~40-80 min) |
+| Post-backfill coverage census (expected_unattempted→0, bounded)                                                        | Not run                                                                                                                                                                    | VM `--apply` run completes                    |
+| Flip plan checkbox (plan line 561, Track S2) + `docs(plans):` commit SAME turn                                         | Not flipped (correctly — not done)                                                                                                                                         | backfill + census complete                    |
+| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | Not posted                                                                                                                                                                 | all above                                     |
 
 **Resume path (next session — this issue doc is the SSOT)**: watch for the defi golden to clear at UAC LDR HEAD
 (`instruments-service` `test_expected_matches_golden[defi]` passes), then in order: quickmerge-ship the script, launch
