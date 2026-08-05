@@ -142,11 +142,11 @@ cgroup (`MemoryMax=54G`) and causing a 3× crash-loop. SSOT:
 A systemd service (`resource-watchdog.service`, `After=orchestrator.service`) polls every 10 seconds and kills
 non-allowlisted processes exceeding per-resource thresholds:
 
-| Dimension | Normal pressure (cgroup < 80%)       | High pressure (cgroup ≥ 80%) |
-| --------- | ------------------------------------ | ---------------------------- |
-| RSS       | 10 GB                                | 4 GB                         |
-| CPU       | >95 % of one core, sustained 10+ min |
-| Swap      | >4 GB per process                    |
+| Dimension | Normal pressure (cgroup < 80%)       | High pressure (cgroup ≥ 80%)   |
+| --------- | ------------------------------------ | ------------------------------ |
+| RSS       | 10 GB                                | 4 GB                           |
+| CPU       | >95 % of one core, sustained 10+ min | _(same — not pressure-scaled)_ |
+| Swap      | >4 GB per process                    | _(same — not pressure-scaled)_ |
 
 **Allowlist**: Processes matching `orchestrator`, `uvicorn`, `resource-watchdog`, `pytest`, `prek`, `ruff`,
 `basedpyright`, `mypy`, `npm`, `vitest`, `tsc` are never killed (quality-gates + infrastructure).

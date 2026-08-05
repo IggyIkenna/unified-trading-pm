@@ -282,11 +282,13 @@ Each manifest records what data was written, when, and to which bucket/path.
 
 ---
 
-## 8. Prod Bucket IAM Write-Protection (ENFORCED)
+## 8. Prod Bucket IAM Write-Protection (PARTIALLY ENFORCED — new SAs scoped, god-SA still unconditioned)
 
-Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** — the code-level
-name-resolver safety net (§ 1) is now backed by live GCP IAM conditions. Terraform SSOT:
-`deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
+Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** for callers already
+migrated to the new per-tier service accounts (§ 8.1) — the code-level name-resolver safety net (§ 1) is now backed by
+live GCP IAM conditions for those callers. This is additive, not yet exhaustive: the original `unified-trading-sa` still
+holds unconditioned project-wide `storage.objectAdmin` alongside the new bindings (§ 8.5) until every write path is
+confirmed migrated off it. Terraform SSOT: `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
 `/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`.
 
 ### 8.1 Per-Tier Service Accounts

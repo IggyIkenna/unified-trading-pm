@@ -39,9 +39,9 @@ code_refs:
 
 ## Why this redirect exists
 
-The 2026-05-08 catalogue audit
-([`plans/questions/defi_readiness_catalogue_2026_05_08.md`](../../plans/questions/defi_readiness_catalogue_2026_05_08.md))
-flagged 3 mev-protection.md docs at risk of content drift:
+The 2026-05-08 catalogue audit (`plans/questions/defi_readiness_catalogue_2026_05_08.md`, retired 2026-05-20 — see the
+[retirement record](../../plans/archive/questions_README_retired_2026_05_20.md) for its 2 successors) flagged 3
+mev-protection.md docs at risk of content drift:
 
 - `/codex/07-security/mev-protection.md` (this file; was implementation-focused)
 - `/codex/04-architecture/mev-protection.md` (was system-architecture-focused)

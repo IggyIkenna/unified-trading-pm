@@ -110,11 +110,13 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
   not even in tests. `test_ac_uic_alignment.py` (which imports from `unified_api_contracts.internal` inside the UAC
   external test suite) is a **known CIRCULAR violation** and must be moved to `unified_api_contracts/internal/tests/`.
   **Successor plan (per CLAUDE.md "Temporary state must have a named successor plan" rule + codex audit D-11
-  2026-05-12)**: tracked as a sub-task under
-  [`plans/active/uac_citadel_architecture_2026_05_07.md`](../../plans/active/uac_citadel_architecture_2026_05_07.md)
-  (UAC import-surface enforcement workstream). Until that move lands, the file is permitted under the existing
-  `internal → canonical` cross-surface exception; no new circular-violating test files may be added (QG step
-  `unified-trading-pm/scripts/quality_gates/check_uac_internal_imports.py` enforces).
+  2026-05-12)**: was tracked as a sub-task under `uac_citadel_architecture_2026_05_07.md` (UAC import-surface
+  enforcement workstream) — that plan file no longer exists; `plans/archive/INDEX.md`'s citadel section records the
+  topic as "superseded by completed execution plan," with no successor filename findable on disk (2026-08-05
+  docs-reconcile). Whether the described move (`test_ac_uic_alignment.py` → `unified_api_contracts/internal/tests/`) has
+  actually landed in the `unified-api-contracts` repo is unverified by this note — until confirmed, the file is
+  permitted under the existing `internal → canonical` cross-surface exception; no new circular-violating test files may
+  be added (QG step `check_uac_internal_imports.py` enforces).
 - **unified_api_contracts.internal**: stdlib + pydantic + **permitted to import from `unified_api_contracts.canonical`**
   (normalization canonicals re-used in messaging). No cloud SDKs. `internal` → `canonical` is the **only** permitted
   cross-surface import direction within UAC.
