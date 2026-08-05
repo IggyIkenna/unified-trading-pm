@@ -91,11 +91,11 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`; (b) the operator Pyth Hermes
       coverage/backtest-window go/no-go decision (the candidate's 2023-10-01 floor) remains open. Both items stay in the
       conflict-gated Deferred taxonomy for batch6 re-check.
-- [ ] [DOC] P2. Re-check the 24-doc non-batchable Deferred taxonomy list for any operator-gated/time-gated item that has
-      since cleared (an operator ruling landed, a gating VM/backfill completed, a dependent doc's status changed) — move
-      any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch. Repo:
-      unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with the
-      specific evidence checked).
+- [x] ✅ [DOC] P2. Re-check the 24-doc non-batchable Deferred taxonomy list for any operator-gated/time-gated item that
+      has since cleared (an operator ruling landed, a gating VM/backfill completed, a dependent doc's status changed) —
+      move any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch.
+      Repo: unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with
+      the specific evidence checked).
 - [ ] [DOC] P3. Confirm the known mistag
       (`archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`) has actually been retagged
       away from `asset_group: [defi]` by its already-tracked
@@ -123,3 +123,52 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
   7 todos `[x]`). Source doc states: #1 parked (conflict-gated), #2/#3 archived/resolved no-change, #4 flipped `[x]`
   (market-tick-data-service@1564a983), #5 already `[x]` with matching SHAs, #6/#7 batch5 corroboration notes added.
   Shipped unified-trading-pm@5245e6c0a.
+- **2026-08-05 (slot-13, data_engineering)**: Todo 2 — re-checked all 24 Deferred docs from batch5 § Non-batchable
+  orphans + 2 conflict-gated items. **6 docs cleared** (archived/resolved since batch5 was drafted), **18 remain
+  blocked** (gating condition unchanged). Per-item verdicts below. Shipped unified-trading-pm@<sha>.
+
+  **CONFLICT-GATED (2 of 3 still blocked, 1 cleared):**
+
+  | #   | Doc                                                                    | Verdict       | Evidence                                                                                                                                                                                                              |
+  | --- | ---------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 1   | `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16`      | STILL BLOCKED | `status: open` — delete-vs-re-leg CARRY_STAKED_BASIS onto Jupiter still unruled.                                                                                                                                      |
+  | 2   | `defi_track5_coverage_mvp_backfill_2026_07_24` PYTH backfill candidate | STILL BLOCKED | Batch3 C6 shipped (CODE fix done) but the `[HUMAN-AGENT] P1` operator go/no-go on Pyth Hermes coverage + backtest-window scope in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md:339-340` remains open. |
+  | 3   | `/data-pipeline-check-is` + `/data-pipeline-check-mtds` 3×3 runs       | STILL BLOCKED | Operator must name `--day` values (BLK-d355f03a). No ruling since 2026-07-30.                                                                                                                                         |
+
+  **OPERATOR-GATED (8 of 13 still blocked, 5 cleared):**
+
+  | #   | Doc                                                                              | Verdict       | Evidence                                                                                                          |
+  | --- | -------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------- |
+  | 1   | `defi_expected_unattempted_backlog_1m_2026_07_03`                                | STILL BLOCKED | `status: open` — SSOT contradiction (`_INSTRUMENT_TYPE_ALIASES` vs `venue_mapping.DataTypeConfig`) still unruled. |
+  | 2   | `defi_expected_unattempted_seeder_design_2026_07_26`                             | ✅ CLEARED    | Archived 2026-08 — `status: complete`. Already superseded by batch6's fresh triage.                               |
+  | 3   | `defi_catalog_engine_config_key_contract_drift_2026_07_23`                       | STILL BLOCKED | `status: open` — 5 unfixed bugs still awaiting operator prioritization call.                                      |
+  | 4   | `defi_mvp_backfill_optimization_ready_2026_07_20`                                | ✅ CLEARED    | Archived — `status: resolved`.                                                                                    |
+  | 5   | `defi_turbo_api_hides_real_captured_data_2026_07_07`                             | STILL BLOCKED | `status: open` — durable UAC registry fix still needs operator ruling (double-counting risk).                     |
+  | 6   | `defi_upstream_instruments_catalog_stale_2026_07_15`                             | STILL BLOCKED | `status: open` — retry-sweep-signal mechanism ownership still unassigned.                                         |
+  | 7   | `e2e_testing_collateral_validation_dead_import_2026_07_23`                       | ✅ CLEARED    | Archived — `status: resolved`.                                                                                    |
+  | 8   | `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21`                | STILL BLOCKED | `status: open` — operator ruling on ETH-underlying-units semantics still needed.                                  |
+  | 9   | `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07`                      | STILL BLOCKED | `status: open` — 2 BLOCKED-OPERATOR-DECISION items + k-prefix coin-case question still open.                      |
+  | 10  | `solana_dex_pool_swaps_indexer_scope_2026_07_12`                                 | STILL BLOCKED | `status: open` — needs a dedicated implementation plan authored (operator priority call).                         |
+  | 11  | `lst_rate_honest_coverage_2026_07_21`                                            | STILL BLOCKED | `status: active` — Phase 6 pipeline_mode mislabel fix still needs its own scoping pass.                           |
+  | 12  | `defi_track01_per_instrument_and_canon_id_2026_07_24`                            | STILL BLOCKED | `status: active` — multi-item residual, each sub-item gated on other incomplete work.                             |
+  | 13  | `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24` | ✅ CLEARED    | Archived 2026-07 — `status: complete`. All 5/5 todos done, apply was a provable no-op.                            |
+
+  **TIME-GATED (1 of 3 cleared, 2 still blocked):**
+
+  | #   | Doc                                                               | Verdict       | Evidence                                                                                                                                                                                                                                                                       |
+  | --- | ----------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | 1   | `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22`         | STILL BLOCKED | `status: open` — gating batch1 VERIFY-only todo is done (batch1 landed) but the CODE P2 canonical-data_type registration + manifest backfill is now tracked in batch6's own todos; this doc's remaining item is the operator-decision item (HYPERLIQUID k-prefix), still open. |
+  | 2   | `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16` | STILL BLOCKED | `status: open` — in-repo generator re-run still gated on confirming the generator has no independent bug.                                                                                                                                                                      |
+  | 3   | `features_service_defi_backfill_vm_oom_unexplained_2026_07_26`    | ✅ CLEARED    | Archived — `status: resolved`. Batch3 D1 `[BLOCKED-INFRA]` tag removed 2026-07-30 (slot-14); VM relaunch confirmed clean.                                                                                                                                                      |
+
+  **TOO-LARGE-OR-RISKY (1 of 1 still blocked):**
+
+  | #   | Doc                                                                            | Verdict       | Evidence                                                                                                                                       |
+  | --- | ------------------------------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 1   | `defi_track5_coverage_mvp_backfill_2026_07_24` launcher/write-concurrency work | STILL BLOCKED | `status: active` — still gated on `candle_canonical_path_migration_execution_2026_07_24` P8 (live, actively-draining cross-cutting migration). |
+
+  **HUMAN-ONLY (1 of 1 cleared):**
+
+  | #   | Doc                                                           | Verdict    | Evidence                                                                                       |
+  | --- | ------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+  | 1   | `defi_dexpool_second_writer_path_and_zero_capture_2026_07_10` | ✅ CLEARED | Archived — `status: resolved`. Item 2 fully closed; no remaining action per batch5's own note. |
