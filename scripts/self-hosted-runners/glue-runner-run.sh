@@ -176,8 +176,27 @@ except Exception: print('gone')" 2>/dev/null || echo gone)"
       echo "[glue-runner] registration ${STALE_ID} disappeared on its own (clean deregister) — nothing to do"
     elif [ "${STALE_STATUS}" = "offline" ]; then
       echo "[glue-runner] deleting stale OFFLINE registration ${RUNNER_NAME} (id=${STALE_ID}) — left by a SIGTERM'd predecessor"
-      curl -fsS -X DELETE -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-        "${API}/actions/runners/${STALE_ID}" || true
+      # RETRY + LOG (2026-08-05, fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
+      # follow-up): a bare `curl -fsS ... || true` swallowed the response body on ANY failure,
+      # turning a single delete error into a silent no-op — the NEXT generate-jitconfig call then
+      # failed 409 "already exists" forever, a crash loop with zero diagnostic trail (measured:
+      # 89 consecutive restarts on agent-orchestrator's glue-1). Root cause only found by
+      # manually reproducing the exact same delete call OUTSIDE the tight restart loop, where it
+      # succeeded immediately (HTTP 204) with the SAME token — consistent with a transient
+      # failure (host I/O pressure or GitHub-side propagation lag), not a real permission/state
+      # problem. Retry a few times with backoff before giving up, and log the actual HTTP status
+      # + body on every failed attempt so a recurrence doesn't need a live manual repro.
+      DEL_OK=false
+      for _ in 1 2 3; do
+        DEL_RESP="$(curl -sS -X DELETE -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+          "${API}/actions/runners/${STALE_ID}" -w '\n%{http_code}' 2>/dev/null)"
+        DEL_CODE="${DEL_RESP##*$'\n'}"
+        DEL_BODY="${DEL_RESP%$'\n'*}"
+        [ "${DEL_CODE}" = "204" ] && { DEL_OK=true; break; }
+        echo "[glue-runner] delete of stale registration ${STALE_ID} returned HTTP ${DEL_CODE} (want 204): ${DEL_BODY}" >&2
+        sleep 2
+      done
+      [ "${DEL_OK}" = true ] || echo "[glue-runner] WARN: could not delete stale registration ${STALE_ID} after 3 attempts — generate-jitconfig below will likely 409" >&2
     else
       # Still not offline after ~90s: this is NOT the normal ghost. Something else genuinely holds
       # our name. Fail loudly rather than yank it — systemd will retry.
