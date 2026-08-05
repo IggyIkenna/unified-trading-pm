@@ -235,3 +235,22 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   **RE-ARMED** on these 2 reds, owner = the fe68844c backfill slot, and slot-12 waits on an origin-movement watcher for
   the owner's fix, then re-gates and ships the 3 gas_fee files. **UAC P1 flipped [x] this turn** - attempt-8's red does
   NOT flag `market_metadata`, so the ce9d8f12 removal is confirmed effective.
+- **2026-08-05 (data_engineering slot-12) RE-GATE #9 (AUTHORITATIVE) — STILL RED ON BOTH fe68844c RATCHET REDS; the
+  `cec16b74` "fixed en route" CLAIM IS DISPROVEN**: origin moved `87e9e100`→`cec16b74` (commit
+  `fix(mtds): WS connectors' zero-delay reconnect can tight-loop…; also carries 2 pre-existing repo-wide-gate blockers fixed en route (DefiManifestRecorder method-size trim, TID251 noqa)`).
+  Diff pre-check predicted the claim false (`_defi_manifest.py` byte-identical across the range; the reset-script diff
+  only deleted a trailing comment, `from google.cloud import (storage,)` KEPT; no ruff baseline/config change). Ran the
+  AUTHORITATIVE full `bash scripts/quality-gates.sh --no-fix` on the ff-merged tree at `cec16b74` (slot-12's 3 gas_fee
+  files in the working tree; log `/tmp/mtds_qg_cec16b74.log`, `QG_PROCESS_EXIT=1`): **10032 passed / 26 skipped / 1
+  xpassed, coverage 80.54% ≥ 79% PASSES**; EXACTLY 2 reds, both the fe68844c upstream ratchet blockers — (1)
+  `Function/class/method size exceeded`: `_defi_manifest.py:181 DefiManifestRecorder.record_captured(): 51L` +
+  `:233 DefiManifestRecorder._emit_captured_add(): 51L` (STEP 5.38); (2) `STEP 5.95 TID251`:
+  `reset_source_returned_zero_manifest.py:43 TID251`, 39 violations > baseline 38 (`check_ruff_rule_ratchet.py`,
+  baseline `unified-trading-pm/scripts/quality_gates/ruff_rule_ratchet_baseline.yaml`, NEVER raise a count). **Slot-12's
+  3 gas_fee files are gate-CLEAN** (no red attributed to them: funcsize scan flags ONLY `_defi_manifest.py`; TID251
+  flags ONLY the reset script; coverage holds above floor with the test deletions). **P3 remains BLOCKED** (green-tree
+  rule) on the fe68844c owner; the RB stays armed. **Corrected-watcher lesson**: the old `grep -c 'from google.cloud'`
+  proxy CANNOT see noqa-suppressed TID251 sites (invisible to grep), and funcsize only changes when `_defi_manifest.py`
+  is actually touched — so the watch signal is **blob-change on the 2 target files at origin tip** (precision signal, no
+  false fire on unrelated commits), NOT import-grep. On fire: re-gate (authoritative), then ship the 3 gas_fee files +
+  flip P3 same-turn. Watcher recipe re-armed as `/tmp/watch_ratchet_fix2.sh`.

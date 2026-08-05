@@ -232,3 +232,22 @@ green.
   still HEAD=origin=`87e9e100` (ahead=0), 3 gas_fee files still unshipped in working tree (correct — blocked); watcher
   `bcrml7ser` + heartbeat `b35hyqyfr` alive, owner fix still NOT landed (origin `87e9e100`). Nothing new at risk; `/tmp`
   harnesses regenerable from the recipes above. Resume = wait for watcher `RATCHET_FIX_LANDED` → NEXT STEP 1-6 above.
+- **2026-08-05 (data_engineering slot-12) RE-GATE #9 (AUTHORITATIVE) — P3 STILL BLOCKED; the `cec16b74` "fixed en route"
+  CLAIM IS DISPROVEN by the real gate**: origin moved `87e9e100`→`cec16b74` (commit msg claimed it "carries 2
+  pre-existing repo-wide-gate blockers fixed en route (DefiManifestRecorder method-size trim, TID251 noqa)"). Ran the
+  AUTHORITATIVE full `bash scripts/quality-gates.sh --no-fix` on the ff-merged tree at `cec16b74` (3 gas_fee files in
+  working tree; log `/tmp/mtds_qg_cec16b74.log`, `QG_PROCESS_EXIT=1`): **10032 passed / 26 skipped / 1 xpassed, coverage
+  80.54% ≥ 79% PASSES**; EXACTLY 2 reds, both the SAME fe68844c ratchet blockers — funcsize
+  `_defi_manifest.py:181 record_captured(): 51L` + `:233 _emit_captured_add(): 51L`, and TID251
+  `reset_source_returned_zero_manifest.py:43` (39 > baseline 38). The commit's fix claim does NOT match the diff
+  (`_defi_manifest.py` byte-identical across the range; reset-script diff only removed a trailing comment, the
+  `from google.cloud import (storage,)` import KEPT). **Slot-12's 3 gas_fee files are gate-CLEAN** (no red attributed to
+  them). Owner fix NOT on origin. P3 checkbox NOT flipped (correct — green-tree rule). **Corrected watcher re-armed** as
+  `/tmp/watch_ratchet_fix2.sh` (blob-change on the 2 target files at origin tip — the old `grep -c 'from google.cloud'`
+  proxy CANNOT see noqa-suppressed TID251 sites, and funcsize only changes when `_defi_manifest.py` is touched), +
+  heartbeat. **NEXT STEP (unchanged, only remaining work)**: on watcher fire → (1) `git pull --ff-only` MTDS; (2) full
+  `bash scripts/quality-gates.sh` on merged tree; (3) on green,
+  `bash scripts/quickmerge.sh "<msg>" --agent --files "market_tick_data_service/cli/handlers/gas_fee_handler.py tests/unit/test_gas_fee_handler.py tests/unit/test_gas_fee_handler_coverage.py"`;
+  (4) flip THIS P3 checkbox `[ ]`→`[x]` same-turn with landed SHA (PM `docs(plans):` carve-out); (5) verify
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout`; (6) POST /done. Full RE-GATE #9 record:
+  `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` Progress Log.
