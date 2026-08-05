@@ -139,9 +139,14 @@ context_scope:
       NOT — it needs a real content migration (copy the legacy-only rows forward under the canonical name, verify, THEN
       retire), never a blind rename/delete.** This directly validates the caution this doc was filed under and the R5
       precedent it cited — the fear was not hypothetical.
-- [ ] [DATA] P2. **`dex_pools` → `dex_pool_state`**: DIAG cleared above — safe to design + dry-run + execute as a pure
-      manifest-only re-key (or a bounded 2-venue GCS relabel if the raw objects also carry the legacy data_type in their
-      path) once someone picks this up. Small population (454K rows, 2 venue/chain pairs) — low risk, low effort.
+- [x] ✅ [DATA] P2. **DONE 2026-08-05.** `dex_pools` → `dex_pool_state`: turned out to be pure manifest retirement, not
+      a GCS rename — direct content comparison found the canonical writer already captured byte-identical data under
+      `instrument_type=solana_amm_pool` (not `pool`, the exact wrong-vocabulary gotcha CLAUDE.md warns about).
+      `retire_dex_pools_legacy_captured_rows_2026_08_05.py` bulk-verified every (instrument_id, date) pair has a
+      canonical twin before touching anything; ran against prod — 453,985/454,014 rows retired (capture_status
+      captured→attempted_failed, GCS objects untouched, reversible), 29 rows excluded (no twin found, all dated
+      2025-01-17 — a real, narrow residual left `captured`, needs its own small follow-up investigation, NOT retired
+      blind). Round-trip verified.
 - [ ] [DATA] P2. **`dex_swaps` → `dex_pool_swaps`**: DIAG above proves this is NOT a rename — it is a real content
       migration. Recipe: for each of the 22 gapped (venue,chain) pairs, copy the legacy-only-dated `dex_swaps` rows
       forward to canonical `dex_pool_swaps` form (mirroring the R5 fold precedent — copy, verify, THEN retire the legacy
@@ -159,6 +164,9 @@ context_scope:
 
 ## Progress Log
 
+- **interactive session 2026-08-05**: executed the `dex_pools` half only (see the flipped todo above for full detail).
+  `dex_swaps`/`rate_indices` remain genuinely untouched -- both need their own dedicated pass (the `dex_swaps` gap
+  root-cause + real content migration is the dominant remaining scope by far, ~3.46M of the ~4.0M total rows).
 - **interactive session 2026-08-04 (autonomous, `/autonomous`)**: filed as a scoping-only doc after confirming (a) the
   row counts are large enough to warrant dedicated care, (b) the owning master plan is at its hard line cap, and (c)
   this exact session already caught one "looked safe, wasn't" mistake on a smaller, related delete candidate this same
