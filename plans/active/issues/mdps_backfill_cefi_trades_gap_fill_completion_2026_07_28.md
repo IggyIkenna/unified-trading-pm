@@ -20,7 +20,7 @@ summary: >-
   confirmed present on GCS regardless); all 5 other exit-1 VMs hit an identical, unrelated, systemic
   `pubsub.topics.publish` IAM permission gap on the `run-ledger` topic at shutdown (cosmetic, not a data issue, but
   affects 6+ VMs so worth its own fix).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -56,7 +56,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
-resolved_by:
+resolved_by: cefi_satellite_ao_dispatch_batch5_2026_08_02
 ---
 
 # mdps-backfill-cefi trades gap-fill — campaign complete, 2 small follow-ups tracked
@@ -145,3 +145,6 @@ safe; only the manifest's registration of it is what the reconciliation todo abo
   exact todo verbatim on 2026-08-02, Source-citing this doc. Corrected to KEEP-NA-STALE-duplicate per the shared
   conflict-check protocol (`ao-dispatch-batch-naming-and-conflict-check.md` § 3, case 4) — citation banner added above,
   `assigned_vm` left as `NA`.
+- **batch5 finalize reconciliation 2026-08-05 (slot 2)**: both checkboxes verified done — manifest merge shipped
+  (deployment-service@35e91fa, unified-trading-library@a01b3f13, both verified on origin), IAM gap fixed 2026-07-29.
+  Remaining open items: 0. Flipped `status: resolved`.

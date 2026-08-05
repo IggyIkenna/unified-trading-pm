@@ -8,7 +8,7 @@ summary:
   launch-mtds-backfill-vm.sh — a live-leg pipeline_e2e_check smoke test against a Tardis-sourced venue can contend for
   the shared single-IP Tardis key with an active real backfill, risking the same 403-storm/false-attempted_failed
   corruption the guard exists to prevent.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -22,7 +22,7 @@ parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
-resolved_by:
+resolved_by: cefi_satellite_ao_dispatch_batch5_2026_08_02
 locked_by:
 context_scope:
   [
@@ -179,3 +179,6 @@ live-incident report. Not escalating to the operator as a page; tracked here per
   finding, less so now that P1/P2 resolved not-a-bug).
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
   2026-08-03 citation; sole open P3 item stays tracked as `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2.
+- **batch5 finalize reconciliation 2026-08-05 (slot 2)**: all 3 checkboxes verified done — P1+P2 closed NOT-A-BUG
+  (unified-trading-pm@c34bfd176, verified on origin), P3 shipped (unified-trading-pm@509b2553c, verified on origin).
+  Remaining open items: 0. Flipped `status: resolved`.
