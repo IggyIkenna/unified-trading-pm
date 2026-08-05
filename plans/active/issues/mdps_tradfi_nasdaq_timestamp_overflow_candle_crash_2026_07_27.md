@@ -137,8 +137,9 @@ dropped/flagged as a single bad-row anomaly.
       `ts_event` → generic `timestamp` for TradFi (preserve the unit-signaling column name through to MDPS), or MDPS's
       column-priority/unit map becomes schema/vendor-aware (keyed off `pipeline_mode`/`source`, not column name +
       magnitude). **SCOPED 2026-08-05 (slot-4, `data_engineering`)**: surveyed all consumers, created phased migration
-      plan at `/plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` (dual-write `ts_event` +
-      `timestamp` → migrate MDPS → audit remaining consumers → remove alias). — unified-trading-pm@26b99c2b7
+      plan at `/plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` (dual-write
+      `ts_event` + `timestamp` → migrate MDPS → audit remaining consumers → remove alias). —
+      unified-trading-pm@26b99c2b7
 - [x] ✅ [SCRIPT] P2. Once the guard lands, re-run the same scoped cell (and ideally a few more NASDAQ instruments) to
       confirm the candle path now degrades gracefully instead of failing outright. —
       market-data-processing-service@f179c96 (guard verified present at base_adapter.py:285-313). Evidence: (1)
@@ -160,8 +161,8 @@ dropped/flagged as a single bad-row anomaly.
   (4+ files with magnitude-heuristic workarounds), features-service (`raw_data_loader.py`, `mtds_fred_reader.py`), UTL
   (`detect_timestamp_column_and_unit`), e2e-testing, instruments-service. Recommended a phased approach (dual-write →
   migrate consumers → remove alias) in the new scoping plan at
-  `/plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`. The magnitude heuristic already works
-  correctly — this is tech-debt cleanup, not a crash fix.
+  `/plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`. The magnitude heuristic
+  already works correctly — this is tech-debt cleanup, not a crash fix.
 
 - **2026-08-05 (slot-6, data_engineering) — independent re-verification of todo 2's trace.** Downloaded + inspected both
   raw prod parquet files directly (`NASDAQ:EQUITY:{IBIT,ETHA}-USD.parquet`, day=2026-05-07): IBIT 13,717 rows, ETHA

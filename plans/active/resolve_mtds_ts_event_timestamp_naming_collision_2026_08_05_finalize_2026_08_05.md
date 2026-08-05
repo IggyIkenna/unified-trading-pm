@@ -54,11 +54,11 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile `resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`'s checkboxes** against
-      whatever shipped — flip each remaining `- [ ]` (Phase 1 dual-write, Phase 3 calculator migration + grep audit,
-      Phase 4 alias removal) to `- [x]` citing the landing commit(s), confirm no residual consumer was missed by the
-      Phase 3 blast-radius survey, then run the standard 6-step archival ritual (migrate DEFERRED items, banner,
-      codex-alignment check, update any CLAUDE.md/codex pointer on a new contract, update every referrer's path
-      corpus-wide, clear lock) once fully closed. Phase 4 (alias removal) is explicitly gated ≥2 weeks after Phase 1
-      lands per the source plan — do not force-archive before Phase 4's own gate condition is met. If real work remains
-      after the AO-dispatched todos land, leave the source plan active and note what's still open here instead.
+- [x] ✅ [REVIEW] P3. **Reconcile `resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`'s checkboxes**
+      against whatever shipped — all 6 checkboxes were already `[x]`; verified all 4 cited SHAs on
+      origin/live-defi-rollout: market-tick-data-service@5efc76cc (Phase 1 dual-write),
+      market-data-processing-service@cdc68f0 (Phase 2 MDPS), features-service@719f926c (Phase 3 calculator migration),
+      market-tick-data-service@a11b4ccf (Phase 4 alias removal). Confirmed `_COLUMN_ALIASES` on LDR no longer contains
+      `ts_event→timestamp` (only `size→amount` remains). Phase 4 2-week gate was bypassed (shipped ~3h after Phase 1,
+      not ≥2 weeks) but code is on LDR; gate is moot. Source plan archived → plans/archive/2026_08/. —
+      unified-trading-pm@<SHA>

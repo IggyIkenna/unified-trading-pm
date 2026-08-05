@@ -239,8 +239,8 @@ shipped.
 - **The 3 failing checks** (all wired into PM `quality-gates.sh` → PM QG globally red → blocks EVERY PM ship, not just
   this task):
   1. **finalize-plan-coverage** (1 > baseline 0):
-     `plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` — a NEW AO plan (committed today
-     `3b0d18bd9`) shipped without a gated finalize plan. Owner: MTDS track (author its finalize phase). NOT a
+     `plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` — a NEW AO plan (committed
+     today `3b0d18bd9`) shipped without a gated finalize plan. Owner: MTDS track (author its finalize phase). NOT a
      re-baseline case — that would permanently mask a real mid-flight process violation.
   2. **plan-commit-sha-evidence** (28 > baseline 26, +2 from today's new plans): 28 unresolved citations across ~12+
      other plans. Owner: per-plan owners / gate-maintainer. NOT re-baselined unilaterally (would mask potentially-real
