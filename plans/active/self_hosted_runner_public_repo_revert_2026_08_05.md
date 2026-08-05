@@ -257,11 +257,25 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       still-open "longer-window measurement" gap). Update that plan's issue doc
       (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) with the dated result rather than duplicating
       it here.
-- [ ] 21. [INFRA] P1. **Deregister the old self-hosted runners for the 14 landed repos** (not started this session —
-      needs SSM access to the CI runner VM per `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s documented
-      method: `gh api repos/IggyIkenna/<repo>/actions/runners` DELETE + `systemctl stop`+`disable` the exact unit —
-      never the buggy `teardown --POOL_TAG` path, per that plan's own documented incident). Do the 3 remaining repos
-      (#8, #14, #16) in the SAME pass once they land, rather than two separate deregistration sweeps.
+- [x] 21. ✅ [INFRA] P1. **Deregistered the old self-hosted runners for all 17 landed repos — DONE.** Used the
+      documented safe path exactly (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own incident-derived
+      method — never `setup-glue-runners.sh teardown --POOL_TAG`, which has a live, unresolved, reproducible bug that
+      silently drops `POOL_TAG` and can take down an unrelated repo's entire pool). Confirmed live via SSM
+      (`SSM_INSTANCE=i-042a6332509482556`, the dedicated `ci-escalation-runner-vm-1` — NOT `ssm-run.sh`'s stale default,
+      which still points at the old AO box) that each of the 17 repos maps to EXACTLY one
+      `github-glue-runner-<repo>@glue-1.service` + 2 timers (`slot-refresh`, `token-refresh`), with the unit DESCRIPTION
+      itself naming the exact repo — zero ambiguity. Stopped+disabled all 51 units (17×3) by exact literal name in one
+      pass (no `POOL_TAG`/script invocation anywhere), then `gh api -X DELETE` the specific runner ID for each of the 17
+      repos (fetched per-repo first, not guessed). **Verified clean both sides**: all 17 repos now show `total_count: 0`
+      registered runners; a fresh `systemctl list-units 'github-glue-runner*'` sweep afterward shows ONLY the 8 private
+      repos' pools still active (`ao` ×4, `unified-trading-pm` ×8, `strategy-service`, `e2e-testing`,
+      `execution-service`, `features-service`, `market-tick-data-service`, `ml-service` — all online, zero collateral
+      damage). **One false alarm chased down and cleared**: `market-tick-data-service`'s journal showed a
+      `Stopping`/job-`Canceled`/`Started` cycle that looked concerning at first glance — traced it to 13:38-13:39 UTC,
+      ~7.5 hours before this deregistration ran (~21:1x UTC) and confirmed as a routine JIT-ephemeral runner restart
+      (its own systemd `restart counter` was already at 13 from routine per-job cycling since 2026-08-04) — unrelated to
+      anything done here; the unit's own timers were still correctly active/scheduled throughout, confirming it was
+      never touched.
 - [x] 22. ✅ [INFRA] P2. **`unified-trading-library`'s promotion-PR backlog — RESOLVED, not a bug.** Follow-up check:
       PRs #746–#750 were each individually **closed (not merged)** at staggered times through 2026-08-05, and a fresh PR
       #751 was open with all checks green (`semver-agent/label-check`, `sit-gate/fleet-green`,
@@ -269,6 +283,32 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       `ldr-to-main-promote-fleet.yml`'s close-and-recreate-on-new-diff behavior firing repeatedly under this session's
       (and the wider shared host's) unusually high same-day commit volume on `unified-trading-library`'s dependents —
       not a stuck pipeline. No fix needed.
+- [x] 23. ✅ [INFRA] P2. **Inverse-direction audit: any of the 8 PRIVATE repos' workflows still on billed GitHub-hosted
+      minutes that COULD move to self-hosted? Checked all 7 not already covered by the earlier `unified-trading-pm`
+      sweep (todo/finding above) — zero actionable items, same shape of answer.** Every `runs-on: ubuntu-latest` /
+      GH-hosted item across `agent-orchestrator`, `strategy-service`, `e2e-testing`, `features-service`,
+      `market-tick-data-service`, `execution-service`, `ml-service` resolves to one of three legitimate categories: -
+      **`notify-slack.yml`** (5 of 7 repos) — confirmed `on: workflow_call` only (a reusable carrier other jobs invoke
+      on-demand when something fails), same resilience reasoning as PM's own fleet-health watchdogs: it must stay
+      GH-hosted so it can still fire if the self-hosted infra itself is what's unhealthy. Correct as-is. -
+      **`image-build-gate.yml`** (all 7) — has no local `runs-on:` at all; it's a pure `uses:` delegation to
+      `unified-trading-pm/.github/workflows/image-build-validate.yml`, which is ALREADY self-hosted
+      (`[self-hosted, glue]` on all 3 of its own jobs). Zero local cost, nothing to fix. - **`agent-audit.yml`**
+      (`strategy-service` inline; `execution-service`/`features-service`/ `market-tick-data-service` delegate to PM's
+      `python-quality-gates-v2.yml`) — `workflow_dispatch`-only. Header comments in 3 of these claim "Triggered by
+      `overnight-agent-orchestrator.yml` for nightly quality-gate validation," which is **stale**: read that
+      orchestrator directly — its T1/T2/T3 tiers were removed when their member repos folded into
+      `unified-api-contracts`/`unified-trading-library`; only T0 (those 2, both already public/GH-hosted) remains wired.
+      No live recurring trigger exists for any of these 4 `agent-audit.yml` files today, so their runner choice costs
+      nothing regardless of value. - **Useful side-finding, not a gap**: this traced through to confirming the MAIN
+      `quality-gates-v2.yml` gate's real heavy execution (`qg-slices` job in `python-quality-gates-v2.yml`) is
+      controlled by a `with:       self_hosted_runner_labels` input — NOT the caller file's own local `runs-on:` lines
+      (those govern only that file's auxiliary jobs, e.g. the escalation/notify ones this plan's todo 1-4 work fixed).
+      That input is templated by the SAME pre-existing `get_qg_runner_labels()` off the SAME `self-hosted-qg-repos.txt`
+      this plan edited, via the SAME `rollout-workflow-templates.sh` rollout already run — spot-checked and confirmed
+      correct both directions: `strategy-service`/`execution-service` (private) render `'["self-hosted","glue"]'`;
+      `unified-api-contracts`/`deployment-api` (public, reverted) render `""` (→ `ubuntu-latest`). Confirms the
+      session's core revert was complete and correct for the main gate all along, not just the auxiliary jobs.
 
 ## Progress Log
 
@@ -373,3 +413,25 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
     billing-waste problem itself is already fully fixed by the `runs-on:` changes, since idle registrations cost nothing
     and simply won't be assigned work); todo 20 (billing/load re-measurement — genuinely cannot be done yet, needs a few
     days of elapsed real usage to be meaningful). **Plan stays `status: active`** — not archiving until 20 and 21 close.
+
+- **2026-08-05 (operator: "do it, any other flows that can be self hosted on private repos anything at all currently
+  using gh ci mins?") — todo 21 (runner deregistration) and todo 23 (inverse-direction audit) both closed.**
+  - **Todo 21**: full details in that todo's own entry above. Headline: 17/17 repos' old self-hosted runners cleanly
+    deregistered (systemd + GitHub API both sides), zero collateral damage to the 8 private repos, one false-alarm
+    journal entry chased down and confirmed unrelated (predates this work by ~7.5h).
+  - **Todo 23**: the operator's question was the exact inverse of this plan's original direction — private repos still
+    paying real GH Actions minutes that could move to self-hosted. Checked all 7 private repos not already covered by
+    the earlier PM sweep; found zero actionable items, each `ubuntu-latest` use falls into a legitimate, already-correct
+    category (see todo 23 for the three-way breakdown). **The most valuable output of this pass wasn't a new fix — it
+    was closing a verification gap this plan had never actually closed**: tracing exactly how
+    `self_hosted_runner_labels` flows from `self-hosted-qg-repos.txt` through `rollout-workflow-templates.sh` into the
+    reusable `python-quality-gates-v2.yml`'s heavy `qg-slices` job confirmed the MAIN quality-gates-v2.yml gate (not
+    just the 9 auxiliary templates todos 1-4 fixed) was correctly reverted for all 17 public repos all along — this had
+    been _assumed_ correct (the allowlist + existing `get_qg_runner_labels()` predates this plan) but never directly
+    spot-checked against the actual rendered `with:` value in a committed file until now.
+  - **Lesson for whoever continues this**: when a repo's workflow calls a reusable workflow via `uses:`, that reusable
+    workflow's OWN `runs-on:` (or, if parameterized, whatever input drives it) is what actually governs execution — a
+    caller-local `runs-on:` line in the SAME job key is not even read by GitHub Actions. Don't assume a grep for
+    `runs-on:` in the caller file tells the whole story; find the `uses:` target and check IT.
+  - **Genuinely remaining**: only todo 20 (billing/load re-measurement, needs a few days of real elapsed usage). Nothing
+    else is open. Plan stays `status: active` until that closes, then archive per the standard ritual.
