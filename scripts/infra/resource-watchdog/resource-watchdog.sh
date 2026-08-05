@@ -443,9 +443,14 @@ _rw_probe_qg_governor() {
     _RW_QG_TOKENS_MAX=-1
     if [[ -z "$gov_script" ]]; then return 0; fi
     local status_output; status_output="$("$gov_script" --status 2>/dev/null || true)"
+    # Parse "tokens held now: X/Y" when there ARE active reservations
     if [[ "$status_output" =~ tokens\ held\ now:\ ([0-9]+)/([0-9]+) ]]; then
         _RW_QG_TOKENS_HELD="${BASH_REMATCH[1]}"
         _RW_QG_TOKENS_MAX="${BASH_REMATCH[2]}"
+    elif [[ "$status_output" =~ K=([0-9]+) ]]; then
+        # Governor running but no tokens held (dir empty/absent) → 0/K
+        _RW_QG_TOKENS_HELD=0
+        _RW_QG_TOKENS_MAX="${BASH_REMATCH[1]}"
     fi
 }
 
