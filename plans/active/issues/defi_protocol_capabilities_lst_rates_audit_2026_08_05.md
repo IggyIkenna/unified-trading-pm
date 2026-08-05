@@ -145,10 +145,15 @@ for the 5 missing protocols). Finding C is a separate, lower-priority wiring ite
 - [x] ✅ [DATA] P2. Add `lst_rates` to YEARN_V3 PROTOCOL_CAPABILITIES data_types — unified-api-contracts@e4e4e5a9
 - [x] ✅ [DATA] P2. Create PROTOCOL_CAPABILITIES entries for BINANCE, COINBASE, ROCKETPOOL, SANCTUM, SOLBLAZE —
       unified-api-contracts@8feaea84
-- [ ] [DATA] P3. Wire `collect-rewards` operation for LIDO/ETHERFI/EIGENLAYER or remove `rewards` from their
-      aspirational data_types (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. Removed `rewards` from LIDO/ETHERFI aspirational data_types; EIGENLAYER's `rewards` stays (genuinely
+      collected by `collect-eigenlayer-rewards` handler) — unified-api-contracts@bc397b93
 
 ## Progress Log
 
 - **2026-08-05 (slot-7, data_engineering craft)**: audit complete — cross-referenced all 101 live venues'
   PROTOCOL_CAPABILITIES declarations against expected_coverage.py + lst_rates_handler.py. Filed with 8 actionable todos.
+- **2026-08-05 (slot-13, data_engineering craft)**: todo 8 — removed aspirational `rewards` from LIDO/ETHERFI
+  PROTOCOL_CAPABILITIES data_types. EIGENLAYER's `rewards` stays (genuinely collected by `collect-eigenlayer-rewards`
+  handler which writes both `rewards` + `eigenlayer_rewards` data_types). LIDO/ETHERFI had no `collect-rewards` handler
+  (ETHERFI's WS connector is BLOCKED-CREDENTIALS scaffold); wiring one would require new API credentials + handler
+  implementation not in scope for this P3. All 8 todos now done.
