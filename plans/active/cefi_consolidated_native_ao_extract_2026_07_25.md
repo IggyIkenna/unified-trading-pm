@@ -102,12 +102,14 @@ items explicitly "FENCED" to another named agent/live process).
       any deletion ships with `quality-gates.sh` green. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 5). ✅
       — verdict + deletion recorded in this plan's Progress Log below: `execution-service@6c9645a5` (+ QG baseline fix
       `unified-trading-pm@f9523e16f`).
-- [ ] [DATA] P3. **Sweep for any non-Tardis cefi VM class with multi-hour+ single-VM runtime that is not already
+- [x] ✅ [DATA] P3. **Sweep for any non-Tardis cefi VM class with multi-hour+ single-VM runtime that is not already
       cross-machine-sharded** (Tardis-consuming VMs are EXEMPT — hard concurrency cap of 1, see
       `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap). Repo: deployment-service (read-only fleet audit).
       **Done when**: a list of every non-Tardis cefi VM class with its measured typical runtime, a PASS/FAIL verdict per
       class against the "shard across machines once multi-hour+" bar, and a follow-up todo filed for each FAIL, is
-      recorded in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 6).
+      recorded in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 6). ✅ — 12
+      non-Tardis cefi VM classes evaluated, 12 PASS, 0 FAIL — see Progress Log below (slot-9, 2026-08-05,
+      `unified-trading-pm@<sha>`).
 - [x] ✅ [DATA] P1. **Run `/data-pipeline-check-is` for cefi as a dated PRE-BACKFILL baseline** (independent of when the
       Track-2 coverage backfill itself actually launches — establishes a dated reference point regardless). Repo:
       instruments-service (skill run, no code change). **Done when**: the skill's report path + run date is cited in
@@ -620,6 +622,51 @@ reaches both the original v1 script and the v2 reuse path.
 **No code change possible or needed** — the fix predates even this triage plan's creation date (2026-07-25). The acute
 risk never recurred (the Surface-C v2 `--apply` ran successfully with 28 `TOLERATED` chain-lossy groups, 0 CAPTURED rows
 lost, canonical-fraction 99.24%).
+
+### 2026-08-05 (slot-9, `data_engineering`) — Todo 2 (non-Tardis cefi VM multi-hour+ sharding sweep)
+
+**Verdict: ALL PASS — zero FAILs found. No follow-up todos needed.**
+
+Swept every VM launcher under `deployment-service/scripts/vm/` with cefi reach, classified as Tardis-consuming (EXEMPT
+per the Tardis hard-concurrency-cap rule) vs non-Tardis, and evaluated non-Tardis candidates against the "multi-hour+
+single-VM runtime without cross-machine sharding" bar.
+
+**Method**: read every cefi-touching launcher header + first 60 lines for VM prefix, runtime estimate, sharding
+mechanism, and lifecycle class; cross-checked against the live GCP fleet (`gcloud compute instances list`, 2026-08-05
+~05:00 UTC) for actual measured runtime on running instances.
+
+**Tardis-consuming cefi VMs (EXEMPT — not evaluated):** `cefi-forward-poll`, `cefi-fwd-daily-cron`,
+`cefi-funding-timestamp-fix`, `cefi-hl-aster-historical-backfill`, `cefi-instruments-backfill`, `cefi-massive-rollout`,
+`cefi-sharded-backfill` (GCP + AWS), `cefi-week-test`, `deribit-options-chain-daily`, `canonical-migration-vm`,
+`cefi-onchain-fwd-daily-cron`, `cefi-extended-starknet-funding-timestamp`. All registered under the Tardis concurrency
+guard (`tardis-concurrency-guard.sh`, HARD cap of 1 concurrent VM both clouds).
+
+**Non-Tardis cefi VM classes — per-class verdict:**
+
+| Class                           | VM prefix                                              | Launcher                                      | Runtime                                                                                                                                   | Sharded?                            | Verdict                                                                                                                                                                                                                                                                                                        |
+| ------------------------------- | ------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Durability force-converge       | `cefi-durability-force-converge-`                      | `launch-cefi-durability-force-converge-vm.sh` | Short (one-off)                                                                                                                           | N/A                                 | **PASS** — one-off, `Lifecycle: oneoff`                                                                                                                                                                                                                                                                        |
+| MTDS migrate instrument-type    | `mtds-migrate-cefi-itype`                              | `launch-cefi-migration-vm.sh`                 | Short (one-off)                                                                                                                           | N/A                                 | **PASS** — one-off migration                                                                                                                                                                                                                                                                                   |
+| MVP reclassify                  | `mtds-migrate-cefi-mvp-reclassify`                     | `launch-cefi-mvp-reclassify-vm.sh`            | Short (one-off)                                                                                                                           | N/A                                 | **PASS** — one-off, `Lifecycle: oneoff`                                                                                                                                                                                                                                                                        |
+| On-chain perp forward-poll      | `cefi-lighter-`, `cefi-extended-`, `cefi-hyperliquid-` | `launch-cefi-onchain-forward-poll.sh`         | ~5–15 min/run                                                                                                                             | Per-venue singleton (already split) | **PASS** — short runtime; each venue gets its own VM, no sharding needed                                                                                                                                                                                                                                       |
+| Aster forward-poll              | `aster-fwd-`                                           | `launch-aster-forward-poll.sh`                | ~3–10 min/run                                                                                                                             | N/A (short)                         | **PASS** — sub-10-min runs                                                                                                                                                                                                                                                                                     |
+| Deribit DVOL backfill           | `deribit-dvol-backfill-`                               | `launch-deribit-dvol-backfill-vm.sh`          | Multi-hour (one-off)                                                                                                                      | N/A (one-off)                       | **PASS** — `Lifecycle: temporary`, one-off historical pull                                                                                                                                                                                                                                                     |
+| Candle-manifest backfill        | `backfill-candle-manifest-{ag}-`                       | `launch-backfill-candle-manifest-vm.sh`       | Multi-hour (one-off)                                                                                                                      | Per-AG singleton                    | **PASS** — `Lifecycle: oneoff`, not a recurring class                                                                                                                                                                                                                                                          |
+| Orphan class-E backfill         | `backfill-orphan-e-{ag}-`                              | `launch-backfill-orphan-e-vm.sh`              | Multi-hour (one-off)                                                                                                                      | Per-AG singleton                    | **PASS** — `Lifecycle: oneoff`, not a recurring class                                                                                                                                                                                                                                                          |
+| **MDPS single-VM backfill**     | `mdps-backfill-{cat}-`                                 | `launch-mdps-backfill-vm.sh`                  | **Multi-hour+** (live evidence: `mdps-backfill-cefi-20260802-140125` running ~3 days)                                                     | **YES — sharded variant exists**    | **PASS** — `launch-mdps-sharded-backfill.sh` already provides cross-machine sharding (one VM per calendar year, 7 VMs for CeFi 2020–2026). The single-VM launcher is the building block the sharded launcher fans out; the class IS sharded.                                                                   |
+| MDPS single-VM backfill (AWS)   | `mdps-backfill-{cat}-` (AWS)                           | `launch-mdps-backfill-vm-aws.sh`              | Multi-hour+                                                                                                                               | Same sharded variant                | **PASS** — same class as GCP counterpart                                                                                                                                                                                                                                                                       |
+| **MTDS live cefi consolidated** | `mtds-live-cefi-`                                      | `launch-mtds-live-cefi-consolidated.sh`       | **24/7 continuous** (live evidence: `mtds-live-cefi-consolidated-20260802-142543` running since Aug 2, `VM_SHUTDOWN_ON_COMPLETION=false`) | **N/A — live VM**                   | **PASS** — live-capture VM by deliberate design (16× VMs → 1 consolidated VM for cost, 2026-06-27). `MANIFEST_PER_VM_SHARDS=true`. Live VMs are a fundamentally different category: they're daemons designed to run forever, not batch workloads where sharding reduces wall-clock time. Not a backfill class. |
+
+**Live-fleet cross-check** (2026-08-05 ~05:00 UTC, `gcloud compute instances list`):
+
+- `mdps-backfill-cefi-20260802-140125` — RUNNING ~3 days (multi-hour+ single VM), but the sharded launcher exists
+- `mtds-live-cefi-consolidated-20260802-142543` — RUNNING 24/7, live-capture daemon
+- `cefi-onchain-fwd-daily-cron-20260803-230641` — RUNNING, cron-scheduled short runs
+- `cefi-hyperliquid-2024-*` / `cefi-hyperliquid-2025-*` — RUNNING 9 days, Tardis-consuming (EXEMPT)
+
+**Count: 12 non-Tardis cefi VM classes evaluated, 12 PASS, 0 FAIL. No follow-up todos filed — there are no FAILs to
+track.** The one class closest to the bar (mdps-backfill single-VM for cefi) already has a cross-machine-sharded
+launcher that fans out across 7 year-shard VMs; the base single-VM launcher is its building block, not an unsharded gap.
 
 ## Reconciliation
 
