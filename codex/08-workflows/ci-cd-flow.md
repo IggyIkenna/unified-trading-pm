@@ -1006,10 +1006,32 @@ A code fix landing on `main` does **not** propagate to a running container by it
    `repositoryEventConfig { push: { branch: "^main$" } }` to fire on a branch push.
 4. **The cloud-build-router must not swallow `PERMISSION_DENIED`** — it now exits with a DISTINCT status + alerts on
    `PERMISSION_DENIED` (vs genuinely-unconfigured) so a permissions regression is loud, not a silent no-deploy.
+5. **Cloud Run SERVICES (not jobs) can have live traffic PINNED BY REVISION NAME, silently defeating every future
+   auto-deploy (incident: `deployment-api`, discovered 2026-08-05)** — a Cloud Run _service_'s traffic config is either
+   `latestRevision: true` (tracks whatever the newest Ready revision is — the healthy default) or an explicit
+   `{revisionName: <name>, percent: 100}` pin. Once ANYTHING sets an explicit by-name pin — a manual
+   `gcloud run services update-traffic --to-revisions=<name>=100`, the Console "manage traffic" action, or
+   `deployment-service/scripts/cloud-run/canary-deploy.sh`'s rollback path (canary-deploy.sh:279-296, which correctly
+   pins `PREV_REVISION=100` on a failed health check but has **no companion step that ever restores `--to-latest`**) —
+   the service is stuck in named-pin mode **indefinitely**. Every subsequent CI build+deploy
+   (`deployment-api-main-deploy` et al., no `--no-traffic` flag) still runs, still reports `SUCCESS`, still creates a
+   fresh healthy `Ready=True` revision — but **traffic never moves off the pinned name**, with zero alert anywhere in
+   the pipeline. Measured 2026-08-05: 5 consecutive green CI deploys over ~24h, all silently trafficless, while a
+   revision from _before_ a shipped fix kept serving 100% of production traffic. Diagnose via
+   `gcloud run services describe <svc> --format='value(status.traffic)'` — if the 100%-entry has an explicit
+   `revisionName` instead of tracking latest, or its revision predates your last merge, traffic is pinned. **A
+   deliberate pin (precutover freeze, canary hold) is fine — but it MUST be scoped like a plan `locked_by:`: a stated
+   reason + an explicit named owner + an explicit un-pin step, never left implicit.** Applies to any Cloud Run _service_
+   with a `-main-deploy`-style auto-deploy trigger — currently `deployment-api`, `deployment-ui`, and
+   `unified-trading-system-ui`'s UAT deploy (`odum-portal-staging`; PROD is manual-only by design, see
+   `deploy-uat-on-merge.yml`, so a pin there doesn't defeat an _expected_ auto-deploy the same way). Does **NOT** apply
+   to `agent-orchestrator` — its dashboard deploys to Firebase Hosting and its API deploys via EC2/systemd
+   (`ao-self-pull.sh`), neither of which has Cloud Run revision-traffic semantics.
 
 **Rule:** after a fix merges, confirm the deployed artefact actually changed — check the running image digest
 (`gcloud run jobs describe … --format='value(spec.template.spec.template.spec.containers[0].image)'`) and the build that
-produced it, not just the merge.
+produced it, not just the merge. **For Cloud Run _services_, also confirm traffic actually moved** — check
+`status.traffic` resolves to the revision your fix built, not just that the build/deploy step reported SUCCESS.
 
 ---
 

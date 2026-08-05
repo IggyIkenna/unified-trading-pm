@@ -107,7 +107,8 @@ A scheduled/`push` workflow fires ONLY from the DEFAULT branch. **Never hand-edi
 template + `rollout-workflow-templates.sh` (rollout done only when every copy is committed + pushed); **bumping a GHA
 action version: VERIFY the ref RESOLVES**. **Breaking-detection is CONTENT-based** (AST differ
 `scripts/cicd/detect_breaking_change.py`; a 0.x-minor/docstring/refactor is NOT breaking; `feat!:` is the human
-override). On fail: `gh run view --log-failed`, fix root cause in real time. **`ci_status` is Firestore-SSOT** (WS-A
+override). On fail: `gh run view --log-failed`, fix root cause in real time. **Green deploy ≠ live traffic**: a stray
+Cloud Run revision pin can freeze deploys at 0% — verify `status.traffic`. **`ci_status` is Firestore-SSOT** (WS-A
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
@@ -200,7 +201,7 @@ architecture (L0–L4)".
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
   `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes by
-  `assigned_role` (skill-based), not VM. (legacy alias `human-planning` == `planning`, still accepted.)
+  `assigned_role` (skill-based), not VM.
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
   `/codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
@@ -210,7 +211,6 @@ architecture (L0–L4)".
   `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM
   executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch.
   **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`,
-  `/codex/11-project-management/doc-frontmatter-schema.md`,
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
