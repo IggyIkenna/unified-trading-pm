@@ -75,7 +75,7 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                      |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc    |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 118,134 already resolved, **53,692 needed** (was 56,940 on 08-04, real -3,248) |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 130,762 already resolved, **52,515 needed** (was 56,940 on 08-04, real -4,425) |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
@@ -555,3 +555,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-05T17:53Z** — `af-backfill-20260805-171010` still healthy, ~103min elapsed (its longest run of the
   campaign), left running. Continued real FIXTURE_STATS progress: 54,810→53,692 (-1,118). STANDINGS/TEAMS trickle
   continues at the same small rate (51,168→51,114, 46,809→46,786). PLAYER_STATS/INJURIES unchanged.
+- **2026-08-05T18:13Z** — `af-backfill-20260805-171010` still healthy, ~123min elapsed, left running. FIXTURE_STATS
+  continues steadily: 53,692→52,515 (-1,177). STANDINGS/TEAMS are now completely flat vs. the last check (51,114/46,786,
+  unchanged) — the small passive trickle noted the last two checks appears to have paused for now; not concerning, just
+  noting the pattern isn't perfectly continuous. PLAYER_STATS/INJURIES unchanged.
