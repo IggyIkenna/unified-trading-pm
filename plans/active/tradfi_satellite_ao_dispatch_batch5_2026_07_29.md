@@ -296,12 +296,19 @@ ground to open up, and it did:
       `features-service@d06919bf` resolves the issue — EIA/CFTC/Baker Hughes all respond normally from a GCP VM. Issue
       doc both checkboxes flipped, status→resolved. — `unified-trading-pm@bc13f1c94`
 
-- [ ] [DATA] P3. **Spot-check the TRADFI:volatility test-bucket parquet/manifest for concurrent-write corruption.**
-      Check the written TRADFI:volatility parquet/manifest for the 2026-01-29..2026-01-30 window (test bucket
-      `features-tradfi-test-central-element-323112`) to confirm no partial-write corruption resulted from two VMs'
-      concurrent writes to the same sink — the doc's determinism argument (concurrent writes should converge
-      byte-identically) is currently an unverified assumption. Repo: features-service. **Done when**: the spot-check is
-      recorded with a pass/fail verdict on the determinism assumption. Source:
+- [x] ✅ [DATA] P3. **Spot-check the TRADFI:volatility test-bucket parquet/manifest for concurrent-write corruption —
+      VERDICT: CANNOT VERIFY (data gone).** The test bucket `features-tradfi-test-central-element-323112` was inspected
+      live on 2026-08-05T18:50Z. It contains only 5 index objects (all under `_index/`): a consolidated
+      `availability_index.parquet` + 2 per-VM manifests from 2026-08-03 (`022954-b3b034` and `053515-b3b034`). Zero
+      feature-data parquet files, zero `volatility` rows — the index is `delta_one` only. The two 2026-08-03 VM runs
+      were SEQUENTIAL (VM1 `written_at` 02:32–05:25, VM2 05:38–11:23 — no overlap). The original 2026-07-27
+      concurrent-write data (two VMs writing TRADFI:volatility for 2026-01-29..2026-01-30) no longer exists — the
+      ephemeral `-test`-tier bucket was cleared between 2026-07-30 (when the source issue doc recorded it empty) and
+      2026-08-03 (when it was repopulated with delta_one data). **The determinism assumption (concurrent writes should
+      converge byte-identically) cannot be verified or falsified — the evidence was destroyed by the bucket clear.** The
+      source issue doc (`features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`) already reached the
+      same conclusion on 2026-07-30 ("verified-moot — test bucket now empty"). No code shipped (read-only GCS
+      inspection). Source:
       `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved
       2026-07-30).
 
@@ -329,16 +336,16 @@ ground to open up, and it did:
       is recorded. Source: `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
 
       **Mechanism (a) confirmed (slot-7, 2026-07-30, static code read)**: `related_data_types` was missing from
-              `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
-              dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
-              `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
-              2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
-              inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
-              2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
-              (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
-              branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
-              regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
-              `quality-gates.sh` green (1999 passed, 0 failed).
+                  `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
+                  dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
+                  `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
+                  2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
+                  inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
+                  2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
+                  (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
+                  branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
+                  regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
+                  `quality-gates.sh` green (1999 passed, 0 failed).
 
 - [x] ✅ [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by
@@ -944,6 +951,19 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   `market-data-processing-service@c10425d`). **Verdict: SYSTEMIC** — cross-repo naming collision (not a one-off).
   Architectural fix tracked as open P3 in the source issue doc. No code changed this session — doc-only (trace evidence
   recorded here + in source issue doc Progress Log). Flipped batch5 todo 13 done.
+
+- **2026-08-05 (slot-3, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-011`)** — Worked todo 11
+  (spot-check TRADFI:volatility test-bucket for concurrent-write corruption). Inspected
+  `gs://features-tradfi-test-central-element-323112/` live: 5 objects total, all under `_index/` — a consolidated
+  `availability_index.parquet` (delta_one only, 3 rows, 2026-01-20) + 2 per-VM manifests from 2026-08-03
+  (`022954-b3b034`: 11 rows, written 02:32–05:25; `053515-b3b034`: 19 rows, written 05:38–11:23). Zero feature-data
+  parquet files, zero `volatility` rows. The two 2026-08-03 VM runs are **sequential** (VM1 ended before VM2 started),
+  not concurrent. The original 2026-07-27 concurrent-write data (two VMs writing TRADFI:volatility for
+  2026-01-29..2026-01-30) is **gone** — the ephemeral `-test`-tier bucket was cleared between 2026-07-30 (when the
+  source issue doc recorded it empty) and 2026-08-03 (repopulated with delta_one). **Verdict: CANNOT VERIFY** — the
+  determinism assumption cannot be confirmed or refuted because the evidence was destroyed. The source issue doc already
+  reached the same conclusion ("verified-moot — test bucket now empty") on 2026-07-30. No code shipped — read-only GCS
+  inspection. Flipped batch5 todo 11 done.
 
 ## Codex SSOTs
 
