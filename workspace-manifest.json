@@ -954,9 +954,9 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "warn_file_count": 6,
-        "coverage_pct": null,
+        "coverage_pct": 82.75,
         "qg_red_reason": null,
+        "warn_file_count": 6,
         "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 0,
+        "coverage_pct": 73.72,
         "qg_red_reason": "ruff",
         "warn_file_count": 0,
-        "coverage_pct": null
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1411,7 +1411,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1484,10 +1484,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
+        "coverage_pct": null,
+        "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 99.29,
-        "large_file_count": 0,
-        "qg_red_reason": null
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
