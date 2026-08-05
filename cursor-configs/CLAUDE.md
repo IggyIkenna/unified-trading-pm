@@ -159,10 +159,10 @@ live claim / mtime <120s → PROTECT). An interactive session IS slot N (long un
     `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
-- **Pre-task plan/issue conflict check (HARD RULE)** — before starting ANY task, grep `plans/active/`+`.../issues/`
-  first: plans go stale/superseded BETWEEN daily `/plan-reconcile` sweeps, so no-flag ≠ current; 0 hits ≠ clear
-  (grep-then-READ) — confirm `status`/`supersedes` first; scope reads narrowly, keep replies terse. SSOT:
-  `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`, `…/context-economy.md`.
+- **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
+  stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
+  status/supersedes. Context economy: scope reads + Bash output (`grep -c`/`tail -5`, not full dumps), terse replies.
+  SSOT: `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`, `…/context-economy.md`.
 
 ## Doc retrieval — retrieve less but right (L0→L4, grep-native)
 
