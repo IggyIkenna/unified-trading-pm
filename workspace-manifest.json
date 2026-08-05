@@ -624,7 +624,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -656,9 +656,9 @@
       ],
       "codebase_health": {
         "large_file_count": 0,
-        "qg_red_reason": "qg",
-        "warn_file_count": 0,
-        "coverage_pct": 86.35
+        "coverage_pct": 86.35,
+        "qg_red_reason": null,
+        "warn_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -795,7 +795,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -827,9 +827,9 @@
       "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 5,
-        "coverage_pct": null,
-        "large_file_count": 7,
-        "qg_red_reason": "qg"
+        "coverage_pct": 89.85,
+        "qg_red_reason": null,
+        "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -954,10 +954,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": null,
         "warn_file_count": 6,
-        "coverage_pct": 82.75
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -988,7 +988,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1020,9 +1020,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 5,
-        "qg_red_reason": "qg",
-        "warn_file_count": 10,
-        "coverage_pct": 85.98
+        "coverage_pct": 85.98,
+        "qg_red_reason": null,
+        "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1335,7 +1335,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "version": "0.2.12",
       "version_source": "git-tag",
       "status": "active",
@@ -1411,7 +1411,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
