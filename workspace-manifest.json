@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
-        "warn_file_count": 0,
+        "qg_red_reason": "qg",
         "large_file_count": 0,
-        "qg_red_reason": "pytest"
+        "coverage_pct": 73.78,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
