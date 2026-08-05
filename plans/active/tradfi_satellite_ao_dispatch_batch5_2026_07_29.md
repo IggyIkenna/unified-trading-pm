@@ -312,13 +312,26 @@ ground to open up, and it did:
       the source issue doc. Evidence: gcloud-verified raw GCS parquet for both instruments;
       `symbol_rules.py:60-61,94-106` confirmed; `base_adapter.py:213-228,285-315` confirmed.
 
-- [ ] [DATA] P2. **Instrument `_streaming_filter_slice` to root-cause why CME combo `ohlcv_15m`/`ohlcv_24h` aggregation
-      produces `symbols_processed=0`.** Per the doc's own prescribed next step: log pre/post-filter row counts to
-      distinguish between the two candidate mechanisms (a data_type column mismatch dropping all rows in the
-      slice-filter, vs. no 1s/1m→15m aggregation writer yet existing for tradfi per the `TradfiOhlcv15mAdapter`
-      docstring). Repo: market-data-processing-service. **Done when**: the instrumentation identifies which mechanism is
-      responsible, and the fix (or a scoped follow-up todo if the fix is a larger build) is recorded. Source:
-      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
+- [x] ✅ [DATA] P2. **Instrument `_streaming_filter_slice` to root-cause why CME combo `ohlcv_15m`/`ohlcv_24h`
+      aggregation produces `symbols_processed=0`.** — `market-data-processing-service@ca546fd` (instrumentation),
+      `market-data-processing-service@0671953` (mechanism-(a) fix). Per the doc's own prescribed next step: log
+      pre/post-filter row counts to distinguish between the two candidate mechanisms (a data_type column mismatch
+      dropping all rows in the slice-filter, vs. no 1s/1m→15m aggregation writer yet existing for tradfi per the
+      `TradfiOhlcv15mAdapter` docstring). Repo: market-data-processing-service. **Done when**: the instrumentation
+      identifies which mechanism is responsible, and the fix (or a scoped follow-up todo if the fix is a larger build)
+      is recorded. Source: `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
+
+      **Mechanism (a) confirmed (slot-7, 2026-07-30, static code read)**: `related_data_types` was missing from
+          `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
+          dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
+          `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
+          2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
+          inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
+          2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
+          (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
+          branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
+          regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
+          `quality-gates.sh` green (1999 passed, 0 failed).
 
 - [x] ✅ [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by
