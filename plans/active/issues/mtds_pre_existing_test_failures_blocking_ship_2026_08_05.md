@@ -61,8 +61,9 @@ Both are likely one-line fixes.
 
 - [ ] [TEST] P2. Fix `test_protocol_class_ops_have_modules[lending]` — register `collect-rewards` for
       ProtocolClass.LENDING in `_CLI_OP_TO_MODULE` (repo: market-tick-data-service)
-- [ ] [TEST] P2. Fix `test_tier3_prediction_polymarket_no_crash` — ensure POLYMARKET `fills` Tier-3 sentinel row carries
-      an `instrument_id` (repo: market-tick-data-service)
+- [x] ✅ [TEST] P2. Fix `test_tier3_prediction_polymarket_no_crash` — ensure POLYMARKET `fills` Tier-3 sentinel row
+      carries an `instrument_id` (repo: market-tick-data-service) — market-tick-data-service@1bcee624 (upstream fix:
+      filter to per-instrument dts via is_per_instrument_shard_data_type)
 
 ## Progress Log
 
