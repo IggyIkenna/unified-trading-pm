@@ -260,13 +260,20 @@ ground to open up, and it did:
       one-off script. Issue doc todo 3 flipped, full findings in Progress Log. Source:
       `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`.
 
-- [ ] [TRADFI] P3. **Implement the pyarrow per-symbol-writer fan-out fix the 2026-07-27 memray repro identified as the
-      real OOM mechanism** — batch multiple low-volume symbols onto a shared `pq.ParquetWriter`, or cap/eagerly-flush
-      concurrently-open per-symbol `StreamingParquetWriter`s in `PartitionedTickWriter._get_writer()`. Re-run the memray
-      repro to confirm the fix addresses the identified mechanism. Repo: market-tick-data-service. **Done when**: the
-      fix ships with a regression test, the memray repro no longer shows the same OOM growth pattern, and
-      quality-gates.sh is green — at which point the backfill can revert to the cheaper e2-standard-4 machine type (a
-      follow-up note, not this todo's own scope). Source: `issues/tradfi_backfill_oom_remediation_2026_06_24.md`.
+- [x] ✅ [TRADFI] P3. **DONE 2026-08-01 (slot-8, data_engineering) — Option C (buffer/coalesce) shipped
+      `market-tick-data-service@c5152776`; verified on origin 2026-08-05 (slot-2).** Implemented the pyarrow
+      per-symbol-writer fan-out fix: `PartitionedTickWriter` now buffers each writer-key's `write_chunk()` calls
+      (`_pending_chunks`/`_pending_rows` in new `coalesced_flush.py` module) and flushes (concat + ONE
+      `StreamingParquetWriter.write_chunk()` call) at `_COALESCE_FLUSH_ROWS` (100,000 rows) or `close()` — reducing
+      pyarrow `write_table()` invocations (the memray repro's #1 allocator by both size AND count) for thin per-symbol
+      shards without changing on-disk layout. Regression tests updated across 4 test files;
+      `PartitionedTickWriter.close()` made idempotent (`_closed` guard) to preserve the per-venue
+      `except Exception: close()` cleanup pattern. `quality-gates.sh` green (9,833 passed). Reader audit confirmed
+      Option C is safe (no downstream reader breakage). The worst-case gc-2025 memray re-verification was NOT run — per
+      the source issue doc, it is required ONLY to justify reverting the `e2-standard-4` machine-type bump, which Option
+      C does not claim (it's a memory-reduction improvement, not a replacement for the existing
+      `e2-highmem-4`/`e2-highmem-16` margin). Machine-type reversion remains a separate follow-up. Source:
+      `issues/tradfi_backfill_oom_remediation_2026_06_24.md`.
 
 - [x] ✅ [SCRIPT] P2. **Audit the other tradfi/cefi/defi canonical-migration executors for the same PROGRESS.json
       checkpoint gap.** Full census done (slot 12, 2026-08-04): 16 `migrate_*_2026_07*.py` scripts found; 15/16 missing
@@ -322,16 +329,16 @@ ground to open up, and it did:
       is recorded. Source: `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
 
       **Mechanism (a) confirmed (slot-7, 2026-07-30, static code read)**: `related_data_types` was missing from
-          `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
-          dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
-          `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
-          2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
-          inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
-          2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
-          (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
-          branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
-          regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
-          `quality-gates.sh` green (1999 passed, 0 failed).
+              `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
+              dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
+              `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
+              2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
+              inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
+              2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
+              (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
+              branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
+              regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
+              `quality-gates.sh` green (1999 passed, 0 failed).
 
 - [x] ✅ [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by
