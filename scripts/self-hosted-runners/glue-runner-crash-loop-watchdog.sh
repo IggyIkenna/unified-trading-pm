@@ -134,17 +134,23 @@ clear_alerted() {
   mv "${STATE_FILE}.tmp" "$STATE_FILE"
 }
 
-# Fire a repository_dispatch carrying the alert; best-effort (never fails the watchdog tick).
+# Fire a repository_dispatch carrying the alert. Returns 0 ONLY on a confirmed-sent dispatch --
+# callers gate mark_alerted/clear_alerted on this. Found live 2026-08-05: this used to always
+# `return 0` (token failure) or swallow the gh api call's real exit with a trailing `|| true`,
+# so mark_alerted fired unconditionally regardless of whether anything actually reached Slack --
+# a broken credential path silently marked every condition "already alerted" on its first
+# (failed) attempt, permanently suppressing the real page. Never lets a dispatch failure abort
+# the whole tick under `set -e` -- callers wrap this in an `if`, not a bare call.
 dispatch_alert() {
   local message="$1" severity="$2" dedup_key="$3" recovery="$4" token
-  token="$(resolve_gh_token)" || { log "FATAL: could not resolve GH token, skipping dispatch for ${dedup_key}"; return 0; }
+  token="$(resolve_gh_token)" || { log "FATAL: could not resolve GH token, skipping dispatch for ${dedup_key} -- will retry next tick"; return 1; }
   jq -n \
     --arg message "$message" \
     --arg severity "$severity" \
     --arg dedup_key "$dedup_key" \
     --argjson recovery "$recovery" \
     '{event_type: "glue-runner-health", client_payload: {message: $message, severity: $severity, dedup_key: $dedup_key, cooldown_min: 30, recovery: $recovery}}' \
-  | GH_TOKEN="$token" gh api "repos/${GH_REPO}/dispatches" --input - 2>&1 | sed 's/^/[glue-runner-watchdog] /' || true
+  | GH_TOKEN="$token" gh api "repos/${GH_REPO}/dispatches" --input - 2>&1 | sed 's/^/[glue-runner-watchdog] /'
 }
 
 mapfile -t units < <(systemctl list-units --type=service --all --no-legend 2>/dev/null \
@@ -162,12 +168,13 @@ for unit in "${currently_crashlooping[@]}"; do
   if ! was_alerted "$unit"; then
     restarts="$(systemctl show "$unit" -p NRestarts --value 2>/dev/null || echo "?")"
     log "NEW crash-loop: ${unit} (NRestarts=${restarts}) -- paging"
-    dispatch_alert \
+    if dispatch_alert \
       "\`${unit}\` is crash-looping on \`${THIS_INSTANCE_ID}\` (\`NRestarts=${restarts}\`, state \`activating (auto-restart)\`) -- the runner process is DOWN, not just slow." \
       "CRITICAL" \
       "glue-runner-crash-loop:${unit}" \
-      "false"
-    mark_alerted "$unit"
+      "false"; then
+      mark_alerted "$unit"
+    fi
   fi
 done
 
@@ -184,12 +191,13 @@ if [ -s "$STATE_FILE" ]; then
     done
     if [ "$still_looping" = false ]; then
       log "RECOVERED: ${unit} -- posting bookend"
-      dispatch_alert \
+      if dispatch_alert \
         "\`${unit}\` recovered -- no longer crash-looping on \`${THIS_INSTANCE_ID}\`." \
         "INFO" \
         "glue-runner-crash-loop:${unit}" \
-        "true"
-      clear_alerted "$unit"
+        "true"; then
+        clear_alerted "$unit"
+      fi
     fi
   done < "$STATE_FILE"
 fi
@@ -210,12 +218,13 @@ for unit in "${currently_wedged[@]}"; do
     active_hr="$(awk -v s="$active_sec" 'BEGIN{printf "%.1f", s/3600}')"
     mem_mb="$(awk -v b="$(systemctl show "$unit" -p MemoryCurrent --value 2>/dev/null || echo 0)" 'BEGIN{printf "%.0f", (b+0)/1024/1024}')"
     log "NEW wedge: ${unit} (active ${active_hr}h, ${mem_mb}MB) -- paging"
-    dispatch_alert \
+    if dispatch_alert \
       "\`${unit}\` on \`${THIS_INSTANCE_ID}\` has been continuously active for **${active_hr}h** (>${WEDGED_THRESHOLD_SEC}s threshold, ${mem_mb}MB resident) -- a JIT glue-runner should cycle every job. This is very likely a hung job holding the process alive (Restart=always never fires because it never exits) rather than a slow one. \`systemctl restart ${unit}\` re-registers a fresh JIT token; check GitHub's own runner list for this repo first (\`gh api repos/<owner>/<repo>/actions/runners\`) -- an empty list confirms GitHub has already abandoned tracking this run and nothing else will unstick it." \
       "CRITICAL" \
       "$key" \
-      "false"
-    mark_alerted "$key"
+      "false"; then
+      mark_alerted "$key"
+    fi
   fi
 done
 
@@ -234,12 +243,13 @@ if [ -s "$STATE_FILE" ]; then
     done
     if [ "$still_wedged" = false ]; then
       log "RECOVERED (wedge): ${unit} -- posting bookend"
-      dispatch_alert \
+      if dispatch_alert \
         "\`${unit}\` recovered -- no longer wedged on \`${THIS_INSTANCE_ID}\`." \
         "INFO" \
         "$key" \
-        "true"
-      clear_alerted "$key"
+        "true"; then
+        clear_alerted "$key"
+      fi
     fi
   done < "$STATE_FILE"
 fi
