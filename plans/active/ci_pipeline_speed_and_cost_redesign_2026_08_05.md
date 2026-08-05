@@ -239,7 +239,32 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       needs real testing before fleet-wide rollout (a single canary repo first, verified for a few days, is the safe
       path given this session's own history of 2 separate live incidents from touching this exact runner
       infrastructure). Directly reduces disk WRITE I/O on the same EBS volume this session's capacity investigation was
-      about.
+      about. **IMPLEMENTED + CANARIED 2026-08-05, `fast-checkout.sh` shipped
+      (`unified-trading-pm@b656cb87b`/`23f1ad262`/`91ebc6584`) — mechanism proven SAFE via a real green CI run, but the
+      actual speedup is NOT yet confirmed active.** Deployed to agent-orchestrator's pool as the canary. Found and fixed
+      3 real bugs live, each via an actual failing/succeeding CI run (not just static review) — recorded so none
+      regress: 1. `RUNNER_BASE` (set via the wrapper's systemd `EnvironmentFile`) does NOT propagate into the job's own
+      environment — self-hosted runners don't leak arbitrary host env vars into `run:` steps, only GHA-native ones
+      (`GITHUB_*`) are guaranteed present. Fixed by deriving the pool's base dir from `GITHUB_WORKSPACE`'s own path
+      structure instead (`<RUNNER_BASE>/<INSTANCE>/_work/<REPO>/<REPO>`, this fleet's fixed `work_folder="_work"`
+      convention). 2. Recursively removing `TARGET` where `TARGET == GITHUB_WORKSPACE == the shell's own cwd` (GHA's
+      default for a `run:` step) broke every subsequent command's `getcwd()` — fixed by `cd`ing to the parent dir before
+      any removal. 3. The plain-clone fallback did an unauthenticated `git clone` of a PRIVATE repo before configuring
+      credentials — fails outright (non-interactive credential prompt). Fixed to mirror `actions/checkout@v4`'s own
+      order: init + configure the auth header first, fetch second. **Open mystery, NOT resolved**: even with all 3 fixes
+      live and MD5-verified deployed (`/opt/github-glue-runners-ao/fast-checkout.sh`), the job's own
+      `[ -f "${SCRIPT}" ]` check — and a full `ls -la` of the derived base dir added as a diagnostic — shows the file
+      (and several other long-lived files: `refresh-slot-repo.sh`, `repo/`, `venv/`, `writer-1/`) as ABSENT from the
+      runner's own perspective, while a concurrent direct SSM check of the same real path shows all of them present with
+      correct permissions/ownership. Ruled out: env-var propagation (fixed), systemd sandboxing (no `Protect*`/namespace
+      directives in the unit — read the full unit file, confirmed clean), a live zombie/duplicate runner process
+      (checked via `ps`, none found — JIT-ephemeral had already cycled), mount inconsistency. **Net effect: completely
+      safe (every job correctly falls back to a working plain clone, verified via a real green run) but not yet
+      DELIVERING the intended I/O reduction on the canary pool.** Do NOT roll out to additional pools until this is
+      understood — rolling out a mechanism that always silently no-ops is harmless but pointless, and rolling out to a
+      DIFFERENT pool with a different runner config before understanding root cause risks a different, unknown failure
+      mode. Needs focused follow-up investigation directly on the runner process's own view of its filesystem (e.g., a
+      temporary diagnostic added to `glue-runner-run.sh` itself, run on the VM, rather than more remote guessing).
 
 ## Codex SSOTs
 
