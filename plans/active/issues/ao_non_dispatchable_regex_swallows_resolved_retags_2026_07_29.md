@@ -169,8 +169,8 @@ past tense rather than deleting it outright.
   live code/data check — rather than trusting the prose. Also checked whether any file was further touched by the two
   LATER commits `dae3f1341` (odds-api-key rotation) or `1be175ce8` (2026-07-30 credential/external-blocked re-triage),
   since those could have superseded the state `6edd4486a` captured.
-  - **CONFIRMED-RESOLVED / CORRECT-AS-IS (12 files, 21 items)**: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`,
-    `infra_capture_and_devops_leftovers_2026_07_06.md`,
+  - **CONFIRMED-RESOLVED / CORRECT-AS-IS (12 files, 21 items)**: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (now
+    archived at /plans/archive/2026_07/), `infra_capture_and_devops_leftovers_2026_07_06.md`,
     `/plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
     `mtds_available_at_cross_asset_backfill_2026_07_13.md` (8 items — all trace to the same real CLAUDE.md
     maintenance-window ruling), `prediction_phase_ab_residuals_2026_07_24.md`,
@@ -198,11 +198,12 @@ past tense rather than deleting it outright.
     applied) — it was a plain arithmetic/data error baked into the ruling text that would have misled whoever executes
     the reclassify step into hunting for 7 nonexistent bare-COINBASE rows. Corrected the row counts (9,743 backfill / 7
     reclassify, not 9,736/14) and added an explicit correction note in BOTH this doc and its cross-referencing sibling
-    `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which had copied the same wrong figures into its own promoted
-    todo + its provenance-record "Deferred" section) — the cross-cutting doc's separate COINBASE(7) half is now flagged
-    as a DIFFERENT, older measurement (`audit_index_vs_gcs_spellings.py`, 2026-06-18) not shown to be satisfied by this
-    todo, rather than silently assumed closed. No `BLOCKED-*` marker restoration was needed since the underlying
-    operator-decision gate itself was never wrong — only the row-count math was.
+    `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (now archived at /plans/archive/2026_07/; which had copied the
+    same wrong figures into its own promoted todo + its provenance-record "Deferred" section) — the cross-cutting doc's
+    separate COINBASE(7) half is now flagged as a DIFFERENT, older measurement (`audit_index_vs_gcs_spellings.py`,
+    2026-06-18) not shown to be satisfied by this todo, rather than silently assumed closed. No `BLOCKED-*` marker
+    restoration was needed since the underlying operator-decision gate itself was never wrong — only the row-count math
+    was.
   - **Net result**: of the full 24 originally-rephrased mentions (23 here + the 1 sports item from the prior pass), 2
     needed a correction (1 credential-marker restoration done previously, 1 numeric-fact correction done this session)
     and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely

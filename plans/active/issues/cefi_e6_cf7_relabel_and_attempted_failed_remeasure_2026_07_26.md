@@ -39,7 +39,7 @@ source:
     "cefi_satellite_ao_dispatch_batch2_2026_07_26.md E6 CF-7 diagnostic todo, sourced from
     data_completion_cefi_2026_07_15.md's bare 'E6 CF-7 relabel... 50% attempted_failed (1.33M)' line item.",
   ]
-resolved_by: cefi_satellite_ao_dispatch_batch3_2026_07_26
+resolved_by: cefi_satellite_ao_dispatch_batch3_2026_07_26 # now archived at /plans/archive/2026_07/
 locked_by:
 locked_since:
 supersedes:
@@ -49,7 +49,7 @@ context_scope:
     /plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
   ]

@@ -12,7 +12,7 @@ summary: >-
   named. One genuine cross-tranche conflict was found and initially PARKED for the operator; **ruled 2026-07-28**
   (operator gate-cleanup pass, general design-choice theme applied) and promoted to a 6th dispatchable todo — see
   "Deferred — BLOCKED-OPERATOR-DECISION" below for the resolution record.
-status: active
+status: complete # (was: active) 2026-08-05 -- all 6 todos done, finalized + archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -29,7 +29,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-05"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,7 +53,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
     /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
@@ -63,10 +63,16 @@ context_scope:
 
 # CeFi satellite AO batch 3 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was autonomous with the
-> operator unreachable, so the flip is explicitly reserved for operator review. Flip this frontmatter's `status` to
-> `active` only after that review.
+> **✅ ARCHIVED 2026-08-05 — all 6 todos DONE.** Reconciled all 4 source docs' checkboxes, re-checked all 6 Deferred
+> items (2 gates cleared → batch4 candidates, 4 still blocked with dated re-verification notes), handed the 2
+> provably-shipped stale checkboxes in the deribit-combo doc to a reconcile pass, and archived the parent plan alongside
+> its companion finalize doc in the same commit. See the finalize plan
+> (`/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`) for the full closure trail.
+
+> **Status: draft — NOT dispatched (historical).** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit
+> skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was autonomous
+> with the operator unreachable, so the flip is explicitly reserved for operator review. Flip this frontmatter's
+> `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively:
 > `plans/active/data_completion_cefi_2026_07_15.md` · instruments-service CLI + `t1_batch_scheduler.tf` ·

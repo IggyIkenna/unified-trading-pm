@@ -8,7 +8,7 @@ summary: >-
   blank-`data_type` conflict, the 4 prerequisite-gated items, and the too-large/risky doc) for any whose gate has since
   cleared, then archive batch3 via the standard 6-step ritual. Also carries the one `/plan-reconcile` hand-off this
   audit produced (2 provably-shipped stale checkboxes in the deribit-combo partition-move doc).
-status: active
+status: complete # (was: active) 2026-08-05 -- all 4 todos done, archived alongside parent plan
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,13 +17,13 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-30"
+last_updated: "2026-08-05"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [cefi_satellite_ao_dispatch_batch3_2026_07_26]
+depends_on: [cefi_satellite_ao_dispatch_batch3_2026_07_26] # now archived at /plans/archive/2026_07/
 gate_on_depends: true
 source: >-
   /ag-closeout-audit skill run 2026-07-26 (autonomous), per task_template.md §4's finalize-plan-coverage rule — every
@@ -57,7 +57,13 @@ context_scope:
 
 # CeFi satellite AO batch 3 — finalize
 
-> **Status: draft — NOT dispatched.** Flips to `active` only alongside its parent
+> **✅ ARCHIVED 2026-08-05 — all 4 todos DONE.** Reconciled all 4 source docs' checkboxes, re-checked all 6 Deferred
+> items from the parent plan (2 gates cleared → batch4 candidates, 4 still blocked with dated re-verification notes),
+> handed the 2 provably-shipped stale checkboxes to a reconcile pass, and archived the parent plan
+> `/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` alongside this doc in the same commit. See
+> the Progress Log (todo evidence below) for the full closure trail.
+
+> **Status: draft — NOT dispatched (historical).** Flips to `active` only alongside its parent
 > `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`, and only on explicit operator approval.
 
 > **Machine-gated on `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) — the
@@ -106,7 +112,7 @@ context_scope:
       `issues/deribit_combo_perpetual_partition_move_2026_07_21.md` §9 (`[DESIGN] P1` + `[WRITER] P1`) are already `[x]`
       with full evidence — no flip needed, both already cite `mtds@2ddc6d4a` and the execution-log entry. The remaining
       2 `[DATA] P2` todos were NOT touched (15,119-row `--apply` still operator-gated per §7).
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed each — verify none silently vanish, especially the PARKED conflict) → add the
       archive banner → run the codex-alignment check (batch3 creates no new durable contract; confirm still true, and
@@ -114,7 +120,14 @@ context_scope:
       referrer of `cefi_satellite_ao_dispatch_batch3_2026_07_26` and repoint each to the archived path → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus
       referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside
-      it in the same commit.
+      it in the same commit. **DONE 2026-08-05 (slot-5).** Executed the full 6-step archival ritual: (1) verified all
+      Deferred items already have homes in their source issue docs with dated re-verification notes from todo 2 —
+      nothing silently vanishes, the 2 gate-cleared items are annotated as batch4 candidates; (2) added archive banners
+      to both the parent plan and this finalize doc; (3) codex-alignment confirmed: no new durable contract created by
+      batch3, `deployment-observability.md` edit (`unified-trading-pm@66fa926d5`) verified landed in git log; (4)
+      grepped corpus-wide, found and repointed 6 referrers (batch4, INDEX.md, cefi_e6_cf7, cefi_hl_aster,
+      ao_non_dispatchable_regex, per_venue_scope_key_provisioning) to archive paths; (5) `locked_by` confirmed empty;
+      (6) both plans `git mv`'d to `plans/archive/2026_07/`.
 
 ## Codex SSOTs
 
@@ -127,3 +140,6 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) unchanged — `_finalize` gate doc, no source-code
   paths added per the skip-source carve-out; all 6 entries confirmed resolving on disk.
+- **2026-08-05 (slot-5)**: todo 4 DONE — 6-step archival ritual executed. Both plans archived to
+  `plans/archive/2026_07/`. All 6 corpus referrers repointed. `locked_by` confirmed empty. No codex changes needed
+  (batch3 created no durable contracts). `deployment-observability.md` edit (`66fa926d5`) confirmed landed.

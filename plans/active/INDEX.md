@@ -58,13 +58,14 @@ by hand._
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
-- [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](./cefi_satellite_ao_dispatch_batch3_2026_07_26.md) — Third
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode) immediately
-  after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic) and…
-- [`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26`](./cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md)
+- [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md) —
+  Third AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode)
+  immediately after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic)
+  and… **[ARCHIVED 2026-08-05]**
+- [`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md)
   — Gated closeout for cefi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch1/batch2 finalize pattern: reconcile each source
-  doc's…
+  doc's… **[ARCHIVED 2026-08-05]**
 - [`cefi_satellite_ao_dispatch_batch4_2026_07_31`](./cefi_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** —
   Fourth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-31 (scheduled autonomous
   dispatch, tranche=cefi). Phase 0 re-derived the covering-plan set via `generate_ag_closeout_audit_candidates.py` (101…
