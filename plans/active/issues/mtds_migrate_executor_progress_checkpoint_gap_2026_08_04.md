@@ -117,9 +117,9 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 ### Category B — Non-date scripts: need object-index checkpoint (5 scripts)
 
-- [ ] [DATA] P3. Add object-index checkpoint to `migrate_onchain_perp_perpetual_canonical_2026_07_08.py` (manifest-row
-      iterator, no date loop — needs a different checkpoint shape than `record_vm_progress`; design the pattern before
-      implementing). Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. Add object-index checkpoint to `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`
+      (manifest-row iterator, no date loop — zero-padded object-index keys via `record_vm_progress`, gated on `--apply`,
+      renames sorted deterministically; design doc in commit message). Repo: market-tick-data-service@0eac3708.
 - [ ] [DATA] P3. Add object-index checkpoint to `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`, same
       category. Repo: market-tick-data-service.
 - [ ] [DATA] P3. Add object-index checkpoint to `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py`, same
