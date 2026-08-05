@@ -124,6 +124,18 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
       WITH the diff is 80.63% (PASSES, vs 80.65% clean, −0.02pt); the earlier "76.21% drop" was a truncated-run artifact
       (aster flaky failure cut the suite → partial coverage). No compensating tests needed. — **Done 2026-08-05**,
       evidence: full QG run `/tmp/qg_with_diff.log`, coverage.xml 80.63%. (repo: market-tick-data-service)
+- [ ] [UAC] P1. **Remove `market_metadata` from `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI** —
+      `unified_api_contracts/registry/market_data_categories.py:2264,2269` (added by `6e791b05`, the same commit as the
+      `fills` declaration). Same declared-but-unwired class as `fills`; still blocks the MTDS gate —
+      `test_tier3_prediction_polymarket_no_crash` emits an instrument-less `market_metadata` row (sentinel strict
+      validation at `venue_fetch.py:606` warns but does NOT drop; `DATA_TYPES_BY_ASSET_GROUP["prediction"]` omits it;
+      `registry/data_type_capability.py:1026` records "market_metadata excluded — adapters do not yet write those
+      data_types to the manifest"). Owner: the UAC capability-declaration workers (fleet doc
+      `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`; identical dict/pattern to the `fills` removal at
+      `5f441e0d`). Unblock criterion: MTDS `quality-gates.sh` green — verified the pre-`6e791b05` venue map declared
+      only `trades`/`book_snapshot_5` (`git show 6e791b05^`) and the sentinel test passed in that state. (repo:
+      unified-api-contracts) — **UAC side shipped `unified-api-contracts@ce9d8f12` (08-05)**; MTDS re-gate running to
+      confirm green.
 
 ## Progress Log
 
@@ -180,3 +192,13 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   EXIT-CODE CAVEAT**: the QG background task notification reported "exit code 0" but the authoritative in-band marker is
   `QG_EXIT=1` (task output file) + the final pytest line "1 failed" — the QG is RED; do not trust that task's reported
   exit code. slot-12's P3 remains BLOCKED (green-tree rule); diff still in the MTDS working tree, unshipped.
+- **2026-08-05 (data_engineering slot-12) BLOCKER UNBLOCKED — UAC `market_metadata` removal shipped
+  `unified-api-contracts@ce9d8f12`**: the UAC capability-declaration workers removed `market_metadata` from
+  `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI — exactly the fix recommended in the RE-GATE RESULT entry
+  above. Verified: `rg '"market_metadata"' unified_api_contracts/registry/market_data_categories.py` → 0 hits; both
+  venues now declare only `trades` + `book_snapshot_5`, matching the pre-`6e791b05` green state confirmed via
+  `git show 6e791b05^`. Slot-7 independently corrected the fleet doc's "market_metadata stays" claim (PM@e577d2cc6) and
+  recorded `ce9d8f12` there. MTDS full re-gate re-running (background, log `/tmp/qg_ce9d8f12.log`) against the
+  editable-install view at `ce9d8f12`. **On green**: ship slot-12's 3 gas_fee files via `quickmerge --agent --files`,
+  flip the P3 checkbox in `features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md` same-turn, verify SHA on
+  origin, POST /done.
