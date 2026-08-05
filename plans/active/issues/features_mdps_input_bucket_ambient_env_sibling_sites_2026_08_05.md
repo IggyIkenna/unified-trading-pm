@@ -146,9 +146,14 @@ at features-service@cc5c52b8). Left -004 checkbox `[ ]` — not false-completing
 - [x] ✅ [INFRA] P2. Rebuild + republish the features-service code tarball (`create-code-tarballs.sh`) ahead of any
       features-e2e benchmark relaunch (repo: deployment-service) — verified already current at features-service@cc5c52b8
       (dry-run confirmed: tarball manifest SHA matches HEAD, no rebuild needed).
-- [ ] [INFRA] P3. Diagnose why `commodity-signals-batch-test-*` resolves for the TRADFI:commodity benchmark
+- [x] ✅ [INFRA] P3. Diagnose why `commodity-signals-batch-test-*` resolves for the TRADFI:commodity benchmark
       (`IS_TEST_RUN` sink override vs bucket estate) and provision/fix it (repo: features-service +
-      deployment-service/bucket estate).
+      deployment-service/bucket estate) — **diagnosis: pure provisioning gap.** `_test_bucket()` in
+      `pipeline_e2e_check.py:649-652` derives `commodity-signals-batch-test-{pid}` from the flat `features-commodity`
+      kind by string-inserting `-test-` (since the kind is non-env-tiered, `deployment_env="test"` is a no-op). The
+      bucket was never provisioned; only `commodity-signals-batch-central-element-323112` existed. **Fix: provisioned
+      `gs://commodity-signals-batch-test-central-element-323112`** (ASIA-NORTHEAST1, uniform-bucket-level-access,
+      labels: managed-by=terraform-canonical, env=test, kind=features-commodity).
 - [ ] [DATA] P3. Re-verify the DEFI:onchain dependency gate on a recent day once the sibling sweep ships, then relaunch
       the DEFI:onchain features-e2e benchmark to measure the real number (repo: features-service) — remains tracked in
       `data_pipeline_check_mdps_features-056`.
