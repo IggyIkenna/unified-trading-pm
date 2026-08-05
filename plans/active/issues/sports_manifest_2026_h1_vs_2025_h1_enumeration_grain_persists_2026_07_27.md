@@ -249,11 +249,16 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       need the same two-job model (rolling window + historical backfill) that sports already got; cefi/prediction have a
       different root cause (genuine growth, not the static-default window) and need separate diagnosis. (repo:
       instruments-service, deployment-service)
-- [ ] [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth (88->924, 88->926,
-      51->384 respectively vs the ~4x baseline other sports data_types show, e.g. WEATHER 94->388, MATCHES 102->406) to
-      determine whether it is genuine coverage expansion (more leagues legitimately tracked in 2026) or a
-      duplicate/near-duplicate league_id seeding artifact isolated to those 3 data_types. Read-only classification; no
-      manifest write. (repo: instruments-service)
+- [x] ✅ [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth —
+      instruments-service@7fc96c90. **Verdict: GENUINE COVERAGE EXPANSION, not an artifact.** Original 88→924 figure was
+      manifest ROW COUNTS, not distinct league_ids. Actual distinct league_id growth: FIXTURES 88→438 (4.98x),
+      FIXTURES_OUTCOMES 88→439 (4.99x), ODDS 50→383 (7.66x) — consistent with control data_types WEATHER 94→384 (4.09x)
+      and MATCHES 94→383 (4.07x). 84-100% cross-data_type overlap confirms the same league_ids appear across data_types.
+      Zero case-insensitive duplicates found; all 83 near-duplicate candidates are false positives (different
+      countries/divisions with similar naming conventions). 70%+ of new leagues have actual captured data. One possible
+      real near-duplicate noted: KENYA_FKF_PREMIER_LEAGUE vs KENYA_PREMIER_LEAGUE. Script:
+      `scripts/sports_league_id_growth_investigation_2026_08_05.py` (+ report at
+      `/tmp/sports_league_id_growth_report_2026_08_05.json`).
 
 ## Progress Log
 
