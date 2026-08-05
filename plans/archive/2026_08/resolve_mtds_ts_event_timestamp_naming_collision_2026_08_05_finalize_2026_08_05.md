@@ -9,7 +9,7 @@ summary: >-
   then archives it via the standard 6-step ritual once fully closed. Authored 2026-08-05 to close the
   finalize-plan-coverage gate the source plan's own creation triggered (task_template.md §4 — every assigned_vm:planning
   plan needs a companion gated finalize plan).
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, mtds, mdps, tradfi, data-correctness, ts_event]
 related:
   [
-    /plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md,
+    /plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md,
     /plans/active/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md,
   ]
 created: "2026-08-05"
@@ -45,10 +45,13 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md,
+    /plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-05** — reconciliation complete; source plan archived to
+> `/plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`.
 
 # resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05 — finalize
 
