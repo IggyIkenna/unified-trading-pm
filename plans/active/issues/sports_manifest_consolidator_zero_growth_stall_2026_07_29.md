@@ -444,12 +444,14 @@ cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) th
       `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` (185 MB, 2026-08-05)
       confirms 0 rows with `venue=KALSHI AND source=polymarket_clob`; all 370,426 KALSHI rows carry `source=kalshi`.
       Repo: market-tick-data-service (no code change — investigation only).
-- [ ] [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** — the P1 audit above
-      classified DeFi as structurally low-risk by naming-convention analysis only (its `market-data-tick-defi-prd`
-      manifest is 1.07 GB, judged disproportionate for this session's single-walk budget). Done-when: a single DuckDB
-      read of `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` confirms 0 rows have
-      `data_type` literally equal to any `ALL_DEFI_VENUES` token
-      (`unified-api-contracts/     unified_api_contracts/registry/defi_venues.py`). Repo: unified-trading-library.
+- [x] ✅ [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** (slot 11,
+      2026-08-05). Single DuckDB read of
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (1.07 GB, queried via
+      GCS with column pruning): **0 rows have `data_type` literally equal to any `ALL_DEFI_VENUES` token** (168
+      `PROTOCOL-CHAIN` identifiers vs 33 manifest `data_type` values — all generic categories like `dex_swaps`,
+      `gas_fees`, `lending_indices`; zero overlap). **The sentinel-collision bug class is ABSENT from the DeFi
+      manifest** — the P1 blast-radius audit is now structurally closed (sports-only, confirmed across all 5
+      asset_groups). No code change shipped (read-only investigation).
 
 ## Codex SSOTs
 
