@@ -172,13 +172,14 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       'POLYMARKET-PERP'] excluded"), 07-24/25 + 07-26/27 still correctly `available=False` (real KALSHI failures / no
       other-venue capture). features-service@`46461ebc`. Structural root fix (narrow BINANCE-DELIVERY caps + reclass
       phantom rows) tracked as the follow-up todo below. (repo: features-service and/or market-tick-data-service)
-- [ ] [DATA] P3. **unified-api-contracts / market-tick-data-service** — structural root fix for the BINANCE-DELIVERY
+- [x] ✅ [DATA] P3. **unified-api-contracts / market-tick-data-service** — structural root fix for the BINANCE-DELIVERY
       phantom-`perp_funding` capability uncovered in the P2 above: add a narrowed `VENUE_DATA_TYPE_CAPABILITIES`
       `BINANCE-DELIVERY` entry (mirroring BINANCE-FUTURES: trades/book_snapshot_5/derivative_ticker/liquidations/
       futures_chain — NO perp_funding/options_chain/ohlcv_1m/volatility_index) so the fallback no longer seeds phantom
       EXPECTED cells, then reclass the ~40 existing BINANCE-DELIVERY perp_funding `attempted_failed`/`empty_confirmed`
       rows (06-02→08-04) to `expected_unattempted` or drop per manifest policy (prod cefi manifest; human-verified
-      reclass). (repo: unified-api-contracts + market-tick-data-service)
+      reclass). (repo: unified-api-contracts + market-tick-data-service) — unified-api-contracts@f2214c09
+      (VENUE_DATA_TYPE_CAPABILITIES entry added) + market-tick-data-service@dedd50c1 (reclass script)
 - [x] ✅ [SCRIPT] P2. **e2e-testing** — fix multi_timeframe `smoke_matrix.py` verifier (the two-bug class already fixed
       for cross_instrument/onchain/sports/volatility in `e2e-testing@fbaa722` but MISSED for multi_timeframe): (1)
       `_verify_gcs_parquet` prefix is `features/by_date/day={date}/` but the real writer path is
