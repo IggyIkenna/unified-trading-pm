@@ -108,10 +108,15 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       `POST /api/fleet/watchdog/kill-events` (additive dual-write alongside existing AO-internal POST). Opt-in via
       `RW_DEPLOYMENT_API_URL` env var. Dry-run sends `killed: false`; live kill sends `killed: true`. Fire-and-forget
       with 3s connect / 5s max-time. config.yaml updated with new keys.
-- [ ] [BACKEND] P2. Add a `GET` read route in deployment-api (e.g. `/api/watchdog/kill-events?vm_name=&hours=`)
+- [x] ✅ [BACKEND] P2. Add a `GET` read route in deployment-api (e.g. `/api/watchdog/kill-events?vm_name=&hours=`)
       returning recent rows, following `GET /api/vm-resources/rolling`'s query-shape conventions in
       `deployment-api/deployment_api/routes/vm_resource_history.py`. Done when the route returns real rows for the AO
-      host after the prior todo has produced at least one.
+      host after the prior todo has produced at least one. — deployment-api@37d6f14 Evidence: GET
+      /api/watchdog/kill-events (prefix /api/watchdog, router watchdog_events.py) + SQL builder
+      `watchdog_kill_events_sql()` (operational_data_queries.py), wired in main.py, 15 unit tests green, QG green. Route
+      SQL validated live against central-element-323112 table (schema matches plan). Table currently has 0 rows (no kill
+      event produced yet — the [REVIEW] P3 todo owns triggering the first real/dry-run kill); route degrades honestly to
+      empty until then.
 - [ ] [UI] P3. Add a kill-events panel to `deployment-ui/src/pages/VmResourceComparison.tsx`'s existing per-VM
       expandable-row scaffolding (the same one already wired to `getProcessCategoryBreakdown`), showing recent kills for
       the AO host: timestamp, command, reason, rss_mb/limit_mb. Done when the panel renders real data for the AO host in
