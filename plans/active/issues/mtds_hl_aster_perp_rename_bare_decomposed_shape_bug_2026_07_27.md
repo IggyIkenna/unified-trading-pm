@@ -209,21 +209,26 @@ sibling todo reads `[x]`.
       runtime gate for filename correctness. → new todo 6 below. — `market-tick-data-service` (read-only code audit, no
       code change).
 
-- [ ] [SCRIPT] P3. **Harden `do_rename()`'s `deleted_dup_source` branch with a content-equality check before it deletes
-      the old object** (flagged 2026-08-03 by review agt-de20d5 after the slot-3 `--apply` run). That branch currently
-      real-deletes the OLD (stale-duplicate) object based solely on the NEW canonical name's EXISTENCE — it does NOT
-      compare content (crc32c / size / row-count) between old and new before the delete, so a genuinely-different object
-      that happened to collide on the canonical name would be silently destroyed. The 2026-08-03 slot-3 run deleted
-      1,048 objects via this path against prod bucket `market-data-tick-cefi-prd-central-element-323112`; review
-      confirmed live that bucket carries a 604800s (7-day) GCS soft-delete policy, so those specific deletes are
-      RECOVERABLE through 2026-08-10 if ever found wrong — this is a hardening follow-up, NOT an active-loss incident.
-      Process-gap note for the audit trail: that `--apply` todo was not `[OPERATOR]`-tagged and did not cite a fresh
-      soft-delete-retention check (task_template.md finding T's bar); adding the content-equality guard removes the
-      reliance on that missing gate. Repo: market-tick-data-service. Real-but-P3 because the same code path WILL run
-      again soon (the sibling `lending_indices` launcher shares the identical `do_rename()`-adjacent metadata-delimiter
-      bug class). **Done when**: `do_rename()`'s dedup-delete path performs a crc32c/size (or row-count) equality
-      assertion between the old object and the pre-existing canonical object and only deletes the old one when they
-      match, refusing + logging the delete on mismatch; add a unit test covering the mismatch-refusal case.
+- [x] ✅ [SCRIPT] P3. **Harden `do_rename()`'s `deleted_dup_source` branch with a content-equality check before it
+      deletes the old object** — `market-tick-data-service@ac74212b` (content-equality check via crc32c+size comparison
+      added to `do_rename()`; 6 new unit tests: match→delete, crc32c/size/both mismatch→refuse,
+      source-gone→already_canonical, dry-run→no GCS calls; also fixed pre-existing DEFI shard count drift in
+      `test_pipeline_e2e_prediction_canonical.py` (2856→2958) to restore QG-green; 10020 tests pass, QG green,
+      quickmerge landed). (flagged 2026-08-03 by review agt-de20d5 after the slot-3 `--apply` run). That branch
+      currently real-deletes the OLD (stale-duplicate) object based solely on the NEW canonical name's EXISTENCE — it
+      does NOT compare content (crc32c / size / row-count) between old and new before the delete, so a
+      genuinely-different object that happened to collide on the canonical name would be silently destroyed. The
+      2026-08-03 slot-3 run deleted 1,048 objects via this path against prod bucket
+      `market-data-tick-cefi-prd-central-element-323112`; review confirmed live that bucket carries a 604800s (7-day)
+      GCS soft-delete policy, so those specific deletes are RECOVERABLE through 2026-08-10 if ever found wrong — this is
+      a hardening follow-up, NOT an active-loss incident. Process-gap note for the audit trail: that `--apply` todo was
+      not `[OPERATOR]`-tagged and did not cite a fresh soft-delete-retention check (task_template.md finding T's bar);
+      adding the content-equality guard removes the reliance on that missing gate. Repo: market-tick-data-service.
+      Real-but-P3 because the same code path WILL run again soon (the sibling `lending_indices` launcher shares the
+      identical `do_rename()`-adjacent metadata-delimiter bug class). **Done when**: `do_rename()`'s dedup-delete path
+      performs a crc32c/size (or row-count) equality assertion between the old object and the pre-existing canonical
+      object and only deletes the old one when they match, refusing + logging the delete on mismatch; add a unit test
+      covering the mismatch-refusal case.
 
 - [x] ✅ [SCRIPT] P2. **Harden HL/ASTER adapters to stamp canonical `instrument_id` directly** —
       market-tick-data-service@eda8ad68. HL adapter (`hyperliquid_s3.py`): all 4 producers (`_fill_to_trade_row`,
