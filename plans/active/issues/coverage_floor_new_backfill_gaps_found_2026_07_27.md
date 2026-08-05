@@ -145,3 +145,4 @@ context_scope:
   (reverses #3). All 3 todos in this doc now closed; doc archival eligible but header note says fold into parent doc +
   delete — out of scope for this task. Evidence: manifest query (bounded column-projected read, features-service venv),
   Tardis API probe, code audit of venue_mapping.py, symbol_rules.py, mvp_scope.py v10, launch-cefi-sharded-backfill.sh.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

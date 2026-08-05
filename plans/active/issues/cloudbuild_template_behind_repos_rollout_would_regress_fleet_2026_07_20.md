@@ -233,3 +233,4 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
   `ci_satellite_ao_dispatch_batch1_2026_07_26.md` reference for the current AO-dispatchable copy
   `ci_satellite_ao_dispatch_batch5_2026_08_02.md`, added the drift-checker's ratchet baseline file, dropped two older
   historical-context docs to stay within the 2-6 entry budget.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

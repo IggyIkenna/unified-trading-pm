@@ -252,3 +252,4 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
   defi/tradfi/sports, explicitly gated in-doc on operator sign-off ("hard-stop, never-autonomous" per the delete-safety
   protocol) — a genuine human-only gate, not a judgment-free bounded task. The 2026-08-03 inline annotation resolves
   only the CEFI CF-audit-adjudication half; the bucket-delete half remains open and correctly NA.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

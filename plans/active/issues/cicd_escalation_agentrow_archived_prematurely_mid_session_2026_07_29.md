@@ -340,3 +340,4 @@ cleanly instead of ending on an issue-doc corroboration.
   urgency but does not change its eligibility — still a genuine design/risk call, not a bounded worker-executable todo.
   Cross-validated: today's sibling `/ag-closeout-audit ao` batch6 run independently declined this doc into its
   "too-large/unscoped-design" bucket.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -475,3 +475,4 @@ Leaving todo 3 unchecked, this task (`-003`, todo 4) is done — calling `/done`
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
 - **context-scout 2026-08-03 (re-scout)**: swapped the now-stale capacity-crisis doc (the 2026-08-02 entry confirms that
   blocker cleared) for the actual regen script (`generate_ui_reference_data.py`) todo 3's remaining work runs.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

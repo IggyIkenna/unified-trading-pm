@@ -206,3 +206,4 @@ the verification-only todo that surfaced it). Candidate hypotheses, none confirm
   dropped the async-wait-discipline codex doc since the hang mechanism is now deterministically understood.
 - 2026-08-03 (slot-9, backend_engineer): shipped the `[BACKEND] P3` reload()-elimination follow-up — see checkbox above
   for full detail. One open todo remains in this doc (`[INFRA] P3` stale-prefix pruning), so not archiving.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

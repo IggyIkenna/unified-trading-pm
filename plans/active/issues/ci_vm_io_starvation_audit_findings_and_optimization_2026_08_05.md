@@ -43,6 +43,14 @@ resolved_by:
 source: ["interactive audit session 2026-08-05 — CI runner migration verification + I/O starvation diagnosis"]
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+  ]
 ---
 
 # CI VM I/O Starvation — Audit Findings, Root Causes, and Proposed Solutions
@@ -369,3 +377,4 @@ flipped.
   Diagnosed I/O starvation: volume at default 6,000 IOPS, shared-VM resource caps still active, no concurrency cap.
   Removed resource caps live. Bumped volume to 16,000 IOPS. Documented proposed worktree + shared-venv architecture.
   Identified remaining GitHub billing sources. Flagged stale codex docs.
+- **context-scout 2026-08-05**: populated context_scope (5 entries).

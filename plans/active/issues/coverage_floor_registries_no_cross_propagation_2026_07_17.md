@@ -306,3 +306,4 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
 - **slot-6 2026-08-05** (coverage_floor_registries_no_cross_propagation-008): BINANCE-DELIVERY investigation complete —
   conclusively dead/never-implemented. Annotated `venue_mapping.py` comment (unified-api-contracts@9241dc85).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -332,3 +332,4 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   `/plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_r5_smoke_ledger_history_2026_08_05.md`,
   expanded `context_scope` from 2→5 pre-computed entries, and added a Progress Log marker. Result: 896L, well under the
   1000L hard cap — `check_line_caps.sh` passes. All 11 docs in this issue are now resolved; all checkboxes flipped.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -133,3 +133,4 @@ repeated per-incident coaching.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries) — already minimal + source-anchored (`verify.py`
   is confirmed to be the actual guard implementation), left unchanged.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

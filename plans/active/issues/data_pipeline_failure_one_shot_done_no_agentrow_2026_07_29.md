@@ -248,3 +248,4 @@ still in flight.
   different mechanism. **Suggested next step for whoever revisits this**: the very next `one_shot_complete` 400 — call
   `claim-interactive` FIRST, then retry the SAME `/done` call before concluding it is still broken; that single retry is
   the missing data point every report so far (including this one) has left open.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

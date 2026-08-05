@@ -106,3 +106,4 @@ context_scope:
   plausible future RECLASSIFY candidates for a dedicated split, not actioned this run.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
