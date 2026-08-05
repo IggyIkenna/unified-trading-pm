@@ -578,47 +578,80 @@ PYEOF
 
       # Switch to (or create) the branch.
       #
-      # GUARD (2026-07-22, quickmerge_silently_reset_unpushed_commit_2026_07_22 /
-      # utl_shared_clone_commits_repeatedly_reset_2026_07_22 — confirmed root cause):
+      # GUARD (2026-07-22 / 2026-07-28 / 2026-08-05, quickmerge_silently_reset_unpushed_commit_2026_07_22 /
+      # utl_shared_clone_commits_repeatedly_reset_2026_07_22 — confirmed root cause, TWICE reproduced live):
       # `checkout -B branch_name origin/branch_name` unconditionally RESETS
       # refs/heads/$branch_name to origin, discarding any local commits ahead of
       # origin — and this ancestor clone ($ancestor_path) is a SINGLE SHARED
       # directory, not a private per-slot worktree, so it can be a DIFFERENT
       # concurrent agent's committed-but-unpushed work sitting on this exact
-      # branch (branch_name is routinely the fleet's own integration branch). The
-      # reflog message this produces ("branch: Reset to origin/<branch>") plus
-      # "the commit survived only via reflog until gc" matches both incident docs
-      # exactly. Preserve any local-ahead commits to a named, content-addressed
-      # ref BEFORE resetting — this does not change behavior for the common case
-      # (no local-ahead commits, the vast majority of cascades) and turns the rare
-      # case from silent, reflog-only-recoverable data loss into a loud, durably
-      # recoverable one. Local-only (not pushed) — deliberately minimal; durability
-      # beyond this clone is a possible follow-up, not required to close the gap.
-      if git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
-        _cascade_ahead=$(git rev-list --count "origin/$branch_name..refs/heads/$branch_name" 2>/dev/null || echo 0)
-        if [ "${_cascade_ahead:-0}" -gt 0 ]; then
-          _cascade_preserve_sha=$(git rev-parse "refs/heads/$branch_name" 2>/dev/null || echo "")
-          if [ -n "$_cascade_preserve_sha" ]; then
-            _cascade_preserve_ref="refs/wip-preserve/cascade-${ancestor}-${_cascade_preserve_sha:0:12}"
-            git update-ref "$_cascade_preserve_ref" "$_cascade_preserve_sha" 2>/dev/null || true
-            echo "[cascade] ⚠️  $ancestor: refs/heads/$branch_name had ${_cascade_ahead} commit(s) ahead of origin/$branch_name — preserved at ${_cascade_preserve_ref} before realigning (local-only; NOT pushed). Recover: cd $ancestor_path && git checkout -B $branch_name $_cascade_preserve_ref"
-          fi
+      # branch (branch_name is routinely the fleet's own integration branch).
+      #
+      # NOTE this is a real, INTENTIONAL reset, not a bug to "skip" (operator
+      # ruling 2026-08-05, todo 8 superseded): Stage 1's dependency validation
+      # for THIS quickmerge run needs $ancestor_path to genuinely reflect
+      # origin/$branch_name — that's the whole point of the cascade. Skipping
+      # the reset when local is ahead would make "QG passed locally" mean
+      # nothing, because it would validate against a DIFFERENT concurrent
+      # agent's possibly-never-promoted local state instead of what will
+      # actually land on the integration branch. The fix is making the
+      # preserve-then-reset ATOMIC (closing the TOCTOU race root-caused in
+      # todo 7, reproduced live by injecting a delay between the old
+      # ahead-check and the checkout), not skipping the reset.
+      #
+      # Two-part fix:
+      #   1. flock this whole critical section (stash / preserve / checkout /
+      #      stash-pop) on a lock file inside the ancestor's OWN .git dir —
+      #      serializes concurrent cascades from DIFFERENT quickmerge.sh
+      #      invocations hitting the same ancestor (the actual observed
+      #      2026-07-22/07-28 trigger: many agents shipping concurrently, each
+      #      cascading through a shared ancestor). Degrades to unlocked
+      #      (best-effort, prior behavior) if flock(1) is unavailable.
+      #   2. Unconditional, no-branch preserve immediately adjacent to the
+      #      checkout — removes the old "count ahead over history, THEN decide
+      #      whether to preserve" gap (an O(history) git rev-list call was the
+      #      window todo 7's repro exploited); capturing the CURRENT tip and
+      #      resetting are now two back-to-back plumbing calls with no
+      #      variable-length computation between them. This narrows (does not
+      #      claim to fully eliminate) exposure to a totally unrelated,
+      #      lock-unaware `git commit` landing in that same host process's
+      #      shared directory at the exact instant between the two calls —
+      #      closing that residual sliver needs every writer to respect the
+      #      same lock, out of scope here. update-ref is a cheap no-op when the
+      #      preserved sha already equals origin's (the common case).
+      _cascade_lock_fd=221
+      _cascade_lock_file="$ancestor_path/.git/quickmerge-cascade.lock"
+      _cascade_realign_and_restore() {
+        _cascade_preserve_sha=$(git rev-parse --verify --quiet "refs/heads/$branch_name" 2>/dev/null || echo "")
+        if [ -n "$_cascade_preserve_sha" ]; then
+          _cascade_preserve_ref="refs/wip-preserve/cascade-${ancestor}-${_cascade_preserve_sha:0:12}"
+          git update-ref "$_cascade_preserve_ref" "$_cascade_preserve_sha" 2>/dev/null || true
         fi
-      fi
-      if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
-        git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
-          git checkout "$branch_name" --quiet 2>/dev/null || \
+        if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
+          git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
+            git checkout "$branch_name" --quiet 2>/dev/null || \
+            git checkout -b "$branch_name" origin/main --quiet
+        elif git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
+          git checkout "$branch_name" --quiet
+        else
           git checkout -b "$branch_name" origin/main --quiet
-      elif git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
-        git checkout "$branch_name" --quiet
+        fi
+        if [ -n "$_cascade_preserve_sha" ] && [ "$(git rev-parse "$branch_name" 2>/dev/null)" != "$_cascade_preserve_sha" ]; then
+          echo "[cascade] ⚠️  $ancestor: refs/heads/$branch_name was at ${_cascade_preserve_sha:0:12}, realigned to origin/$branch_name — prior tip preserved at ${_cascade_preserve_ref} (local-only; NOT pushed). Recover: cd $ancestor_path && git checkout -B $branch_name $_cascade_preserve_ref"
+        fi
+        if [ "$stashed" = 1 ] && git stash list 2>/dev/null | grep -q "cascade-$$-$branch_name"; then
+          git stash pop --quiet 2>/dev/null || \
+            echo "[cascade] ⚠️  $ancestor: stash pop had conflicts — resolve manually before committing"
+        fi
+      }
+      if command -v flock >/dev/null 2>&1 && eval "exec ${_cascade_lock_fd}>\"\$_cascade_lock_file\"" 2>/dev/null; then
+        flock "$_cascade_lock_fd"
+        _cascade_realign_and_restore
+        flock -u "$_cascade_lock_fd" 2>/dev/null || true
+        eval "exec ${_cascade_lock_fd}>&-" 2>/dev/null || true
       else
-        git checkout -b "$branch_name" origin/main --quiet
-      fi
-
-      # Restore stash on the new branch
-      if [ "$stashed" = 1 ] && git stash list 2>/dev/null | grep -q "cascade-$$-$branch_name"; then
-        git stash pop --quiet 2>/dev/null || \
-          echo "[cascade] ⚠️  $ancestor: stash pop had conflicts — resolve manually before committing"
+        echo "[cascade] ⚠️  $ancestor: flock(1) unavailable or lock file uncreatable — realigning WITHOUT the concurrent-cascade lock"
+        _cascade_realign_and_restore
       fi
     )
     echo "[cascade] ✅ $ancestor on branch '$branch_name'"
