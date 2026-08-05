@@ -80,10 +80,10 @@
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.95.0",
     "unified-trading-library": "0.74.0",
-    "unified-trading-pm": "1.2.720",
+    "unified-trading-pm": "1.2.722",
     "market-data-processing-service": "0.25.0",
     "e2e-testing": "0.41.0",
-    "agent-orchestrator": "0.97.0",
+    "agent-orchestrator": "0.100.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
     "strategy-service": "0.51.0",
@@ -824,7 +824,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": 88.66,
         "large_file_count": 7,
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": "pytest",
+        "coverage_pct": 96.44,
         "warn_file_count": 37,
-        "large_file_count": 27
+        "large_file_count": 27,
+        "qg_red_reason": null
       }
     },
     "unified-trading-library": {
@@ -2085,9 +2085,9 @@
       "version": "0.32.0"
     },
     "execution-service": {
-      "branch": "staging",
-      "sha": "39044da7ac880215c488ed2b96cb536f7af43c8f",
-      "version": "0.38.0"
+      "version": "0.38.0",
+      "sha": "b503d9dab05d6a173bec26f7f5b4dea6ae485283",
+      "branch": "staging"
     },
     "deployment-api": {
       "branch": "staging",
@@ -2195,8 +2195,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.74.1.dev2+g33fbd738e",
-      "published_at": "2026-08-05T08:55:32Z",
+      "version": "0.74.1.dev2+gdd1932795",
+      "published_at": "2026-08-05T11:38:52Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
