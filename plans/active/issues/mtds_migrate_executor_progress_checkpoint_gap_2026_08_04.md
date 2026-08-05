@@ -135,5 +135,5 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 ## Progress Log
 
-- [ ] [DATA] P3. Slot 7 (2026-08-05): shipped `migrate_prediction_trades_legacy_bundle_2026_07_28.py` checkpoint
+- [x] ✅ [DATA] P3. Slot 7 (2026-08-05): shipped `migrate_prediction_trades_legacy_bundle_2026_07_28.py` checkpoint
       (market-tick-data-service@ad9de1ac), raced with slot-4 (@9ba50aa0) — both landed; idempotent change.
