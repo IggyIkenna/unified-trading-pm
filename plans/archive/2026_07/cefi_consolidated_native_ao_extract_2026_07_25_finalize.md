@@ -9,7 +9,7 @@ summary: >-
   during the triage (KRAKEN-SPOT Script-2 item, the 658-wire-key item, the catalogue-gap enumeration item, the DERIBIT
   combo writer-fix half, and re-verifying the _DRYRUN_COLS P0) — deliberately deferred from the extraction plan itself
   so the parent doc's edit surface is touched once, coherently.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -57,6 +57,12 @@ context_scope:
 
 # CeFi native AO extract — finalize
 
+> **🟢 ARCHIVED 2026-08-05.** All 3 todos resolved: the 12 fresh-work checkboxes reconciled (todo 1), the 5
+> stale-checkbox findings flipped with fresh re-verification (todo 2), and the parent plan archived via the standard
+> 6-step ritual (todo 3). Moved to `/plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md`;
+> corpus referrers updated. The companion `cefi_consolidated_native_ao_extract_2026_07_25.md` is co-archived in the same
+> commit.
+>
 > **Machine-gated on `cefi_consolidated_native_ao_extract_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 12 tasks in that plan are `done`. `sequential: true` because
 > todo 2 (stale-checkbox flips) should follow todo 1 (fresh-work checkbox flips) to avoid two concurrent workers editing
@@ -82,7 +88,7 @@ context_scope:
       confirmed in `_DRYRUN_COLS` at
       `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`, `1284606a` on LDR, fix
       predates triage. Repo: unified-trading-pm.
-- [ ] [DOC] P3. **Archive `cefi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P3. **Archive `cefi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked (all 20 human-only classifications
       were already either cited as staying in the parent doc, or resolved by todo 2 above) → add the archive banner →
       run the codex-alignment check → grep the corpus for every referrer of

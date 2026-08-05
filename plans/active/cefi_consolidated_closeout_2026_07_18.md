@@ -44,8 +44,8 @@ related:
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
   ]
 created: 2026-07-18
 last_updated: "2026-07-25" # 2026-07-25: 4-child split (migration-cutover, coverage-backfill, candle-namespace, misc-hygiene) + Track 0 cryptovenue-phases embed (cefi.1) + 11 AO-readiness fixes; was 2026-07-24

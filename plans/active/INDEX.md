@@ -47,13 +47,6 @@ by hand._
   — The "Aggregated source docs" discoverability index extracted verbatim from
   cefi_consolidated_closeout_2026_07_18.md's 2026-07-24 line-cap trim (2nd pass -- the umbrella:true exemption was
   removed same-day, flat 1000L hard cap now applies…
-- [`cefi_consolidated_native_ao_extract_2026_07_25`](./cefi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
-  AO-eligibility triage of cefi_consolidated_closeout_2026_07_18.md's OWN 32 native `- [ ]` todos (not the satellite-doc
-  digest, already covered by cefi_satellite_ao_dispatch_batch1_2026_07_25.md). Classified every open native todo…
-- [`cefi_consolidated_native_ao_extract_2026_07_25_finalize`](./cefi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for cefi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 12 of that plan's todos are done. Mirrors the batch1_finalize pattern, plus one extra:
-  because the…
 - [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once

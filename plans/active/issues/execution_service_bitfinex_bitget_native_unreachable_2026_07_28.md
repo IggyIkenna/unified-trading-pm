@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [dead-code, adapters, cefi, execution]
 related:
   [
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
   ]
@@ -41,7 +41,7 @@ depends_on: []
 locked_by: live-defi-rollout
 context_scope:
   [
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
     /plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md,
     execution-service/execution_service/trade_execution/factory.py,

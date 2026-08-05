@@ -13,8 +13,8 @@ summary: >-
   cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md Finding 5, but the parent's checkboxes were never
   flipped. 2 of the 12 AO-eligible candidates (BITGET-FUTURES catalogue rollup, _DRYRUN_COLS fix) are net-new scoped
   tasks derived from that staleness finding, not literal re-drafts of a stale line.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [cefi]
 stage: [data]
 repos:
@@ -71,6 +71,14 @@ context_scope:
 
 # CeFi consolidated closeout — native todo AO extraction
 
+> **🟢 ARCHIVED 2026-08-05.** All 12 todos resolved: every candidate shipped or confirmed already-done, the 20
+> human-only items reconciled (5 stale checkboxes flipped in the parent doc via the companion finalize plan). Closed out
+> via `cefi_consolidated_native_ao_extract_2026_07_25_finalize.md` (source-doc reconciliation + stale-checkbox flips +
+> this archival). Moved to `/plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md`; corpus referrers
+> updated. No new durable contract from this plan — every todo executed an already-decided spec from the parent doc or
+> was a bounded audit/measurement feeding a still-open human decision recorded there; codex-alignment check: nothing to
+> update.
+>
 > **Status: draft.** Per CLAUDE.md's plan-destination rule, never auto-shipped to `active` — flip only after operator
 > review. All 12 todos below are same-priority-within-doc and touch distinct files (verified per-todo below; the one
 > real ordering dependency, Track 7's verify-then-backfill, was resolved by MERGING the two steps into one todo rather

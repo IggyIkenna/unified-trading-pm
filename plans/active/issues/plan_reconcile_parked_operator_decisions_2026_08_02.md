@@ -117,10 +117,10 @@ the data-loss finding to its own issue doc first. **Other**: operator text.
 
 - `/plans/active/cefi_consolidated_closeout_2026_07_18.md:183-190` — Track 1 "DONE 2026-07-27... every shard
   EXIT_STATUS=0... 0 further planned changes."
-- `/plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md:332-335`, SAME day — the identical artifact "turned
-  out ~2 orders of magnitude larger than planned (~4.5M objects, not ~12,662)... **still in progress**." Corroborated by
-  `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` and children showing 17/44 shards still incomplete on
-  2026-07-31, four days after the claimed completion.
+- `/plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md:332-335`, SAME day — the identical artifact
+  "turned out ~2 orders of magnitude larger than planned (~4.5M objects, not ~12,662)... **still in progress**."
+  Corroborated by `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` and children showing 17/44 shards still
+  incomplete on 2026-07-31, four days after the claimed completion.
 
 **A [WORKER REC]**: un-check Track 1 — the fleet docs are the measured ground truth and the closeout is the roll-up.
 **B**: keep it checked and add a "roll-up only, see fleet docs" qualifier. **Other**: operator text.

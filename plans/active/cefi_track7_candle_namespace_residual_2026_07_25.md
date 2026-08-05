@@ -19,7 +19,7 @@ tags: [cefi, close-out, candle, track-7, bundle-collision, operator-gated-delete
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
   ]
@@ -50,7 +50,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,

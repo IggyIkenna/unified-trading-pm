@@ -17,7 +17,7 @@ related:
   [
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-31"
@@ -44,7 +44,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
