@@ -75,17 +75,22 @@ context_scope:
       id-form mismatch); 1 remaining open (Deferred P2 marker-format migration, still BLOCKED-OPERATOR-DECISION) — NOT
       resolved. Each cited SHAs reachable on origin: ✅. Remaining-open counts explicitly stated: ✅.
 
-- [ ] [REVIEW] P2. **Re-check batch5's single Deferred item for a cleared gate.** The deferred item is
+- [x] ✅ [REVIEW] P2. **Re-checked batch5's single Deferred item — gate still blocked (2026-08-05, slot 8).** The
+      deferred item is
       `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`'s
       `[DATA] P2` marker-format prod migration (~700 unmigrated manifest ids across BYBIT raw-date dated futures,
       COINBASE-FUTURES PERPETUAL, BITGET-FUTURES PERPETUAL), ruled KEEP-NA on 2026-07-30 for lacking the delete/apply
-      gate. Re-verify whether its blocker has since cleared: has an `[OPERATOR]` tag with a delete-safety cite been
-      added to that todo, or has a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` ≥ 604800s reversibility
-      check been recorded for the target bucket? If cleared, record it as a batch6 candidate — **do not draft the todo
-      here**, this finalize plan's scope is reconciliation, not fresh drafting. If still blocked, record a dated
-      re-verification. Also re-check whether batch5's own catalogue-completeness todo produced a follow-up that belongs
-      in the same batch6 slot. **Done when**: the Deferred entry carries either a "gate cleared → batch6 candidate" note
-      or a dated re-confirmation that it is still blocked.
+      gate. **Re-verification 2026-08-05**: re-read the issue doc live — the P2 todo remains unchecked, the doc is still
+      `assigned_vm: NA`, no `[OPERATOR]` tag with a delete-safety cite has been added, no
+      `gcs_bucket_soft_delete_retention_seconds()` ≥ 604800s reversibility check has been recorded for the target
+      bucket, and the latest na-eligibility-audit (2026-08-04) reaffirmed KEEP-NA. **Gate has not cleared.** When it
+      does clear (either via an `[OPERATOR]` tag with a delete-safety cite per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a, or a fresh same-run reversibility check), the
+      ~700-id migration is a natural batch6 candidate — do not draft it here (this finalize plan's scope is
+      reconciliation, not fresh drafting). **Batch5's own P3 catalogue-completeness todo** (slot 5, 2026-08-05, resolved
+      at unified-trading-pm@766822efe) found 10 legacy Kraken id-form mismatches that would be absorbed by this same
+      marker-format migration — no separate follow-up todo is needed beyond the existing Deferred P2. **Verdict**: dated
+      re-confirmation that the gate is still blocked; batch6 candidacy recorded.
 
 - [ ] [DOC] P2. **Author the missing gated finalize sibling for the bitfinex/bitget reclassified doc.**
       `/plans/active/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md` was flipped
