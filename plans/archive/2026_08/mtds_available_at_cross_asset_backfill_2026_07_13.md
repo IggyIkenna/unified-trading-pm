@@ -460,9 +460,11 @@ dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol" part was NOT 
 false-success was only found AFTER the archive. The defi lane is genuinely INCOMPLETE until the re-run passes verify +
 resume.
 
-**Remaining (resume here)**: (1) re-run the apply WITHOUT `MANIFEST_ALLOW_STALE_FALLBACK=true` — from MTDS:
-`GCP_PROJECT_ID=central-element-323112 PYTHONPATH=. nohup .venv/bin/python -m market_tick_data_service.scripts.rebuild_defi_available_at --start-date 2020-01-01 --end-date 2026-08-04 --chunk-days 7`
-(~50 min, chunk ~147 continues since per-VM shards are idempotent); (2) force-consolidate via
+**Remaining (resume here)**: (1) re-run the apply WITHOUT `MANIFEST_ALLOW_STALE_FALLBACK=true` — from MTDS, **MUST
+launch with `env -u CLAUDE_CONFIG_DIR`** (see the Run-2 CRASH block — the orchestrator `orphan_reap` sweep kills any
+nohup'd python that inherits `CLAUDE_CONFIG_DIR=orch-slot-<N>`; the apply never reads that var, verified via `rg`):
+`GCP_PROJECT_ID=central-element-323112 PYTHONPATH=. nohup env -u CLAUDE_CONFIG_DIR .venv/bin/python -m market_tick_data_service.scripts.rebuild_defi_available_at --start-date 2020-01-01 --end-date 2026-08-04 --chunk-days 7`
+(~45 min, chunk ~42 continues since per-VM shards are idempotent); (2) force-consolidate via
 `… -m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112 --force`;
 (3) verify with `scripts/mtds_defi_fillrate_check_2026_08_05.py` (fill-rate must RISE, `MANIFEST_COLUMN_FILL_REGRESSION`
 must not trip, row counts unchanged); (4) resume cron via
@@ -497,3 +499,33 @@ idempotent — a partial run recovers by re-running the same command. **Next ses
 `[[VM_PROGRESS]] last_completed_date=… monotonic=true`; on process EXIT verify no crash markers + the final completed
 chunk, then force-consolidate → fill-rate verify → resume cron → `/done` (protocol above). Do NOT run QG/quickmerge
 while it is alive.
+
+**Run-2 CRASH (2026-08-05 20:51:41 UTC, slot-15)**: run `20260805T204606Z-b1ce4315` (PID 1194491) died SILENTLY
+mid-chunk-42 (2020-10-14..20) — same signature as run-1: no completion line, 0 Traceback/ERROR/OOM markers. Chunks 1-41
+completed cleanly (2,661 cells enriched this run, write_errors 0). **ROOT CAUSE — the run-1 "no QG while alive" lesson
+is RETRACTED**: journald shows the killer in both cases —
+`20:38:51 WARNING orphan_reap sweep: slot 15 pid 782156 age=335s KILLED` and
+`20:51:48 WARNING orphan_reap sweep: slot 15 pid 1194491 age=345s KILLED`. The agent-orchestrator
+`sweep_orphan_processes` (`server/orphan_reap.py`; LIVE — `tuning.orphan_sweep_dry_run=false`; grace
+`tuning.boot_grace_seconds=300`) matches ANY OS process whose `CLAUDE_CONFIG_DIR` matches the `orch-slot-<N>` shape and
+that is not part of the slot's live tmux pane tree. Our nohup'd apply inherited
+`CLAUDE_CONFIG_DIR=/home/ubuntu/.claude-configs/orch-slot-15` from the worker shell → the sweep misidentified this legit
+data-pipeline python as an orphaned claude worker and reaped it at ~5 min (both died at age 335/345s ≈ 5.5 min after
+launch). The shared-host QG-load probe (chunk-47 standalone, 12.7s/exit 0) was a red herring — the crash was the reaper,
+not memory pressure.
+
+**Run-3 relaunch (FIXED, 2026-08-05 20:55:27 UTC, slot-15)**: relaunched with **`env -u CLAUDE_CONFIG_DIR`** (apply +
+UTL chain never read it — verified `rg`). PID **1391898**, run_id `20260805T205527Z-71ea788c`, log
+`/tmp/rebuild_defi_apply_2026_08_05_run3.log`. Verified the real python's `/proc/<pid>/environ` has NO
+`CLAUDE_CONFIG_DIR` (0 hits) → the reaper's identity check cannot match it. Expect ~40-45 min to end-date 2026-08-04
+(~344 chunks × ~8s); chunks 1-15 honestly skip, 16-41 re-enrich idempotently. Exit-watchdog armed (kill -0 on the python
+PID; fires on EXIT with tail + crash-marker count + journald orphan_reap check). **Next session**: on EXIT, no crash
+markers + final `[[VM_PROGRESS]]` near 2026-08-04 → force-consolidate → fill-rate verify → resume cron → `/done`.
+
+- [ ] [P1] **Follow-up: orchestrator `orphan_reap` reaps legit non-claude background jobs** — `sweep_orphan_processes`
+      (`agent-orchestrator/server/orphan_reap.py`) matches ANY process whose `CLAUDE_CONFIG_DIR=orch-slot-<N>` is not in
+      the live pane tree, NOT just `claude` binaries — a background data-pipeline python launched from a worker shell
+      (inheriting the env) gets killed as an orphan (killed this apply twice). Fix: scope the identity match to the
+      `claude` executable (proc exe basename) so non-claude jobs are never reaped. Cross-repo (orchestrator); `env -u`
+      workaround documents the per-launch dodge but the reaper should be hardened. Provenance: journald orphan_reap
+      lines 2026-08-05 20:38:51/20:51:48; SSOT `agent-orchestrator/server/orphan_reap.py`.
