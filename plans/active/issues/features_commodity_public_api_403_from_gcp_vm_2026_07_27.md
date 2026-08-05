@@ -12,7 +12,7 @@ summary: >-
   missing/generic `User-Agent` header these public sites now reject as bot traffic. The manifest's own honest-absence
   guard correctly REFUSED to record this as `empty_confirmed` (no `FetchEvidence` proving a clean 200+empty response) —
   a good defensive catch, not itself a bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,6 +38,8 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  features-service@d06919bf (User-Agent header fix) + live GCP VM re-verification 2026-08-05 (slot-16,
+  features-commodity-tradfi-20260805-000243, 4/4 succeeded)
 locked_by:
 locked_since:
 context_scope:
@@ -97,11 +99,27 @@ environment-level cause (VM IP / headers) than 3 independent site outages.
       a caller-supplied header still wins. `bash scripts/quality-gates.sh --no-fix` green (17974+ tests). **Re-test from
       a real GCP VM not run this session** (would require launching a VM — see todo below, which stays open pending that
       live re-test). — features-service@d06919bf
-- [ ] [DATA] P3. **operator** — if the header fix doesn't resolve it, check whether `central-element-323112`'s egress IP
-      range is on any of EIA/CFTC/Baker Hughes' block-lists (unlikely to be operator-actionable beyond routing through a
-      different egress path); not urgent — commodity is a P1/lower-priority family, not currently gating anything else
-      in the matrix.
+- [x] [DATA] P3. **operator** — if the header fix doesn't resolve it, check whether `central-element-323112`'s egress IP
+      range is on any of EIA/CFTC/Baker Hughes' block-lists — **NOT NEEDED (2026-08-05): header fix verified working;
+      egress IP is not blocked; see Progress Log for live re-verification evidence.**
 
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **2026-08-05 (slot-16, data_engineering, task `tradfi_satellite_ao_dispatch_batch5-010`) — LIVE RE-VERIFICATION: PASS
+  ✅**. Three GCP VM runs against `--family commodity --asset-group TRADFI`:
+  1. `features-commodity-tradfi-20260804-235609` (SPOT) — preempted 9s after insert, never ran.
+  2. `features-commodity-tradfi-20260804-235831` (SPOT) — ran with `features-service@c8627c64` (which includes the
+     header fix `d06919bf` as an ancestor). **Header fix confirmed working**: no 403/timeout/404 from EIA, CFTC, or
+     Baker Hughes — the pipeline successfully fetched data, computed the signal, and reached the GCS write stage. Failed
+     at `_write_signal_to_gcs()` with a DIFFERENT 403: `uts-prd-sa` lacked `storage.objects.create` on
+     `commodity-signals-batch-central-element-323112` — a bucket-level IAM gap, not the original external-API issue.
+     Grant applied: `roles/storage.objectCreator` on the bucket.
+  3. `features-commodity-tradfi-20260805-000243` (SPOT) — re-ran with the IAM fix in place. **Complete success**:
+     `Batch completed: 4/4 succeeded` (NG 2026-07-04, NG 2026-07-05, CL 2026-07-04, CL 2026-07-05),
+     `DEPLOYMENT_COMPLETED exit_code=0`. Manifest shard written with 4 entries. VM self-deleted via
+     `VM_SHUTDOWN_ON_COMPLETION=true`.
+
+  **Verdict**: `features-service@d06919bf` (Chrome User-Agent + Accept header in `http_get()`) **resolves the issue** —
+  EIA, CFTC, and Baker Hughes all respond normally from a GCP VM with the fix. The operator-gated egress-IP block-list
+  check (todo below) is NOT needed — the header was the sole root cause. Flipping both remaining checkboxes below.
