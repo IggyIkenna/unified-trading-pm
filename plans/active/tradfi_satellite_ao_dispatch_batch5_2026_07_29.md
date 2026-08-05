@@ -298,13 +298,19 @@ ground to open up, and it did:
       `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved
       2026-07-30).
 
-- [ ] [DATA] P2. **Trace the corrupted `58317-01-15` timestamp to its raw source and classify one-off vs. systemic.**
-      Trace back to the raw source object (NASDAQ:EQUITY:IBIT/ETHA, day=2026-05-07) to determine whether the overflow is
-      a one-off vendor glitch or a systemic unit/encoding bug (e.g. epoch-microseconds misread as epoch-nanoseconds, or
-      an unfiltered sentinel/NULL). The MDPS-side guard has already shipped regardless; this determines whether a
-      capture-path fix is also needed. Repo: market-tick-data-service. **Done when**: the trace is recorded with a
-      one-off/systemic verdict; if systemic, file the capture-path fix as a new tracked follow-up todo (not this todo's
-      own scope). Source: `issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md`.
+- [x] ✅ [DATA] P2. **Trace the corrupted `58317-01-15` timestamp to its raw source and classify one-off vs. systemic. —
+      `unified-trading-pm@<sha>` (doc-only: trace recorded in issue doc).** Originally traced by slot-12 (2026-08-03);
+      independently re-verified by slot-6 (2026-08-05). Raw source objects confirmed clean via direct prod-parquet
+      inspection: IBIT (13,717 rows, all timestamps in 1.778e18 ns range) and ETHA (4,891 rows, same range), zero
+      anomalous values — NOT a vendor glitch. Root cause: MTDS `_COLUMN_ALIASES` (`symbol_rules.py:60-61`) renames
+      Databento's `ts_event` → generic `timestamp`, erasing the unit signal; MDPS `_get_local_timestamp_column` then
+      falls through to the generic `timestamp` fallback (priority 4), which pre-fix got `unit="us"` — a genuine ns value
+      (~1.778e18) read as µs → ×1000 → ~1.778e21 ns → year ≈58,317 (matches the crash report exactly). **Verdict:
+      SYSTEMIC** — the root cause is the cross-repo naming collision. Tactical MDPS guard already shipped
+      (`base_adapter.py:285-314`, magnitude heuristic ≥1e18 → ns; `market-data-processing-service@f179c96`).
+      Architectural fix (resolve the naming collision without relying on magnitude inference) tracked as open P3 todo in
+      the source issue doc. Evidence: gcloud-verified raw GCS parquet for both instruments;
+      `symbol_rules.py:60-61,94-106` confirmed; `base_adapter.py:213-228,285-315` confirmed.
 
 - [ ] [DATA] P2. **Instrument `_streaming_filter_slice` to root-cause why CME combo `ohlcv_15m`/`ohlcv_24h` aggregation
       produces `symbols_processed=0`.** Per the doc's own prescribed next step: log pre/post-filter row counts to
@@ -903,6 +909,21 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
       forward.
 
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
+
+- **2026-08-05 (slot-6, data_engineering craft, task `tradfi_satellite_ao_dispatch_batch5-012`)** — Worked todo 13
+  (trace corrupted `58317-01-15` timestamp). Independently re-verified the full trace originally completed by slot-12
+  (2026-08-03): (a) downloaded + inspected BOTH raw prod parquet files (`NASDAQ:EQUITY:{IBIT,ETHA}-USD.parquet`,
+  day=2026-05-07) — IBIT 13,717 rows, ETHA 4,891 rows, ALL timestamps in ~1.778e18 ns range, ZERO anomalous values — NOT
+  a vendor glitch; (b) confirmed root cause in code: `symbol_rules.py:60-61`
+  (`_COLUMN_ALIASES = {"ts_event": "timestamp"}`) erases the ns unit signal, `base_adapter.py:213-228`
+  (`_get_local_timestamp_column` priority: `ts_init > local_timestamp > ts_event > timestamp`) falls through to the
+  generic `timestamp` fallback (priority 4), pre-fix `base_adapter.py:291` assigned `unit="us"` to generic `timestamp` —
+  a genuine ns value (~1.778e18) read as µs → ×1000 → ~1.778e21 ns → year ≈58,317 (matches crash report exactly); (c)
+  verified both fixes shipped: `base_adapter.py:285-314` (magnitude heuristic ≥1e18 → ns,
+  `market-data-processing-service@f179c96`) and `base_adapter.py:317-319` (bounds-check NaT coercion,
+  `market-data-processing-service@c10425d`). **Verdict: SYSTEMIC** — cross-repo naming collision (not a one-off).
+  Architectural fix tracked as open P3 in the source issue doc. No code changed this session — doc-only (trace evidence
+  recorded here + in source issue doc Progress Log). Flipped batch5 todo 13 done.
 
 ## Codex SSOTs
 
