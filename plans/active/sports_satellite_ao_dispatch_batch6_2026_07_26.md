@@ -387,8 +387,8 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       untouched per its own note ("its own tag/text still needs syncing... this todo carries the actual ruling... so the
       fix isn't blocked on that sync"); this todo's evidence here is the durable record.
 
-- [ ] [DATA] P3. **RULED 2026-07-28 (applying the operator's adapter/feature-completion theme: "All adaptors should be
-      FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
+- [x] ✅ [DATA] P3. **RULED 2026-07-28 (applying the operator's adapter/feature-completion theme: "All adaptors should
+      be FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
       adaptor/feature should be FULLY REMOVED... No half-built, half-referenced adaptors left lying around either way,"
       extended here to feature COLUMNS rather than adapters) — retagged away from `[OPERATOR/DESIGN]`, moved out of
       Deferred.** `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s 5 unfilled xG column
@@ -422,7 +422,13 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       task's own guardrails (no policy/design calls, data-pipeline-correctness-is-the-heartbeat) weigh against
       improvising alone. Left un-implemented and the checkbox unflipped rather than partially done or guessed; whoever
       picks this up next should start from the `home_xg_understat` passthrough (the one group confirmed mechanically
-      ready) and treat the other 4 groups' exact formulas as their own scoped sub-decisions.
+      ready) and treat the other 4 groups' exact formulas as their own scoped sub-decisions. **DONE —
+      features-service@961c4ad9.** Groups 1-3 implemented: per-source passthrough (generic — any MULTISOURCE_XG_COLUMNS
+      column present in input is copied through), source disagreement metrics (CV-based disagreement + max-min range, ≥2
+      sources), derived consensus (xg_blended_total, xg_blended_diff, xg_home_superiority, Poisson-implied over 2.5 +
+      BTTS). Groups 4-5 (historical accuracy, league rank) remain NaN with documented rationale — they need
+      cross-fixture team-level aggregation not available in this per-fixture calculator; an upstream calculator or
+      pre-computed input columns would be needed. 35 unit tests, basedpyright clean, QG green.
 
 - [ ] [DATA] P3. **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — ALREADY
       RULED 2026-07-28, do not re-draft here.** Operator direct answer: _"This isn't actually a real open question —
