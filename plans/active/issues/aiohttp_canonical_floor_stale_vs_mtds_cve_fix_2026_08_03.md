@@ -39,6 +39,14 @@ superseded_by:
 resolved_by:
 source: ["discovered 2026-08-03 while landing sports_af_full_entity_completion_2026_08_03.md via quickmerge"]
 drift_direction: advance-code
+context_scope:
+  [
+    workspace-constraints.toml,
+    scripts/manifest/check-dependency-alignment.py,
+    scripts/manifest/generate_canonical_dependency_manifest.py,
+    scripts/propagation/propagate-canonical-versions.py,
+    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+  ]
 ---
 
 ## What was actually tried, and why it was reverted
@@ -86,3 +94,7 @@ whenever infra/dependency-hygiene work is next in queue; no urgency to interrupt
 same day) covers a dead slot's unpushed `unified-trading-library` aiohttp bump to `>=3.14.3` closing 3 different, real,
 currently-unpatched CVEs (2026-59881/69243/69244) — that rescue is P1 and should happen first; once it lands,
 unified-trading-library resolves off this doc's 16-repo mismatch list, leaving 15.
+
+## Progress Log
+
+- **context-scout 2026-08-05**: populated context_scope (5 entries).

@@ -213,3 +213,4 @@ too large.
   rather than silently dropping it. Doc-level disposition unchanged from the 2 prior passes; this refines the reason
   with a per-item read.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -309,3 +309,4 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the two concrete todo targets
   (`infra_satellite_ao_dispatch_batch3_2026_07_30.md` for finding 10, the stale-agentwork-scratch-clone doc for
   finding 11) alongside the existing 3.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

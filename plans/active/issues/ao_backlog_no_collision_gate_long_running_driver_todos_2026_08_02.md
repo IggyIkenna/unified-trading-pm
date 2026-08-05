@@ -147,3 +147,4 @@ even if nobody revisits it.
   existing 2.
 - **context-scout 2026-08-03 (re-pass)**: re-verified under the updated methodology, unchanged (5 entries) — all still
   resolve and remain the right minimal set for both open todos.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

@@ -186,3 +186,4 @@ this, each time invisible until someone reads the backlog by hand.
   still names this doc in its `[REVIEW] P0` archival todo). Not archived independently, per the established ruling.
   Cross-validated: today's same-day sibling `/ag-closeout-audit ao` batch6 run reached the identical conclusion
   independently ("already the named archival target of batch3_finalize's own gated todos").
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

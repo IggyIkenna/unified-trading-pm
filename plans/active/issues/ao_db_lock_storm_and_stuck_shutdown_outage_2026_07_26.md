@@ -359,3 +359,4 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and cover the two remaining open
   todos (apply the live `--reload` removal + confirm via journalctl).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

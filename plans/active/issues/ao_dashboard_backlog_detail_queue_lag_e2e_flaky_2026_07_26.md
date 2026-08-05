@@ -112,3 +112,4 @@ is just wrong to assume it won't fire.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (4 entries) — still the right
   minimal set for both open todos.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

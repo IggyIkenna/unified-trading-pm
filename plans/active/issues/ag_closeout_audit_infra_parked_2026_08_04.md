@@ -186,3 +186,4 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
   `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + finalize twin (3 todos, both `status: draft`). **Ledger**: 1 new
   parked finding + 3 re-verified carry-forwards (all still open) + 3 net-new docs classified, 1 entry written above —
   balanced.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

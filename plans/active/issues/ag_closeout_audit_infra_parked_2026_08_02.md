@@ -249,3 +249,4 @@ both still awaiting operator approval to flip to `active`. Neither has been acti
   still `- [ ]` at source (`docs_reconcile_autonomous_sweep_2026_07_30.md` todo 1), 13 days out, a hard PM QG gate
   projected 24 → ~168 violations in a single day. Re-surfaced in this run's report rather than only living here.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (3 entries), still accurate.

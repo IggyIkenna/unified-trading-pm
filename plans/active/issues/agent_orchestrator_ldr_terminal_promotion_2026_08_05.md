@@ -43,6 +43,15 @@ source:
 drift_direction: advance-process
 estimate_class: infra
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    scripts/cicd/ldr_to_main_fleet_promote.sh,
+    scripts/repo-management/pin_branch_protection_rulesets.py,
+    .github/workflows/ldr-to-staging-promote.yml,
+    workspace-manifest.json,
+  ]
 ---
 
 # agent-orchestrator: `promotion_model: ldr_terminal` — opted out of LDR→main promotion
@@ -153,3 +162,4 @@ Confirmed by direct code/config reading before changing anything (not assumed):
   from doc descriptions) that the minimal-diff fix was a single new `promotion_model` value plus 2 small Python-in-YAML
   edits — no changes needed to the fleet promoter script itself, since its exact-match filter already naturally excludes
   anything that isn't literally `"ldr_main"`.
+- **context-scout 2026-08-05**: populated context_scope (6 entries).

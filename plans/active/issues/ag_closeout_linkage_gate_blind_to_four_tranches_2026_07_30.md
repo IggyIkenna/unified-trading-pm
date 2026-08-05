@@ -327,3 +327,4 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped an accidental repeat entry, dropped 2
   weakly-relevant codex/plan links, kept the source script + the doc where the actual shipped fix landed.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

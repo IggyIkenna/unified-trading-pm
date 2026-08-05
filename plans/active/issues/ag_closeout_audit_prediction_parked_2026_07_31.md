@@ -291,3 +291,4 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   unless/until an operator or the next worker... picks (A) or (B)") — no operator action taken on either linked adapter
   dead-code doc since 2026-07-31, re-confirmed via direct read of both. Not reclassifiable: the doc's own text is the
   citation (redirect + explicit non-actionable framing). Doc stays NA.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

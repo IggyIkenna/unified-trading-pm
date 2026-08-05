@@ -133,3 +133,4 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
 - **context-scout 2026-08-03**: re-verified (5 entries, unchanged; prior marker undercounted) — all still resolve and
   cover both the `[UI]`/`[DATA]` todo pair (dashboard + orm.py) and the `[BACKEND]` follow-up
   (worker_liveness/**init**.py).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

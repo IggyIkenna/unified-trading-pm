@@ -221,3 +221,4 @@ Other: operator can type a custom answer
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the archived triage doc (self-confirmed
   unrelated in this doc's own 2026-07-30 conflict-check) for PLAN_FORMAT.md, named in the escalation's own body text.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

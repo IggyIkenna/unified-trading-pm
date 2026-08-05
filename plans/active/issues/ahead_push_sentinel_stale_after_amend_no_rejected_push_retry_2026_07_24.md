@@ -121,3 +121,4 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and remain the right minimal set
   for the doc's sole open todo (rejected-push recovery design in `_ahead_push.py`).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
