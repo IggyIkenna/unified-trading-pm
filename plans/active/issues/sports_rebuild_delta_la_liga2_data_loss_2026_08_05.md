@@ -95,9 +95,48 @@ the live bucket, same session.
 2. Re-run the manifest rebuild (or targeted re-emission) for `LA_LIGA_2` ODDS cells to restore the 846 missing rows
 3. After the fix, re-verify the manifest-vs-GCS cross-reference confirms 0 GCS-only cells
 
+## Progress Log
+
+### 2026-08-05 ~07:30Z — slot-2: Verification (todo #3)
+
+Re-ran manifest-vs-GCS cross-reference for ODDS. Downloaded the live availability manifest
+(`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 113MB, 9,246,416 rows)
+and queried via DuckDB.
+
+**Key counts (current state):**
+
+| Metric                                 | Count                              |
+| -------------------------------------- | ---------------------------------- |
+| Manifest total rows                    | 9,246,416                          |
+| ODDS total rows                        | 372,910                            |
+| ODDS distinct leagues                  | 383                                |
+| ODDS leagues with captured>0           | 30                                 |
+| ODDS leagues with empty_confirmed only | 353                                |
+| LA_LIGA_2 manifest rows                | **0** (still absent)               |
+| BRASILEIRAO manifest rows              | 2,847 (962 captured + 1,885 empty) |
+
+**Verdict: 0 GCS-only cells NOT YET achieved.** The 846 LA_LIGA_2 cells (+1 BRASILEIRAO edge case) are still GCS-only
+because todo #2 (re-emit LA_LIGA_2 ODDS manifest rows) has not been executed.
+
+**Potential blocker for todo #2**: `_LEAGUE_ALIASES` in
+`unified_api_contracts/canonical/domain/sports/provider_league_ids.py` still maps `LA_LIGA_2 → SEGUNDA_DIVISION`.
+`canonicalize_league_id()` applies the alias BEFORE checking the registry, so it always returns `SEGUNDA_DIVISION` for
+`LA_LIGA_2` input. The manifest rebuild for todo #2 must construct GCS paths directly from the catalogue's `league_id`
+(bypassing `canonicalize_league_id()`) or the alias must be removed now that LA_LIGA_2 is a real league again (not just
+an alias for SEGUNDA_DIVISION). The alias comment in the file says "LA_LIGA_2 → SEGUNDA_DIVISION: prod manifest has
+3,465 rows under the alias; SEGUNDA_DIVISION has LeagueDefinition" — that was written before the re-registration at
+b4bac708, so it may now be stale and in need of removal.
+
+**Recommendation**: Execute todo #2 with awareness of the alias issue, then re-verify.
+
 - [x] ✅ [DATA] P1. Add `LA_LIGA_2` to the instruments-service sports league catalogue. — unified-api-contracts@b4bac708
       (note: SSOT is in UAC, not instruments-service)
 - [ ] [DATA] P1. Re-emit LA_LIGA_2 ODDS manifest rows for the 846 (date, league) cells with real GCS objects. (repo:
       instruments-service)
-- [ ] [VERIFY] P2. Re-run manifest-vs-GCS cross-reference for ODDS to confirm 0 GCS-only cells remain. (repo:
-      instruments-service, read-only)
+- [x] ✅ [VERIFY] P2. Re-run manifest-vs-GCS cross-reference for ODDS — **846 LA_LIGA_2 cells still GCS-only** (todo #2
+      not yet executed). Manifest downloaded 2026-08-05 ~07:30 UTC, 113MB, 9,246,416 rows. ODDS: 372,910 rows, 30
+      leagues with captured>0, 383 distinct leagues total. LA_LIGA_2: 0 manifest rows (confirmed). BRASILEIRAO: 962
+      captured + 1,885 empty in manifest (the reported +1 GCS-only edge case was not independently verified — full GCS
+      walk was too heavy for in-session). Root cause unchanged from original finding: todo #2 (re-emit LA_LIGA_2 ODDS
+      manifest rows) has not been executed yet. Verification should be re-run after todo #2 completes. — slot-2
+      @2026-08-05 ~07:30Z
