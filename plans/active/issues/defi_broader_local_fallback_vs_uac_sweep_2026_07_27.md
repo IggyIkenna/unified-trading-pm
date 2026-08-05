@@ -126,3 +126,4 @@ urgent (no known active drift found yet, unlike the launch-dates case), but wort
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

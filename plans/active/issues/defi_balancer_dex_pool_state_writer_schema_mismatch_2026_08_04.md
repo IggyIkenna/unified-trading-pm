@@ -140,3 +140,4 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   than folded into the retirement doc) because it is a genuinely different, larger-scope problem (a live MTDS writer
   schema/computation gap, not a "should we keep this corpus" question) that pre-dates and is unaffected by the
   retirement decision.
+- **context-scout 2026-08-05**: populated/refreshed context_scope (3 entries).

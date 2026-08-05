@@ -755,3 +755,4 @@ auto-generated section's own owner script, rather than hand-editing the table) â
   context-scout metadata backfill (no content change). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) â€” still accurate against the doc's only remaining
   open item (the P0 design decision on `catalog_trading.py`'s 5 broken archetypes, all under `target_universe/`).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

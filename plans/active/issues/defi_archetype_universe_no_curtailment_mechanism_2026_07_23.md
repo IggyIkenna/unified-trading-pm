@@ -852,3 +852,4 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md`,
   `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `archetype_leg_spec_seeds.py`, `factory.py`,
   `basis_perp.py`, the bare `target_universe/` dir).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

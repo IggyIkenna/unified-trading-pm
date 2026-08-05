@@ -49,7 +49,9 @@ context_scope:
   [
     market-tick-data-service/scripts/one_offs/purge_gas_fees_legacy_venue_prefixes_2026_08_04.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
-    deployment-service/scripts/vm/vm_zombie_watchdog.py,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
+    /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
   ]
 ---
 
@@ -150,3 +152,6 @@ the highest-priority open question.
   even started logging — filing this doc rather than continuing to blind-retry against what looks like active infra
   flakiness. Resumed the consolidator cron (never mutated, no risk in doing so) rather than leave DeFi-wide
   consolidation paused indefinitely.
+- **context-scout 2026-08-05**: populated context_scope (5 entries) — the purge script + the actual `gsutil`-hang
+  suspect files (`launcher_common.sh`, `vm-exec-with-gcs-tee.sh`) the P1 root-cause todo targets, plus the sibling
+  dispatch doc the P2 todo updates.

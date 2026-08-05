@@ -294,3 +294,4 @@ slow:
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — all 3 open todos remain held
   by the live, standing `[OPERATOR] P0` R3-relaunch gate (main's "standing escalation #1", still unresolved across 6+
   dispatches) — nothing worker-determinable absent the operator ruling. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

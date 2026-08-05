@@ -217,3 +217,4 @@ session's shared host.
   host), per-protocol, only for pools with recent manifest capture dates (skip long-dead pools), with the acceptance
   that some fraction will remain blank (dead/rugpulled pools, rate limits). That workstream should be tracked in its own
   plan.
+- **context-scout 2026-08-05**: re-scouted; all todos now closed; context_scope re-verified (5 entries), unchanged.

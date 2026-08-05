@@ -40,8 +40,8 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
-    market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
@@ -369,3 +369,5 @@ FLAT shape, tracked under the other doc).
   sports/prediction shapes) are already tracked in the follow-up issue doc
   `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`. All 4 todos in this
   doc are now closed — doc eligible for archival (no locks).
+- **context-scout 2026-08-05**: re-scouted; all todos now closed, so swapped `instrument_availability_paths.py` for the
+  live follow-up issue doc that now owns the remaining flat-shape work; now 4 entries.

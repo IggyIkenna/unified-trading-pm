@@ -196,3 +196,5 @@ adapters' venues.
   counter. Since no instruments trigger validation failure, the fix produces zero behavioral change in current
   production — no surprise `failed` count jump. The fix remains valuable as defense-in-depth against future instrument
   definition corruption.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

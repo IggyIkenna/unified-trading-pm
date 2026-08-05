@@ -482,3 +482,4 @@ files.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
   re-read end to end, all 4 open items unchanged: wire-in-or-delete/consolidation product decisions with named
   registry/billing/cross-repo blast radius, none worker-determinable. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

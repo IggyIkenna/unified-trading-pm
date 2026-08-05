@@ -185,3 +185,4 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate against the 4 remaining open
   items (Aave/Alchemy + Chainlink/Pyth research, subgraph-HTTP status threading, the governance dual-source design
   question).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

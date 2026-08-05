@@ -63,7 +63,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -349,3 +349,5 @@ No design call needed — every fact here is independently checkable:
   physically flipped (1017L, over 1000L hard cap) but the evidence is in batch8's todo, the
   `na-eligibility-audit 2026-08-03` marker, and `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`. All 4 todos
   in this issue doc are now `[x]`; the doc is eligible for archival (no `locked_by`).
+- **context-scout 2026-08-05**: re-scouted; batch8's own doc is now archived (`plans/archive/2026_08/...`) so re-pointed
+  that entry; re-verified remaining 3 entries unchanged (4 entries total).

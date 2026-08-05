@@ -57,8 +57,8 @@ context_scope:
   [
     /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
     /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/migration_orphan_sweep.py,
+    /plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md,
   ]
 ---
 
@@ -202,3 +202,7 @@ checked, not assumed.
 
   **837 with twins**: No action needed — the canonical writer already registered them. The legacy copies are redundant
   but harmless (same instrument_id, same row_count=1, same data).
+
+- **context-scout 2026-08-05**: re-scouted; swapped the delete-safety-protocol codex doc for the
+  `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` issue doc, which the Progress Log now shows owns the
+  remaining deletion follow-on; now 4 entries.
