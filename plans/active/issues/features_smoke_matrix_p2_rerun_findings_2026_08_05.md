@@ -148,14 +148,31 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       re-running skips already-processed dates, so no data is destroyed or duplicated — reversibility is inherent. Use
       RESUME_START_DATE=2026-07-26, RESUME_END_DATE=$(date +%F). This closes the delta_one/cross_instrument/ volatility
       upstream starvation identified above. (repo: market-data-processing-service / deployment-service)
-- [ ] [DATA] P2. **market-tick-data-service / features-service** — root-cause BINANCE-DELIVERY `perp_funding`
-      `attempted_failed` on every date 07-24→08-04 in the cefi PROD manifest (persistent, not transient). Decide between
-      (a) fixing BINANCE-DELIVERY perp_funding collection and (b) adding BINANCE-DELIVERY to
-      `features_service/onchain/app/core/dependency_checker.py`'s `_KNOWN_OUTAGE_VENUES_BY_SVC` (mirroring the
-      POLYMARKET-PERP venue-scoped tolerance from
-      `defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`), which is required for
-      DEFI:onchain's `market-tick-data-service-perp` dependency (and hence the onchain smoke) to pass despite
-      HYPERLIQUID/KALSHI-PERP being captured. (repo: features-service and/or market-tick-data-service)
+- [x] ✅ [DATA] P2. **market-tick-data-service / features-service** — root-cause BINANCE-DELIVERY `perp_funding`
+      `attempted_failed` on every date 07-24→08-04 in the cefi PROD manifest (persistent, not transient). **Chose (b)**
+      — added BINANCE-DELIVERY to `features_service/onchain/app/core/dependency_checker.py`'s
+      `_KNOWN_OUTAGE_VENUES_BY_SVC` (market-tick-data-service-perp), mirroring the POLYMARKET-PERP venue-scoped
+      tolerance from `defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`. Root cause
+      (live-verified via `read_availability_index_safe` on `market-data-tick-cefi-prd-central-element-323112`):
+      BINANCE-DELIVERY has no `VENUE_DATA_TYPE_CAPABILITIES` entry (unlike BINANCE-FUTURES), so
+      `get_expected_data_types_for_venue` falls back to the full cefi cross-product and seeds `perp_funding` as
+      EXPECTED, but no writer produces it (`perp_funding_handler.py` protocol set =
+      hyperliquid/kalshi_perp/polymarket_perp; BINANCE-DELIVERY not a registered funding-cadence venue in UAC
+      `perp_funding_cadence`); every daily CEFI attempt lands `attempted_failed` (never captured, occasional
+      `empty_confirmed`; `source=kalshi_perp`, `instrument_type=futures_chain`, `instrument_id=None` on every row).
+      Decision rationale mirrors POLYMARKET-PERP: tolerance is venue-scoped, not blanket — the check stays sensitive to
+      a failure on HYPERLIQUID/KALSHI-PERP, and "only-outage-rows-present" still fails (no false-healthy). 3 new unit
+      tests. Live matrix verified: 07-28→08-04 `available=True` ("2 known-outage rows on ['BINANCE-DELIVERY',
+      'POLYMARKET-PERP'] excluded"), 07-24/25 + 07-26/27 still correctly `available=False` (real KALSHI failures / no
+      other-venue capture). features-service@`46461ebc`. Structural root fix (narrow BINANCE-DELIVERY caps + reclass
+      phantom rows) tracked as the follow-up todo below. (repo: features-service and/or market-tick-data-service)
+- [ ] [DATA] P3. **unified-api-contracts / market-tick-data-service** — structural root fix for the BINANCE-DELIVERY
+      phantom-`perp_funding` capability uncovered in the P2 above: add a narrowed `VENUE_DATA_TYPE_CAPABILITIES`
+      `BINANCE-DELIVERY` entry (mirroring BINANCE-FUTURES: trades/book_snapshot_5/derivative_ticker/liquidations/
+      futures_chain — NO perp_funding/options_chain/ohlcv_1m/volatility_index) so the fallback no longer seeds phantom
+      EXPECTED cells, then reclass the ~40 existing BINANCE-DELIVERY perp_funding `attempted_failed`/`empty_confirmed`
+      rows (06-02→08-04) to `expected_unattempted` or drop per manifest policy (prod cefi manifest; human-verified
+      reclass). (repo: unified-api-contracts + market-tick-data-service)
 - [x] ✅ [SCRIPT] P2. **e2e-testing** — fix multi_timeframe `smoke_matrix.py` verifier (the two-bug class already fixed
       for cross_instrument/onchain/sports/volatility in `e2e-testing@fbaa722` but MISSED for multi_timeframe): (1)
       `_verify_gcs_parquet` prefix is `features/by_date/day={date}/` but the real writer path is
@@ -197,3 +214,9 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
   `availability_index.parquet` records the candle layer under `data_type=trades` (MDPS service_name + pipeline_mode
   set), NOT `data_type=processed_candles` — relevant to Finding 1's "zero processed_candles rows" read
   (data_type-naming, not absence).
+- 2026-08-05 (slot-5, data_engineering): Closed the P2 BINANCE-DELIVERY perp_funding todo (option b — venue-scoped
+  known-outage tolerance, features-service@46461ebc). Root cause fully evidenced: phantom EXPECTED capability via the
+  `VENUE_DATA_TYPE_CAPABILITIES` fallback for BINANCE-DELIVERY; no writer; structural absence, not transient. Filed the
+  structural root fix as a new P3 todo above (narrow caps + reclass). OOM-acknowledgement: no process launched by this
+  slot was OOM-killed today; all GCS reads ran column-pruned + date-filtered under `run-bounded-analysis.sh` (one
+  over-wide probe was correctly capped/killed by the 4G guard — no host impact).
