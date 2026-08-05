@@ -144,3 +144,17 @@ green.
   (`tests/onchain/unit/test_defi_pipeline_extension_calculators.py` only exercises `calculate_features`/`source_name`,
   confirmed by reading it, same as the original 2026-07-30 fix's note).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **2026-08-05 (data_engineering slot-12)**: P3 started. Code complete + verified (gas_fee_handler.py: removed
+  `_collect_latest_fees`/`_write_latest_fees_shard`, rewrote `_collect_one_evm_chain` to always run the date-scoped
+  path; test_gas_fee_handler.py + test_gas_fee_handler_coverage.py updated: removed TestCollectLatestFees, repointed
+  patches to `_collect_for_date`). Module imports clean, methods confirmed removed. **NOT SHIPPED — blocked.** The diff
+  sits in `market-tick-data-service` `stash@{0}`. Two blockers, fully documented in
+  `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md`: (1) MTDS has 2 PRE-EXISTING test failures
+  on a clean tree (collect_handler_schema `[lending]`, orchestrator tier3_polymarket) that block ALL MTDS commits under
+  the green-tree rule — repo-blocker RB (mtds qg_red) declared. (2) **COVERAGE NON-ISSUE (corrected 2026-08-05)**: the
+  earlier "this diff drops coverage 80.65%→76.21%" claim was a TRUNCATED-RUN artifact — the authoritative full
+  quality-gates.sh run WITH the diff is 80.63% (PASSES the 79% gate, −0.02pt vs clean); no compensating coverage needed,
+  P2 in the blocker doc dismissed. The ONLY remaining blocker is the 2 pre-existing failures. P3 checkbox NOT flipped
+  (correct — not shipped, green-tree rule holds). The blocker issue doc itself was unpushable via quickmerge at filing
+  time because the PM full gate is red on a pre-existing `agent-rules-size-cap` (cursor-configs/CLAUDE.md 48 B over cap)
+  and a concurrent session's live edit dirtied the tree — see that doc's Progress Log.
