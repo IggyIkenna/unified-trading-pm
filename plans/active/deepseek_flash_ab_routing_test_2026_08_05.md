@@ -114,8 +114,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `ao_self_pull_stalled_by_untracked_backup_files_2026_07_29` wedge class live); `deepseek-v4-pro` backfilled
       `variant: "pro"` for symmetry. Deployed via `ao-self-pull.sh` (triggered manually to skip the ~15min cron wait);
       orchestrator restarted clean on `7d73ded`, confirmed `systemctl is-active`→`active`.
-- [ ] 7. [REVIEW] P2. After deploy, verify the split is actually live: confirm at least one real `task_usage` row lands
-      with `model=deepseek-v4-flash` and `backfilled=0` within the first few hours, and that the pro pool is still
+- [x] 7. ✅ [REVIEW] P2. After deploy, verify the split is actually live: confirm at least one real `task_usage` row
+      lands with `model=deepseek-v4-flash` and `backfilled=0` within the first few hours, and that the pro pool is still
       getting roughly half of new DeepSeek dispatches (not starved). **Checked 2026-08-05, ~20 min post-deploy: NOT YET
       landed** — `?model=deepseek-v4-pro` shows 377 lifetime tasks; `?model=deepseek-v4-flash` still shows only the 9
       PRE-EXISTING uncontrolled-substitution rows, and a direct `task_usage` query for
@@ -125,8 +125,15 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       new `deepseek-v4-flash` account AND `deepseek-v4-pro` (checked `completed_at > deploy time` for pro too) — if pro
       were accumulating normally while flash stayed at zero, that would signal a real routing bug; instead NEITHER has
       completed a task yet since deploy, meaning no DeepSeek-bound task has finished at all in this ~35min window
-      (plausible given DeepSeek is a subset of ~150-280 total daily completions) — not yet evidence either way. Do not
-      re-poll again before the next natural session check-in.
+      (plausible given DeepSeek is a subset of ~150-280 total daily completions) — not yet evidence either way.
+      **CONFIRMED LIVE 2026-08-05 21:04 UTC**: first real `deepseek_spawn_selected` activity-log event choosing
+      `account_id=deepseek-v4-flash` fired at `20:41:33` (the true start of the live A/B window — later than the
+      original deploy because `ao-self-pull.sh`'s ~15min cron cadence plus the dirty-gate incident in todo 6 delayed
+      activation). By `21:04` there were 2 completed `task_usage` rows under `account_id=deepseek-v4-flash`
+      (`backfilled=0`, turn_count 54 and 57, spend $0.039 and $0.047) and 5 slots (3/5/8/9 + one killed) actively
+      assigned to it — the mechanism works, both variants are receiving and completing real dispatches. See Progress Log
+      for the ratio-skew nuance discovered during this check (not a blocker, but relevant to todo 2's unit test and todo
+      9's eventual comparison).
 - [ ] 8. [REVIEW] P2. Let the split run for ~24h of real fleet dispatch (per operator ask, 2026-08-05) before drawing
       conclusions — a few hours of sample size isn't enough given the turn-count variance already measured (31-100 turns
       is the modal range, but the tail runs to 500+).
@@ -195,21 +202,40 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   post-deploy, not instantly. **Next check-in**: confirm a real task_usage row lands with `account_id=deepseek-v4-flash`
   (not just `model=deepseek-v4-flash` under the old pro account) — this is the todo above ("verify the split is actually
   live"), not done yet as of this entry.
+- **2026-08-05 21:04 UTC — split confirmed live; ratio-skew finding**: re-queried `state.db`'s real table
+  (`data/state/state.db`, NOT `data/agent_orchestrator.db`/`data/orchestrator.db` — both exist on the VM but are empty;
+  a future session re-running this check should go straight to `state/state.db`). Confirmed 2 completed
+  `deepseek-v4-flash` task_usage rows and 22 `deepseek_spawn_selected` events choosing flash vs only 2 choosing pro in
+  the ~23min window since the first flash selection (`20:41:33`-`21:04`) — a real, measured 22:2 skew, not 50/50. **Root
+  cause (read directly from the deployed `autospawn.py`, lines ~1348-1386)**:
+  `wants_flash = _deepseek_flash_should_route(...)` only controls whether the code tries the FLASH-filtered sub-pool
+  FIRST; when `wants_flash` is `False`, there is no symmetric "prefer pro" branch — it falls straight into the same
+  unfiltered `_pick_headroom_account(provider="deepseek")` call used as the `wants_flash=True` branch's own fallback.
+  Because DeepSeek accounts never populate `five_hour_pct`/`weekly_pct` (`_account_has_headroom` treats this as "always
+  has headroom" by design), the unfiltered picker's sort key degenerates to `(0, 0, active_slot_count)` — i.e.
+  **whichever DeepSeek account currently has fewer active slots wins the unfiltered pick**, regardless of `wants_flash`.
+  A freshly-seeded flash account starts at zero active slots, so both the `wants_flash=True` path AND most
+  `wants_flash=False` picks (which land here with no variant preference at all) currently resolve to flash until slot
+  counts even out. **Not a bug that blocks the test** — both arms are still receiving real, valid dispatches, which is
+  the actual requirement — but it means `deepseek_flash_route_fraction=0.5` should NOT be read as "50% of outcomes,"
+  it's closer to "at least 50% preference, further amplified by a least-loaded tie-break until slot counts converge."
+  Relevant to todo 2 (a unit test asserting a strict alternating 50/50 on `_deepseek_flash_should_route` alone would
+  pass while still missing this real-world skew — the test should exercise the full `select_account_for_spawn` path, not
+  just the accumulator helper) and to todo 9 (expect unequal sample sizes between pools; that's fine to report, not
+  something to force into balance).
 
 ## Deferred work after 2026-08-05
 
-| Item                                                                                                                                                   | State / why deferred                                                                                                                                      | Blocked on                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                        | Nothing — pick up directly                                        |
-| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                  | Nothing — pick up directly                                        |
-| Todo 7 — confirm a real `task_usage` row lands under `account_id=deepseek-v4-flash`                                                                    | **Cannot be done yet** — needs a fresh AutoSpawn DeepSeek spawn decision to fire post-deploy; checked once at ~20min post-deploy, genuinely zero rows yet | Elapsed time / real fleet dispatch activity                       |
-| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work                                                                                                | Elapsed time                                                      |
-| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                        | Todo 8                                                            |
-| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                        | Operator                                                          |
-| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                            | Todos 9-11                                                        |
-| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                      | Nothing — pick up directly, independent of this plan's 24h window |
+| Item                                                                                                                                                   | State / why deferred                                                                                                                                                                    | Blocked on                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                                                      | Nothing — pick up directly                                        |
+| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                                                | Nothing — pick up directly                                        |
+| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work. Clock starts `20:41:33` (first real flash selection), not the earlier deploy time — target check-in ≈`2026-08-06 20:41 UTC` | Elapsed time                                                      |
+| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                      | Todo 8                                                            |
+| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                      | Operator                                                          |
+| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
+| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
-**Recommended next item**: todo 7 (confirm the split is live) — cheap, single query, tells us within minutes whether the
-whole mechanism is actually working before investing in the 24h wait. If it's still zero after a few real DeepSeek
-dispatches have happened (check via the live backlog, not by re-polling blindly), that's a real bug in the routing
-logic, not a timing artifact, and would block everything downstream.
+**Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
+selection). Do not re-poll the fleet in the meantime — todo 7 already confirmed the mechanism works; further early
+checks just burn an SSM round-trip without changing the answer to anything actionable yet.
