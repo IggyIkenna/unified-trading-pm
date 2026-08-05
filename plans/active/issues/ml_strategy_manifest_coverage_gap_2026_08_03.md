@@ -220,18 +220,18 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
       check with the operator or a design doc whether ml-service inference was ever meant to persist predictions in prod
       yet, or if `MLInferenceBatchModeHandler`'s discarded `prediction_writer` is itself a gap worth its own todo. If
       genuinely not-yet-built, no action needed beyond this note. Repo: ml-service.
-- [ ] 4. [SCRIPT] P3. **Fix `backfill_strategy_instructions_orphan_class_e.py`'s `sample_verify` step — it checks the
-      wrong per-VM shard filename.** `main()` re-instantiates a fresh `ManifestWriter()` to resolve `_per_vm_path` for
-      the post-write verify read, but each `ManifestWriter()` instantiation picks a NEW random per-VM shard name — so
-      the verify step reads a file that was never written (`does not exist after close()`) even when the actual write
-      (via the `record_cells()`-owned writer instance) succeeded. Confirmed live during the real `--apply` run for todo
-      2: `recorded_cells=7 record_errors=0` but `verify_failed=1` — the write itself was independently confirmed correct
-      via a direct GCS read (see todo 2's evidence above), so this is a verify-step bug, not a data bug. Fix: have
-      `record_cells()` return the writer's own `_per_vm_path` (captured before `.close()`) instead of the caller
-      re-resolving a second instance's path — `main()` should thread that value into `sample_verify()` directly. (A fix
-      was drafted + QG-green this session but reverted uncommitted when this dispatch was cancelled mid-turn by an
-      unrelated backlog-regen artifact — this todo re-derives it fresh rather than assuming stale context.) Repo:
-      strategy-service.
+- [x] 4. ✅ [SCRIPT] P3. **Fix `backfill_strategy_instructions_orphan_class_e.py`'s `sample_verify` step — it checks the
+      wrong per-VM shard filename.** — strategy-service@1c20712b `main()` re-instantiates a fresh `ManifestWriter()` to
+      resolve `_per_vm_path` for the post-write verify read, but each `ManifestWriter()` instantiation picks a NEW
+      random per-VM shard name — so the verify step reads a file that was never written (`does not exist after close()`)
+      even when the actual write (via the `record_cells()`-owned writer instance) succeeded. Confirmed live during the
+      real `--apply` run for todo 2: `recorded_cells=7 record_errors=0` but `verify_failed=1` — the write itself was
+      independently confirmed correct via a direct GCS read (see todo 2's evidence above), so this is a verify-step bug,
+      not a data bug. Fix: have `record_cells()` return the writer's own `_per_vm_path` (captured before `.close()`)
+      instead of the caller re-resolving a second instance's path — `main()` should thread that value into
+      `sample_verify()` directly. (A fix was drafted + QG-green this session but reverted uncommitted when this dispatch
+      was cancelled mid-turn by an unrelated backlog-regen artifact — this todo re-derives it fresh rather than assuming
+      stale context.) Repo: strategy-service.
 
 ## Progress Log
 
