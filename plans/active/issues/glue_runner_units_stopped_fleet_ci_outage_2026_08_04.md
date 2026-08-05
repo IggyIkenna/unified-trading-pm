@@ -143,19 +143,30 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       restart. The watchdog must catch this too, not just crash-loop and cleanly-inactive**, e.g. alert on a runner
       whose `journalctl` shows "Running job" with no matching "completed" line for > N minutes, independent of systemd
       `ACTIVE` state (which stays green throughout this failure mode).
-- [ ] [INFRA] P1. **NEW 2026-08-05 — unresolved.** `writer-1/2/3` on the SAME planning VM (`ip-172-31-3-59`, instance
-      `i-042a6332509482556`, unified-trading-pm's own writer pool — a different set of units from this doc's original
-      incident) were found stuck mid-`update-ci-status` job for ~2h, blocking `ldr-to-main-promote-fleet.yml` fleet-wide
-      (confirmed: 2 prior manual `workflow_dispatch` attempts sat queued 12-15min then were cancelled with no runner
-      ever picking them up). `systemctl daemon-reload` + `systemctl restart` on all three cleared the hung jobs (SIGKILL
-      on the old PID, confirmed via `ps`/journal) but **did NOT restore GitHub registration** — 5+ min post-restart, GH
-      API still reports all three `offline` (though no longer `busy`), and the fresh Runner.Listener processes produce
-      ZERO stdout (no "Connected to GitHub", no error) — unlike the healthy `glue-*` pool on the same host, which
-      reconnects in under a second after any restart. Host-level network to `api.github.com` confirmed fine (`curl` 200
-      in 24ms); no established TCP connections from the new Listener PIDs (`ss -tnp` empty) — so it isn't network-layer
-      either. Root cause NOT found. Needs someone with deeper access to check the runner's own registration-side error
-      surface (GH's runner-registration audit log, or a full de-register/re-register instead of a soft restart) — a soft
-      restart was sufficient for the 2026-08-04 incident above but is NOT sufficient here.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the SAME planning VM
+      (`ip-172-31-3-59`, instance `i-042a6332509482556`, unified-trading-pm's own writer pool) — root cause was a
+      **diagnostic miss, not a genuinely unfixable hang**: my earlier "root cause NOT found" checks
+      (`systemctl status     actions.runner.*`, `journalctl -u actions.runner.*`) matched ZERO units, because these
+      runners are NOT self-registered `actions.runner.*` services — they're custom systemd TEMPLATE units,
+      `github-glue-runner@writer-N.service` (unified-trading-pm) and `github-glue-runner-ao@writer-1.service`
+      (agent-orchestrator, a SEPARATE registration + a SEPARATE `/opt/github-glue-runners-ao/` directory tree on the
+      same host — do not confuse the two pools). Every earlier "restart"/"check" against the wrong unit name silently
+      no-op'd. With the real names: `systemctl status`/`journalctl -u github-glue-runner@writer-N.service` showed two
+      DIFFERENT genuine failure shapes, not one — (a) agent-orchestrator's `writer-1` had never actually been restarted
+      this incident at all (`Active: since Aug 04 09:43`) and was looping
+      `TaskCanceledException`/`SocketException(125)     Operation canceled` on stale TLS reads against the Actions
+      broker (`pipelinesghubeus3.actions.githubusercontent.com`) — a long-lived HTTP/2 connection that died without the
+      client detecting it, a known self-hosted-runner failure class; (b) unified-trading-pm's `writer-1/2/3`, already
+      `systemctl restart`-ed earlier this session via the correct unit name, were genuinely stuck silently at init
+      (`_diag` log frozen at exactly 4 startup lines for 30+ min despite the process actively consuming CPU) — DNS,
+      disk, and `curl https://api.github.com` all confirmed healthy, ruling out host-level network/infra causes.
+      **Fix**: `sudo systemctl restart` on the correct 4 unit names (`github-glue-runner-ao@writer-1.service` +
+      `github-glue-runner@writer-{1,2,3}.service`) via SSM. Verified via the GitHub API (not just systemd `is-active`,
+      which was misleadingly green throughout): all 4 `online` within ~15s of restart; the 3 unified-trading-pm writers
+      immediately went `busy: true` on real queued work. Confirmed materially fixed, not cosmetic:
+      `ldr-to-main-promote-fleet.yml`'s two prior manual dispatches had each sat queued then been auto-cancelled after
+      12-15min with no runner ever attaching — the run dispatched immediately after this fix stayed
+      `pending`/progressing past that same window instead of being cancelled.
 
 ## Progress Log
 
@@ -203,3 +214,20 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   else's problem, wait" case — I could not find the root cause with the access/tools available in this session). Also
   extended the existing `[INFRA] P2` watchdog todo to explicitly cover this "active-but-hung" shape, since the current
   framing (crash-loop vs. cleanly-inactive) would miss it too.
+- **2026-08-05 (same session, later) — root-caused and RESOLVED, closing the `[INFRA] P1` todo above.** The earlier
+  "root cause not found" was a diagnostic miss: `systemctl status actions.runner.*` (GitHub's own default self-install
+  naming convention) matched nothing, because this fleet's runners are custom systemd template units named
+  `github-glue-runner@writer-N.service` (found by `find /etc/systemd/system -iname '*glue*'`, then confirmed against
+  `glue-runner-run.sh`'s own header comment). With the real unit names, `journalctl -u` showed real, readable state for
+  the first time: agent-orchestrator's `writer-1` (a separate registration + directory tree,
+  `/opt/github-glue-runners-ao/`, from unified-trading-pm's `/opt/github-glue-runners/`) had silently stopped
+  long-polling GitHub's broker after a stale TLS connection, never actually restarted this incident despite being named
+  in the earlier todo; unified-trading-pm's `writer-1/2/3`, already restarted once via the correct unit name earlier
+  this session, were separately stuck silently at process init. `sudo systemctl restart` on all 4 correct unit names via
+  SSM fixed both: GitHub API confirmed all 4 `online` within 15s, the 3 unified-trading-pm writers went `busy` on real
+  queued work immediately, and a `ldr-to-main-promote-fleet.yml` run dispatched right after stayed progressing past the
+  12-15min mark where the two prior attempts had been auto-cancelled. **Lesson for next time**: when a self-hosted
+  runner investigation on this host comes up empty, verify the unit name against `glue-runner-run.sh`'s header comment
+  or `find /etc/systemd/system -iname '*glue*'` FIRST — `actions.runner.*` is the wrong pattern fleet-wide here, and a
+  `systemctl`/`journalctl` query against a non-existent unit name fails silently (empty output, not an error), which
+  reads exactly like "nothing to report" instead of "you queried the wrong thing."
