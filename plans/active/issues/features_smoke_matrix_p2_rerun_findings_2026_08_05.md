@@ -193,11 +193,12 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       `commodity-signals-batch-central-element-323112` exists in the 103-bucket listing; the provisioned features test
       set is calendar/cefi/defi/pred/sports/tradfi, no commodity). The commodity smoke's write 404s. Either provision
       the folded-name bucket or repoint `_test_bucket()` to an existing one. (repo: deployment-service)
-- [ ] [SCRIPT] P3. **e2e-testing** — decide the per-cell timeout for cross_instrument `smoke_matrix.py`: the CEFI cell's
-      real compute (HMM/sklearn fitting over the instrument universe) exceeds the 600s `subprocess` bound and is killed
-      (correctly, thanks to the INFRA killpg fix — no orphan, no OOM). Either raise the bound for this family or accept
-      the timeout as the honest bound (a smoke that times out IS a valid signal the family can't complete within the
-      smoke window). (repo: e2e-testing)
+- [x] ✅ [SCRIPT] P3. **e2e-testing** — decide the per-cell timeout for cross_instrument `smoke_matrix.py` —
+      e2e-testing@0b4d81e. **Decision: accept 600s as the honest bound.** Extracted the magic number to
+      `SMOKE_PER_CELL_TIMEOUT` module-level constant with rationale comment. cross_instrument CEFI (HMM/sklearn fitting
+      over the full instrument universe) genuinely exceeds the smoke window — a timeout IS a valid signal (this family
+      needs a full backfill VM), and the real bug was the orphan process leak (now verified fixed by killpg), not the
+      bound. (repo: e2e-testing)
 
 ## Progress Log
 
