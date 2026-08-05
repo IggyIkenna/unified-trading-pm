@@ -144,12 +144,9 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   # -- instruments-service cli/main.py — REMOVED 2026-08-05 (slot-13): all 3 sites now fixed
   #    (lines 85+159 projected with columns=, line 307 QG-allow'd per instruments-service@a325da86).
-  - repo: market-tick-data-service
-    file: market_tick_data_service/engine/orchestrator/venue_fetch.py
-    line: 186
-    function: _check_sports_v9_columns
-    status: pending_triage
-    successor: read_availability_index_bare_defi_callers_2026_07_27
+  # -- market-tick-data-service venue_fetch.py — REMOVED 2026-08-05 (slot-12): now projected
+  #    with columns=["schema_version","asset_group","source","pipeline_mode","available_at"]
+  #    (read_availability_index_unfiltered_callsite_audit_2026_07_26 third-strike fix).
   - repo: unified-trading-library
     file: unified_trading_library/dependency_check.py
     line: 143
