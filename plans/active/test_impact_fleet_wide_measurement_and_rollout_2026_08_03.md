@@ -268,19 +268,27 @@ to be per repo — not measured here, out of this todo's scope.
       This does NOT mean promote, and does NOT mean the selector is unsafe — it means the live single-repo trial (below,
       clock to 2026-08-17) remains the only viable evidence path until the capacity crisis resolves enough to produce
       clean historical samples.
-- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency — STILL BLOCKED, backtest did NOT clear it.
-      UNAFFECTED by the MDPS-only promotion below** (that was a scoped, single-repo operator override, not fleet-wide
-      evidence clearing the bar this todo actually gates). Gated on EITHER the live single-repo trial
+- [ ] [REVIEW] P2. **Fleet-wide shadow-mode trial / evidence sufficiency — STILL BLOCKED overall, but real progress
+      2026-08-05. UNAFFECTED by the MDPS-only promotion below** (that was a scoped, single-repo operator override, not
+      fleet-wide evidence clearing the bar this todo actually gates). Gated on EITHER the live single-repo trial
       (`market-data-processing-service`, done-when 2026-08-17 — moot now that MDPS runs a real gate instead of a shadow
       trial; re-derive fleet-wide evidence from the post-promotion divergence-analysis tool instead, see above) OR the
-      historical backtest clearing with zero divergences over a sample the reviewer judges large enough to trust — the
-      backtest above ran for real but returned a 0-usable-sample result (see its writeup), which does NOT satisfy "large
-      enough to trust"; it is evidence of nothing, not evidence of safety. This plan's `sequential: true` only encodes
-      file-order, not this OR; a human/reviewing-worker must read both todos' actual state and decide which (if either)
-      satisfies the bar, not just check that the prior todo in file order is `[x]`. If the backtest is re-run later
-      (once the capacity crisis resolves) and clears with a genuinely trustworthy sample, it does NOT skip the
-      fleet-wide question — it only removes the requirement to wait until 2026-08-17. Done-when: zero observed
-      divergences fleet-wide, from whichever evidence source actually satisfies the reviewer.
+      historical backtest clearing with zero divergences over a sample the reviewer judges large enough to trust.
+      **Re-ran the backtest 2026-08-05** now that `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
+      has meaningfully (not fully) reduced fleet contention: `execution-service`/`instruments-service`/
+      `market-data-processing-service` still 0 usable (100% unattributable infra kills — contention reduced, not
+      eliminated), but `features-service` produced a real usable sample for the first time — **5/5, and investigated
+      each one directly rather than trusting the raw tool output**: all 5 are the SAME already-tracked
+      pytest-timeout-under-contention flakiness
+      (`/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`, identical
+      `+++ Timeout +++` signature), NOT genuine selector divergences — the selector's narrowing was correct in every
+      case; the tests separately timed out under load, unrelated to the diffs. **Net: 0 genuine divergences found in the
+      first real usable sample (n=5, one repo)** — real, if still modest, positive evidence, not yet "large enough to
+      trust" fleet-wide on its own. This plan's `sequential: true` only encodes file-order, not this OR; a
+      human/reviewing-worker must read both todos' actual state and decide which (if either) satisfies the bar, not just
+      check that the prior todo in file order is `[x]`. Done-when: zero observed divergences fleet-wide, from whichever
+      evidence source actually satisfies the reviewer — re-run the backtest again once contention drops further (e.g.
+      after the pending AO-box downsize, still on operator hold) to grow the sample across more repos.
 - [x] ✅ [REVIEW] P2. **Promotion decision — RESOLVED for MDPS ONLY, 2026-08-03, direct operator override; fleet-wide
       promotion remains exactly as blocked as the todo above states.** Operator directly instructed promotion ("pls
       implement /autonomous") after being shown the corrected evidence picture in-conversation (backtest inconclusive —
@@ -453,3 +461,11 @@ due for its own pre-authorized next action independent of this audit.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
 - **context-scout 2026-08-03 (re-scout)**: re-verified context_scope (6 entries) -- all paths resolve
   (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, already correctly dated); no change needed.
+- **2026-08-05 (interactive session)**: re-ran the historical backtest after completing
+  `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (fleet contention measurably down, load average
+  ~65 peak → ~29 on the new dedicated VM, not fully resolved). `features-service` finally produced a usable sample (5,
+  up from 0) — investigated each divergence directly against the raw CI logs rather than trusting the tool's summary,
+  and all 5 turned out to be the same already-tracked pytest-timeout-under-contention flakiness, not genuine selector
+  bugs (cross-linked into `pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`). Net: first real, if
+  modest, positive evidence point (0/5 genuine divergences) — updated the fleet-wide evidence-sufficiency todo above
+  accordingly. The other 3 backtested repos remain at 0 usable sample; re-run again once contention drops further.
