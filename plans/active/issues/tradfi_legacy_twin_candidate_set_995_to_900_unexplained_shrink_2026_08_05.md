@@ -99,9 +99,10 @@ Run a fresh orphan sweep for tradfi and compare the class-B population against b
       `migration_orphan_sweep.py` for `--asset-group tradfi` (read-only), record the `B_legacy_duplicate` count, and
       compare against both the 995 (2026-07-10) and 900 (2026-07-30) baselines. If the sweep script has changed since
       2026-07-10, note the version used. (repo: instruments-service)
-- [ ] [DOC] P1. **Correct the stale 995 figure everywhere it appears** in
-      `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` if the fresh sweep confirms the current
-      population is NOT 995. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P1. **Correct the stale 995 figure everywhere it appears** in
+      `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` — unified-trading-pm@1b0f98c82. All 5
+      operational references updated from 995→900; historical quote (line 79) preserved with editorial note pointing to
+      this issue doc.
 - [ ] [DATA] P2. **Document the root cause of the 995→900 delta** — which of the 4 candidate explanations (a-d) above is
       correct, with cited evidence. If the cause cannot be determined, state that explicitly and explain why. (repo:
       unified-trading-pm)
