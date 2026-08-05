@@ -198,10 +198,10 @@ leakage-sensitive, and looks safely AO-eligible on its own. Finding 3 is a small
       values via `features[selected]` (no change to what the final LightGBM model actually sees). New regression test
       `test_phase_1_handles_nan_in_numeric_columns_before_fit` (10% random NaN + one fully-NaN column, 500 numeric cols)
       proves no crash.
-- [ ] [CODE] P3. Wire `extra_args_fn=_add_ml_training_args` (and the other training-specific `ServiceBootstrap` kwargs
-      `ml_service/training/cli/main.py::main()` already passes) into the consolidated `ml_service/cli/main.py::run_cli`
-      so the installed `ml-service` console script can actually run training operations, matching
-      `python -m ml_service.training.cli.main`'s behavior. (repo: ml-service)
+- [x] ✅ [CODE] P3. Wire `extra_args_fn=_add_ml_training_args` (and the other training-specific `ServiceBootstrap`
+      kwargs `ml_service/training/cli/main.py::main()` already passes) into the consolidated
+      `ml_service/cli/main.py::run_cli` so the installed `ml-service` console script can actually run training
+      operations, matching `python -m ml_service.training.cli.main`'s behavior. (repo: ml-service) — ml-service@550bea9
 - [ ] [DATA] P3. Re-verify the 758-fixtures/13-dates vs. 2,383-fixtures/17-dates discrepancy against real prod data —
       confirm whether this is staleness or a regression in the fixture_id join-key-sibling-frame mechanism, independent
       of Finding 1. **Update 2026-08-03 (slot-3)**: a THIRD count observed for the same window via `--operation train`
