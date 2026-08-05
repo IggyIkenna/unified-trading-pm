@@ -96,12 +96,15 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       move any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch.
       Repo: unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with
       the specific evidence checked).
-- [ ] [DOC] P3. Confirm the known mistag
-      (`archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`) has actually been retagged
-      away from `asset_group: [defi]` by its already-tracked
-      `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76` todo; if still untagged, do not re-draft a new
-      todo — just verify the existing todo is still open and note its status here. Repo: unified-trading-pm. Done when:
-      a verdict (retagged / still open, citing the batch2-finalize todo state) is recorded.
+- [x] ✅ [DOC] P3. — unified-trading-pm@31dd16a67. **VERDICT (2026-08-05, slot-9): STILL UNTAGGED — batch2-finalize todo
+      still open.** Confirmed the issue doc
+      `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` still carries
+      `asset_group: [defi]` (frontmatter L22), while its real content — the empty-string-fallback QG STEP 5.101
+      baseline-ratchet mechanism, fleet-wide — is infra/cross-cutting, NOT DeFi-specific. The batch2-finalize todo that
+      owns the retag (`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:81-84`, sub-item (1) of the P2) is still
+      `- [ ]` open — no one has picked it up. Per this todo's own instructions, did NOT re-draft a new todo or retag it
+      here; the existing batch2-finalize todo remains the single tracked owner. Repo: unified-trading-pm. Done when: a
+      verdict (retagged / still open, citing the batch2-finalize todo state) is recorded.
 - [ ] [DOC] P1. Archive `defi_satellite_ao_dispatch_batch5_2026_07_27.md` via the standard 6-step ritual (migrate any
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch5 is in
