@@ -386,3 +386,4 @@ own tests pass (178 passed across the four canonical-path test modules).
   `tardis_shared.py`/skill-doc/CLAUDE.md pointers (the writer fix already shipped) in favor of `quarantine.py` (the
   standalone module both §7 BLOCKED-UPSTREAM-DESIGN dispatches center on), keeping the design-gate doc + the oracle
   itself as the load-bearing reads.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

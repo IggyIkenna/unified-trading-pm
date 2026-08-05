@@ -170,3 +170,5 @@ verified via diff — one line added to the `context_scope` list, zero content m
 the same top-of-doc operator ruling and file-ownership coordination gates; cross-checked against
 `ci_satellite_ao_dispatch_batch1_2026_07_26.md` D26 (verbatim match, all 4 items, consistent un-dispatched status). No
 RECLASSIFY, no ARCHIVE.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

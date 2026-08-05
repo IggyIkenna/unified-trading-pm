@@ -35,7 +35,7 @@ context_scope:
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     /plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2,
-    unified-trading-pm/scripts/openapi,
+    scripts/openapi,
   ]
 ---
 
@@ -860,3 +860,5 @@ fired.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
   resolve; the doc carries zero open `- [ ]` items (a fully-resolved running gap-pool, kept `status: open` by design per
   its own stated purpose), so the sibling findings doc + parent plan + source registries remain the right set.
+- **context-scout 2026-08-05**: re-scouted; fixed a broken `context_scope` path (`unified-trading-pm/scripts/openapi`
+  never resolves — same-repo paths are plain repo-relative; corrected to `scripts/openapi`), now 5 entries.

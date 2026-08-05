@@ -170,3 +170,4 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict; the
   sole todo is still an unresolved architecture choice (range-loop rewrite vs. cross-process cache), one branch of which
   touches the shared fleet-wide VM startup script — a design call, not bounded worker-determinable work.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

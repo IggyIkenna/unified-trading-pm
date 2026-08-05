@@ -844,3 +844,4 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the openapi scripts dir (Phase-0 generator
   fixes are all shipped) for the execution-service adapters dir, since the sole remaining open item (F46,
   BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

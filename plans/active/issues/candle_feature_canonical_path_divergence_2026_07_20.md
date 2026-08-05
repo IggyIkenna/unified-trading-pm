@@ -606,3 +606,4 @@ remain genuinely open content-level work, distinct from the path-migration infra
   resolve; the two codex layout docs, the completed migration-execution plan, the still-open manifest-coverage-gap issue
   doc, and the migration script remain the right minimal set for the genuinely open items (todo 3's TradFi quarantine
   ruling, todo 9's split-brain count).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

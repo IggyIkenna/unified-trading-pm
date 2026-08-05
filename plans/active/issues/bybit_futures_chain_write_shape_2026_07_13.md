@@ -179,3 +179,4 @@ workspace).
   `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`) have real, extracted,
   ready-to-execute work sitting with no live dispatch path pending batch4's activation — flagged again in this run's
   report per the 2026-08-02 pass's own note.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

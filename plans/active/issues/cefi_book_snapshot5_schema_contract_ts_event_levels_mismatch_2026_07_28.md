@@ -813,3 +813,4 @@ against the reproduction script.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict;
   both remaining open todos are still explicit design/maintainer-judgment calls (features-service reader design gap;
   error-truncation observability design question), neither worker-determinable.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

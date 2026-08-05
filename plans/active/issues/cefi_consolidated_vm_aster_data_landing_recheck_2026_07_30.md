@@ -173,3 +173,4 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
   (`live/connectors/aster_book_liq_ws.py`) named in the 2026-08-02 investigation append.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
   2026-08-02 verdict, banner and citations still accurate, no content change since besides the context-scout refresh.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

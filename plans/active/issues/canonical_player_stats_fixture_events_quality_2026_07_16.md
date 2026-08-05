@@ -282,3 +282,4 @@ its own touched subset piecemeal.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the honest-absence codex doc and the
   now-superseded dedup script (Finding 1 fully resolved), added the 2025-cell root-cause census script since the sole
   remaining open item (the P3 manifest-reconciliation todo) builds directly on it.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

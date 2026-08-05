@@ -97,3 +97,4 @@ reference-universe cache on that date) it could recur on future dates/venues.
   backfill/one-off VM. Most likely root cause: stale tarball — the VM used pre-fix code. No code change needed; the P1
   fix (`91ac1caa`, 2026-07-12) already covers this. The 354 rows are harmless legacy strays per the honest-coverage
   model (same P2 decision as the sibling doc).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -680,3 +680,4 @@ accordingly.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped the progress-log-archive doc, added the
   actual migration script + launcher (this doc's own context_scope had zero source-code paths despite being the primary
   write-up of a code-driven fleet failure).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

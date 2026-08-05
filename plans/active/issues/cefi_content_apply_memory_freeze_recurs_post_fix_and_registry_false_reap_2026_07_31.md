@@ -222,3 +222,4 @@ depend on.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the prior verdict; items
   1-2 stay correctly held back from reclassify (batch4 still `status: draft`, duplicate-dispatch risk), items 3-5 remain
   genuinely open corroborating data for the separate still-open shard-16 investigation. No reclassification.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

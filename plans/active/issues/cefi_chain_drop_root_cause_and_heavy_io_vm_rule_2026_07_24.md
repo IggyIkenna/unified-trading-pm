@@ -548,3 +548,4 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   sole todo still resumes a migration explicitly PAUSED on direct operator request and wraps prod GCS renames in a
   manifest-consolidator pause/verify/apply/resume sequence — resuming is itself a judgment call, not
   worker-determinable.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
