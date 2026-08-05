@@ -104,6 +104,18 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # stays in the <1s precommit budget. The corpus-wide ratchet (line_caps_baseline.yaml) is a
     # separate, full-sweep-only check for debt in files nobody is actively editing.
     "$SCRIPT_DIR/check_line_caps.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Line caps (staged plans)" || { echo "  ❌ Line cap exceeded in a staged plan — split it (bash scripts/plan-hygiene/check_line_caps.sh <file> for detail)"; PF=$(( PF + 1 )); }
+    # Finalize-plan coverage on staged plans ONLY (--only, ao_kpi_done_vs_detail_mismatch_2026_08_05
+    # follow-up) — a brand-new assigned_vm:planning plan authored in a "pure doc/plan-flip -> prek
+    # only" commit (CLAUDE.md's own carve-out) used to skip this check entirely, since it previously
+    # lived ONLY in the full quality-gates.sh (repeat of the 2026-07-27
+    # finalize_plan_coverage_regression incident, which blocked quickmerge fleet-wide until someone
+    # noticed and authored the missing companions). --only still scans the whole corpus to resolve
+    # gating but only fails on violations among these staged paths, so a pre-existing violation in an
+    # unrelated plan never blocks this commit (RULE-11 blast-radius safety, same as frontmatter-schema
+    # above).
+    python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Finalize-plan coverage (staged plans)" \
+      || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }

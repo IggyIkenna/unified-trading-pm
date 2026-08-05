@@ -78,6 +78,26 @@ repos:
         files: ^(plans/|codex/)
         pass_filenames: false
 
+  # Agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — the corpus-wide QG copy of
+  # this check (scripts/quality_gates/check_agent_rules_size_cap.py) only ran inside the full
+  # quality-gates.sh, so a commit that edits CLAUDE.md/SUB_AGENT_MANDATORY_RULES.md alongside a
+  # plan/codex doc (the "pure doc/plan-flip -> prek only" carve-out) could land over the hard cap
+  # with nobody catching it until the next agent ran the full gate (ao_kpi_done_vs_detail_mismatch_
+  # 2026_08_05 follow-up — a 40,960-byte zero-margin cap made the very next legitimate edit from
+  # ANYONE fail). Fires only when one of the two capped files is actually staged (files: below), so
+  # it's a no-op for every other commit and for repos where these paths don't exist.
+  - repo: local
+    hooks:
+      - id: agent-rules-size-cap
+        name: Agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md)
+        entry:
+          bash -c 'CHECK="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
+          pwd)}/unified-trading-pm/scripts/quality_gates/check_agent_rules_size_cap.py"; [ -f "$CHECK" ] || exit 0;
+          python3 "$CHECK"'
+        language: system
+        files: ^cursor-configs/(CLAUDE|SUB_AGENT_MANDATORY_RULES)\.md$
+        pass_filenames: false
+
   # Ruff - Python linter/formatter for scripts
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.0

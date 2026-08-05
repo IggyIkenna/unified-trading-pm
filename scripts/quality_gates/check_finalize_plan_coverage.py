@@ -193,7 +193,7 @@ def _write_baseline(
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Finalize-plan-coverage check (every AO plan needs a gated finalize plan)."
     )
@@ -201,15 +201,28 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
     parser.add_argument("--strict", action="store_true")
-    return parser.parse_args()
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help=(
+            "Blast-radius-safe precommit mode (RULE-11, mirrors check_frontmatter_schema.py's staged-files "
+            "scoping): still scans the whole corpus to resolve WHICH plans are gated (that's inherently "
+            "corpus-wide knowledge), but only reports/fails on violations among these specific paths — a "
+            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline/ratchet "
+            "comparison in this mode; any violation among --only paths fails immediately."
+        ),
+    )
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    ns = _parse_args()
+def main(argv: list[str] | None = None) -> int:
+    ns = _parse_args(argv)
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
     baseline_path: Path = cast(Path, ns.baseline_path)
     baseline_write: bool = cast(bool, ns.baseline_write)
     strict: bool = cast(bool, ns.strict)
+    only: list[str] | None = cast("list[str] | None", ns.only)
 
     active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
     if not active_dir.is_dir():
@@ -218,6 +231,36 @@ def main() -> int:
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
+
+    if only is not None:
+        # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
+        # since argparse hands us whatever the caller typed) and keep just the violations that
+        # ARE one of them — the corpus scan above still ran in full (gating is inherently
+        # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
+        # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
+        # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
+        only_resolved = {Path(o).resolve() for o in only}
+        violations = [v for v in violations if v.resolve() in only_resolved]
+        draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
+        if not violations and not draft_gate_violations:
+            print("✅ finalize-plan-coverage (--only): clean.")
+            return 0
+        if violations:
+            print(
+                "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+                " to a new/existing companion plan — see task_template.md §4):"
+            )
+            for v in violations:
+                print(f"  - {v}")
+        if draft_gate_violations:
+            print(
+                "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
+                " flip to status: active, see task_template.md §4):"
+            )
+            for v in draft_gate_violations:
+                print(f"  - {v}")
+        return 1
+
     print(
         f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "
         f"{len(violations)} violation(s)."
