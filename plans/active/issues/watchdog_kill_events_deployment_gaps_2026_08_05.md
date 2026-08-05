@@ -120,10 +120,11 @@ session).
       `Environment=` lines, then `systemctl daemon-reload && systemctl restart resource-watchdog`. Requires root (slot
       16 has no sudo). After restart, a real kill must produce a `killed=true` row in `watchdog_kill_events` (verify via
       `GET /api/watchdog/kill-events?vm_name=ip-172-31-5-118`). (repo: none — operator action on planning VM)
-- [ ] [UI] P3. Make the AO host's kill events reachable in deployment-ui: either (a) extend the resource-history
+- [x] ✅ [UI] P3. Make the AO host's kill events reachable in deployment-ui: either (a) extend the resource-history
       collector to also sample the orchestrator/AO host so it appears in `/api/vm-resources/rolling`, or (b) add an
       AO-host kill-events surface in `VmResourceComparison.tsx` (or the fleet view) that is not gated on
-      resource_samples rows. (repo: deployment-ui)
+      resource_samples rows. (repo: deployment-ui) — deployment-ui@ed2466e + pw:L2 ✓
+      (tests/smoke/ao-host-kill-events.spec.ts, tsc/ESLint/Vitest/Playwright green, QG all-passed 2026-08-05)
 
 ## Evidence
 
