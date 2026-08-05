@@ -99,12 +99,9 @@ checked, not assumed.
       — these 2021 objects are real data (1 row each, valid hive keys) with no manifest row. Run the canonical twin
       check across all 1,042 (confirm no pipeline_mode= twin exists for any), then `record_captured` on the manifest to
       close the GCS↔manifest gap. This is the direct fulfillment of C0-RD5b's original charter.
-- [ ] [DATA] P2. Audit the `ticks_migrated` writer for canonical v9 path compliance (repo: instruments-service or
-      market-tick-data-service) — the 2026-04-18 migration wrote objects to `raw_tick_data/by_date/` with NO
-      `pipeline_mode=`, NO `data_type=`/`chain=`/`instrument_type=` hive keys, and a combined `venue=PROTOCOL-CHAIN`
-      segment (e.g. `AAVEV3-ETHEREUM`). Determine: (a) which migration script produced these, (b) whether it's still
-      running, (c) whether the objects need canonical re-path with proper pipeline_mode + hive keys, and (d) whether the
-      manifest has rows for them (if not → backfill). This is a current writer defect, not stale data.
+- [x] ✅ [DATA] P2. Audit the `ticks_migrated` writer for canonical v9 path compliance — **FINDINGS: NOT a current
+      writer defect; the fold already ran + manifest coverage is complete. See Progress Log for full audit.** —
+      market-tick-data-service@13f14b78 (fold script, the canonical resolution)
 - [ ] [DATA] P3. Close C0-RD5/C0-RD5b checkboxes on the archived `defi_manifest_canonicalisation_2026_06_01.md` — per
       the corpus's existing precedent, edit the two `- [ ]` checkboxes (lines ~1230 and ~1232) directly in the archived
       doc to note their resolution: C0-RD5 (legacy bucket deletion) was subsumed by
@@ -152,3 +149,40 @@ checked, not assumed.
   The legacy top-level `dex_pools/` and `lending_indices/` trees are zero-objects (per the 2026-07-21 fold). No `day=`
   top-level objects exist. No `category=defi` objects exist. The surviving legacy-FORM objects are all in the shared
   `-prd` bucket under `raw_tick_data/` — exactly the pre-seeded-in-`-prd` scenario C0-RD5b predicted.
+
+- **slot-10 worker 2026-08-05 (`ticks_migrated` writer audit — this todo)**: Traced the full provenance of the
+  `ticks_migrated_20260418T*.parquet` objects through code and plan corpus. **FOUR FINDINGS, correcting the "current
+  writer defect" framing above**:
+
+  **(a) Origin**: The objects were produced by a one-time migration batch — the instruments-store v9 migration
+  (`build_instrument_catalogue.py` / `migrate_instruments_store_v9.py`) — that ran on 2026-04-18 (the filename
+  timestamp). All 5,332 objects share a single GCS `Creation time=2026-05-12` and `Storage class=COLDLINE`. The
+  `ticks_migrated_<ts>.parquet` naming convention was the legacy batch's output-stamp for objects written at the
+  composite-venue path (`venue=PROTOCOL-CHAIN`) without hive keys.
+
+  **(b) Still running**: **NO — definitively not.** Verified in the issue doc
+  `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (lines 148-154): a bounded probe of near-present
+  dates (2026-07-20/25/27) for `venue=UNISWAPV4-ETHEREUM/` under the non-canonical prefix found ZERO new objects. This
+  is a frozen, one-time migration artifact, NOT an active writer producing new non-canonical output.
+
+  **(c) Canonical re-path needed**: **ALREADY DONE.** The script `fold_legacy_composite_venue_objects_2026_07_31.py`
+  (`market-tick-data-service@13f14b78`, applied 2026-08-01 via `defi_satellite_ao_dispatch_batch6_2026_07_30.md`)
+  processed all 5,332 legacy shards → 324,867 canonical objects written with proper
+  `pipeline_mode=batch_onchain_subgraph/`, fully decomposed hive keys
+  (`chain=ETHEREUM/instrument_type=<type>/data_type=<dt>`), canonicalized venues (UNISWAPV2→UNISWAP_V2, AAVEV3→AAVE_V3,
+  etc.), and remapped data_types (liquidity→dex_pool_state, swaps→dex_pool_swaps,
+  rate_indices/utilization→lending_indices). The legacy objects remain as intentionally un-deleted residuals — deletion
+  is the separate, delete-safety-gated `[PM] P2` todo in
+  `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+
+  **(d) Manifest rows**: **YES for the canonical twins** — 324,867 `record_captured` rows registered during the fold.
+  **NO for the legacy objects** (by design — the fold deliberately leaves them unregistered; they were never parseable
+  by `parse_hive_path()` which returns `None` for the bare-venue `ticks_migrated_*.parquet` shape). This is correct: the
+  canonical twins now carry the manifest coverage; the legacy residual objects await the separate deletion step. **No
+  backfill needed** — the fold already handled it.
+
+  **Conclusion**: No code changes required for this todo. The `ticks_migrated` writer is a frozen historical artifact,
+  not a current defect; the fold has already restored canonical path compliance and manifest coverage. The ONLY
+  remaining action is deleting the residual legacy objects, tracked separately by the `delete-the-legacy-copies` phase
+  in `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`'s `[PM] P2` todo (requires operator +
+  delete-safety protocol).
