@@ -78,21 +78,21 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOCS] P3. **Retire the stale "~50% attempted_failed (1.33M)" cefi figure at its source.**
-      `data_completion_cefi_2026_07_15.md`'s E6 CF-7 line item (line ~277) still reads "Investigate the 50%
-      `attempted_failed` rows (1.33M)". That figure was re-measured against the live cefi availability index on
-      2026-07-26 (9,138,791 rows, single read) as **11.61% / 1,060,613 rows** — the denominator grew ~3.5x while the
-      numerator fell, so the "~50%" framing overstates a correctness problem that is already ~95% attributed to open P0
-      work. Edit that line item to (a) strike the stale ~50%/1.33M figure, (b) cite 11.61% / 1,060,613 as the current
-      measurement, and (c) link `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`
-      as the measurement + attribution record. Also strike the same line's "COINBASE↔COINBASE-SPOT mismatch" relabel
-      premise — that doc measured bare `venue == "COINBASE"` at **0 rows** (already fully canonical), so there is no
-      relabel to do. Do NOT touch the blank-`data_type` half of that line item — it is PARKED as a cross-tranche
-      conflict (see Deferred). Repo: unified-trading-pm. Source:
-      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`. **Done when**:
-      `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the COINBASE relabel
-      premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is flipped `[x]` with
-      the commit cited, and prek is green.
+- [x] ✅ [DOCS] P3. **Retire the stale "~50% attempted_failed (1.33M)" cefi figure at its source.** —
+      unified-trading-pm@4d90eeefe `data_completion_cefi_2026_07_15.md`'s E6 CF-7 line item (line ~277) still reads
+      "Investigate the 50% `attempted_failed` rows (1.33M)". That figure was re-measured against the live cefi
+      availability index on 2026-07-26 (9,138,791 rows, single read) as **11.61% / 1,060,613 rows** — the denominator
+      grew ~3.5x while the numerator fell, so the "~50%" framing overstates a correctness problem that is already ~95%
+      attributed to open P0 work. Edit that line item to (a) strike the stale ~50%/1.33M figure, (b) cite 11.61% /
+      1,060,613 as the current measurement, and (c) link
+      `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` as the measurement +
+      attribution record. Also strike the same line's "COINBASE↔COINBASE-SPOT mismatch" relabel premise — that doc
+      measured bare `venue == "COINBASE"` at **0 rows** (already fully canonical), so there is no relabel to do. Do NOT
+      touch the blank-`data_type` half of that line item — it is PARKED as a cross-tranche conflict (see Deferred).
+      Repo: unified-trading-pm. Source: `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
+      **Done when**: `data_completion_cefi_2026_07_15.md`'s E6 CF-7 item carries the corrected figure + the link, the
+      COINBASE relabel premise is struck with the 0-row measurement cited, that source doc's `[DOCS] P3` checkbox is
+      flipped `[x]` with the commit cited, and prek is green.
 - [x] ✅ [SCRIPT] P2. **Make the cefi IS t1-recon job's date window default to the run day instead of a hardcoded
       range.** — instruments-service@2217756f The cefi instruments-service recon job runs on a hardcoded
       `--start-date`/`--end-date`, so it re-processes a fixed historical window every day instead of doing true T+1
