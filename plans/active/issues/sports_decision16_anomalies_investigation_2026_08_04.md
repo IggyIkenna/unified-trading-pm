@@ -207,6 +207,61 @@ Recommended follow-ups (not executed here — this is a read-only diagnosis):
    may be acceptable if standings are genuinely treated as "latest snapshot" data where the partition date reflects
    processing time, not data effective time.
 
+---
+
+## Date-keying evaluation (2026-08-05)
+
+Per the P3 DESIGN todo: evaluated whether the standings/teams cache in `sports_reference_core.py` should be date-keyed.
+
+### Cache mechanics
+
+- `_cached_standings_df` (`__init__.py:312`) — module-level `pd.DataFrame | None`, initialized to `None` per process
+  invocation
+- `_fetch_and_cache_standings` (`sports_reference_core.py:623-650`) — checks `_cached_standings_df is None`; if so,
+  calls `adapter.get_standings(lid)` for all prediction leagues, sets cache via `_set_cached_standings`; if cache is
+  already populated, returns it with 0 API calls
+- `_write_standings_per_league` (`sports_reference_core.py:653-689`) — writes standings to `by_date/day={date}/` using
+  the `date` parameter the orchestrator passes, regardless of whether that data reflects the standings AS OF that date
+- No explicit clear function exists (unlike `clear_defi_universe_cache` and `clear_fixture_leagues_cache`); the cache
+  lives for the duration of one process invocation
+- The design intent is documented at `__init__.py:308-312`: "Sports reference core entity caches —
+  leagues/teams/standings are the same across all dates within a batch run. Fetched once, written to every date
+  partition."
+
+### The actual anomaly mechanism
+
+When the sports reference pipeline runs for a single current date (normal daily run), standings are fetched once,
+written to that date's partition, and the process exits — correct.
+
+When the pipeline runs for historical dates (backfill/reprocess), the same process may process multiple dates. The
+standings cache is populated on the first date, and every subsequent date gets the same current-season data written to
+its `day=` partition. This produces ~3,050 date partitions all containing identical season-2026 standings data.
+
+### Decision: NOT date-keying
+
+Date-keying the cache would add per-date API calls with **zero data-quality benefit**:
+
+1. **api_football returns current standings regardless of date.** The `adapter.get_standings(lid)` endpoint does not
+   accept a historical date parameter — it always returns the CURRENT league table. Even with a date-keyed cache, every
+   date would still receive identical data after identical API calls, just at higher cost and with rate-limit risk.
+
+2. **The design is intentional and documented.** The comment at `__init__.py:308-312` explicitly states the
+   single-cache-per-batch-run design. The three entity caches (leagues, teams, standings) all follow the same pattern —
+   slow-moving reference data fetched once and written to every date partition.
+
+3. **Historically-accurate standings require a different data source.** If backtesting with historically-accurate league
+   tables is ever needed, it requires a historical table archive (e.g., a "league table as of date X" data product), not
+   a cache-key change in the api_football adapter. The api_football API is a "current snapshot" endpoint.
+
+4. **The phantom-auditor noise is a path-template issue, not a cache-keying issue.** The 460 STANDINGS + 460 TEAMS
+   phantom rows are caused by path-template mismatch between the auditor and writer, not by the cache design. The UAC
+   `SPORTS_DATA_TYPE_TO_FOLDER` entries for `STANDINGS`/`TEAMS` were already present (confirmed by todo 2 above).
+
+### Verdict
+
+**Accepted as intended behavior.** The standings cache design is a deliberate "latest snapshot" pattern appropriate for
+a current-only API data source. No code change, no design issue filed. Close.
+
 ## Todos
 
 - [x] ✅ [DATA] P3. **Prune the 405 player_values snapshot trigger-date objects under `season=2026/` with trigger dates
@@ -222,10 +277,14 @@ Recommended follow-ups (not executed here — this is a read-only diagnosis):
       `candidate_parquet_paths("STANDINGS"/"TEAMS", day, league_id)` returns valid candidate paths. No code change
       needed.
 
-- [ ] [DESIGN] P3. **Evaluate whether the sports reference standings/teams cache should be date-keyed** (repo:
-      instruments-service). Currently `_fetch_and_cache_standings` holds a single in-memory cache of the latest
-      standings for all leagues, and `_write_standings_per_league` writes it to whatever `date` the orchestrator passes.
-      When backfill/reprocess runs process historical dates, current-season standings data is written to old `day=`
-      partitions. Decision needed: is this acceptable ("latest snapshot" semantics), or should the cache be date-keyed
-      so historical runs write historically-accurate data? File a design issue if date-keying is desired; otherwise
-      document as intended behavior and close.
+- [x] ✅ [DESIGN] P3. **Evaluate whether the sports reference standings/teams cache should be date-keyed** — PM@<sha>.
+      **Decision: "latest snapshot" semantics are accepted as intended behavior. No date-keying needed.** See §
+      "Date-keying evaluation (2026-08-05)" below for full analysis. No code change — the single in-memory cache is a
+      deliberate design choice documented at `__init__.py:308-312` ("Sports reference core entity caches — leagues/
+      teams/standings are the same across all dates within a batch run. Fetched once, written to every date
+      partition."). Date-keying the cache would add API-call cost for no benefit — api_football returns CURRENT
+      standings regardless of the date requested, so a date-keyed cache would simply re-fetch the same data repeatedly.
+      If historically-accurate league tables are ever needed, that requires a DIFFERENT data source (historical table
+      archives), not a cache-key change in the current adapter. The phantom-auditor noise and duplicate-data concerns
+      are presentation/waste issues, not correctness bugs — the data written IS real, just attributed across many
+      processing dates. Close.
