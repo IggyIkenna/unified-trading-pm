@@ -79,8 +79,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
-| **STANDINGS**    | **all-383**                  | 108,653 expected, 58,025 already resolved, **50,628 needed** (was 64,439 on 08-04, **-13,811**)           |
-| **TEAMS**        | **all-383**                  | 108,653 expected, 62,060 already resolved, **46,593 needed** (was 64,723 on 08-04, **-18,130**)           |
+| **STANDINGS**    | **all-383**                  | 108,653 expected, 58,294 already resolved, **50,359 needed** (was 64,439 on 08-04, **-14,080**)           |
+| **TEAMS**        | **all-383**                  | 108,653 expected, 62,196 already resolved, **46,457 needed** (was 64,723 on 08-04, **-18,266**)           |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -577,3 +577,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
   like FIXTURE_STATS/PLAYER_STATS/INJURIES). **Practical implication: this TEAMS run is already advancing STANDINGS for
   free** — may not need a separate dedicated STANDINGS launch at all if this run continues; will re-evaluate once TEAMS
   converges or this run ends.
+- **2026-08-05T20:51Z** — `af-backfill-20260805-201310` still healthy, ~97min elapsed, left running. Dual progress
+  continues: TEAMS 46,593→46,457 (-136), STANDINGS 50,628→50,359 (-269).
