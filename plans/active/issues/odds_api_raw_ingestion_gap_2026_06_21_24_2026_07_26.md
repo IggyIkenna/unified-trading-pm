@@ -10,7 +10,7 @@ summary: >-
   classification during the MDPS `odds_horizon_bucket` league_id-casing-migration reprocess — the reprocessor correctly
   refused to fabricate output rather than treat the meta-only shape as real odds data. This is escalation/documentation
   only; no backfill or re-derivation was attempted.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -31,6 +31,8 @@ priority: P3
 estimate_class: research
 source: sports_satellite_ao_dispatch_batch5_2026_07_26.md, escalation todo
 resolved_by:
+  "2026-08-05 scoped backfill VM mtds-backfill-odds-gap-20260621-24 — all 4 dates returned 0 rows, 0 credits used;
+  vendor historical endpoint has no odds data for 2026-06-21..24 — genuine permanent upstream absence"
 locked_by:
 context_scope:
   [
@@ -93,12 +95,12 @@ pipeline actually writes real `instrument_type=odds` data for them.
 
 ## Todos
 
-- [ ] [DATA] P3. **RULED 2026-07-28 — retagged from `[OPERATOR]`.** The operator's direct ruling on this exact question
-      (recorded 2026-07-28 against the parallel "who owns the ODDS_API raw-ingestion writer?" framing of this same todo,
-      surfaced via `sports_satellite_ao_dispatch_batch6_2026_07_26.md`): _"This isn't actually a real open question —
-      check the code and just re-run/dispatch it. Convert to a normal task, do not leave as an operator-facing
-      question."_ Routing this to a human "owner" is unnecessary; this is a normal, bounded engineering task.
-      Reconciling that with the 2026-07-27 investigation already on this doc (which found the direct internal-log
+- [x] [DATA] P3. ✅ **RULED 2026-07-28 — retagged from `[OPERATOR]`.** The operator's direct ruling on this exact
+      question (recorded 2026-07-28 against the parallel "who owns the ODDS_API raw-ingestion writer?" framing of this
+      same todo, surfaced via `sports_satellite_ao_dispatch_batch6_2026_07_26.md`): _"This isn't actually a real open
+      question — check the code and just re-run/dispatch it. Convert to a normal task, do not leave as an
+      operator-facing question."_ Routing this to a human "owner" is unnecessary; this is a normal, bounded engineering
+      task. Reconciling that with the 2026-07-27 investigation already on this doc (which found the direct internal-log
       evidence expired — 2-day Cloud Logging retention, 33-36 days stale at investigation time — so no further internal
       log-export chase is warranted) and applying the general full-backfill mandate ("full backfills... DO IT" for
       anything not superseded, cost <$100 pre-approved, no partial completion): the concrete remaining task is to
@@ -146,3 +148,23 @@ See the retagged `[DATA] P3` todo for the full task.
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (3 entries, unchanged — still accurate).
+- **slot-5/data_engineering 2026-08-05 — CONFIRMED: vendor historical endpoint has no odds data for these 4 dates**: (1)
+  Adapter review: re-read `odds_api_adapter.py` — no adapter-side reason a re-fetch would repeat the meta-only shape.
+  `download_batch()` → `_discover_fixtures()` → `_run_league_fetch_loop()` chain correctly handles 422 (no data), client
+  errors, and builds proper `instrument_type=odds` rows. (2) GCS pre-check: confirmed the 4 dates still have only
+  `instrument_type=sport` meta-snapshots (now under `league_id=` prefix for batch mode post-restructure), zero
+  `instrument_type=odds` objects — gap unchanged since original report. (3) Scoped backfill VM launched:
+  `launch-mtds-sports-odds-backfill-vm.sh --start 2026-06-21 --end 2026-06-24 --force` → VM
+  `mtds-backfill-odds-gap-20260621-24` (SPOT, e2-highmem-4, asia-northeast1-c). Results from local log
+  `/tmp/vm-exec-7325.log` on the VM:
+  - 2026-06-21: 0 rows, 0 credits used
+  - 2026-06-22: 0 rows, 0 credits used
+  - 2026-06-23: 0 rows, 0 credits used
+  - 2026-06-24: 0 rows, 0 credits used Each date: SHARD_INCOMPLETE (expected 1 venue ODDS_API, wrote 0), sentinel fanned
+    out 184 expected bookmaker entries. 0 credits used = zero billable API calls — the vendor's discovery endpoint
+    returned empty/422 for all leagues on all 4 dates. VM completed at 15:37:36 UTC, total runtime ~100s. (4) Note: only
+    `batch_odds_api` pipeline_mode was attempted via the MTDS batch path; `live_odds_api` uses the same historical
+    endpoint through the same adapter, so the 0-row result would be identical. A separate live-scheduler re-run for
+    historical dates would add no new information. **CONCLUSION: This is a genuine, permanent upstream absence — the
+    vendor's historical endpoint has no odds-trades data for 2026-06-21..24. Marking resolved per the plan's own
+    done-definition.** No further chasing (vendor contact, longer-retention log export) is warranted.
