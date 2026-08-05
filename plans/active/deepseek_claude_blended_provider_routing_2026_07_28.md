@@ -405,3 +405,5 @@ default from an external reference.
       verified live via `GET /api/backlog/usage/windows`: 1h=5 tasks/$0.47, 5h=54 tasks, 24h=269 tasks, 7d=1235 tasks,
       lifetime=1252 tasks (37.3M input / 234.5M cache-creation / 26.8B cache-read / 54.2M output tokens) — the
       dashboard's Task Usage Windows panel is now populated with real data end to end.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

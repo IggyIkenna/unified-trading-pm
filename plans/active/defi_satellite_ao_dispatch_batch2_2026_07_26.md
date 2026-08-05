@@ -799,3 +799,4 @@ source issue doc directly as the successor reference.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- trimmed a lower-yield aggregated-sources +
   batch1-finalize ref, kept the umbrella/finalize/skill/naming-SSOT/batch1-precedent set (code-free coordinator doc, no
   single source-code target).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

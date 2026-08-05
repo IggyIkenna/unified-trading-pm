@@ -129,3 +129,4 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the only change since 2026-07-30 is a frontmatter `asset_group`
   retag ([meta] -> [cross-cutting], 2026-07-31, confirmed a genuine mistag correction with no todo/content change).
   Explicit operator instruction to run locally/autonomously still governs; both remaining open todos unchanged.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

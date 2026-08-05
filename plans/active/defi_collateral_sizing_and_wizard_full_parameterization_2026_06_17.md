@@ -221,3 +221,4 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — 3 of 4 open items remain
   genuine operator/design-judgment work (one explicitly cross-referenced elsewhere as an operator product-decision); the
   4th (P3 test-flake fix) is too small to justify splitting the doc. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

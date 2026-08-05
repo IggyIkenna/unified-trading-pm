@@ -618,3 +618,5 @@ safely-completable work. Terminal state:
       `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`. Net: this plan's "⏳
       Remaining" table (above) is stale prose as of this check — all 4 rows are actually resolved, just tracked in other
       docs rather than restated here. No new issue doc filed; nothing was orphaned.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

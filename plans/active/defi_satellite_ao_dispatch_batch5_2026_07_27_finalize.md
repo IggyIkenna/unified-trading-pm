@@ -46,7 +46,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -181,3 +181,5 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
   | #   | Doc                                                           | Verdict    | Evidence                                                                                       |
   | --- | ------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
   | 1   | `defi_dexpool_second_writer_path_and_zero_capture_2026_07_10` | ✅ CLEARED | Archived — `status: resolved`. Item 2 fully closed; no remaining action per batch5's own note. |
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

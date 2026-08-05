@@ -318,3 +318,4 @@ droppability now rather than treated as still-gated.
   (archived `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`'s ARCHIVED-2026-07-27 banner confirms fleet-wide
   closure), leaving 1 open todo: the fleet-wide msgpack >=1.2.1 bump on the last 2/20 repos, explicitly blocked on
   foreign gates outside this plan's own repos and fix authority. `locked_by: live-defi-rollout` still applies.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

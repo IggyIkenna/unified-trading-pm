@@ -350,3 +350,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
   follow-ups into 6 real tracked checkboxes (content unchanged, format-only fix), so the open-todo count moved from 0 to
   6 since the last pass, but the doc's own §5 banner still explicitly frames all 6 as "build-phase — not yet scoped for
   AO dispatch; each needs its own sizing pass", and item 6 is explicitly `[OPERATOR]`-tagged. NA remains correct.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

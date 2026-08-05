@@ -61,6 +61,8 @@ resolved_by:
 depends_on: []
 context_scope:
   [
+    /plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md,
+    /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
@@ -172,3 +174,6 @@ zero-non-canonical dispatch above and should not get lost in the volume of that 
   items" are a status table, not a checklist). Explicitly not archival-eligible yet (own § 4: "Archive this tracking doc
   once superseded by a clean final state") and not AO-dispatchable (every row needs a live status check a
   human/dispatching session must reconcile, not a worker-determinable outcome).
+- **context-scout 2026-08-05**: refreshed context_scope (5 entries) -- swapped in the still-open big-finding regression
+  issue doc + the blocked gas_fees manifest-purge issue doc, the two live operational threads this checkpoint doc most
+  needs a resumer to read first.

@@ -983,3 +983,5 @@ cause: `onchain/cli/handlers/batch_handler.py` `resolve_bucket(kind="instruments
 (gate fixed) but needs a features tarball rebuild + a fresh VM; DEFI:onchain needs the IS-catalogue fix;
 TRADFI:commodity test-bucket provisioned but not yet benchmarked. Declined via skip GATED per
 plans-run-to-actual-completion.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
