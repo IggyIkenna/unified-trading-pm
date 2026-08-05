@@ -222,4 +222,8 @@ green.
   fe68844c slot's ratchet fix; no operator action needed. **Session lessons**: PM's branch is `live-defi-rollout` not
   `main` (`git rev-list --count origin/main..HEAD` is a red herring); `/tmp/ffpulltokens.*` is an empty 0-byte
   transient, not a secret; doc-contention recovery = `git restore --source=HEAD` foreign subsumed WIP, pull, re-apply my
-  unique entries, commit fast.
+  unique entries, commit fast. **MEASUREMENT TRAP (hit twice, 2026-08-05)**: multi-repo
+  `git show origin/live-defi-rollout:<path>` checks MUST `cd` into the target repo first — run from
+  `unified-trading-pm`, an MTDS path that doesn't exist there makes `git show` fail silently, so `grep -c` reads 0 and
+  the AST read reads "CLEAN" = a FALSE "fix landed" verdict. Cross-check every such result against `git diff --stat` in
+  the same cwd (empty when the cwd is the wrong repo).
