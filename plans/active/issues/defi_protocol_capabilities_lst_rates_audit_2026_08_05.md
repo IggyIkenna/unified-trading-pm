@@ -141,7 +141,7 @@ for the 5 missing protocols). Finding C is a separate, lower-priority wiring ite
 - [x] ✅ [DATA] P2. Add `lst_rates` to RENZO PROTOCOL_CAPABILITIES data_types — unified-api-contracts@27b7881a
 - [x] ✅ [DATA] P2. Add `lst_rates` to BEEFY PROTOCOL_CAPABILITIES data_types — unified-api-contracts@394fdbf0
 - [x] ✅ [DATA] P2. Add `lst_rates` to IDLE PROTOCOL_CAPABILITIES data_types — unified-api-contracts@e1639234
-- [ ] [DATA] P2. Add `lst_rates` to PENDLE PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
+- [x] ✅ [DATA] P2. Add `lst_rates` to PENDLE PROTOCOL_CAPABILITIES data_types — unified-api-contracts@96070f2b
 - [x] ✅ [DATA] P2. Add `lst_rates` to YEARN_V3 PROTOCOL_CAPABILITIES data_types — unified-api-contracts@e4e4e5a9
 - [ ] [DATA] P2. Create PROTOCOL_CAPABILITIES entries for BINANCE, COINBASE, ROCKETPOOL, SANCTUM, SOLBLAZE (repo:
       unified-api-contracts)
