@@ -109,9 +109,38 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
 
 **Phase 3 — Audit and migrate remaining consumers:**
 
-- [ ] [DATA] P2. **features-service** — audit `raw_data_loader.py`, `mtds_fred_reader.py`, and any cross-instrument
-      calculator that reads raw tick columns by name. Confirm no consumer hardcodes `timestamp` column access that would
-      break if `ts_event` becomes the canonical name. File findings as follow-up todos in this plan.
+- [x] ✅ [DATA] P2. **features-service** — audit `raw_data_loader.py`, `mtds_fred_reader.py`, and any cross-instrument
+      calculator that reads raw tick columns by name. Audit complete 2026-08-05 (slot-2). Findings below.
+
+      **Findings summary:**
+          - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
+          - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
+            `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
+            use `"timestamp"` column name but are test fixtures only.
+          - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
+            `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
+            `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
+            (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
+            `pl.col("timestamp").dt.truncate("1m")`).
+          - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
+            `validate_input()` missing-column check.
+          - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
+          - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
+
+          **Follow-up todos filed below (Phase 3, items 3a-3b).**
+
+- [ ] [DATA] P2. **features-service** — migrate 5 cross-instrument raw-tick calculators to accept `ts_event` as an
+      alternative to `timestamp` in `required_columns` + computation. Gate: Phase 1 (dual-write) must be done first so
+      both columns are on disk. Per-calculator scope: - `BookDepthCalculator` (book_depth.py:50,100,124): add `ts_event`
+      to required_columns, prefer `ts_event` over `timestamp` in output pass-through. - `LiquidityWallCalculator`
+      (liquidity_wall.py:57,106,176): same pattern. - `LiquidationClusterCalculator`
+      (liquidation_cluster.py:55,117,132): same pattern. - `CompositeSRCalculator` (composite_sr.py:64): same pattern. -
+      `FlowInteractionCalculator` (flow_interaction.py:51,81,85): most coupled — uses `pl.col("timestamp").dt.truncate`
+      and renames `minute` → `timestamp` in output. Accept `ts_event` as input, preserve `timestamp` output naming
+      (consumers downstream of this calculator are separate from the MTDS alias issue). - `_make_mock_book_df` /
+      `_make_mock_trades_df` (raw_data_loader.py:88,105): dual-write both columns in mock DataFrames so tests cover both
+      names. Unit test: verify each calculator accepts input with ONLY `ts_event` (no `timestamp` column) after
+      migration.
 - [ ] [DATA] P3. **all repos** — grep for `["']timestamp["']` column-access patterns in any reader of MTDS-written raw
       tick parquet (exclude MDPS which is handled in Phase 2). Catalog any hardcoded `timestamp`→`ts_event` assumptions.
 
@@ -128,6 +157,14 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
 
 ## Progress Log
 
+- **2026-08-05 (slot-2, data_engineering)**: Phase 3 audit of features-service complete. Findings: `mtds_fred_reader.py`
+  — clean (FRED uses `date`/`yield_pct`, no timestamp column). `raw_data_loader.py` — production path is
+  column-name-agnostic (reads parquet via `pl.read_parquet`, passes columns through); mock functions use `"timestamp"`
+  but are test fixtures only. **5 cross-instrument calculators hardcode `"timestamp"`** in `required_columns` +
+  computation: `BookDepthCalculator`, `LiquidityWallCalculator`, `LiquidationClusterCalculator`,
+  `CompositeSRCalculator`, `FlowInteractionCalculator`. All safe under Phase 1 dual-write; all would break at Phase 4
+  alias removal on `validate_input()`. `FlowInteractionCalculator` is most coupled (`pl.col("timestamp").dt.truncate`).
+  Filed follow-up migration todo (Phase 3 item 3a) for the 5 calculators; gated on Phase 1 completion.
 - **2026-08-05 (slot-4, data_engineering)**: Scoping plan created. Surveyed all consumers of the `timestamp` column
   across the fleet (MTDS, MDPS, UTL, features-service, e2e-testing, instruments-service). Confirmed the alias has been
   live since 2026-04-16; 2026-06-10 census found 24/24 sampled parquets carry `timestamp` name. Recommended phased
