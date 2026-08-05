@@ -2117,8 +2117,21 @@ fi
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
 # Determine PR base branch
-# Staging-first model: all human commits target staging; [skip ci] automation goes direct to main.
+# ao_kpi_done_vs_detail_mismatch_2026_08_05 follow-up: this used to default every non-PM,
+# non-[skip ci] repo to "staging" unconditionally — stale since staging went dead fleet-wide
+# 2026-06-27 and its CI automation was torn down 2026-07-23
+# (github_actions_staging_machinery_shutdown_2026_07_24.md). Stage 1.5 above already reads
+# $REPO_PMODEL from the manifest (and correctly skips the staging-lock check for ldr_main
+# hotfixes), but this decision point never consulted it, so quickmerge kept printing
+# "Staging-first" and — worse — a plain --hotfix on an ldr_main repo (100% of the fleet today)
+# would fall through to actually opening + auto-merging a PR against the dead staging branch.
+# ldr_main now gets its own branch, same shape as PM's Option B: land on LDR, let the fleet
+# bot promote it, and re-route --hotfix to the mechanism that actually reaches main
+# (--hotfix-to-main) instead of a doomed staging PR. re-entry to true staging-first for some
+# future repo just needs its manifest promotion_model flipped off "ldr_main" — this branch
+# order still falls through to the staging path in that case.
 PM_OPTION_B=false
+LDR_MAIN=false
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
@@ -2135,9 +2148,22 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
   PR_BASE="main"
   PM_OPTION_B=true
   echo "[$REPO_NAME] Option B: lands on LDR trunk; ldr-to-main-promote.yml drains to main (v2 on that PR is the gate)"
+elif [ "$REPO_PMODEL" = "ldr_main" ]; then
+  PR_BASE="main"
+  LDR_MAIN=true
+  echo "[$REPO_NAME] promotion_model=ldr_main: lands on LDR trunk; ldr-to-main-promote-fleet.yml drains to main (staging skipped — dead since 2026-06-27)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
+fi
+
+if [ "$LDR_MAIN" = true ] && [ "$HOTFIX" = true ] && [ "$HOTFIX_TO_MAIN" != true ]; then
+  # --hotfix-to-main takes precedence if both flags were somehow passed together — it's the
+  # mechanism that still works for ldr_main, so let its own block below handle that case.
+  echo "[$REPO_NAME] ⚠️  --hotfix targets staging, which is dead for promotion_model=ldr_main repos (staging automation shut down 2026-07-23) — it would open a PR nothing ever processes."
+  echo "[$REPO_NAME]    This commit already landed on $BRANCH (LDR trunk) and will promote via ldr-to-main-promote-fleet.yml (~15min SLA) same as a normal ship."
+  echo "[$REPO_NAME]    Need it on main RIGHT NOW instead of waiting? re-run with --hotfix-to-main (operator-gated fast-track; see --help)."
+  exit 0
 fi
 
 # ============================================================================
@@ -2155,7 +2181,11 @@ fi
 # onto a dedicated single-commit branch off origin/main and opening a PR → main (v2-on-main is the only
 # gate; no protection bypass, no whole-trunk promote). Done in a throwaway worktree so the LDR working
 # tree (and any peer agent) is undisturbed. Guards were validated at flag-parse time.
-if [ "$HOTFIX_TO_MAIN" = true ] && [ "$PR_BASE" = "staging" ]; then
+# Applies to PR_BASE="staging" (legacy staging-first repos, if any promotion_model flag ever
+# flips back) AND LDR_MAIN — for an ldr_main repo this is the ONLY hotfix mechanism that reaches
+# main immediately; plain --hotfix already redirected here above instead of opening a dead
+# staging PR (ao_kpi_done_vs_detail_mismatch_2026_08_05 follow-up).
+if [ "$HOTFIX_TO_MAIN" = true ] && { [ "$PR_BASE" = "staging" ] || [ "$LDR_MAIN" = true ]; }; then
   HOTFIX_SHA=$(git rev-parse HEAD)
   HOTFIX_SHORT=$(git rev-parse --short HEAD)
   HOTFIX_BRANCH="hotfix-main/${REPO_NAME}-${HOTFIX_SHORT}"

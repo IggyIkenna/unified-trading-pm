@@ -53,11 +53,25 @@
 # admitted job's SIGALRM budget being blown by whole-host contention. Reverted to ubuntu-latest per the doc's
 # precedented per-repo fix; e2e-testing is NOT one of the operator's 6 explicitly-protected repos, so no ruling
 # conflict.
+#
+# unified-trading-library + e2e-testing RE-ADDED 2026-08-05 (ci_pipeline_speed_and_cost_redesign_2026_08_05.md):
+# both prior reverts' root cause was whole-host CPU/memory thrashing (load avg 90.8/80.5/81.8 on a 16-vCPU box,
+# 87% swap for UTL; a SIGALRM timeout on an otherwise-clean 10s test for e2e-testing) — a DIFFERENT resource
+# dimension from the disk-throughput saturation this session separately fixed (EBS 125->500 MB/s). Re-adding is
+# justified by: (1) the disk fix removes one real contention source even though it wasn't THESE repos' documented
+# cause, (2) a live host check at re-add time showed load average 4.08/4.92/6.24 (vs. the 90+ that caused the
+# revert) and swap at 8.5/47Gi=18% (vs. 87%) — healthy headroom, not just "should be fine" hope. Both repos'
+# self-hosted runner pools were already registered + verified online per the prior notes above (no new pool setup
+# needed). This is a single-snapshot check, not a durably-proven fix for the underlying host-thrashing mechanism —
+# if either repo's `QG slice (tests)` job shows the same starvation/SIGALRM signature again, revert per the same
+# precedented per-repo playbook (this is the 2nd/3rd cycle for each, not a first attempt).
 agent-orchestrator
 unified-trading-pm
 strategy-service
 system-integration-tests
 trading-agent-service
+unified-trading-library
+e2e-testing
 unified-api-contracts
 unified-trading-api
 features-service
