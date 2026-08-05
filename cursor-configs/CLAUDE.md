@@ -36,14 +36,13 @@
 ## Model tier
 
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
-truth: `agent-orchestrator/server/model_tier.py`, 2026-07). **`opus-required` = main orchestrator role ONLY**
-(2026-08-04: cross-repo/trading judgment retired as opus triggers → sonnet-5 instead; 2026-07-23: never size).
-**`sonnet_variant: light|default` (2026-08-04) picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO
-dispatch); default is for harder work + escalation + CI, always. Every `assigned_vm: planning` plan defaults to
-`effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
-`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
-every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
-`/codex/06-coding-standards/model-tier-selection.md`.
+truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = main orchestrator role ONLY** (cross-repo/trading
+judgment + sizing dropped as opus triggers → sonnet-5; 2026-07-23/08-04). **`sonnet_variant: light|default` (2026-08-04)
+picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO dispatch); default is for harder work +
+escalation + CI, always. Every `assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**:
+no declared tier → todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent
+`Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch
+→ HARD STOP. SSOT: `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 
@@ -85,9 +84,9 @@ UAC-internal.
   dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT but the toggle is REVERSIBLE (major/breaking bump or
   operator decision routes THROUGH staging; gates unchanged). **LDR never runs server QG**; `main` = reconciled
   projection back-merged to LDR (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on
-  `push:[main]` (retargeted off `staging` 2026-07-25) → git-tag mint + `publish-package` wheel to AR; label-check
-  ADVISORY, major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter.
-  `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
+  `push:[main]` (was `staging` until 2026-07-25) → git-tag mint + `publish-package` wheel to AR; label-check ADVISORY,
+  major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter. `unified-trading-codex`
+  ARCHIVED (SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
@@ -106,7 +105,7 @@ BODY**, even when only describing it — triggers it, so write `skip-ci`; recove
 (`ci-failure-watcher --auto-recover`), do NOT escalate. **Force-push** (relax→do→RE-ENABLE) is initial-clean-slate only.
 A scheduled/`push` workflow fires ONLY from the DEFAULT branch. **Never hand-edit a per-repo workflow copy** — edit the
 template + `rollout-workflow-templates.sh` (rollout done only when every copy is committed + pushed); **bumping a GHA
-action version: VERIFY the ref RESOLVES** (`setup-uv` has no `@v8`). **Breaking-detection is CONTENT-based** (AST differ
+action version: VERIFY the ref RESOLVES**. **Breaking-detection is CONTENT-based** (AST differ
 `scripts/cicd/detect_breaking_change.py`; a 0.x-minor/docstring/refactor is NOT breaking; `feat!:` is the human
 override). On fail: `gh run view --log-failed`, fix root cause in real time. **`ci_status` is Firestore-SSOT** (WS-A
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a

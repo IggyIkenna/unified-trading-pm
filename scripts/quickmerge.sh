@@ -2230,6 +2230,15 @@ if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
   exit 0
 fi
 
+# LDR_MAIN normal ship: plain --hotfix already redirected above (staging is dead for this
+# promotion_model), and --hotfix-to-main already exited via its own block if requested — so
+# reaching here means neither was set. Same shape as the PM_OPTION_B exit below.
+if [ "$LDR_MAIN" = true ]; then
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote-fleet.yml drains to main (gates: sit-gate/fleet-green + quality-gates-v2 + quickmerge-provenance)."
+  echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix-to-main (operator-gated fast-track; see --help)."
+  exit 0
+fi
+
 # ldr_to_main_promote_churn_fix_verification_2026_07_27: quickmerge used to open its OWN
 # direct-to-main PR here (--head "$BRANCH", i.e. live-defi-rollout) for every PM ship. That PR's
 # head is the live, ever-moving LDR branch — under fleet commit velocity (every 20-90s) it
