@@ -563,3 +563,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (`af-backfill-20260805-201310`), confirmed RUNNING. FIXTURE_STATS ends this stretch at 49,442 needed (from 56,940 —
   7,498 shards resolved, ~13.2% of its total, over one ~3-hour run). Will return to FIXTURE_STATS/FIXTURE_LINEUPS after
   TEAMS/STANDINGS.
+- **2026-08-05T19:53Z** — TEAMS still shows zero census movement after ~39min (unlike every other entity, which showed
+  some movement within a similar window) — rather than assume something's wrong, pulled the actual run.log directly.
+  **Confirmed genuine real work is happening**: `ManifestWriter: per-VM shard updated (... 768 new ...)` repeated across
+  multiple processed dates (2020-07-27 through 07-30 so far), each with real per-league TEAMS data written. This is the
+  same per-VM-shard-to-canonical lag every entity shows early in a run — not a new failure, just the first time TEAMS
+  specifically has sat at exactly zero for this long before the next consolidator cycle catches up. Left running.
