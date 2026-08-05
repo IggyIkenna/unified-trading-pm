@@ -52,8 +52,8 @@ pre-existing failures prevent ANY unrelated code change (including the both-legs
 
 ## Recommended fix
 
-- [ ] [BACKEND] P2. Add `collect-rewards` CLI operation to `_CLI_OP_TO_MODULE` for `ProtocolClass.LENDING` (repo:
-      market-tick-data-service)
+- [x] ✅ [BACKEND] P2. Add `collect-rewards` CLI operation to `_CLI_OP_TO_MODULE` for `ProtocolClass.LENDING` (repo:
+      market-tick-data-service) — market-tick-data-service@51f778d4 (slot-16, 2026-08-05)
 - [ ] [BACKEND] P2. Fix Polymarket Tier-3 per-data-type sentinel to include `instrument_id` in rows (repo:
       market-tick-data-service)
 
