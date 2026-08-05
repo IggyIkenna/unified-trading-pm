@@ -189,10 +189,14 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       the existing blended-routing path is a real, scoped follow-up but belongs in an agent-orchestrator
       dispatch/routing plan, not this CI-cost plan — not created here per the "ask before creating a plan" rule;
       operator to decide where it lands.
-- [ ] [INFRA] P2. **Re-evaluate whether `unified-trading-library` and `e2e-testing`** (reverted to GitHub-hosted
-      `ubuntu-latest` specifically due to the capacity crisis — see `self-hosted-qg-repos.txt`'s own changelog comments)
-      can return to self-hosted now that the EBS throughput ceiling is raised. If yes, that's a direct GH Actions
-      billing reduction (those two repos' real test runs are currently BILLED minutes as a workaround).
+- [x] ✅ [INFRA] P2. **Re-evaluate + re-add `unified-trading-library` and `e2e-testing` to self-hosted — SHIPPED
+      2026-08-05.** Live host check at re-add time: load average 4.08/4.92/6.24 (vs. the 90+ that caused both prior
+      reverts) and 18% swap (vs. 87%) — healthy headroom, not just "should be fine" hope. Allowlist updated
+      (`unified-trading-pm@dc3ab95d7`), rolled out via
+      `rollout-workflow-templates.sh --repo <name> --template     quality-gates-v2.yml` (pre-flight action-pin check
+      passed cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both
+      watched-not-guaranteed — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature
+      recurs, revert per the same precedented per-repo playbook (not a new investigation).
 - [ ] [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` (RESTART_THRESHOLD=5 default) actually paged**
       for agent-orchestrator's 89-restart crash-loop found this session. If it didn't fire, that's a real alerting gap
       on top of the crash-loop bug itself — worth its own fix so the NEXT crash-loop doesn't need a live manual
