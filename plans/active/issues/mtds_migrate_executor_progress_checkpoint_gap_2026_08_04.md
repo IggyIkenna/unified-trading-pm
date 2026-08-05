@@ -105,9 +105,9 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
       same pattern — market-tick-data-service@9134ff7e.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_prediction_trades_legacy_bundle_2026_07_28.py`, same
       pattern — market-tick-data-service@9ba50aa0 (peer preempted; slot-4 verified on origin).
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`, same pattern. Repo:
-      market-tick-data-service.
+      market-tick-data-service@6ddb0374.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`, same pattern. Repo: market-tick-data-service.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
