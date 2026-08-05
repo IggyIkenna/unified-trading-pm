@@ -102,8 +102,9 @@ depends_on: []
       **SUPERSEDED 2026-07-23** by the "ROOT CAUSE CORRECTED" section below (the actual masking writer is a different
       job, `uts-prod-instruments-service-sports-fixtures`, not this one) and **RESOLVED 2026-07-24** by the downgrade
       todo's verification (see below): no redeploy action taken or needed on this job.
-- [ ] [DATA] P3. Sweep other asset groups for the same seeder-over-captured pattern (the enumerate_v2 guard is active
-      for every asset_group now via main(); verify the nightly jobs' images pick it up fleet-wide).
+- [x] ✅ [DATA] P3. Sweep other asset groups for the same seeder-over-captured pattern (the enumerate_v2 guard is active
+      for every asset_group now via main(); verify the nightly jobs' images pick it up fleet-wide). —
+      instruments-service@2b165597 (already shipped; sweep-only verification, no code change needed).
 
 ## Adjudication outcome (2026-07-14, `scripts/recency_masked_adjudication_2026_07_13.py` @ instruments-service@853cef81)
 
@@ -233,3 +234,14 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **P3 fleet-wide sweep 2026-08-05** (slot 2, data_engineering): code audit confirms the oscillation guard is active for
+  ALL 5 asset groups. `enumerate_expected_universe.py::main()` (line 4568) passes `captured_set` unconditionally; the
+  single choke point at lines 3337-3357 drops any `empty_confirmed` row whose atom already has a captured manifest row —
+  this guard applies to cefi, defi, tradfi, sports, and prediction identically. Non-sports AGs have NO separate
+  batch-capture `empty_confirmed` emission paths outside `enumerate_expected_universe.py` (unlike sports, whose
+  `sports_reference_core.py`/`process_zero_records.py`/`weather.py` paths were the original masking writers — all now
+  guarded: `_AfManifestHooks._manifest_index_guarded_captured_leagues` at instruments-service@4275b2d8, presence guards
+  in `process_zero_records.py`). Cloud Run job registry confirms `expected-universe-v2-{ag}` and `is-daily-enum-{ag}`
+  per-AG jobs exist for all 5 AGs using `instruments-service:latest` mutable tag; no non-sports equivalent of
+  `uts-prod-instruments-service-sports-fixtures` exists. **Verdict: guard coverage is complete fleet-wide — all AGs are
+  protected.** No code changes required; this closes the last open todo.
