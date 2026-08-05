@@ -96,11 +96,15 @@ different failure modes) — treat them as independent work items, not a single 
 
 ## Todos
 
-- [ ] [DATA] P3. Root-cause + fix `OKX-FUTURES trades` chronic zero-capture on the `live_okx` pipeline. Confirmed via
-      manifest: 100% `empty_confirmed`/`expected_unattempted` across `2026-07-30`–`2026-08-01`, chronic back to at least
-      `2026-07-20`. Sibling OKX-FUTURES shards (`book_snapshot_5`/`derivative_ticker`) are now healthy post-tarball-fix;
-      `trades` is the remaining gap. Likely a connector-level WS subscription issue (wrong channel name, wire-format
-      mismatch, or missing instrument mapping). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. Root-cause + fix `OKX-FUTURES trades` chronic zero-capture on the `live_okx` pipeline —
+      market-tick-data-service@bf69e612. Root cause: `OKXFuturesDatedWSFeedConnector` inherited
+      `_send_sub_batch`/`_send_unsub_batch` from `OKXFuturesWSFeedConnector` (okx_ws.py), which called
+      `_instrument_to_okx_inst_id` — a function that only handles `OKX-SWAP:PERPETUAL:` IDs. For
+      `OKX-FUTURES:FUTURE:BTC-USD@INV-20260710`, it returned bare `BTC-USD@INV-20260710` (marker + canonical date
+      intact) — a malformed instId OKX silently ignores. Fix: overrode both methods to use
+      `_instrument_to_okx_futures_inst_id` instead, correctly mapping `@LIN`→`_UM`, `@INV`→bare, `YYYYMMDD`→`YYMMDD`.
+      Sibling book/ticker connectors never had this bug (they inherit from `_OKXFuturesBaseConnector` which already uses
+      the correct mapper). (repo: market-tick-data-service)
 - [ ] [DATA] P3. Root-cause + fix `POLYMARKET-PERP perp_funding` permanent `attempted_failed` on the
       `batch_polymarket_perp` pipeline. Confirmed via manifest: `attempted_failed` every day `2026-07-28`–`2026-07-31`,
       zero `captured` rows. Batch path (not the live-capture VM) — likely a sourcing/API-endpoint/credential issue
