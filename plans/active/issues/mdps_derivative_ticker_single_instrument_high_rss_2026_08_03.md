@@ -23,11 +23,11 @@ tags: [mdps, candle, derivative-ticker, memory, resource-usage, host-contention]
 related: [/plans/archive/issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-03"
+last_updated: "2026-08-05"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P3
+priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
@@ -99,15 +99,28 @@ genuine defect — hence P3, not P1 like todo 1.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. **Re-run the identical single-instrument HYPERLIQUID `derivative_ticker` backfill (see command above)
-      on a QUIET host (a dedicated VM with no other concurrent agent load, or during a fleet-quiet window)** and capture
-      `RESOURCE_SAMPLE` RSS across all 7 timeframes. **Done when**: either (a) RSS stays in the low hundreds-of-MB to
-      low-GB range (matching bug 1's proof for `trades`, ~1.3GB peak for 2 instruments) — confirms this was
-      host-contention noise, close as WORKS-AS-INTENDED; or (b) RSS genuinely climbs into the multi-GB range for ONE
-      instrument — escalate to P1 and root-cause the specific aggregation step responsible (bisect by commenting out
-      timeframes one at a time, or profile with `tracemalloc`/`memray`), following the same "unscoped listing/retention"
-      investigation pattern as todo 1. Repo: market-data-processing-service.
+- [x] ✅ [DATA] P1. **Re-run the identical single-instrument HYPERLIQUID `derivative_ticker` backfill on a QUIET host**
+      — CONFIRMED scenario (b): RSS climbed to 18,492 MiB (~18.5 GB) for ONE instrument on ONE day in ~33 seconds on a
+      quiet host (load ~7, 32Gi available RAM, swap 8.2Gi — vs the original run's load ~41, swap ~22Gi). Two
+      RESOURCE_SAMPLE data points captured before OOM kill: rss=1121MiB at init, rss=18492MiB during 1-file processing.
+      This is a GENUINE MDPS memory defect, NOT host-contention noise. Repo: market-data-processing-service.
+
+- [ ] [DATA] P1. **Root-cause the `derivative_ticker` single-instrument memory explosion (18.5GB RSS for 1 instrument ×
+      1 day).** Bisect by timeframe (comment out timeframes one at a time in the aggregation loop to isolate which
+      aggregation step is retaining/copying data), or profile with `tracemalloc`/`memray`. Likely culprit:
+      `fast_candle_aggregation.aggregate_from_15s_efficient` or per-timeframe polars aggregation retaining/copying the
+      base 15s frame. Follow the same "unscoped listing/retention" investigation pattern as the now-fixed todo 1
+      (`mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md`). Repo: market-data-processing-service.
 
 ## Progress Log
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).
+- **slot-4 investigation 2026-08-05**: Re-ran the identical single-instrument backfill on a quiet host (load ~7, 32Gi
+  available RAM, swap 8.2Gi — vastly better than the original run's load ~41, swap ~22Gi). Two RESOURCE_SAMPLE data
+  points captured before the process was OOM-killed:
+  - `ts=2026-08-05T13:12:31Z`: rss=1121MiB (~1.1GB) — initialization/loading phase
+  - `ts=2026-08-05T13:13:04Z`: rss=18492MiB (~18.5GB) — processing 1 file, ~33s after init **Conclusion: CONFIRMED
+    scenario (b)** — RSS genuinely climbs into multi-GB range for ONE instrument on ONE day. This is a GENUINE MDPS
+    memory defect, NOT host-contention noise. The prior 11-22GB reading (2026-08-03, slot 6) is now corroborated.
+    Escalated to P1 with a new root-cause todo (bisect by timeframe or profile with tracemalloc/memray). Priority bumped
+    P3→P1 in frontmatter.
