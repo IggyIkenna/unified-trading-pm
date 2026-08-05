@@ -22,23 +22,24 @@ summary: >-
   a specific opt-in flag; this consolidator reports `success=True error=-` every cycle — it thinks it's working
   correctly). Not root-caused to a specific line of merge/dedup logic — flagging for someone with context on
   `manifest_consolidator.py`'s incremental anti-join/UNION ALL path (SSOT below, § "Incremental cycle (steady state)").
-status: open
+status: false-positive
 nature: issue
 asset_group: [sports]
 stage: [data]
 repos: [unified-trading-library, deployment-service, instruments-service]
 scope: [engineer]
-tags: [manifest, consolidator, sports, data-correctness, dedup, cross-cutting]
+tags: [manifest, consolidator, sports, data-correctness, dedup, cross-cutting, false-alarm-likely]
 related:
   [
     /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md,
+    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
   ]
 created: "2026-08-04"
 author: unknown
 parent_epic: infrastructure_master
-priority: P1
+priority: P3
 assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -47,6 +48,29 @@ resolved_by:
 locked_by:
 depends_on: []
 ---
+
+> **🟨 LIKELY FALSE ALARM 2026-08-05T17:03Z — read this before anything else in this doc.** A pre-existing, already-
+> RESOLVED sister doc, `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, investigated the EXACT same
+> symptom on this SAME consolidator five days earlier and proved the premise wrong via a live diagnostic (operator-
+> authorised pause-cron + snapshot + probe): **`dedup_dropped` is not an independently-measured quantity — it is
+> `rows_in - rows_out`, derived, per `manifest_consolidator.py:998`.** So "every shard row is a duplicate" and "row
+> count didn't grow" are the SAME statement restated, not two corroborating pieces of evidence. That investigation
+> directly diffed a live shard against the canonical using the module's own dedup-key resolution and found shard rows'
+> `attempted_at` timestamps ALREADY present in canonical — i.e. genuinely absorbed via in-place UPDATE, not dropped. I
+> made the identical reasoning error the 07-29 doc's ORIGINAL (later-disproven) report made. **This does NOT invalidate
+> the census-based progress figures in `sports_af_full_entity_completion_2026_08_03.md`** — those read the canonical
+> directly and their movements track real backfill activity (FIXTURE_STATS' -294/-243 progress this session matches its
+> own actively-running VM; STANDINGS/TEAMS' drops match other jobs' backlog draining) — census-based tracking is
+> unaffected and reliable either way. What's now in doubt is only the "the consolidator is silently dropping new
+> content" framing below — the "stuck" plateaus this doc documents are plausibly just cycles where the merged shards'
+> content was ENTIRELY already-captured (e.g. a backfill VM's own
+> `Per-fixture pre-fetch skip: N pairs already in existing per-league parquets` re-processing), which produces the exact
+> same static-`rows_out` signature with zero actual bug. I have NOT run the same live pause+snapshot+probe diagnostic
+> myself to definitively confirm this (that's a real live-bucket intervention I'm not taking unilaterally, per the same
+> discipline the 07-29 doc's own resolution followed) — downgrading status to `likely-false-alarm` and priority
+> accordingly rather than closing outright without that direct confirmation. Recommend whoever next touches this doc
+> either runs that diagnostic to confirm, or simply closes this as a duplicate false-alarm citing the 07-29 doc's
+> resolution. Everything below this banner is retained as the original (now-superseded) report.
 
 ## What I found
 

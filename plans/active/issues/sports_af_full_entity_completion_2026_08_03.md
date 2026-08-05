@@ -75,7 +75,7 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                    |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc  |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 81,685 already resolved, **56,646 needed** (was 56,940 on 08-04, real -294)  |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 84,555 already resolved, **56,403 needed** (was 56,940 on 08-04, real -537)  |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet) |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                             |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)          |
@@ -532,3 +532,17 @@ are genuinely in scope for the operator's "no exceptions" directive.
   further since the fix worked cleanly. **Given STANDINGS/TEAMS are now closer to done than
   FIXTURE_STATS/FIXTURE_LINEUPS (51,740/47,020 vs. 56,646/58,523), worth reprioritizing them once the current entity
   stalls** — updated todos below.
+- **2026-08-05T17:03Z** — `af-backfill-20260805-171010` still healthy, ~53min elapsed, no reason to interrupt. Re-census
+  confirms continued real FIXTURE_STATS progress (56,646→56,403, -243 further) from this run specifically. Every other
+  entity unchanged since the last check — the earlier STANDINGS/TEAMS jump was a one-time backlog drain, not an ongoing
+  trend; only actively-backfilled entities move now. No consolidator or idle-gap news this check.
+- **2026-08-05T17:03Z (correction)** — Found a pre-existing, already-RESOLVED sister doc
+  (`sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`) that investigated the EXACT same "frozen rows_out"
+  symptom on this same consolidator 5 days earlier and, via a live pause+snapshot+probe diagnostic, proved it's the
+  **expected signature of legitimate idempotent absorption**, not data loss (`dedup_dropped` is _derived_ as
+  `rows_in - rows_out`, not independently measured — the two "corroborating" numbers are one statement, not two).
+  **Downgraded `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` to `likely-false-alarm` / P3**
+  accordingly — I made the identical reasoning error the 07-29 doc's own original (later-disproven) report made. **This
+  does NOT affect anything in THIS doc** — the census figures above read the canonical directly and their movements
+  track real backfill activity regardless of whether the "stuck" periods were a bug or expected no-op re-merges; every
+  needed-count and progress claim in this doc stands as-is.
