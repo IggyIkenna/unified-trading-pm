@@ -113,10 +113,14 @@ urgent (no known active drift found yet, unlike the launch-dates case), but wort
       fixed sites (`LENDING_PROTOCOL_DEPLOY_DATES` fix pattern confirmed correct). No code changes needed (pure
       audit/inventory deliverable). Full inventory in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log
       (2026-08-04, slot-8).
-- [ ] [DATA] P3. **operator** — after the P0 script above lands, re-run the parent plan's
+- [x] ✅ [DATA] P3. **operator** — after the P0 script above lands, re-run the parent plan's
       `derive_protocol_launch_dates.py`-style drift check (or a token-decimals/chain-genesis equivalent if one doesn't
       exist yet) against any newly-found local dict to confirm no ACTIVE production drift is currently hiding behind a
-      shadow copy the way Spark/AAVE V3 were.
+      shadow copy the way Spark/AAVE V3 were. — unified-trading-pm@<sha> — audit (slot-8, 2026-08-04) found 0 shadow
+      copies of UAC Category-A data across all 4 DeFi repos; all 42 inventoried sites are clean (token decimals = no UAC
+      SSOT exists, chain genesis = byte-identical to UAC, factory addresses = proper UAC cascade or net-new registries,
+      LENDING_PROTOCOL_DEPLOY_DATES = already fixed). No local dicts to run a drift check against — this todo's
+      precondition (shadow-copy dicts found) was not met. Issue is fully addressed.
 
 ## Progress Log
 
