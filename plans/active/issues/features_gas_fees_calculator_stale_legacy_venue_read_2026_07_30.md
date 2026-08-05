@@ -172,3 +172,16 @@ green.
   (quickmerge auto-stamps `Quickmerge: agent`), flip THIS P3 checkbox `[ ]`→`[x]` in the SAME turn with the landed SHA,
   push the docs flip via the PM docs-only carve-out (docs commits are exempt from strict-quickmerge), verify
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout`, then POST /done.
+- **2026-08-05 (data_engineering slot-12) RE-GATE CAME BACK RED — P3 STILL BLOCKED, next step updated**: the MTDS
+  re-gate (full `bash scripts/quality-gates.sh` WITH the gas_fee diff, log `/tmp/qg_green_ship.log`) finished with
+  **9989 passed / 1 failed**, coverage 80.63% (PASSES). The `[lending]` failure cleared
+  (`unified-api-contracts@5f441e0d` worked), but `test_tier3_prediction_polymarket_no_crash` STILL fails on the
+  `market_metadata` row (instrument-less, no `instrument_id`) — the fleet doc's "market_metadata stays" premise is
+  falsified; root cause + recommended UAC-side removal are documented in
+  `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` Progress Log (RE-GATE RESULT entry,
+  2026-08-05). **UPDATED NEXT STEP**: P3 ships the moment the MTDS tree is green. The remaining blocker is
+  UAC-owner-side — remove `market_metadata` from `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI (same pattern as
+  the `fills` removal at `5f441e0d`), then a final MTDS re-gate; on green, run the SAME ship command recorded in the
+  previous entry (quickmerge `--agent --files` the 3 code files), flip THIS P3 checkbox `[ ]`→`[x]` same-turn with the
+  landed SHA, push via the PM docs carve-out, verify `git merge-base --is-ancestor <sha> origin/live-defi-rollout`, then
+  POST /done.

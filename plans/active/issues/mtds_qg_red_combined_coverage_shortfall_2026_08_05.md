@@ -64,6 +64,14 @@ context_scope:
 > unrelated gas_fee work (dead-code removal for
 > `plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md` P3) cannot ship under the
 > green-tree rule until this repo is green.
+>
+> **⚠️ 2026-08-05 STATUS CONFLICT — blocker NOT resolved (contradicts slot-8's P1 flip)**: slot-8 flipped P1 `[x]` at
+> `5f144fc85` based on a **targeted** 0.68s run of the 2 test files. The **full** `quality-gates.sh` re-gate (slot-12,
+> WITH the gas_fee diff, log `/tmp/qg_green_ship.log`) is **RED** — `9989 passed / 1 failed` — the polymarket test still
+> fails on the **`market_metadata`** row (`instrument_type=''`, no `instrument_id`). UAC unchanged (HEAD `5f441e0d`;
+> `market_metadata` still declared for POLYMARKET/KALSHI at `market_data_categories.py:2264,2269`). The clean-tree QG
+> ALSO failed this test pre-`5f441e0d` — the targeted run passing is order-dependence, NOT a green gate. Root cause +
+> recommended UAC-side removal: Progress Log RE-GATE RESULT entry (2026-08-05).
 
 ## What I found
 
@@ -149,3 +157,26 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   "restore coverage" obligation is DISMISSED as a non-issue; the diff is coverage-green. NOTE this corrects the prior
   Pass-1 claim in this doc AND the "coverage drop ~4.4pts" text in
   `features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md`'s Progress Log (2026-08-05 entry).
+- **2026-08-05 (data_engineering slot-12) RE-GATE RESULT — STILL RED, `market_metadata` instance remains**: full
+  `bash scripts/quality-gates.sh` WITH the gas_fee diff (log `/tmp/qg_green_ship.log`): **9989 passed / 1 failed / 25
+  skipped / 1 xpassed**, coverage 80.63% (PASSES). The `[lending]` failure CLEARED — the AAVE `collect-rewards` removal
+  at `unified-api-contracts@5f441e0d` worked. But
+  `test_orchestrator_per_data_type_sentinel.py:: test_tier3_prediction_polymarket_no_crash` STILL FAILS, and the cause
+  is NOT `fills` (already removed at `5f441e0d`) — it is the **`market_metadata` row**:
+  `AssertionError: PREDICTION Tier-3 row must carry instrument_id: {'date': '2026-03-24', 'venue': 'POLYMARKET', 'data_type': 'market_metadata', 'instrument_type': ''}`.
+  **This FALSIFIES the "market_metadata … so it stays" premise** in
+  `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`: the sentinel does NOT map it to the per-instrument
+  `prediction_market_metadata` family — it emits an instrument-less row that trips the SAME Tier-3 invariant `fills`
+  did. Root cause (verified): `VENUE_DATA_TYPE_CAPABILITIES["POLYMARKET"]` / `["KALSHI"]` still declare
+  `market_metadata` (`unified_api_contracts/registry/market_data_categories.py:2264,2269` — added in the SAME commit
+  `6e791b05` as `fills`), while `DATA_TYPES_BY_ASSET_GROUP["prediction"]` omits it AND
+  `registry/data_type_capability.py:1026` records "POLYMARKET book_snapshot / market_metadata excluded — adapters do not
+  yet write those data_types to the manifest". The sentinel's strict validation (`venue_fetch.py:606`) only WARNS, does
+  not drop → instrument-less row fires → invariant trips. **Recommended fix (same class + same direction as the
+  operator's ruling)**: remove `market_metadata` from `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI — identical
+  dict/pattern to the `fills` removal at `5f441e0d`. Owner: the UAC capability-declaration workers (fleet doc
+  `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`). MTDS re-gate after that lands should clear (the
+  remaining `trades`/`book_snapshot_5` rows fan out per-instrument with instrument_id from the MVP seed). **HARNESS
+  EXIT-CODE CAVEAT**: the QG background task notification reported "exit code 0" but the authoritative in-band marker is
+  `QG_EXIT=1` (task output file) + the final pytest line "1 failed" — the QG is RED; do not trust that task's reported
+  exit code. slot-12's P3 remains BLOCKED (green-tree rule); diff still in the MTDS working tree, unshipped.
