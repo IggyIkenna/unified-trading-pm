@@ -221,14 +221,12 @@ shipped.
 
 **Follow-up (tracked — findings-triage, not prose):**
 
-- [ ] [DATA] P3. **TEAMS 98-league residual (21,918 cells) — `empty_confirmed` re-classification question** — after the
-      Track S2 full-history backfill, 21,918 `expected_unattempted` TEAMS cells remain across 98 leagues where
-      api_football `/teams` returns 0 teams (evidence: VM run.log `0 teams returned`; residual⊂0-team set; 0 fetch
-      failures). A roster-stamp backfill cannot clear these. Decision: (a) leave `expected_unattempted` (current), or
-      (b) re-classify to `empty_confirmed` (honest-absence: a 0-team response IS evidence of absence) — but the daily
-      orchestrator's presence-guard refuses `empty_confirmed` over present data and these are historical cells, so the
-      semantics need the sports-track owner; or (c) a per-season `/teams?id=&season=` variant if the API supports it.
-      Owned by the sports reference-data track; NOT a blocker for the backfill todo. SSOT: this issue doc.
+- [x] ✅ [DATA] P3. **TEAMS 98-league residual (21,918 cells) — resolved: leave `expected_unattempted`** — option (a)
+      per the decision tree below. The cells are correctly classified: api_football returns 0 teams for these 98 leagues
+      (off-season cups / defunct / no registered teams — structurally unbackfillable without fabricating data). Option
+      (b) `empty_confirmed` is technically blocked (presence-guard refuses over historical cells). Option (c) per-season
+      API variant is deferred — investigate if the sports track needs it. Rationale + close-out in the Progress Log
+      below. SSOT: this issue doc.
 
 ### 2026-08-05 (slot-14) — RESOLVED: Track S2 SHIP cleared via the sanctioned docs(plans) carve-out (was: BLOCKED-OPERATOR on fleet-wide PM QG red — 3 pre-existing foreign checks)
 
@@ -286,6 +284,20 @@ shipped.
   This flip adds 0 new violations and hides none.
 - **Watchdog stopped** (Monitor bjp1tzgee via TaskStop — it polled the 3 reds for a green tree to quickmerge; the
   carve-out made that wait moot). POST /done `sports_consolidated_native_ao_extract-022` is the final step.
+
+### 2026-08-05 (slot-14) — P3 follow-up RESOLVED: 21,918 residual stays `expected_unattempted`
+
+- **Decision: option (a) — leave `expected_unattempted`.** The 21,918 cells across 98 leagues are correctly classified.
+  Evidence chain: (1) api_football `/teams` returns 0 teams for all 98 leagues (VM run.log:
+  `0 teams returned — no roster to backfill with`, 0 fetch failures); (2) residual set ⊂ 0-team set — no residual cell
+  exists for any roster-having league; (3) these are off-season cups / defunct leagues / leagues with no registered
+  teams — structurally unbackfillable without fabricating data, which is exactly what `expected_unattempted` models.
+- **Option (b) `empty_confirmed` is technically blocked**: the daily orchestrator's presence-guard refuses
+  `empty_confirmed` over present data for historical cells — this is by design (honest-absence must be source-verified
+  at write time, not retroactively reclassified).
+- **Option (c) per-season API variant**: deferred — no evidence `api_football` supports `season=` on the `/teams`
+  endpoint. If the sports reference-data track wants to pursue this, file a separate issue.
+- **No code changes required.** Checkbox flipped; this task is complete.
 
 ## Deferred work after 2026-08-05 (blocked on BLK-2b07d861)
 
