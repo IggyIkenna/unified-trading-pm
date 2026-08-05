@@ -204,13 +204,14 @@ ALL, not even for the success path.
       pass**: the 2 existing phantom manifest rows for `feature_family=time_features` / `2026-07-04`,`2026-07-05` in the
       live prod manifest (`features-calendar-prd-central-element-323112`) still need correcting/purging — filed as its
       own bounded follow-up below rather than risking an ad-hoc prod-manifest-parquet edit inline.
-- [ ] [DATA] P3. **features-service / operator** — purge (or correct to `capture_status=empty_confirmed`) the 2 known
+- [x] ✅ [DATA] P3. **features-service / operator** — purge (or correct to `capture_status=empty_confirmed`) the 2 known
       phantom `feature_family=time_features` manifest rows (`date` ∈ `{2026-07-04, 2026-07-05}`,
       `capture_status=captured`, `row_count=24`) in `features-calendar-prd-central-element-323112`'s
       `_index/availability_index.parquet` — now root-caused + code-fixed above (the write-gate-rejection bug that
       produced them cannot recur), this is pure historical-debris cleanup. No GCS object exists for either row
       (confirmed in the P1 audit above), so this is a manifest-row-only correction, not a `gcs_delete_object` call —
-      find or use the appropriate `ManifestWriter`/consolidator correction path rather than hand-editing the parquet.
+      corrected via `ManifestWriter.record_empty()` CAS merge (prod --apply + post-verify clean,
+      `features-service@5706e1a3`).
 - [x] ✅ [SCRIPT] P2. **features-service** — audit every OTHER feature family's config for the same
       declared-but-unconsumed `is_test_run` pattern (this bug's root cause — a field that LOOKS like it's wired up
       because it's declared with the right description, but isn't consulted anywhere) — `volatility`, `onchain`,
