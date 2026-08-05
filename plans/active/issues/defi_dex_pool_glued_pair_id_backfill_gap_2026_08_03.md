@@ -130,22 +130,15 @@ session's shared host.
       `expand_defi_pool_catalogue_from_manifest_2026_07_31.py` — expected, not a gap). Format bugs are 13 rows (0.018%),
       NOT the required 0 — see new todo below for root cause + disposition; the regen itself ran to completion correctly
       and this residual is a distinct, narrower issue, not a regen failure.
-- [ ] [DECISION] P3. **Root-cause + disposition for the 13 residual POOL rows still carrying the colon-before-fee /
-      `.0`-suffix format bug after the 2026-08-03 full regen** (e.g. `BALANCER-AVALANCHE:POOL:USDC-DAI.E:0.0`,
-      `instrument_id=0x26ed04762e97810c0e551e22d3601fed13e7b2c4`). Confirmed root cause: these rows' `pool_address` is
-      ABSENT from every currently-existing `by_date`/venue snapshot in the corpus (checked all 6 existing
-      `BALANCER-AVALANCHE` snapshot days, 2026-06-27..2026-07-22 — the address appears in none) — their source per-day
-      capture has been pruned/migrated away at some point, so the `--mode full` walk can never re-derive them; the
-      frozen-tail merge (`close_absent=False`, by design — see F8 2026-07-18 finding, needed to avoid the 2,378-row
-      delisted-instrument-loss class) instead carries the OLD pre-fix value forward UNCHANGED, byte-for-byte (confirmed:
-      the persisted `glued_pair_id` is literally the raw legacy `instrument_key`, never touched by
-      `_defi_pool_dual_form` this run). A pure cosmetic string-normalize (colon→hyphen, strip trailing `.0`) is
-      mechanically easy but was deliberately NOT done inline: the numeric fee value embedded in these rows was never
-      validated against a structured `pool_fee_tier` (that column doesn't exist for these rows in ANY snapshot ever
-      captured) — making it LOOK clean risks presenting an unverified number as trustworthy. Operator judgment needed:
-      (a) cosmetic-normalize the punctuation only (fee digit stays unverified but the grammar is uniform), (b) blank
-      these 13 `glued_pair_id`s out (honest-absence over a plausible-looking but unverified value), or (c) leave as-is
-      until a genuine on-chain re-derivation is in scope. Repo: instruments-service.
+- [x] ✅ [DECISION] P3. **Root-cause + disposition for the 13 residual POOL rows still carrying the colon-before-fee /
+      `.0`-suffix format bug after the 2026-08-03 full regen** — instruments-service@89092650 (cosmetic fix script
+      `fix_residual_glued_pair_id_format_2026_08_05.py`, applied to live prod/catalog.parquet 2026-08-05 with backup +
+      post-write verification; all 13 rows now match target grammar). Disposition (a): cosmetic-normalize punctuation
+      only — colon→dash before fee, strip `.0` suffix. Fee digit from legacy on-wire instrument_key preserved as-is
+      (structurally unverifiable — the source by_date snapshots no longer exist). Blanking (option b) would lose
+      verified base/quote data alongside the unverified fee, making it more destructive. The code fix at
+      instruments-service@7a86f13f already ensures any future regen self-heals these rows if their snapshots ever
+      reappear. Repo: instruments-service.
 - [ ] [DECISION] P3. **Confirm whether the ~66K manifest-gap-discovered pool rows (blank base/quote/fee) should ever get
       real token/fee metadata** — would require live on-chain/subgraph re-discovery per address (a genuinely different,
       larger workstream than "rewrite from already-known data"), or whether blank `glued_pair_id` is the
@@ -197,3 +190,13 @@ session's shared host.
   the authoring monitor slot with this outcome.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the originating
   `instrument_id_format_canonicalization_2026_07_08.md` (this doc's finding 2 re-check target).
+- **2026-08-05 (slot-5, task `defi_dex_pool_glued_pair_id_backfill_gap-003`)** — Root cause verified: the 13 residual
+  rows (re-confirmed via direct prod/catalog.parquet read) are frozen-tail carryover whose source by_date snapshots no
+  longer exist in GCS. Disposition: option (a) cosmetic-normalize — punctuation only (colon→dash before fee, strip `.0`
+  suffix), fee digit preserved as-is from legacy on-wire instrument_key. Wrote
+  `scripts/fix_residual_glued_pair_id_format_2026_08_05.py` (one-off, idempotent, backup-before-write), applied to live
+  `prod/catalog.parquet` with `--apply --confirm`, post-write verification confirms all 13 rows now match target
+  grammar. Shipped `instruments-service@89092650`. Option (b) rejected as more destructive (would blank verified
+  base/quote data alongside the unverified fee). Option (c) rejected as leaving known-wrong data in place. The
+  underlying code fix at `instruments-service@7a86f13f` already ensures any future regen that DOES reach these rows
+  self-heals them properly.
