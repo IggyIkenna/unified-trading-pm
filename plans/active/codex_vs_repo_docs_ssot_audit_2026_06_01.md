@@ -470,7 +470,10 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `src/components/NavMenu.tsx`) + `docs/ARCHITECTURE.md` (stale "8-tab"/route table, component structure, endpoint
       list all reconciled to current source). Repo-internal drift only, no codex target. QG-green (55s), verified on
       origin.
-- [ ] [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs.
+- [x] ✅ [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs. —
+      unified-trading-system-ui@c0d28753: FIX-STALE repoint dart-v2-audit-context.md §10.1 broken
+      `per-category-bucket-layouts.md` → `per-asset-group-bucket-layouts.md` + stale vocabulary `categories` →
+      `asset groups`
 
 ### FIX-STALE pass-1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held), ~340 fixes on LDR
 
