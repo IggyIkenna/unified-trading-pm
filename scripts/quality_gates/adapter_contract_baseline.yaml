@@ -307,7 +307,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_catalog_freshness.py:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 43
+    count: 47
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
