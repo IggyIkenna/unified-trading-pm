@@ -976,3 +976,21 @@ default from an external reference.
       (`gcloud secrets list --project=central-element-323112`, checked via the planning VM's own GCP identity — the
       dev-checkout identity has no `secretmanager.list` on this project). Do not guess a secret name; wait for the
       operator.
+- [x] [INFRA] P1. ✅ Added durable per-task token usage (`TaskUsageRow`: input/cache_creation/cache_read/output +
+      spend_usd, any provider), persisted at `/done` — `agent-orchestrator@b310c68`. Same-session follow-up: historical
+      backfill script (dry-run default) + window-aggregated (1h/5h/24h/7d/lifetime) per-task-averaged dashboard view —
+      `agent-orchestrator@5f6b20f`.
+- [x] [INFRA] P1. ✅ Give workers a within-task turn/token compaction trigger, bounding the mechanism the 2026-08-05
+      pilot showed (a single task, one session, cache_read climbing every turn, never pruned — NOT the cross-task
+      chaining `one_task_per_session_enabled` already fixed 2026-08-04). Turned out ALREADY SHIPPED same-day, 10:35
+      (before this investigation started): `context_lifecycle.py` force-compacts every working slot unconditionally at
+      60% context (`context_worker_force_compact_pct`) — `agent-orchestrator@cc16d1f`. An earlier version of this todo
+      (a) proposed reverting one-task-per-session instead — retracted, would've undone the 2026-08-04 fix; (b) then
+      proposed building this — retracted again, verified already built by re-reading the current file directly instead
+      of trusting a stale sub-agent claim of "workers excluded".
+- [x] [DATA] P1. ✅ DeepSeek's `cache_read_input_tokens` discount confirmed real — operator-reported actual spend
+      ≈$35 for the 16h/2.5B-token window matches the ~$22-25 implied by the published 120x hit/miss rate against the
+      dollar-share breakdown (40% hit/40% miss/10% output); a fake/near-full-rate discount would imply ~$1000+.
+- [x] [INFRA] P2. ✅ Made `one_task_per_session_enabled` gate 1 sequential-plan-aware, scoped to `provider=="deepseek"`
+      only (Claude's ~5min/1hr cache TTL makes the same skip a plausible net loss there; DeepSeek's disk cache verified
+      to survive hours-to-days) — `agent-orchestrator@b310c68`.
