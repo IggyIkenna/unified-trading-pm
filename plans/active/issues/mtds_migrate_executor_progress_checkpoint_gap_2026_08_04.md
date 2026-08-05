@@ -101,8 +101,8 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
       market-tick-data-service@a4b26ff7.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_legacy_gas_fees_venue_2026_07_30.py`, same pattern —
       market-tick-data-service@ecca299a.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`, same
-      pattern. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`,
+      same pattern — market-tick-data-service@9134ff7e.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_prediction_trades_legacy_bundle_2026_07_28.py`, same
       pattern. Repo: market-tick-data-service.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
