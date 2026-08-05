@@ -506,3 +506,11 @@ are genuinely in scope for the operator's "no exceptions" directive.
   independent of this bug), but census-confirmed convergence cannot be truthfully declared for ANY entity in this doc
   while the consolidator stays frozen — treat every "needed" figure in this doc as a stale floor, not current truth,
   until that issue resolves. Relaunched FIXTURE_STATS again regardless.
+- **2026-08-05T00:30Z** — Two findings this check. (1) Consolidator: `rows_out` ticked +1 (9,239,513→9,239,514) around
+  18:55Z on 08-04, then re-froze at the new value through at least 00:22Z on 08-05 (5.5+ hrs, ~35+ more merges) — not a
+  recovery, reinforces the original finding (full detail in the issue doc's update). (2) `af-backfill-20260804-145154`
+  (the singleton lock's last occupant) was preempted at **14:13:36Z on 08-04 after a decent ~20min run** — and the lock
+  sat **completely idle for 10+ hours** until this check, no VM running the whole time. Relaunched immediately
+  (`af-backfill-20260805-013103`), confirmed RUNNING. Root cause of the idle gap not investigated (outside this doc's
+  scope to diagnose the scheduling mechanism itself) — noting it so a future tick doesn't assume continuous coverage
+  between Progress Log entries.
