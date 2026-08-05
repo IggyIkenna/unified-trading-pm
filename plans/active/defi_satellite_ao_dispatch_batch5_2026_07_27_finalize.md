@@ -76,12 +76,21 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       `[x]` with matching SHAs, no change. (6) `mtds_dex_pools_swaps_backfill_verification` — batch5 independent
       corroboration note added. (7) `mtds_instruments_metadata_hive_canonicalisation_reader_gap` — batch5 independent
       corroboration note added.
-- [ ] [DOC] P2. Re-check the 2 conflict-gated Deferred items (`architecture_v2_drift_leg_specs_and_manifest_residue`
-      CARRY_STAKED_BASIS delete-vs-re-leg call; `defi_track5_coverage_mvp_backfill`'s PYTH SPOT-backfill overlap with
-      batch3's C6) — if the operator has ruled on the strategy-domain call, or if batch3's C6 Pyth backfill has landed
-      and its window is confirmed to fully cover the candidate's window, resolve/close the parked note (fold into a
-      batch6 todo if the operator's ruling produces new bounded work; otherwise mark resolved-no-action). Repo:
-      unified-trading-pm. Done when: both parked items have an explicit resolved/still-open verdict recorded.
+- [x] ✅ [DOC] P2. — unified-trading-pm@<sha>. Re-check the 2 conflict-gated Deferred items
+      (`architecture_v2_drift_leg_specs_and_manifest_residue` CARRY_STAKED_BASIS delete-vs-re-leg call;
+      `defi_track5_coverage_mvp_backfill`'s PYTH SPOT-backfill overlap with batch3's C6) — both STILL BLOCKED
+      (2026-08-05, slot-6 re-check): **(1) CARRY_STAKED_BASIS delete-vs-re-leg**: STILL BLOCKED.
+      `issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` remains `status: open`,
+      `assigned_vm: NA` — the operator's strategy-domain decision (delete
+      `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` from `tests/e2e/_shared/strategy-registry.ts:158` vs. re-leg
+      onto Jupiter) has not been made. na-eligibility-audit 2026-07-30 confirmed KEEP-NA. No change since batch5
+      deferred it. **(2) PYTH oracle_prices SPOT backfill overlap**: STILL BLOCKED. Batch3's C6 Pyth backfill VMs
+      completed (`exit_code=0`), window `2026-04-15..2026-08-03` — does NOT fully cover track5's candidate window
+      (`2023-10-01..2026-07-22`; C6 starts at 2026-04-15, leaving `2023-10-01..2026-04-14` uncovered). Additionally: (a)
+      C6 has an unresolved BTC/ETH/INF data-correctness gap gated on an `[OPERATOR]` ruling in
+      `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`; (b) the operator Pyth Hermes
+      coverage/backtest-window go/no-go decision (the candidate's 2023-10-01 floor) remains open. Both items stay in the
+      conflict-gated Deferred taxonomy for batch6 re-check.
 - [ ] [DOC] P2. Re-check the 24-doc non-batchable Deferred taxonomy list for any operator-gated/time-gated item that has
       since cleared (an operator ruling landed, a gating VM/backfill completed, a dependent doc's status changed) — move
       any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch. Repo:
