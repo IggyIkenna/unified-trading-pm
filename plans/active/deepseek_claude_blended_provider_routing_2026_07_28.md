@@ -994,3 +994,6 @@ default from an external reference.
 - [x] [INFRA] P2. ✅ Made `one_task_per_session_enabled` gate 1 sequential-plan-aware, scoped to `provider=="deepseek"`
       only (Claude's ~5min/1hr cache TTL makes the same skip a plausible net loss there; DeepSeek's disk cache verified
       to survive hours-to-days) — `agent-orchestrator@b310c68`.
+- [ ] [OPERATOR] P2. Run `backfill_task_usage.py --apply` on the orchestrator VM once the dry-run (dispatched 2026-08-05
+      via SSM, CommandId `17ae0cb4-4385-4e83-b5a3-d7184f605cd0`, i-0c9b283b31d6b5ca7/ap-northeast-1; result not yet
+      checked) confirms sane numbers.

@@ -24,7 +24,7 @@ status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, unified-api-contracts, instruments-service, market-tick-data-service]
+repos: [agent-orchestrator, unified-api-contracts, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [admin, engineer]
 tags: [ci-outage, glue-runner, self-hosted-runner, systemd, tier-a-gate, promotion-blocked, monitoring-gap, big-finding]
 related:
@@ -138,7 +138,24 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       when any expected `github-glue-runner-<repo>@glue-1.service` is `inactive`/`dead`/`failed` for > N minutes while
       peer runners are active, so a stopped runner pages instead of silently stalling promotion for an hour. Repo:
       agent-orchestrator (deployment/monitoring). Cross-ref `/codex/05-infrastructure/deployment-observability.md`,
-      `/codex/04-architecture/ci-alerting.md`.
+      `/codex/04-architecture/ci-alerting.md`. **2026-08-05 addendum: a THIRD failure mode found (see Progress Log) —
+      "active" at the systemd level but hung mid-job for hours, then failing to re-register with GitHub even after
+      restart. The watchdog must catch this too, not just crash-loop and cleanly-inactive**, e.g. alert on a runner
+      whose `journalctl` shows "Running job" with no matching "completed" line for > N minutes, independent of systemd
+      `ACTIVE` state (which stays green throughout this failure mode).
+- [ ] [INFRA] P1. **NEW 2026-08-05 — unresolved.** `writer-1/2/3` on the SAME planning VM (`ip-172-31-3-59`, instance
+      `i-042a6332509482556`, unified-trading-pm's own writer pool — a different set of units from this doc's original
+      incident) were found stuck mid-`update-ci-status` job for ~2h, blocking `ldr-to-main-promote-fleet.yml` fleet-wide
+      (confirmed: 2 prior manual `workflow_dispatch` attempts sat queued 12-15min then were cancelled with no runner
+      ever picking them up). `systemctl daemon-reload` + `systemctl restart` on all three cleared the hung jobs (SIGKILL
+      on the old PID, confirmed via `ps`/journal) but **did NOT restore GitHub registration** — 5+ min post-restart, GH
+      API still reports all three `offline` (though no longer `busy`), and the fresh Runner.Listener processes produce
+      ZERO stdout (no "Connected to GitHub", no error) — unlike the healthy `glue-*` pool on the same host, which
+      reconnects in under a second after any restart. Host-level network to `api.github.com` confirmed fine (`curl` 200
+      in 24ms); no established TCP connections from the new Listener PIDs (`ss -tnp` empty) — so it isn't network-layer
+      either. Root cause NOT found. Needs someone with deeper access to check the runner's own registration-side error
+      surface (GH's runner-registration audit log, or a full de-register/re-register instead of a soft restart) — a soft
+      restart was sufficient for the 2026-08-04 incident above but is NOT sufficient here.
 
 ## Progress Log
 
@@ -174,3 +191,15 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   requiring this kind of after-the-fact archaeology. P2 (extending the crash-loop watchdog to catch a cleanly-`inactive`
   unit, not just a crash-looping one) remains the one open item — still correctly scoped to `agent-orchestrator`, not
   something to bolt onto this session's host-level access.
+- **2026-08-05 (interactive session, unrelated token-usage-tracking work, hit this class of outage a third time)** —
+  While trying to speed up an agent-orchestrator quickmerge's LDR->main promotion, found `writer-1/2/3` (a DIFFERENT
+  pool than this doc's original 3 units — unified-trading-pm's own writer runners, same host) all showed GH-API
+  `offline`+`busy` simultaneously. `journalctl` showed all three stuck on `Running job: update-ci-status` since ~10:20
+  with no completion line ~2h later — a THIRD distinct failure shape (hung mid-job, not crash-looping, not cleanly
+  stopped). Restarted via SSM (`i-042a6332509482556`, correcting an initial wrong-instance-ID mistake — the planning VM
+  and this writer-pool host are DIFFERENT instances despite the similar naming) after confirming host disk/memory were
+  healthy and it wasn't a resource-exhaustion crash-loop. Restart cleared the hang (old PID SIGKILLed) but did NOT
+  restore GitHub connectivity — added as the new `[INFRA] P1` todo above, left genuinely unresolved (not a "someone
+  else's problem, wait" case — I could not find the root cause with the access/tools available in this session). Also
+  extended the existing `[INFRA] P2` watchdog todo to explicitly cover this "active-but-hung" shape, since the current
+  framing (crash-loop vs. cleanly-inactive) would miss it too.
