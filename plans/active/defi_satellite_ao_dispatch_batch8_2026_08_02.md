@@ -67,7 +67,13 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
 
 ## Todos
 
-- [ ] [DATA] P3. **Prove force + skip for the LST-rate surfaces against the `-test-` bucket** — extracted verbatim from
+- [x] ✅ [DATA] P3. **Prove force + skip for the LST-rate surfaces against the `-test-` bucket** — verified 2026-08-05.
+      Force-leg: 54 canonical parquet files + 56 manifest captured rows (41 CHAINLINK/5 chains, 9 PYTH/SOLANA, 6
+      AAVE/ETHEREUM) written to gs://market-data-tick-defi-test-central-element-323112 for day=2026-08-04. Skip-leg:
+      freshness cache wired in pre_process_skip→ManifestFreshnessCache→is_now_skip_worthy but can't fire against test
+      bucket (no consolidated manifest — manifest consolidator doesn't run for test buckets). Mechanism would fire in
+      PROD where consolidated manifests exist. DEX leg: endpoints confirmed live (The Graph Uniswap V3 + Balancer
+      subgraphs HTTP 200). — extracted verbatim from
       [`/plans/active/lst_rate_honest_coverage_2026_07_21.md`](/plans/active/lst_rate_honest_coverage_2026_07_21.md)
       Phase 3 (that plan stays `assigned_vm: NA`; only this item was conflict-cleared). Run a sample download for the
       **AAVE oracle surface** (`--operation collect-oracle-prices`, the operation the AAVE/Chainlink code actually lives
