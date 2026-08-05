@@ -54,6 +54,8 @@ SWAP_LIMIT_KB=$(( ${RW_SWAP_LIMIT_GB:-4} * 1024 * 1024 ))
 MIN_AGE_SEC="${RW_MIN_PROCESS_AGE_SEC:-30}"
 MAX_KILLS_PER_MIN="${RW_MAX_KILLS_PER_MIN:-1}"
 ORCHESTRATOR_URL="${RW_ORCHESTRATOR_URL:-http://localhost:8765}"
+DEPLOYMENT_API_URL="${RW_DEPLOYMENT_API_URL:-}"
+VM_NAME="${RW_VM_NAME:-$(hostname 2>/dev/null || echo 'planning-vm')}"
 MARKER_DIR="${RW_MARKER_DIR:-/dev/shm/resource-watchdog/kills}"
 LOG_FILE="${RW_LOG_FILE:-/var/log/resource-watchdog.log}"
 DRY_RUN="${RW_DRY_RUN:-false}"
@@ -252,6 +254,41 @@ EOF
     _rw_log_info "orchestrator notified: pid=$pid slot=$slot reason=$reason"
 }
 
+_rw_notify_deployment_api() {
+    local pid="$1" slot="$2" reason="$3" rss_kb="$4" limit_kb="$5" cmd="$6" killed="$7"
+
+    # Skip silently if no deployment-api URL is configured (opt-in).
+    if [[ -z "${DEPLOYMENT_API_URL:-}" ]]; then
+        return 0
+    fi
+
+    local rss_mb=$(( rss_kb / 1024 ))
+    local limit_mb=$(( limit_kb / 1024 ))
+    local pressure; pressure="$(_rw_pressure_level)"
+
+    local payload; payload="$(cat <<EOF
+{
+  "vm_name": "${VM_NAME}",
+  "pid": ${pid},
+  "slot_id": "${slot}",
+  "command": "$(echo "$cmd" | sed 's/"/\\"/g')",
+  "rss_mb": ${rss_mb},
+  "limit_mb": ${limit_mb},
+  "pressure_level": "${pressure}",
+  "reason": "${reason}",
+  "killed": ${killed}
+}
+EOF
+)"
+    # Fire-and-forget — don't block the watchdog loop on API calls
+    curl -s -X POST "${DEPLOYMENT_API_URL}/api/fleet/watchdog/kill-events" \
+        -H "Content-Type: application/json" \
+        -d "$payload" \
+        --connect-timeout 3 --max-time 5 \
+        >/dev/null 2>&1 || _rw_log_warn "deployment-api unreachable for kill notification (pid=$pid slot=$slot)"
+    _rw_log_info "deployment-api notified: pid=$pid slot=$slot reason=$reason killed=${killed}"
+}
+
 _rw_snapshot_process() {
     local pid="$1" reason="$2"
     local snap_dir; snap_dir="$(dirname "$LOG_FILE")/snapshots"
@@ -398,6 +435,9 @@ _rw_enforce_process() {
     if [[ "$DRY_RUN" == "true" ]]; then
         _rw_log_info "DRY-RUN: would kill pid=$pid slot=$slot ($reason)"
         _rw_rate_limit_record
+        # Notify deployment-api even in dry-run mode so the integration is testable
+        # without an actual kill (killed=false).
+        _rw_notify_deployment_api "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd" "false"
         return 0
     fi
 
@@ -411,6 +451,8 @@ _rw_enforce_process() {
         _rw_rate_limit_record
         # Notify orchestrator (fire-and-forget)
         _rw_notify_orchestrator "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd"
+        # Notify deployment-api (fire-and-forget — additive, dual-write)
+        _rw_notify_deployment_api "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd" "true"
         _rw_log_info "KILL #${_RW_KILL_COUNT}: pid=$pid slot=$slot ($reason)"
     fi
 

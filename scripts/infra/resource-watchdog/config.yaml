@@ -59,6 +59,8 @@ safeguards:
 # ── Feedback loop ─────────────────────────────────────────────────────────────
 feedback:
   orchestrator_url: http://localhost:8765 # AO internal API for kill notifications
+  deployment_api_url: "" # deployment-api base URL for kill-event dual-write (opt-in — empty=skip)
+  vm_name: "" # hostname override for kill-event records (empty=hostname via `hostname` command)
   marker_dir: /dev/shm/resource-watchdog/kills # tmpfs — survives memory pressure
 
 # ── Logging ───────────────────────────────────────────────────────────────────
