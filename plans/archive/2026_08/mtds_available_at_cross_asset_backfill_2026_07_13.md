@@ -529,3 +529,9 @@ markers + final `[[VM_PROGRESS]]` near 2026-08-04 → force-consolidate → fill
       `claude` executable (proc exe basename) so non-claude jobs are never reaped. Cross-repo (orchestrator); `env -u`
       workaround documents the per-launch dodge but the reaper should be hardened. Provenance: journald orphan_reap
       lines 2026-08-05 20:38:51/20:51:48; SSOT `agent-orchestrator/server/orphan_reap.py`.
+
+**Run-3 progress (2026-08-05 21:44 UTC, slot-15)**: ALIVE at chunk 222 (2024-03-27), ~65% done (~221/343 chunks
+complete). `write_errors: 0`, crash markers 0, `monotonic=true`, 0 orphan_reap hits since launch. Chunk rate ~10s at
+75-78k cells. ETA ~22:10-22:15 UTC. Exit-watchdog armed (harness task; fires on EXIT with tail + crash markers +
+enriched total). Full resume command:
+`cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 PYTHONPATH=. nohup env -u CLAUDE_CONFIG_DIR .venv/bin/python -m market_tick_data_service.scripts.rebuild_defi_available_at --start-date 2020-01-01 --end-date 2026-08-04 --chunk-days 7 > /tmp/rebuild_defi_apply_2026_08_05_run3.log 2>&1 &`
