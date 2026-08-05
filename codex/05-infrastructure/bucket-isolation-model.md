@@ -282,33 +282,61 @@ Each manifest records what data was written, when, and to which bucket/path.
 
 ---
 
-## 8. Prod Bucket IAM Write-Protection
+## 8. Prod Bucket IAM Write-Protection (ENFORCED)
 
-Prod buckets (`-prd-`) have IAM policies that restrict write access:
+Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** — the code-level
+name-resolver safety net (§ 1) is now backed by live GCP IAM conditions. Terraform SSOT:
+`deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
+`/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`.
 
-- Service accounts for batch/live workloads: read + write (scoped to their domain)
-- CI/CD service accounts: read-only on prod, read + write on mock/dev
-- Developer accounts: read-only on prod, read + write on mock/dev
+### 8.1 Per-Tier Service Accounts
+
+| SA                 | Write scope                                                    | Read scope  | Status                                                             |
+| ------------------ | -------------------------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `uts-prd-sa`       | `*-prd-*` buckets (Group A + Group B, IAM-conditioned)         | all buckets | **Live** — deployment-api + 96 VM launchers wired                  |
+| `uts-test-sa`      | `*-test-*` buckets (Group A + Group B, IAM-conditioned)        | all buckets | **Live** — smoke-test / CI VMs                                     |
+| `uts-migration-sa` | **Unconditioned** `storage.objectAdmin` (cross-tier exception) | all buckets | **Live** — `launch-bucket-rsync-vm.sh` only                        |
+| `uts-dev-sa`       | —                                                              | —           | **Historical** — permanently unbound (dev tier retired 2026-07-13) |
+| `uts-stg-sa`       | —                                                              | —           | **Historical** — permanently unbound (stg tier retired 2026-07-13) |
+
+All live SAs also hold the 7 non-storage roles `unified-trading-sa` carries (`bigquery.dataEditor`,
+`secretmanager.secretAccessor`, `run.invoker`, `pubsub.editor`, `compute.instanceAdmin.v1`, `iam.serviceAccountUser`,
+`artifactregistry.reader`), project-wide and unconditioned — necessary for real runtime operation beyond GCS
+reads/writes.
+
+### 8.2 IAM Condition Mechanism
+
+Per-tier write scope is enforced via GCP IAM Conditions on `resource.name`. **GCP's IAM Condition CEL environment
+supports only `startsWith()` / `endsWith()`** — `contains()` and `matches()` (regex) are both **undeclared references**,
+rejected only at real `tofu apply` time (confirmed live 2026-07-29, `deployment-service@44002342`). Neither
+`tofu validate` nor `tofu plan` catches this.
+
+The safe pattern is a `startsWith` on the bucket-name prefix + `endsWith` on the tier suffix + project (e.g.
+`startsWith("projects/_/buckets/market-data-tick-")` AND `endsWith("-prd-central-element-323112")`). The tier segment
+immediately follows the group prefix in every real bucket name, so `startsWith` alone covers the family; `endsWith`
+locks the tier.
+
+### 8.3 CI/CD + Developer Identities
+
+- CI/CD service accounts: `storage.objectViewer` on all buckets (read-only on prod)
+- Developer accounts: `storage.objectViewer` on all buckets (read-only on prod)
+- No CI/CD or developer identity holds `storage.objectAdmin` on any prod bucket
+
+### 8.4 Migration-SA Exception
+
+`uts-migration-sa` is the single sanctioned cross-tier writer — its `storage.objectAdmin` grant is **unconditioned** (no
+`resource.name` condition), matching its stated purpose: a narrow exception for migration/cutover scripts that
+legitimately span tiers. Currently used only by `launch-bucket-rsync-vm.sh`.
+
+### 8.5 Pending: God-SA `objectAdmin` Removal
+
+The original `unified-trading-sa` still holds project-wide `roles/storage.objectAdmin` — the per-tier conditioned
+bindings are live **alongside** it (additive enforcement: new SAs are scoped; the old SA still has broad access).
+Removal of the god-SA grant is tracked as P2.1b of the rollout plan, gated on every remaining write-path runtime
+confirming it runs as its tier SA rather than `unified-trading-sa` or the default compute SA.
 
 `CLOUD_MOCK_MODE=true` or `DEPLOYMENT_ENV=dev` never resolves to prd tier, preventing accidental prod writes during
-development or testing. Staging (`stg`) uses its own IAM write-protection separate from prod. See
-`bucket_iam_write_protection_per_tier_2026_06_09.md` for the IAM rollout plan.
-
-### 8.1 GCP IAM Condition CEL — real function support (confirmed live 2026-07-29)
-
-When writing a conditional `google_storage_bucket_iam_member` / `google_project_iam_member` binding scoped by
-`resource.name` (e.g. a per-tier/per-suffix bucket-name match), **GCP's IAM Condition CEL environment supports only
-`startsWith()` / `endsWith()`** on `resource.name` — `contains()` and `matches()` (regex) are both **undeclared
-references**, rejected only at real `tofu apply` time
-(`400 Condition expression compilation failed... undeclared reference to 'contains'`). Neither `tofu validate` nor
-`tofu plan` catches this — GCP does not compile the CEL expression server-side until `apply`, so a broken condition
-looks clean through the whole plan/review cycle and only fails live.
-
-The safe pattern for a per-tier/per-suffix match is a single `startsWith("projects/_/buckets/{prefix}{tier}-")` per
-bucket-name prefix (exact, not an approximation) — confirmed live that the tier segment immediately follows the group
-prefix in every real bucket name (e.g. `features-cefi-prd-central-element-323112`), so `startsWith` alone is sufficient;
-no `contains`/regex is actually needed for this shape. Source:
-`bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md`, `deployment-service@44002342`.
+development or testing.
 
 ---
 
