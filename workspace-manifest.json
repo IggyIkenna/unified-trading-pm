@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "coverage_pct": 83.9,
@@ -454,7 +454,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "qg",
         "warn_file_count": 22,
