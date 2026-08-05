@@ -1840,32 +1840,35 @@ sleep 0.3
 if [ -n "$FILES_ARG" ]; then
   ADDED_ANY=0
   for f in $FILES_ARG; do
-    if [ -e "$f" ]; then
-      git add "$f"
+    if git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
+      # Already staged (e.g. the caller ran `git rm`/`git rm --cached` before invoking
+      # quickmerge). Checked FIRST, before touching the filesystem at all: a staged
+      # deletion removes the path from `git ls-files` but the working-tree copy can
+      # still be sitting there (plain `git rm --cached` doesn't delete it) — if that
+      # copy is ALSO now gitignored (the normal case for dropping a build/run artifact
+      # from tracking in the same commit that adds the ignore rule), the `[ -e ]`-first
+      # ordering below would re-`git add` it and hit "The following paths are ignored
+      # ... hint: use -f", aborting STAGE 5 (schema_artifacts untrack across
+      # mtds/execution-service/PM, 2026-08-06; the omniroute-eval/results fix,
+      # 2026-08-04, only covered a path ABSENT from the worktree, not this present--
+      # but-ignored shape). Nothing further to do — the deletion is already staged.
       ADDED_ANY=1
+    elif [ -e "$f" ]; then
+      if git check-ignore -q -- "$f" 2>/dev/null; then
+        # Present on disk, untracked (not caught by the staged-diff check above), and
+        # gitignored — the caller named a path that was never tracked and is currently
+        # excluded. Nothing to stage; force-adding a caller-named ignored path silently
+        # would be surprising, so warn instead of aborting the whole run.
+        echo "[$REPO_NAME] ⚠️  Path is untracked and gitignored — skipping: $f"
+      else
+        git add "$f"
+        ADDED_ANY=1
+      fi
     elif git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
       # Tracked but absent from the worktree = a DELETION — stage it. The old
       # `[ -e ]`-only guard silently dropped deleted paths from scoped commits
       # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
-      #
-      # `git rm --cached`, NOT `git add`: when the path is ALSO gitignored --
-      # the normal case for dropping a now-ignored build/run artifact from
-      # tracking -- `git add` prints "The following paths are ignored by one of
-      # your .gitignore files" and exits 1 EVEN THOUGH it stages the deletion
-      # correctly, which aborted quickmerge at STAGE 5 and made such a removal
-      # unshippable through the sanctioned path (agent-orchestrator
-      # omniroute-eval/results, 2026-08-04). `git rm --cached` stages the same
-      # deletion and is ignore-agnostic.
       git rm --cached --quiet -- "$f"
-      ADDED_ANY=1
-    elif git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
-      # Already staged as a deletion (e.g. the caller ran `git rm`/committed via a
-      # pre-existing index before invoking quickmerge). `git ls-files` no longer lists
-      # it — removing a path from the INDEX also removes it from ls-files' output, not
-      # just the worktree — so the check above alone misreads a legitimate, already-staged
-      # deletion as an untracked/invalid path. A --files argument consisting ENTIRELY of such
-      # paths (a pure-deletion diff) previously left ADDED_ANY=0 and hard-failed with
-      # "No valid paths from --files" despite there being a real, ready-to-commit deletion.
       ADDED_ANY=1
     else
       echo "[$REPO_NAME] ⚠️  Path not found (and not tracked): $f"
