@@ -110,6 +110,18 @@ was written
 - GMX GCS+manifest purge — 90 objects deleted, 660 manifest rows dropped, cron resumed. Corrected a stale "already
   complete" claim in the archived removal doc.
 - GMX 4 residual-row root cause found (stale `catalog.parquet`, daily re-seed) — feeds directly into item 7 above.
+- **GMX "3,305 residual manifest rows" finding (2026-08-05, interactive session continuation) — investigated, RETRACTED,
+  not real.** Surfaced while ad-hoc-querying the DeFi tick manifest during the gas_fees purge (item 1); the first query
+  hit the wrong bucket (`instruments-store-defi-prd-*`, the catalogue bucket, instead of `market-data-tick-defi-prd-*`,
+  the tick bucket the purge actually touches), and a second, correct-bucket query still returned inconsistent counts (0,
+  then an error, then 0) while item 1's purge attempts were concurrently reading/mutating the same manifest. Once the
+  manifest was fully quiescent (all further purge launches stopped, see
+  `/plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`), two fresh
+  independent checks both returned **0 GMX rows**, and a fresh, independently-triggered honest-coverage rollup
+  (`gs://central-element-323112-honest-coverage/2026-08-05/coverage.json`, `generated_at: 2026-08-05T14:42:13Z`,
+  `partial: false`, all 5 asset groups measured) confirms `GMX` absent from `by_chain.defi` — matching the 4-row-case
+  fix above, no new purge needed. Lesson: a manifest read taken WHILE a concurrent writer/purger is active is not
+  trustworthy evidence either way; re-check once quiescent before filing a residual-row finding.
 - 4 new issue docs filed: `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`,
   `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md`, `defi_hyperliquid_residual_manifest_rows_2026_08_04.md`,
   `defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
