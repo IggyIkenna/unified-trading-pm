@@ -155,10 +155,10 @@ false-positive surface). Recommend, in order:
   `agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py` (the regression-test home both remaining `[INFRA]`
   todos need to extend, per the shipped todo 2's own evidence line) — now 4 entries.
 
-- [ ] [INFRA] P3. **Land the orphaned commit that already IMPLEMENTS the `[INFRA] P3` guard-/done-sha-vs-evidence todo
-      above — do NOT re-implement it.** Dead slot-8 (died 2026-08-04T09:11:01Z) left `agent-orchestrator@3080fecd7da9`
-      "feat(done): cross-check /done reported sha against evidence-cited commit" — the full fix
-      (`verify.resolve_sha_in_worktree()` + a ~200-line regression test), preserved on origin at
+- [x] ✅ [INFRA] P3. **Land the orphaned commit that already IMPLEMENTS the `[INFRA] P3` guard-/done-sha-vs-evidence
+      todo — agent-orchestrator@0d449c6 above — do NOT re-implement it.** Dead slot-8 (died 2026-08-04T09:11:01Z) left
+      `agent-orchestrator@3080fecd7da9` "feat(done): cross-check /done reported sha against evidence-cited commit" — the
+      full fix (`verify.resolve_sha_in_worktree()` + a ~200-line regression test), preserved on origin at
       `refs/heads/wip-preserve/orchestrator-slot-8-3080fec` (also still in `.tabs/8/agent-orchestrator`, clean tree,
       ahead=1). Its `Quickmerge:agent` trailer is pre-stamped but Pass-1 QG never actually ran on it
       (`.qg_last_passed_sha` = parent `2e5792b`, not `3080fec`), so `quickmerge --agent` will refuse until QG re-runs.
