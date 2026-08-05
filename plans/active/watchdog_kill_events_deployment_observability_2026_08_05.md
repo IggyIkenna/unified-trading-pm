@@ -95,10 +95,10 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       `deployment-api/deployment_api/services/operational_data_writer.py`, following `write_reap_event`'s exact shape
       (UTL `insert_rows`, try/except-log, never raises). Done when a unit test inserts a synthetic row and asserts no
       exception on both a well-formed and a malformed payload. — deployment-api@0a3e69d
-- [ ] [BACKEND] P2. Add a `POST` ingest route in deployment-api (e.g. `/api/watchdog/kill-events`) that calls the new
-      writer. No new auth model — reuse whatever the existing fleet ingest routes in
+- [x] ✅ [BACKEND] P2. Add a `POST` ingest route in deployment-api (e.g. `/api/fleet/watchdog/kill-events`) that calls
+      the new writer. No new auth model — reuse whatever the existing fleet ingest routes in
       `deployment-api/deployment_api/routes/fleet.py` already use. Done when a `curl` POST with a synthetic payload
-      returns 2xx and the row is visible via `bq query` within a minute.
+      returns 2xx and the row is visible via `bq query` within a minute. — deployment-api@7d79433
 - [ ] [INFRA] P2. Wire `resource-watchdog.sh`'s `_rw_notify_orchestrator()` (or a sibling function, additive — do not
       remove the existing AO-internal POST) to ALSO POST each kill event to the new deployment-api ingest route from the
       prior todo. Fire-and-forget, same pattern as the existing orchestrator POST (must not block the watchdog's
