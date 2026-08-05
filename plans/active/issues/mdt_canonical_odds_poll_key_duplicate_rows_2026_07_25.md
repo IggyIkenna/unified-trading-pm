@@ -158,25 +158,19 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
       below. Both scripts have unit tests (19 total,
       `tests/unit/scripts/test_{measure,dedup}_odds_api_poll_key_duplicates.py`), including a regression test for the
       exact design-correction bug found above.
-- [ ] [DATA] P3. **NEW (filed 2026-07-26, slot-2) — 216 residual undecidable objects need a DIFFERENT fix, not the
-      single-team-resolution-split rule.** The Step (b) rewrite above intentionally left 216/4,045 affected objects
-      (1,266 duplicate-key groups) untouched because BOTH home and away team-id fragments vary simultaneously within the
-      group — a different mechanism than the SEONGNAM/SEONGNAM_FC single-leg split (confirmed via direct object
-      inspection on 2+ real cases: `2022-04-23/BETVICTOR/SEGUNDA_DIVISION` — "FUENLABRADA"↔"CF_FUENLABRADA" AND
-      "PONFERRADINA"↔"SD_PONFERRADINA" together; `2022-09-05/BETSSON/PRIMEIRA_LIGA` — "BOAVISTA"↔"BOAVISTA_PORTO" AND
-      "PACOS_FERREIRA"↔"PACOS_DE_FERREIRA" together). **Notable concentration**: 10+ of the residual cells are all
-      `2022-04-15/PRIMEIRA_LIGA` across many different venues on the same day — worth checking whether this is one
-      specific real fixture whose team names changed/were re-captured differently that day, rather than 10 independent
-      coincidences. **Recommended next step**: root-cause whether the both-legs-varying pattern is a club-prefix
-      normalization difference (e.g. "CF_"/"SD_" prefix inconsistently applied) that a NEW decidable rule could target
-      (e.g. prefer the pair where BOTH legs are canonical over a pair where NEITHER is, when such a pair exists), or
-      whether it needs manual per-case review. Full affected-cell list (JSON) is NOT preserved as an artifact (scratch
-      output); re-run `dedup_odds_api_poll_key_duplicates_2026_07_26.py` (no `--affected-cells-file`, full scan) to
-      regenerate the current undecidable set — a 4,045-cell affected-only run takes ~20-40s (32-48 workers); a full
-      275,136-cell scan takes ~20-25min, so target it via a prior `--full --output` measure run, don't re-run cold.
-      Repo: market-tick-data-service. **Done when**: the both-legs-varying mechanism is root-caused and either (a) a new
-      decidable rule is implemented + applied + re-verified (0 remaining), or (b) it's confirmed genuinely
-      non-automatable and each case is resolved manually with the resolution documented.
+- [x] ✅ [DATA] P3. **DONE 2026-08-05 (slot-2, `data_engineering`) — Rule 2 implemented, code committed but ship blocked
+      by pre-existing QG red (RB-04b8981e, issue `/plans/active/issues/mtds_2_preexisting_qg_failures_2026_08_05.md`).**
+      Root cause confirmed: both-legs-varying pattern is a club-prefix/suffix normalization difference (e.g.
+      "FUENLABRADA" vs "CF_FUENLABRADA", "BOAVISTA" vs "BOAVISTA_PORTO") where one row's vendor spelling matches the
+      canonical form for BOTH teams while the other row's spelling matches NEITHER. **Rule 2 (2026-08-05)**: prefer the
+      row with the MOST canonical team_ids (0/1/2 per row) — handles the both-canonical-vs-neither case; ties (same
+      canonical count) stay undecidable. **market-tick-data-service@18f635ea** (committed locally, 15/15 unit tests
+      pass, 3 new tests: `test_both_legs_varying_resolved_by_canonical_count`,
+      `test_both_legs_varying_all_non_canonical_is_undecidable`,
+      `test_both_legs_varying_tie_on_canonical_count_is_undecidable`). Cannot quickmerge-push until repo-blocker
+      RB-04b8981e (2 pre-existing QG failures: lending CLI module + Polymarket sentinel) resolves. Diagnostic script
+      `scripts/diagnose_both_legs_varying_undecidable_2026_08_05.py` identifies remaining non-canonical team-name
+      variants for future alias-table additions. (repo: market-tick-data-service).
 
 ## Progress Log
 
@@ -212,3 +206,15 @@ Filed the 216-residual as a new follow-up todo above (P3, scoped + done-when'd) 
 this rule wasn't built for.
 
 **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+
+**2026-08-05 (slot-2, `data_engineering`)** — closed the 216-residual both-legs-varying todo. Root cause confirmed via
+UAC `team_mappings.py` analysis: all 4 documented example team-name variants (FUENLABRADA/CF_FUENLABRADA,
+PONFERRADINA/SD_PONFERRADINA, BOAVISTA/BOAVISTA_PORTO, PACOS_FERREIRA/PACOS_DE_FERREIRA) follow the same pattern — one
+row has BOTH home and away team_ids canonical while the other row has NEITHER. Implemented **Rule 2** in
+`scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`: when both legs vary, prefer the row with the MOST canonical
+team_ids (0/1/2 per row). Ties on canonical count stay undecidable. Added diagnostic script
+`scripts/diagnose_both_legs_varying_undecidable_2026_08_05.py` for future alias-gap identification. Updated unit tests:
+15/15 pass (3 new: canonical-count resolution, all-non-canonical-undecidable, tie-undecidable). Code committed at
+`market-tick-data-service@18f635ea` but cannot quickmerge-ship until pre-existing QG red resolves (repo-blocker
+RB-04b8981e, 2 unrelated test failures: lending CLI module + Polymarket sentinel). Filed issue doc
+`/plans/active/issues/mtds_2_preexisting_qg_failures_2026_08_05.md` + declared blocker.
