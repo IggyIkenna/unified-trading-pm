@@ -75,7 +75,7 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                      |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc    |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 140,807 already resolved, **51,438 needed** (was 56,940 on 08-04, real -5,502) |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 153,148 already resolved, **49,734 needed** (was 56,940 on 08-04, real -7,206) |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
@@ -552,3 +552,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   early in the window (51,740→51,114, 47,020→46,786) then went flat — confirms the earlier "backlog drain" was a
   continuing-but-decaying trickle, not a clean one-time event, and it appears to have settled now. PLAYER_STATS/INJURIES
   unchanged throughout (no backfill run against either).
+- **2026-08-05T18:52Z** — `af-backfill-20260805-171010` still healthy, ~161.7min elapsed (still going), left running.
+  **FIXTURE_STATS crossed below 50,000 needed for the first time**: 51,438→49,734 (-1,704). Total genuine progress since
+  this VM launched: 56,940→49,734, a 12.7% reduction in one continuous run. Everything else flat.
