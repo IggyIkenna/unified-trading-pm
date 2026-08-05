@@ -30,7 +30,7 @@ Environment=RW_MARKER_DIR=/dev/shm/resource-watchdog/kills
 Environment=RW_STATUS_FILE=/dev/shm/resource-watchdog/status.json
 Environment=RW_LOG_FILE=/var/log/resource-watchdog.log
 Environment=RW_DRY_RUN=false
-Environment=RW_ALLOWLIST=orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc
+Environment="RW_ALLOWLIST=orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc"
 
 # Security hardening
 NoNewPrivileges=yes
