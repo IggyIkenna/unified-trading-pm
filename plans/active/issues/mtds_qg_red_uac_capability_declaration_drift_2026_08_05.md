@@ -176,3 +176,11 @@ same UAC-churn class:
   `engine/` readers only; the rule11 test is UAC-registry-driven shard enumeration). But it blocks the SAME green-tree
   commit boundary, so the unblock chain is now: UAC removals (done) → **rule11 lockstep bump (this addendum)** → aster
   WS-test load-flake (environmental; needs a fair field) → green → ship iterrows.
+- **RESOLVED (08-05 17:1xZ, slot-7)**: MTDS full QG GREEN on a fair field (`mtds-qg-slot7-iterrows3.log`, exit=0, 10007
+  passed / 0 failed + 6 passed, STEP 5.94 ratchet holds at 237). The rule11 pin drift is resolved: the pin VALUE
+  2856→2958 was independently shipped by slot-4 `market-tick-data-service@d5882379` (attributing +102 to "2 new
+  protocols solend/marginfi"); slot-7 verified the measured composition is actually **102 venues × 29 data_types, the
+  29th dimension being `oracle_prices`** (measured via `enumerate_mtds_shards('DEFI')` — 2958 total, `oracle_prices`
+  present across all 102 venues, solend/marginfi already within the 102) and shipped the correcting comment at
+  `market-tick-data-service@655c9320`. All three blockers from this issue are cleared; the staged iterrows fix shipped
+  at `market-tick-data-service@5d428486` (see fred plan).
