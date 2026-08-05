@@ -251,12 +251,15 @@ just belongs on a different layer than instrument_type does, and conflating the 
       the `test_get_expected_pairs_flattens_correctly` comment to note the VENUE_DATA_TYPE_CAPABILITIES vs
       EXPECTED_COVERAGE_BY_ASSET_GROUP distinction. QG green. **The `deployment-api` PREDICTION_DATA_TYPE_META
       retirement is a separate follow-up — out of scope for this pass.**
-- [ ] [SCRIPT] P3. Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES` (zero consumers), DeFi's emptied
-      `DEFI_VENUE_AXIS_OVERRIDES = {}` (`defi_venues.py:573`) plus the stale comment referencing it in
-      `defi_venue_capabilities.py:133-134`, and Prediction's inert `(asset_group, instrument_type)` matrix row
-      (`market_data_categories.py:732-734`, already documented as a no-op) once its scope exclusion (this doc's header
-      note) is itself the authoritative record. **Not touched this pass** — `defi_venues.py` was live-being-edited by
-      concurrent sibling agents for the duration of this dispatch.
+- [x] ✅ [SCRIPT] P3. Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES` (zero consumers), DeFi's emptied
+      `DEFI_VENUE_AXIS_OVERRIDES = {}` (`defi_venues.py:714`), the stale comment referencing it (`defi_venues.py:703`),
+      and Prediction's inert `(asset_group, instrument_type)` matrix row (`market_data_categories.py:1460-1462`).
+      Shipped `unified-api-contracts@72d11208` (verified on `origin/live-defi-rollout`). The stale comment previously at
+      `defi_venue_capabilities.py:133-134` no longer references `DEFI_VENUE_AXIS_OVERRIDES` — line numbers drifted,
+      current content is about RADIANT/BENQI/VENUS; zero remaining code consumers of either deleted symbol
+      (grep-verified). Prediction matrix row was deleted per the plan's scope exclusion — Prediction is grain-bound,
+      resolved via `instr.data_type`, never consults this matrix. Test updates: added prediction SOURCE_PRIORITY entries
+      to exclusion reasons; `test_prediction_market_slice_absent` replaces `test_prediction_market_slice_present`.
 - [x] ✅ [DESIGN] P2. **New finding, 2026-07-10** (surfaced while live-verifying finding 2): 31 DeFi
       `(venue, data_type)` pairs across 8 protocols (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/GMX/DRIFT/KAMINO + AAVE_V3's
       `rewards` + all `ALCHEMY-*` `gas_fees`) declare a genesis start-date in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer
