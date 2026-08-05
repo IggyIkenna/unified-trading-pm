@@ -174,9 +174,9 @@ overhead.
   deployment-api response) has not been implemented; this is still genuinely open, just no longer blocked. Same applies
   to the UI todo below (transitively gated on this one).
 
-- [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
-      them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
-      (transitively blocked on the API todo, which is blocked on the v6 migration).
+- [x] ✅ [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
+      them — deployment-ui@e2d109a | pw:L2 ✓ | regression: tests/e2e/data-status-axis-value-census.spec.ts (repo:
+      deployment-ui)
 
   **Re-dispatched a THIRD time despite `gate_on_depends: true` (2026-07-21, slot 2)**: re-verified fresh —
   `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` todos 5-8 are STILL open/unchecked, the block genuinely still
