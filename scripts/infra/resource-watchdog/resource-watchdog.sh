@@ -427,6 +427,20 @@ _rw_status_json_path() {
     echo "${RW_STATUS_FILE:-/dev/shm/resource-watchdog/status.json}"
 }
 
+_rw_probe_qg_governor() {
+    # Probe the QG host governor's token-concurrency state so the AO UI can show
+    # "2/4 tokens held" at a glance. Best-effort: -1 means "governor unreachable."
+    local gov_script="${RW_QG_GOVERNOR_SCRIPT:-/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh}"
+    _RW_QG_TOKENS_HELD=-1
+    _RW_QG_TOKENS_MAX=-1
+    if [[ ! -x "$gov_script" ]]; then return 0; fi
+    local status_output; status_output="$("$gov_script" --status 2>/dev/null || true)"
+    if [[ "$status_output" =~ tokens\ held\ now:\ ([0-9]+)/([0-9]+) ]]; then
+        _RW_QG_TOKENS_HELD="${BASH_REMATCH[1]}"
+        _RW_QG_TOKENS_MAX="${BASH_REMATCH[2]}"
+    fi
+}
+
 _rw_write_status_file() {
     # Write a lightweight status JSON snapshot for the orchestrator to read.
     # Called once per poll tick so the AO UI always has fresh data.
@@ -462,7 +476,9 @@ _rw_write_status_file() {
   "last_kill_iso": ${last_kill_iso},
   "uptime_seconds": ${uptime_sec},
   "orchestrator_url": "${ORCHESTRATOR_URL}",
-  "marker_dir": "${MARKER_DIR}"
+  "marker_dir": "${MARKER_DIR}",
+  "qg_tokens_held": ${_RW_QG_TOKENS_HELD:--1},
+  "qg_tokens_max": ${_RW_QG_TOKENS_MAX:--1}
 }
 STATUS_EOF
 }
@@ -526,7 +542,8 @@ _rw_main_loop() {
             unset "CPU_PREV_UTIME[$spid]" "CPU_PREV_STIME[$spid]" "CPU_PREV_TIMESTAMP[$spid]" "CPU_OVER_THRESHOLD_SINCE[$spid]" 2>/dev/null || true
         done
 
-        # Write status snapshot for orchestrator / AO UI consumption
+        # Probe QG governor token state + write status snapshot for AO UI
+        _rw_probe_qg_governor
         _rw_write_status_file
 
         sleep "$POLL_INTERVAL"
