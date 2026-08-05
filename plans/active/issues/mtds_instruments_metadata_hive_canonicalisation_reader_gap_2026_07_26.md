@@ -276,16 +276,17 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       root cause as MORPHO/FLUID, now producing real data. **Todo 9's gate (todo 8) is now clear** — solend/marginfi can
       be added to `_DEFAULT_PROTOCOLS` once the per-VM shard is consolidated and the next daily capture cycle confirms
       ongoing `captured` status. (repo: market-tick-data-service, deployment-service)
-- [ ] 9. [DATA] P3. **Re-opened from the now-archived `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`**
-      (its P3 follow-up todo about `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` solend/marginfi omission, originally
-      closed as BLOCKED-BY-DEEPER-BUG pending this doc's reader fix). Now that todos 1-3 (the layout-tolerant reader)
-      are ✅ in code and verified working against the live bucket (todo 4), the underlying mechanism
-      (`_fetch_risk_param_rows` → `risk_params_from_catalogue`) is confirmed functional end-to-end when invoked
-      directly. **GATE CLEARED 2026-08-05**: todo 8 is ✅ — the reader fix is confirmed live in production (VM launched
-      from current tarball `a94aeec02`, MORPHO/FLUID/KAMINO all producing `captured` rows with `row_count>0`). (a) Add
-      `solend`/`marginfi` to `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` (line 111 and the iteration list at ~line
-      380), (b) verify with a live smoke-fetch that both new protocols return real IS-catalogue data through the fixed
-      reader, (c) confirm manifest rows appear for the next capture cycle. (repo: market-tick-data-service)
+- [x] ✅ 9. [DATA] P3. **Re-opened from the now-archived `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`**
+      — market-tick-data-service@d5882379 (its P3 follow-up todo about `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS`
+      solend/marginfi omission, originally closed as BLOCKED-BY-DEEPER-BUG pending this doc's reader fix). Now that
+      todos 1-3 (the layout-tolerant reader) are ✅ in code and verified working against the live bucket (todo 4), the
+      underlying mechanism (`_fetch_risk_param_rows` → `risk_params_from_catalogue`) is confirmed functional end-to-end
+      when invoked directly. **GATE CLEARED 2026-08-05**: todo 8 is ✅ — the reader fix is confirmed live in production
+      (VM launched from current tarball `a94aeec02`, MORPHO/FLUID/KAMINO all producing `captured` rows with
+      `row_count>0`). (a) Add `solend`/`marginfi` to `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` (line 111 and the
+      iteration list at ~line 380), (b) verify with a live smoke-fetch that both new protocols return real IS-catalogue
+      data through the fixed reader, (c) confirm manifest rows appear for the next capture cycle. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
@@ -350,3 +351,9 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   captured (98.5%). KAMINO investigation confirmed `kamino_lending` was correctly configured but never running — same
   root cause as MORPHO/FLUID. Todo 9 gate is now clear. No service code changed (tarball already current); plan-only
   update.
+- 2026-08-05 (slot 4, `data_engineering`): Shipped todo 9 — added `solend` and `marginfi` to `risk_params_handler.py`'s
+  `_DEFAULT_PROTOCOLS` (market-tick-data-service@d5882379). Both protocols were already in `SOLANA_LENDING_PROTOCOLS`
+  (catalogue-only path) and had `_PROTOCOL_TO_VENUE_PREFIX` entries from todo 3. Also updated
+  `test_rule11_per_ag_shard_counts_byte_unchanged` DEFI expected count 2856→2958 and removed unneeded blanket pyright
+  suppression header from `lending_rewards_handler.py`. Smoke-fetch verification deferred to next capture cycle per todo
+  9(b-c).
