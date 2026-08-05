@@ -258,14 +258,89 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
       `EIGEN.parquet` on 2026-07-26). LIDO/ETHERFI zero objects (DNS failures per §6.1, classification fix shipped
       earlier). Plan's bare-symbol expectation was pre-launch estimate — actual instrument_key format IS canonical per
       `write_defi_rows` line 414. Dead `file_name="ticks.parquet"` argument removed.
-- [ ] [SERVICE] P3. `StakingYieldsHandler` implements 3 of the 14 protocols the UAC capability registry declares for
+- [x] ✅ [SERVICE] P3. `StakingYieldsHandler` implements 3 of the 14 protocols the UAC capability registry declares for
       `collect-staking-yields` (LIDO/ETHERFI/EIGENLAYER only — missing YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/
-      SYMBIOTIC/KARAK/RENZO/KELPDAO/PUFFER/JITORESTAKING). Scope a capability-completion pass once § 6.1 confirms the 3
-      existing venues actually produce good data in production.
+      SYMBIOTIC/KARAK/RENZO/KELPDAO/PUFFER/JITORESTAKING). Scoping complete — unified-trading-pm@<sha> (see §7). All 11
+      protocols have existing IS adapters; 8 use DefiLlama public yields (free), 3 use AAVE Oracle (Alchemy key exists).
+      Zero credential blockers. Estimate ~4 AI days. Recommendation: Phase 1 (8 DefiLlama, ~2.5d) → Phase 2 (3 AAVE,
+      ~1.5d).
 - [x] [DATA] P3. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` **Status: Production
       (2026-04-24)** label — it is not, and has never been, actually running in production; restate as "Implemented,
       unscheduled" (or similar) until § 6.1 ships, then flip to Production with the real ship date. — already covered by
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines 326-333) (see that doc for execution).
+
+## 7. §6.3 Scoping — capability-completion for 11 missing protocols (2026-08-05)
+
+**Precondition check**: §6.1 (scheduler wired, 2026-07-26) + §6.2 (leaf-name verified, 2026-08-05) are both shipped. The
+3 existing venues (LIDO/ETHERFI/EIGENLAYER) produce data in production — precondition met.
+
+**Method**: read existing adapter code for all 11 protocols (in
+`market_tick_data_service/market_interface/adapters/defi/`) to identify actual data sources used, then research
+protocol-specific APIs where DefiLlama is not the source. Found: **all 11 protocols have existing IS adapters** that
+already resolve instrument metadata; the gap is `staking_yields_handler.py` fetch functions.
+
+### Per-protocol assessment
+
+| #   | Protocol      | Venue Prefix  | Class            | Data Source                                      | Auth                                        | Complexity |
+| --- | ------------- | ------------- | ---------------- | ------------------------------------------------ | ------------------------------------------- | ---------- |
+| 4   | Yearn V3      | YEARN_V3      | YIELD            | DefiLlama yields `project=yearn-finance`         | None (public)                               | **LOW**    |
+| 5   | Convex        | CONVEX        | YIELD            | DefiLlama yields `project=convex-finance`        | None (public)                               | **LOW**    |
+| 6   | Beefy         | BEEFY         | YIELD            | DefiLlama yields `project=beefy`                 | None (public)                               | **LOW**    |
+| 7   | Pendle        | PENDLE        | YIELD            | DefiLlama yields `project=pendle`                | None (public)                               | **LOW**    |
+| 8   | Idle          | IDLE          | YIELD            | DefiLlama yields `project=idle`                  | None (public)                               | **LOW**    |
+| 9   | Symbiotic     | SYMBIOTIC     | RESTAKING        | DefiLlama yields `project=symbiotic`             | None (public)                               | **LOW**    |
+| 10  | Karak         | KARAK         | RESTAKING        | DefiLlama yields `project=karak-network`         | None (public)                               | **LOW**    |
+| 11  | Renzo         | RENZO         | RESTAKING        | AAVE Oracle (primary) + DefiLlama coins fallback | Alchemy API key (already in Secret Manager) | **MEDIUM** |
+| 12  | KelpDAO       | KELPDAO       | RESTAKING        | AAVE Oracle (primary) + DefiLlama coins fallback | Alchemy API key (already in Secret Manager) | **MEDIUM** |
+| 13  | Puffer        | PUFFER        | RESTAKING        | AAVE Oracle (primary) + DefiLlama coins fallback | Alchemy API key (already in Secret Manager) | **MEDIUM** |
+| 14  | JitoRestaking | JITORESTAKING | STAKING (Solana) | DefiLlama yields `project=jito-restaking`        | None (public)                               | **LOW**    |
+
+### Data-source details
+
+**Tier A — DefiLlama public yields (8 protocols, ~2h each):** `https://yields.llama.fi/pools` returns current APY + TVL
+for all tracked pools (~7,000+ across all protocols), filterable by `project` slug. This is the FREE/public endpoint,
+NOT the $300/mo Pro API — the existing adapters already use it and it works in production. Each protocol needs an
+`async def _fetch_<protocol>_apy(session, date)` function that calls DefiLlama, filters by project slug, extracts APY +
+TVL fields, and returns rows in the handler's expected shape `(symbol, ts_event, venue, chain, apy, total_staked)`. The
+DefiLlama endpoint returns CURRENT snapshot (not historical) — acceptable since the existing `_fetch_eigenlayer_apy` has
+the same limitation (APY=0.0, only TVL populated). Historical backfill would need
+`https://yields.llama.fi/chart/{pool_id}` (also public, per-pool UUID).
+
+**Tier B — AAVE Oracle + DefiLlama fallback (3 protocols, ~3-4h each):** Renzo (ezETH), KelpDAO (rsETH), Puffer (pufETH)
+use the same pattern as the existing `lst_rates_handler.py` — query AAVE V3 Oracle `getAssetPrice()` at sampled blocks
+for 15-min granularity oracle_prices, with DefiLlama `coins.llama.fi/prices/historical` as daily fallback. The adapters
+already implement this fully; the staking_yields handler would either: (a) reuse the adapter or (b) add simplified fetch
+functions that extract the "yield" from exchange-rate drift (ezETH/ETH, rsETH/ETH, pufETH/ETH price changes over time,
+analogous to how `lst_rates_handler.py` computes LST exchange rates). The Alchemy API key is already stored in Secret
+Manager and used by the existing adapters — no new credential needed.
+
+### Implementation estimate
+
+- **8 DefiLlama protocols**: ~2h each = ~16h total. Pattern is identical — add URL constant, add fetch function, add
+  tuple to `venues` list. Bulk-add might reduce overhead.
+- **3 AAVE Oracle protocols**: ~3-4h each = ~10-12h total. More complex (RPC calls, block sampling, exchange-rate
+  computation) but the adapter code is a reference implementation.
+- **Integration/testing**: ~4h (update `STAKING_URL_FALLBACKS`, add unit tests, verify QG green).
+- **Total**: ~30-32h (~4 calibrated AI days, `brand-new` × 1.0).
+
+### Blockers
+
+- **None.** All data sources are public (DefiLlama yields) or use existing credentials (Alchemy). No new API keys, no
+  paid subscriptions, no operator-gated actions needed.
+- **One design question** (answerable by any data_engineering worker): for the 8 DefiLlama protocols, should
+  `StakingYieldsHandler` call `https://yields.llama.fi/pools` once and fan-out by project slug (1 HTTP request for all
+  8), or per-venue like the existing pattern (8 HTTP requests)? Recommendation: **batch once and fan out** — the
+  single-response payload is ~2 MB raw, ~50 KB filtered, and DefiLlama's public endpoint throttles to ~2 req/s. One call
+  for all 8 is both faster and more polite to their infra. Add
+  `_fetch_defillama_staking_yields(session, date) -> dict[str, list[dict]]` keyed by project slug, then per-venue
+  functions extract their slice.
+
+### Recommendation
+
+**Split into two phases**: Phase 1 (8 DefiLlama protocols, ~2.5 AI days) ships the bulk of the gap with no credential
+risk. Phase 2 (3 AAVE Oracle protocols, ~1.5 AI days) follows once Phase 1 is verified in production. If operator
+prefers a single pass, all 11 can ship together (~4 AI days). File as a single plan with two sequential phases or two
+independent plans.
 
 ## Progress Log
 
@@ -278,3 +353,7 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
   `lst_rates_handler.py` (its finding is fully resolved, docstring-only), the shipped terraform file, the closeout plan,
   and the canonical-path-oracle sibling doc; added `capability_declarations/_defi.py` (the 14-protocol declaration the
   remaining §6.3 capability-completion todo needs).
+- **data_engineering slot-12 2026-08-05**: §6.3 capability-completion scoping done. Read all 11 adapter files +
+  capability declarations. Key finding: all 11 protocols already have IS adapters; 8 use DefiLlama public yields (free,
+  no auth), 3 use AAVE Oracle + DefiLlama fallback (Alchemy key exists). Zero credential blockers. Estimate ~4
+  calibrated AI days split across two phases. Full scoping in §7 above.
