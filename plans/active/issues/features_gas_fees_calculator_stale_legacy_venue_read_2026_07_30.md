@@ -186,3 +186,40 @@ green.
   previous entry (quickmerge `--agent --files` the 3 code files), flip THIS P3 checkbox `[ ]`→`[x]` same-turn with the
   landed SHA, push via the PM docs carve-out, verify `git merge-base --is-ancestor <sha> origin/live-defi-rollout`, then
   POST /done.
+- **2026-08-05 (data_engineering slot-12) PRE-COMPACT HANDOFF — P3 STILL BLOCKED on 2 UPSTREAM RATCHET REDS, owner =
+  MTDS fe68844c backfill slot, origin-watcher armed**: full re-gate record through attempt #8 is in
+  `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` (RE-GATE #5-#8 entry, committed
+  `c2cbf2473`). **Current blocker** (the UAC `market_metadata` blocker in the entry above was RESOLVED — shipped at
+  `unified-api-contracts@ce9d8f12`): 2 NEW UPSTREAM RATCHET REDS introduced by `market-tick-data-service@fe68844c`
+  (honest available_at backfill, owned by the fe68844c backfill slot): (1) `TID251` ratchet 39>38 —
+  `scripts/reset_source_returned_zero_manifest.py:43` `from google.cloud import storage` (in-file comment "owner
+  refactor to get_storage_client tracked"); (2) function-size 51L>50L — `_defi_manifest.py:181 record_captured` +
+  `:233 _emit_captured_add`. **NOT my files; NOT editing them** (workspace rule: never edit recently-pushed files; owner
+  tracked the refactor + previously fixed the same 50L cap at `a5a93dc0`). RB (mtds qg_red) RE-ARMED on these 2 reds,
+  owner = fe68844c slot. Ship set is the **3 gas_fee files** (DEFI pin + e2e pin + lending_rewards_header were DROPPED —
+  upstream shipped identical: MTDS@655c9320 oracle_prices attribution + byte-identical pin). MTDS HEAD = origin tip
+  `87e9e100` as of 2026-08-05 ~19:5x UTC — owner fix NOT landed yet. **Diff still in the MTDS working tree, unshipped**
+  (3 files: `cli/handlers/gas_fee_handler.py`, `tests/unit/test_gas_fee_handler.py`,
+  `tests/unit/test_gas_fee_handler_coverage.py`; +34/−236; the 3 `tests/schema_artifacts/*.json` trailing-newline regens
+  are regenerable and deliberately excluded). **Watcher armed** (background task `bcrml7ser`, script was
+  `/tmp/watch_ratchet_fix.sh`): polls MTDS origin every 20s, emits `RATCHET_FIX_LANDED tip=…` when BOTH violations clear
+  on origin tip — TID251:
+  `git show origin/live-defi-rollout:scripts/reset_source_returned_zero_manifest.py | grep -c 'from google.cloud'` == 0;
+  funcsize: AST mirror of the gate (no method >50L in `_defi_manifest.py`) — and exits at 90-min timeout with
+  `WATCH_TIMEOUT`. If `/tmp` is wiped, re-create the watcher from that recipe. **Heartbeat**: the orchestrator
+  `/api/slots/12/progress` endpoint refreshes `last_ping` via the same `update_slot_ping` as `/heartbeat`, so posting
+  `/progress` every ≤120s keeps the slot alive (stale threshold = 20 min silence, `AGENT_STALE_THRESHOLD` — not the
+  "5×60s" loop-dead heuristic). A background loop was running (`/tmp/beat_progress.sh`, task `b35hyqyfr`), posting
+  `/progress` with task_id `features_gas_fees_calculator_stale_legacy_venue_read-002`, self-terminating on watcher
+  completion. **Memory**: host valley was 9 GiB/61 GiB at handoff — QG can run immediately when the fix lands (OOM risk
+  only above ~18 GiB with ≤4 concurrent gates). **NEXT STEP (only remaining work, in order)**: (1) `git pull --ff-only`
+  MTDS to the fixed tip; (2) full `bash scripts/quality-gates.sh` on the merged tree; (3) on green,
+  `bash scripts/quickmerge.sh "<msg>" --agent --files "market_tick_data_service/cli/handlers/gas_fee_handler.py tests/unit/test_gas_fee_handler.py tests/unit/test_gas_fee_handler_coverage.py"`;
+  (4) flip THIS P3 checkbox `[ ]`→`[x]` in the SAME turn with the landed SHA (PM `docs(plans):` carve-out commit — docs
+  commits exempt from strict-quickmerge); (5) verify `git merge-base --is-ancestor <sha> origin/live-defi-rollout`; (6)
+  POST /done (done_definition = "Checkbox flipped in plan + code shipped"). P3 checkbox NOT flipped (correct — not
+  shipped, green-tree rule holds). **Deferred (cannot be done yet — external event)**: the P3 ship, blocked on the
+  fe68844c slot's ratchet fix; no operator action needed. **Session lessons**: PM's branch is `live-defi-rollout` not
+  `main` (`git rev-list --count origin/main..HEAD` is a red herring); `/tmp/ffpulltokens.*` is an empty 0-byte
+  transient, not a secret; doc-contention recovery = `git restore --source=HEAD` foreign subsumed WIP, pull, re-apply my
+  unique entries, commit fast.
