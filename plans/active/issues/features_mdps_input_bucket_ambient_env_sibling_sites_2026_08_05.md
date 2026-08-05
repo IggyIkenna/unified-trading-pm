@@ -106,9 +106,9 @@ is gated on the sibling sweep + a benchmark run. None of these are done, so the 
 - [ ] [DATA] P2. Sweep MDPS-input `kind="market-data"` sites in features-service to force `deployment_env="prod"` (repo:
       features-service) — the 11 sites listed in What I found §2; mirror `resolve_mdps_candle_bucket`, add per-site
       regression tests.
-- [ ] [INFRA] P2. Rebuild + republish the features-service code tarball (`create-code-tarballs.sh`) ahead of any
-      features-e2e benchmark relaunch (repo: deployment-service) — the manual-build gap that silently ships stale code
-      to benchmark VMs.
+- [x] ✅ [INFRA] P2. Rebuild + republish the features-service code tarball (`create-code-tarballs.sh`) ahead of any
+      features-e2e benchmark relaunch (repo: deployment-service) — verified already current at features-service@cc5c52b8
+      (dry-run confirmed: tarball manifest SHA matches HEAD, no rebuild needed).
 - [ ] [INFRA] P3. Diagnose why `commodity-signals-batch-test-*` resolves for the TRADFI:commodity benchmark
       (`IS_TEST_RUN` sink override vs bucket estate) and provision/fix it (repo: features-service +
       deployment-service/bucket estate).
