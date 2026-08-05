@@ -1,0 +1,131 @@
+---
+doc_type: issue
+title: >-
+  instruments-service defi expected-universe GOLDEN red at UAC LDR HEAD — PROTOCOL_CAPABILITIES churn has no lockstep
+  golden regen owner (2026-08-05: golden=320 vs actual=376, 58 to add, 2 to remove)
+summary: >-
+  instruments-service QG fails `test_expected_matches_golden[defi]` FLEET-WIDE (local AND CI). CI's dep resolution is
+  CONTENT-FIRST: `python-quality-gates-v2.yml` clones each dep at its `live-defi-rollout` HEAD ("the SSOT content local
+  QG resolves against"), falling back to the version-aware tag only if the LDR clone fails — so local editable path-dep
+  and CI clone are byte-identical, and the golden test is red for EVERYONE resolving UAC at LDR HEAD. Root cause: UAC's
+  `PROTOCOL_CAPABILITIES` is mid-audit churn (12 commits 2026-08-05 11:07Z→12:29Z, adding lst_rates/oracle_prices/
+  staking_yields declarations + removing LIDO/ETHERFI "rewards"), while the defi expected-universe golden was last
+  regenerated 2026-07-21 (`instruments-service@1cb3624d`). Fresh bounded diff 2026-08-05 ~12:45Z: golden=320 actual=376
+  extra=58 missing=2, and the gap is still growing (13 extra at ~12:10Z). Nobody owns the lockstep golden regen:
+  slot-7's same-day audit `defi_protocol_capabilities_lst_rates_audit_2026_08_05.md` covers the capability declarations
+  but not the golden fixture. Regenerating now is WRONG (the golden docstring forbids blind regen — 07-10 incident — and
+  UAC is still churning, so a regen would be stale again within hours). This blocks ALL instruments-service shipping
+  (quickmerge re-gates on a red tree), including slot-14's sports TEAMS full-history backfill (task
+  `sports_consolidated_native_ao_extract-022`).
+status: open
+nature: issue
+asset_group: [defi]
+stage: [data]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer]
+tags: [defi, expected-universe, golden-drift, protocol-capabilities, lst-rates, qg-red, cross-repo, lockstep]
+related:
+  [
+    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md,
+    /plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md,
+    /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+  ]
+created: "2026-08-05"
+author: slot-14 (data_engineering craft)
+last_updated: "2026-08-05"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: engineer
+priority: P1
+drift_direction: advance-code
+source: [sports_consolidated_native_ao_extract-022 (slot-14)]
+resolved_by:
+locked_by:
+locked_since:
+depends_on: []
+---
+
+## Problem
+
+instruments-service `quality-gates.sh` is red on `test_expected_matches_golden[defi]`, and this is a FLEET-WIDE red —
+**not** a local-ahead-of-CI artifact. CI's dep clone is content-first (`python-quality-gates-v2.yml::clone_repo`,
+operator decision 2026-06-11): it clones each dep at its `live-defi-rollout` HEAD (the content local editable siblings
+resolve against), only falling back to the version-aware tag/branch chain if the LDR clone fails. Local editable
+path-dep and CI clone are therefore byte-identical → identical `build_expected("defi")` → identical golden failure.
+
+## Evidence (2026-08-05)
+
+- **Golden last regenerated**: `instruments-service@1cb3624d`, 2026-07-21 18:13Z
+  (`fix(cefi): regenerate stale expected-universe golden`).
+- **UAC `PROTOCOL_CAPABILITIES` churn since then** (UAC live-defi-rollout HEAD now `6e791b05`, 2026-08-05 12:29Z): 12
+  commits today (11:07Z→12:29Z), incl. `394fdbf0` BEEFY lst_rates, `e1639234` IDLE lst_rates, `96070f2b` PENDLE
+  lst_rates, `e4e4e5a9` YEARN_V3 lst_rates, `8feaea84` BINANCE/COINBASE/ROCKETPOOL/SANCTUM/SOLBLAZE entries, `b2874193`
+  "add 10 undeclared DeFi data_types", `bc397b93` "remove aspirational rewards from LIDO/ETHERFI" — plus 07-22→08-02
+  commits (RENZO/KELPDAO/ankr/stader/… lst_rates).
+- **Fresh bounded diff vs golden** (`run-bounded-analysis.sh`, 2026-08-05 ~12:45Z):
+  `golden=320 actual=376 extra=58 missing=2`.
+  - extra classes: `lst_rates` for BEEFY/BINANCE/COINBASE/IDLE/PENDLE/ROCKETPOOL/SANCTUM/SOLBLAZE/YEARN_V3/etc.;
+    `oracle_prices` for MORPHO/SPARK/RADIANT/KAMINO; `staking_yields` for ROCKETPOOL.
+  - missing: `LIDO-ETHEREUM (yield_bearing, rewards)` + `ETHERFI-ETHEREUM (yield_bearing, rewards)` — matches UAC
+    `bc397b93` rewards-removal at 12:21Z.
+- **The mismatch is STILL GROWING** (13 extra at ~12:10Z → 58 extra at ~12:45Z) → UAC is mid-flight, not settled.
+
+## Why this is not fixable by a unilateral golden regen
+
+- The defi golden's own docstring + the 07-10 incident
+  (`plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md`) forbid regenerating the fixture while
+  UAC/UTL capability content is in flux — a regen silently bakes whatever UAC state is live into the checked-in golden.
+- UAC is STILL CHURNING right now; a regen would be stale again within hours (13→58 extra in ~35 min).
+- The capability declarations are the subject of slot-7's open audit
+  `defi_protocol_capabilities_lst_rates_audit_2026_08_05.md` — until that audit's verdict is locked (are the additions
+  correct? is the LIDO/ETHERFI rewards-removal right?), the golden must not be re-baked.
+- The `rewards` removal is itself an audit-driven change mid-review.
+
+## Why it blocks the fleet
+
+Any instruments-service QG — local or CI — resolves UAC at LDR HEAD → `build_expected("defi")` reads the new
+capabilities → 376 vs 320 golden → RED. quickmerge re-gates on a red tree → **no instruments-service code ships**. This
+blocked slot-14's sports TEAMS full-history backfill (task `sports_consolidated_native_ao_extract-022`) at the ship
+step: the backfill script is written + dry-run-validated (67,782 `expected_unattempted` cells across 322 api_football
+leagues, census-exact, 0 pre-2022-floor cells) but cannot be committed via quickmerge while the tree is red.
+
+## Resolution (AO-scope — regenerate the golden in LOCKSTEP with the capability work)
+
+The defi track that owns the UAC `PROTOCOL_CAPABILITIES` churn (slot-7's audit
+`defi_protocol_capabilities_lst_rates_audit_2026_08_05.md` + the six-LST-venues issue) must, once the capability state
+stabilizes (no further LDR commits expected / audit verdict locked):
+
+1. run `instruments-service/scripts/regenerate_expected_universe_golden.py` — it REFUSES while UAC/UTL have uncommitted
+   changes, so keep both trees clean,
+2. commit the golden regen together with the capability commits (lockstep — the 07-30 deribit precedent
+   `instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md` resolved its UAC↔golden drift exactly this way:
+   fix the UAC side + regen the golden in the same effort),
+3. confirm `instruments-service` `quality-gates.sh` green (5200+ tests).
+
+**done-when**: `test_expected_matches_golden[defi]` passes at UAC LDR HEAD; `instruments-service` QG green.
+
+## Progress Log
+
+### 2026-08-05 (slot-14) — sports TEAMS backfill blocked at ship step by this golden drift
+
+- **Prerequisite live-probe CONFIRMED** for task `sports_consolidated_native_ao_extract-022`: the consolidator
+  NULL/empty-string dedup-key fix shipped (`unified-trading-library@11009da7`, verified ancestor-or-equal of
+  origin/live-defi-rollout). The task's STOP condition was NOT triggered.
+- **Backfill script written + validated** (`instruments-service/scripts/backfill_teams_full_history_2026_08_05.py`, 301
+  lines, untracked): `--dry-run` reproduces the coverage census exactly — 322/384 expected api_football leagues have
+  67,782 `expected_unattempted` cells (2021-09-18..2026-07-23, 0 pre-floor cells). Write-path verified: TEAMS rows are
+  uniformly `venue=""` → `record_captured` without an explicit venue produces matching rows (no dedup-twin risk).
+- **OOM event (shared-host; operator directive)**: the FIRST dry-run attempt was OOM-killed by `run-bounded-analysis.sh`
+  at RSS 7.35GB > 6G cap — `_read_canonical_manifest()` read the full 9.25M-row consolidated index unfiltered. FIXED by
+  column-projected pyarrow read (5 cols only); re-run exit 0. Recorded here per the operator's shared-host directive;
+  the plan file is at its 1000-line hard cap so this session record lives in this issue doc.
+- **QG status**: `quality-gates.sh --no-fix` → 5200 passed / 1 failed (`test_expected_matches_golden[defi]`) / 6 skipped
+  / coverage 88.78%. The sole failure is this pre-existing cross-repo drift, NOT caused by the backfill script (no test
+  references it).
+- **Blocked at ship step**: quickmerge `--agent` (no QG sentinel in instruments-service) would force a full Pass-2 QG →
+  red → exit 1. Escalated via `/api/slots/14/blocked` with options: (a) the defi track regenerates the golden in
+  lockstep → slot-14 ships immediately; (b) operator approves an immediate regen; (c) operator directs an alternative
+  path.
