@@ -79,8 +79,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
-| **STANDINGS**    | **all-383**                  | 108,653 expected, 59,401 already resolved, **49,252 needed** (was 64,439 on 08-04, **-15,187**)           |
-| **TEAMS**        | **all-383**                  | 108,653 expected, 63,275 already resolved, **45,378 needed** (was 64,723 on 08-04, **-19,345**)           |
+| **STANDINGS**    | **all-383**                  | 108,653 expected, 60,332 already resolved, **48,321 needed** (was 64,439 on 08-04, **-16,118**)           |
+| **TEAMS**        | **all-383**                  | 108,653 expected, 64,206 already resolved, **44,447 needed** (was 64,723 on 08-04, **-20,276**)           |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -586,10 +586,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   consolidator absorption, but the underlying mechanism is fully understood (same per-VM-shard-to-canonical lag seen
   throughout this campaign) and not a new failure mode. Per the accepted-characteristic rule, not re-verifying via
   run.log every subsequent tick — VM confirmed still RUNNING as of 22:28Z, left running.
-- **2026-08-05T22:52Z** — Movement finally resumed after the 5-check flat stretch (~217min elapsed): TEAMS 46,457→46,333
-  (-124), STANDINGS 50,359→50,207 (-152). Confirms the consolidator caught up on the accumulated chunk `-c3` work as
-  expected. VM still healthy, left running.
-- **2026-08-05T23:11Z** — Continued steady progress (~236min elapsed): TEAMS 46,333→46,013 (-320), STANDINGS
-  50,207→49,887 (-320). VM still healthy, left running.
-- **2026-08-05T23:29Z** — Continued strong progress (~254min elapsed, over 4 hours now): TEAMS 46,013→45,378 (-635),
-  STANDINGS 49,887→49,252 (-635). VM still healthy, left running.
+- **2026-08-05T22:52Z-23:47Z (condensed)** — Movement resumed after the 5-check flat stretch and has been strong and
+  accelerating since (confirms the consolidator caught up on the accumulated chunk `-c3` work): TEAMS
+  46,457→46,333→46,013→45,378→44,447; STANDINGS 50,359→50,207→49,887→49,252→48,321, across 4 checks spanning
+  217min→272min elapsed (VM now past 4.5 hours continuous runtime, by far the campaign's longest single run). VM healthy
+  throughout, left running.
