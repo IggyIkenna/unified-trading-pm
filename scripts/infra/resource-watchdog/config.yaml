@@ -1,0 +1,67 @@
+# resource-watchdog configuration
+# Shipped from: unified-trading-pm/scripts/infra/resource-watchdog/config.yaml
+# On the planning VM this lives at /etc/resource-watchdog/config.yaml
+# Changes go through PR + deploy — never edit directly on the VM.
+#
+# The watchdog script reads these via environment variables (set by the systemd
+# unit). This YAML file is the documented SSOT; the systemd unit's Environment=
+# entries are the runtime source of truth. Keep them in sync.
+
+# ── Polling ───────────────────────────────────────────────────────────────────
+poll_interval_sec: 10 # How often to scan all processes
+
+# ── Cgroup ────────────────────────────────────────────────────────────────────
+cgroup:
+  memory_current_path: /sys/fs/cgroup/system.slice/orchestrator.service/memory.current
+  memory_max_path: /sys/fs/cgroup/system.slice/orchestrator.service/memory.max
+  procs_path: /sys/fs/cgroup/system.slice/orchestrator.service/cgroup.procs
+  # memory_max fallback if the cgroup file reads "max" (no limit): 54 GB
+  memory_max_fallback: 57982058496
+
+# ── Pressure levels ───────────────────────────────────────────────────────────
+pressure:
+  high_threshold_pct: 80 # % of cgroup MemoryMax that triggers high pressure
+
+# ── Per-resource thresholds ───────────────────────────────────────────────────
+limits:
+  normal_pressure:
+    rss_gb: 10 # Per-process RSS limit at normal pressure
+  high_pressure:
+    rss_gb: 4 # Per-process RSS limit when cgroup >= 80% MemoryMax
+  cpu:
+    max_pct: 95 # % of ONE core (CPU-sec / wall-sec × 100)
+    sustained_window_min: 10 # Must exceed max_pct for this many minutes before kill
+  swap:
+    max_gb: 4 # Per-process swap limit (cgroup has 16 GB swap total)
+
+# ── Allowlist ─────────────────────────────────────────────────────────────────
+# Processes matching ANY of these patterns in their command line are NEVER killed.
+# Space-separated, matched via substring (not regex).
+allowlist:
+  - orchestrator
+  - uvicorn
+  - resource-watchdog
+  - pytest
+  - prek
+  - ruff
+  - basedpyright
+  - mypy
+  - npm
+  - vitest
+  - tsc
+
+# ── Safeguards ────────────────────────────────────────────────────────────────
+safeguards:
+  min_process_age_sec: 30 # Skip processes younger than this (startup spikes)
+  max_kills_per_min: 1 # Rate-limit kills to prevent cascading kill storms
+  sigterm_grace_sec: 5 # Wait after SIGTERM before escalating to SIGKILL
+
+# ── Feedback loop ─────────────────────────────────────────────────────────────
+feedback:
+  orchestrator_url: http://localhost:8765 # AO internal API for kill notifications
+  marker_dir: /dev/shm/resource-watchdog/kills # tmpfs — survives memory pressure
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+log:
+  file: /var/log/resource-watchdog.log
+  # Also logs to stderr → captured by journald (journalctl -u resource-watchdog)

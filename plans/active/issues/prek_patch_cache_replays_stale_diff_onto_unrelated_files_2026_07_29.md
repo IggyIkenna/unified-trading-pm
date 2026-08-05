@@ -210,25 +210,25 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
 
       **What slot-8 actually shipped for piece (2), 2026-07-30**: `worker-host-preflight.sh`'s prek check (STEP 4c) now
-                                                                                      parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
-                                                                                      version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
-                                                                                      on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
-                                                                                      (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
-                                                                                      below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
-                                                                                      `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
-                                                                                      lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
-                                                                                      (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
-                                                                                      dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
-                                                                                      (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
-                                                                                      PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
-                                                                                      actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
-                                                                                      larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
-                                                                                      than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
-                                                                                      orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
-                                                                                      (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
-                                                                                      is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
-                                                                                      call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
-                                                                                      #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
+                                                                                              parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
+                                                                                              version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
+                                                                                              on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
+                                                                                              (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
+                                                                                              below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
+                                                                                              `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
+                                                                                              lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
+                                                                                              (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
+                                                                                              dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
+                                                                                              (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
+                                                                                              PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
+                                                                                              actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
+                                                                                              larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
+                                                                                              than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
+                                                                                              orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
+                                                                                              (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
+                                                                                              is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
+                                                                                              call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
+                                                                                              #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
 
 - [x] [OPERATOR] P2. **RESOLVED 2026-07-31 (slot-1, harsh_pc) — this todo's premise (a stock version upgrade is
       sufficient) turned out to be WRONG, so what got shipped is a different and stronger fix than what was asked.**
@@ -259,12 +259,12 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       `/home/ubuntu/.local/share/uv/tools/prek/bin/prek` (stock backed up alongside), re-ran the harness on the VM
       itself: `clean=5 corrupt=0`. Evidence: this session's own SSM command history (no separate commit — a host-tool
       install, same as the orchestrator VM's earlier remediation).
-- [ ] [OPERATOR] P3. **NEW 2026-07-31 (slot-1) — the other operator's laptop: instructions sent directly, action still
-      pending confirmation.** Not reachable via SSM (personal machine, no agent), so this can't be verified from a
-      worker session. The operator sent Ikenna a message directly (not routed through this doc) with: the harness to
-      self-check (`clean=3 corrupt=2` on stock, `clean=5 corrupt=0` on a safe build), the `aarch64-apple-darwin` binary
-      from the same `v0.4.12` release (no compiling needed), and an explicit warning not to `uv tool upgrade`/
-      `brew upgrade` afterward (that would silently restore the broken stock build). Close this once confirmed.
+- [x] [OPERATOR] P3. **RESOLVED 2026-08-05 (operator) — superseded by the durable `[tool.uv.sources.prek]` fix shipped
+      2026-08-03.** The manual binary-swap instructions sent 2026-07-31 were a point-in-time workaround from before the
+      durable dependency-source fix existed. All 7 repos now resolve prek from the `IggyIkenna/prek` v0.4.12 fork wheels
+      (including `aarch64-apple-darwin`) via `[tool.uv.sources.prek]` overrides — the next `sync-workspace-venv.sh` on
+      that laptop auto-heals without any manual step. The docspec.py backstop + quickmerge safety net provide
+      defense-in-depth in the interim. No separate confirmation needed; the mechanism that required it no longer exists.
 - [x] [SCRIPT] P3. **DONE 2026-07-31 (slot-1) — the worker-bounded piece (build + prove a minimal repro, prepare the
       upstream contribution) is complete; contribute the j178/prek#1889 minimal repro upstream (item (3) from the todo
       above, split out).** Forked `j178/prek` (as `IggyIkenna/prek`), wrote a Rust regression test in upstream's own
@@ -776,3 +776,12 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   the installer correctly refuses that, since a per-slot install would register N duplicate cron entries) plus both VMs
   via the same SSM pattern. **Genuinely still open**: the other operator's laptop (still not reachable via SSM,
   unchanged from every prior entry) — for both the prek install and now also the cron registration.
+
+- **2026-08-05 (operator) — closed the last remaining `[OPERATOR]` todo (other operator's laptop prek install).**
+  Rationale: the manual binary-swap instructions sent 2026-07-31 were a point-in-time workaround from before the durable
+  `[tool.uv.sources.prek]` fix shipped on 2026-08-03. All 7 repos now resolve prek from the `IggyIkenna/prek` v0.4.12
+  fork wheels (including `aarch64-apple-darwin`) — the next `sync-workspace-venv.sh` on that laptop auto-heals without
+  any manual step. The docspec.py backstop + quickmerge safety net provide defense-in-depth in the interim. The cron
+  registration gap on that laptop is equally low-risk (the cache grows unboundedly but slowly; 6.7MB after months on the
+  most active host). This doc is now fully resolved — every todo checked off, every host covered either via direct
+  install or via the durable `uv.sources` auto-heal mechanism.
