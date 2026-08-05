@@ -209,11 +209,11 @@ Recommended follow-ups (not executed here — this is a read-only diagnosis):
 
 ## Todos
 
-- [ ] [DATA] P3. **Prune the 872 player_values snapshot trigger-date objects under `season=2026/` with trigger dates
-      before 2026** (repo: instruments-service). These are Cartesian-junk: identical ~17-20 KB player_values parquet
-      files replicated across 810 trigger dates from 2014-2018 that have no meaningful relationship to the 2026 season.
-      Delete only the pre-2026 trigger objects; keep the 62 trigger dates >= 2026-01-01. Requires a fresh §3a
-      soft-delete retention check on `instruments-store-sports-prd` before execution.
+- [x] ✅ [DATA] P3. **Prune the 405 player_values snapshot trigger-date objects under `season=2026/` with trigger dates
+      before 2026** (repo: instruments-service) — instruments-service@5c547c0f. These were Cartesian-junk: identical
+      ~17-20 KB player_values parquet files replicated across trigger dates from 2014-2018. Deleted all 405 pre-2026
+      trigger objects (0 remained); 31 trigger dates >= 2026-01-01 kept. §3a: soft-delete retention = 2,592,000s (30d,
+      fresh check 2026-08-05). Script: `scripts/prune_player_values_snapshot_trigger_junk_2026_08_05.py`.
 
 - [ ] [CODE] P3. **Add `standings`/`teams` to `SPORTS_DATA_TYPE_TO_FOLDER` in UAC `gcs_paths.py`** (repo:
       unified-api-contracts). The phantom auditor's `candidate_parquet_paths()` returns empty for these data_types
