@@ -146,3 +146,24 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   revert/scope lands on LDR.
 - **NOTIFIED**: operator via this doc (cross-repo, CI-red — big-finding class,
   `/codex/11-project-management/ plan-priority-tier-and-dispatch-ordering.md` findings triage).
+
+## ADDENDUM (08-05 16:45Z, slot-7): third MTDS-QG blocker — rule11 DEFI shard-count pin drift (+102)
+
+After the two removals above (`5f441e0d` + `ce9d8f12`), a further full MTDS re-gate (16:35Z) surfaced a THIRD blocker,
+same UAC-churn class:
+
+- **`test_rule11_per_ag_shard_counts_byte_unchanged` FAILS**: `DEFI shard count drifted: 2958 != 2856`.
+  `tests/unit/test_pipeline_e2e_prediction_canonical.py`'s `_PER_AG_SHARD_COUNTS["DEFI"]` is a frozen pin (bumped today
+  @06:13 by slot-16, `c98e0abb`: 2828→2856, "102 venues × 28 data_types"). The live enumeration via
+  `scripts/pipeline_e2e_check.py::enumerate_mtds_shards("DEFI")` now returns **2958** — a **+102-shard growth in UAC's
+  editable-path `MtdsShardSpec` set SINCE that pin** (measured 16:45Z). The 11:07Z→12:29Z UAC capability-declaration
+  wave added ~102 DEFI shards without the MTDS pin being bumped in lockstep — the same
+  `instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05` class, now hitting MTDS's own golden pin.
+- **Owner**: whoever is adding DEFI shard declarations in UAC (the same wave owners). Resolution is a lockstep bump:
+  either UAC reverts/defers the un-wired declarations, or MTDS's `_PER_AG_SHARD_COUNTS["DEFI"]` is bumped 2856→2958 by
+  the DECLARING side (with a comment citing the exact UAC commit that added the 102). MTDS-owner bumping the pin to
+  chase UAC churn is a lockstep anti-pattern (masks the drift); the declaring side owns the pin bump.
+- **Unrelated to the two resolved blockers above** and to the staged iterrows fix (slot-7's 6-file bundle touches
+  `engine/` readers only; the rule11 test is UAC-registry-driven shard enumeration). But it blocks the SAME green-tree
+  commit boundary, so the unblock chain is now: UAC removals (done) → **rule11 lockstep bump (this addendum)** → aster
+  WS-test load-flake (environmental; needs a fair field) → green → ship iterrows.
