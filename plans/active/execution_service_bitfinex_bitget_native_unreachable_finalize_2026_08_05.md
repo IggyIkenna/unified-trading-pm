@@ -65,7 +65,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the source doc's single factory.py wiring checkbox.** The source doc
+- [x] ✅ [REVIEW] P2. **Reconcile the source doc's single factory.py wiring checkbox.** The source doc
       (`execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`) has exactly 1 todo — the factory.py wiring
       change — which was shipped 2026-08-03 (slot 8, backend_engineer) across two repos: execution-service@0f37ec8a
       (wires BITFINEX/BITGET into `DIRECT_REST_VENUES`, `_create_direct_rest_adapter`, `get_supported_venues()`) +
@@ -97,6 +97,11 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-05** (slot 6, review): Todo 1 reconciliation complete. Both SHAs verified as ancestors of
+  `origin/live-defi-rollout` at execution time: execution-service@0f37ec8a ✅, unified-api-contracts@1ee4dbd5 ✅. Source
+  doc `execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md` has exactly 1 todo, `[x]` done → 0 remaining
+  open todos. Source doc carries `locked_by: live-defi-rollout` (since 2026-05-21) — unlock + archival deferred to
+  todo 2.
 - **2026-08-05** (slot 13, data_engineering): Authored this finalize sibling per batch5's closeout todo 3. Source doc's
   single todo (factory.py wiring) confirmed done at execution-service@0f37ec8a + unified-api-contracts@1ee4dbd5, both
   verified ancestors of `origin/live-defi-rollout` at authoring time. The `locked_by: live-defi-rollout` on the source
