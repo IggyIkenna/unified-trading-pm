@@ -80,10 +80,12 @@ here.
 
 ## Todos
 
-- [ ] [DATA] P3. Root-cause why two consecutive `--force` writes for the identical (CEFI, BINANCE-FUTURES, trades,
-      2026-07-05, 1m, BTC-USDT@LIN) shard landed at two different object paths (with vs. without `instrument_type=`
-      segment) — check whether this is invocation-path-dependent (skill driver vs. direct CLI) or a race in
-      instrument_type resolution (repo: market-data-processing-service).
+- [x] ✅ [DATA] P3. Root-cause: version skew, not non-determinism — the segment-less path was written by pre-`bcc4d64`
+      code (~2026-07-21), the canonical path by current code. Neither invocation-path (same
+      `_write_candles`→`write_candle_parquet` chain) nor race (`_infer_instrument_type` is CPU-local, no shared state).
+      Current code is deterministic; the duplicate exists because old object at legacy path evaded the new code's
+      canonical-path skip-if-exists check. Migration script `migrate_candle_canonical_2026_07.py` will converge. (repo:
+      market-data-processing-service).
 
 ## Progress Log
 
@@ -94,3 +96,28 @@ here.
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **Root cause analysis 2026-08-05** (slot 5, task mdps_candle_path_instrument_type_segment_nondeterministic-001):
+  **Neither candidate mechanism is the cause.** The two paths are from DIFFERENT CODE VERSIONS, not a non-determinism in
+  the current code.
+
+  _Evidence chain_:
+  1. `git log` confirms the canonical shape (`instrument_type=` segment) landed in `bcc4d64`
+     (`feat(candles): canonical single-derivation writer — instrument_type+SOURCE data_type+pipeline_mode`,
+     ~2026-07-21/22). Writes predating this commit produce the segment-less path.
+  2. The CURRENT write path is deterministic — both `_build_candle_output_path` (skip-if-exists via
+     `derive_candle_object_path` in `canonical_writer_shaping.py:967`) and `write_candle_parquet` (actual upload via
+     `build_canonical_candle_object_path` in `canonical_writer.py:331`) funnel through the SAME canonical builder.
+  3. `_infer_instrument_type("BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN")` always returns `"PERPETUAL"` — the 3-segment
+     id's position-1 token is authoritative (step 1 of the 6-step resolution in `canonical_writer_shaping.py:344-404`).
+     The function is purely CPU-local, no shared state, no I/O — no race surface exists.
+  4. NOT invocation-path-dependent: the skill driver (`/data-pipeline-check-mdps`) and direct CLI both funnel through
+     `_write_candles` → `_upload_candles_to_gcs` → `write_candle_parquet`. No alternate write seam exists.
+  5. The duplicate was created because: old code wrote to the legacy (segment-less) path → new `--force` code checked
+     for existence at the CANONICAL path → didn't find it → wrote a second byte-identical copy at the canonical path.
+     This is exactly the gap `migrate_candle_canonical_2026_07.py` exists to close.
+
+  _Conclusion_: The current code CANNOT produce the segment-less path. `build_canonical_candle_object_path` in
+  `output_path_helpers.py:74-110` always passes `instrument_type` (a required `str`) to `build_canonical_candle_path`,
+  which always includes the `instrument_type=` segment (UTL `registry.py:324-362` → `_candle_prefix` appends it when
+  `instrument_type is not None`, i.e. always for the public API). The migration script will converge the two objects
+  onto the canonical path. No code fix needed for MDPS — the write path is already correct and deterministic.
