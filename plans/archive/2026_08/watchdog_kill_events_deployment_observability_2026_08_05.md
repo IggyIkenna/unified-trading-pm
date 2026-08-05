@@ -156,3 +156,20 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
 - Extending the SAME dual-write pattern to other host-local incident classes (e.g. QG host governor self-aborts) is
   explicitly out of scope here — this plan is watchdog-kill-events only. A future plan can generalize if the operator
   wants it.
+
+## Progress Log
+
+- **2026-08-05 (interactive session, unrelated side-fix committed but not yet pushed)**: while investigating the
+  RAM-spike that led to this plan, also fixed a real bug in `resource-watchdog.logrotate` (missing `su root root`
+  directive — logrotate was silently refusing to rotate the log on this host's `root:syslog` `/var/log`) plus a
+  `cascade_dep_branch()` TOCTOU data-loss race in `scripts/quickmerge.sh` (see that commit's own message for the full
+  incident history) and a new regression test for it
+  (`scripts/quality-gates-base/tests/test-quickmerge-cascade-lock.sh`). All 3 commits are QG-green and committed locally
+  on this machine (`0246ba753`, `5c2bb0232`, `9631dd460`) but **not yet pushed to origin** after ~15 quickmerge attempts
+  today — `unified-trading-pm`'s `live-defi-rollout` was under sustained, extreme concurrent-agent push contention this
+  session (confirmed via repeated branch-drift races, one genuine merge conflict on a QG baseline file resolved by
+  merging both sides, and several new-but-unrelated pre-existing-debt QG regressions from other agents' concurrent work,
+  each investigated and confirmed non-fabricated before re-baselining). **Nothing is lost** — these are real local
+  commits, not uncommitted diffs; retry the pull-rebase-autostash + quickmerge cycle once the branch quiets down. The
+  already-deployed `resource-watchdog.logrotate` on the live VM will keep silently no-op'ing rotation until this lands
+  and `install-resource-watchdog-retention.sh` is re-run there.
