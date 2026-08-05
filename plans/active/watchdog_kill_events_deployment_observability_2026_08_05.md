@@ -91,10 +91,10 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       `ts TIMESTAMP, vm_name STRING, pid INT64, slot_id STRING, command STRING, reason     STRING, rss_mb INT64, limit_mb INT64, pressure_level STRING, killed BOOL`.
       Done when `bq show     central-element-323112:deployment_operational_data.watchdog_kill_events` returns this
       schema.
-- [ ] [BACKEND] P1. Add `write_watchdog_kill_event(...)` to
-      `deployment-api/deployment_api/services/     operational_data_writer.py`, following `write_reap_event`'s exact
-      shape (UTL `insert_rows`, try/except-log, never raises). Done when a unit test inserts a synthetic row and asserts
-      no exception on both a well-formed and a malformed payload.
+- [x] ✅ [BACKEND] P1. Add `write_watchdog_kill_event(...)` to
+      `deployment-api/deployment_api/services/operational_data_writer.py`, following `write_reap_event`'s exact shape
+      (UTL `insert_rows`, try/except-log, never raises). Done when a unit test inserts a synthetic row and asserts no
+      exception on both a well-formed and a malformed payload. — deployment-api@0a3e69d
 - [ ] [BACKEND] P2. Add a `POST` ingest route in deployment-api (e.g. `/api/watchdog/kill-events`) that calls the new
       writer. No new auth model — reuse whatever the existing fleet ingest routes in
       `deployment-api/deployment_api/routes/fleet.py` already use. Done when a `curl` POST with a synthetic payload
