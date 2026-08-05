@@ -104,15 +104,15 @@ urgent (no known active drift found yet, unlike the launch-dates case), but wort
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. **data_engineering** — grep every DeFi-touching repo (instruments-service, market-tick-data-service,
-      features-service, market-data-processing-service) for local dict/constant declarations whose KEYS look like
-      `(chain, protocol)` or `(chain, token)` pairs and whose VALUES are decimals, dates, or hex addresses — i.e.
-      candidate shadow-copies of UAC `TOKEN_DECIMALS` / `CHAIN_GENESIS_DATES` / the various factory-address registries.
-      For each candidate, read the consuming code to determine: (a) is UAC actually consulted first (a real cascade,
-      like `get_protocol_floor_date`'s pattern), or does the local value win outright (a real override, not just a
-      fallback)? (b) does the local value currently MATCH UAC, or has it drifted? Mirror the
-      `LENDING_PROTOCOL_DEPLOY_DATES` fix pattern for anything found: remove dead-code entries UAC now covers, keep +
-      comment-justify genuinely-still-needed ones, add a shape-lock regression test per dict fixed.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-04 (slot-8, data_engineering, batch-6 todo 2)** — Grepped all 4 DeFi-touching repos
+      (instruments-service, market-tick-data-service, features-service, market-data-processing-service) for local
+      dict/constant declarations shadowing UAC Category-A data. **Result: 0 genuine UAC shadow drifts found.** All 42
+      inventoried sites fall into 3 clean categories: Token Decimals (26 sites, no UAC SSOT exists — local dicts are
+      genuine SSOTs), Chain Genesis Dates (2 sites, both match UAC byte-identical), Factory Addresses & Protocol
+      Registries (11 sites, proper UAC cascade or net-new registries for protocols UAC doesn't cover). Plus 3 already-
+      fixed sites (`LENDING_PROTOCOL_DEPLOY_DATES` fix pattern confirmed correct). No code changes needed (pure
+      audit/inventory deliverable). Full inventory in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log
+      (2026-08-04, slot-8).
 - [ ] [DATA] P3. **operator** — after the P0 script above lands, re-run the parent plan's
       `derive_protocol_launch_dates.py`-style drift check (or a token-decimals/chain-genesis equivalent if one doesn't
       exist yet) against any newly-found local dict to confirm no ACTIVE production drift is currently hiding behind a

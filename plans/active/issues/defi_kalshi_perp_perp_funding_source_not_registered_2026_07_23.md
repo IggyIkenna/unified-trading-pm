@@ -116,18 +116,21 @@ concrete, currently-failing symptom; the classification question is the census a
 
 ## Follow-up (filed 2026-07-28, from the corpus-wide scope audit above)
 
-- [ ] [DIAG] P2. Root-cause the 3 zero-object gap days inside the KALSHI_PERP defi capture window (2026-07-17,
-      2026-07-20, 2026-07-21) — check the collector's run logs/cron history for those UTC days to determine whether each
-      is a transient fetch failure (worth a `record_failed`/backfill) or an intentional pause, and whether the gap is
-      visible anywhere downstream today. Repo: market-tick-data-service. **(see
-      `defi_satellite_ao_dispatch_batch6_2026_07_30.md:310` — extracted/dispatched there as a combined todo, still open
-      as of 2026-08-04; not independent unassigned work.)**
-- [ ] [DIAG] P2. Root-cause the daily `_migrated_kalshi_perp_<timestamp>.parquet` marker object written into the live
-      KALSHI_PERP venue prefix (2026-05-29 through 2026-07-16, 57 instances, then stops) — identify which migration/
-      backfill script wrote it, confirm it is inert (no reader depends on it) or needs cleanup, and whether its abrupt
-      stop on 2026-07-17 is related to the gap-day finding above. Repo: market-tick-data-service. **(see
-      `defi_satellite_ao_dispatch_batch6_2026_07_30.md:310` — extracted/dispatched there as a combined todo, still open
-      as of 2026-08-04; not independent unassigned work.)**
+- [x] ✅ [DIAG] P2. **CLOSED 2026-08-05 (slot-4, data_engineering, batch-6 todo 10)** — Root-cause of the 3 zero-object
+      gap days inside the KALSHI_PERP defi capture window (2026-07-17, 2026-07-20, 2026-07-21). **Verdict: Transient
+      upstream API condition.** The handler's `_collect_kalshi_perp` calls the Kalshi API
+      `GET /margin/markets?status=active` — when this returns zero tickers, the handler returns 0 without writing any
+      GCS object. The scattered, non-sequential pattern (Saturday/Monday/Tuesday with data on Sunday) is consistent with
+      a transient upstream condition, not a code bug. The gap-day backfill is a recovery item, not a code fix. Full
+      analysis in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log (2026-08-05, slot-4).
+- [x] ✅ [DIAG] P2. **CLOSED 2026-08-05 (slot-4, data_engineering, batch-6 todo 10)** — Root-cause of the daily
+      `_migrated_kalshi_perp_<timestamp>.parquet` marker objects (2026-05-29 through 2026-07-16, 57 instances, then
+      stops). **Verdict: Inert R3 migration artifacts — renamed empty bundled parquet files from the pre-per-instrument-
+      sharding era.** The R3 migration renamed bundled `kalshi_perp_{ts}.parquet` files to `_migrated_{stem}.parquet`
+      (safety-rename convention, never deletes). Markers stop on 2026-07-17 because per-instrument sharding was deployed
+      from 2026-07-18 onward. All markers are 0-row empty parquet files — safe to delete via existing tooling. The
+      abrupt stop is unrelated to the gap-day finding (the two phenomena share a trigger date but have different root
+      causes). Full analysis in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log (2026-08-05, slot-4).
 
 ## Codex SSOTs
 

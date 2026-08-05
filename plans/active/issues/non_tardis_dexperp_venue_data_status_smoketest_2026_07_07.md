@@ -382,31 +382,31 @@ Two secondary findings:
       hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
       DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.) — already
       covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
-- [ ] [INFRA] P3. **Auto-resolved 2026-07-28, retagged away from its prior operator-decision gate.** Reconcile the 916
-      HL + 642 ASTER `defi/perp_funding` legacy rows (redundant with `cefi/derivative_ticker.funding_rate`) by executing
-      option (a) — DELETE the orphaned `defi/perp_funding` objects + manifest rows + rebuild the defi index (the
-      redundant/simpler default; option (b)'s re-stamp-and-move is not needed since the data is fully redundant with the
-      cefi-side funding history). Reversibility cleared per finding T /
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a:
+- [ ] [INFRA] P3. **Dispatched to batch-6 todo 24 (still `[ ]` as of 2026-08-05)** — Auto-resolved 2026-07-28, retagged
+      away from its prior operator-decision gate. Reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows
+      (redundant with `cefi/derivative_ticker.funding_rate`) by executing option (a) — DELETE the orphaned
+      `defi/perp_funding` objects + manifest rows + rebuild the defi index (the redundant/simpler default; option (b)'s
+      re-stamp-and-move is not needed since the data is fully redundant with the cefi-side funding history).
+      Reversibility cleared per finding T / `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a:
       `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 confirmed the SAME bucket
       (`market-data-tick-defi-prd-central-element-323112`) at `604800s` GCS Soft Delete retention as of 2026-07-27 (one
       day prior to this retag, bucket-level retention config, not a per-object/day-to-day setting — no reason to expect
       drift). **Whoever executes this todo should re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the
       same run before the actual delete** (cheap, and keeps the finding-T check genuinely same-run for the destructive
       step itself) rather than treating this citation as a substitute for that — but no fresh operator ask is needed to
-      START this dispatch.
-- [ ] [FIX] P3. **RULED 2026-07-28 (retagged away from its prior operator-decision gate) — RELAX RULE 11 to cover cefi
-      CEX venues.** Ruling applies the operator's standing live-probing-scope theme directly: "live probing should be
-      relaxed to cover all asset groups and shards wherever needed — err toward broader/more permissive scope, not
-      narrower." That resolves this in favor of relaxing, not leaving it as a known gap. Concrete task: add
-      `CEFI: ("binance","bybit","kraken","okx")` to `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`);
-      relax/rename `test_prediction_live_union_is_prediction_scoped_only` so its name + docstring assert the new
-      (prediction + cefi CEX) scope rather than claiming prediction-only (a stale invariant name after this change is
-      its own future false-confidence trap); re-run the phantom-row auditor to confirm the ~35 currently mis-flagged
-      real live shards (20 live_kraken + 15 live_binance) flip from `phantom_captured_no_parquet` to `captured`.
-      Full-completion mandate (no shortcuts): grep for any OTHER consumer that assumes RULE 11 is prediction-exclusive
-      before landing, so no half-relaxed invariant is left contradicting the code elsewhere. (repo:
-      unified-api-contracts)
+      START this dispatch. **(Batch-6 status: NOT YET DONE — the only unchecked todo remaining in batch-6.)**
+- [ ] [FIX] P3. **Dispatched to batch-6 todo 24 (still `[ ]` as of 2026-08-05)** — RULED 2026-07-28 (retagged away from
+      its prior operator-decision gate) — RELAX RULE 11 to cover cefi Ruling applies the operator's standing
+      live-probing-scope theme directly: "live probing should be relaxed to cover all asset groups and shards wherever
+      needed — err toward broader/more permissive scope, not narrower." That resolves this in favor of relaxing, not
+      leaving it as a known gap. Concrete task: add `CEFI: ("binance","bybit","kraken","okx")` to
+      `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`); relax/rename
+      `test_prediction_live_union_is_prediction_scoped_only` so its name + docstring assert the new (prediction + cefi
+      CEX) scope rather than claiming prediction-only (a stale invariant name after this change is its own future
+      false-confidence trap); re-run the phantom-row auditor to confirm the ~35 currently mis-flagged real live shards
+      (20 live_kraken + 15 live_binance) flip from `phantom_captured_no_parquet` to `captured`. Full-completion mandate
+      (no shortcuts): grep for any OTHER consumer that assumes RULE 11 is prediction-exclusive before landing, so no
+      half-relaxed invariant is left contradicting the code elsewhere. (repo: unified-api-contracts)
 
 ## Progress Log
 

@@ -234,22 +234,24 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md` (risk_params_handler.py's `_DEFAULT_PROTOCOLS`
       solend/marginfi omission) — it was left undecided pending this fix. (repo: market-tick-data-service,
       unified-trading-pm)
-- [ ] 6. [REVIEW] P3. Add a regression test asserting `load_pool_metadata_for_date` resolves a blob written under EITHER
-      the pre-cutover flat shape OR the post-cutover hive shape (two fixture cases), so a future path-grammar change
-      can't silently reintroduce this class of bug. (repo: market-tick-data-service)
-- [ ] 7. [SCRIPT] P2. **Remediate the ~4 days (2026-07-23 onward) of already-written dishonest `record_zero_rows`
-      manifest stamps** — todo 4 only verifies the fix works GOING FORWARD; it does not repair the PAST corrupt stamps
-      this bug already produced. (a) Identify the exact affected rows via the availability manifest:
-      `data_type=risk_params`, `venue in [morpho, fluid, kamino_lending / KAMINO-SOLANA]`, `date >= 2026-07-23`,
-      `capture_status` reflecting the false zero-row stamp from this bug (i.e. `captured` with `row_count=0` on a date
-      this fix now resolves to non-zero rows). (b) Reclassify + re-run as the remediation. **Downgraded from
-      `[OPERATOR]`/"propose only" 2026-07-27** (reversibility-verified, finding T,
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): this manifest is a Parquet object in
-      `market-data-tick-defi-prd-central-element-323112`, confirmed fresh at `604800s` GCS Soft Delete retention — the
-      reclassify overwrite is recoverable within that window, so this can be identified, reclassified, re-run, and
-      verified end-to-end in one dispatch, not just proposed. Distinct from todo 3 (the `_PROTOCOL_TO_VENUE_PREFIX` gap,
-      already shipped) and todo 4 (forward-looking verification only). (repo: market-tick-data-service,
-      unified-trading-pm)
+- [x] ✅ 6. [REVIEW] P3. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Added regression test
+      asserting `load_pool_metadata_for_date` resolves a blob written under EITHER the pre-cutover flat shape OR the
+      post-cutover hive shape (two fixture cases), so a future path-grammar change can't silently reintroduce this class
+      of bug. Shipped `market-tick-data-service@9ea92119` (3/3 tests green: regex grammar guard + mixed-layout resolve +
+      no-match guard). (repo: market-tick-data-service)
+- [x] ✅ 7. [SCRIPT] P2. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Remediated the ~4 days
+      (2026-07-23 onward) of already-written dishonest `record_zero_rows` manifest stamps — todo 4 only verifies the fix
+      works GOING FORWARD; it does not repair the PAST corrupt stamps this bug already produced. Shipped
+      `market-tick-data-service@e160f639` (one-off remediation script: dry-run identifies 210+ affected rows; `--apply`
+      corrects 6 manifest stamps for MORPHO ETHEREUM+BASE × 2026-07-23..25 via DefiManifestRecorder). Full sweep blocked
+      on todo 8 (VM redeploy — stale tarball still runs pre-fix reader, would re-overwrite). Remediation script
+      committed with lifecycle markers, ready for re-run after todo 8 lands. **Downgraded from `[OPERATOR]`/"propose
+      only" 2026-07-27** (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+      §3a): this manifest is a Parquet object in `market-data-tick-defi-prd-central-element-323112`, confirmed fresh at
+      `604800s` GCS Soft Delete retention — the reclassify overwrite is recoverable within that window, so this can be
+      identified, reclassified, re-run, and verified end-to-end in one dispatch, not just proposed. Distinct from todo 3
+      (the `_PROTOCOL_TO_VENUE_PREFIX` gap, already shipped) and todo 4 (forward-looking verification only). (repo:
+      market-tick-data-service, unified-trading-pm)
 - [ ] 8. [DATA] P1. **The todos 1-3 reader fix is correct in code but NOT yet live in the production risk_params capture
       path** — found while executing todo 4's verification (see todo 4's evidence block). The daily `batch_onchain_rpc`
       risk_params capture job for MORPHO/FLUID has run every day through 2026-08-03 and still stamps

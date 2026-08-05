@@ -142,7 +142,8 @@ that point in the sequence.
 
 ## Todos
 
-- [x] [DATA] P1. ✅ **Done 2026-07-30** — `market-tick-data-service@8016c7e4` (migration script + memory-safety fix) +
+- [x] [DATA] P1. ✅ **Done 2026-07-30 (slot-7, data_engineering); batch-6 re-verified 2026-08-05 (slot-10,
+      data_engineering, batch-6 todo 9)** — `market-tick-data-service@8016c7e4` (migration script + memory-safety fix) +
       `features-service@48f77f2a` (Part-4 stale-reader fix). Migrated the pre-2026-07-22 `gas_fees` historical
       population: scoping found real history under only 10 of the 14 listed legacy venues (12,425 manifest rows;
       `FANTOM`/`CELO`/`SOLANA`/`BITCOIN` had zero — nothing to migrate there). Full completion, no partial rollout:

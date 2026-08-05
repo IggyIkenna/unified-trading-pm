@@ -145,13 +145,14 @@ adapters' venues.
       discarded via `_flatten_instrument_result`'s skip. New unit test
       (`test_download_all_instruments_routes_success_false_to_failed_not_succeeded`) asserts the routing + log content;
       `quality-gates.sh` green. — market-tick-data-service@df3d55dd.
-- [x] ✅ [SERVICE] P3. **Audit complete 2026-08-05 — blast radius: ZERO.** All 12 adapters gate `success:False` on
-      `_validate_instrument` failures (missing venue / all-identifier-fields-null). Production instrument catalog
-      (`prd/catalog.parquet`, 7,223 instruments, 31 venues) has ZERO malformed records. Instrument availability parquets
-      for all 12 venues on 2026-08-05 (191 instruments) + historical spot-check 2026-07-30/08-01/08-03 all CLEAN (no
-      null venue, no null identifiers). The `success:False` path is a defensive guard that has never fired in production
-      — no rows were silently dropped. The fix (mtds@df3d55dd) is correct but the blast radius is zero. See Progress Log
-      § "P3 audit findings" for full adapter→venue mapping + validation methodology. Repo: market-tick-data-service.
+- [x] ✅ [SERVICE] P3. **Audit complete 2026-08-05 (batch-6 todo 1) — blast radius: ZERO.** All 12 adapters gate
+      `success:False` on `_validate_instrument` failures (missing venue / all-identifier-fields-null). Production
+      instrument catalog (`prd/catalog.parquet`, 7,223 instruments, 31 venues) has ZERO malformed records. Instrument
+      availability parquets for all 12 venues on 2026-08-05 (191 instruments) + historical spot-check
+      2026-07-30/08-01/08-03 all CLEAN (no null venue, no null identifiers). The `success:False` path is a defensive
+      guard that has never fired in production — no rows were silently dropped. The fix (mtds@df3d55dd) is correct but
+      the blast radius is zero. See Progress Log § "P3 audit findings" for full adapter→venue mapping + validation
+      methodology. Repo: market-tick-data-service.
 - [x] ✅ [SERVICE] P3. **DUPLICATE of above — resolved by same audit.** Identical todo (same description, same repos);
       the audit above covers both. This duplicate should be removed in the next plan hygiene sweep.
 
