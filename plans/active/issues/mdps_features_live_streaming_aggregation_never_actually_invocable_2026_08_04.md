@@ -325,11 +325,12 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `PermissionDenied`, or other non-retriable errors. The `NotFound` on `tradfi-delta-one-features-ready-sub` crashed
       the cross_instrument worker instead of logging + retrying. Either wrap the lambda in a try/except or switch to
       `LiveDataSource.stream()` which already has the hardening. Repo: features-service.
-- [ ] [DATA] P3. **Note for `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` todo 4** (register a
+- [x] ✅ [DATA] P3. **Note for `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` todo 4** (register a
       `CandleAdapterRegistry` entry for `(PREDICTION, book_snapshot_5)`): even once shipped, this adapter will never be
       invoked by the mdps-features-live path, since `mdps_mvp_universe('prediction')` returns zero shards structurally —
       MDPS's candle-shard model does not apply to prediction at all. Whoever picks up that todo should read this doc's
-      "Structural finding" section first so the adapter registration isn't mistaken for a depth-history fix.
+      "Structural finding" section first so the adapter registration isn't mistaken for a depth-history fix. —
+      unified-trading-pm@34d31c1d2
 
 ## Progress Log
 
