@@ -196,3 +196,42 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   editable-install view at `ce9d8f12`. **On green**: ship slot-12's 3 gas_fee files via `quickmerge --agent --files`,
   flip the P3 checkbox in `features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md` same-turn, verify SHA on
   origin, POST /done.
+- **2026-08-05 (data_engineering slot-12) RE-GATE #4 — ONE NEW RED: rule11 shard-count sentinel, caused by a NEW UAC
+  `perp_mark_price` registration (RESOLVED via MTDS pin bump 2856→2958, in working tree)**: the post-`ce9d8f12` full
+  re-gate (`/tmp/qg_mtds_dip.log`, low-load window) cleared BOTH prior failures — **9996 passed / 1 failed**, coverage
+  80.63% (PASSES). The single red is
+  `test_pipeline_e2e_prediction_canonical.py::test_rule11_per_ag_shard_counts_byte_unchanged`:
+  `AssertionError: DEFI shard count drifted: 2958 != 2856`. Root cause verified: `unified-api-contracts@75245222`
+  (`feat(defi): register perp_mark_price as canonical data_type + SchemaContract`, slot-2, 16:48Z) added
+  `perp_mark_price` to `DATA_TYPES_BY_ASSET_GROUP["defi"]`, driving the DEFI shard cross-product from 102 venues × 28
+  data_types (=2856) to 102 × 29 (=2958). **Decision — pin bump, NOT UAC removal**: this is the legitimate-registration
+  class, NOT the declared-but-unwired class (`fills`/`market_metadata`). Evidence: (1) UAC@75245222's own commit comment
+  documents a REAL already-migrated HYPERLIQUID mark-price corpus (316 days, 2026-07-13 dedicated-bucket migration) in
+  the shared defi tick-data bucket with no live reader yet; (2)
+  `plans/active/defi_distinct_values_zero_noncanonical_ dispatch_2026_08_04.md` row 8 explicitly dispatches "Register
+  `perp_mark_price` + backfill" (status: Dispatched, in progress) mirroring the already-shipped `perp_daily_ctx`
+  pattern; (3) the corpus is preserved in the shared bucket + has 22,374 manifest rows
+  (`defi_hyperliquid_residual_manifest_rows_2026_08_04.md`). Verified on this HEAD via the script's own
+  `enumerate_mtds_shards("DEFI")`: 2958, with `perp_mark_price` the SOLE new data_type (+102 = 102 venues × 1).
+  Resolution: MTDS pin `_PER_AG_SHARD_COUNTS["DEFI"]` 2856→2958 with an evidence comment citing UAC@75245222 (unshipped,
+  in the MTDS working tree — ships with the gas_fee diff). **NEXT STEP**: final MTDS re-gate on the pin fix; on green,
+  quickmerge the 4 code files (gas_fee_handler.py, lending_rewards_handler.py, test_gas_fee_handler.py,
+  test_gas_fee_handler_coverage.py, test_pipeline_e2e_prediction_canonical.py), flip P3 same-turn, POST /done.
+- **2026-08-05 (data_engineering slot-12) RE-GATE #5-#8 + SHIP-SET TRIMMED + 2 NEW UPSTREAM RATCHET REDS - P3 STILL
+  BLOCKED, RB RE-ARMED**: the DEFI pin + lending_rewards_header + e2e pin files were DROPPED from the ship set because
+  upstream already shipped the identical changes (correct `oracle_prices` attribution at MTDS@655c9320; byte-identical
+  pin). Ship set is now the **3 gas_fee files**. Gate outcomes: **attempt 5** GREEN (`/tmp/qg_final_ship5.log`, 10004
+  passed, sentinel 2c451c33) on the pre-merge tree; **attempt 6** red ONLY on `[3.5/6] IMPORT PATTERNS`
+  (`/tmp/qg_ship6.log`, 10015 passed) - upstream `scripts/one_offs/trace_composite_venue_provenance_2026_08_05.py:39`
+  deep import, since fixed upstream at MTDS@b2497b73 (byte-identical to my own one-off fix, which I reverted as
+  redundant); **attempt 7** GREEN (`/tmp/qg_ship7.log`, 10015 passed, sentinel bf69e612) after ff-pull of 9 commits;
+  **attempt 8** (`/tmp/qg_ship8.log`) red on **2 NEW UPSTREAM RATCHET REDS introduced by MTDS@fe68844c** (honest
+  available_at backfill): (1) `TID251` ratchet 39 > 38 - `scripts/reset_source_returned_zero_manifest.py:43`
+  `from google.cloud import storage`, which carries an in-file comment "owner refactor to get_storage_client tracked";
+  (2) `Function/class/method size exceeded` 51L - `_defi_manifest.py:181 record_captured` + `:233 _emit_captured_add`,
+  re-broken past the 50L cap that MTDS@a5a93dc0 had previously fixed. **Decision - NOT editing the owner's
+  recently-pushed active files** (fe68844c is the in-flight available_at backfill; workspace rule: never edit
+  recently-pushed files; owner tracked the TID251 refactor and previously fixed the same 50L cap): the RB is
+  **RE-ARMED** on these 2 reds, owner = the fe68844c backfill slot, and slot-12 waits on an origin-movement watcher for
+  the owner's fix, then re-gates and ships the 3 gas_fee files. **UAC P1 flipped [x] this turn** - attempt-8's red does
+  NOT flag `market_metadata`, so the ce9d8f12 removal is confirmed effective.
