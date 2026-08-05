@@ -1,4 +1,7 @@
-fabricated_sha_citation_baseline: 0
+fabricated_sha_citation_baseline: 1
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
-baseline_citations: []
+baseline_citations:
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/4/unified-trading-pm/plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md
+    line: 616
+    cited: market-tick-data-service@531a07d8693593124fb60e4d15acd19fc19270e0
