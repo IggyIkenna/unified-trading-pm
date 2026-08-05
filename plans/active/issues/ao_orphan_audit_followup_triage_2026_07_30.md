@@ -129,3 +129,6 @@ source:
   `ao_satellite_ao_dispatch_ batch2_2026_07_30.md` allegedly "carries real, ready fixes" for includes
   `ao_recovery_audit_layer1_deleted_2026_07_15` — `grep -in recovery` against the live batch2 doc returns zero hits
   naming that doc or its subject matter; batch2 does not actually cover it.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. Re-verified: the
+  stale-pointer finding above (batch2 doesn't actually cover `ao_recovery_audit_layer1_deleted_2026_07_15`) is still
+  unfixed on the live batch2 doc.

@@ -177,6 +177,7 @@ function.
   Checked `ao_orphan_audit_followup_triage_2026_07_30.md`'s claim that `ao_satellite_ao_dispatch_batch2_2026_07_30.md`
   already carries a fix for this doc — grep against the live batch2 doc found zero mentions of recovery-audit/this doc,
   so that candidate was NOT added (flagged as a stale pointer on the triage doc instead, not fixed here).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 ## Todos
 

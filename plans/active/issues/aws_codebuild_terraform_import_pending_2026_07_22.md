@@ -221,3 +221,4 @@ correctly NA.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries — corrects the 2026-08-01 marker's stale count, the
   list itself already carried 4) — all still resolve; matches the doc's current NA-gate (rulings table D1-D4).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

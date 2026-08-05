@@ -949,3 +949,4 @@ Other: operator can type a custom answer
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries — corrects the 2026-08-01 marker's stale count, the
   list itself already carried 3) — all still resolve; this is a code-free standing decision-log (all 38 entries
   resolved, kept `open` only because the parent rollout plan is still active), so no source path applies.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

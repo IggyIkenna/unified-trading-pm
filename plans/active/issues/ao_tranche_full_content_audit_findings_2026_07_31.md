@@ -162,3 +162,4 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   4 open todos: §1/§2 are explicit `[OPERATOR]` rulings, §3 self-states it needs a human read, §4 is the lone mechanical
   item but the doc stays whole-NA since `assigned_vm` is doc-granular). Cross-validated: the same-day sibling
   `/ag-closeout-audit ao` batch6 run also declined this doc as operator-gated.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

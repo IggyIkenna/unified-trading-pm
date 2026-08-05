@@ -228,3 +228,4 @@ follows correctly — only the webhook config is missing).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — deduped a repeated `agents/main.md` entry
   (previously listed both as `/agents/main.md` and `unified-trading-pm/agents/main.md`, the same file); content
   otherwise unchanged and all entries verified to resolve.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

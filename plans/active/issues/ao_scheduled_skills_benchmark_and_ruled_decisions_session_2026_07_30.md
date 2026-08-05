@@ -346,3 +346,4 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (5 entries) — still the right
   minimal set for the remaining open items (benchmark re-runs, the PM-checkout-staleness follow-up, the benchmark-
   artifact update).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

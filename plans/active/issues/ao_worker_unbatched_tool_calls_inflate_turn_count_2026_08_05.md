@@ -40,6 +40,13 @@ source: ["interactive session, cost-per-task investigation, transcript sample vi
 drift_direction: advance-process
 estimate_class: research
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agents/worker.md,
+    cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+  ]
 ---
 
 # AO workers issuing independent tool calls one-per-turn instead of batching — measured, real
@@ -88,3 +95,7 @@ them"), but the instruction is not being followed in practice, at least in this 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`
 - `plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` — the DeepSeek pro/flash A/B test this finding originated
   alongside (different question — model choice — but the same investigation).
+
+## Progress Log
+
+- **context-scout 2026-08-05**: populated context_scope (4 entries).

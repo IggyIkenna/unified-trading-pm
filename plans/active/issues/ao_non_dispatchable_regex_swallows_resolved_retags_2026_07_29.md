@@ -227,3 +227,4 @@ past tense rather than deleting it outright.
   above). The one real item was `RECLASSIFY`'d once (2026-07-30) then explicitly reverted by a dated operator directive
   the next day (`unified-trading-pm@14478ca26`) — per this skill's own citation class (b), a revert is a standing
   ruling, not re-litigated.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

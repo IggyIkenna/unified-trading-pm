@@ -61,11 +61,10 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/health.py,
-    agent-orchestrator/server/tmux_pruner.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/config.py,
     agent-orchestrator/scripts/github.slice,
     agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh,
-    agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
   ]
 ---
@@ -218,3 +217,10 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       rebuild would silently lose it.
 - [ ] [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an earlier
       claim" above) if it recurs — not investigated this session, out of window.
+
+## Progress Log
+
+- **context-scout 2026-08-05**: populated/refreshed context_scope (6 entries) — corrected a wrong file
+  (`tmux_pruner.py`, not actually the slot-level stale-flip mechanism this doc discusses) to the real one
+  (`worker_liveness_watchdog.py`, confirmed to hold `_reclaim_idle_lingering_sessions`, the reclaimer named in item 1
+  above); trimmed the duplicate second install-timer script to stay within the 2-6 target.

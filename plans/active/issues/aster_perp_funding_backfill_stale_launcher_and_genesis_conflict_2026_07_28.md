@@ -207,3 +207,4 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   6/11's park recommendation already stand). No unblocked action available. Released via
   `/skip-current-task {"reason_code": "BLOCKED"}`. Not re-filing a duplicate `/blocked` — nothing changed since the
   standing one; endorsing the park recommendation a 3rd time.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
