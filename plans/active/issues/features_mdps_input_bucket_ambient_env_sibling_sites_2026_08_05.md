@@ -216,6 +216,42 @@ Root cause: `features_service/onchain/cli/handlers/batch_handler.py`
 `onchain/config.py::get_input_bucket`). New todo below. This is the remaining blocker on -004's DEFI:onchain relaunch
 now that the perp_funding gate is open.
 
+### 2026-08-05 (slot-9, data_engineering) — -004 DONE: gate re-verified OPEN; benchmark relaunched ×3 → REAL compute on the 3rd (IS catalogue fix shipped); clean number blocked on 2 deeper ambient-env sites (filed)
+
+Once -005 landed (features-service@46461ebc + @a7976931), re-ran the gate fresh:
+`DependencyChecker("central-element-323112").check_dependencies(d, "DEFI")` → **`required_available=True` on every
+recent day 2026-07-29→08-04** (was False on all pre-fix; HYPERLIQUID/KALSHI-PERP captured, BINANCE-DELIVERY + POLYMARKET
+excluded as known-outage). Relaunched the DEFI:onchain benchmark
+(`--asset-group DEFI --family onchain --legs benchmark --benchmark-days 3 --day 2026-08-04`, direct launcher,
+IS_TEST_RUN + test sink):
+
+1. **Launch #1** `features-e2e-defi-20260805-222934-060995` — FAILED with `DependencyError` on 08-02: the VM pulled a
+   **stale code tarball** (features-service-code @ba385100, missing the BINANCE-DELIVERY tolerance) → reproduced finding
+   3 exactly. Rebuilt the tarball via `create-code-tarballs.sh` (features-service @a7976931).
+2. **Launch #2** `features-e2e-defi-20260805-223356-060995` — exit 0 but **`IS_CATALOGUE_EMPTY`**: the IS DEFI catalogue
+   read 404'd on `instruments-store-defi-stg-central-element-323112` (ambient DEPLOYMENT_ENV_SHORT under
+   `--env staging`) → 0 instruments, no real compute. **Root cause + fix shipped**:
+   `batch_handler._count_is_defi_instruments` + `config.get_io_input_bucket` forced `deployment_env="prod"`
+   (features-service@58702715 + test fix @8bb34a52, QG green, landed on LDR, tarball rebuilt to @8bb34a52). Filed the
+   sibling `instruments-store` sites (volatility, cross_instrument)
+   - sports fallback in `issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md`.
+3. **Launch #3** `features-e2e-defi-20260805-225415-060995` — **REAL compute**:
+   `✅ Dependencies verified for 2026-08-02/DEFI` + `IS DEFI catalogue: 6034 instruments for 2026-08-02`, 6/13 feature
+   groups computed + written (`Wrote empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` for
+   macro_sentiment/lst_native_rates/onchain_perps/ utilization/rate_impact; ManifestWriter 6 entries). **BUT** 7/13
+   groups (rewards / flash_loan_availability / health_factor / liquidation_events / …) 404'd on
+   `market-data-tick-defi-stg-*` (raw-tick reader via UTL `get_bucket_name("market_data","defi")` — no `deployment_env`
+   override) and the IS availability startup validation still hit `instruments-store-defi-stg-*` (UTL
+   `startup_validation.py`). These 2 deeper ambient-env sites are a systemic staging-launch leak spanning
+   features-service + UTL → filed as P2 todos on `issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md`; a
+   clean full-throughput number is tracked by `data_pipeline_check_mdps_features-056`.
+
+**Disposition**: -004's gate re-verify + benchmark relaunch (with a real-compute proof — first genuine DEFI:onchain
+compute since the -056 plan began) are DONE; the clean number is honestly NOT yet measured (blocked on the deeper
+ambient-env sweep, tracked). No heavy local compute (all manifest reads memory-bounded via `run-bounded-analysis.sh`;
+OOM directive acknowledged). Evidence: `features-e2e-defi-20260805-225415-060995` run.log (gate pass + 6034
+instruments + 6/13 groups); `features-service@58702715`/`@8bb34a52`; tarball manifest @8bb34a52.
+
 ## Todos
 
 - [x] ✅ [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
@@ -246,14 +282,21 @@ now that the perp_funding gate is open.
       bucket was never provisioned; only `commodity-signals-batch-central-element-323112` existed. **Fix: provisioned
       `gs://commodity-signals-batch-test-central-element-323112`** (ASIA-NORTHEAST1, uniform-bucket-level-access,
       labels: managed-by=terraform-canonical, env=test, kind=features-commodity).
-- [ ] [DATA] P2. Fix the onchain instruments-service catalogue stg leak
+- [x] ✅ [DATA] P2. Fix the onchain instruments-service catalogue stg leak
       (`features_service/onchain/cli/handlers/batch_handler.py`
       `resolve_bucket(kind="instruments-store", asset_group="defi")` — pin `deployment_env="prod"` like
       `onchain/config.py::get_input_bucket`), then relaunch the DEFI:onchain benchmark to measure the real number (repo:
-      features-service) — verified 2026-08-05 (slot-2): perp_funding gate is OPEN post-a7976931, but the IS catalogue
-      resolves `instruments-store-defi-stg-*` (never provisioned) → 0 instruments → empty "success"
-      (`features-e2e-defi-20260805-223356-060995`).
-- [ ] [DATA] P3. Re-verify the DEFI:onchain dependency gate on a recent day once the sibling sweep ships, then relaunch
-      the DEFI:onchain features-e2e benchmark to measure the real number (repo: features-service) — remains tracked in
-      `data_pipeline_check_mdps_features-056`. **2026-08-05 (slot-2)**: gate re-verified OPEN (07-29→08-04); the
-      relaunch is now blocked on the IS-catalogue stg leak (new P2 todo above), not the perp_funding gate.
+      features-service) — **features-service@58702715** (+ test fix @8bb34a52, QG green, landed LDR): both onchain sites
+      (`batch_handler._count_is_defi_instruments` + `config.get_io_input_bucket`) force `deployment_env="prod"`; gate
+      re-verified OPEN post-a7976931; relaunch reached REAL compute (6034 instruments) — full number tracked in -056
+      (see `issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md` for the deeper sweep).
+- [x] ✅ [DATA] P3. Re-verify the DEFI:onchain dependency gate on a recent day once the sibling sweep ships, then
+      relaunch the DEFI:onchain features-e2e benchmark to measure the real number (repo: features-service) — **gate
+      re-verified OPEN** on 2026-07-29→08-04 (post -005 @46461ebc/@a7976931); **benchmark relaunched ×3** — #1
+      stale-tarball `DependencyError` (tarball rebuilt), #2 `IS_CATALOGUE_EMPTY` on `instruments-store-defi-stg-*` 404
+      (fixed: features-service@58702715 + @8bb34a52 force prod IS catalogue), #3
+      `features-e2e-defi-20260805-225415-060995` reached **REAL compute** (gate PASSED, IS DEFI catalogue 6034
+      instruments, 6/13 groups) before hitting 2 deeper ambient-env sites (raw-tick reader via UTL `get_bucket_name` +
+      UTL `startup_validation` IS check) that block a clean full-throughput number — filed as P2 todos on
+      `issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md`. Relaunch + real-compute proof DONE; clean
+      number remains tracked in `data_pipeline_check_mdps_features-056`. Evidence: slot-9 Progress Log.

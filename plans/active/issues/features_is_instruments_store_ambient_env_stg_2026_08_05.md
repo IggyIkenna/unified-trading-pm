@@ -82,6 +82,18 @@ locked_since:
      sports' instruments-store via `--source-bucket` (`_resolve_source_bucket` forces the `-prd-` reference bucket), so
      sports is covered at launcher level; still worth aligning the config fallback for direct non-driver launches.
 
+3. **NEW 2026-08-05 (slot-9, 3rd DEFI:onchain relaunch `features-e2e-defi-20260805-225415-060995`) — the onchain compute
+   path leaks ambient env through TWO more resolution functions** (the 3rd launch reached real compute — gate PASSED,
+   `IS DEFI catalogue: 6034 instruments` — but 7/13 feature groups 404'd on the -stg- tier):
+   - **Raw-tick data reader**: `features_service/onchain/adapters/mtds_canonical_reader.py:203` uses
+     `get_bucket_name("market_data", "defi")` (UTL `cloud_constants.get_bucket_name` — NO `deployment_env` override
+     exists), which resolves `market-data-tick-defi-stg-*` under a staging launch → 404 on every `raw_tick_data` read
+     (rewards / flash_loan_availability / health_factor / liquidation_events groups).
+   - **IS availability startup validation**: `unified_trading_library/startup_validation.py` (~line 290) resolves the
+     `instruments-store` bucket for the "instruments-service availability check" without forcing prod → 404 on
+     `instruments-store-defi-stg-*` (logged at VM start, non-fatal). These are a systemic ambient-env leak under
+     `--env staging` benchmark launches, spanning features-service + UTL.
+
 ## Why it matters
 
 `data_pipeline_check_mdps_features-056` needs genuine per-family throughput numbers. TRADFI:volatility and
@@ -118,3 +130,12 @@ sweep). Fixed both onchain sites (`batch_handler._count_is_defi_instruments` + `
       cross_instrument `engine/cefi_wire_bridge.py:133` (sports config fallback for consistency), mirroring
       `_count_is_defi_instruments` @58702715; per-site regression tests pin `deployment_env="prod"` regardless of
       ambient env. QG green + quickmerge.
+- [ ] [DATA] P2. Fix the onchain compute-path ambient-env leaks found on the 3rd DEFI:onchain relaunch (repo:
+      features-service + unified-trading-library) — (a) `onchain/adapters/mtds_canonical_reader.py:203`
+      `get_bucket_name("market_data", "defi")` has no `deployment_env` override → resolves `-stg-` under a staging
+      launch; switch to `resolve_bucket_name(kind="market-data", asset_group="defi", deployment_env="prod")` (or add the
+      override to UTL `get_bucket_name`) so every `raw_tick_data` read (rewards / flash_loan_availability /
+      health_factor / liquidation_events) hits the real `-prd-` bucket; (b)
+      `unified_trading_library/startup_validation.py` IS-availability check → force `-prd-` instruments-store.
+      Regression tests pin prod under ambient staging. QG green + quickmerge both repos. Then re-run the DEFI:onchain
+      benchmark for a clean full-throughput number (tracks -056).
