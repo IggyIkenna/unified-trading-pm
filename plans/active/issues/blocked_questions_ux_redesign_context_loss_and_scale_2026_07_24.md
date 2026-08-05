@@ -141,6 +141,7 @@ exists" section together before scoping the workstream.
   archiving this doc or auto-picking a direction on its `[DESIGN]` todo below (an open-ended scoping call, correctly
   staying a human decision per this doc's own frontmatter) — flagging the renewed operator pain as a signal it may be
   worth un-deferring, not deciding that myself.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 ## Todos
 

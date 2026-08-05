@@ -164,3 +164,4 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   put this doc back in incremental scope was a cosmetic `context_scope` backfill commit, not a content change; the
   2026-08-01 rationale (a concurrency-critical shared-writer change needing per-handler verification, not a mass edit)
   still holds.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -172,3 +172,4 @@ retag doing the real work here).
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the bucket-isolation-model codex SSOT (the
   domain doc governing the god-SA removal + tier-SA sequencing this doc's own open `[OPERATOR]` todo is gated on).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

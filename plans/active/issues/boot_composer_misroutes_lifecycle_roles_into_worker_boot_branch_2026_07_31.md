@@ -54,8 +54,8 @@ context_scope:
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    /agents/review.md,
     /agents/ag_closeout_auditor.md,
+    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
 ---
 
@@ -236,3 +236,6 @@ cefi-specific** — same defect now reproduced on a second tranche.
   as todo 6; the `/done` empty-sha data-integrity fix as todo 7) — same tranche-standing-NA convention as
   `fleet_git_health_ip_185...`'s marker today. `asset_group` now correctly `[ao]` (retagged 2026-08-04, no longer the
   flagged mistag).
+- **context-scout 2026-08-05**: re-scouted; swapped `/agents/review.md` for
+  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` (now the doc actually tracking the remaining 2 open
+  todos per the 2026-08-04 na-eligibility-audit marker above), 5 entries.

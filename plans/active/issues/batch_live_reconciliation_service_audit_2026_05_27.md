@@ -614,3 +614,4 @@ defect, just confirming the coupling is daily, not real-time.
   `citadel_paper_batch_live_reconciliation_2026_06_19.md`), so those three took priority over the doc's own frontmatter
   `related:`/`source:` codex list. Added the `batch-live-reconciliation-service/` source dir (previously absent despite
   this being a service-code audit) and dropped two secondary codex docs to stay within the 2-6 cap.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

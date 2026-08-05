@@ -293,3 +293,5 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
 - **context-scout 2026-08-01**: populated context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the sibling god-SA-removal issue doc (the
   P2.1b caller this doc's P0/P3.1/P3.2 findings directly gate).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate — all todos now `[x]`
+  done, minimal set stays correct pending archival.

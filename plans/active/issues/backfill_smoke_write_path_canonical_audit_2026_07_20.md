@@ -322,3 +322,4 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   (both cover § 1's test-bucket-enforcement question, already fully DONE via todos 1/2/4/5); kept the codex + plan +
   source-file entries most load-bearing for the two still-open todos (3, 6 — canonical-grammar comment fixes and the
   `market_lifecycle`/`futures_contracts` scope decision).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

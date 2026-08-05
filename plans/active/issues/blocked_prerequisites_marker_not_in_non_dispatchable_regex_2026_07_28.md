@@ -209,3 +209,4 @@ same-corpus dependencies). Instead:
   each occurrence needs per-case classification (external-gate mislabel → retag, vs. same-corpus dependency → convert to
   `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
   decision, explicitly "not a worker's call to make unilaterally".
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

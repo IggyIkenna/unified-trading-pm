@@ -113,3 +113,4 @@ first:
   2026-08-02 marker. Sole open todo still duplicates `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`
   (still `assigned_vm: NA`/local-only per the 2026-07-31 operator directive); citation still accurate. In scope this run
   only via an incidental corpus-wide touch, no content drift.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

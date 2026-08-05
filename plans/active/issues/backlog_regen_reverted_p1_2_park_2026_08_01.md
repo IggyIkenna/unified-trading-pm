@@ -163,3 +163,4 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   listed operator-gated by batch6). Item 3 ([SCRIPT] P2, "consider a standing assertion...") remains an unscoped design
   fork — repo ownership (agent-orchestrator vs. unified-trading-pm) and mechanism (hygiene sweep vs. periodic check)
   both undecided; also independently declined by batch6 as "an unscoped design fork." Not reclassified.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
