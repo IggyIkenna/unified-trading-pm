@@ -283,17 +283,28 @@ jobs:
       # failure inside the script itself (it self-verifies HEAD before declaring success). No
       # caller is worse off than before; only a canaried subset of pools benefit until this rolls
       # out further.
+      #
+      # TWO BUGS caught live on the first canary run (2026-08-05), fixed here — a self-hosted
+      # runner does NOT leak its wrapper's RUNNER_BASE env var into the job (only GHA-native vars
+      # like GITHUB_WORKSPACE are guaranteed present), so this step derives the pool's own base
+      # dir from GITHUB_WORKSPACE's own path structure (<RUNNER_BASE>/<INSTANCE>/_work/<REPO>/
+      # <REPO>, this fleet's fixed work_folder="_work" registration convention) instead of
+      # trusting RUNNER_BASE. And `rm -rf "${GITHUB_WORKSPACE}"` while the shell's OWN cwd IS
+      # GITHUB_WORKSPACE (GHA's default for a `run:` step) breaks every subsequent command's
+      # getcwd() — this step now `cd`s to the parent dir first, before any removal.
       - name: Checkout (fast-path aware)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          SCRIPT="${RUNNER_BASE:-/opt/github-glue-runners}/fast-checkout.sh"
+          cd "$(dirname "${GITHUB_WORKSPACE}")"
+          DERIVED_BASE="$(dirname "$(dirname "$(dirname "$(dirname "${GITHUB_WORKSPACE}")")")")"
+          SCRIPT="${DERIVED_BASE}/fast-checkout.sh"
           if [ -f "${SCRIPT}" ]; then
             bash "${SCRIPT}" "${GITHUB_WORKSPACE}"
           else
-            echo "no fast-checkout.sh on this runner (GH-hosted, or not yet deployed to this pool) -- plain clone"
+            echo "no fast-checkout.sh at ${SCRIPT} (GH-hosted, or not yet deployed to this pool) -- plain clone"
             rm -rf "${GITHUB_WORKSPACE}"
             git clone --quiet --no-checkout "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_WORKSPACE}"
             git -C "${GITHUB_WORKSPACE}" fetch --quiet --depth=2 origin "${GITHUB_REF}"

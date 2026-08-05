@@ -14,13 +14,28 @@
 # on a timer FOR EVERY POOL, but nothing consumed it — actions/checkout@v4 has no native
 # `--reference`/mirror-aware mode, so every job re-cloned cold regardless.
 #
+# TWO REAL BUGS caught live on the first canary run (2026-08-05), both fixed here — recorded so
+# neither regresses:
+#   1. RUNNER_BASE does NOT propagate into the job's own environment. It's set via the wrapper's
+#      systemd EnvironmentFile (glue-runner-run.sh's process env), but self-hosted runners do not
+#      leak arbitrary host env vars into job `run:` steps — only GHA-native vars (GITHUB_*,
+#      RUNNER_WORKSPACE, etc.) are guaranteed present. Trusting `${RUNNER_BASE:-default}` silently
+#      resolved to the WRONG (untagged) pool path on every tagged pool, so the mirror was never
+#      found at all. Fixed: derive RUNNER_BASE from GITHUB_WORKSPACE's own path structure instead
+#      (GHA always sets this correctly) — see derive_runner_base() below.
+#   2. `rm -rf "${TARGET}"` where TARGET == the shell's OWN current working directory (GHA sets a
+#      `run:` step's cwd to $GITHUB_WORKSPACE by default) yanks the directory out from under the
+#      running shell — every subsequent command fails with "fatal: Unable to read current working
+#      directory". Fixed: cd to TARGET's parent BEFORE any removal, never operate from inside a
+#      directory this script is about to delete.
+#
 # SAFETY MODEL (this is what makes it safe to ship fleet-wide immediately, not just to a
 # canaried repo): the mirror is UNEVENLY maintained across the fleet today (confirmed live —
 # some pools' refresh timer isn't even installed, staleness ranged 5 minutes to 47 hours) and
 # is a plain fast-forward mirror of the DEFAULT branch only, not every ref this workflow might
 # need to check out (PR merge refs, other branches). So the fast path is opportunistic, not
 # assumed: falls back to a normal `git clone` for ANY of —
-#   - no mirror at this RUNNER_BASE (expected on ubuntu-latest, or a repo with no pool yet)
+#   - no mirror at the derived RUNNER_BASE (expected on ubuntu-latest, or a repo with no pool yet)
 #   - mirror older than MAX_STALENESS_SECONDS (its own refresher may be broken/disabled)
 #   - the hardlink-copy itself fails (cross-filesystem, permissions)
 #   - the post-copy fetch/checkout of the actual target ref fails
@@ -32,10 +47,9 @@
 # wrong checkout because of this script; worst case is "no speedup this run."
 #
 # Usage: fast-checkout.sh <target-dir>
-#   Env (from the calling workflow step): GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_REF (set by
-#   GitHub Actions automatically), GH_TOKEN (the job's github.token — needed to replicate
-#   actions/checkout@v4's credential setup, see below), RUNNER_BASE (defaults
-#   /opt/github-glue-runners, same default as setup-glue-runners.sh / refresh-slot-repo.sh).
+#   Env (from the calling workflow step): GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_REF,
+#   GITHUB_WORKSPACE (all set by GitHub Actions automatically), GH_TOKEN (the job's
+#   github.token — needed to replicate actions/checkout@v4's credential setup, see below).
 set -euo pipefail
 
 TARGET="${1:?usage: fast-checkout.sh <target-dir>}"
@@ -43,7 +57,22 @@ TARGET="${1:?usage: fast-checkout.sh <target-dir>}"
 : "${GITHUB_SHA:?GITHUB_SHA not set}"
 : "${GITHUB_REF:?GITHUB_REF not set}"
 : "${GH_TOKEN:?GH_TOKEN not set — needed to configure git credentials for later steps}"
-: "${RUNNER_BASE:=/opt/github-glue-runners}"
+
+# BUG 2 FIX: move off TARGET before anything might rm -rf it — GHA's default cwd for a `run:`
+# step IS $GITHUB_WORKSPACE (== TARGET here), so removing it while it's still the shell's cwd
+# breaks every subsequent command's getcwd(), not just the ones touching TARGET directly.
+cd "$(dirname "${TARGET}")"
+
+log() { printf '[fast-checkout] %s\n' "$*"; }
+
+# BUG 1 FIX: derive RUNNER_BASE from GITHUB_WORKSPACE's own structure instead of trusting an
+# env var that doesn't actually reach this process. This fleet's runner registration always
+# passes work_folder="_work" (glue-runner-run.sh), so GITHUB_WORKSPACE is always
+# <RUNNER_BASE>/<INSTANCE>/_work/<REPO>/<REPO> — strip 4 trailing path components to recover it.
+derive_runner_base() {
+  dirname "$(dirname "$(dirname "$(dirname "$1")")")"
+}
+RUNNER_BASE="$(derive_runner_base "${TARGET}")"
 
 # Replicates actions/checkout@v4's own credential setup (an `http.<url>/.extraheader` with a
 # base64 basic-auth token) so any LATER step in the job that does its own git operation
@@ -61,8 +90,6 @@ STAMP="${RUNNER_BASE}/repo.refreshed-at"
 MAX_STALENESS_SECONDS=1800 # matches setup-glue-runners.sh's own "STALE — refresher broken?" threshold
 REPO_URL="https://github.com/${GITHUB_REPOSITORY}.git"
 
-log() { printf '[fast-checkout] %s\n' "$*"; }
-
 plain_clone() {
   log "plain clone path: ${REPO_URL} @ ${GITHUB_SHA}"
   rm -rf "${TARGET}"
@@ -71,6 +98,8 @@ plain_clone() {
   git -C "${TARGET}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
   git -C "${TARGET}" checkout --force --quiet "${GITHUB_SHA}"
 }
+
+log "derived RUNNER_BASE=${RUNNER_BASE} from GITHUB_WORKSPACE=${TARGET}"
 
 # ── Eligibility: mirror present and fresh ────────────────────────────────────────────────────
 if [ ! -d "${MIRROR}/.git" ]; then
