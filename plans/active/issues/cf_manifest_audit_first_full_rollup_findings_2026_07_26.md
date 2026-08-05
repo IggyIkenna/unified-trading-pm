@@ -269,6 +269,11 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       blanket "any AG" carve-out, mirroring the caution already applied to the sports skip-signal-false-negative and
       CF-8-denominator checker fixes in sibling docs (root-causing != safely fixing; a rushed fix risks masking a future
       genuine regression). Repo: unified-trading-library.
+- [x] ✅ [DATA] P3. Gate-check + documentation for the legacy trades-row backfill todo above — verified
+      `sports-cf8-maintenance-window-scheduled` still FALSE (2026-08-05), filed BLK-40c4da25 (resolved: option C, park —
+      do not execute), retagged the parent todo `BLOCKED-OPERATOR — BLK-d9137d48`. No dispatchable work until operator
+      lifts the STOP; the `gates_queued=0` prereq-linkage gap is a separate structural fix (RULES.md §4: yaml-only
+      tuning). Repo: unified-trading-pm (docs-only). — unified-trading-pm@0b785f1ff (slot-16, 2026-08-05)
 
 ## Progress Log
 
