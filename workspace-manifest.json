@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": 81.47,
         "large_file_count": 1,
-        "warn_file_count": 0,
-        "qg_red_reason": null
+        "coverage_pct": 81.47,
+        "qg_red_reason": "basedpyright",
+        "warn_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -209,8 +209,8 @@
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "large_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": "qg",
-        "coverage_pct": 87.6,
         "warn_file_count": 0
       }
     },
@@ -274,10 +274,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
+        "large_file_count": 0,
         "coverage_pct": 74.71,
-        "qg_red_reason": null,
-        "warn_file_count": 4,
-        "large_file_count": 0
+        "qg_red_reason": "qg",
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -342,8 +342,8 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
-        "coverage_pct": 83.79,
         "large_file_count": 0,
+        "coverage_pct": 83.8,
         "qg_red_reason": "pytest",
         "warn_file_count": 17
       }
@@ -369,7 +369,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "FAILING",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -393,10 +393,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 9,
+        "large_file_count": 6,
         "coverage_pct": 73.75,
-        "large_file_count": 6
+        "qg_red_reason": "ruff",
+        "warn_file_count": 9
       }
     },
     "execution-service": {
@@ -456,10 +456,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "qg",
-        "warn_file_count": 22,
-        "coverage_pct": null,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": 84.19,
+        "qg_red_reason": "pytest",
+        "warn_file_count": 22
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -487,7 +487,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -624,7 +624,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -826,10 +826,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 6,
+        "large_file_count": 6,
         "coverage_pct": 88.65,
-        "large_file_count": 6
+        "qg_red_reason": "pytest",
+        "warn_file_count": 6
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -988,7 +988,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1019,10 +1019,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
+        "large_file_count": 5,
+        "coverage_pct": 85.98,
         "qg_red_reason": "qg",
-        "warn_file_count": 10,
-        "coverage_pct": null,
-        "large_file_count": 5
+        "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1109,12 +1109,12 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "large_file_count": 0,
+        "coverage_pct": 9.57,
         "qg_red_reason": "qg",
-        "coverage_pct": null,
         "warn_file_count": 0
       }
     },
@@ -1220,12 +1220,12 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
         "large_file_count": 27,
+        "coverage_pct": 96.44,
         "qg_red_reason": null,
-        "warn_file_count": 36
+        "warn_file_count": 37
       }
     },
     "unified-trading-library": {
@@ -1274,10 +1274,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.5,
         "large_file_count": 7,
-        "warn_file_count": 22,
-        "qg_red_reason": null
+        "coverage_pct": 89.29,
+        "qg_red_reason": null,
+        "warn_file_count": 22
       }
     },
     "unified-trading-pm": {
@@ -1310,8 +1310,8 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": 73.73,
         "large_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": "qg",
         "warn_file_count": 0
       }
@@ -2205,8 +2205,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.1.dev6+gad8b62b4a",
-      "published_at": "2026-08-05T04:48:05Z",
+      "version": "0.98.1.dev8+gf04184676",
+      "published_at": "2026-08-05T05:53:55Z",
       "registry": "artifact-registry"
     }
   }
