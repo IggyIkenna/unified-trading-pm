@@ -468,3 +468,16 @@ resume.
 must not trip, row counts unchanged); (4) resume cron via
 `scripts/mtds_available_at_backfill_resume_defi_2026_08_05.py`; (5) POST `/done` with task_id
 `mtds_available_at_cross_asset_backfill-005` + sha `aafbbfdf`.
+
+**Apply re-run LIVE (2026-08-05, slot-15)**: relaunched ~20:33 UTC WITHOUT `MANIFEST_ALLOW_STALE_FALLBACK=true` (the fix
+makes it unnecessary). **PID 782156**, run_id `20260805T203318Z-ddb19404`, log `/tmp/rebuild_defi_apply_2026_08_05.log`.
+Reader fix CONFIRMED working in production — chunks report real index-cell counts and enrichment begins at chunk 16/17
+(April 2020, defi data start; chunks 1-15 honestly skip with `enriched: 0` + `index_cells_no_disk_object` = correct, NOT
+the false-success). Snapshot progress at 20:37 UTC: chunk 33, `last_completed_date=2020-08-11`, `monotonic=true`; chunk
+32 sample
+`{'index_captured_blank': 294, 'total_shards': 298, 'matched_shards': 126, 'enriched': 126, 'write_errors': 0, 'unparseable': 0}`.
+Expected completion ~21:15-21:30 UTC; then immediately: force-consolidate → fill-rate verify → resume cron → `/done`.
+**Status check for next session**: `kill -0 782156` (alive), `tail -5 /tmp/rebuild_defi_apply_2026_08_05.log` for
+`[[VM_PROGRESS]] last_completed_date=… monotonic=true`, `grep -cE "Traceback|ERROR|Killed|OOM" <log>` = 0. The watchdog
+Monitor dies with this session — re-arm if the run is still alive; the per-VM shard accumulate mode makes any re-apply
+idempotent, so killing/restarting is safe (resumes at the next un-enriched chunk).
