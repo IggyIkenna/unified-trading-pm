@@ -88,5 +88,10 @@ locked_by:
   commits 2026-08-05 11:07Z→12:29Z, with nobody owning lockstep golden regen. The two blocking commits here (`6e791b05`
   @12:07Z, `b2874193` @12:15Z) landed inside that wave — a fleet-wide mid-audit state, not a single rogue declaration.
   Operator resolution should cover the wave (aspirational-vs-wired decision per declaration), not just these two.
+- **Promote-lag nuance (verified 08-05 14:30Z)**: UAC `origin/main` is at `8de39ca2` (last LDR→main promote 08:49Z),
+  which PRE-DATES the 12:07Z/12:15Z declarations — so both blockers are absent from main only by lag, NOT by revert. The
+  next `*/15` promote carries them onto main and flips MTDS CI red on the first run that reaches pytest. A fresh session
+  must NOT read "blocker absent from UAC main" as resolved; LDR HEAD (`6e791b05`) is the ground truth until an explicit
+  revert/scope lands on LDR.
 - **NOTIFIED**: operator via this doc (cross-repo, CI-red — big-finding class,
   `/codex/11-project-management/ plan-priority-tier-and-dispatch-ordering.md` findings triage).
