@@ -105,10 +105,13 @@ different failure modes) — treat them as independent work items, not a single 
       `_instrument_to_okx_futures_inst_id` instead, correctly mapping `@LIN`→`_UM`, `@INV`→bare, `YYYYMMDD`→`YYMMDD`.
       Sibling book/ticker connectors never had this bug (they inherit from `_OKXFuturesBaseConnector` which already uses
       the correct mapper). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Root-cause + fix `POLYMARKET-PERP perp_funding` permanent `attempted_failed` on the
-      `batch_polymarket_perp` pipeline. Confirmed via manifest: `attempted_failed` every day `2026-07-28`–`2026-07-31`,
-      zero `captured` rows. Batch path (not the live-capture VM) — likely a sourcing/API-endpoint/credential issue
-      specific to Polymarket's perp_funding data feed. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. Root-cause + fix `POLYMARKET-PERP perp_funding` permanent `attempted_failed` on the
+      `batch_polymarket_perp` pipeline — market-tick-data-service@b2497b73, unified-api-contracts@845f7ce5. Root cause:
+      `CEFI_PERP_VENUE_API_ENDPOINTS["POLYMARKET_PERP"]` was set to `https://perps-api.polymarket.com` which was DNS
+      NXDOMAIN (2026-06-21). The Polymarket perps API is now live at `https://api.perpetuals.polymarket.com` (verified
+      HTTP 200, 2026-08-05). Fix: updated the UAC registry endpoint URL + replaced the hardcoded
+      `raise ClientConnectionError` in `_collect_polymarket_perp` with a working collector that fetches instruments via
+      `GET /v1/info/instruments` and funding rates via `GET /v1/info/funding?instrument_id=<id>&limit=100`.
 
 ## Codex SSOTs
 
