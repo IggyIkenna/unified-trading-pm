@@ -117,10 +117,11 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       SQL validated live against central-element-323112 table (schema matches plan). Table currently has 0 rows (no kill
       event produced yet — the [REVIEW] P3 todo owns triggering the first real/dry-run kill); route degrades honestly to
       empty until then.
-- [ ] [UI] P3. Add a kill-events panel to `deployment-ui/src/pages/VmResourceComparison.tsx`'s existing per-VM
+- [x] ✅ [UI] P3. Add a kill-events panel to `deployment-ui/src/pages/VmResourceComparison.tsx`'s existing per-VM
       expandable-row scaffolding (the same one already wired to `getProcessCategoryBreakdown`), showing recent kills for
       the AO host: timestamp, command, reason, rss_mb/limit_mb. Done when the panel renders real data for the AO host in
-      a local dev run against the live deployment-api.
+      a local dev run against the live deployment-api. — deployment-ui@adac737 | pw:L2 ✓ | regression:
+      tests/smoke/vm-resource-rolling-window.spec.ts
 - [ ] [DOC] P3. Update `/codex/05-infrastructure/agent-orchestrator-api-host.md`'s "Resource watchdog" section and
       `/codex/05-infrastructure/deployment-observability.md` to document the new dual-write (AO-internal +
       deployment-api) and note this supersedes the Phase-4 AO-UI-only scope for kill events specifically. Done when both
