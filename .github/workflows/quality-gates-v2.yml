@@ -15,6 +15,12 @@ name: quality-gates-v2
 on:
   push:
     branches: [main]
+    # workspace-manifest.json-only commits (ci-status-consolidator.yml's hourly Firestore->manifest
+    # projection) don't need a full gate re-run -- excluding them here (instead of the consolidator's
+    # blanket `[skip ci]` commit-message marker) lets OTHER push-triggered workflows on main, notably
+    # main-backmerge-to-ldr.yml, still fire normally on that commit. See
+    # plans/active/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md.
+    paths-ignore: ["workspace-manifest.json"]
   pull_request:
     branches: [main, staging]
   workflow_dispatch:
