@@ -234,13 +234,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
       zero prod rows / duplicated MDPS). Verified 2026-08-05: `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits.
       No code changes needed — already deleted. **The onchain parts (`_SOURCE_COVERAGE_START`, `_PROTOCOL_TO_DATA_TYPE`)
       split to the separate todo below.** — unified-trading-pm@<sha>
-- [ ] [CODE] P2. **Audit and fix `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` to read from UAC (finding 4,
+- [x] ✅ [CODE] P2. **Audit and fix `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` to read from UAC (finding 4,
       onchain part).** `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py:188-198`, byte-copy of
       `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]` — the same `(venue, data_type) -> start_date` facts live in UAC's
       `VENUE_DATA_TYPE_CAPABILITIES`) and `_PROTOCOL_TO_DATA_TYPE` (`solana_defi_handler.py:249-261`, the
       `"kamino"`/`"kamino_lending"` split — maps protocol→data_type with no corresponding UAC entry for the split, a
-      structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. (repo:
-      market-tick-data-service)
+      structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. —
+      market-tick-data-service@51f778d4
 - [x] ✅ [CODE] P2. **Add `market_metadata` + `fills` to `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET/KALSHI (UAC half
       only — `book_snapshot_5` was already present).** shipped `unified-api-contracts@6e791b05` (verified on
       `origin/live-defi-rollout`). Added `market_metadata: "2024-06-01"` and `fills: "2024-06-01"` to both POLYMARKET
