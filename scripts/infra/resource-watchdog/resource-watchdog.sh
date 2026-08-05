@@ -430,10 +430,18 @@ _rw_status_json_path() {
 _rw_probe_qg_governor() {
     # Probe the QG host governor's token-concurrency state so the AO UI can show
     # "2/4 tokens held" at a glance. Best-effort: -1 means "governor unreachable."
-    local gov_script="${RW_QG_GOVERNOR_SCRIPT:-/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh}"
+    # Try the configured path, then the standard VM workspace path.
+    local gov_script=""
+    if [[ -n "${RW_QG_GOVERNOR_SCRIPT:-}" ]] && [[ -x "$RW_QG_GOVERNOR_SCRIPT" ]]; then
+        gov_script="$RW_QG_GOVERNOR_SCRIPT"
+    elif [[ -x "/home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh" ]]; then
+        gov_script="/home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh"
+    elif [[ -x "/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh" ]]; then
+        gov_script="/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh"
+    fi
     _RW_QG_TOKENS_HELD=-1
     _RW_QG_TOKENS_MAX=-1
-    if [[ ! -x "$gov_script" ]]; then return 0; fi
+    if [[ -z "$gov_script" ]]; then return 0; fi
     local status_output; status_output="$("$gov_script" --status 2>/dev/null || true)"
     if [[ "$status_output" =~ tokens\ held\ now:\ ([0-9]+)/([0-9]+) ]]; then
         _RW_QG_TOKENS_HELD="${BASH_REMATCH[1]}"
