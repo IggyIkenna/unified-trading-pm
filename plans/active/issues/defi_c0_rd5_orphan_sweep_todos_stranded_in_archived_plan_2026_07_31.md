@@ -95,10 +95,10 @@ checked, not assumed.
       buckets today — **FOUND: 1,042 legacy-FORM objects + ongoing migration artifacts. See Progress Log for full
       characterization and scoped follow-up todos below.** — instruments-service@<SHA>
 
-- [ ] [DATA] P2. Backfill `record_captured` for the 1,042 CURVE dex_pool_state orphans (repo: market-tick-data-service)
-      — these 2021 objects are real data (1 row each, valid hive keys) with no manifest row. Run the canonical twin
-      check across all 1,042 (confirm no pipeline_mode= twin exists for any), then `record_captured` on the manifest to
-      close the GCS↔manifest gap. This is the direct fulfillment of C0-RD5b's original charter.
+- [x] ✅ [DATA] P2. Backfill `record_captured` for the 1,042 CURVE dex_pool_state orphans (repo:
+      market-tick-data-service) — market-tick-data-service@2b436caf — 205 true orphans registered in manifest via
+      additive per-VM-shard ManifestWriter.add(); 837 already had canonical twins on GCS; verified post-apply: 0 orphan
+      candidates remain.
 - [x] ✅ [DATA] P2. Audit the `ticks_migrated` writer for canonical v9 path compliance — **FINDINGS: NOT a current
       writer defect; the fold already ran + manifest coverage is complete. See Progress Log for full audit.** —
       market-tick-data-service@13f14b78 (fold script, the canonical resolution)
@@ -186,3 +186,19 @@ checked, not assumed.
   remaining action is deleting the residual legacy objects, tracked separately by the `delete-the-legacy-copies` phase
   in `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`'s `[PM] P2` todo (requires operator +
   delete-safety protocol).
+
+- **slot-8 worker 2026-08-05 (CURVE dex_pool_state orphan manifest backfill — this todo)**: Created
+  `scripts/one_offs/backfill_curve_dex_pool_state_orphan_manifest_2026_08_05.py` in MTDS (modelled on the existing
+  `register_extended_starknet_batch_extended_manifest_gap_2026_08_05.py` pattern). **Key finding correcting the slot-11
+  scan above**: of the 1,042 legacy-FORM CURVE objects, **only 205 are true orphans** — the other 837 already have
+  canonical `pipeline_mode=batch_onchain_subgraph/` twins on GCS. The slot-11 scan's "no canonical twin" claim was
+  incorrect. Ran per-object twin-existence checks across all 1,042 (targeted per-object GCS prefix probes, never a
+  corpus walk).
+
+  **Orphan registration**: Registered the 205 true orphans in the production availability manifest via additive
+  `ManifestWriter(per_vm_shards=True).add()` writes with `pipeline_mode=batch_onchain_subgraph`,
+  `source=onchain_subgraph`, `instrument_type=POOL`, `chain=ETHEREUM`. Verified post-registration: 0 orphan candidates
+  remain across all 38 days — every GCS object now has a manifest `capture_status=captured` row.
+
+  **837 with twins**: No action needed — the canonical writer already registered them. The legacy copies are redundant
+  but harmless (same instrument_id, same row_count=1, same data).
