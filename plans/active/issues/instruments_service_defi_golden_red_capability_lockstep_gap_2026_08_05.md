@@ -178,10 +178,15 @@ stabilizes (no further LDR commits expected / audit verdict locked):
   FULL-TIMEOUT). Estimated 40-80 min to completion.
 - **T+10min verify (mandatory)**: confirm the full VM is still RUNNING and the run.log is progressing.
 
-### 2026-08-05 (slot-14) — BLOCKED-OPERATOR-DECISION (escalated → BLK-2b07d861)
+### 2026-08-05 (slot-14) — BLOCKED-OPERATOR-DECISION (escalated → BLK-2b07d861) — **RESOLVED 13:43Z**
 
 **Escalated via `/api/slots/14/blocked` (2026-08-05 ~12:45Z → `BLK-2b07d861`, "Escalated to dashboard. Main/review agent
-will answer.")**. Decision required from the operator / defi-track owner before slot-14 can ship:
+will answer.")**. Decision required from the operator / defi-track owner before slot-14 can ship.
+
+**RESOLUTION**: the defi track executed option (a) — the golden was regenerated in LOCKSTEP with the capability work
+(`instruments-service@0975de10`, golden cleared 13:07:59Z, `extra=0 missing=0`); slot-14's /heartbeat flipped from
+`blocked` → `working`, confirming the ticket closed. No remaining operator decision pending; slot-14 resumed and
+shipped.
 
 - **option (a) [RECOMMENDED]** — the defi track that owns the UAC `PROTOCOL_CAPABILITIES` churn regenerates the defi
   expected-universe golden in LOCKSTEP once the capability state stabilizes (07-30 deribit precedent
