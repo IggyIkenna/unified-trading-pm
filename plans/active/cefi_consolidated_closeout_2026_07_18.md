@@ -299,7 +299,7 @@ POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) a
   write). ✅ **DONE 2026-08-04** — all 3 `*_native.py` files confirmed dead (zero production references), deleted
   (`execution-service@6c9645a5`); QG baseline updated (`unified-trading-pm@f9523e16f`). Adjacent finding
   (bitfinex/bitget native unreachable) filed as
-  `issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`. Full evidence:
+  `/plans/archive/2026_08/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`. Full evidence:
   `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 1 Progress Log.
 
 ## Track 6 — Independent cefi data-correctness / hygiene items · P2
