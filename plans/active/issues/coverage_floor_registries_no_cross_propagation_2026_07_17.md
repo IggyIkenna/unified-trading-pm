@@ -245,10 +245,19 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       full-year sharded launch ever targeted it. Fix shipped (added `"2019"` + generalized `START_DATE` override) — full
       writeup + follow-up launch command in the sibling doc above. Evidence: `deployment-service@4fff44f`. (repo:
       market-tick-data-service backfill)
-- [ ] [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
+- [x] ✅ [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
       manifest (only 7 `attempted_failed` rows dated 2026-07-26) — the registered floor is unverifiable against measured
       reality because no real data exists yet. Investigate whether Binance COIN-M delivery contracts are actually being
-      fetched at all, or whether this is a dead/never-implemented shard. (repo: market-tick-data-service)
+      fetched at all, or whether this is a dead/never-implemented shard. (repo: market-tick-data-service) —
+      **unified-api-contracts@9241dc85**. INVESTIGATION COMPLETE: BINANCE-DELIVERY is conclusively a
+      dead/never-implemented shard. Added to MVP v9 (2026-06-24), removed by operator decision #3 in v10 (2026-06-27) —
+      has NEVER been fetched by any production pipeline. Every downstream system (MTDS cefi_catalog_reader.py:172,
+      _mvp_scope_rules.py:452-456, launch-mtds-live-cefi-consolidated.sh:30, liquid_representative.py:28) explicitly
+      excludes it per the MVP spec. No backfill launcher targets it; the live connector (binance_futures_ws.py)
+      references it only in comments. The 7 attempted_failed rows from 2026-07-26 were a one-off probe during the brief
+      v9 window. The Tardis binance-delivery endpoint is real and correctly registered, but the venue_start_dates entry
+      at 2020-01-01 is Tardis metadata only (unverifiable). Annotated the comment in venue_mapping.py to document this;
+      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse).
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
@@ -283,3 +292,5 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (6 entries).
+- **slot-6 2026-08-05** (coverage_floor_registries_no_cross_propagation-008): BINANCE-DELIVERY investigation complete —
+  conclusively dead/never-implemented. Annotated `venue_mapping.py` comment (unified-api-contracts@9241dc85).
