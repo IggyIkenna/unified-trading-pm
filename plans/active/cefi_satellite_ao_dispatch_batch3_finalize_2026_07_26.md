@@ -78,8 +78,8 @@ context_scope:
       `[BACKEND] P2` stays open (operator-gated). 1 open — does NOT reach zero. - `data_completion_cefi_2026_07_15.md`:
       E6 CF-7 edit verified landed (corrected 11.61% figure + COINBASE=0 + link). Many open checkboxes remain — does NOT
       reach zero.
-- [x] ✅ [REVIEW] P1. **Re-check batch3's own Deferred items for cleared gates.** — unified-trading-pm@<SHA> Walked all
-      6 Deferred entries in `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (2026-08-05, slot-7): **(a) 🟢 Gate
+- [x] ✅ [REVIEW] P1. **Re-check batch3's own Deferred items for cleared gates.** — unified-trading-pm@3e70f3f83 Walked
+      all 6 Deferred entries in `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (2026-08-05, slot-7): **(a) 🟢 Gate
       cleared — blank-`data_type` conflict**: resolved 2026-07-28, executed as batch3 todo 6
       (`unified-trading-pm@a3922f9c9`), 0 blank-`data_type` rows, bare-OKX×7 reclassified. Already resolved within
       batch3 itself — nothing left to extract. **(b) 🟢 Gate cleared → batch4 candidate —
