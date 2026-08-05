@@ -23,6 +23,9 @@ locked_by:
 source:
   - "market-tick-data-service@172bc0cf (the commit blocked by these failures)"
   - "market-tick-data-service@bc8bfd0f (clean LDR HEAD — same failures)"
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # MTDS — 2 pre-existing test failures blocking QG-green ship (2026-08-05)

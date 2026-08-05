@@ -12,7 +12,7 @@ summary: >-
   (unified-api-contracts market_data_categories.py TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE, root cause not
   confirmed); this extends that finding to OPTION/FUTURE/COMBO (same batch, same signature) and also found that
   frozenset is NOT actually wired into deployment-api's _ACCEPTED_EXCEPTIONS despite its own comment claiming it is.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,7 +38,7 @@ estimate_calibrated_ai_days: 1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: market-data-processing-service@b039ec2f (writer guard) + market-tick-data-service (full purge, 2026-08-05)
 locked_by:
 locked_since:
 supersedes:
@@ -324,19 +324,27 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
       2026-08-03), independently of this doc. Verified live on `origin/live-defi-rollout`, working tree clean. No code
       change needed — this todo's own diagnosis (the wiring gap) was already closed by unrelated work before this
       session found it. (repo: deployment-api)
-- [x] ✅ [DATA] P2. **NEW 2026-08-04.** Fix the 13,923 phantom rows (venue∈{CME,ICE,NASDAQ,NYSE,CBOE},
-      instrument_type∈{UD,OPTION,FUTURE,COMBO,EQUITY,ETF,INDEX}, `written_at` in
-      `2026-07-27T16:46:31Z..2026-07-27T16:46:41Z`, `instrument_id IS NULL AND underlying IS NULL`) at the ROW level — a
-      delete-safety-gated manifest CAS write scoped to this exact signature (fresh
-      `gcs_bucket_soft_delete_retention_seconds()` check + snapshot-first, mirroring the pattern already used for the
-      ESM0/SPOT/YAHOO_FINANCE purge this same day), not an axis-value quarantine (which the doc above's REVERTED entry
-      shows breaks the distinct-values panel for the axis's legitimate population). Root cause already traced
-      (`market-data-processing-service/.../canonical_writer.py::write_candle_parquet`'s aggregated-write path omitting
-      `instrument_id`/`underlying`) — this todo is the row-level remediation, not further investigation. —
-      market-tick-data-service@6c797a14 + evidence: 9,440 phantom rows purged (COMBO 4,190 already absent), snapshot at
-      gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_tradfi_bare_itype_phantom_purge_20260804T145447Z.parquet,
-      verified 0 phantom rows remain, zero non-captured collateral, soft-delete retention 604800s confirmed fresh.
-      (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **NEW 2026-08-04, FULLY CLOSED 2026-08-05.** Fix the phantom rows (venue∈{CME,ICE,NASDAQ,NYSE,CBOE},
+      instrument_type∈{UD,OPTION,FUTURE,COMBO,EQUITY,ETF,INDEX}, `instrument_id IS NULL AND underlying IS NULL`,
+      `capture_status=captured`) at the ROW level — a delete-safety-gated manifest CAS write scoped to this exact
+      signature, not an axis-value quarantine (which the doc above's REVERTED entry shows breaks the distinct-values
+      panel for the axis's legitimate population). **Two purges were needed, not one**: (1)
+      `market-tick-data-service@6c797a14` (2026-08-04) purged 9,440 rows scoped to the ORIGINAL doc's `written_at`
+      window (`2026-07-27T16:46:31Z..41Z`) — but a fresh live re-read 2026-08-05 found the SAME signature had
+      **recurred** (16,992 rows, a NEW dominant batch of 6,528 COMBO rows written `2026-08-04T08:51:36Z` — 21 hours
+      AFTER that purge ran), proving the writer bug itself was never fixed, only its symptom cleaned up once. (2)
+      Root-caused + FIXED the writer: `market-data-processing-service@b039ec2f` adds a guard in `write_candle_parquet`
+      that REFUSES (raises + records `attempted_failed`, per-shard-isolated) an aggregated blank-id+blank-underlying
+      write for these 7 non-aggregable instrument_types, converting future occurrences into a traceable failure instead
+      of a silent phantom `capture_status=captured` row. Regression test added
+      (`test_write_candle_parquet_refuses_phantom_aggregated_write_for_non_aggregable_type`); confirmed the existing
+      legitimate-aggregate test (`underlying="MES"`, a real venue rollup) is unaffected. (3) Re-purged the full,
+      unscoped population: `market-tick-data-service` (2026-08-05) — 16,992 rows removed (COMBO 6,528 / EQUITY 4,528 /
+      FUTURE 4,041 / UD 1,099 / OPTION 652 / INDEX 96 / ETF 48; falsely claimed 2,243,619,013 rows of `row_count`),
+      snapshot at `_index/backups/availability_index.pre_phantom_instrument_type_full_purge_20260805T164008Z.parquet`, 2
+      CAS attempts (1 safely rejected by concurrent writer activity, 2nd succeeded), fresh post-purge re-read confirms 0
+      phantom rows remain. Soft-delete retention 604800s confirmed fresh both purges. (repo: market-tick-data-service,
+      market-data-processing-service)
 
 ## Progress Log
 
@@ -385,3 +393,12 @@ path can be hardened to refuse `instrument_type` values with no underlying/chain
   the fix takes effect once deployment-api's own Docker image rebuilds against the new UAC version and redeploys (same
   publish→redeploy pipeline as the day's earlier tradfi fixes — see
   `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` for the CI-congestion context that also gates this).
+- **2026-08-05 (interactive session, next day)**: live re-check of the phantom-row population (unscoped by `written_at`,
+  unlike the prior day's window-scoped purge) found it had REGROWN — 16,992 rows, not the expected 0, with a fresh
+  dominant batch (6,528 COMBO rows) written 21 hours AFTER the prior purge. This proved the writer bug was never
+  actually fixed, only its symptom cleaned up once — a genuinely different, more serious finding than "one historical
+  batch to clean up." Root-caused + fixed the writer itself (`market-data-processing-service@b039ec2f`, guard in
+  `write_candle_parquet` refusing the phantom write shape outright) and re-purged the full current population (16,992
+  rows, `market-tick-data-service`, verified 0 remain). `status: resolved` — this time backed by a code fix that
+  prevents recurrence, not just another cleanup pass. Deployment-api's own display fix (separate finding above) still
+  needs its live traffic promoted to a newer revision — flagged separately, not blocking this todo's closure.

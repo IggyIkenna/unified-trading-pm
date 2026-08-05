@@ -22,6 +22,9 @@ assigned_vm: planning
 source: [mvp_backfill_defi_onchain_v10-005]
 locked_by: ""
 resolved_by: ""
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

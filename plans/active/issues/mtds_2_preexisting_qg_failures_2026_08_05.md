@@ -26,6 +26,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # 2 pre-existing QG test failures block MTDS quickmerge

@@ -31,6 +31,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-docs
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # MTDS QG red from UAC capability-declaration drift
