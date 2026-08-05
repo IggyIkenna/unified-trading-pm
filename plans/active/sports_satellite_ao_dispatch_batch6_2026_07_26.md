@@ -243,10 +243,10 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       `features_service/sports/` (`grep -rn "pd\.NA" features_service/sports/`, 14 hits across 9 files) and verdicted
       each: - `season_context.py:255` / `writer.py:157`'s comment — **NOT a dtype risk, no change.** Already
       independently verified 2026-07-30 in
-      `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s own sibling `[REVIEW]` item: every
-      one of the 20 `SEASON_CONTEXT_COLUMNS` has a real, grep-confirmed assignment site. Spot- re-read this pass:
-      unchanged since that verdict — no new action. - `goal_timing.py:301` — **genuinely never-filled → FIXED.**
-      `early_goal_rate_*`/`late_goal_rate_*` (via `_derive_rates`) and the bucket/situational copies are only
+      `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s own sibling
+      `[REVIEW]` item: every one of the 20 `SEASON_CONTEXT_COLUMNS` has a real, grep-confirmed assignment site. Spot-
+      re-read this pass: unchanged since that verdict — no new action. - `goal_timing.py:301` — **genuinely never-filled
+      → FIXED.** `early_goal_rate_*`/`late_goal_rate_*` (via `_derive_rates`) and the bucket/situational copies are only
       conditionally overwritten when their source columns are present in the input; when absent, the `pd.NA` pre-fill
       survives to return. Converted to `np.nan`. - `league_calculator.py:78` — **genuinely never-filled → FIXED.**
       `compute_league_features` (a live registered feature builder, `tracking/feature_builder_registry.py:66`) only ever
@@ -267,9 +267,9 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       `BUCKETED_FEATURES_COLUMNS` are genuinely categorical/string bucket labels (e.g. `"3-4"`, `"low"`) — `object`
       dtype is the correct, intended dtype for these columns, not an upcast artifact. `quality-gates.sh` green
       (sentinel-verified at `06a98496`). Repo: features-service. Source:
-      `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (`[REVIEW]` item). **Note**: that
-      doc's sibling `[OPERATOR/DESIGN] P3` item (decide which of the 5 unfilled xG column groups to build vs prune) is
-      deliberately NOT extracted — the doc itself stops at diagnosis per the dispatch-scope rule.
+      `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (`[REVIEW]` item).
+      **Note**: that doc's sibling `[OPERATOR/DESIGN] P3` item (decide which of the 5 unfilled xG column groups to build
+      vs prune) is deliberately NOT extracted — the doc itself stops at diagnosis per the dispatch-scope rule.
 
 - [x] ✅ [DOC] P1. **DONE — `unified-trading-pm@1e0399d6e`.** Added the missing source-doc-archival todo to the 5 sports
       `*_finalize` plans — the omission is why a CI gate had to auto-remediate 11 docs at 02:57Z today.**
@@ -391,13 +391,13 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       be FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
       adaptor/feature should be FULLY REMOVED... No half-built, half-referenced adaptors left lying around either way,"
       extended here to feature COLUMNS rather than adapters) — retagged away from `[OPERATOR/DESIGN]`, moved out of
-      Deferred.** `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s 5 unfilled xG column
-      groups (per-source passthroughs, disagreement/range, derived consensus, historical accuracy, league rank) default
-      to **BUILD, not prune** — the theme does not accept "uncertain model value" as grounds for removal, only a PROVEN
-      data-infeasibility does. For each of the 5 groups: (1) investigate whether the underlying inputs are actually
-      obtainable from already-captured per-source data (the doc's own framing suggests most are — e.g. per-source
-      passthroughs and disagreement ranges are pure derived computations over odds/xG data this pipeline already
-      captures, not a new data source); (2) if feasible, implement the group to FULL completion in
+      Deferred.** `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s 5
+      unfilled xG column groups (per-source passthroughs, disagreement/range, derived consensus, historical accuracy,
+      league rank) default to **BUILD, not prune** — the theme does not accept "uncertain model value" as grounds for
+      removal, only a PROVEN data-infeasibility does. For each of the 5 groups: (1) investigate whether the underlying
+      inputs are actually obtainable from already-captured per-source data (the doc's own framing suggests most are —
+      e.g. per-source passthroughs and disagreement ranges are pure derived computations over odds/xG data this pipeline
+      already captures, not a new data source); (2) if feasible, implement the group to FULL completion in
       `MULTISOURCE_XG_COLUMNS` (no partial/placeholder columns); (3) only if a group is proven infeasible (the source
       data genuinely does not exist anywhere reachable), fully remove it — from `MULTISOURCE_XG_COLUMNS`, any UAC schema
       reference, the manifest, and docs, per the "no half-built, half-referenced" mandate — rather than leaving a schema

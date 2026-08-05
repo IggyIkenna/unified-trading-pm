@@ -780,10 +780,10 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       `("volatility",     "TRADFI")` and `("delta_one", "CEFI")` overrides.
 - [x] [DATA] P2. ✅ Both gaps ALREADY have their own dedicated, deeper root-cause docs from other slots — filing a 3rd
       "consolidated" doc would duplicate rather than add value. Appended a 2026-07-27 live-reproduction corroboration
-      note to each instead: `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (21/28 columns
-      confirmed all-NaN across 13 days this session, consistent with its dead-placeholder-schema diagnosis) and
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` (`player_lineup` 74/74 all-zero confirmed on
-      day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
+      note to each instead: `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`
+      (21/28 columns confirmed all-NaN across 13 days this session, consistent with its dead-placeholder-schema
+      diagnosis) and `issues/sports_features_layer_findings_sweep_2026_07_18.md` (`player_lineup` 74/74 all-zero
+      confirmed on day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
       `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
       independently diagnosed further).
 - [x] ✅ [DATA] P2. **CORRECTED 2026-07-29 (slot-6) — narrowed to `perp_funding` specifically, not all 5 data_types.** A

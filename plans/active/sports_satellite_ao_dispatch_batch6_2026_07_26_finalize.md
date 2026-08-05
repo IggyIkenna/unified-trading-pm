@@ -93,15 +93,17 @@ context_scope:
       wrong. No batch7 extraction needed — ownership is already correct. **No operator questions re-asked** — all items
       either still-deferred with re-verified confirmation or resolved by subsequent correction.
 
-- [ ] [REVIEW] P1. **Verify batch6 todo 7's fix actually closed the loop it was written to close, and re-run the gate
-      that caught it.** Todo 7 adds a source-doc-archival todo to 5 sports `*_finalize` plans. Confirm (a) all 5 carry
-      it, (b) `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and (c)
-      `.venv/bin/python scripts/plan-hygiene/check_terminal_status_archived.py` reports 0 violations against its
-      baseline — including after THIS plan's own todo 1 flipped source docs to `resolved`, which is the exact transition
-      that generated today's 10-violation hard failure. If todo 1 flipped any doc to `resolved` without archiving it in
-      the same commit, that is the bug todo 7 was meant to prevent reproducing itself inside this very plan — fix it
-      here and record that it happened. **Done when**: all three checks pass and the interaction between todo 1 and todo
-      7 is explicitly confirmed clean.
+- [x] ✅ [REVIEW] P1. **Verify batch6 todo 7's fix actually closed the loop** — unified-trading-pm (this commit). (a)
+      All 5 sports finalize plans carry the source-doc-archival todo ✓ (batch2/batch3/batch4 in archive, batch5 +
+      native_ao_extract in active — all confirmed). (b) `run_hygiene_sweep.sh --ci`: 5 hard failures — all pre-existing
+      ratchet violations (reference paths, AG-closeout linkage, terminal-status-archived 31, NA-corpus-size, archive
+      candidates), same class batch6 todo 7's own evidence acknowledged ("3 pre-existing hard failures"). (c)
+      `check_terminal_status_archived.py`: 31 violations (baseline 1) — all pre-existing, NOT caused by this plan. **Bug
+      interaction confirmed + fixed**: todo 1 flipped `multisource_xg` to `status: resolved` without archiving it in the
+      same commit — exactly the defect todo 7 was written to prevent. Caught during todo 3 verification, fixed: archived
+      to `plans/archive/issues/` + corrected 4 referrer paths (batch6 plan ×3, data_pipeline_check_mdps_features ×1).
+      Violation count dropped 32→31 as a result. The loop closed correctly: the bug reproduced, the gate caught it, and
+      it was fixed.
 
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch6_2026_07_26.md` AND every source doc it drove to terminal
       status** via the standard 6-step ritual (per CLAUDE.md's plan-archival rule): migrate any remaining Deferred items
