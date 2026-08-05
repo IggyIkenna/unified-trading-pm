@@ -338,3 +338,4 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   `sports-cf8-maintenance-window-scheduled` to `true`. The `gates_queued=0` gap (no formal prereq linkage) is a
   structural issue to address separately — per RULES.md §4, `prereqs.prerequisites` is yaml-only tuning, not
   plan-derivable. No code shipped this touch — read-only gate check + plan doc edits only.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

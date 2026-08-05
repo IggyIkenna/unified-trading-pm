@@ -209,3 +209,4 @@ finding, just not caught by any existing gate because no gate watches this speci
   book_snapshot_5. Full 5-day backfill expected to complete within ~1-2 hours. VM investigation for todo 3: both
   2024/2025 HL VMs confirmed ALIVE and making legitimate progress (multi-year S3 backfills, NOT hung) — detailed
   findings inline in todo 3.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (7 entries), unchanged.

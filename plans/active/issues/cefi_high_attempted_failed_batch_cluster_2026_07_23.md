@@ -634,3 +634,4 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   `VENUE_FETCH_FAILED` bucket remains as one un-attributed category; accepting that as steady state is the pragmatic
   outcome given the irrecoverable normalization. No GCS write, no manifest modification, no code shipped; PM plan-doc
   edit only.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

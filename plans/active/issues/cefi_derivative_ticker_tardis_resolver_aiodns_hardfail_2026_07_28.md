@@ -587,3 +587,4 @@ and the residual-KeyError defense-in-depth path.
   sweeps. The 10 residual rows are likely from the stuck `mtds-live-cefi-consolidated-20260802-142543` VM (see
   `[OPERATOR]` P1 above) running pre-fix code. **No code change needed** (current code handles 404 correctly; historical
   rows will be retried by the next natural cefi backfill sweep, same disposition as the other P3 retry todos).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

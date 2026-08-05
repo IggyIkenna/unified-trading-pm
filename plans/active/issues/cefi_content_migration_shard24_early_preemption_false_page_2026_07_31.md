@@ -189,3 +189,4 @@ someone checks.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
   deploy-lag redeploy confirmation is still a genuine production-redeploy judgment call, with the relaunch todo gated on
   it.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

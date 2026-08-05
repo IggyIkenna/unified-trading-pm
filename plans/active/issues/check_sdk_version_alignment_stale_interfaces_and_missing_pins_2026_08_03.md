@@ -146,3 +146,4 @@ exactly the kind of silent schema/SDK version mismatch the check exists to catch
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -303,3 +303,4 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE-duplicated — reaffirms the 2026-08-01
   verdict (batch4 still `status: draft`, not yet activated) and actually applies the citation banner above the 3 open
   checkboxes that entry only described in prose. `assigned_vm` left `NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

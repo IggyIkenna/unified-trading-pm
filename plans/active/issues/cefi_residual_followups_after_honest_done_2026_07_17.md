@@ -738,3 +738,4 @@ pairs stay honest-unresolved (reported, never guessed).
   contracts" checkbox was stale (its merge target, Phase 2's SSOT-contradiction item, is itself `[x]` DONE); closed with
   citation. Doc stays NA overall — the 586-row blast-radius call, the features schema-shape gap, and the corpus-scale
   `--apply` campaign remain genuine judgment/operator-gated work.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

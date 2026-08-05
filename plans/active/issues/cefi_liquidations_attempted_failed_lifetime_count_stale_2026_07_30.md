@@ -217,3 +217,4 @@ not lost if the bound expires unanswered.
   gated on that choice. Neither is worker-determinable.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
   still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

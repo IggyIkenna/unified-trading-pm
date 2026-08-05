@@ -137,3 +137,4 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
     404 on instrument-store (BINANCE-FUTURES/BYBIT/DERIBIT/ BINANCE-DELIVERY/OKX) — shard-level isolated. 300s
     okex-options timeouts (harmless, different data_type). Per-VM manifest: 68,313 entries. VM shutting down (sleep 75 +
     auto-delete). ✅ Checkbox flipped. — slot-6 verification complete.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

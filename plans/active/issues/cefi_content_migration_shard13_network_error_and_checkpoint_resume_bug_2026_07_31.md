@@ -163,3 +163,4 @@ real progress, until this fix.
   KEEP-NA-STALE-duplicated — the sole open todo is already extracted verbatim into
   `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 4 (`status: draft`), which the 2026-08-01 pass didn't flag;
   applied the citation banner above. `assigned_vm` left `NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
