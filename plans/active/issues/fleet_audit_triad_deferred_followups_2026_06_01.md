@@ -87,9 +87,14 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       decision remains pending on this line — retagged off [OPERATOR] accordingly. **Checkbox flipped 2026-08-05
       (slot-4, fleet_audit_triad_deferred_followups-015)** — the operator gate is resolved and the backfill is tracked
       elsewhere; the doc's "let it be" banner still parks the remaining deferred items.
-- [ ] [DATA] P3. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) deferred until operator sees fit.**
-      Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
-      in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.
+- [x] ✅ [DATA] P3. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) — DONE (2026-08-05, slot-2).**
+      Resolved by `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`: Phase A (2026-07-30,
+      `canonical-migration-cefi-20260730-012546`) migrated 275,363 objects legacy→canonical via
+      `migrate_cefi_flat_to_v9_canonical.py`, filling the 22-day gap; Phase B (2026-08-03,
+      `canonical-migration-cefi-drop-stale-20260803-120428`) phantom-sweep deleted 287,074 stale legacy objects.
+      Residual: manifest `_index` rebuild (re-consolidation) is Phase D of that plan, still pending — tracked there, not
+      here. Playbook reference (for history): `cefi_..._2026_05_27.md` §6I +
+      `bucket_name_ssot_canonicalisation_2026_05_10`.
 
 ### TradFi MDPS reprocess + codex marker drift (folded in 2026-06-01, from deleted `mdps_tradfi_backfill_log_findings`)
 
@@ -112,20 +117,20 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       breakage).
 
       **MOSTLY STALE-DONE (2026-07-30, conflict-check)** — `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md:375`
-                                                                          already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
-                                                                          `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
-                                                                          (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
-                                                                          reconciliation.
+                                                                              already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
+                                                                              `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
+                                                                              (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
+                                                                              reconciliation.
 
-                                                              **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
-                                                              claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
-                                                              `/codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
-                                                              the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
-                                                              uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
-                                                              (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short
-                                                              cross-reference note to each of the 3 docs pointing to the as-shipped marker
-                                                              (`staleness_seconds>0 + trade_count==0`) and the B2 banner, so a reader landing on the legacy token isn't misled.
-                                                              — unified-trading-pm@(this commit).
+                                                                  **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
+                                                                  claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
+                                                                  `/codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
+                                                                  the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
+                                                                  uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
+                                                                  (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short
+                                                                  cross-reference note to each of the 3 docs pointing to the as-shipped marker
+                                                                  (`staleness_seconds>0 + trade_count==0`) and the B2 banner, so a reader landing on the legacy token isn't misled.
+                                                                  — unified-trading-pm@(this commit).
 
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 
@@ -149,17 +154,17 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       future change touches these surfaces, run the smoke suite where system deps exist before re-ticking.
 
       **DONE (2026-08-02, slot-7) — the `libatk` slot-env blocker is RESOLVED; pw:L2 now runs green in-slot.** Verified
-                                                          empirically in the slot-7 worktree (deployment-ui@b7f5d81): `ldd chrome` reports 0 missing libs and a headless
-                                                          chromium launch succeeds, so the 2026-06-01 "`libatk-1.0.so.0` missing" premise no longer holds. Ran the full pw:L2
-                                                          **smoke** suite the item asked for — `npx playwright test tests/smoke` (per-slot mock server on :5206,
-                                                          `VITE_MOCK_API=true`, workers=1) → **428 passed / 0 failed (8.3m), exit 0**, covering the VM- and venue-coverage
-                                                          surfaces this item guards (e.g. `vm_deployments_reconcile`, `vm-resource-rolling-window`, `venue_*`,
-                                                          `data_status_coverage_labels`, cockpit AG/VM picker). This re-tick satisfies the item's own condition ("run the
-                                                          smoke suite where system deps exist before re-ticking"). NB the heavier `tests/e2e/**` drilldown specs showed
-                                                          30.0s-timeout flakes when run concurrently under host load-avg ~42 on 16 cores (5 sibling slots running Playwright)
-                                                          — that is the shared-host-contention flakiness the `playwright.config.ts` comment already documents (workers=1
-                                                          mitigates but does not eliminate it), not a regression, and e2e is outside this item's "smoke suite" scope. Doc-only
-                                                          flip: the specs (`deployment-ui@7bbc270`) were already shipped; only the run-and-re-tick remained.
+                                                              empirically in the slot-7 worktree (deployment-ui@b7f5d81): `ldd chrome` reports 0 missing libs and a headless
+                                                              chromium launch succeeds, so the 2026-06-01 "`libatk-1.0.so.0` missing" premise no longer holds. Ran the full pw:L2
+                                                              **smoke** suite the item asked for — `npx playwright test tests/smoke` (per-slot mock server on :5206,
+                                                              `VITE_MOCK_API=true`, workers=1) → **428 passed / 0 failed (8.3m), exit 0**, covering the VM- and venue-coverage
+                                                              surfaces this item guards (e.g. `vm_deployments_reconcile`, `vm-resource-rolling-window`, `venue_*`,
+                                                              `data_status_coverage_labels`, cockpit AG/VM picker). This re-tick satisfies the item's own condition ("run the
+                                                              smoke suite where system deps exist before re-ticking"). NB the heavier `tests/e2e/**` drilldown specs showed
+                                                              30.0s-timeout flakes when run concurrently under host load-avg ~42 on 16 cores (5 sibling slots running Playwright)
+                                                              — that is the shared-host-contention flakiness the `playwright.config.ts` comment already documents (workers=1
+                                                              mitigates but does not eliminate it), not a regression, and e2e is outside this item's "smoke suite" scope. Doc-only
+                                                              flip: the specs (`deployment-ui@7bbc270`) were already shipped; only the run-and-re-tick remained.
 
 ## Why it matters
 
