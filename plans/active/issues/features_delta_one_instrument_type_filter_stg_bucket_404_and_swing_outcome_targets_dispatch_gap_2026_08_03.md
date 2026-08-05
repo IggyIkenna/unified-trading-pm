@@ -205,23 +205,46 @@ from `calculators/__init__.py`'s module-level registry):
       bug is conclusively fixed + live-verified (real candles now load, up from a hard 0/586). The residual data-density
       gap is out of this todo's scope (a code fix cannot manufacture denser historical market data) and is tracked as
       its own new todo below.
-- [ ] [DATA] P3. Investigate the residual `UNEXPECTED_DATA_GAP` blocker found while re-verifying the P2 todo above: real
-      1-minute TRADFI candle data in `market-data-tick-tradfi-prd-central-element-323112` for `2026-01-20/2026-01-21`
-      (and neighboring days in a ~20-day lookback window) is genuinely sparse within regular trading-session hours for
-      the sampled instruments (`NASDAQ:EQUITY:AAPL-USD`/`IBIT`/`INTU-USD` — e.g. AAPL: only 85/284 hourly-resampled
-      candles within trading hours had real OHLC values across the buffered window; `orchestrator.py`'s
-      `_filter_market_state` gap-tolerance validator correctly flagged this rather than silently computing on missing
-      data). Determine whether this is (a) a genuine, expected characteristic of this environment's TRADFI candle corpus
-      (a lighter/partial backfill density than production would carry, in which case NO from-scratch TRADFI delta_one
-      force run can ever pass the current gap-tolerance bar for a historical window without a denser backfill), or (b)
-      evidence of a real MDPS/Databento backfill gap that should be re-run for genuine density. **Done when**: either
-      (a) confirmed + documented as an accepted environment characteristic (with a decision on whether the gap-tolerance
-      check should differ for `-test-`/dev-tier runs), or (b) a scoped backfill re-run restores dense coverage and a
-      from-scratch TRADFI:delta_one force run genuinely passes ≥1 feature group. Repo: features-service (validator) +
-      market-data-processing-service/deployment-service (if a backfill is the fix). Needs an operator decision on
-      scope/cost before a backfill VM is launched — do not launch one without that.
+- [x] ✅ [DATA] P3. Investigate the residual `UNEXPECTED_DATA_GAP` blocker found while re-verifying the P2 todo above:
+      real 1-minute TRADFI candle data in `market-data-tick-tradfi-prd-central-element-323112` for
+      `2026-01-20/2026-01-21` (and neighboring days in a ~20-day lookback window) is genuinely sparse within regular
+      trading-session hours for the sampled instruments (`NASDAQ:EQUITY:AAPL-USD`/`IBIT`/`INTU-USD` — e.g. AAPL: only
+      85/284 hourly-resampled candles within trading hours had real OHLC values across the buffered window;
+      `orchestrator.py`'s `_filter_market_state` gap-tolerance validator correctly flagged this rather than silently
+      computing on missing data). Determine whether this is (a) a genuine, expected characteristic of this environment's
+      TRADFI candle corpus (a lighter/partial backfill density than production would carry, in which case NO
+      from-scratch TRADFI delta_one force run can ever pass the current gap-tolerance bar for a historical window
+      without a denser backfill), or (b) evidence of a real MDPS/Databento backfill gap that should be re-run for
+      genuine density. **Done when**: either (a) confirmed + documented as an accepted environment characteristic (with
+      a decision on whether the gap-tolerance check should differ for `-test-`/dev-tier runs), or (b) a scoped backfill
+      re-run restores dense coverage and a from-scratch TRADFI:delta_one force run genuinely passes ≥1 feature group.
+      Repo: features-service (validator) + market-data-processing-service/deployment-service (if a backfill is the fix).
+      Needs an operator decision on scope/cost before a backfill VM is launched — do not launch one without that.
 
 ## Progress Log
+
+- 2026-08-05 (slot-2, data_engineering): **P3 investigation complete — verdict (a): confirmed as expected environment
+  characteristic.** Direct GCS evidence (not code review alone):
+  - **Corpus scale**: `market-data-tick-tradfi-prd` has 103,195 total 1m parquet objects across all dates, but only
+    **3-4 equity instruments** total (AAPL-USD, ETHA, IBIT, occasionally ABBV-USD) — the same tickers repeat across the
+    sparse subset of dates that have any equity data. 2026-01-20 has 43 `ohlcv_1m` parquets across ALL instrument types
+    combined (EQUITY: 3; FUTURE/COMBO/OPTION/continuous_future the remaining 40). Recent dates (July 2026) have ZERO
+    equity `ohlcv_1m` at all.
+  - **`-test-` bucket**: `market-data-tick-tradfi-test` has NO `processed_candles/` prefix — zero candle data. The
+    `-prd-` bucket is the sole TRADFI candle corpus for both prod and dev/test.
+  - **Manifest**: consolidator is stalled (`verdict: "empty"`, `error_reason: "locked"`, `no_op: true`).
+  - **Consistency**: per-date counts are 0-4 equities across all sampled dates (Jan 2026 through Jul 2026), with no
+    uptick toward more recent dates — this is a deliberately minimal backfill (just enough instruments to validate
+    pipeline mechanics), not a partial-backfill-in-progress that will grow denser over time.
+  - **Gap-tolerance recommendation**: `_filter_market_state`'s `boundary_tolerance = max(2, 4)` (4 NaN candles max
+    within trading hours) is tuned for production-density data and is too strict for the current sparse dev-tier corpus.
+    A `-test-`/`IS_TEST_RUN`-aware relaxation (or skip) of this specific check should be scoped as its own follow-up —
+    the validator itself is working correctly (data IS genuinely sparse, no code defect), but a dev-tier run that will
+    never have dense data shouldn't fail on a production-density assumption.
+  - **Decision**: no backfill VM needed. A production-density TRADFI backfill would require downloading all Databento
+    datasets for 586+ instruments across all dates — a separate, explicitly scoped plan with operator sign-off on
+    Databento billing cost. Not this issue's scope. This closes the last open todo. No code change (investigation-only
+    task).
 
 - 2026-08-03 (slot-16, data_engineering): Filed while working the P2 re-verification todo in
   `features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`. Root-caused via direct `run.log` read of the
