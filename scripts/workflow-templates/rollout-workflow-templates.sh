@@ -233,6 +233,28 @@ get_qg_runner_labels() {
   fi
 }
 
+# Direct `runs-on:` value for the 8 templates that hardcode the glue pool inline (not via a
+# reusable-workflow `self_hosted_runner_labels` input like quality-gates-v2/semver-agent's OWN
+# job list before this fix) — main-backmerge-to-ldr.yml, major-bump-issue-handler.yml,
+# request-major-bump.yml, staging-backmerge-to-ldr.yml, staging-lock-check.yml,
+# update-dependency-version.yml, version-registry-notify.yml, and semver-agent.yml.tmpl's own
+# `semver:` job. Added 2026-08-05 (self_hosted_runner_public_repo_revert_2026_08_05.md):
+# these were unconditionally `[self-hosted, glue]` for EVERY repo regardless of visibility —
+# 17 of the ~23 repos on self-hosted-qg-repos.txt turned out to be PUBLIC GitHub repos, where
+# GitHub Actions on GitHub-hosted runners is unmetered. Same allowlist as
+# get_qg_runner_labels() (a repo's self-hosted-vs-not decision is ONE fact, not one per
+# workflow file) — differs only in the empty-case fallback, since these substitute directly
+# into `runs-on:` and need a valid YAML value, not a JSON-string input meant for a callee's own
+# `|| '["ubuntu-latest"]'` fallback.
+get_runs_on_value() {
+  local repo="$1" allowlist="$SCRIPT_DIR/self-hosted-qg-repos.txt"
+  if [ -f "$allowlist" ] && grep -qxF "$repo" "$allowlist" 2>/dev/null; then
+    printf '[self-hosted, glue]'
+  else
+    printf 'ubuntu-latest'
+  fi
+}
+
 updated=0
 skipped=0
 missing_dir=0
@@ -296,11 +318,13 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       repo_underscore="${repo//-/_}"
       version_source=$(get_version_source "$repo")
       qg_runner_labels=$(get_qg_runner_labels "$repo")
+      runs_on_value=$(get_runs_on_value "$repo")
       rendered=$(sed -e "s/{{DEP_REPOS}}/${dep_repos}/g" \
                      -e "s/__REPO_NAME__/${repo}/g" \
                      -e "s/__SOURCE_DIR__/${repo_underscore}/g" \
                      -e "s/__VERSION_SOURCE__/${version_source}/g" \
                      -e "s#{{QG_RUNNER_LABELS}}#${qg_runner_labels}#g" \
+                     -e "s#{{RUNS_ON}}#${runs_on_value}#g" \
                      "$template")
       # Skip if target already matches rendered output
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
@@ -314,15 +338,21 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
         echo "  [$([ -f "$target" ] && echo updated || echo created)-tmpl] $repo (dep_repos=${dep_repos})"
       fi
     else
-      # Check if target already matches template (skip if identical)
-      if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then
+      # "Flat copy" templates still get the {{RUNS_ON}} substitution (2026-08-05,
+      # get_runs_on_value() above) — a no-op sed pass for any template that doesn't contain
+      # the placeholder, so this stays byte-identical to a real `cp` for those. Compare
+      # rendered content (not `diff` against the raw template) so the skip-if-unchanged check
+      # is still correct for templates that DO substitute.
+      runs_on_value=$(get_runs_on_value "$repo")
+      rendered=$(sed -e "s#{{RUNS_ON}}#${runs_on_value}#g" "$template")
+      if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
         skipped=$((skipped + 1))
         continue
       fi
       if [ "$DRY_RUN" = true ]; then
         echo "  [dry-$([ -f "$target" ] && echo update || echo create)] $repo"
       else
-        cp "$template" "$target"
+        echo "$rendered" > "$target"
         echo "  [$([ -f "$target" ] && echo updated || echo created)] $repo"
       fi
     fi

@@ -65,26 +65,23 @@
 # needed). This is a single-snapshot check, not a durably-proven fix for the underlying host-thrashing mechanism —
 # if either repo's `QG slice (tests)` job shows the same starvation/SIGALRM signature again, revert per the same
 # precedented per-repo playbook (this is the 2nd/3rd cycle for each, not a first attempt).
+# 15 PUBLIC repos REMOVED 2026-08-05 (self_hosted_runner_public_repo_revert_2026_08_05.md, operator-confirmed
+# intentionally public): system-integration-tests, trading-agent-service, unified-trading-library,
+# unified-api-contracts, unified-trading-api, fund-administration-service, greeks-service, ibkr-gateway-infra,
+# instruments-service, batch-live-reconciliation-service, alerting-service, client-reporting-api, deployment-api,
+# market-data-processing-service, deployment-service. GitHub Actions on GitHub-hosted runners is UNMETERED for
+# public repos regardless of minutes used — none of the self-hosted-migration docs above ever checked repo
+# visibility before adding these. Reverting relieves the shared self-hosted VM's documented capacity contention
+# (fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md) at zero billing cost. This is a DIFFERENT,
+# permanent reason from unified-trading-library's/e2e-testing's own prior revert/re-add cycles above (those were
+# about host contention, not billing) — do not fold this into that flaky-recurrence pattern.
+#
+# Remaining 8 are PRIVATE and genuinely need self-hosting for billing:
 agent-orchestrator
 unified-trading-pm
 strategy-service
-system-integration-tests
-trading-agent-service
-unified-trading-library
 e2e-testing
-unified-api-contracts
-unified-trading-api
 features-service
-fund-administration-service
-greeks-service
-ibkr-gateway-infra
-instruments-service
 market-tick-data-service
 execution-service
-batch-live-reconciliation-service
-alerting-service
-client-reporting-api
 ml-service
-deployment-api
-market-data-processing-service
-deployment-service
