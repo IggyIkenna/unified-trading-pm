@@ -198,29 +198,127 @@ shipped.
 - **option (c)** — operator directs an alternative path.
 - **`can_continue`**: NO for shipping; YES for prep (backfill script + VM launcher are validated and ready).
 
+### 2026-08-05 (slot-14) — census DONE; residual fully explained; Track S2 flip ready
+
+- **Consolidated index fresh 14:10:06Z** (watcher bwzyzdf27): `consolidator_run_at=2026-08-05T14:10:06`,
+  `consolidator_content_write_at=2026-08-05T14:00:42` ≥ backfill shard (13:54:18Z). Execution `w8szq` (lock 14:00:42)
+  included the 44,296 backfill cells — the per-minute cron self-healed exactly as the churn note below predicted.
+- **Fresh bounded TEAMS census** (`teams_coverage_census_2026_08_05.py` under `run-bounded-analysis.sh --mem-cap 6G`, on
+  the post-consolidation index): TEAMS rows=678,275;
+  `captured=582,088 empty_confirmed=74,252 expected_unattempted=21,918 attempted_failed=17`; **0 surviving dedup twins**
+  (dedup-key fix verified in the consolidated output); NULL league_id=3,134 / ''=0 (pre-existing representation);
+  captured span 2018-01-01→2026-08-12.
+- **Residual 21,918 is FULLY EXPLAINED — source-empty, NOT a defect**: the backfill's own launch gap-analysis was 322
+  leagues / **66,487** cells; 44,296 written; **104 leagues' `/teams` calls returned 0 teams** (VM run.log:
+  `0 teams returned — no roster to backfill with`; 0 fetch failures) → excluded from writes. Post-consolidation residual
+  league set (98) ⊂ 0-team set (104): **0 residual cells exist for any roster-having league**. 6 of the 104 (~273 cells:
+  COPA_LIGA_PROFESIONAL / COPA_MX / EMPEROR_CUP / FA_CUP / GREEK_SUPER_LEAGUE_2 / SUPERCOPPA_ITALIANA) were cleared by
+  concurrent writers. A roster-stamp backfill cannot fabricate teams for these 98 leagues (off-season cups / defunct /
+  no registered teams) — structurally unbackfillable. Follow-up tracked below.
+- **Probe OOM lesson**: the first residual probe OOM'd at RSS 6.82GB (>6G cap) materialising the full 9.25M-row index to
+  pandas; the arrow-native rewrite (filter-in-pyarrow → only ~22k rows reach pandas) runs well under the cap. Never
+  materialise the full index to pandas in-session.
+
+**Follow-up (tracked — findings-triage, not prose):**
+
+- [ ] [DATA] P3. **TEAMS 98-league residual (21,918 cells) — `empty_confirmed` re-classification question** — after the
+      Track S2 full-history backfill, 21,918 `expected_unattempted` TEAMS cells remain across 98 leagues where
+      api_football `/teams` returns 0 teams (evidence: VM run.log `0 teams returned`; residual⊂0-team set; 0 fetch
+      failures). A roster-stamp backfill cannot clear these. Decision: (a) leave `expected_unattempted` (current), or
+      (b) re-classify to `empty_confirmed` (honest-absence: a 0-team response IS evidence of absence) — but the daily
+      orchestrator's presence-guard refuses `empty_confirmed` over present data and these are historical cells, so the
+      semantics need the sports-track owner; or (c) a per-season `/teams?id=&season=` variant if the API supports it.
+      Owned by the sports reference-data track; NOT a blocker for the backfill todo. SSOT: this issue doc.
+
+### 2026-08-05 (slot-14) — RESOLVED: Track S2 SHIP cleared via the sanctioned docs(plans) carve-out (was: BLOCKED-OPERATOR on fleet-wide PM QG red — 3 pre-existing foreign checks)
+
+- **The flip + evidence commit is ready on-disk but CANNOT ship.** PM quickmerge's post-gate re-gate fails AND PM
+  `quality-gates.sh` is itself RED on 3 checks — all 3 are PRE-EXISTING and FOREIGN: committed on
+  `origin/live-defi-rollout`, introduced by today's commits from other agents (I pulled 8 such commits 14:20Z;
+  `git rev-list --count origin/live-defi-rollout..HEAD` = 0). Verified NONE touch this issue doc or
+  `sports_consolidated_native_ao_extract_2026_07_25.md` — grep of the full failure lists shows 0 hits for my 2 files,
+  and my `UTL@11009da7` citation resolves.
+- **The 3 failing checks** (all wired into PM `quality-gates.sh` → PM QG globally red → blocks EVERY PM ship, not just
+  this task):
+  1. **finalize-plan-coverage** (1 > baseline 0):
+     `plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` — a NEW AO plan (committed today
+     `3b0d18bd9`) shipped without a gated finalize plan. Owner: MTDS track (author its finalize phase). NOT a
+     re-baseline case — that would permanently mask a real mid-flight process violation.
+  2. **plan-commit-sha-evidence** (28 > baseline 26, +2 from today's new plans): 28 unresolved citations across ~12+
+     other plans. Owner: per-plan owners / gate-maintainer. NOT re-baselined unilaterally (would mask potentially-real
+     citation issues).
+  3. **agent-rules-size-cap** (HARD cap, 48 B over): `cursor-configs/CLAUDE.md` = 41,008 B > 40,960 B, from today's
+     `docs(agent-rules)`/`docs(codex)` edits. Owner: workspace maintainers (condense per the file's own rule). I did NOT
+     edit the shared config — another session is actively editing it.
+- **Workarounds still forbidden**: re-baselining the ratchets or condensing the shared `cursor-configs/CLAUDE.md` would
+  mask/alter FOREIGN violations — not mine to do, and the owners are actively working (MTDS plan + CLAUDE.md both
+  touched today). **Direct-pushing a PURE `docs(plans):` flip is DIFFERENT — it is the SANCTIONED carve-out for exactly
+  this case, not a dodge**: the pre-push hook (`scripts/hooks/pre-push`) states "any commit touching NO source
+  (docs/plans/codex/scripts/.github, _.md/_.yaml/… via CARVE_PREFIX/CARVE_EXT) … A docs or plan push is therefore
+  unaffected in every repo"; `check_strict_quickmerge.py`'s closed carve-out set includes `plans/**`/`*.md`;
+  unified-trading-pm is EXEMPT from the strict-quickmerge guard (operator ruling 2026-07-17); and CLAUDE.md's
+  QG-batching rule routes "pure doc/plan-flip → prek only". The flip changes 0 source files, adds 0 new violations, and
+  leaves all 3 foreign reds fully visible to their owners.
+- **Status**: `can_continue` NO for shipping until the tree clears. The flip is safe on-disk (plan line 561 `- [x] ✅`,
+  line 567 evidence, line-neutral @ 1000). A bounded watchdog (Monitor, 60 min) polls the 3 checks and fires when the
+  tree is green → then: quickmerge issue doc + flip together, verify `origin/live-defi-rollout..HEAD` = 0, POST /done
+  `sports_consolidated_native_ao_extract-022`.
+- **Task WORK is DONE + verified independent of the ship block**: prerequisite shipped (`UTL@11009da7`), backfill
+  44,296/44,296 cells (0 failed, SPOT VM self-deleted), fresh bounded census cited in the entry above.
+
+### 2026-08-05 (slot-14) — SHIPPED (corrected re-land): Track S2 flip + evidence on origin/live-defi-rollout (d6fa4db9e)
+
+- **The ship block was cleared via the documented carve-out** (re-analysis in the section above), **but the FIRST ship
+  attempt produced a CORRUPTED local commit — never pushed.** The commit-time `prettier-autostage` hook inflated the
+  plan to 1003 lines (> the 1000 hard cap): the `plan-hygiene` pre-commit gate runs BEFORE prettier and validated the
+  pre-prettier ~999-line staged file, then prettier re-staged a 1003-line file, so the corruption slipped past the gate.
+  Repair: `git reset --soft` to origin (safe — the corrupted commit was local-only, ahead=1, never on a shared branch),
+  re-applied ONLY the intended edits, pre-ran `prettier@3.9.5` + the scoped `check_line_caps.sh` so commit-time hooks
+  saw a canonical ≤1000-line file, re-committed, pushed.
+- **Shipped (final)**: `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` — Track S2 todo flipped to
+  `- [x] ✅` (line 559) with the evidence line (line 565:
+  `UTL@11009da7; 44,296/44,296 cells (0 failed); residual in this issue doc`), plus a stale-header correction
+  (parent-plan over-cap claim, now 995L) — committed `d6fa4db9e` `docs(plans):`, direct push to
+  `origin/live-defi-rollout` (carve-out), `git rev-list --count origin/live-defi-rollout..HEAD` = 0 verified after push
+  (ahead=0, behind=0).
+- **The 3 foreign PM QG reds re-verified still red after the re-pull** (finalize-plan-coverage /
+  plan-commit-sha-evidence / agent-rules-size-cap) — quickmerge stays unusable, so the carve-out was the correct path.
+  This flip adds 0 new violations and hides none.
+- **Watchdog stopped** (Monitor bjp1tzgee via TaskStop — it polled the 3 reds for a green tree to quickmerge; the
+  carve-out made that wait moot). POST /done `sports_consolidated_native_ao_extract-022` is the final step.
+
 ## Deferred work after 2026-08-05 (blocked on BLK-2b07d861)
 
-| Item                                                                                                                   | State / why deferred                                                                                                                                                                                                                                                                                                             | Blocked-on                                    |
-| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Ship `instruments-service/scripts/backfill_teams_full_history_2026_08_05.py` via quickmerge `--agent`                  | **DONE** — `instruments-service@8a6597db` (golden cleared 13:07:59Z)                                                                                                                                                                                                                                                             | —                                             |
-| Launch SPOT backfill VM (`--apply`, `launch-sports-teams-full-history-backfill-vm.sh`, `instr-backfill-sports` prefix) | Smoke PASSED (232/232 cells) + full VM `instr-backfill-sports-teams-20260805-133652` launched 13:36:52Z, **running** — 13:48Z in fetch phase (BELARUS_PREMIER_LEAGUE 16 / BELGIAN_CUP 219 / UEL 77 / UEFA_NATIONS_LEAGUE 54 teams; PALESTINE_WEST_BANK 0 honestly skipped) (`--force` past the cross-slot singleton-lock holder) | backfill `--apply` run completes (~40-80 min) |
-| Post-backfill coverage census (expected_unattempted→0, bounded)                                                        | Not run                                                                                                                                                                                                                                                                                                                          | VM `--apply` run completes                    |
-| Flip plan checkbox (plan line 561, Track S2) + `docs(plans):` commit SAME turn                                         | Not flipped (correctly — not done)                                                                                                                                                                                                                                                                                               | backfill + census complete                    |
-| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | Not posted                                                                                                                                                                                                                                                                                                                       | all above                                     |
+| Item                                                                                                                   | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                          | Blocked-on |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Ship `instruments-service/scripts/backfill_teams_full_history_2026_08_05.py` via quickmerge `--agent`                  | **DONE** — `instruments-service@8a6597db` (golden cleared 13:07:59Z)                                                                                                                                                                                                                                                                                                                                                                          | —          |
+| Launch SPOT backfill VM (`--apply`, `launch-sports-teams-full-history-backfill-vm.sh`, `instr-backfill-sports` prefix) | **DONE** — full VM `instr-backfill-sports-teams-20260805-133652` (SPOT, launched 13:36:52Z) logged `Done. 44296/44296 cells written (0 failed). Manifest closed (per-VM shard drained).` at 13:54:19Z, rc=0, `DEPLOYMENT_COMPLETED exit_code=0`, then **self-deleted** (STOPPING→gone). Per-VM shard `_index/per_vm/instr-backfill-sports-teams-20260805-133652.parquet` (1.57 MB) written 13:54:18Z. Smoke VM (133011) pre-verified 232/232. | —          |
+| Post-backfill coverage census (expected_unattempted→0, bounded)                                                        | **DONE** — 678,275 TEAMS rows: captured=582,088, empty_confirmed=74,252, expected_unattempted=21,918, attempted_failed=17; 0 dedup twins; residual 21,918 FULLY explained (98 source-empty leagues — api_football 0-team, residual⊂0-team set, 0 fetch failures); empty_confirmed re-classification tracked as follow-up todo above                                                                                                           | —          |
+| Flip plan checkbox (Track S2) + `docs(plans):` commit SAME turn                                                        | **DONE** — flip (`- [x] ✅`, line 559) + evidence (line 565: UTL@11009da7; 44,296/44,296 cells) + stale-header correction, committed `d6fa4db9e` `docs(plans):`, direct-pushed via the SANCTIONED carve-out (PM exempt from strict-quickmerge + no-source commit = documented carve-out); `git rev-list --count origin/live-defi-rollout..HEAD` = 0 verified after push.                                                                      | —          |
+| POST /done `sports_consolidated_native_ao_extract-022`                                                                 | **PENDING — final step** — executed right after this issue-doc commit lands (task WORK + ship are complete + verified; /done is the lifecycle close-out).                                                                                                                                                                                                                                                                                     | —          |
 
-**Resume path (next session — this issue doc is the SSOT)**: the defi golden cleared 13:07:59Z and the script was
-shipped (`instruments-service@8a6597db`); the full backfill VM `instr-backfill-sports-teams-20260805-133652` is RUNNING
-(SPOT `--apply`, 322 leagues / 67,782 cells, launched 13:36:52Z). **Next**: (1) wait for terminal completion; (2) run
-the bounded post-backfill census (`expected_unattempted`→0 for TEAMS); (3) flip plan checkbox line 561 (Track S2)
-same-turn with evidence + `docs(plans):` commit; (4) POST /done `sports_consolidated_native_ao_extract-022`.
+**Resume path (next session — this issue doc is the SSOT)**: the defi golden cleared 13:07:59Z, the backfill script
+shipped (`instruments-service@8a6597db`), the full backfill VM **COMPLETED**
+(`Done. 44296/44296 cells written (0 failed). Manifest closed (per-VM shard drained).` at 13:54:19Z, rc=0, VM
+self-deleted), the post-consolidation bounded census is DONE (section above), and the Track S2 flip + evidence are
+SHIPPED (`d6fa4db9e`, carve-out push, ahead=0 verified). **Nothing pending for this task except the /done POST** (see
+the deferred table) — plus the P3 follow-up todo above (`empty_confirmed` re-classification) is owned by the sports
+reference-data track, NOT this task.
 
-**Re-arm the completion watcher (if the /tmp harness is gone)**: VM `instr-backfill-sports-teams-20260805-133652`, log
-`gs://deployment-scripts-central-element-323112/vm-logs/<VM>/run.log`, zone `asia-northeast1-c`, project
-`central-element-323112`. Terminal = `Done. X/Y cells written (K failed). Manifest closed (per-VM shard drained).`
-(`logger.exception("... write failed")` lines are NON-terminal — the run continues and reports a K-failed summary). Poll
-every ~20s; also check `gcloud compute instances describe <VM>` — VM leaving RUNNING with the Done line =
-complete-on-exit (self-delete); without it = preempt/crash. The backfill script survives at
-`instruments-service/scripts/backfill_teams_full_history_2026_08_05.py`.
+**Consolidator churn observed 14:00-14:04Z (do not re-diagnose)**: the backfill shard landed 13:54:18Z while execution
+`m522p` (a 6-9 min backlog merge, lock held 13:50:48→14:00:42) was mid-merge with a 13:40:40 content cutoff — so its
+13:50:34 index EXCLUDES the backfill. Every per-minute tick since (`dv8qr` 14:01, `mkhcc` 14:02, `j5llr` 14:03) skipped
+with `error=locked` (sibling fresh-lock). The lock churn is NORMAL (lock TTL for instruments-sports = 2400s). Execution
+`w8szq` acquired the lock 14:00:42Z and listed shards AT 14:00:42 — AFTER the backfill shard landed — so its merge WILL
+include the 44,296 cells; it writes the fresh index on completion (expected ~14:06-14:09Z, per the 6-9 min pattern;
+possibly longer if it inherits the backlog). No action needed — the per-minute cron self-heals once w8szq releases.
+
+**Re-arm the index-freshness watcher (if the /tmp harness is gone)**: terminal =
+`gsutil stat gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` showing
+`consolidator_content_write_at:` ≥ `2026-08-05T13:54:19Z` (the backfill completion). Poll every ~30s up to ~30 min; ALSO
+verify `consolidator_run_at:` is newer than `13:50:34Z` (the pre-backfill index). When fresh, run the census command
+above. (This replaces the OLD VM-completion watcher — the VM is done and self-deleted; do NOT re-launch it.) The census
+script survives at `instruments-service/scripts/teams_coverage_census_2026_08_05.py`.
 
 **Session lessons (do not re-learn)**: (1) CI dep resolution is CONTENT-FIRST —
 `python-quality-gates-v2.yml::clone_repo` clones each dep at its LDR HEAD, so local editable path-dep == CI clone ==
