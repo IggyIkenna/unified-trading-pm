@@ -711,6 +711,16 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-05** — **Membership-scope gap recorded (batch2 finalize finding 1).** The 2026-07-26 audit's own Progress
+  Log entry documented this but it wasn't actioned as a durable process change. **The tranche-membership derivation for
+  cross-cutting MUST use
+  `(asset_group: cross-cutting AND parent_epic in DATA_EPICS) UNION (explicit membership in this doc's Tracks/Sources lists)`**
+  — never the epic filter alone. The epic-filter-only scope caused batch1's Phase-1 to pick up 59 docs against a real
+  membership of 142 (104 non-peer-claimed); the `UNION` rule would have caught Tracks 16-24 (added by the 2026-07-25
+  corpus-wide sweep AFTER batch1's candidate corpus was scoped). The skill doc at
+  `cursor-configs/skills/ag-closeout-audit/SKILL.md` § cross-cutting membership rule already carries the
+  `OR explicit membership in Tracks 16-24` clause — this entry confirms the `UNION` is the authoritative derivation, not
+  a fallback.
 - **2026-08-02** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
   dispatch `agt-f23055`, slot 12). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (94
   tranche members, 8 covering docs — batch3 now counted — 1 never-cited, down from 90/11 on 2026-08-01 since batch3's

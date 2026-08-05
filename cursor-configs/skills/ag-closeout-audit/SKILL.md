@@ -46,7 +46,10 @@ at all) and various `infrastructure`/`cross-cutting`-tagged plans, with no dedic
 **`cross-cutting`**: membership is `asset_group` containing `cross-cutting` AND `parent_epic` in one of the 5
 data-relevant epics this doc was scoped from (`infrastructure_master`'s data-relevant subset, `instruments_master`,
 `mtds_mdps_master`, `manifest_master`, `features_and_ml_master`) OR explicit membership in one of Tracks 16-24 (docs
-epic-scoped elsewhere but reclassified in by content — see that doc's own Progress Log).
+epic-scoped elsewhere but reclassified in by content — see that doc's own Progress Log). **The two paths are a UNION,
+not a fallback chain**: the epic filter alone misses docs that entered the closeout via the corpus-wide sweep (Tracks
+16-24), so membership derivation MUST always union both sources — see the 2026-07-26 audit's Progress Log entry in the
+closeout doc for the measured consequences of using epic-filter-only.
 
 **`ao`/`ci`/`infra`**: **`ao`, `ci`, and `infrastructure` are now real dedicated `asset_group` enum values** (added
 2026-07-27, `unified-trading-pm@a97bc7bed` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 10

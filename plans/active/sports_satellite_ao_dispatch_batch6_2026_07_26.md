@@ -488,6 +488,15 @@ otherwise-independent P3 todos over one soft file-overlap risk).
   **Recommended**: assign it to the `infra` tranche (which already splits `deployment_and_user_management_master`
   content per the skill's own membership note) and add it to that tranche's consolidated-closeout Sources list.
 
+  **CORRECTION 2026-08-05 (cross-cutting batch2 finalize todo 3): the "invisible to cross-cutting" premise is measurably
+  wrong.** The skill's cross-cutting membership rule (SKILL.md § "The 10 tranches") admits a doc by the epic filter
+  **OR** explicit membership in the closeout's Tracks 16-24 — and this doc is the **sole Source of Track 23**
+  (`Manifest schema bump: write-time MVP precompute`) in `cross_cutting_consolidated_closeout_2026_07_25.md`. So
+  cross-cutting's audit DID pick it up (this audit found it that way, through the Track membership path). **Do NOT retag
+  to `infra`** — the doc is already cross-cutting-owned via Track 23. If the operator still prefers `infra`, Track 23
+  must be removed from the cross-cutting closeout in the SAME change so the doc is not double-claimed by two tranches.
+  Until then, the ownership is cross-cutting.
+
 ## Not re-surfaced here (already owned — checked, not assumed)
 
 - **batch5's own 16 Deferred items** (4 conflict-gated + 12 operator-gated). `batch5_finalize` todo 2 owns their
