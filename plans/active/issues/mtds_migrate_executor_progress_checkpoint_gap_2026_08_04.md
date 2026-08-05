@@ -124,8 +124,8 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
       category. Repo: market-tick-data-service@c5f49f88.
 - [x] ✅ [DATA] P3. Add object-index checkpoint to `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` —
       market-tick-data-service@73468fa2.
-- [ ] [DATA] P3. Add object-index checkpoint to `migrate_tradfi_manifest_usd_lin_2026_07_18.py`, same category. Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P3. Add object-index checkpoint to `migrate_tradfi_manifest_usd_lin_2026_07_18.py`, same category —
+      market-tick-data-service@88a5aaee.
 - [ ] [DATA] P3. Add object-index checkpoint to `migrate_tradfi_single_leg_product_root_lin_2026_07_09.py`, same
       category. Repo: market-tick-data-service.
 
