@@ -216,7 +216,7 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
       exact 7 known cells. The manifest consolidator merge into the canonical index is async (not yet observed at time
       of writing) — the per-VM-shard direct read is the authoritative proof of the write per the tool's own design (does
       not wait on the consolidator). Done.
-- [ ] 3. [DOC] P3. **Confirm `ml_predictions` is genuinely intentionally unwired** (not a silently-broken feature) —
+- [x] 3. ✅ [DOC] P3. **Confirm `ml_predictions` is genuinely intentionally unwired** (not a silently-broken feature) —
       check with the operator or a design doc whether ml-service inference was ever meant to persist predictions in prod
       yet, or if `MLInferenceBatchModeHandler`'s discarded `prediction_writer` is itself a gap worth its own todo. If
       genuinely not-yet-built, no action needed beyond this note. Repo: ml-service.
@@ -288,3 +288,16 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
   code-quality fix with no data-correctness impact (the write itself was already independently proven correct).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — todos 1-2 are done; swapped the archived
   parent-issue link for the two live source files the still-open todos 3-4 actually touch.
+- **2026-08-05** (AO dispatch, slot 8, data_engineering) — Todo 3 done. Confirmed `ml_predictions` is genuinely
+  intentionally unwired. Code evidence: `ml_service/inference/cli/main.py:327-339` —
+  `prediction_writer = get_writer("ml_predictions", storage)` is constructed but then explicitly discarded via
+  `_ = prediction_writer` (Python's standard throwaway-variable idiom). The `InferHandler.handle()` runs inference and
+  returns results inline but never persists through the writer. Zero real `ml_predictions` objects exist in the prod
+  bucket (confirmed by the 2026-08-03 Tier-2 SPOT VM sweep). The 236 `F_other_corpus` objects in the bucket are
+  `ml_models`/`ml_training_artifacts` sharing the same bucket — unrelated to prediction persistence. The ML
+  implementation design doc (`deployment-service/docs/ML_IMPLEMENTATION.md`) shows architectural intent for
+  `ml-predictions-store/` as the prediction sink, but the code is deliberately not yet wired — this is a pre-production
+  validation phase, not a silently-broken feature. No TODO/FIXME in code suggests accidental breakage. Verdict:
+  genuinely not-yet-built — no action needed beyond this note. If/when ml-service graduates to persisting predictions,
+  the `get_writer("ml_predictions", ...)` scaffold is already in place and just needs to be passed into the handler
+  instead of discarded.
