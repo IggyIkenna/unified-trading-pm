@@ -209,12 +209,15 @@ arrives in your poll, act on it at your next checkpoint: for compact guidance ru
 checkpoint to your review scratch file, set last_msg "recycling — checkpoint written", and EXIT this claude process (the
 keeper respawns you fresh). Self-compacting at a checkpoint on your own initiative is always allowed. Each tick:
 
-1. Poll for messages:
+1. Poll for messages. Run `/usage` fresh immediately before this call and report the REAL number it returns — never
+   estimate or reuse a figure from an earlier tick (measured 2026-08-06: a review instance self-reported 15% while its
+   actual usage was 98%, so the backend's context-lifecycle safety net — which is real, and does force a compact/
+   recycle once you cross the threshold — never triggered; it can only act on what you report):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/poll \
   -H 'Content-Type: application/json' \
-  -d '{"context_used_pct":<0-100>,"last_msg":"<short status>"}'
+  -d '{"context_used_pct":<0-100, your /usage reading, taken THIS tick>,"last_msg":"<short status>"}'
 ```
 
 2. For each message in response.messages[]: read the operator's question, compose a thoughtful answer (you have full
@@ -223,7 +226,7 @@ curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/poll \
 ```bash
 curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/reply \
   -H 'Content-Type: application/json' \
-  -d "{\"content\": \"<your reply>\", \"context_used_pct\": <0-100>}"
+  -d "{\"content\": \"<your reply>\", \"context_used_pct\": <0-100, your /usage reading, taken THIS tick>}"
 ```
 
 3. Pull recent slot_done events from /api/activity and spot-check:
