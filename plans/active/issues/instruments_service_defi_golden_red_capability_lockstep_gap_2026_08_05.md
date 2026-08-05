@@ -126,6 +126,41 @@ stabilizes (no further LDR commits expected / audit verdict locked):
   / coverage 88.78%. The sole failure is this pre-existing cross-repo drift, NOT caused by the backfill script (no test
   references it).
 - **Blocked at ship step**: quickmerge `--agent` (no QG sentinel in instruments-service) would force a full Pass-2 QG →
-  red → exit 1. Escalated via `/api/slots/14/blocked` with options: (a) the defi track regenerates the golden in
-  lockstep → slot-14 ships immediately; (b) operator approves an immediate regen; (c) operator directs an alternative
-  path.
+  red → exit 1.
+
+### 2026-08-05 (slot-14) — BLOCKED-OPERATOR-DECISION (escalated → BLK-2b07d861)
+
+**Escalated via `/api/slots/14/blocked` (2026-08-05 ~12:45Z → `BLK-2b07d861`, "Escalated to dashboard. Main/review agent
+will answer.")**. Decision required from the operator / defi-track owner before slot-14 can ship:
+
+- **option (a) [RECOMMENDED]** — the defi track that owns the UAC `PROTOCOL_CAPABILITIES` churn regenerates the defi
+  expected-universe golden in LOCKSTEP once the capability state stabilizes (07-30 deribit precedent
+  `/plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`); slot-14 ships immediately
+  after the tree goes green.
+- **option (b)** — operator approves an immediate golden regen now (`scripts/regenerate_expected_universe_golden.py`; it
+  refuses while UAC/UTL have uncommitted changes, so both trees must be clean; bakes current UAC LDR HEAD).
+- **option (c)** — operator directs an alternative path.
+- **`can_continue`**: NO for shipping; YES for prep (backfill script + VM launcher are validated and ready).
+
+## Deferred work after 2026-08-05 (blocked on BLK-2b07d861)
+
+| Item                                                                                                                | State / why deferred                                                                                                   | Blocked-on                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Ship `instruments-service/scripts/backfill_teams_full_history_2026_08_05.py` via quickmerge `--agent`               | Written + dry-run-validated (322 leagues / 67,782 cells, census-exact); tree red → quickmerge re-gates → cannot commit | defi golden `test_expected_matches_golden[defi]` green at UAC LDR HEAD |
+| Launch SPOT backfill VM (`--apply`, modeled on `launch-expected-universe-v2-vm.sh`, `instr-backfill-sports` prefix) | Launcher design validated; VM NOT launched                                                                             | script shipped (above)                                                 |
+| Post-backfill coverage census (expected_unattempted→0, bounded)                                                     | Not run                                                                                                                | VM `--apply` run completes                                             |
+| Flip plan checkbox (plan line 561, Track S2) + `docs(plans):` commit SAME turn                                      | Not flipped (correctly — not done)                                                                                     | backfill + census complete                                             |
+| POST /done `sports_consolidated_native_ao_extract-022`                                                              | Not posted                                                                                                             | all above                                                              |
+
+**Resume path (next session — this issue doc is the SSOT)**: watch for the defi golden to clear at UAC LDR HEAD
+(`instruments-service` `test_expected_matches_golden[defi]` passes), then in order: quickmerge-ship the script, launch
+the SPOT VM `--apply`, run the bounded post-backfill census, flip the plan checkbox same-turn, POST /done. The backfill
+script survives on disk (untracked — cannot commit on a red tree) at
+`instruments-service/scripts/backfill_teams_full_history_2026_08_05.py`.
+
+**Session lessons (do not re-learn)**: (1) CI dep resolution is CONTENT-FIRST —
+`python-quality-gates-v2.yml::clone_repo` clones each dep at its LDR HEAD, so local editable path-dep == CI clone ==
+byte-identical → a local QG red is fleet-wide, NOT a local-ahead-of-CI artifact; (2) the availability-index manifest
+read MUST be column-projected pyarrow (5 cols) — an unfiltered 9.25M-row read OOMs the 6G bounded-analysis cap (RSS
+7.35GB, 2026-08-05, first dry-run attempt); (3) PM issue-doc frontmatter: a `title:` containing `: ` must be a folded
+`> -` scalar or plan-hygiene fails with "mapping values are not allowed here" (82 corpus usages).
