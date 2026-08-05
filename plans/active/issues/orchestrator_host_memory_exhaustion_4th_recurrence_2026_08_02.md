@@ -15,7 +15,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-health, memory-exhaustion, shared-host, recurring-incident]
-related: []
+related: [/plans/active/resource_watchdog_host_guardian_2026_08_05.md]
 created: 2026-08-02
 author: unknown
 parent_epic: orchestrator_master
@@ -312,3 +312,13 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
     `plans/active/issues/*.md`: no duplicate/superseding doc (only pre-existing related-but-distinct ones).
   - **Net**: active P1, 3rd calendar day, plateaued not trending toward resolution. Main is surfacing the
     elapsed-time-since-escalation gap to the operator for a ruling on the mechanical-enforcement approach.
+
+- **2026-08-05 (interactive session, cross-doc link fix)**: `resource_watchdog_host_guardian_2026_08_05.md` (a same-day,
+  `assigned_vm: NA` plan built "in-session, operator present," never previously cross-linked to this doc) shipped a
+  systemd-based per-process RSS/CPU/swap killer on this exact host — a live instance of this doc's recommended-decision
+  option 1, "bake the bound into the tooling." Concrete evidence it's working: an interactive RAM-spike investigation
+  the same day watched it catch and SIGTERM two ~40GB bare-`read_availability_index()` blowups from slot 15 within one
+  minute, no fleet-wide crash-loop. **Not asserting this formally resolves the `[OPERATOR] P1` todo below** — a systemd
+  RSS-killer is closer to option 1 than option 2/3 (still one shared ~54GiB ceiling, not per-slot reservations or
+  admission control), so it may reduce recurrence frequency without fully closing the question; that's still the
+  operator's call. Cross-linked both docs' `related:` so they're no longer siloed.

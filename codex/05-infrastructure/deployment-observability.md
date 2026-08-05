@@ -46,7 +46,7 @@ referenced_by:
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-05
 code_refs:
   [
     deployment-api/deployment_api/services/cost_observability/service.py,
@@ -627,6 +627,14 @@ columns). `unified_trading_library.lifecycle.daemon.HeartbeatDaemon` stays consu
 **Read path**: `deployment-api` `GET /api/vm-resources/rolling` (avg/min/max/p95 per VM per window, 1h/4h/24h/1wk; omit
 `vm_name` for the cross-VM view) and `GET /api/vm-resources/process-category`; `deployment-ui`'s `WorkHealthCard`
 (window selector alongside the live snapshot) and the `/ops/vm-resources` comparison page consume them.
+
+> **Scope note (confirmed live via `bq query` 2026-08-05)**: `resource_samples` only has rows for
+> deployment-service-launched VMs (backfill/live-data workers heartbeating through `HeartbeatDaemon`) — it has ZERO rows
+> for the central agent-orchestrator API host (`i-0c9b283b31d6b5ca7`), which isn't a deployment-service target. For that
+> host's own RAM/CPU/disk history (and its separate resource-watchdog kill-audit log), see
+> `/codex/05-infrastructure/agent-orchestrator-api-host.md` § "Resource history sampler". A follow-up plan
+> (`/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`) is onboarding the AO host into this
+> table too, plus surfacing watchdog kill events through this same read path.
 
 **Known gaps** (tracked in the plan, not repeated here; updated 2026-07-28 — TTL + process-category publishing both
 shipped since the paragraph above was first written): the cross-VM comparison page filters by service-name text only,

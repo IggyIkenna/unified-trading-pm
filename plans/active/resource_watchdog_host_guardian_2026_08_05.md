@@ -20,6 +20,9 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
+    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: "2026-08-05"
 last_updated: "2026-08-05"
@@ -232,6 +235,31 @@ the orchestrator or tmux.
 ---
 
 ## Progress Log
+
+### 2026-08-05 (later session) — RAM-spike investigation, backup/logrotate gap fix, AO-UI-only ruling partially reversed
+
+An interactive-session RAM-spike investigation (operator noticed host RAM at 75%) traced it to this exact watchdog doing
+its job: slot 15 ran a bare (unprojected) `read_availability_index()` call twice within a minute (known, still-open
+issue `read_availability_index_bare_defi_callers_2026_07_27.md`), RSS hit ~40-42GB each time, the watchdog SIGTERM'd
+both — confirming the watchdog IS catching runaway processes live, closing the loop on
+`orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s still-unruled `[OPERATOR] P1` mechanical-
+enforcement decision (this watchdog is a live instance of that doc's option 1, "bake the bound into the tooling" — the
+two docs were never cross-linked until now; not asserting the 4th-recurrence issue's OPERATOR todo is formally resolved,
+that's still the operator's call, just noting the concrete evidence for whoever picks it up next).
+
+Two follow-ups from that investigation:
+
+1. **Gap found + fixed**: `/var/log/resource-watchdog.log` and its kill snapshots had zero local rotation and zero
+   off-VM backup (deployed same-day, so no history existed before the incident). Fixed via
+   `gcs_sync.upload_resource_watchdog_log_to_gcs/_to_s3` + `upload_resource_watchdog_snapshots_to_gcs/_to_s3` (rides the
+   existing `resource-history-backup.timer`) + `resource-watchdog.logrotate` (14d local) +
+   `resource-watchdog-snapshots.tmpfiles.conf` (14d age-out) + standalone `install-resource-watchdog-retention.sh`.
+2. **Phase 4's AO-UI-only ruling (line ~208 below) is being partially reversed, same day, by direct operator instruction
+   in the follow-up session**: kill/violation events should ALSO surface through deployment-api/ deployment-ui's
+   existing resource-monitoring surfaces, not live only in AO's own world — tracked in
+   `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md` (+ gated finalize). This doc's own
+   Phase-4 checkbox text is left as-is (it accurately records what was decided AT THAT TIME) — this entry is the pointer
+   for a future reader who greps that line and would otherwise think AO-UI-only is still the standing decision.
 
 ### 2026-08-05 (later session) — Phase 4 hardening
 

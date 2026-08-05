@@ -4,25 +4,37 @@ title: agent-orchestrator — central API host architecture
 summary:
   Central API host architecture for agent-orchestrator (EC2 i-0c9b283b31d6b5ca7, 13.113.200.22) — nginx :443 to uvicorn
   :8765 (in-process tmux slots on this same VM — no per-VM fleet backends), systemd resource limits, the orch-watchdog
-  forensic snapshots, EventBridge+Lambda auto-reboot with a sliding-24h reboot ceiling, and the httpx (no-subprocess)
-  usage poller.
+  forensic snapshots, the resource-watchdog kill-guardian + resource-history-sampler historical RAM/CPU/disk trend log
+  (with exact "how far back does our RAM history go / who caused a spike" query recipes — this host is NOT covered by
+  the fleet-wide `deployment_operational_data.resource_samples` BigQuery table, which is deployment-service-launched VMs
+  only), EventBridge+Lambda auto-reboot with a sliding-24h reboot ceiling, and the httpx (no-subprocess) usage poller.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer]
-tags: [orchestrator, infrastructure, aws, ec2, monitoring, self-healing, nginx]
-related: [/codex/04-architecture/agent-orchestrator-overview.md, /codex/05-infrastructure/agent-orchestrator-deploy.md]
+tags:
+  [orchestrator, infrastructure, aws, ec2, monitoring, self-healing, nginx, resource-history, resource-watchdog, oom]
+related:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 created: 2026-05-30
-authoritative_for: [agent-orchestrator central API host (systemd limits + watchdog + auto-reboot)]
+authoritative_for:
+  [
+    agent-orchestrator central API host (systemd limits + watchdog + auto-reboot),
+    where to find this host's historical RAM/CPU/disk data and how far back it goes,
+  ]
 referenced_by:
   [
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
   ]
 owner:
-last_reviewed: 2026-05-30
+last_reviewed: 2026-08-05
 code_refs:
 author: ikenna-claude-subagent
 ---
@@ -148,7 +160,81 @@ non-allowlisted processes exceeding per-resource thresholds:
 `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service`. Script:
 `/usr/local/bin/resource-watchdog.sh` (deployed from PM repo).
 
-**Logs**: `journalctl -u resource-watchdog`. Kill snapshots at `/var/log/snapshots/kill_*.txt`.
+**Logs**: `journalctl -u resource-watchdog` or the raw file `/var/log/resource-watchdog.log` (one line per poll tick +
+one `VIOLATION`/`KILL` line per event — this is the per-incident "which exact process, what threshold, was it killed"
+audit trail). Kill snapshots (full `ps`/cmdline capture at kill time) at `/var/log/snapshots/kill_*.txt`.
+
+> **Gap found 2026-08-05, fixed same day**: this service was deployed 2026-08-05, so `/var/log/resource-watchdog.log`
+> and the kill snapshots by construction had no history before that date, and — unlike the resource-history sampler
+> below — neither was mirrored off-VM nor logrotated, on a host already at ~80% local disk. Fixed via
+> `gcs_sync.upload_resource_watchdog_log_to_gcs/_to_s3` + `upload_resource_watchdog_snapshots_to_gcs/_to_s3` (rides the
+> existing `resource-history-backup.timer`, no new systemd unit) + `resource-watchdog.logrotate` (14d local rotation)
+>
+> - `resource-watchdog-snapshots.tmpfiles.conf` (14d age-out) + standalone `install-resource-watchdog-retention.sh`
+>   (applies to an already-running VM; `bootstrap_vm.sh` Step 4.8 covers future VM builds).
+
+---
+
+## Resource history sampler — this host's RAM/CPU/disk/swap trend log
+
+Answers "how has this host's RAM/CPU/disk actually trended over the last N days" — **NOT** the same question the
+resource watchdog above answers (which single process got killed and why, right now). Do not confuse the two, and do not
+confuse either with `deployment-observability.md`'s `deployment_operational_data.resource_samples` BigQuery table — that
+table is fleet-wide but **scoped to deployment-service-launched VMs only** (backfill/live-data workers launched via
+`deployment-service/scripts/vm/`); it has **zero rows for this central API host**, confirmed live via `bq query`
+2026-08-05 (`vm_name`/`service` filtered for this instance and for `%orchestrator%` returned empty, while the same query
+against the fleet's own VM names returns thousands of rows/day). If you need this host's history, the three sources
+below are the only ones that have it.
+
+**Primary source — `resource-history-sampler.service`** (`ao_resource_history_externalize_2026_07_30`): standalone
+systemd unit (deliberately NOT an in-process orchestrator thread — survives `ao-self-pull.sh`'s restart of
+`orchestrator.service` on every upstream commit landing on `live-defi-rollout`, observed every ~15-25 min while the
+fleet is shipping, and survives a genuine OOM-kill of the orchestrator itself). Samples CPU/RAM/disk/swap/iowait every 5
+seconds via `server/resource_history.py`'s `ResourceHistoryLoop`, appending to one JSONL file per day:
+`agent-orchestrator/data/state/resource_history/YYYY-MM-DD.jsonl` (~9 MB/day). Running continuously since 2026-07-31 —
+as of 2026-08-05 that's already 6 days of local history and growing; no pruning cron found for the data dir, so old
+daily files are not deleted automatically (at ~9 MB/day this is not an urgent disk concern, unlike the resource-watchdog
+log above). Also mirrored off-VM to GCS/S3 every 10 minutes by the sibling `resource-history-backup.timer`
+(`OnBootSec=180`, `OnUnitActiveSec=600`) — durable even if the VM is replaced. Install/redeploy both units together:
+`bash scripts/install-resource-history-sampler.sh --operator ubuntu --start`.
+
+**Legacy/superseded — `resource-monitor.sh` bridge cron**: `*/5 * * * * /opt/resource-monitor/resource-monitor.sh`,
+appends to `/var/log/resource-monitor/resource-monitor.jsonl` (load/cpu-jiffies/mem/swap + top-8-by-%CPU processes),
+self-trims to the last 8640 lines (~30 days at 5-min cadence). Its own header comment says it is explicitly "a bridge
+until the AO-integrated version lands" — that version (`resource-history-sampler.service` above) landed 2026-07-31 and
+has been stable for 6+ days as of this writing, so this cron is now a retirement candidate (not yet removed as of
+2026-08-05; `deployment-observability.md` § "Known gaps" still references it as the safety net for a different,
+unrelated timer that failed to autostart — check that note is still current before deleting this cron).
+
+**Query recipes** (read-only; no dashboard JWT needed — same SSM Session Manager pattern as
+`check-ao-backlog-status.sh`, see that script's header for the auth rationale):
+
+```bash
+# RAM/CPU/disk trend for the last week, from this host's own sampler (primary source):
+aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
+  --document-name AWS-RunShellScript --parameters commands='[
+    "cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/resource_history && \
+     for f in $(ls *.jsonl | tail -7); do echo \"== $f ==\"; \
+     python3 -c \"import json,sys; [print(l.strip()) for i,l in enumerate(open(sys.argv[1])) if i%720==0]\" \"$f\"; done"
+  ]' --query 'Command.CommandId' --output text
+# (samples every 720th line ~= hourly points from the 5s-cadence file; drop the %720 filter for full-resolution)
+
+# What got killed in the last N hours and why (resource-watchdog audit trail):
+aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
+  --document-name AWS-RunShellScript --parameters commands='[
+    "sudo grep -E \"VIOLATION|KILL\" /var/log/resource-watchdog.log | tail -100"
+  ]' --query 'Command.CommandId' --output text
+
+# Current + historic-peak cgroup memory for orchestrator.service (54 GiB hard cap):
+aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
+  --document-name AWS-RunShellScript --parameters commands='[
+    "cat /sys/fs/cgroup/system.slice/orchestrator.service/memory.current /sys/fs/cgroup/system.slice/orchestrator.service/memory.peak"
+  ]' --query 'Command.CommandId' --output text
+```
+
+Then poll
+`aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7 --region ap-northeast-1 --query StandardOutputContent --output text`
+until `Status` is `Success` (same pattern as `check-ao-backlog-status.sh`).
 
 ---
 

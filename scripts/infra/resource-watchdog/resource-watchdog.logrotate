@@ -1,0 +1,25 @@
+# Epic: resource_watchdog_host_guardian_2026_08_05
+# Lifecycle: permanent
+# Delete-when: NA
+#
+# logrotate policy for /var/log/resource-watchdog.log (found missing during the
+# 2026-08-05 RAM-spike investigation -- the watchdog was deployed the same day
+# with no local rotation, on a host already at ~80% disk).
+#
+# No `copytruncate` needed: resource-watchdog.sh's _rw_log() opens the file via
+# `tee -a` fresh on every single log line (not a long-held fd across the poll
+# loop), so a plain rename-and-recreate rotation is safe -- the very next log
+# line just recreates the path.
+#
+# Install target: /etc/logrotate.d/resource-watchdog (copied by bootstrap_vm.sh
+# Step 4.8 / install-resource-watchdog-retention.sh).
+
+/var/log/resource-watchdog.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 root root
+}
