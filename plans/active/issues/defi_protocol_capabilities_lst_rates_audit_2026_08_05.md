@@ -142,7 +142,7 @@ for the 5 missing protocols). Finding C is a separate, lower-priority wiring ite
 - [x] ✅ [DATA] P2. Add `lst_rates` to BEEFY PROTOCOL_CAPABILITIES data_types — unified-api-contracts@394fdbf0
 - [x] ✅ [DATA] P2. Add `lst_rates` to IDLE PROTOCOL_CAPABILITIES data_types — unified-api-contracts@e1639234
 - [ ] [DATA] P2. Add `lst_rates` to PENDLE PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
-- [ ] [DATA] P2. Add `lst_rates` to YEARN_V3 PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
+- [x] ✅ [DATA] P2. Add `lst_rates` to YEARN_V3 PROTOCOL_CAPABILITIES data_types — unified-api-contracts@e4e4e5a9
 - [ ] [DATA] P2. Create PROTOCOL_CAPABILITIES entries for BINANCE, COINBASE, ROCKETPOOL, SANCTUM, SOLBLAZE (repo:
       unified-api-contracts)
 - [ ] [DATA] P3. Wire `collect-rewards` operation for LIDO/ETHERFI/EIGENLAYER or remove `rewards` from their
