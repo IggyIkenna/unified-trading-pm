@@ -63,10 +63,10 @@ context_scope:
       the ~21 distinct source docs (see that plan's Todos section, each ending `Source: ...`) — flip/annotate their own
       checkboxes with the batch-6 commit SHA, so a doc read independently (outside this batch) shows accurate state.
       Repo: unified-trading-pm. Done when: all source docs show an annotation citing the batch-6 todo + commit SHA that
-      closed their item. **DONE 2026-08-05 (slot-8, review/data_engineering, unified-trading-pm@&lt;SHA&gt;).**
-      Reconciled all ~21 distinct source docs: 11 active docs edited with batch-6 annotations (11 files modified), 7
-      archived docs already [x] (no edits needed), 3 docs already pre-annotated or not requiring changes. Note: batch-6
-      todo 24 (HYPERLIQUID/ASTER delete) is still `[ ]` in the parent plan — its source doc
+      closed their item. **DONE 2026-08-05 (slot-8, review/data_engineering, unified-trading-pm@057dc55d7).** Reconciled
+      all ~21 distinct source docs: 11 active docs edited with batch-6 annotations (11 files modified), 7 archived docs
+      already [x] (no edits needed), 3 docs already pre-annotated or not requiring changes. Note: batch-6 todo 24
+      (HYPERLIQUID/ASTER delete) is still `[ ]` in the parent plan — its source doc
       (`non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`) is annotated as "dispatched to batch-6 (still
       open)" rather than closed. See Progress Log below for full reconciliation table.
 - [ ] [DOC] P2. Re-check the 2 conflict-gated Deferred items (`defi_venue_lst_rates_residual_2026_07_24.md`'s SUSHISWAP
