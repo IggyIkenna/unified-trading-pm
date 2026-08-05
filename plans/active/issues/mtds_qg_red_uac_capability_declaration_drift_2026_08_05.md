@@ -77,12 +77,48 @@ locked_by:
   support `fills` (skip venue-level-invalid dts); or (b) scope/revert the `fills` declaration for POLYMARKET in UAC if
   prediction fills capture is not imminent.
 
+## Decision (operator, 08-05) — resolve BOTH as UAC-side removals [#1(a), #2(b)]
+
+Operator ruled (08-05, in-session) to take the UAC-side removal path for both — consistent with the audit's `bc397b93`
+resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC editable view at `6e791b05`):
+
+- **#2 fills is a SELF-CONTRADICTION inside UAC**: `DATA_TYPES_BY_ASSET_GROUP["prediction"]`
+  (`unified_api_contracts/registry/market_data_categories.py:314-332`) = `trades`, `book_snapshot_5`,
+  `prediction_canonical_question_group`, `market_lifecycle` — **`fills` is NOT a valid prediction data type**. The
+  6e791b05 commit declared a venue capability for a data type the same registry says prediction venues cannot emit, with
+  no MTDS fills-capture wiring (only `scripts/` rebuild/migrate one-offs reference POLYMARKET). The UAC
+  `book_snapshot_5` comment documents the convention: a declaration is legitimate only when capture is wired (cites
+  `mtds@7c849d7`). `market_metadata` from the same commit is NOT broken — the sentinel maps it to the
+  `prediction_market_metadata` family — so it stays.
+- **#1 collect-rewards is declared-but-unwired across THREE surfaces**: PROTOCOL_CAPABILITIES data_types `rewards` +
+  `mtds_operations` `collect-rewards` (`_defi.py`, added by b2874193), `defi_venue_capabilities.py` `rewards` on all 10
+  AAVE_V3 chains (e.g. ETHEREUM `2023-01-27`), and `defi_prediction_instrument_seeds.py` AAVE_V3 `rewards` seed. MTDS
+  `_CLI_OP_TO_MODULE` has no `collect-rewards` (only `collect-eigenlayer-rewards` + 24 other `collect-*` ops); no AAVE
+  rewards handler exists. The `rewards` data_types entry was explicitly commented "aspirational: capture not yet wired"
+  by the declaring worker.
+- **Audit precedent spans surfaces**: bc397b93 removed the `rewards` data_type for LIDO/ETHERFI, and no LIDO/ETHERFI
+  `rewards` seed remains — cross-surface consistency is the established pattern.
+
+## Ship state (in-flight)
+
+- **UAC edits made but NOT yet committed/pushed** (green-tree rule; UAC QG running 08-05 ~13:55Z):
+  - `_defi.py` — removed AAVE `rewards` data_type + `collect-rewards` mtds_operation (matches bc397b93 shape).
+  - `market_data_categories.py` — removed `fills` from POLYMARKET + KALSHI `VENUE_DATA_TYPE_CAPABILITIES`.
+  - **OPEN CONSISTENCY QUESTION (unresolved, ~30-min if owned)**: the AAVE `rewards` seed
+    (`defi_prediction_instrument_seeds.py:153`) and the `rewards` entries in `defi_venue_capabilities.py` for all 10
+    AAVE_V3 chains remain. The audit precedent cleaned seeds for LIDO/ETHERFI, so these surfaces likely also need
+    removal — UAC QG (which checks seed↔data_types consistency) will confirm whether they are now orphaned. Scope to the
+    same UAC commit or the follow-up when the gate's verdict lands.
+- **Blocker for MTDS shipping**: MTDS stays red until the UAC removal ships + the next editable-install view includes
+  it. Then re-gate MTDS (expect green) and ship the staged iterrows fix.
+
 ## Status / owner
 
 - **Owner**: the workers who landed `unified-api-contracts@6e791b05` and `@b2874193` (or operator-gated decision on
   which of (a)/(b) each resolves to).
-- **Unblock criterion**: MTDS `bash scripts/quality-gates.sh` green on LDR baseline. Once green, the staged iterrows fix
-  ships immediately.
+- **Unblock criterion**: MTDS `bash scripts/quality-gates.sh` green on LDR baseline. Per the 08-05 operator decision
+  (UAC-side removals), the path is: ship the UAC removal commit → re-gate MTDS (expect green) → ship the staged iterrows
+  fix.
 - **Fleet-wide context**: slot-14 reports the SAME UAC churn wave reds instruments-service's defi expected-universe
   golden (`instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md`): 12 `PROTOCOL_CAPABILITIES`
   commits 2026-08-05 11:07Z→12:29Z, with nobody owning lockstep golden regen. The two blocking commits here (`6e791b05`
