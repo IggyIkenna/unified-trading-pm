@@ -253,13 +253,14 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       declined. Checking this off as "diagnosed" per the todo's own literal scope and this doc's established precedent
       (the CF-8 sports todos above), NOT as "CF-3/CF-4 are GREEN," which they are not. No code shipped, no production
       write; read-only diagnostic + this doc edit only.
-- [ ] [DATA] P3. **NEW — 2026-08-02 (slot-6)**: once the `sports-cf8-maintenance-window-scheduled` gate opens (same
-      window as `sports_cf8_available_at_backfill_regression-007`), bundle in a backfill/reclassification of the 3,833
-      legacy `data_type=trades` denominator-seed rows on `instruments-store-sports-prd` found by the CF-3/CF-4 todo
-      above (either delete as superseded-by-the-v2-enumerator, or re-stamp `pipeline_mode`/`source` via
+- [ ] [DATA] P3. **BLOCKED-OPERATOR — BLK-d9137d48 + sports-cf8-maintenance-window-scheduled (FALSE since 2026-07-14,
+      operator chose option A: wait for a scheduled maintenance window).** Once the gate opens (same window as
+      `sports_cf8_available_at_backfill_regression-007`), bundle in a backfill/reclassification of the 3,833 legacy
+      `data_type=trades` denominator-seed rows on `instruments-store-sports-prd` found by the CF-3/CF-4 todo above
+      (either delete as superseded-by-the-v2-enumerator, or re-stamp `pipeline_mode`/`source` via
       `_derive_pm_source_transport`-equivalent logic) so CF-3/CF-4 can actually reach GREEN — do this in the SAME
       maintenance pass as the CF-8 available_at backfill rather than a separate production touch on this twice-regressed
-      surface. Repo: instruments-service.
+      surface. **Gate re-verified 2026-08-05 (slot-16): still FALSE, no dispatchable work.** Repo: instruments-service.
 - [ ] [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
@@ -324,5 +325,11 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   prior regressions on this surface, and the todo's own text gates on this exact maintenance window opening. Filed
   blocked-question `BLK-40c4da25` recommending option C: park this task behind the gate as a formal prereq so it only
   dispatches when the gate actually opens (currently `gates_queued=0` on the condition — no formal prereq linkage
-  exists, which is why the task was dispatched despite the gate being closed). No code shipped this touch — read-only
-  gate check + this doc edit only.
+  exists, which is why the task was dispatched despite the gate being closed). **BLK-40c4da25 RESOLVED 2026-08-05
+  (main): option C approved.** Gate stays CLOSED (operator-owned — does NOT auto-open under the 2026-07-28
+  pre-live-trading maintenance-window skip ruling; that ruling covers orchestrator restarts, not a deliberate operator
+  risk-control STOP on a twice-regressed production data surface). Disposition: todo retagged
+  `BLOCKED-OPERATOR — BLK-d9137d48`; no dispatchable work until the operator lifts the STOP and flips
+  `sports-cf8-maintenance-window-scheduled` to `true`. The `gates_queued=0` gap (no formal prereq linkage) is a
+  structural issue to address separately — per RULES.md §4, `prereqs.prerequisites` is yaml-only tuning, not
+  plan-derivable. No code shipped this touch — read-only gate check + plan doc edits only.

@@ -1,4 +1,4 @@
-fabricated_sha_citation_baseline: 24
+fabricated_sha_citation_baseline: 25
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_citations:
@@ -23,6 +23,9 @@ baseline_citations:
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md
     line: 955
     cited: agent-orchestrator@0b62753
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
+    line: 99
+    cited: unified-trading-pm@31dd16a67
   - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
     line: 721
     cited: unified-trading-pm@b06abdf96
