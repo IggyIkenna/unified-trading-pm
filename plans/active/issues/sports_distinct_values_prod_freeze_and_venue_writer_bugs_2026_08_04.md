@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  "Sports distinct-values panel: 4-day-frozen prod deploy (44→3 non-canonical count) — root-caused + fixed today; 3
-  venues (FOOTBALL/LADBROKES_UK/SPORT888) need a historical re-stamp, not more code"
+  "Sports distinct-values panel: 4-day-frozen prod deploy + 2 venue writer bugs + a historical re-stamp — 44→1
+  non-canonical (only FOOTBALL residual left, tracked separately)"
 summary: >-
   Operator flagged the deployment-ui Distinct Values panel (sports) still showing ~44 non-canonical values across
   venues/instrument_types/data_types despite prior sessions already having landed the fixes in UAC + deployment-api.
@@ -95,7 +95,7 @@ context_scope:
   ]
 ---
 
-# Sports distinct-values panel — 44→3 non-canonical (2026-08-04)
+# Sports distinct-values panel — 44→1 non-canonical (2026-08-04/05)
 
 ## What was live when this session started (verified via the raw endpoint, not just the screenshot)
 
@@ -183,6 +183,29 @@ confirming before scoping a re-stamp for it.
   `--asset-group sports --shard-spec sports:ODDS_API:trades --instrument-ids "ODDS_API:SPORT:soccer_epl;...5 leagues" --live-source native --env prod`)
   — now running as `mtds-live-sports-odds-api-trades-20260804-131449`, confirmed picking up today's fix (see traps below
   for the 2 real gotchas hit getting this right).
+- **2026-08-05 (later same day)**: `market-tick-data-service@118eb148` — fixed
+  `manifest_swap_venue_restamp_2026_07_27.py`'s case-sensitive `raw_tick_only` filter (see the completed re-stamp todo
+  above for the full story — this bug meant the manifest-relabel half of the venue rename had never actually worked, on
+  any prior run). Executed the full historical GCS content re-stamp + manifest relabel for LADBROKES_UK→LADBROKES and
+  SPORT888→BET888SPORT (31,118 GCS objects, 30,912 manifest rows across both venues) on a manually-launched
+  `canonical-migration-sports-` VM, torn down after completion. Triggered a fresh sports honest-coverage rollup and
+  confirmed live: **venues non-canonical 3→1** (only the pre-existing `FOOTBALL` residual remains).
+- `market-tick-data-service@b2497b73` — unrelated, but was blocking every quickmerge in this repo: another session's
+  already-committed `783a5463` had a bare import-pattern violation
+  (`from unified_trading_library.manifest_writer import read_availability_index_safe` instead of the package root) in
+  `scripts/one_offs/trace_composite_venue_provenance_2026_08_05.py`. Fixed via the checker's own `--fix` mode and
+  shipped standalone before retrying my own commit. **Lesson**: shipping this collided with `quickmerge`'s own internal
+  patch-stash mechanism — my second commit attempt for `manifest_swap_venue_restamp_2026_07_27.py` (not part of this
+  file's scope) got autostashed+popped mid-run, and its pop raced against `prek`'s own `ruff --fix` import-sorting pass
+  on the SAME `trace_composite_venue_provenance` file, leaving a literal unresolved 3-way-merge marker block (the
+  "Updated upstream" / "Stash base" / "Stashed changes" triplet a `git stash pop` conflict writes into the file) STAGED
+  (not just in the working tree) after the run reported success. Confirmed safe to resolve by comparing all 3 marked
+  sections against `git show HEAD:<file>` — HEAD's already-committed content was byte-identical to the "Stashed changes"
+  section (ruff had just reformatted 2 import lines into 1 sorted line), so
+  `git restore --source=HEAD --staged --worktree -- <file>` cleanly discarded the marker debris with zero data loss.
+  **Takeaway for next time**: a quickmerge run reporting exit 0 / "completed" is NOT proof the working tree is clean —
+  always `git status --porcelain` (no path arg) after every quickmerge, especially when two commits touch overlapping
+  files in quick succession on a shared checkout.
 
 ## Todos
 
@@ -191,8 +214,8 @@ confirming before scoping a re-stamp for it.
       instrument_types 0/0, data_types 0/0. FOOTBALL did **NOT** clear naturally — still present after a full day +
       fresh rollup, so its own todo below stays open (the "may self-heal" hope in the original write-up did not pan
       out).
-- [ ] [DATA] P1. Restart the live capture VM to verify the fix — **DONE, 2026-08-05** (see Shipped above) but leaving as
-      a checked-off record with the 2 traps hit, since the SAME traps will bite the next person who relaunches any
+- [x] ✅ [DATA] P1. Restart the live capture VM to verify the fix — **DONE, 2026-08-05** (see Shipped above) but leaving
+      as a checked-off record with the 2 traps hit, since the SAME traps will bite the next person who relaunches any
       `mtds-live-*` VM after a code fix: 1. `launch-mtds-live.sh`'s tarball-freshness check is a WARN, not a hard block,
       by default (`LC_TARBALL_FRESHNESS` unset) — it launched the VM anyway with a stale `market-tick-data-service`
       tarball TWICE in a row (once because the local checkout had unrelated dirty test-artifact files that made
@@ -210,28 +233,47 @@ confirming before scoping a re-stamp for it.
       group"). Caught and re-stopped within ~30-60s, before confirmed harm, but this is a real trap: a `mtds-live-*` VM
       is stateful and its boot disk should never be casually restarted like a stateless one — always launch a genuinely
       fresh instance via the launcher script instead.
-- [ ] [DATA] P2. Historical re-stamp for LADBROKES_UK→LADBROKES / SPORT888→BET888SPORT — **scope corrected 2026-08-05,
-      see Cause 3 above: this is the FULL historical range (990 / 1,824 distinct dates), not a narrow window.** Tools
-      already exist and are proven (0 failures in their original 2026-07-27 run) —
-      `market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py` (GCS content-rewrite;
-      **never deletes the source** — a pure additive read/transform/write to the new path, so no delete-safety-protocol
-      citation is actually needed for this half, correcting this doc's own earlier claim) then
-      `manifest_swap_venue_restamp_2026_07_27.py` (manifest CAS relabel, ADD+REMOVE — this half DOES touch the
-      manifest's own REMOVE path, mirror that script's existing safety shape, not a fresh design). Exact day-lists for
-      `--days-file` were extracted once (2026-08-04, via
-      `scripts/sports/census_track_c_venue_restamp_targets_2026_07_27.py` filtered to
-      `pipeline_mode=batch_odds_api & capture_status=captured`) but lived only in this session's scratchpad, which did
-      not survive a session interruption — cheap to regenerate (the census script run takes seconds; see reproduction
-      command below). Given the object count (comparable to the original 24,268+37,722-object migration), this is
-      a >few-hundred-object operation — heavy-I/O HARD RULE applies, must run on a VM in-region, never from a local
-      session. No ready-made VM launcher exists for this specific one-off script (the existing `mtds-live-*`/
-      `mtds-backfill-*` launchers are for the MTDS CLI's own task dispatch, not for running an arbitrary standalone
-      script) — needs either a minimal generic VM + SSH, or a small wrapper launcher. [OPERATOR] tag pending — confirm
-      AO-dispatch vs human-run before executing (this doc currently `assigned_vm: NA`; flip to `planning` if AO should
-      pick this up). Reproduction for the day-lists:
-      `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python3 scripts/sports/census_track_c_venue_restamp_targets_2026_07_27.py`
-      then filter its `read_availability_index` output by venue/pipeline_mode/capture_status as above. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P2. Historical re-stamp for LADBROKES_UK→LADBROKES / SPORT888→BET888SPORT — **DONE, 2026-08-05**. Ran on
+      a manually-launched VM (`canonical-migration-sports-venue-restamp-20260805-170246`, registered
+      `canonical-migration-sports-` prefix, `asia-northeast1-c`, SPOT, torn down after completion — no ready-made
+      wrapper launcher existed for this specific one-off pair of scripts, so used the documented "Manual SSH setup"
+      recipe from `deployment-service/scripts/vm/README.md` instead of extending the 2151-line
+      `launch-canonical-migration-vm.sh` dispatcher). Full historical range both venues: LADBROKES_UK
+      2023-03-31..2026-07-26 (12,202 objects), SPORT888 2020-06-06..2026-07-26 (18,916 objects) — 31,118 total, matching
+      the census's manifest-shard estimate closely. First apply pass:
+      `restamp_sports_bookmaker_venue_2026_07_27.py --apply-prod --confirm-prod-write` found 30,814 objects (99.0%)
+      already-present-and-content-equivalent (the original 2026-07-27 migration had already covered them — the
+      "re-polluted the whole range" theory from Cause 3 above was WRONG in degree: only 298 objects (0.96%) actually
+      diverged, not the full range), 6 genuinely new, 0 failed, **171 (LADBROKES_UK) + 127 (SPORT888) = 298
+      content_mismatch** the tool correctly refused to blind-overwrite (its own documented safety behavior — never
+      guesses on a pre-existing, non-equivalent target). Diagnosed the 298 by reusing the tool's own
+      `_content_relation`/natural-key comparison on every flagged object (not guessed): a clean ~50/50 split between
+      `src_superset` (source strictly contains target's rows, zero ambiguity, safe) and fully-disjoint-key `mismatch`
+      (same row count both sides, e.g. 24/24, but 0 natural-key overlap — consistent with a later reprocessing job
+      re-fetching the same historical days under fresh `fetch_utc`/`bm_time` stamps). Presented this finding to the
+      operator (AskUserQuestion, 3-way tradeoff: overwrite-with-source / union-merge-dedup / leave-as-residual) rather
+      than guess on production odds-market data — operator chose **overwrite target with source** (source is the
+      continuously-recaptured live path; simpler, no duplicate-tick-inflation risk). Wrote a small scoped reconciliation
+      script (`reconcile_mismatch.py`, scratchpad-only, not shipped — reuses the main script's own
+      `_rewrite_venue_content`/`_target_path`/`scan_day` primitives, only removes the "never overwrite on mismatch"
+      gate, scoped to the 47+40 already-flagged days) — 171+127=298 overwritten, 0 failed. Re-ran the main script's own
+      apply pass again as an independent verify: **0 content_mismatch, 0 failed, both venues, 100% clean.** **Found +
+      fixed a second real bug while running `manifest_swap_venue_restamp_2026_07_27.py`**: its `raw_tick_only` filter
+      compared `instrument_type`/`data_type` against uppercase `"ODDS"`/`"TRADES"`, but the live manifest carries
+      lowercase `odds`/`trades` for this shape (confirmed via direct manifest read) — the exact C2a-class casing gotcha
+      CLAUDE.md already rules on ("compare case-insensitively, do NOT flag, do NOT refuse"). This silently produced a
+      dry-run of "0 REMOVE, 0 ADD" for both venues — i.e., the manifest-swap step had **never actually worked** for the
+      raw-tick shape on ANY prior run, including the original 2026-07-27 migration (explaining why LADBROKES_UK/
+      SPORT888 still had live manifest rows today despite that migration's claimed 8,859+13,997-row swap — the GCS
+      content got copied then, but the manifest was never relabeled). Fixed with `.str.upper()` on both sides
+      (`market-tick-data-service@118eb148` — see Shipped below), applied directly to the VM's deployed copy first to
+      unblock, confirmed the dry-run now correctly shows 12,164/18,882 planned REMOVE+ADD matching the census exactly,
+      then ran `--apply-prod --confirm-prod-write` for both venues: **0 stale rows remaining, both venues, verified via
+      the script's own post-write re-download check.** Final census re-run confirms **LADBROKES_UK: 0 rows, SPORT888: 0
+      rows** (no manifest entries at all for either old-venue name). Triggered a fresh sports-scoped honest-coverage
+      rollup (`launch-measure-honest-coverage-vm.sh sports`) and confirmed on the LIVE panel: **venues non-canonical
+      count 3 → 1** (only `FOOTBALL` remains, the separate pre-existing residual tracked below — LADBROKES_UK/SPORT888
+      no longer appear in the non-canonical list at all). (repo: market-tick-data-service)
 - [ ] [DATA] P3. Confirm FOOTBALL's 194 `attempted_failed` rows either clear naturally on a future retry or, if not
       after another few days, scope why they're still failing post-fix (may be an unrelated failure cause, not just the
       venue mis-stamp) before deciding whether they need a manifest phantom-row cleanup or are a separate live bug.
@@ -253,16 +295,26 @@ confirming before scoping a re-stamp for it.
   around, documented as a follow-up todo). Extracted `--days-file` day-lists for the re-stamp but did not yet execute it
   (no ready VM launcher for this specific script; needs the minimal-VM-+-SSH path scoped in the todo above) — session
   paused here for a `/pre-compact` checkpoint before continuing.
+- **2026-08-05 (same day, continuation after `/pre-compact`)**: executed the historical re-stamp end to end (see the
+  completed Todos entry above for the full account). Two real findings along the way, not anticipated by the original
+  2026-07-27 tooling: (1) the original migration's "0 pre-existing rows" assumption no longer held (a second migration
+  attempt against an already-migrated target needs 3-way reconciliation, not just copy-if-missing) — resolved 298
+  genuinely-diverged objects via an operator-approved overwrite-with-source policy after diagnosing (not guessing) the
+  divergence pattern; (2) `manifest_swap_venue_restamp_2026_07_27.py`'s uppercase `ODDS`/`TRADES` filter never actually
+  matched the live manifest's lowercase `odds`/`trades` values — meaning the manifest-relabel half of this migration
+  class had silently no-op'd on every prior run, including the original 2026-07-27 closeout (the GCS content moved, the
+  manifest never did). Fixed and shipped. Verified end-to-end: fresh census shows 0 rows for both old venue names, fresh
+  honest-coverage rollup shows the live panel at venues 3→1 non-canonical (only the pre-existing, separately-tracked
+  `FOOTBALL` residual remains). Both VMs used (the manual re-stamp VM and the honest-coverage measurement VM) torn down
+  after completion.
 
 ## Deferred work after 2026-08-05
 
-| Item                                                              | State              | Blocked on                                                                                                                                                                              |
-| ----------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Historical GCS+manifest re-stamp (LADBROKES_UK/SPORT888)          | Not done           | Nobody — real work. Day-lists regenerate in seconds (recipe above); needs a clean VM (no ready-made launcher for this one-off script — build a minimal one, or SSH a fresh generic VM). |
-| FOOTBALL 194 `attempted_failed` phantom rows                      | Not done           | Nobody — confirmed NOT self-healing after 24h+; needs a short investigation into why the retry hasn't cleared them.                                                                     |
-| `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                                                                                                                                  |
-| LDR→main promotion of today's 5 shipped commits                   | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run.                                                                                                         |
+| Item                                                              | State              | Blocked on                                                                                                          |
+| ----------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| FOOTBALL 194 `attempted_failed` phantom rows                      | Not done           | Nobody — confirmed NOT self-healing after 48h+; needs a short investigation into why the retry hasn't cleared them. |
+| `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                                                              |
+| LDR→main promotion of today's 6 shipped commits                   | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run.                                     |
 
-**Recommended next item**: the historical re-stamp (P2, real user-visible data-correctness gap, tooling already proven
-safe) — the VM-launch mechanics are the only remaining unknown, everything else (day-lists, scripts, safety shape) is
-already worked out above.
+**Recommended next item**: the FOOTBALL phantom-row investigation (P3, small, self-contained) — everything else in this
+doc is now resolved or genuinely time-gated.
