@@ -430,13 +430,14 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       cross-fixture team-level aggregation not available in this per-fixture calculator; an upstream calculator or
       pre-computed input columns would be needed. 35 unit tests, basedpyright clean, QG green.
 
-- [ ] [DATA] P3. **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — ALREADY
-      RULED 2026-07-28, do not re-draft here.** Operator direct answer: _"This isn't actually a real open question —
-      check the code and just re-run/dispatch it. Convert to a normal task, do not leave as an operator-facing
-      question."_ That issue doc (one of this same operator-decisions pass's assigned files) has already been retagged
-      from `[OPERATOR]` to `[DATA] P3` with the full task (re-read the adapter, attempt a live re-fetch of the 4 dates
-      via the historical endpoint, close as backfilled-or-proven-permanent-absence either way) — execute that doc's own
-      Todos section item, not this pointer. Removed from Deferred here since it is no longer an open operator question.
+- [x] ✅ [DATA] P3. **DONE — `unified-trading-pm@<see plan-flip commit>`.**
+      `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — executed per the
+      2026-07-28 operator ruling (retagged from `[OPERATOR]` to `[DATA] P3`). Adapter re-read confirmed no adapter-side
+      reason a re-fetch would repeat the meta-only shape. Scoped backfill VM `mtds-backfill-odds-gap-20260621-24` (SPOT,
+      e2-highmem-4) launched against all 4 dates (2026-06-21..24): **0 rows, 0 credits used** on every date — the
+      vendor's historical discovery endpoint returned empty/422 for all leagues. CONCLUSION: genuine permanent upstream
+      absence. Issue doc `status: resolved` + todo `[x]` with full evidence in its Progress Log. Removed from Deferred
+      here since it is no longer an open operator question.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
