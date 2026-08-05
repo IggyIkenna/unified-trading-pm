@@ -96,8 +96,8 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       move any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch.
       Repo: unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with
       the specific evidence checked).
-- [x] ✅ [DOC] P3. — unified-trading-pm@31dd16a67. **VERDICT (2026-08-05, slot-9): STILL UNTAGGED — batch2-finalize todo
-      still open.** Confirmed the issue doc
+- [x] ✅ [DOC] P3. — unified-trading-pm@8777977c01ff14b829eaccd827517a3728d5dfc8. **VERDICT (2026-08-05, slot-9): STILL
+      UNTAGGED — batch2-finalize todo still open.** Confirmed the issue doc
       `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` still carries
       `asset_group: [defi]` (frontmatter L22), while its real content — the empty-string-fallback QG STEP 5.101
       baseline-ratchet mechanism, fleet-wide — is infra/cross-cutting, NOT DeFi-specific. The batch2-finalize todo that

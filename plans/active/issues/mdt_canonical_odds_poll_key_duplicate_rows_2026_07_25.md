@@ -164,13 +164,14 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
       "FUENLABRADA" vs "CF_FUENLABRADA", "BOAVISTA" vs "BOAVISTA_PORTO") where one row's vendor spelling matches the
       canonical form for BOTH teams while the other row's spelling matches NEITHER. **Rule 2 (2026-08-05)**: prefer the
       row with the MOST canonical team_ids (0/1/2 per row) — handles the both-canonical-vs-neither case; ties (same
-      canonical count) stay undecidable. **market-tick-data-service@18f635ea** (committed locally, 15/15 unit tests
-      pass, 3 new tests: `test_both_legs_varying_resolved_by_canonical_count`,
-      `test_both_legs_varying_all_non_canonical_is_undecidable`,
-      `test_both_legs_varying_tie_on_canonical_count_is_undecidable`). Cannot quickmerge-push until repo-blocker
-      RB-04b8981e (2 pre-existing QG failures: lending CLI module + Polymarket sentinel) resolves. Diagnostic script
-      `scripts/diagnose_both_legs_varying_undecidable_2026_08_05.py` identifies remaining non-canonical team-name
-      variants for future alias-table additions. (repo: market-tick-data-service).
+      canonical count) stay undecidable. **market-tick-data-service@1bcee624e155775e061e1e9c74f4ab12fbc993d2**
+      (originally cited here as `18f635ea`, a short-sha that never matched any commit — corrected after locating the
+      real commit by content: same author slot-2, same date, same 3 new tests
+      `test_both_legs_varying_resolved_by_canonical_count`, `test_both_legs_varying_all_non_canonical_is_undecidable`,
+      `test_both_legs_varying_tie_on_canonical_count_is_undecidable`, same "Rule 2 (2026-08-05)" commit message).
+      Verified now an ancestor of `origin/live-defi-rollout` — the repo-blocker RB-04b8981e has since cleared and this
+      landed via quickmerge. Diagnostic script `scripts/diagnose_both_legs_varying_undecidable_2026_08_05.py` identifies
+      remaining non-canonical team-name variants for future alias-table additions. (repo: market-tick-data-service).
 
 ## Progress Log
 

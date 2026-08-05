@@ -109,7 +109,8 @@ green.
 ## Todos
 
 - [x] [DATA] P1. Repoint `block_priority_gas_distribution_calculator.py`'s shard spec from `venue=chain` to
-      `venue="ALCHEMY"`, correct the two stale docstrings. — **Done 2026-07-30**, `features-service@7f800b45`.
+      `venue="ALCHEMY"`, correct the two stale docstrings. — **Done 2026-07-30**,
+      `features-service@48f77f2a73aa3ef348b374965cc80dc07fbf65bd`.
 - [x] [DATA] P2. ✅ `_GAS_FEE_CHAINS` in this same calculator lists `GNOSIS`, which is not in `gas_fee_handler.py`'s
       `DEFAULT_GAS_FEE_CHAINS` — the calculator silently reads an always-empty shard for that chain. Reconciled the two
       chain lists. — **Done 2026-08-03**, `features-service@09c07ead`. **Scope note**: the reconciliation surfaced a

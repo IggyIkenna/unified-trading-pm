@@ -154,12 +154,21 @@ decide "already promoted".
       dispatch counter instead of POST-call completion order so a late-posting stale run can't overwrite a fresher good
       one. (repo: unified-trading-pm, `.github/workflows/ldr-to-main-promote-fleet.yml` and/or
       `system-integration-tests/.github/workflows/full-workspace-sit.yml`'s status-post step) — **DONE 2026-07-29
-      (slot-2, infra) — `unified-trading-pm@2f9646585` + `@466c7621e`** (`ldr-to-main-promote-fleet.yml`
-      `SIT_FLEET_LINE` fix filtering cancelled runs before selecting `[0]`) and **`system-integration-tests@33cf6f0`**
-      (`full-workspace-sit.yml` no-ops on `job.status=cancelled`), via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
-      line 312, citing this exact sub-finding as source. Two regression tests back it:
-      `test-sit-fleet-green-cancelled-run-clobber.sh`, `test_full_workspace_sit_cancelled_run_noop.py`. Landed the day
-      before the 2026-07-30 na-eligibility-audit pass, which missed flagging it as done — caught this pass.
+      (slot-2, infra) — `unified-trading-pm@ab22e725b6141e4ccd7b11018134e7e8bbb90961` +
+      `unified-trading-pm@18a55dd49c12dbf71241696b1fbfd5e8aa2ee37d`** (corrected full shas — the originally-cited
+      `2f9646585`/`466c7621e` never matched any commit; the real pair is confirmed by content: the first commit's
+      message is this exact incident writeup + regression test citing "Source:
+      plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md", and the second commit's
+      message literally reads "Companion commit to 2f9646585 — the actual
+      `.github/workflows/ldr-to-main-promote-fleet.yml` edit got dropped from that commit by prek's stash/restore cycle"
+      — i.e. `2f9646585` was a real attempted sha that prek's hook mutated away before the commit landed, and
+      `18a55dd49...` is the follow-up that actually shipped the workflow edit; both verified ancestors of
+      `origin/live-defi-rollout`) (`ldr-to-main-promote-fleet.yml` `SIT_FLEET_LINE` fix filtering cancelled runs before
+      selecting `[0]`) and **`system-integration-tests@33cf6f0`** (`full-workspace-sit.yml` no-ops on
+      `job.status=cancelled`), via `ci_satellite_ao_dispatch_batch1_2026_07_26.md` line 312, citing this exact
+      sub-finding as source. Two regression tests back it: `test-sit-fleet-green-cancelled-run-clobber.sh`,
+      `test_full_workspace_sit_cancelled_run_noop.py`. Landed the day before the 2026-07-30 na-eligibility-audit pass,
+      which missed flagging it as done — caught this pass.
 
 ## Progress Log
 

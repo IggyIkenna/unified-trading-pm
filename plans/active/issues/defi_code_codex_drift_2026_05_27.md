@@ -133,7 +133,10 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       Goldsky subgraph ~38 days stale; the real root cause is an already-tracked orchestrator-wiring gap
       (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md` P1), not a registry gap — flipping phase now would
       recreate the phantom-capacity dishonest-coverage class the data-pipeline-correctness HARD RULE bans. Shipped
-      `unified-api-contracts@5626079e`. Full evidence trail in this doc's Progress Log. **The 3 inverse venues
+      `unified-api-contracts@f0032d171b89ff38aafcea0d9d28882ccca2b991`
+      (`fix(defi,cefi): D10 defi lending capability     entries + DERIBIT-COMBO test coverage`, 2026-07-10, confirmed on
+      origin/live-defi-rollout; corrects the earlier `5626079e` citation, which does not resolve to a real commit —
+      likely a mistyped/stale short sha). Full evidence trail in this doc's Progress Log. **The 3 inverse venues
       (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully removed 2026-06-02 (operator decision,
       no usable/decodable data source); UAC capabilities + IS adapters wiped. SSOT:
       `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
@@ -159,19 +162,19 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       2026-05-31) must be migrated into `asset_group=cefi` so data agrees with the code-level classification.
 
       **CLEAR for dispatch (2026-07-30, conflict-check)** — no other active doc claims this migration. **Flagging, not
-                                                                                                                                                                              blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
-                                                                                                                                                                              "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
-                                                                                                                                                                              reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
-                                                                                                                                                                              migration plan, not a hard block.
+                                                                                                                                                                                                                                                                                                  blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
+                                                                                                                                                                                                                                                                                                  "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
+                                                                                                                                                                                                                                                                                                  reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
+                                                                                                                                                                                                                                                                                                  migration plan, not a hard block.
 
-                                                                                              **Migration plan filed 2026-08-02** (this item's remaining action):
-                                                                                              `plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (`status: draft`,
-                                                                                              `assigned_vm: NA` per ask-before-creating default; mirrors `solana_defi_legacy_migration_2026_05_27`'s gate
-                                                                                              pattern — Phase 1 audit+script, Phase 2 VM execution, Phase 3 manifest reconcile, Phase 4 operator-gated
-                                                                                              delete). Re-verified live 2026-08-02: legacy `asset_group=defi` corpus confirmed still present (bounded
-                                                                                              per-day GCS checks, not a whole-corpus walk), writes stopped between 2026-06-05 and 2026-06-20 (frozen, no
-                                                                                              live-write race to coordinate a migration around). **The GCS/manifest migration itself has NOT executed yet —
-                                                                                              that work now lives in the new plan's own todos, not here.**
+                                                                                                                                                                                                                  **Migration plan filed 2026-08-02** (this item's remaining action):
+                                                                                                                                                                                                                  `plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (`status: draft`,
+                                                                                                                                                                                                                  `assigned_vm: NA` per ask-before-creating default; mirrors `solana_defi_legacy_migration_2026_05_27`'s gate
+                                                                                                                                                                                                                  pattern — Phase 1 audit+script, Phase 2 VM execution, Phase 3 manifest reconcile, Phase 4 operator-gated
+                                                                                                                                                                                                                  delete). Re-verified live 2026-08-02: legacy `asset_group=defi` corpus confirmed still present (bounded
+                                                                                                                                                                                                                  per-day GCS checks, not a whole-corpus walk), writes stopped between 2026-06-05 and 2026-06-20 (frozen, no
+                                                                                                                                                                                                                  live-write race to coordinate a migration around). **The GCS/manifest migration itself has NOT executed yet —
+                                                                                                                                                                                                                  that work now lives in the new plan's own todos, not here.**
 
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are

@@ -314,11 +314,11 @@ Two independent gates because Group A and Group B are at different stages:
       compute SA) — do not leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                              > (or any other role) without going through terraform at all. See
-                                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                              > actually complete until that doc's P1/P2 also land.
+                                                                                                                                                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                                                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                                                                                                                                              > (or any other role) without going through terraform at all. See
+                                                                                                                                                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                                                                                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -351,13 +351,13 @@ Two independent gates because Group A and Group B are at different stages:
       follow-up `tofu plan` shows 0 changes (config/state/live in sync). INERT until P2.2c/P2.2d actually wire a runtime
       to one of these SAs — no live runtime identity changed as a result.
 - [x] ✅ [CODE] P2.2c. **DONE 2026-07-31 (slot-5, reconciled with a concurrent slot-7 session on the same file) —
-      `deployment-service@8a8125e`/`c518cda` + `118ad9e`.** Wired `deploy-shared.sh`'s default `--service-account` for
-      `uts-shared-deployment-api`/deployment-api from `unified-trading-sa` to `uts-prd-sa` (env-overridable via
-      `RUNTIME_SA=` for an instant revert), and live-verified access: Secret Manager `versions.access`, Pub/Sub
-      `topics.list`, BigQuery `datasets.list`, Storage `objects.list` (Group A `-prd-`) all confirmed working directly
-      via an impersonated `uts-prd-sa` token. Concurrently, slot-7 found + fixed 2 grant gaps this check didn't cover
-      (`roles/bigquery.jobUser`, bucket-level write on `unified-deployment-state-*`/`deployment-scripts-*`),
-      live-verified via real endpoints — see
+      `deployment-service@a2b90f9e7351f23c9ce48130e1926acff066f5ae`/`c518cda` + `118ad9e`.** Wired `deploy-shared.sh`'s
+      default `--service-account` for `uts-shared-deployment-api`/deployment-api from `unified-trading-sa` to
+      `uts-prd-sa` (env-overridable via `RUNTIME_SA=` for an instant revert), and live-verified access: Secret Manager
+      `versions.access`, Pub/Sub `topics.list`, BigQuery `datasets.list`, Storage `objects.list` (Group A `-prd-`) all
+      confirmed working directly via an impersonated `uts-prd-sa` token. Concurrently, slot-7 found + fixed 2 grant gaps
+      this check didn't cover (`roles/bigquery.jobUser`, bucket-level write on
+      `unified-deployment-state-*`/`deployment-scripts-*`), live-verified via real endpoints — see
       `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` P2 (flipped ✅ there).
       Also fixed an unrelated drift bug found along the way: `deploy-shared.sh` had a stale `--memory=4Gi --cpu=2`
       predating `cloudbuild.yaml`'s documented 2026-07-17 8Gi→16Gi OOM fix for this service — now `16Gi/4cpu` to match.

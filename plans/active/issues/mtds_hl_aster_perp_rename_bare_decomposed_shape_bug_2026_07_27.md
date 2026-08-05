@@ -231,7 +231,8 @@ sibling todo reads `[x]`.
       covering the mismatch-refusal case.
 
 - [x] ✅ [SCRIPT] P2. **Harden HL/ASTER adapters to stamp canonical `instrument_id` directly** —
-      market-tick-data-service@eda8ad68. HL adapter (`hyperliquid_s3.py`): all 4 producers (`_fill_to_trade_row`,
+      market-tick-data-service@eda8ad685526dda0bfeca12ae9c657f0feac467b (full sha; verified ancestor of
+      `origin/live-defi-rollout`). HL adapter (`hyperliquid_s3.py`): all 4 producers (`_fill_to_trade_row`,
       `_parse_l2_book_line`, `_build_funding_ticker`, `_parse_asset_ctxs_csv`) now stamp
       `f"HYPERLIQUID:PERPETUAL:{symbol}"`. ASTER adapter (`_umi_aster.py`): new `_canonical_aster_instrument_id()`
       helper handles three shapes (already-decomposed `BASE-QUOTE@LIN`, raw concatenated `BASEQUOTE`, unrecognised

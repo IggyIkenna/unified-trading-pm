@@ -160,8 +160,11 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       committed-but-unpushed WIP in slot 8's worktree; INHERIT it, do NOT re-implement.** As of 2026-07-31 the UTL half
       (`aggregate_cefi_manifest_volume` in `unified_trading_library/manifest_writer/_volume_aggregation.py`) is already
       on origin; the two consumer halves are stranded ahead=1 in slot 8's `.tabs/8`:
-      `market-tick-data-service@a89e4114057e` (the `cefi_catalog_reader.py` margin-gate wiring) and
-      `features-service@2f480da24764` (the `batch_handler.py` `feature_perp_representative` wiring). Both carry a
+      `market-tick-data-service@a89e4114057e` (the `cefi_catalog_reader.py` margin-gate wiring) and, originally
+      committed in slot 8's worktree as `2f480da24764` then **rewritten by an autostash-rebase during push** to the
+      final landed commit `features-service@48911e87f50809167a973b6ece6bb693612480d3`
+      (`feat(delta_one): wire real     venue-volume observations into the perp collapse`, 2026-07-31, confirmed on
+      origin/live-defi-rollout) — the `batch_handler.py` `feature_perp_representative` wiring. Both carry a
       `Quickmerge: agent` trailer, but NEITHER repo's `.qg_last_passed_sha` sentinel matches HEAD — so this is NOT a
       same-SHA `quickmerge --agent` retry. Recovery path, from slot 8 itself (still live, still holding both commits) or
       a live inheritor of `.tabs/8` once its liveness gate is clear: re-run Pass-1 `quality-gates.sh` on each EXACT HEAD
@@ -327,8 +330,9 @@ rotating baskets).
 
 - **2026-07-31 ~13:33Z (main-agent agt-9f21bc): slot-8 stranded-WIP recovery backstop filed.** The `[MTDS] P2` build
   todo above was fully implemented then stranded when slot 8 died (tmux_session_lost 13:15:34Z) with the work committed
-  but unpushed — `market-tick-data-service@a89e4114057e` + `features-service@2f480da24764` (the UTL half was already on
-  origin). Slot 8 respawned 13:22:01Z and still carries both ahead=1 commits (ff-pull preserves them); review-role
+  but unpushed — `market-tick-data-service@a89e4114057e` + `features-service` (committed as `2f480da24764`, later
+  rewritten to `48911e87f50809167a973b6ece6bb693612480d3` by an autostash-rebase during push; the UTL half was already
+  on origin). Slot 8 respawned 13:22:01Z and still carries both ahead=1 commits (ff-pull preserves them); review-role
   agt-8ce066 (msgs 2969/2972) pinged it directly with ship instructions. The recovery todo above + this entry are the
   durable backstop per every-follow-up-is-a-todo, in case the direct ping is missed before a recycle. Main does NOT do
   the git recovery itself (cross-slot worktree / quickmerge is worker-craft).

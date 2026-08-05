@@ -138,9 +138,9 @@ context_scope:
 - [x] ✅ [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
       batch/replay path is also built) in `data_type_capability.py`, scoped ONLY to the venues that actually ship
       deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts. — **DONE (partial,
-      by design), slot-13, `unified-api-contracts@a7a14187`.** Split the two data_types instead of flipping both
-      identically: `depth_of_book_10` is raw-captured directly by a per-venue WS connector (todo 2,
-      `market-tick-data-service@15f5657b`) — flipped `live_capable=True` for the 5 genuinely capable venues
+      by design), slot-13, `unified-api-contracts@aab15c3e8c044c8b422240f4c22f24ec7e19a0ea`.** Split the two data_types
+      instead of flipping both identically: `depth_of_book_10` is raw-captured directly by a per-venue WS connector
+      (todo 2, `market-tick-data-service@15f5657b`) — flipped `live_capable=True` for the 5 genuinely capable venues
       (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES, OKX-SWAP), stayed honest-absent for the other 4. `queue_position`
       is COMPUTED — `compute_book_microstructure` exists (todo 3) but **no handler dispatches it against a live feed and
       writes the result** (the pre-retirement handler was deleted in `a4fb3d13` and was never rebuilt — not covered by

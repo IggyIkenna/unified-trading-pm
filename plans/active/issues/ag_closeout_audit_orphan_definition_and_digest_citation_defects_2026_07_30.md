@@ -165,18 +165,19 @@ Other: operator can type a custom answer
       or filter in `_closeout_paths()` directly), and add a unit test asserting a doc cited ONLY in the digest is
       reported as `never_cited`. **Done when**: `--tranche cefi --json` no longer lists
       `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` in `covering_paths`, and the new test fails against
-      the current code. Repo: unified-trading-pm. — unified-trading-pm@369df5695. `_closeout_paths()` now filters
-      `"aggregated_sources" not in p.name`; `test_aggregated_sources_digest_is_not_a_covering_doc` added and passing.
+      the current code. Repo: unified-trading-pm. — unified-trading-pm@a589efe05b4672d2c33194c66cb4a88add69e96b.
+      `_closeout_paths()` now filters `"aggregated_sources" not in p.name`;
+      `test_aggregated_sources_digest_is_not_a_covering_doc` added and passing.
 - [x] ✅ [SCRIPT] P2. Extend `_covering_paths()` to implement SKILL.md Phase 0.2 path (b) — resolve the consolidated
       closeout's frontmatter `depends_on:`/`related:` (and its `_native_ao_extract_*` siblings') to real files and union
       them into the covering set, instead of matching filenames against `(dispatch_batch|satellite|_finalize)` only.
       **Done when**: `--tranche cefi --json`'s `covering_paths` includes the four 2026-07-25 line-cap forks
       (`cefi_misc_audits_and_hygiene`, `cefi_track2_coverage_backfill_checkpoints`,
       `cefi_track7_candle_namespace_residual`, `cefi_consolidated_native_ao_extract`). Repo: unified-trading-pm. —
-      unified-trading-pm@369df5695. Implemented via each discovered `_finalize` doc's `depends_on:` resolved to its
-      paired main-plan file path (more general than parsing the closeout's own `depends_on:`/`related:`, which are empty
-      for cefi — the finalize→main link is the actual mechanical relationship every line-cap fork uses corpus-wide, also
-      fixes the same gap independently found by the sports sibling run,
+      unified-trading-pm@a589efe05b4672d2c33194c66cb4a88add69e96b. Implemented via each discovered `_finalize` doc's
+      `depends_on:` resolved to its paired main-plan file path (more general than parsing the closeout's own
+      `depends_on:`/`related:`, which are empty for cefi — the finalize→main link is the actual mechanical relationship
+      every line-cap fork uses corpus-wide, also fixes the same gap independently found by the sports sibling run,
       `ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`). Verified:
       `--tranche cefi --json`'s `covering_paths` now includes all four named forks (16 covering docs, up from 12; 97
       members, down from 102 with the 5 newly-covering main docs excluded).

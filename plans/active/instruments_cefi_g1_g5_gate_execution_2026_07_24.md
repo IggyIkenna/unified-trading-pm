@@ -334,8 +334,9 @@ Coverage is the verification lens — every number flows through `compute_honest
       instruments-service@b0596d0 (trailing-window + frozen-tail, `--mode incremental` default; self-widening window;
       supersedes the SIGKILL-on-3600s cloud-regen failure). (5) Staleness gate — instruments-service@5d31994
       (CATALOGUE_STALE_BY_DATE warning, coverage-horizon check) + @4979429 (clamp day<=today so future-dated prediction
-      settlement partitions don't blind the gate). — instruments-service@d9418e6e image (0.87.0) +
-      deployment-service@9d0e457 (per-AG scheduler) + instruments-service@b0596d0 + @5d31994 + @4979429.
+      settlement partitions don't blind the gate). — instruments-service@5ab4a1e554 (tag v0.87.0, the LDR→main promote
+      commit the image was built from at 2026-06-27 10:26 UTC; the built image's own digest is `sha256:d9418e6e`, not a
+      commit sha) + deployment-service@9d0e457 (per-AG scheduler) + instruments-service@b0596d0 + @5d31994 + @4979429.
 - [x] ✅ [SCRIPT] P0. **G3b — cefi DATED instruments: `available_to`=venue-truth + expiry oracle — SIGNED OFF
       2026-07-06** (RECONCILE: shipped as G1.1/G1.h). Evidence: `build_catalogue_dataframe` now derives `available_to`
       from VENUE TRUTH — (1) explicit `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled into

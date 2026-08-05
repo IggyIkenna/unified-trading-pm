@@ -271,9 +271,9 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
 
 - [x] ✅ [CODE] [UI] P1. DONE 2026-06-11 — deployment-api@0676afc (signal fields) + deployment-api@3c29dac
       (trigger-region fix) + deployment-api@98d0d40 (build-LIST region + REPO_NAME match — completes the fix) +
-      deployment-ui@c984541 + deployment-ui@1ad86d5 (sha render) | pw:L2 ✓ | regression:
-      tests/e2e/repos-promotion-blocked.spec.ts. **(B1) Image/build column — real status, not "unknown".** **ROOT CAUSE
-      was a region mismatch in TWO places, fixed in two commits:** (1) `3c29dac` pinned
+      deployment-ui@c984541 + deployment-ui@46d6ae59920cd4786fe85a42b65141d94332328f (sha render) | pw:L2 ✓ |
+      regression: tests/e2e/repos-promotion-blocked.spec.ts. **(B1) Image/build column — real status, not "unknown".**
+      **ROOT CAUSE was a region mismatch in TWO places, fixed in two commits:** (1) `3c29dac` pinned
       `CLOUD_BUILD_REGION = "asia-northeast1"` for the TRIGGER list
       (`_cloud_builds_trigger.py`/`cloud_builds.py`/`settings.py`) — was reading `gcs_region` (`us-central1`) where 0 of
       57 triggers live; (2) `98d0d40` fixed the BUILD-LIST path the trigger fix didn't reach: `_cloud_builds_history.py`
@@ -309,14 +309,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `tests/smoke/`) — so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test.
       **Leftover (slot 4): `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo:
       deployment-ui.
-- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@1ad86d5 | pw:L2 ✓ | regression:
-      tests/e2e/repos-promotion-blocked.spec.ts (B2 header test). **(B2) Repo drill-down build header** — opening a repo
-      now renders a build-details header at the top: build **status** + **source** (Cloud Build/CodeBuild, derived from
-      the log-URL host via `buildSourceLabel`) + **last build time** + **built commit sha** (→GitHub commit) + **build
-      log link**. Shares the B1 image signal; honest-absent ("no Cloud Build / CodeBuild for this repo") when the repo
-      has no build. UI-only — the detail endpoint already returned `image` (now populated by the B1 fix). Repo:
-      deployment-ui (`RepoDetailPanel` build header + `buildSourceLabel` helper).
-- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-api@98d0d40 + deployment-ui@1ad86d5 | pw:L2 ✓ | regression:
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-ui@46d6ae59920cd4786fe85a42b65141d94332328f | pw:L2 ✓ |
+      regression: tests/e2e/repos-promotion-blocked.spec.ts (B2 header test). **(B2) Repo drill-down build header** —
+      opening a repo now renders a build-details header at the top: build **status** + **source** (Cloud
+      Build/CodeBuild, derived from the log-URL host via `buildSourceLabel`) + **last build time** + **built commit
+      sha** (→GitHub commit) + **build log link**. Shares the B1 image signal; honest-absent ("no Cloud Build /
+      CodeBuild for this repo") when the repo has no build. UI-only — the detail endpoint already returned `image` (now
+      populated by the B1 fix). Repo: deployment-ui (`RepoDetailPanel` build header + `buildSourceLabel` helper).
+- [x] ✅ [CODE] [UI] P2. DONE 2026-06-11 — deployment-api@98d0d40 +
+      deployment-ui@46d6ae59920cd4786fe85a42b65141d94332328f | pw:L2 ✓ | regression:
       tests/e2e/repos-promotion-blocked.spec.ts (last-success tests) + tests/unit (backend). **(B-lastsuccess) Show the
       LAST SUCCESSFUL build when the latest is red** (operator ask 2026-06-11: "if the current build fails, how do I see
       the last successful build?"). Backend: `_recent_builds_by_repo_name` now returns per repo a

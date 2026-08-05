@@ -184,12 +184,13 @@ context_scope:
 - [x] ✅ [DATA] P3. Once `[DATA] P2` above lands (or rules out the anti-pattern), resume the remaining unverified
       `smoke_matrix.py` legs (multi_timeframe, onchain, sports, volatility) for
       `features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md`'s original verification goal, this time with the
-      fixed/hardened timeout wrapper from the todo above. (repo: features-service, e2e-testing) —
-      **e2e-testing@84cd621**. All 4 remaining families verified (slot 7, 2026-08-05): dry-run + real invocation
-      attempted against GCP `central-element-323112` with `GCP_PROJECT_ID` + `PROTOCOL_DATA_SINK_BUCKET*` env vars set +
-      600s process-group SIGKILL timeout hardening confirmed active. All 4 families fail full E2E due to **pre-existing
-      infrastructure issues** unrelated to the P0/P2 fixes: **onchain** — dependency check rejects 2026-05-03 (5 missing
-      upstream MTDS deps); **multi_timeframe** — CLI SUCCEEDS (exit 0, 36 manifest rows written to
+      fixed/hardened timeout wrapper from the todo above. (repo: features-service, e2e-testing) — **verification-only
+      run against e2e-testing's existing smoke_matrix.py fixes (no new commit landed; exact sha not applicable)**. All 4
+      remaining families verified (slot 7, 2026-08-05): dry-run + real invocation attempted against GCP
+      `central-element-323112` with `GCP_PROJECT_ID` + `PROTOCOL_DATA_SINK_BUCKET*` env vars set + 600s process-group
+      SIGKILL timeout hardening confirmed active. All 4 families fail full E2E due to **pre-existing infrastructure
+      issues** unrelated to the P0/P2 fixes: **onchain** — dependency check rejects 2026-05-03 (5 missing upstream MTDS
+      deps); **multi_timeframe** — CLI SUCCEEDS (exit 0, 36 manifest rows written to
       `features-cefi-test-central-element-323112`) but verifier looks at wrong parquet prefix
       (`features/by_date/day=...` vs. actual multi_timeframe path); **sports** — `ManifestConsolidatorStaleError` on
       `features-sports-test-central-element-323112` (consolidator not running for test buckets); **volatility** — CLI

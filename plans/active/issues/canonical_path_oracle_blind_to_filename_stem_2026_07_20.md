@@ -268,10 +268,10 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       surfacing as a proper per-shard `record_failed` via the existing shard-isolation machinery rather than a silent
       corrupt write. Regression tests: `tests/internal/unit/test_canonical_id_builder.py::TestSymbolColonGuard`.
 - [x] [DATA] P1. **DONE 2026-07-27 (slot-15)** — Re-ran CeFi surface-A id-form with the fixed oracle installed
-      (`unified-api-contracts@29c3672ff` lineage, carrying `d40c5d7d`/`502ef57e`) and restated the verdict: 1.
-      **Mechanism re-verified.** Re-ran all 4 § 1 example stems through `canonical_path_violations_classified`
-      (`require_pipeline_mode` False AND True) — every one that pre-fix silently read "0 violations == CANONICAL" now
-      correctly reports an `ID_FORM` violation; a genuinely canonical stem
+      (unified-api-contracts lineage carrying `d40c5d7d`/`502ef57e`; exact working-tree sha not recoverable —
+      squash/rebase history) and restated the verdict: 1. **Mechanism re-verified.** Re-ran all 4 § 1 example stems
+      through `canonical_path_violations_classified` (`require_pipeline_mode` False AND True) — every one that pre-fix
+      silently read "0 violations == CANONICAL" now correctly reports an `ID_FORM` violation; a genuinely canonical stem
       (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN.parquet`) still reports zero violations of either class (no false
       positive introduced). The exact § 6.1a colon_wire form (`BINANCE-FUTURES:PERP:BTCUSDT`) also now fails
       `is_canonical_instrument_id` directly. 2. **Fresh sampled census (Tier-1, in-session, no VM, no corpus walk)** —

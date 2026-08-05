@@ -106,7 +106,10 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       SHA) is therefore already MET; slot-11's orphan `b411374c1` is a redundant duplicate, do NOT recover/rebase it.
       This is exactly why the todo was written outcome-defined rather than SHA-brittle. — Ensure slot-11's
       vault_share_price fix lands on `origin/live-defi-rollout`. Review saw it committed cleanly as
-      `market-tick-data-service@b411374c1` (Quickmerge trailer; real+tested fix for
+      `market-tick-data-service@b411374c1f302ac04bf2b05ccab8eadac5176b5e` (full sha — object verified present in the
+      local clone as a real commit, "fix(defi): vault_share_price manifest per-instrument grain with instrument_id", but
+      confirmed NOT an ancestor of `origin/live-defi-rollout` — this citation documents what slot-11 committed locally,
+      not a landed change; Quickmerge trailer; real+tested fix for
       `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` — per-instrument instrument_id now recorded
       per shard instead of one null-id aggregate call), but slot 11 died a 2nd time before Pass-1 QG finished and the
       Part-B 900s ahead-commit age guard correctly declined to auto-push the half-verified commit. As of main's check

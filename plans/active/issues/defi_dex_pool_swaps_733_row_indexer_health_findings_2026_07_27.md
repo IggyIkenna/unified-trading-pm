@@ -615,21 +615,22 @@ absorb the actual remediation work.
       (this investigation). The actual fix is filed as the new P2 todo below.
 - [x] ✅ [DATA] P2. **NEW, 2026-08-05 (slot 4 → slot 6).** Add taxonomy reason + runtime detection for "frozen indexer
       head" — **SHIPPED UAC: unified-api-contracts@2d74b345 (adds EXPECTED_SUBGRAPH_STALLED_HEAD to
-      EmptyConfirmedReason + OUT_OF_COVERAGE_WINDOW_REASONS). MTDS: market-tick-data-service@531a07d8 (ready, blocked on
-      pre-existing QG failures RB-04b8981e — \_SubgraphStalledHeadError + \_is_subgraph_head_stale +
-      probe_subgraph_head_and_raise_if_stale + record_stalled_head_empty in new \_dex_swaps_stalled_head.py module; 49
-      tests pass, file sizes comply). Will quickmerge MTDS when blocker clears.** (stalled `_meta.block.timestamp`
-      despite live query response). Unlike `EXPECTED_SUBGRAPH_DEINDEXED` (zero allocations, no query can succeed), this
-      subgraph HAS allocations and serves historical data correctly — the failure mode is that the indexer head is
-      frozen far behind chain tip, so any backfill attempt for dates past the frozen head returns honest-zero rows (not
-      an error) but the zero is MISLEADING (it's not that no swaps occurred; it's that the subgraph hasn't indexed those
-      blocks yet). The fix needs: (a) a new `EmptyConfirmedReason.EXPECTED_SUBGRAPH_STALLED_HEAD` in UAC (or
-      equivalent), (b) runtime detection in `dex_swaps_handler.py` that checks `_meta.block.timestamp` staleness against
-      a threshold (suggest ≥7 days), (c) routing to `record_empty(reason=EXPECTED_SUBGRAPH_STALLED_HEAD)` instead of
-      `record_zero_rows()` when the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed`
-      rows from accumulating on every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection
-      should be generic enough to catch future occurrences on other high-throughput chains. Repo:
-      market-tick-data-service, unified-api-contracts.
+      EmptyConfirmedReason + OUT_OF_COVERAGE_WINDOW_REASONS). MTDS:
+      market-tick-data-service@531a07d8693593124fb60e4d15acd19fc19270e0 (ready, blocked on pre-existing QG failures
+      RB-04b8981e — \_SubgraphStalledHeadError + \_is_subgraph_head_stale + probe_subgraph_head_and_raise_if_stale +
+      record_stalled_head_empty in new \_dex_swaps_stalled_head.py module; 49 tests pass, file sizes comply). Commit is
+      real but stranded off `live-defi-rollout` — preserved on `wip-preserve/orchestrator-slot-6-531a07d8` (slot-6,
+      2026-08-05). Will quickmerge MTDS when blocker clears.** (stalled `_meta.block.timestamp` despite live query
+      response). Unlike `EXPECTED_SUBGRAPH_DEINDEXED` (zero allocations, no query can succeed), this subgraph HAS
+      allocations and serves historical data correctly — the failure mode is that the indexer head is frozen far behind
+      chain tip, so any backfill attempt for dates past the frozen head returns honest-zero rows (not an error) but the
+      zero is MISLEADING (it's not that no swaps occurred; it's that the subgraph hasn't indexed those blocks yet). The
+      fix needs: (a) a new `EmptyConfirmedReason.EXPECTED_SUBGRAPH_STALLED_HEAD` in UAC (or equivalent), (b) runtime
+      detection in `dex_swaps_handler.py` that checks `_meta.block.timestamp` staleness against a threshold (suggest ≥7
+      days), (c) routing to `record_empty(reason=EXPECTED_SUBGRAPH_STALLED_HEAD)` instead of `record_zero_rows()` when
+      the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed` rows from accumulating on
+      every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection should be generic enough to
+      catch future occurrences on other high-throughput chains. Repo: market-tick-data-service, unified-api-contracts.
 
 ## Progress Log
 

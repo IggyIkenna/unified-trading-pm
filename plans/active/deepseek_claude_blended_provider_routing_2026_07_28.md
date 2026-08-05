@@ -369,9 +369,9 @@ default from an external reference.
       Claude-only/provider-blind, starving a healthy funded DeepSeek pool behind a Claude-only 90% signal (519 queued, 1
       dispatched). Root-caused live by the main orchestrating agent after an operator report; fixed same-day. Full
       writeup: `plans/active/issues/autospawn_pool_critical_halt_starves_deepseek_2026_08_04.md`
-      (`unified-trading-pm@f7af03a1a`). Fix: the halt now also requires `_non_anthropic_pool_has_capacity` to be False.
-      — `agent-orchestrator@3f06bea`, ahead=0. Also bumped `deepseek_route_fraction` 0.8→0.9 —
-      `agent-orchestrator@0b62753`.
+      (`unified-trading-pm@a5e22fb398d7b19380ab2e94c08d59ef28a7b827`). Fix: the halt now also requires
+      `_non_anthropic_pool_has_capacity` to be False. — `agent-orchestrator@3f06bea`, ahead=0. Also bumped
+      `deepseek_route_fraction` 0.8→0.9 — `agent-orchestrator@d18e6830cbabd402345fe6bacb071fe24bb2e01e`.
 - [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance ($0.34 as of 2026-08-04T14:05Z). — Done: confirmed $4.84
       live via `/api/accounts` at 2026-08-04T14:33Z.
 - [ ] [OPERATOR] P3. Create/name the DeepSeek GSM secret and give it to an agent, then re-source
@@ -383,9 +383,9 @@ default from an external reference.
       window-aggregated (1h/5h/24h/7d/lifetime) per-task-averaged dashboard view — `agent-orchestrator@5f6b20f`.
 - [x] [INFRA] P1. ✅ Give workers a within-task turn/token compaction trigger. Turned out ALREADY SHIPPED same-day
       10:35, before this investigation started: `context_lifecycle.py` force-compacts every working slot unconditionally
-      at 60% context — `agent-orchestrator@cc16d1f`. Verified by re-reading the current file directly, not trusting a
-      stale sub-agent claim of "workers excluded" (2 earlier proposals on this todo were retracted as a result — see
-      Progress Log discipline note).
+      at 60% context — `agent-orchestrator@9747537d91dd4337f24a9c087c9dcd4d760b6abc`. Verified by re-reading the current
+      file directly, not trusting a stale sub-agent claim of "workers excluded" (2 earlier proposals on this todo were
+      retracted as a result — see Progress Log discipline note).
 - [x] [DATA] P1. ✅ DeepSeek's `cache_read_input_tokens` discount confirmed real — operator-reported actual spend
       ≈$35 for the 16h/2.5B-token window matches the ~$22-25 implied by the published 120x hit/miss rate against the
       40%/40%/10% hit/miss/output dollar-share breakdown; a fake/near-full-rate discount would imply ~$1000+.
