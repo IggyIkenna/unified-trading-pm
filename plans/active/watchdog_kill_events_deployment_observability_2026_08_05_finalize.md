@@ -60,6 +60,8 @@ Machine-held (`depends_on` + `gate_on_depends: true`) until every todo in
       (watchdog_kill_events_deployment_gaps_2026_08_05.md). Deferred item stays as a closed record. —
       unified-trading-pm@c251d376d
 - [x] ✅ [DOC] P3. Run the standard 6-step archival ritual on the now-fully-done source plan (move to
+      unified-trading-pm@c251d376d
+- [ ] [DOC] P3. Run the standard 6-step archival ritual on the now-fully-done source plan (move to
       `plans/archive/2026_08/`, fix every corpus referrer path, flip `status: complete`) per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Done when
       `regenerate_active_plan_inventory.py` shows zero orphaned referrers to the archived slug. —
