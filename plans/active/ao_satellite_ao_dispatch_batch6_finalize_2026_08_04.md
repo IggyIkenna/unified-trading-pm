@@ -116,3 +116,4 @@ source: >-
   dispatch). `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check
   gates → archive sources → archive self) and several touch the same files. Ships `status: active` per the skill's
   2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
+- **context-scout 2026-08-05**: populated context_scope (5 entries).

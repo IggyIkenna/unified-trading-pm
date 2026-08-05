@@ -612,3 +612,4 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   `origin/live-defi-rollout`, flipped to `[x]`, part (b) stays operator-owned. Plus `_DRYRUN_COLS` P0: `"chain"`
   confirmed in `_DRYRUN_COLS` at `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`,
   `1284606a` on LDR — fix predates the triage. All evidence in `cefi_4surface_migration_execution_log_2026_07_24.md`.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

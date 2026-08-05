@@ -308,3 +308,4 @@ todo's isolated wording. No reclassification.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict;
   Phase C stays blocked-investigation and Phases D/E remain real-production, VM-scale manifest rebuild+verify prod-write
   work despite Phase B's delete now completing. Not worker-determinable.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

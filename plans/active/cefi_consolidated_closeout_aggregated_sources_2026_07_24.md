@@ -808,3 +808,4 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-31 verdict; the
   sole open checkbox is the standing "keep this index synced" maintenance task, by design never terminal.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (2 entries), still accurate.

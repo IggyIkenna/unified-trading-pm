@@ -980,3 +980,4 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   meta-audit doc, no source path.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
   sole open item remains the operator-gated mass-flip finalization, not a bounded worker-determinable task.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

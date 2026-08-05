@@ -385,3 +385,4 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   explicit multi-repo feature work pending an operator kind-vs-prefix decision before any dispatch can even be scoped;
   ml-models-store delete P1 is a fully-proven-safe disposition that is a human-only hard stop per
   `gcs-and-manifest-delete-safety-protocol.md`.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

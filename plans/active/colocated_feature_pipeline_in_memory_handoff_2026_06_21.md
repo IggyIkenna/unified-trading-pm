@@ -126,3 +126,4 @@ severities were weakened to `"none"`, masking 574 errors).
   (`features-service@b457ee43`). Of the 3 remaining open items, 1.3b/1.7e already carry correct SUPERSEDED-BY-BATCH1
   citations verified still open in the active `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 4th is
   genuinely gated. `locked_by: live-defi-rollout` still applies.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

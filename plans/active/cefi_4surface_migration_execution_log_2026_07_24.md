@@ -863,3 +863,4 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   deribit_combo_perpetual_partition_move issue + the cross-cutting codex doc (superseded here by the CeFi-specific
   blueprint), added the verify_cefi_canonical_4surface_2026_07_20.py source path (the migration's central verification
   tool, cited throughout).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

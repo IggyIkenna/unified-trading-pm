@@ -84,3 +84,4 @@ context_scope:
      the P0 "23 DeFi adapters silently return empty" type-filter bug
      (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`). May already be fixed but was never verified. Source
      plan left `active`; these should be promoted to tracked checkboxes or filed as a follow-up issue.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -877,3 +877,4 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator gate (2026-07-25): do not flip to
   planning until operator personally runs /ag-closeout-audit + /plan-reconcile for this AG; sole open item is a
   meta-note about untracked digest items, not dispatchable work itself.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

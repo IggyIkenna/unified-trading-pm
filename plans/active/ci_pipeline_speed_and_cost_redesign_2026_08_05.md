@@ -322,3 +322,6 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 - `/codex/08-workflows/ci-cd-flow.md` — the gate set, quickmerge, LDR-is-SSOT, promotion flow this plan operates inside
   of; do not duplicate its content here.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. No Progress Log section
+  exists in this doc, so this marker is appended as the final line instead.

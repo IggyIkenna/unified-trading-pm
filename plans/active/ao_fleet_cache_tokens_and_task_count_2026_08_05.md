@@ -177,3 +177,4 @@ migration system."
   once `git status`/`git stash list` show the tree quiet (no unfamiliar modified files, stash count not still climbing);
   if it lands clean, this plan is fully done and should go through the 6-step archival ritual immediately per the
   plan-completion-and- archival-discipline HARD RULE.
+- **context-scout 2026-08-05**: populated context_scope (9 entries).

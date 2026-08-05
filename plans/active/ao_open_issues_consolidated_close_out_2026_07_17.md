@@ -911,3 +911,4 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   stale-dispatch 24h spot-check) are now extracted into `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 (drafted
   today by `/ag-closeout-audit ao`) — same two items, independently found. `assigned_vm` stays NA (extraction ≠
   reclassify-in-place; flipping this doc would also dispatch the other 6 genuinely-gated items).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

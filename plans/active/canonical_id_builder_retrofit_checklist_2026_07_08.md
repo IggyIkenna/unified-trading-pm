@@ -294,3 +294,4 @@ context_scope:
   the stale rows — the mechanical `rsplit` approach was verified byte-identical against clean counterparts instead.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
   canonical_id_builder.py source path and all entries still resolve.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
