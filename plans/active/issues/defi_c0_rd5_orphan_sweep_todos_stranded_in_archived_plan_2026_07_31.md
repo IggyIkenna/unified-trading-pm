@@ -90,14 +90,26 @@ checked, not assumed.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Live-check whether any of the 8 legacy DeFi bucket-stems still hold pre-canonical legacy-FORM objects
-      (`day=/category=defi/venue=...` or bare `date=` shapes, no `pipeline_mode=`) in the surviving `-prd` buckets
-      today. If zero found (likely, given the deletions cited above), close C0-RD5/C0-RD5b as
-      superseded-and-verified-moot with the live evidence, and note the closure back on
-      `defi_manifest_canonicalisation_2026_06_01.md` (an archived doc — edit its own checkboxes directly per the
-      corpus's existing precedent of retroactively correcting archived-doc checkboxes when evidence surfaces, do not
-      re-open/unarchive it). If any are found, draft a proper scoped todo in an active plan (this doc, upgraded, or a
-      fresh one) — do not leave them stranded a second time.
+- [x] ✅ [SCRIPT] P3. Live-check whether any of the 8 legacy DeFi bucket-stems still hold pre-canonical legacy-FORM
+      objects (`day=/category=defi/venue=...` or bare `date=` shapes, no `pipeline_mode=`) in the surviving `-prd`
+      buckets today — **FOUND: 1,042 legacy-FORM objects + ongoing migration artifacts. See Progress Log for full
+      characterization and scoped follow-up todos below.** — instruments-service@<SHA>
+
+- [ ] [DATA] P2. Backfill `record_captured` for the 1,042 CURVE dex_pool_state orphans (repo: market-tick-data-service)
+      — these 2021 objects are real data (1 row each, valid hive keys) with no manifest row. Run the canonical twin
+      check across all 1,042 (confirm no pipeline_mode= twin exists for any), then `record_captured` on the manifest to
+      close the GCS↔manifest gap. This is the direct fulfillment of C0-RD5b's original charter.
+- [ ] [DATA] P2. Audit the `ticks_migrated` writer for canonical v9 path compliance (repo: instruments-service or
+      market-tick-data-service) — the 2026-04-18 migration wrote objects to `raw_tick_data/by_date/` with NO
+      `pipeline_mode=`, NO `data_type=`/`chain=`/`instrument_type=` hive keys, and a combined `venue=PROTOCOL-CHAIN`
+      segment (e.g. `AAVEV3-ETHEREUM`). Determine: (a) which migration script produced these, (b) whether it's still
+      running, (c) whether the objects need canonical re-path with proper pipeline_mode + hive keys, and (d) whether the
+      manifest has rows for them (if not → backfill). This is a current writer defect, not stale data.
+- [ ] [DATA] P3. Close C0-RD5/C0-RD5b checkboxes on the archived `defi_manifest_canonicalisation_2026_06_01.md` — per
+      the corpus's existing precedent, edit the two `- [ ]` checkboxes (lines ~1230 and ~1232) directly in the archived
+      doc to note their resolution: C0-RD5 (legacy bucket deletion) was subsumed by
+      `gcs_bucket_estate_cleanup_2026_07_10.md` + `defi_dedicated_bucket_shared_migration_     2026_07_13.md`; C0-RD5b
+      (orphan sweep) is now tracked by the two P2 todos above in this issue doc.
 
 ## Progress Log
 
@@ -112,3 +124,31 @@ checked, not assumed.
   (`defi_satellite_ao_dispatch_batch2_2026_07_26.md`) is a corroborating citation on an already-closed, unrelated todo
   (deleting a specific script + auditing 8 campaign scripts for dead bucket templates), not a live claim on this doc's
   live-check work. CLEAR, no conflict.
+- **slot-11 worker 2026-08-05 (live GCS check)**: Bounded, streaming scan of
+  `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/` (121,655 parquet objects scanned, capped at
+  200K). **FOUND two distinct classes of legacy-FORM objects**:
+
+  **Class 1 — Pre-canonical dex_pool_state (1,042 objects)**: Exactly the shape C0-RD5b described.
+  - Path:
+    `raw_tick_data/by_date/day=2021-01-{17..31},{02-01..02-23}/asset_group=defi/venue=CURVE/chain=ETHEREUM/ instrument_type=pool/data_type=dex_pool_state/0x{address}.parquet`
+    — NO `pipeline_mode=` segment.
+  - All CURVE/ETHEREUM/pool, 38 unique days, 1 row each, ~11.7KB avg (real data, not zero-row shells).
+  - These are true orphans: no canonical twin exists at the corresponding `pipeline_mode=batch_onchain_subgraph/` path.
+  - Per `migration_orphan_sweep.py` taxonomy: class (E) ORPHAN_REAL — valid shape, rows>0, NO manifest row → needs
+    `record_captured` backfill, never delete.
+
+  **Class 2 — Migration artifacts (ticks_migrated\_, ongoing)**: A DIFFERENT, more concerning finding.
+  - Path:
+    `raw_tick_data/by_date/day=2026-01-{01..NN}/asset_group=defi/venue={AAVEV3,CURVE,ETHENA,ETHERFI,LIDO, MORPHO,UNISWAPV2,UNISWAPV3,UNISWAPV4}-ETHEREUM/ticks_migrated_20260418T{HHMMSS}Z.parquet`
+    — NO `pipeline_mode=`, NO `data_type=`/`chain=`/`instrument_type=` hive keys, just bare venue with `-ETHEREUM`
+    suffix.
+  - Written by a migration on 2026-04-18 (filename timestamp), 9 files/day across 9 venues, real row counts
+    (UNISWAPV3=40-70K rows, UNISWAPV4=10-23K rows). Scan only covered Jan 1-20; actual date range likely extends
+    further. These are NOT pre-canonical — they're RECENT migration output not following canonical v9 path conventions.
+  - This is a CURRENT writer defect, not just stale data to clean up.
+
+  **What was NOT found**: The 8 legacy kind-dedicated buckets (dex-swaps, oracle-prices, gas-fees, dex-pools, lst-rates,
+  perp-funding, lending-indices, eigenlayer-rewards) are all confirmed deleted per the earlier cleanup/migration work.
+  The legacy top-level `dex_pools/` and `lending_indices/` trees are zero-objects (per the 2026-07-21 fold). No `day=`
+  top-level objects exist. No `category=defi` objects exist. The surviving legacy-FORM objects are all in the shared
+  `-prd` bucket under `raw_tick_data/` — exactly the pre-seeded-in-`-prd` scenario C0-RD5b predicted.
