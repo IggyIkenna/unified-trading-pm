@@ -228,12 +228,13 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       `market-tick-data-service@b94259a0` (2026-07-26) would still be executing the pre-fix exact-path reader every
       cycle, which explains the contradiction (manual invocation of HEAD code = real data; the deployed process = still
       zero) without requiring a second code bug. See todo 8.
-- [ ] 5. [DATA] P3. Once todos 1-4 **AND todo 8** are green (todo 4 found the fix is not yet live in production —
-      widening `_DEFAULT_PROTOCOLS` to `solend`/`marginfi` today would just add two more venues riding the same
-      still-broken-in-prod path), re-open the sibling P3 todo in
-      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md` (risk_params_handler.py's `_DEFAULT_PROTOCOLS`
-      solend/marginfi omission) — it was left undecided pending this fix. (repo: market-tick-data-service,
-      unified-trading-pm)
+- [x] ✅ 5. [DATA] P3. **DONE 2026-08-05 (slot-9, data_engineering)** — Re-opened the sibling P3 todo
+      (risk_params_handler.py's `_DEFAULT_PROTOCOLS` solend/marginfi omission, originally tracked in the now-archived
+      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`) as todo 9 below. The reader fix (todos 1-3) is
+      correct in code and verified against the live bucket (todo 4), but the production capture pipeline is still
+      running the pre-fix tarball (todo 8 pending) — so todo 9 is explicitly gated on todo 8: widening
+      `_DEFAULT_PROTOCOLS` before the VM redeploy would add two more venues riding the same still-broken-in-prod path.
+      No code changed (doc-only). (repo: unified-trading-pm) — unified-trading-pm@<sha>
 - [x] ✅ 6. [REVIEW] P3. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Added regression test
       asserting `load_pool_metadata_for_date` resolves a blob written under EITHER the pre-cutover flat shape OR the
       post-cutover hive shape (two fixture cases), so a future path-grammar change can't silently reintroduce this class
@@ -269,6 +270,18 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       `KAMINO`/`KAMINO_LENDING` risk_params has ZERO manifest rows at all since 2026-07-01 (not even a zero-row stamp) —
       `kamino_lending` is in `_DEFAULT_PROTOCOLS` but appears to never dispatch; may be the same stale-deployment cause
       or a distinct dispatch gap. (repo: market-tick-data-service, deployment-service)
+- [ ] 9. [DATA] P3. **Re-opened from the now-archived `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`**
+      (its P3 follow-up todo about `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` solend/marginfi omission, originally
+      closed as BLOCKED-BY-DEEPER-BUG pending this doc's reader fix). Now that todos 1-3 (the layout-tolerant reader)
+      are ✅ in code and verified working against the live bucket (todo 4), the underlying mechanism
+      (`_fetch_risk_param_rows` → `risk_params_from_catalogue`) is confirmed functional end-to-end when invoked
+      directly. **GATED on todo 8**: the production capture VM still runs the pre-fix tarball — widening
+      `_DEFAULT_PROTOCOLS` to `solend`/`marginfi` before the VM redeploy would add two more venues riding the same
+      still-broken-in-prod path and produce dishonest zero-row manifest stamps. Once todo 8 is ✅ (VM redeployed,
+      production confirmed writing `row_count>0` for MORPHO/FLUID risk_params): (a) add `solend`/`marginfi` to
+      `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` (line 111 and the iteration list at ~line 380), (b) verify with a
+      live smoke-fetch that both new protocols return real IS-catalogue data through the fixed reader, (c) confirm
+      manifest rows appear for the next capture cycle. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -316,3 +329,9 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   standalone would be scope creep beyond this todo. Did not attempt the VM redeploy myself (todo 8) — out of this
   verification todo's scope and a production-capture-VM restart deserves its own dispatch with focused verification, not
   a side effect of a read-only check.
+- 2026-08-05 (slot 9, `data_engineering`): Closed todo 5 — re-opened the sibling P3 todo (solend/marginfi
+  `_DEFAULT_PROTOCOLS` omission, originally tracked in the now-archived
+  `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`) as todo 9 in this doc. The reader fix (todos 1-3) is
+  verified working against the live bucket (todo 4), confirming the underlying mechanism is functional — but the
+  production capture VM still runs the pre-fix tarball (todo 8 pending), so todo 9 is explicitly gated on todo 8. No
+  code changed (doc-only).
