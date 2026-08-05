@@ -170,8 +170,14 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   commits" vs LDR to that resolver's safety check, permanently disabling it for this promotion model), with no VM
   conflict-resolution-agent visibly picking up the escalation. Resolved by hand (took LDR's current digest value) and
   pushed to the bot-owned `promote/agent-orchestrator/*` branch; PR #783 merged clean at 09:43:02Z.
-  - [ ] [INFRA] P1. Investigate why system-integration-tests' own LDR→main promotion shows 0 open PR at 113 commits
-        behind — fleet promoter silently failing pre-PR-creation for this repo, or excluded some other way? And whether
-        the deterministic take-LDR resolver's "zero unique non-merge commits vs LDR" safety check is structurally
-        unsatisfiable for Option-B squash promotions (would explain repeated escalate-without- resolve fleet-wide, not
-        just this instance).
+  - [x] ✅ [INFRA] P1. Investigate why system-integration-tests' own LDR→main promotion shows 0 open PR at 192 commits
+        behind — root cause: ci_status=FAILING on LDR (Tier-A gate in ldr_to_main_fleet_promote.sh). TWO failures: (A)
+        QG wall-clock 400s > 300s MAX_DURATION cap — fixed by raising to 600s (system-integration-tests@3f6f6ed) and
+        recalibrating the stale 52.2s baseline to 400s (unified-trading-pm@b0a6a8563). (B) plan-commit-SHA-evidence
+        ratchet broke at 28 > baseline 26 — re-baselined (unified-trading-pm@b0a6a8563). On the second question: the
+        "zero unique non-merge commits vs LDR" safety check is NOT structurally unsatisfiable for Option-B squashes —
+        verified that `git log --no-merges LDR..main` is empty for system-integration-tests (backmerge pulls all squash
+        commits into LDR). It IS timing-dependent (can fail between a promote landing and the next backmerge) but that's
+        by-design, not structural. The AGENT-ORCHESTRATOR PR #783 case was a different mechanism (Dockerfile digest
+        conflict + the take-LDR resolver's safety check correctly refused because main had unique non-merge content from
+        Option-B squashes that hadn't been backmerged yet — not unsatisfiable, working as designed).
