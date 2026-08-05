@@ -125,11 +125,11 @@ sweep). Fixed both onchain sites (`batch_handler._count_is_defi_instruments` + `
 
 ## Todos
 
-- [ ] [DATA] P2. Sweep the remaining `instruments-store` catalogue sites in features-service to force
+- [x] ✅ [DATA] P2. Sweep the remaining `instruments-store` catalogue sites in features-service to force
       `deployment_env="prod"` (repo: features-service) — volatility `cli/handlers/batch_handler.py:52` +
       cross_instrument `engine/cefi_wire_bridge.py:133` (sports config fallback for consistency), mirroring
       `_count_is_defi_instruments` @58702715; per-site regression tests pin `deployment_env="prod"` regardless of
-      ambient env. QG green + quickmerge.
+      ambient env. QG green + quickmerge — features-service@4b2edbd5
 - [ ] [DATA] P2. Fix the onchain compute-path ambient-env leaks found on the 3rd DEFI:onchain relaunch (repo:
       features-service + unified-trading-library) — (a) `onchain/adapters/mtds_canonical_reader.py:203`
       `get_bucket_name("market_data", "defi")` has no `deployment_env` override → resolves `-stg-` under a staging
