@@ -164,12 +164,15 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       would have caught the actual incident in this doc (a manual pin, not a `canary-deploy.sh` rollback) — the
       log-based alert above only covers the `canary-deploy.sh` rollback path specifically. (repo: deployment-service, or
       wherever the fleet's periodic health-check jobs already live)
-- [ ] [DATA] P3. Once the drift check above exists, consider whether it subsumes/duplicates the still-open cold-start
+- [x] ✅ [DATA] P3. Once the drift check above exists, consider whether it subsumes/duplicates the still-open cold-start
       investigation's detection needs
-      (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) — that doc's root cause is
-      different (a startup failure, not a traffic pin) but the SYMPTOM (stale traffic, silent) is identical, and a
-      single "traffic vs latest-ready" drift check would have surfaced BOTH incidents just as fast as a human noticing a
-      broken UI panel did. Cross-reference, don't duplicate investigation. (repo: unified-trading-pm, doc-only)
+      (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) — unified-trading-pm@<SHA>.
+      Cross-referenced: the drift check detects explicit by-name revision pins ≠ latest-ready (covers the manual-pin
+      root cause of the wiring doc's own incident) but does NOT detect the cold-start `exit(0)` silent-freeze case
+      because `gcloud run deploy` default sets `latestRevision: true` and the drift check skips `tracks_latest=True`
+      services. A future enhancement comparing "newest Ready revision vs actually-serving revision under latestRevision"
+      would subsume both. Added cross-reference + Progress Log entry to the cold-start doc; no duplication of
+      investigation. (repo: unified-trading-pm, doc-only)
 
 ## Progress Log
 
@@ -177,3 +180,14 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   `canary-deploy.sh` loud-alert fix, documented the hazard class in codex/CLAUDE.md. Filed this doc after being asked
   directly whether the Slack-routing follow-up (explicitly called out as unfinished in the session) had been tracked —
   it had not; this doc is that tracking, per the "every follow-up is a `- [ ]` todo, never prose" HARD RULE.
+- **2026-08-05 (slot-7, data_engineering, P3 cross-reference task)**: Read the cold-start issue doc
+  (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) and the shipped drift check
+  (`cloud_run_traffic_drift_check.py` @ `deployment-service@74fb6ac`). **Finding**: the drift check does NOT fully
+  subsume the cold-start `exit(0)` detection need. The drift check only flags explicit by-name revision pins ≠
+  latest-ready; it skips services tracking `latestRevision: true`. Since `deploy-shared.sh`'s `gcloud run deploy`
+  default sets `latestRevision: true`, and Cloud Run keeps the old revision as the `latestRevision` target when the new
+  one cold-start-fails, the drift check would read `tracks_latest=True` and skip — precisely the silent-freeze scenario
+  documented in the cold-start doc. A future enhancement that ALSO compares "newest `Ready` revision vs.
+  actually-serving revision under `latestRevision`" would subsume both the manual-pin case (this doc's incident) AND the
+  cold-start-failure case. Added cross-reference + Progress Log entry to the cold-start doc with this analysis; no
+  duplication of investigation. Flipped this todo's checkbox. (repo: unified-trading-pm, doc-only)

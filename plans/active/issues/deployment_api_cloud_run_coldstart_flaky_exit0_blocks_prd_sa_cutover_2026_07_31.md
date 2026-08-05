@@ -34,6 +34,7 @@ related:
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
+    /plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md,
   ]
 created: "2026-07-31"
 author: unknown
@@ -196,6 +197,19 @@ this service relative to its documented, measured requirement.
   failed. No code shipped — live verification only. (repo: deployment-service, deployment-api)
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — still the right minimal set (SIGABRT
   crash-loop doc, the gating bucket-IAM plan, and the fixed `deploy-shared.sh`).
+- **2026-08-05 (slot-7, data_engineering, cross-reference from cloud_run_traffic_pin_silent_freeze_alert_wiring-003)** —
+  The periodic Cloud Run traffic-pin drift check (`cloud_run_traffic_drift_check.py`, `deployment-service@74fb6ac`,
+  hourly GHA scheduled job) now compares `status.traffic` against `status.latestReadyRevisionName` for all auto-deployed
+  services. However, it does **not** fully subsume this doc's detection need: the drift check only flags **explicit
+  by-name revision pins** ≠ latest-ready; it skips services tracking `latestRevision: true`. Since `deploy-shared.sh`'s
+  `gcloud run deploy` default (`--to-latest`) sets `latestRevision: true`, and Cloud Run keeps the OLD revision as the
+  `latestRevision` target when the new one cold-start-fails, the drift check would read `tracks_latest=True` and skip —
+  exactly the silent-freeze scenario this doc documents. A future enhancement that ALSO compares "is there a newer
+  `Ready` revision than the one currently serving traffic under `latestRevision`" would subsume both the manual-pin case
+  (the wiring doc's original incident) AND this cold-start-failure case. Until then, the drift check is complementary
+  but not a substitute — this doc's own root-cause investigation (shared with the SIGABRT crash-loop doc) remains the
+  right owner for detection + fix of the cold-start path specifically. Added cross-reference to the wiring doc's Todo 3
+  analysis above in `related:`; no code shipped (doc-only cross-reference).
 - **2026-08-04 (interactive session, operator-directed, unrelated sports distinct-values fix session)** — hit this EXACT
   failure signature live while shipping an unrelated deployment-api-adjacent fix: found production traffic had been
   stuck 100% on `00374-4pd` (pre-`uts-prd-sa`, 2026-07-31T18:39) for ~4 days — every `deploy-shared.sh` run since then
