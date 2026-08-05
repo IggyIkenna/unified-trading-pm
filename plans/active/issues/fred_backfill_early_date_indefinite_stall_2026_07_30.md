@@ -343,3 +343,33 @@ anywhere.
   remaining-todo targets: `tradfi_catalog_reader.py` (open DATA P3 — same iterrows fix needed on the cefi/defi
   siblings), `exit_code_fleet_monitor.py` (open BACKEND P3 — OOM-vs-stall misclassification), and the sibling archived
   issue doc that root-caused the consolidator's own slow-cycle chunk-count blowup).
+
+- **2026-08-05 (slot-7, data_engineering craft)**: **P3 work COMPLETE + no-regression-proven, but SHIPPING BLOCKED on a
+  pre-existing red MTDS baseline (NOT this change).** Applied the identical TradFi fix
+  (`market-tick-data-service@d75e2470`) to `cefi_catalog_reader.py` + `defi_catalog_reader.py`: memoized
+  `_load_catalog_records()` (`df.to_dict("records")`, once per process) + `_yield_for_date(records, ...)` iterating
+  plain dicts instead of `df.iterrows()` per date; CeFi also memoizes `_build_has_perp_for_base` (`_perp_bases` cache) —
+  a second full-iterrows cost per per-date call. Helpers (`_get_first`, `_row_in_mvp_capture_universe`,
+  `_cefi_is_active_on_date`, `_defi_is_active_on_date`, `_build_*_catalog_row`) retyped `pd.Series` →
+  `dict[str, object]` (`dict.get` ≡ `Series.get`). 3 new regression tests pin the once-per-process invariants (CeFi/DeFi
+  `to_dict` called once across 3 per-date calls; perp-bases built once). **Evidence (full QG)**: my change 9999 passed /
+  2 failed; clean baseline 9996 passed / 2 failed — delta = exactly the 3 new tests. The 2 failures are PRE-EXISTING and
+  block the commit (green-tree HARD RULE): `test_protocol_class_ops_have_modules[lending]` (AAVE `collect-rewards`
+  declared at `unified-api-contracts@b2874193` with no MTDS `_CLI_OP_TO_MODULE` entry) and
+  `test_tier3_prediction_polymarket_no_crash` (POLYMARKET `fills` declared at `unified-api-contracts@6e791b05` →
+  sentinel emits an instrument-less Tier-3 row). Escalation filed + pushed:
+  `/plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (resolution options for the
+  declaring UAC-owner side). Working tree holds the 5 ready-to-ship files; unshipped until a decision lands.
+
+## Deferred work after 2026-08-05
+
+| Item                                                                                      | State / why deferred                                                                                                                                                                     | Blocked-on                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ship P3 iterrows fix (5 MTDS files: 2 readers + 3 tests)                                  | Cannot ship yet — committed-ready, but MTDS `quality-gates.sh` is RED on LDR baseline (2 pre-existing UAC-declaration failures) and the green-tree-before-commit rule forbids the commit | Operator/UAC-owner decision on `/plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` — is AAVE `collect-rewards` / POLYMARKET `fills` aspirational (remove from UAC) or wired (fix MTDS handler/sentinel)? |
+| Flip P3 checkbox (`- [ ]` → `- [x] ✅`) in this doc with `market-tick-data-service@<sha>` | Cannot be done yet — requires the code to actually ship first                                                                                                                            | Same blocker (checkbox flip happens in the SAME turn as the code push, per commit+push+flip)                                                                                                                                           |
+
+**Recommended next item**: ship the iterrows fix. On the blocker's resolution (either the UAC owners retract/wire the
+declarations, or an operator rules them aspirational and I fix both failures myself — ~10 min with full context in
+hand), run
+`bash scripts/quickmerge.sh "..." --agent --files 'market_tick_data_service/engine/cefi_catalog_reader.py market_tick_data_service/engine/defi_catalog_reader.py tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py tests/unit/engine/test_cefi_catalog_reader_margin_gate.py tests/unit/engine/test_defi_catalog_reader.py'`,
+verify SHA on origin, flip the checkbox in this doc, `/done` task `fred_backfill_early_date_indefinite_stall-008`.
