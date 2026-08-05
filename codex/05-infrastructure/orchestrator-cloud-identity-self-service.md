@@ -49,11 +49,15 @@ code_refs:
 
 - **GCP**: `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` — the orchestrator's real GCP identity
   (distinct from a human's interactive `gcloud auth login`). Ambient on every AO worker:
-  `GOOGLE_APPLICATION_CREDENTIALS` is exported in both `~/.profile` and `~/.bashrc` on the orchestrator/human-planning
-  VMs, so any tmux-spawned worker shell already authenticates as this SA — no separate credential setup needed.
-- **AWS**: `uts-orchestrator-epic-role` (account `427895769566`) — assumed via the EC2 instance profile by BOTH the
-  orchestrator VM (`i-0c9b283b31d6b5ca7`) and the human-planning VM (`i-0dd9812a96cdda5dc`). Automatic for every process
-  on either VM via the metadata service; no env var or key file involved at all.
+  `GOOGLE_APPLICATION_CREDENTIALS` is exported in both `~/.profile` and `~/.bashrc` on the orchestrator VM, so any
+  tmux-spawned worker shell already authenticates as this SA — no separate credential setup needed.
+- **AWS**: `uts-orchestrator-epic-role` (account `427895769566`) — assumed via the EC2 instance profile by the
+  orchestrator VM (`i-0c9b283b31d6b5ca7`). Automatic for every process on that VM via the metadata service; no env var
+  or key file involved at all.
+
+**The separate `human-planning` VM (`i-0dd9812a96cdda5dc`) previously shared this same identity setup — it was
+terminated 2026-08-03** (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`); do not carry forward any "either VM"
+/ "both VMs" framing for it.
 
 ## The rule
 

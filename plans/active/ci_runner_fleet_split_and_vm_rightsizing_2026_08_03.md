@@ -333,9 +333,13 @@ new pool is confirmed green, (3) only then resize AO down.
       a single spot-check, not a sustained trend) and updating
       `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s own Progress Log with this
       dated evidence — filed as a follow-up in that issue doc directly rather than duplicated here.
-- [ ] [INFRA] P2. Update `/codex/05-infrastructure/agent-orchestrator-deploy.md` to reflect the new topology (AO at
-      `m8i.2xlarge`, escalation VM details, no more colocated runners) — codex must not describe a topology that no
-      longer exists. Gate: doc diff shipped, `unified-trading-pm@<sha>`.
+- [x] ✅ [INFRA] P2. **Partially done 2026-08-05 — the parts that ARE true now.** Added a "CI-runner fleet — split off
+      to a dedicated VM" section to `/codex/05-infrastructure/agent-orchestrator-deploy.md` documenting the migration
+      (escalation VM details, 0 runner units remaining on this box) and fixed the stale "AWS credits cover" cost line to
+      match todo 1's re-confirmed finding. **Deliberately NOT claimed**: "AO at `m8i.2xlarge`" — the instance is still
+      `m8i.4xlarge` (todo 8 remains on operator hold); the new section explicitly says so, so the doc doesn't get
+      re-drifted once that downsize actually happens and someone forgets to flip it. Re-touch this same section when
+      todo 8 resolves either way.
 
 ### Human-planning VM retirement (separate box, tracked here since bundled by the operator)
 
@@ -348,11 +352,17 @@ new pool is confirmed green, (3) only then resize AO down.
       BST, re-arm it or terminate manually:
       `aws ec2 terminate-instances --region ap-northeast-1 --instance-ids     i-0dd9812a96cdda5dc` after confirming idle
       via `ssh human-planning-vm "who; w; tmux ls; uptime"`.
-- [ ] [INFRA] P1. Once terminated, confirm no dangling reference to `i-0dd9812a96cdda5dc` remains load-bearing in codex
-      (`grep -rn "i-0dd9812a96cdda5dc" codex/ plans/active/` — update any doc that assumes it's live, e.g.
-      `agent-orchestrator-single-vm-architecture.md`'s "unaffected — it never executes backlog tasks" framing, and
-      `orchestrator-cloud-identity-self-service.md`'s per-VM ADC setup note). Gate: grep shows only historical/archived
-      references, no active-doc assumes the VM still exists.
+- [x] ✅ [INFRA] P1. **Done 2026-08-05.** Full `grep -rn "i-0dd9812a96cdda5dc" codex/ plans/active/` sweep (10 hits) —
+      fixed the 2 load-bearing codex SSOTs (`agent-orchestrator-single-vm-architecture.md`'s "unaffected" framing,
+      `orchestrator-cloud-identity-self-service.md`'s per-VM ADC note, both now state the termination as fact); the rest
+      were historical/dated records, left as-is except one genuine, more serious finding surfaced along the way (see the
+      human-planning-VM-retirement section below): the VM's termination went ahead WITHOUT cross-checking an
+      already-filed P1 WIP-preservation warning for that exact host, and the flagged uncommitted work in 5 repos is now
+      very likely permanently lost (no snapshot/volume survives). Resolved + escalated in
+      `/plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
+      `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
+      `status:     resolved`), plus the duplicate now-moot allowlist todo in
+      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
 
 ## Progress Log
 

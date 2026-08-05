@@ -198,12 +198,10 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 2nd item
       — independent of the composer-guard fix above per the doc's own text). Repo: agent-orchestrator.
 
-- [ ] [INFRA] P3. **Add `i-0dd9812a96cdda5dc` (`ip-172-31-0-185`, the operator's human-planning VM) to the fleet
-      git-health scanner's known-hosts allowlist**, annotated as a known interactive-only host, so it stops surfacing as
-      a stale/dead worker host on every recycle. **Done when**: the scanner (deployment-service or agent-orchestrator,
-      whichever owns it) no longer flags this host; a regression test or fixture covers the allowlist entry. Source:
-      `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (its sole item). Repo:
-      deployment-service or agent-orchestrator (worker to confirm the scanner's actual home).
+- [x] [INFRA] P3. **MOOT 2026-08-05 — do not dispatch.** The source doc's host (`i-0dd9812a96cdda5dc`/`ip-172-31-0-185`)
+      was terminated 2026-08-03 (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) — there is no host left to
+      allowlist. See `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (now
+      `status: resolved`) for the full resolution.
 
 - [ ] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** In
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3, add surface "(d) any
