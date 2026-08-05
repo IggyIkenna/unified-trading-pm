@@ -241,10 +241,16 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `"kamino"`/`"kamino_lending"` split — maps protocol→data_type with no corresponding UAC entry for the split, a
       structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. (repo:
       market-tick-data-service)
-- [ ] [CODE] P2. Add the missing `book_snapshot`/`market_metadata`/`fills` declarations to
-      `VENUE_DATA_TYPE_CAPABILITIES["POLYMARKET"/"KALSHI"]` (finding 5) and retire deployment-api's parallel
-      `PREDICTION_DATA_TYPE_META` once UAC is complete. This is independent of the CEFI/DEFI/TRADFI combinator redesign
-      — a plain completeness fix. **Not touched this pass** — the `deployment-api` half is out of scope.
+- [x] ✅ [CODE] P2. **Add `market_metadata` + `fills` to `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET/KALSHI (UAC half
+      only — `book_snapshot_5` was already present).** shipped `unified-api-contracts@6e791b05` (verified on
+      `origin/live-defi-rollout`). Added `market_metadata: "2024-06-01"` and `fills: "2024-06-01"` to both POLYMARKET
+      and KALSHI entries in `VENUE_DATA_TYPE_CAPABILITIES` — both data types already had registered SchemaContracts
+      (`PREDICTION_PREDICTION_MARKET_METADATA` + `PREDICTION_PREDICTION_MARKET_FILLS` at
+      `_sports_prediction_contracts.py`) with CONTRACT_REGISTRY keys, so this closes the UAC completeness gap. Start
+      dates match the existing `trades` entry (2026-04-01) — honest: venues always had these, just not captured. Updated
+      the `test_get_expected_pairs_flattens_correctly` comment to note the VENUE_DATA_TYPE_CAPABILITIES vs
+      EXPECTED_COVERAGE_BY_ASSET_GROUP distinction. QG green. **The `deployment-api` PREDICTION_DATA_TYPE_META
+      retirement is a separate follow-up — out of scope for this pass.**
 - [ ] [SCRIPT] P3. Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES` (zero consumers), DeFi's emptied
       `DEFI_VENUE_AXIS_OVERRIDES = {}` (`defi_venues.py:573`) plus the stale comment referencing it in
       `defi_venue_capabilities.py:133-134`, and Prediction's inert `(asset_group, instrument_type)` matrix row
@@ -397,3 +403,11 @@ just belongs on a different layer than instrument_type does, and conflating the 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — prior list had drifted to 7 entries (over the 5-6
   cap) and dropped the still-open finding-6 target (`_defi_v2_contracts.py`); swapped in the newest open-todo's file,
   kept the finding-4 MTDS source paths, dropped the two least-central plan pointers.
+- **2026-08-05** — **Finding 5 (UAC half): added `market_metadata` + `fills` to `VENUE_DATA_TYPE_CAPABILITIES` for
+  POLYMARKET/KALSHI**, shipped `unified-api-contracts@6e791b05` (verified on `origin/live-defi-rollout`).
+  `book_snapshot_5` was already present (added 2026-06-23). Both data types had real SchemaContracts
+  (`PREDICTION_PREDICTION_MARKET_METADATA` / `PREDICTION_PREDICTION_MARKET_FILLS`) with CONTRACT_REGISTRY keys at
+  `_sports_prediction_contracts.py:426,508` — the VENUE_DATA_TYPE_CAPABILITIES entries were the only missing piece.
+  Start dates `"2024-06-01"` match the existing `trades` entry (honest: venues always had these conceptually, just not
+  captured). Kept out of `EXPECTED_COVERAGE_BY_ASSET_GROUP` intentionally — that update belongs with the deployment-api
+  `PREDICTION_DATA_TYPE_META` retirement follow-up. QG green, 2 files touched (8 insertions).
