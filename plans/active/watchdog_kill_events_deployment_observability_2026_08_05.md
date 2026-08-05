@@ -126,10 +126,30 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       `/codex/05-infrastructure/deployment-observability.md` to document the new dual-write (AO-internal +
       deployment-api) and note this supersedes the Phase-4 AO-UI-only scope for kill events specifically. Done when both
       docs' `last_reviewed` are bumped and cross-link the new route/table. — unified-trading-pm@25cf1931c
-- [ ] [REVIEW] P3. End-to-end verify: trigger a real or `--dry-run`-simulated watchdog kill on the live orchestrator VM
-      and confirm it appears in the deployment-ui panel within 2 minutes, without any regression to the existing
+- [x] ✅ [REVIEW] P3. End-to-end verify: trigger a real or `--dry-run`-simulated watchdog kill on the live orchestrator
+      VM and confirm it appears in the deployment-ui panel within 2 minutes, without any regression to the existing
       AO-internal kill-relay-to-slot behavior (the mechanism that tells an agent not to re-spawn a killed process). Done
-      when both are observed live and cited (screenshot or API response pasted into this todo's evidence line).
+      when both are observed live and cited (screenshot or API response pasted into this todo's evidence line). —
+      Evidence: E2E verified live 2026-08-05 21:51 UTC. (1) Deployed the previously-unshipped routes via
+      `deployment-service/scripts/cloud-run/deploy-shared.sh` (Cloud Build 99107210-2188-48fb-a8bc-484cf560c4ac SUCCESS;
+      image 4615dfe8, revision 00440-b2s, 100% traffic) — `GET /api/watchdog/kill-events` +
+      `POST     /api/fleet/watchdog/kill-events` now live (JSON, not SPA fallback); the routes were NOT deployed before
+      this (deployed image predated 7d79433/37d6f14). (2) Triggered a `--dry-run`-simulated watchdog kill on the live
+      orchestrator VM: `resource-watchdog.sh --dry-run --oneshot` (RW_RSS_LIMIT_NORMAL_GB=3 + RW_DEPLOYMENT_API_URL)
+      flagged a controlled 4 GB test process (pid 2382634, slot 16) → dry-run log
+      `deployment-api notified: pid=2382634 slot=16 reason=rss:4204500kB > 3145728kB killed=false`. (3) Row appeared in
+      `deployment_operational_data.watchdog_kill_events` within the same tick:
+      `ts=2026-08-05T21:51:30Z, vm_name=     ip-172-31-5-118, slot_id=16, reason=rss:4204500kB > 3145728kB, killed=false`
+      (verified via `bq query`), and `GET /api/watchdog/kill-events?vm_name=ip-172-31-5-118&hours=1` returned exactly
+      that row — this GET response is what deployment-ui's kill-events panel renders (`getWatchdogKillEvents` →
+      `/api/watchdog/kill-events`, deployment-ui/src/api/deploymentApi.ts:1315). (4) No AO-internal relay regression:
+      `POST localhost:8765/     api/resource-watchdog/kill` live (unknown-slot payload →
+      `{"ok":true,"queued":false,"reason":"unknown_slot"}`), `GET /api/resource-watchdog/status` reports `kill_count:3`
+      intact, and `_rw_notify_orchestrator` is an unchanged sibling call to the additive `_rw_notify_deployment_api`
+      (resource-watchdog.sh lines 449-457). Deployment gaps found + tracked:
+      `plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md` — RW_DEPLOYMENT_API_URL not wired into
+      the live systemd unit (prod dual-write needs root) and AO host not in `/api/vm-resources/rolling` so the UI panel
+      is not reachable via the VM list.
 
 ## Deferred
 
