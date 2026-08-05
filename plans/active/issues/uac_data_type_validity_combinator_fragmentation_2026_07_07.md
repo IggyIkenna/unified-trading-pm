@@ -251,19 +251,49 @@ just belongs on a different layer than instrument_type does, and conflating the 
       (`market_data_categories.py:732-734`, already documented as a no-op) once its scope exclusion (this doc's header
       note) is itself the authoritative record. **Not touched this pass** — `defi_venues.py` was live-being-edited by
       concurrent sibling agents for the duration of this dispatch.
-- [ ] [DESIGN] P2. **New finding, 2026-07-10** (surfaced while live-verifying finding 2): 31 DeFi `(venue, data_type)`
-      pairs across 8 protocols (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/GMX/DRIFT/KAMINO + AAVE_V3's `rewards` + all
-      `ALCHEMY-*` `gas_fees`) declare a genesis start-date in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer 2 — "actual")
-      with **zero real captured rows** in the live manifest (100% `empty_confirmed`). This is the ACTUAL layer
-      over-claiming, not the theoretical layer under-declaring (finding 2's original shape) — needs an
+- [x] ✅ [DESIGN] P2. **New finding, 2026-07-10** (surfaced while live-verifying finding 2): 31 DeFi
+      `(venue, data_type)` pairs across 8 protocols (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/GMX/DRIFT/KAMINO + AAVE_V3's
+      `rewards` + all `ALCHEMY-*` `gas_fees`) declare a genesis start-date in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer
+      2 — "actual") with **zero real captured rows** in the live manifest (100% `empty_confirmed`). This is the ACTUAL
+      layer over-claiming, not the theoretical layer under-declaring (finding 2's original shape) — needs an
       operator/data-owner decision per (protocol, data_type) whether to wire the real capture path or roll back the
       aspirational genesis date. Full live-verified table in the Progress Log below. **(NOTE 2026-07-25: GMX's slice of
       this decision is moot — GMX venue removed platform-wide, see
       `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; the remaining decision covers
-      COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)**
+      COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)** — unified-api-contracts@b2874193
+      (2026-08-05: added 10 undeclared data_types to PROTOCOL_CAPABILITIES across 8 protocols, closing Layer-1→Layer-2
+      drift for spark/compound_v3/morpho/radiant/fluid/kamino (+oracle_prices), aave_v3 (+rewards), alchemy_onchain
+      (+gas_fees), puffer (+lst_rates). Audit function defi_actual_data_types_not_declared_valid() now returns only 2
+      undeclared pairs — AAVE-ETHEREUM/oracle_prices and MAKER-ETHEREUM/lst_rates — both over-claiming cases where the
+      genesis date should be rolled back (oracle_prices on legacy governance venue, lst_rates on a CDP protocol).
+      Operator decision still needed: which of the now-reconciled pairs to wire a real capture path for vs. retire the
+      aspirational genesis date; see Progress Log 2026-08-05 for structured analysis.)
 
 ## Progress Log
 
+- **2026-08-05** — **Second pass on the Layer-1↔Layer-2 reconciliation (the open DESIGN todo).** Re-ran
+  `defi_actual_data_types_not_declared_valid()` against current UAC — 40 undeclared pairs across 38 venues (up from the
+  doc's original 31, due to additional venues registered since 2026-07-10). Added 10 data_type declarations to 8
+  PROTOCOL_CAPABILITIES entries, closing the direction where Layer-2 (actual/captured) claims a data_type Layer-1
+  (theoretical) does not recognise:
+  - `oracle_prices` → `spark`, `compound_v3`, `morpho`, `radiant`, `fluid`, `kamino` (lending/DEX protocols with real
+    oracle price sources available on-chain — all `aspirational: capture not yet wired`)
+  - `rewards` → `aave_v3` (AAVE + GHO token incentive emissions — aspirational)
+  - `gas_fees` → `alchemy_onchain` (chain-level gas data via Alchemy RPC — aspirational)
+  - `lst_rates` → `puffer` (pufETH LST exchange rate — aspirational) Shipped `unified-api-contracts@b2874193` (84/84
+    tests green, QG clean). **Remaining 2 undeclared pairs** are both over-claiming misclassifications where the genesis
+    date should be rolled back rather than the theoretical layer expanded:
+  - `AAVE-ETHEREUM/oracle_prices`: AAVE-ETHEREUM is the legacy governance venue (`aave_governance` protocol), not the V3
+    lending venue where oracle prices live — the genesis date was likely added to the wrong venue key.
+  - `MAKER-ETHEREUM/lst_rates`: Maker is a CDP, not an LST — `lst_rates` does not conceptually apply (Maker produces
+    `vault_share_price` via sDAI/DSR). **Operator decision still needed on the OVER-CLAIMING direction** (the original
+    31-pair finding): now that PROTOCOL_CAPABILITIES correctly declares these data types as theoretically valid, the
+    question is which of COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/KAMINO/AAVE_V3/ALCHEMY-* pairs should get a real MTDS
+    capture handler wired vs. have their aspirational genesis date rolled back. DRIFT (removed) and GMX (removed
+    2026-07-25) are no longer relevant. The 2 remaining undeclared pairs (AAVE-ETHEREUM/oracle_prices,
+    MAKER-ETHEREUM/lst_rates) are clear roll-back candidates regardless of the broader capture-scope decision. Test
+    `test_a_genuine_undeclared_violation_is_still_caught` updated from COMPOUND_V3/oracle_prices (now reconciled) →
+    MAKER-ETHEREUM/lst_rates (still over-claiming).
 - **2026-07-31** — **Finding 6 added (`dex_pools`/`dex_swaps` SchemaContract keys survive their own retirement).**
   Surfaced incidentally while re-reviewing `/codex/02-data/partitioning.md` under the codex freshness-stagger sweep
   (shard offset-0), not from a fresh UAC audit. Same declared-vs-real registry-drift pattern as findings 2 and 4, one
