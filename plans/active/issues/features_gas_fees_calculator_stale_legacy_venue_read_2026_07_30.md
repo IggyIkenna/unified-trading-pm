@@ -115,12 +115,13 @@ green.
       `DEFAULT_GAS_FEE_CHAINS` — the calculator silently reads an always-empty shard for that chain. Reconciled the two
       chain lists. — **Done 2026-08-03**, `features-service@09c07ead`. **Scope note**: the reconciliation surfaced a
       second, more consequential drift than this todo's own text described — see Progress Log. (repo: features-service)
-- [ ] [DATA] P3. The dead-code `_collect_latest_fees`/`_write_latest_fees_shard` path in `gas_fee_handler.py` (lines
+- [x] [DATA] P3. The dead-code `_collect_latest_fees`/`_write_latest_fees_shard` path in `gas_fee_handler.py` (lines
       822-886) writes to an even-older, venue-less flat path (`gas_fees/chain_id={id}/date={d}/...`) that bypasses
       `write_defi_rows` entirely. Confirmed unreachable in the current prod scheduler wiring
       (`defi_collection_scheduler.tf` always passes a date via `BatchPayload`), so not urgent — but it's a landmine if
       any future caller invokes the handler without a date. Consider deleting the dead branch entirely rather than
-      leaving it as a latent legacy-path writer. (repo: market-tick-data-service)
+      leaving it as a latent legacy-path writer. — **Done 2026-08-05**, `market-tick-data-service@e8c669f7`. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
@@ -251,3 +252,16 @@ green.
   (4) flip THIS P3 checkbox `[ ]`→`[x]` same-turn with landed SHA (PM `docs(plans):` carve-out); (5) verify
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout`; (6) POST /done. Full RE-GATE #9 record:
   `plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` Progress Log.
+- **2026-08-05 (data_engineering slot-12) SHIPPED — P3 CHECKBOX FLIPPED [x], `market-tick-data-service@e8c669f7`**: the
+  owner's ratchet fix landed at MTDS@`aafbbfdf` — funcsize CLEAN (AST mirror: no method >50L in `_defi_manifest.py`) and
+  TID251 **38 == baseline** (`check_ruff_rule_ratchet.py` EXIT=0; the fix is count-based — `google.cloud` →
+  `get_storage_client` swap in `rebuild_defi_available_at.py` dropped the total 39→38, so the reset script's site is now
+  at-baseline without that file changing). Authoritative full `quality-gates.sh --no-fix` on the merged tree at
+  `aafbbfdf` + 3 gas_fee files in working tree: **`✅ ALL QUALITY GATES PASSED (191s)`**, `QG_PROCESS_EXIT=0`, sentinel
+  `.qg_last_passed_sha`=`aafbbfdf` (log `/tmp/qg_aafbbfdf_ship.log`). Shipped via
+  `bash scripts/quickmerge.sh --agent --files "market_tick_data_service/cli/handlers/gas_fee_handler.py tests/unit/test_gas_fee_handler.py tests/unit/test_gas_fee_handler_coverage.py"`
+  → landed on LDR `e8c669f7` (3 files, +34/−237); verified
+  `git merge-base --is-ancestor e8c669f7 origin/live-defi-rollout` = ANCESTOR-OK. MTDS working tree now clean except the
+  3 regenerable `tests/schema_artifacts/*.json` trailing-newline regens (deliberately excluded). The 2 upstream ratchet
+  reds are RESOLVED upstream — the fe68844c RB is clear; the blocker issue doc
+  `mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` can be closed out by the RB owner.
