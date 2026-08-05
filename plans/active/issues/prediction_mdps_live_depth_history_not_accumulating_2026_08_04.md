@@ -190,10 +190,10 @@ currently nothing at all.
       warning no longer fires on the next live scan.
 
       > **⚠️ HEADS-UP (2026-08-05):** Even once this adapter ships, it will never be invoked by the
-          > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
-          > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
-          > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
-          > before treating this adapter registration as a depth-history fix.
+                      > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
+                      > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
+                      > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
+                      > before treating this adapter registration as a depth-history fix.
 
 - [x] ✅ [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-ran the same bounded
       GCS-timespan check (`processed_candles/by_date/day={D}/pipeline_mode=live_*` for 2026-08-01 through 2026-08-04).
