@@ -296,19 +296,24 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
 
 ## Todos
 
-- [ ] [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — STANDINGS (460), TEAMS (460), XG
-      (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed false-positive class
-      (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined per the 2026-07-23
-      RE-TRIAGE. **DO NOT dispatch/investigate this item independently (2026-07-30 conflict re-check)** — the 2026-07-30
-      na-eligibility-audit's "Conflict-check CLEAR" note below predates the actual resolution: the operator HAS since
-      ruled on this exact sequencing in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry
-      #8 (option A, 2026-07-25): merge this spot-check into Track S2's "decision 16" day-partition root-cause
-      investigation as a corroborating data point, not a separate classification pass. That investigation is now
-      dispatched (and this residual explicitly folded into it) as `sports_satellite_ao_dispatch_batch7_2026_07_27.md`'s
-      decision-16 `[DIAG] P2` todo. A worker claiming THIS checkbox should cross-check that todo's outcome first and,
-      once it lands, either close this item by reference (root cause shared — nothing further to spot-check
-      independently) or resume an independent spot-check only if batch7's write-up explicitly says the mechanisms are
-      unrelated.
+- [x] ✅ [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — closed by reference: decision-16
+      investigation (unified-trading-pm@09ce04535,
+      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`) confirmed shared root cause for
+      all 1,335 residual rows. STANDINGS (460) + TEAMS (460) = confirmed same mechanism (processing-date vs
+      effective-date partition mismatch); XG (300) + WEATHER (106) + MATCHES (7) + FIXTURES (2) = same pattern per
+      investigation findings. Fix todos already tracked in the decision-16 issue doc — nothing further to spot-check
+      independently. (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed
+      false-positive class (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined
+      per the 2026-07-23 RE-TRIAGE. **DO NOT dispatch/investigate this item independently (2026-07-30 conflict
+      re-check)** — the 2026-07-30 na-eligibility-audit's "Conflict-check CLEAR" note below predates the actual
+      resolution: the operator HAS since ruled on this exact sequencing in
+      `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #8 (option A, 2026-07-25): merge
+      this spot-check into Track S2's "decision 16" day-partition root-cause investigation as a corroborating data
+      point, not a separate classification pass. That investigation is now dispatched (and this residual explicitly
+      folded into it) as `sports_satellite_ao_dispatch_batch7_2026_07_27.md`'s decision-16 `[DIAG] P2` todo. A worker
+      claiming THIS checkbox should cross-check that todo's outcome first and, once it lands, either close this item by
+      reference (root cause shared — nothing further to spot-check independently) or resume an independent spot-check
+      only if batch7's write-up explicitly says the mechanisms are unrelated.
 
 ## Progress Log
 
