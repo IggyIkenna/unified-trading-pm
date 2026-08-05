@@ -237,10 +237,18 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       shards visible in `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/`, and a post-run
       cell-seeding ratio re-check (same method as this issue's own read-only measurement) shows the 2025-vs-2026 H1
       ratio has moved toward ~1x. (repo: deployment-service)
-- [ ] [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
-      cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) — NOT covered by this
-      sports-scoped issue; likely the same boundary artifact. Read-only measurement first; widen/backfill per the same
-      two-job model if confirmed. (repo: deployment-service)
+- [x] ✅ [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
+      cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) —
+      instruments-service@94838ad5. **defi: BOUNDARY ARTIFACT CONFIRMED** (8 data_types, governance_events 425x,
+      flash_loan_events 36.7x, zero expected_unattempted in 2025 H1). **tradfi: BOUNDARY ARTIFACT CONFIRMED** (3
+      data_types, trades 140.6x, tbbo 34.0x, ohlcv_15m 9.4x). **cefi: ELEVATED (3.43x) but NOT boundary-artifact** —
+      expected_unattempted present in both years; book_snapshot_5 at 5.5x is genuine growth, not a denominator artifact.
+      **prediction: ELEVATED (34.04x) but NOT boundary-artifact** — trades grew 48.4x via captured/empty_confirmed, not
+      expected_unattempted (zero expected_unattempted in both 2025 AND 2026 H1). Measurement script shipped at
+      instruments-service/scripts/cross_ag_manifest_enumeration_grain_check_2026_08_05.py. Follow-up: defi and tradfi
+      need the same two-job model (rolling window + historical backfill) that sports already got; cefi/prediction have a
+      different root cause (genuine growth, not the static-default window) and need separate diagnosis. (repo:
+      instruments-service, deployment-service)
 - [ ] [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth (88->924, 88->926,
       51->384 respectively vs the ~4x baseline other sports data_types show, e.g. WEATHER 94->388, MATCHES 102->406) to
       determine whether it is genuine coverage expansion (more leagues legitimately tracked in 2026) or a
@@ -386,3 +394,14 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   with `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent — per-VM shards +
   manifest already hold real progress). Script PID this session: 2560979. Post-run cell-seeding ratio re-check (same
   method as this issue's original measurement) is the done-when gate.
+- **data_engineering worker (slot 9) 2026-08-05**: re-measured the static-default `expected_universe_start_date`
+  boundary artifact for cefi/defi/tradfi/prediction (P3 cross-AG measurement). Used a new generalized script
+  `cross_ag_manifest_enumeration_grain_check_2026_08_05.py` (instruments-service@94838ad5) that reads each AG's live
+  `_index/availability_index.parquet` once. Results: **defi** — BOUNDARY ARTIFACT CONFIRMED: 8 data_types,
+  governance_events 425x, flash_loan_events 36.7x, plus 6 more (74.4M-row manifest, overall 1.89x but heavy outliers).
+  **tradfi** — BOUNDARY ARTIFACT CONFIRMED: 3 data_types, trades 140.6x, tbbo 34.0x, ohlcv_15m 9.4x (6.4M rows, 1.57x).
+  **cefi** — ELEVATED (3.43x) but NOT boundary-artifact: `expected_unattempted` present in both years. **prediction** —
+  ELEVATED (34.04x) but NOT boundary-artifact: trades grew 48.4x via captured/empty_confirmed with zero
+  `expected_unattempted` in BOTH years. Follow-up: defi/tradfi need the same rolling-window fix + historical backfill;
+  cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
+  `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
