@@ -193,15 +193,21 @@ sibling todo reads `[x]`.
       unboundedly and the host retained double-digit GB "available" throughout; did not require killing. Evidence:
       `unified-trading-pm@25cdf1b1f` (plan flip only — no code changed in market-tick-data-service for this todo, pure
       runtime execution against already-shipped code from todo 1).
-- [ ] [SCRIPT] P3. **Follow-up (not this task's scope)**: investigate whether HL/ASTER batch capture is still actively
-      WRITING new objects in the bare (no `VENUE:` prefix) filename shape this migration just cleaned up — the 1,048
-      `deleted_dup_source` outcomes above show canonical-named counterparts already existed for most of the 1,970
-      objects, meaning something recently wrote the CORRECT name while the stale bare-named duplicate never got cleaned
-      up until now; if the underlying writer is still emitting the bare shape for NEW captures, this class of bug will
-      recur after this one-off script's cleanup. Check the batch_hyperliquid/batch_aster capture path for any remaining
-      bare-filename write site (repo: market-tick-data-service). If confirmed still active, file a proper fix todo; if
-      it was a one-time historical artifact (e.g. from the original 2026-06-22 migration's own incomplete pass), this
-      todo resolves as `no-issue-found`.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-05 (slot-3)** — investigation complete: HL/ASTER batch adapters STILL stamp bare
+      `instrument_id` values (no `VENUE:PERPETUAL:` prefix). **Hyperliquid** (`hyperliquid_s3.py`): all four producers
+      (`_fill_to_trade_row`, `_parse_l2_book_line`, `_build_funding_ticker`, `_parse_asset_ctxs_csv`) stamp
+      `instrument_id = _canonical_perp_symbol(coin)` = `"{COIN}-USD@LIN"` — the already-decomposed shape with margin
+      marker but no venue prefix. **ASTER** (`_umi_aster.py`): all producers stamp
+      `instrument_id = symbol = "{COIN}USDT"` — raw concatenated, no venue prefix, no margin marker. The ONLY defense is
+      `PartitionedTickWriter.     _normalize_cefi_instrument_id_column()` which resolves via
+      `CeFiWireCanonicalMap.canonical_for(venue,     instrument_type, symbol)`, but this is **gated on catalogue
+      availability**: if `get_cefi_wire_map()` returns `None` (no cloud wiring / no catalogue object) or the specific
+      `(venue, instrument_type, symbol)` key is absent from the catalogue, the bare symbol stays as-is → bare GCS
+      filename written. The code path for writing bare filenames is still live; it is NOT a one-time historical
+      artifact. **Permanent fix**: update the HL/ASTER adapters to stamp canonical `instrument_id` directly (e.g.
+      `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` instead of bare `BTC-USD@LIN`), removing the dependency on the wire-map
+      runtime gate for filename correctness. → new todo 6 below. — `market-tick-data-service` (read-only code audit, no
+      code change).
 
 - [ ] [SCRIPT] P3. **Harden `do_rename()`'s `deleted_dup_source` branch with a content-equality check before it deletes
       the old object** (flagged 2026-08-03 by review agt-de20d5 after the slot-3 `--apply` run). That branch currently
@@ -219,6 +225,22 @@ sibling todo reads `[x]`.
       assertion between the old object and the pre-existing canonical object and only deletes the old one when they
       match, refusing + logging the delete on mismatch; add a unit test covering the mismatch-refusal case.
 
+- [ ] [SCRIPT] P2. **Harden HL/ASTER adapters to stamp canonical `instrument_id` directly** (follow-up from todo 4
+      investigation, 2026-08-05 slot-3). Both `hyperliquid_s3.py` (4 producers: `_fill_to_trade_row`,
+      `_parse_l2_book_line`, `_build_funding_ticker`, `_parse_asset_ctxs_csv`) and `_umi_aster.py` (3 producers:
+      `_fetch_aster_coin` funding rows, `_fetch_aster_coin` premium rows, `_fetch_aster_agg_trades` trade rows) stamp
+      bare `instrument_id` values — no `VENUE:PERPETUAL:` prefix. The downstream `_normalize_cefi_instrument_id_column`
+      CAN fix this via the cefi wire map, but that is a runtime gate that fails open when the catalogue is unreachable
+      or the specific key is absent. Fix: in each adapter, replace the bare `symbol` assignment with the full canonical
+      form — `f"HYPERLIQUID:PERPETUAL:{coin}-USD@LIN"` for HL (replacing `_canonical_perp_symbol`'s return or wrapping
+      it) and `f"ASTER:PERPETUAL:{coin}-USDT@LIN"` for ASTER (replacing the raw `symbol` variable). Also update
+      `_canonical_perp_symbol` to return the canonical form directly, or add a new helper. Repo:
+      market-tick-data-service. **Done when**: all HL/ASTER adapter producers stamp a canonical `VENUE:PERPETUAL:...`
+      `instrument_id`; existing unit tests pass; `quality-gates.sh` green.
+
 ## Progress Log
 
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (3 entries) — no changes.
+- **slot-3 investigation 2026-08-05**: Traced the full HL/ASTER batch write path from adapters → `write_chunk` →
+  `_normalize_cefi_instrument_id_column` → `_resolve_file_symbol` → GCS filename. Adapters still stamp bare symbols;
+  wire-map normalization is the only defense and it fails open. Filed fix todo 6.
