@@ -12,7 +12,7 @@ summary: >-
   defect. Fixing it in features-service would reintroduce leakage. The real gap: ml-service's CLV target generator has
   no leakage-safe source for real T-0-vs-T-24h CLV data — an architecture decision spanning features-service +
   ml-service, not a bounded code fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [backtest]
@@ -45,6 +45,9 @@ source:
     functions with real T-0+T-24h data.",
   ]
 resolved_by:
+  "All todos completed — design ratified (BLK-8f8b862f Option B), odds_targets export shipped
+  (features-service@332ea5d5), ml-service repointed (ml-service@f107176+655b87e+37d59f1), 3-variant CLV retrain
+  GCS-verified (2026-08-03 slot-3)"
 locked_by:
 locked_since:
 context_scope:
@@ -57,6 +60,9 @@ context_scope:
     ml-service/ml_service/training/app/core/sports_target_generator.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-05** — all todos complete, all implementation shipped and verified (design ratified, `odds_targets`
+> export built, `ml-service` repointed, 3-variant retrain produced + GCS-verified). Moved to `plans/archive/2026_08/`.
 
 # ml-service's CLV target has no leakage-safe source — features-service correctly refuses to emit it
 
@@ -407,5 +413,5 @@ will auto-push a held commit the moment it reclaims a session it considers dead 
   `plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`,
   `plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`, + 5 already-archived
   docs — out of scope for this task's assigned done_definition). Tracked as its own todo instead of silently skipped:
-  - [ ] [DOCS] P3. Archive this doc (`git mv` to `plans/archive/2026_08/`, add a superseded/archived banner, fix the 10
-        referrer paths listed above) per the 6-step archival ritual. (repo: unified-trading-pm)
+  - [x] ✅ [DOCS] P3. Archive this doc (`git mv` to `plans/archive/2026_08/`, add a superseded/archived banner, fix the
+        10 referrer paths listed above) per the 6-step archival ritual. (repo: unified-trading-pm)
