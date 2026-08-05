@@ -36,6 +36,8 @@ parent_epic: tradfi_master
 priority: P1
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # TradFi — legacy-twin candidate set 995 → 900 unexplained shrink
