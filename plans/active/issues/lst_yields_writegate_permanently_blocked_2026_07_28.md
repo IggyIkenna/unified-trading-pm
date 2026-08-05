@@ -140,11 +140,19 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
       `_drop_unmapped_tokens`). Per investigation above: all 4 are `YIELD_BEARING` instruments that produce `lst_rates`
       data but are not LSTs, are absent from the UAC LST registry, and are already silently filtered downstream. Repo:
       market-tick-data-service.
-- [ ] [DATA] P3. Consider whether `ServiceEmissionPolicy.STRICT_FAIL`'s all-or-nothing completeness semantics (no
+- [x] ✅ [DATA] P3. Consider whether `ServiceEmissionPolicy.STRICT_FAIL`'s all-or-nothing completeness semantics (no
       partial credit for a mostly-complete row) is the right policy for `lst_yields`/`lst_native_rates`, or whether
       `PARTIAL_OK` degraded-publish semantics (already used elsewhere per `WRITE_GATE_CONFIG`'s own comment re:
-      `lending_rates`) would be more appropriate now that unmapped-token filtering exists as a safety net. Repo:
-      features-service / unified-trading-library (`emission_publisher.py` policy assignment is UAC-owned).
+      `lending_rates`) would be more appropriate now that unmapped-token filtering exists as a safety net. — **Verdict:
+      PARTIAL_OK adopted.** Per-token yield data is structurally partial (different LSTs populate different yield
+      fields, same shape as lending_rates). `_drop_unmapped_tokens()` already filters tokens not in the UAC registry;
+      remaining NaN cells are genuine "data not available for this token today" gaps. `STRICT_FAIL`'s all-or-nothing
+      semantics suppressed ALL tokens for a day when even one token was missing one field — too aggressive now that
+      unmapped-token filtering exists as a safety net. Downstream consumer (strategy-service CARRY_* archetypes) does
+      its own None-guard on missing values. Changed in UAC `_policies.py` for both `features-service` +
+      `features-onchain-service` keys, `lst_yields` + `lst_native_rates` (the latter was previously unregistered →
+      default STRICT_FAIL); tests updated in features-service `test_emission_policy.py`. Repo:
+      unified-api-contracts@03e1ce95 + features-service@8e5a69ba.
 
 ## Evidence
 
