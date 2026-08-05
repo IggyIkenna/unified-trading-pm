@@ -250,16 +250,15 @@ context_scope:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [DATA] P2. **NEW (found during this fix's historical-damage verification, 2026-07-08): resolve the `FI_`-vs-`FF_`
-      same-(ticker,expiry) instrument_id collision** — 13 real (ticker, expiry) pairs (ETH/XBT only, 2024-2026 range, 45
-      of the 125 remediated files) have BOTH an `FI_` and an `FF_` raw Tardis symbol with real, differing row counts
-      (not duplicates) that now derive the IDENTICAL corrected `instrument_id` because `derive_row_instrument_id`'s
-      FUTURE branch has no field for the `FI`/`FF` contract-subtype. Needs an operator decision on what `FI_` actually
-      represents relative to `FF_` for KRAKEN-FUTURES (the existing code comment in `tardis_shared.py` calling `FI_`
-      "old index, pre-2020, no longer active" is contradicted by real 2024-2026 data found here) and how to encode the
-      distinction in the canonical instrument_id (e.g. a contract-subtype marker) before any further Kraken-Futures
-      remediation or backfill. (FOLDED IN from canonical_id_p0_kraken_futures_collision_2026_07_08, 2026-07-15,
-      plan-reconcile §6 operator ruling)
+- [x] ✅ [DATA] P2. **RESOLVED — the `FI_`-vs-`FF_` instrument_id collision was already fixed by the @LIN/@INV
+      margin-marker path in `derive_row_instrument_id`'s FUTURE branch — market-tick-data-service@3ee21c8c
+      (2026-07-09).** `derive_settlement_dimensions` correctly maps `FI_`→inverse / `FF_`→linear,
+      `_MARGIN_MARKER_VENUES` includes KRAKEN-FUTURES, and `derive_base_token` parses the dated-future underscore shape.
+      `test_tardis_shared_v6.py::TestKrakenFuturesFiFfMarginTypeCollision` (3 tests) all pass. Distinct ids confirmed:
+      `KRAKEN-FUTURES:FUTURE:BTC-USD@INV-20240329` ≠ `KRAKEN-FUTURES:FUTURE:BTC-USD@LIN-20240329`. **Original finding
+      (2026-07-08)**: fix shipped 2026-07-09 (before the 2026-07-15 plan-reconcile fold-in) but this checkbox was never
+      flipped. (FOLDED IN from canonical_id_p0_kraken_futures_collision_2026_07_08, 2026-07-15, plan-reconcile §6
+      operator ruling)
 
 ## Progress Log
 
