@@ -133,14 +133,26 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       clean days (PM #2088 = 4s, #2199 = 14m52s, #2266 = 33m48s) — looks like real retry/backoff churn in that mode, not
       cron-related; worth checking `ldr-to-main-promote-fleet.yml`'s auto-drain retry logic if a tight fleet-wide floor
       matters, separate from PM's ubuntu-latest billing-driver investigation above (different root cause, same repo).
-- [ ] [INFRA] P1. **Find PM's dominant GitHub-hosted (`ubuntu-latest`) cost driver.** Follow-up from the P0 billing
-      finding above (41-59% of ALL fleet Actions billing lands on `unified-trading-pm` specifically). First-pass grep
-      (2026-08-05) found ≥18 PM workflow files with at least one `ubuntu-latest` job, incl. `branch-health.yml` (hourly
-      cron, 3 ubuntu-latest jobs/tick), `ci-health.yml` (hourly, 1 job, intentionally GH-hosted per its own comment),
-      and — the strongest suspect — `python-quality-gates-v2.yml`, a `workflow_call` reusable template: if OTHER repos'
-      CI calls into it and its internal jobs hardcode `ubuntu-latest` for specific steps, billing attributes to PM (the
-      file's home repo) even though the WORK is fleet-wide. Investigation in progress; done when the actual top 3-5
-      cost-driving workflows are named with real July run-count evidence (`gh run list`), not just grep.
+- [x] ✅ [INFRA] P1. **Find PM's dominant GitHub-hosted (`ubuntu-latest`) cost driver — FOUND AND FIXED, 2026-08-05.**
+      The `workflow_call` hypothesis was WRONG (corrected via search of GitHub's own billing docs): reusable-workflow
+      minutes bill to the CALLING repo, not the file's home repo — confirmed all 24 other repos' calls into
+      `python-quality-gates-v2.yml` bill against themselves. **Real root cause, ranked by measured July run count**
+      (`gh api .../actions/workflows/<f>/runs?created=2026-07-01..2026-07-31`): 1. **`quality-gates-v2.yml` (PM's own
+      promotion-gate wrapper) — 4,763 runs/month, by far #1.** PM must call `python-quality-gates-v2.yml` LOCALLY
+      (`uses: ./.github/workflows/...`, chicken-and-egg — PM can't reference itself remotely) — and unlike the 24 other
+      repos (migrated by `rollout-workflow-templates.sh`, which only targets remote-ref callers), PM's own local `with:`
+      block never passed `self_hosted_runner_labels`, so EVERY internal job (`content-gate`, `qg-slices`,
+      `supersede-check`) defaulted to `ubuntu-latest` — even though PM's own glue pool has been live and used by other
+      jobs in the same file for weeks. **FIXED**: added `self_hosted_runner_labels: '["self-hosted","glue"]'` to PM's
+      own `with:` block (`unified-trading-pm@995c374ce`), verified via a manual `workflow_dispatch` run. 2.
+      `ci-health.yml` — 1,398 runs (hourly cron + fleet-wide `repository_dispatch` wake-ups, genuinely land in PM).
+      `runs-on: ubuntu-latest` is explicitly commented LOAD-BEARING (verifies GH-hosted infra independent of
+      self-hosted) — correctly should NOT change. 3. `branch-health.yml` (731×3 jobs, hourly) +
+      `reconcile-release-tags.yml` (931×2 jobs, `*/30`) — moderate, already relaxed once (07-17/06-11); lower priority
+      than #1, diminishing safety margin on further cuts. **Ruled out as false leads**: `main-backmerge-to-ldr.yml`
+      (2,774 runs but ~40s each, trivial total) and `conflict-resolution-merged.yml` (1,026 runs but its `if:` gate
+      skips almost every invocation in ~1s). **Expected impact**: fix #1 alone should eliminate the large majority of
+      PM's $483.58/mo — re-measure PM's September billing once a full month has elapsed under the fix to confirm.
 - [x] ✅ [INFRA] P1. **Audit the `update-dependency-version.yml` fan-out** — CLOSED as "already true", 2026-08-05.
       `update-repo-version.yml` (the sender, `.github/workflows/update-repo-version.yml:294-310`) computes
       `/tmp/dependents.txt` by walking `workspace-manifest.json`'s `repositories.<name>.dependencies` list and only
@@ -189,21 +201,41 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       operator asked for: ~300 tasks/day, expected CI-minute footprint at some stated per-task assumption, actual
       measured footprint, and where the delta comes from (concurrency fan-out, retries/re-triggers, the already-fixed
       digest-refresh churn, or something not yet found).
-- [ ] [INFRA] P1. **Warm git-object cache for JIT-ephemeral runner checkouts** (operator, 2026-08-05: "why fresh-clone
-      every time when we already keep clones current via cron"). Confirmed live: `glue-runner-run.sh`'s JIT-ephemeral
-      branch runs `rm -rf _work/* _diag/*.log` before EVERY job, and `python-quality-gates-v2.yml`'s `actions/checkout`
-      steps use `fetch-depth: 1`/`2` — shallow, but still a genuine cold network clone every run (no existing git
-      history to fetch against once `_work` is wiped). No reference-clone/warm-mirror mechanism exists anywhere in this
-      setup today (verified: zero hits for `--reference`/`--shared`/mirror patterns across
-      `scripts/self-hosted-runners/` and `.github/workflows/`). Proposed design — same "lives OUTSIDE `_work`, survives
-      the wipe" pattern this codebase already uses for `RUNNER_TOOL_CACHE`: maintain a cron-refreshed bare mirror clone
-      per repo (same idea as the existing per-slot `slot-cron-ff-pull.sh`, just serving the runner instead of a
-      worktree), and have each job's checkout use `git clone --reference <mirror> --dissociate` against it — `_work`
-      still gets wiped fresh every job (isolation preserved, the actual reason the wipe exists), but the git OBJECT DATA
-      is already local, so only genuinely new commits since the last cron refresh come over the network. Needs real
-      testing before rollout (confirm `actions/checkout`'s behavior against a pre-seeded reference, or replace it with a
-      custom checkout step) — this touches every job on the shared runner, don't ship blind. Directly reduces disk WRITE
-      I/O on the same EBS volume this session's capacity investigation was about.
+- [ ] [INFRA] P1. **Warm git-object cache for JIT-ephemeral runner checkouts** — DESIGN REVISED 2026-08-05, folding in
+      an independent analysis from Harsh (Slack, same day) plus a correction to this todo's own earlier claim.
+      **Correction**: this todo previously said "zero hits for `--reference`/mirror patterns... no mechanism exists" —
+      WRONG, found on closer read: `setup-glue-runners.sh` + `refresh-slot-repo.sh` (10-min timer,
+      `github-glue-slot-refresh.timer`) already maintain a cron-refreshed local clone at `${RUNNER_BASE}/repo`
+      (`/opt/github-glue-runners/repo`), with a `repo.refreshed-at` freshness stamp — this IS the mirror Harsh
+      described. **But it's scoped narrowly**: built for the WRITER pool only (STEP 2b — lets the high-frequency
+      `ci-status-update` writer pre-stage `ci_status_store.py` and skip `actions/checkout` entirely for its own tiny
+      job), a SHALLOW clone (`gh repo clone ... -- --depth 1`), and the GLUE pool's actual
+      `python-quality-gates-v2.yml`/`quality-gates-v2.yml` jobs — the ones doing the 1.7 GB `actions/checkout@v4` I/O
+      Harsh measured — never read it at all. **Harsh's independent measurement** (same root cause, extra numbers): ~1.7
+      GB written per glue run (checkout+venv+artifacts) × up to 25 concurrent = ~42 GB competing for one disk; at the
+      OLD 96 MB/s (6k IOPS) that's 7+ min of pure write time — matches this session's own iostat finding (92.9% iowait).
+      Proposed 3 options, ranked by his own effort/payoff read: **(A)**
+      `git clone --reference <deep-mirror> --dissociate` (needs the shallow mirror converted to a real/deep clone first
+      — `actions/checkout@v4` has no native `reference:` input, so this means a custom checkout step). **(B)**
+      `git worktree add` off a `--bare --mirror` repo (zero object copying, fastest, but needs maintaining bare
+      mirrors + custom checkout). **(C)** hardlink-copy the existing mirror (`cp -al mirror _work/<run-id>/<repo>` +
+      `git fetch` + `git checkout --force <sha>` — cheapest to implement TODAY because the mirror infra already exists)
+      — his own pick, "the mirror already exists and is refreshed every 10 min." He additionally flags **pre-built
+      venvs**: hardlink-copying a per-repo pre-built `.venv` alongside the checkout would eliminate `uv sync`'s
+      venv-write cost too (currently ~200-500 MB written fresh per run even though `~/.cache/uv` itself is already
+      persistent/warm — 9s not 2m07s). **Recommendation**: Option C, reusing the EXISTING `refresh-slot-repo.sh`/timer
+      pattern rather than building a parallel mechanism — (1) convert `${RUNNER_BASE}/repo` from `--depth 1` to a full
+      clone (one-time, then `pull     --ff-only` keeps it current same as today), (2) extend the refresh timer's
+      scope/labels so it also serves the glue pool (today it's writer-pool-only by convention, not by hard restriction),
+      (3) replace `actions/checkout@v4` in `python-quality-gates-v2.yml` with a custom step:
+      `cp -al ${RUNNER_BASE}/repo _work/<run-id>/<repo> && git fetch origin && git checkout --force <sha> && git clean     -fdx`,
+      with an explicit fallback to plain `actions/checkout@v4` if the mirror is missing/stale/dirty (checked via the
+      existing `repo.refreshed-at` stamp) — so a mirror problem degrades to today's behavior, never blocks a job.
+      **Still true**: this touches every job on the shared runner across ~24+ repos via the shared workflow template —
+      needs real testing before fleet-wide rollout (a single canary repo first, verified for a few days, is the safe
+      path given this session's own history of 2 separate live incidents from touching this exact runner
+      infrastructure). Directly reduces disk WRITE I/O on the same EBS volume this session's capacity investigation was
+      about.
 
 ## Codex SSOTs
 
