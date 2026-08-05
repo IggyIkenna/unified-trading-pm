@@ -579,3 +579,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   converges or this run ends.
 - **2026-08-05T20:51Z** — `af-backfill-20260805-201310` still healthy, ~97min elapsed, left running. Dual progress
   continues: TEAMS 46,593→46,457 (-136), STANDINGS 50,628→50,359 (-269).
+- **2026-08-05T21:28Z** — TEAMS/STANDINGS flat for 2 consecutive checks now (~117min, ~133min, both unchanged at
+  46,457/50,359) — per the established threshold, did a quick run.log sanity check rather than ignore it. VM is
+  genuinely still working: actively processing forward through dates (now at 2020-12-17/18), and has started a NEW
+  per-VM shard chunk (`af-backfill-20260805-201310-c3.parquet`, 11,505 entries and climbing) — the same
+  per-VM-shard-to-canonical lag recurring for this fresh chunk, not a stall. Left running, no action needed.
