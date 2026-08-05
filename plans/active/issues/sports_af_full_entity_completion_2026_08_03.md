@@ -584,3 +584,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
   genuinely still working: actively processing forward through dates (now at 2020-12-17/18), and has started a NEW
   per-VM shard chunk (`af-backfill-20260805-201310-c3.parquet`, 11,505 entries and climbing) — the same
   per-VM-shard-to-canonical lag recurring for this fresh chunk, not a stall. Left running, no action needed.
+- **2026-08-05T21:46Z** — 3rd consecutive flat census check (~152min elapsed, still 46,457/50,359). Re-checked the
+  run.log: chunk `-c3` grew 11,505→33,747 entries, VM now at date 2021-01-16 (~30 more days processed) — real,
+  substantial continued work, this is now the campaign's longest single stretch without consolidator absorption but the
+  same known mechanism, not a new failure. Left running.
