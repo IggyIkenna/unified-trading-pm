@@ -10,7 +10,7 @@ summary: >-
   bare-venue relabel candidates = 0 (already fully canonical). One genuinely new, small, untracked finding: 9,750
   `captured` rows with a blank `data_type` string, all `market-tick-data-service`, spanning 2019-2026. Diagnose-only —
   no relabel/reclassify --apply executed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -39,7 +39,7 @@ source:
     "cefi_satellite_ao_dispatch_batch2_2026_07_26.md E6 CF-7 diagnostic todo, sourced from
     data_completion_cefi_2026_07_15.md's bare 'E6 CF-7 relabel... 50% attempted_failed (1.33M)' line item.",
   ]
-resolved_by:
+resolved_by: cefi_satellite_ao_dispatch_batch3_2026_07_26
 locked_by:
 locked_since:
 supersedes:
@@ -123,9 +123,9 @@ rows) is real but small and not urgent.
 
 ## Recommended decision
 
-- [x] [DOCS] P3. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md, see that doc for
-      execution]** Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50%
-      (1.33M)" figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
+- [x] ✅ [DOCS] P3. **Shipped `unified-trading-pm@4d90eeefe` (batch3 item 1, 2026-07-26).** Updated
+      `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50% (1.33M)" figure and point
+      at this doc for the current 11.61%/1,060,613 measurement + attribution.
 
 > **📤 THE OPEN P3 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
 > tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` `[DATA] P2` (`status: active`,
@@ -133,9 +133,11 @@ rows) is real but small and not urgent.
 > same framing, same done-when). Leave `assigned_vm: NA` here — flip this checkbox only by citing batch3's execution
 > once it lands, not independently.
 
-- [x] ✅ [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no
-      longer a cross-tranche operator-decision-gated conflict with
-      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
+- [x] ✅ [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) + EXECUTED batch3 item 6 (2026-07-31,
+      `unified-trading-pm@a3922f9c9`): 0 blank-`data_type` `captured` rows in live manifest, bare-`OKX`×7 reclassified,
+      cross-cutting COINBASE(7) independently verified at 0.** Retagged from the "either/or" open framing, no longer a
+      cross-tranche operator-decision-gated conflict with
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`. The apparent conflict dissolves once the
       two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,743 rows) ALREADY
       market-type-suffixed venues (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/HYPERLIQUID/DERIBIT/BINANCE-SPOT/
       COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) — only `data_type` is blank, `venue` is unambiguous. The remaining **7 rows
