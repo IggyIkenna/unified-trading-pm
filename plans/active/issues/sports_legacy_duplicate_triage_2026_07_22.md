@@ -344,15 +344,13 @@ Recommended next steps, in priority order:
       canonical per-league write target at all** under the current convention (canonical per-league partitioning is
       scoped to `get_prediction_leagues()` only) — this is a distinct, unresolved population, tracked as new todo 7
       below.
-- [ ] 7. [REVIEW] P3. **Policy decision: 5,028 non-Prediction-tier-league v2 legacy rows have no canonical per-league
+- [x] ✅ 7. [REVIEW] P3. **Policy decision: 5,028 non-Prediction-tier-league v2 legacy rows have no canonical per-league
       write target** (found while executing todo 2, 2026-08-03) — canonical `entity=fixtures`/ `entity=fixture_stats`
       per-league partitioning is scoped to UAC `get_prediction_leagues()` only, so these rows can never satisfy Part 1
-      (twin exists) of the delete-safety proof under the existing convention, regardless of any future migrate-forward
-      attempt. This is a genuine judgment call, not a mechanical migration: (a) accept as permanent legacy-only data
-      (matches the flat-legacy 28,100-row precedent — no delete, no migrate, leave as-is; the v2 tree already has zero
-      live readers/writers per § 4 Part 3/4), or (b) extend canonical per-league write scope to cover non-Prediction
-      leagues too (a real coverage/product decision, not this todo's scope). Until decided, these `sports_reference_v2/`
-      objects stay `no-migrate-first`.
+      (twin exists) of the delete-safety proof. **DECIDED 2026-08-05 (slot 3, data_engineering): Option (a) — accept as
+      permanent legacy-only data.** Zero live readers/writers (§4), matches the flat-legacy 28,100-row precedent (no
+      delete, no migrate, leave as-is). `sports_reference_v2/` objects stay `no-migrate-first`. Option (b) is a separate
+      product decision, not required to close this issue.
 - [ ] 6. [DATA] P3. **Migrated from `/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`
       todo 5 on archival (2026-08-03).** Root-cause and retire whatever wrote 764
       `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
@@ -460,3 +458,8 @@ point, per this data_type/day/league key."
   mechanical work. `instruments-service@25796237`.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **worker slot-3 2026-08-05**: Executed todo 7 (policy decision). **Option (a) — accept as permanent legacy-only
+  data.** The v2 staging tree has zero live readers/writers (confirmed §4 Part 3/4), matching the flat-legacy 28,100-row
+  precedent (no delete, no migrate, leave as-is). `sports_reference_v2/` objects stay `no-migrate-first` indefinitely.
+  Option (b) (extend canonical per-league write scope) is a separate product decision outside this issue's scope — it
+  can be pursued independently but is not required to close this issue. No code changes needed (pure policy ruling).
