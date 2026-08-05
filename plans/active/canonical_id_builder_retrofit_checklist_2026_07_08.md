@@ -211,19 +211,22 @@ context_scope:
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. Note there that the new `build_leg()` helper is
       now available for that plan to use once its pending `[DECISION]` (per-leg `VENUE:` prefix drop) resolves — do not
       re-scope that work into this plan.
-- [ ] [DATA] P3. **DECIDED — yes, refactor `ccxt_adapter.py` to call the shared builder.** Operator guidance: no real
-      ambiguity here (explicitly "no output change" either way per this todo's own framing) — do it for consistency,
-      same for the MTDS callers below. Not urgent, pick up opportunistically.
-- [ ] [DATA] P3. **DECIDED — yes, upgrade MTDS's already-correct callers to the new one-entry-point** —
+- [x] ✅ [DATA] P3. **DECIDED — yes, refactor `ccxt_adapter.py` to call the shared builder —
+      instruments-service@70eaaa4a.** Operator guidance: no real ambiguity here (explicitly "no output change" either
+      way per this todo's own framing) — do it for consistency, same for the MTDS callers below. Not urgent, pick up
+      opportunistically.
+- [x] ✅ [DATA] P3. **DECIDED — yes, upgrade MTDS's already-correct callers to the new one-entry-point —
+      market-tick-data-service@2d59869f** —
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py:242` and
       `.../cefi/tardis_shared.py:433,464,473`. Cosmetic consistency change, no behavior change expected. Not urgent.
 - [x] [DATA] P3. **Retire the misspelled `AAVEV3-OPTIMISM` venue-token duplicate** (finding 5) — DONE, fixed by a
       concurrent sibling agent the same session (DeFi venue-token naming cleanup), confirmed via a fresh real re-query
       of `prod/catalog.parquet`: 0 ghost rows, 16 rows correctly under `AAVE_V3-OPTIMISM`. This todo was stale by the
       time this plan was filed — the parallel work wasn't visible to the agent that wrote it.
-- [ ] [SCRIPT] P2. **Ship each retrofit batch via quickmerge**, quality-gates green per repo, citing before/after
+- [x] ✅ [SCRIPT] P2. **Ship each retrofit batch via quickmerge**, quality-gates green per repo, citing before/after
       `instrument_key` evidence per adapter touched (same evidence pattern as the CCXT plan's per-venue table). Batch by
-      asset-group-cluster (todo 1+2 together, todo 4 alone, todo 6 alone, etc.) rather than one giant commit.
+      asset-group-cluster (todo 1+2 together, todo 4 alone, todo 6 alone, etc.) rather than one giant commit. — **Batch
+      3 (P3 ccxt_adapter): instruments-service@70eaaa4a; Batch 4 (P3 MTDS callers): market-tick-data-service@2d59869f.**
 - [ ] [SCRIPT] P2. **Migrate the 1,330 stale-colon MORPHO catalog rows found during the finding-6 verify pass
       (2026-08-01)** — `prod/catalog.parquet`'s MORPHO A_TOKEN/DEBT_TOKEN rows still carry an embedded colon before the
       market-key hex suffix for 1,330 of 2,753 real rows (e.g. `MORPHO-BASE:A_TOKEN:ACBBTC-USDC:0x125081`, should read
