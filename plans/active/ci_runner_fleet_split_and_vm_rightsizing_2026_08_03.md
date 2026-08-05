@@ -228,12 +228,21 @@ new pool is confirmed green, (3) only then resize AO down.
       above) installed + `quality-gates-v2` dispatched 2026-08-04; verification pending. **PM's 8-runner pool (5 glue +
       3 writer) and AO's 3-runner pool (2 glue + 1 writer) both installed on the new VM 2026-08-04** — every slot
       confirmed online at the correct count via `gh api .../actions/runners` (PM: 5 `glue-ip-172-31-3-59-*` + 3
-      `writer-ip-172-31-3-59-*`; AO: 2 `glue-*` + 1 `writer-*`, same IP), matching the old VM's counts exactly. AO's
-      `quality-gates-v2` dispatched (run 30897598568, queued). PM's workflow has no `workflow_dispatch` trigger (422 on
-      manual dispatch attempt) — verification will come from this session's own next quickmerge ship to
-      `unified-trading-pm` (organic push-triggered CI), not a manual dispatch. **Old-VM deregistration for PM/AO NOT YET
-      DONE** — waiting on the above verification first, given the batch-1 incident precedent (never partially deregister
-      a multi-runner pool).
+      `writer-ip-172-31-3-59-*`; AO: 2 `glue-*` + 1 `writer-*`, same IP), matching the old VM's counts exactly. **PM
+      verified green organically** (this session's own plan-doc quickmerge ship triggered a real `main`-branch job —
+      `freeze-deferred-build-replay` succeeded on `glue-ip-172-31-3-59-5`, plus `update-ci-status` succeeded on BOTH
+      `writer-ip-172-31-3-59-1` and `-3` — proving both glue and writer slots work). **AO verified via organic history,
+      not the manual dispatch** — the manual `quality-gates-v2` re-dispatch (run 30898648500) hit the supersede-check
+      pattern again (QG slice cancelled mid-run by newer activity), but a scan of AO's last 25 completed runs found
+      real, clean successes on the new VM's glue runners across 4 different job types: Semver Agent, `backmerge`,
+      `build + deploy to Firebase Hosting`, `validate / GCP Cloud Build` — sufficient proof. **Old-VM deregistration for
+      PM (8) + AO (3) DONE 2026-08-04/05**: `systemctl stop`+`disable` on all 11 old-VM units (`i-0c9b283b31d6b5ca7`)
+      confirmed inactive, then `gh api DELETE` for all 11 runner IDs — both repos now show 100% new-VM runners
+      (`gh api .../actions/runners`), 0 old-VM entries. PM re-confirmed healthy after (all 8 online). **Batch 3
+      update**: `deployment-service` confirmed green (2026-08-04) and `deployment-api` confirmed green (2026-08-05,
+      run 30956307018) — both old-VM runners deregistered via the same safe method.
+      `alerting-service`/`client-reporting-api`/`ml-service`/`market-data-processing-service` still cycling through the
+      real fleet-contention backlog (in_progress/queued) — deregister each as it goes green.
 - [x] ✅ [INFRA] P1. **Side-finding, fixed: PM's/AO's pool installs on the new VM stalled ~9 minutes on a real per-pool
       memory-cap throttle, not a code bug.** `scripts/self-hosted-runners/github-glue-runner.slice` caps EVERY pool
       independently at `MemoryMax=8G`/`MemoryHigh=6G` (each `POOL_TAG` renders its own separately-named slice — this is

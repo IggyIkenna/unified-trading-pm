@@ -675,6 +675,48 @@ buildable or verifiable from a dev checkout. See each todo's own "Done when" bel
     hallucination, but the skill never actually ran. Not isolated whether this is a DeepSeek reasoning gap specifically
     or a harness-level thing (Skill-tool exposure to tmux-spawned interactive workers generally) — see new todo below.
 
+**2026-08-04 (later, later entry, same interactive session, slot-2) — isolated the `/pre-compact` gap above: it is a
+harness/CLI-version issue, not a DeepSeek reasoning gap. Full writeup; two new todos above (one flipped done, one
+new).**
+
+- **Test design**: two fresh, cheap, single-turn `tmux_spawn.spawn()` control sessions, same harness/cwd-shape/prompt,
+  differing only in `env_file` — one on `deepseek-v4-pro`, one on the real `sub-a-ikenna` Anthropic sub-account. Asked
+  each to introspect and list its own exact tool names, whether a `Skill` tool exists, and what tool call it would make
+  to invoke the `pre-compact` skill.
+- **Result 1 — identical tool lists**: both reported the byte-identical 15-tool list (Task, Bash, Glob, Grep,
+  ExitPlanMode, Read, Edit, MultiEdit, Write, NotebookEdit, WebFetch, TodoWrite, WebSearch, BashOutput, KillBash) — no
+  `Skill` tool on either backend. Same order, same names. This alone strongly suggested the gap is in the CLI surface
+  tmux_spawn launches, not the model.
+- **Result 2 — direct slash-command test, confound eliminated**: typed the literal `/pre-compact` into the idle
+  Claude-backed control session's pane via the exact mechanism `context_lifecycle.py:349` (`tmux_spawn.submit_to_pane`)
+  uses in production. First attempt returned `Unknown slash command: pre-compact` — but the sandbox cwd had no
+  `.claude/skills/` at all, so that result was confounded (could just mean "this dir has no skill configured," not "the
+  CLI can't run skills"). Copied the real project's `.claude/skills/pre-compact/SKILL.md` straight into the sandbox cwd
+  and retried on a fresh respawn: **same result, `Unknown slash command: pre-compact`**, confound eliminated.
+- **Root cause, confirmed directly**: `claude --version` for the binary `tmux_spawn` invokes (`claude_bin="claude"`,
+  resolved from PATH) is **1.0.112**, and its own `/help` output lists zero Skills-related commands or infrastructure —
+  a CLI build that predates the Skills feature entirely. `tmux_spawn.py` deliberately sets `DISABLE_AUTOUPDATER=1` on
+  every spawned worker ("the fleet npm-global install is root-owned, so a worker's auto-update attempt can only FAIL") —
+  confirming there IS a fleet-wide pinned npm-global `claude-code` install that does not self-update, so whatever
+  version it was provisioned at is what persists indefinitely.
+- **Production-code confirmation, not just inference**: read `context_lifecycle.py:343-394` directly. The two-phase
+  force path calls `tmux_spawn.submit_to_pane(session, "/pre-compact")`, logs `submitted=<bool>`, and unconditionally
+  proceeds to force `/compact` next once idle. `submit_to_pane` only verifies the text left the input box — it has **no
+  way to distinguish** "the skill loaded and ran" from "the CLI printed `Unknown slash command` and did nothing."
+  `/compact` itself is a real CLI built-in (unlike `/pre-compact`, a custom project Skill) and fires regardless, so the
+  actual context-clearing still happens — but the durability ritual this whole two-phase design exists to guarantee
+  (operator 2026-07-22, per the comment at line 343) can silently no-op fleet-wide, for Claude-backed workers exactly as
+  much as DeepSeek-backed ones, with zero signal in the logged `activity` row (`submitted=True` either way).
+- **What's confirmed vs. inferred**: confirmed — the exact failure mode, reproduced twice, with the missing-skill
+  confound explicitly ruled out, against this operator's local `claude` 1.0.112 install. Inferred, not yet confirmed —
+  that the production orchestrator VM's own pinned `claude` binary is on the same or a similarly pre-Skills version (not
+  checked directly this session; a lightweight VM-side version check is the new todo below).
+- **Correction to the earlier entry above**: that entry framed this as possibly "a DeepSeek reasoning gap specifically"
+  — it was not. The DeepSeek hard-task agent's shell-out-to-nested-`claude` fallback was a reasonable improvisation
+  given a structurally absent capability, not a model defect.
+- **Cost**: this isolation pass used two single-turn introspection sessions plus manual pane typing (no multi-step
+  tasks) — DeepSeek balance $4.93 → $4.92 (~$0.01), confirmed via `GET /user/balance` before and after.
+
 ## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
 
 Operator shared an external "AI Compute Optimisation Strategy" doc (generic, not written for this fleet) proposing 7→2
@@ -796,16 +838,36 @@ default from an external reference.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Touches
   agent-orchestrator's own live routing/billing/credential infra; repeated dated operator holds + 2 documented real
   safety incidents from testing this code; highest-stakes remaining items need operator-supervised rollout.
-- [ ] [REVIEW] P2. Investigate whether DeepSeek-backed sessions can invoke Claude Code Skills (e.g. `/pre-compact`) at
-      all — a 2026-08-04 sandboxed pilot found a DeepSeek worker asked to invoke `/pre-compact` had no working mechanism
-      to do so (attempted a nested `claude` subprocess shell-out instead, which hung on the missing TTY), and fell back
-      to describing the skill from general knowledge rather than running it. Matters because Tier 1/2
-      `context_lifecycle.py` proactive-compact guidance assumes the agent can act on a `/pre-compact` → `/compact` nudge
-      — if DeepSeek workers structurally can't, long-running DeepSeek main/review-loop agents may silently accumulate
-      context forever with no working escape hatch. Done when: confirmed whether the Skill-invocation path is exposed to
-      tmux-spawned interactive sessions at all (Claude-backed or DeepSeek-backed — isolate which side the gap is on),
-      and if it is, why the DeepSeek session didn't find/use it. See Progress Log 2026-08-04 (later entry) for the full
-      pilot writeup.
+- [x] [REVIEW] P2. ✅ Investigate whether DeepSeek-backed sessions can invoke Claude Code Skills (e.g. `/pre-compact`)
+      at all — **isolated and root-caused 2026-08-04 (same-day follow-up); this is NOT a DeepSeek-specific gap.** Two
+      live `tmux_spawn.spawn()` control sessions (one on the real `sub-a-ikenna` Anthropic account, one on
+      `deepseek-v4-pro`, identical harness/cwd/prompt) reported the byte-identical 15-tool list — no `Skill` tool on
+      EITHER backend. Typing the literal `/pre-compact` into the idle Claude-backed session's pane (the exact
+      `tmux_spawn.submit_to_pane` mechanism `context_lifecycle.py:349` uses in production) returned
+      `Unknown slash command: pre-compact` even after copying the real `.claude/skills/pre-compact/SKILL.md` straight
+      into the sandbox cwd — ruling out "missing project skill file" as the cause. `claude --version` on this machine's
+      spawn binary is **1.0.112**, and its own `/help` output lists zero Skills-related commands/infra — a CLI build
+      that predates the Skills feature entirely (workers run `DISABLE_AUTOUPDATER=1` by design, so a fleet install stays
+      pinned wherever it was provisioned). **Production impact, confirmed by reading the code, not just inferring**:
+      `context_lifecycle.py:349`'s two-phase force path (`submit_to_pane(session, "/pre-compact")` then `/compact`) only
+      checks whether the text left the input box — identical `submitted=True` whether the skill actually ran or the CLI
+      silently answered "Unknown slash command." `/compact` (a real CLI built-in) still fires right after, so the
+      compaction itself proceeds — but the durability ritual that's supposed to run first (the entire reason this
+      two-phase design exists, operator 2026-07-22) can silently no-op fleet-wide, for Claude-backed AND DeepSeek-backed
+      workers alike, with no signal anywhere that it happened. Not yet confirmed: whether the ACTUAL production VM's
+      pinned `claude` binary is on the same pre-Skills version (this was reproduced against this operator's local
+      homebrew install, not the VM) — that's the one remaining unknown, tracked in the new todo directly below. See
+      Progress Log 2026-08-04 (later, later entry) for the full isolation writeup.
+- [ ] [INFRA] P1. **Confirm whether the production orchestrator VM's pinned `claude` CLI binary supports Skills at
+      all**, and if not, fix `context_lifecycle.py`'s forced `/pre-compact` path so it can tell the difference between
+      "skill ran" and "Unknown slash command" silently swallowed. Follows directly from the finding above (todo
+      immediately preceding this one) — that finding was reproduced against this operator's local `claude` 1.0.112
+      (pre-Skills), not the VM itself. Done when: (a) the VM's actual `claude --version` (or equivalent evidence, e.g. a
+      real forced-precompact pane capture showing either skill content loading or "Unknown slash command") is checked
+      and recorded, (b) if pre-Skills confirmed, either the fleet's pinned npm install is bumped to a Skills-supporting
+      version OR `context_lifecycle.py`'s `submitted` check is hardened to detect the "Unknown slash command" pane text
+      and fall back / alert instead of silently proceeding straight to `/compact`, and (c) a dated Progress Log entry
+      shows the fix verified against a real forced-precompact cycle, not just unit-tested.
 
 ### Phase 2 todos (2026-07-30, added — none of the above touched or re-ordered)
 
