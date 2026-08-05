@@ -272,11 +272,35 @@ jobs:
       QG_GOVERNOR_MODE: ${{ inputs.self_hosted_runner_labels != '' && 'reservation' || 'token' }}
       QG_GOVERNOR_REPO: ${{ github.event.repository.name }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
-          fetch-depth: 2
+      # Fast-path aware checkout (repo-clone I/O reduction, ci_pipeline_speed_and_cost_redesign_
+      # 2026_08_05.md): on a self-hosted runner whose pool has a fresh, cron-refreshed local
+      # mirror (RUNNER_BASE/repo — maintained by refresh-slot-repo.sh regardless of this change),
+      # fast-checkout.sh hardlink-copies it instead of a cold ~1.7GB network clone. Falls back to
+      # a plain clone (byte-identical to the old `actions/checkout@v4` step, same fetch-depth: 2)
+      # for EVERY case where the fast path isn't safe: GitHub-hosted ubuntu-latest (no
+      # RUNNER_BASE/script at all — this is the common case fleet-wide today), a runner pool
+      # whose script hasn't been deployed yet, a missing/stale mirror, or any fetch/checkout
+      # failure inside the script itself (it self-verifies HEAD before declaring success). No
+      # caller is worse off than before; only a canaried subset of pools benefit until this rolls
+      # out further.
+      - name: Checkout (fast-path aware)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SCRIPT="${RUNNER_BASE:-/opt/github-glue-runners}/fast-checkout.sh"
+          if [ -f "${SCRIPT}" ]; then
+            bash "${SCRIPT}" "${GITHUB_WORKSPACE}"
+          else
+            echo "no fast-checkout.sh on this runner (GH-hosted, or not yet deployed to this pool) -- plain clone"
+            rm -rf "${GITHUB_WORKSPACE}"
+            git clone --quiet --no-checkout "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_WORKSPACE}"
+            git -C "${GITHUB_WORKSPACE}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
+            git -C "${GITHUB_WORKSPACE}" checkout --force --quiet "${GITHUB_SHA}"
+            BASIC_AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0 2>/dev/null || printf 'x-access-token:%s' "${GH_TOKEN}" | base64)"
+            git -C "${GITHUB_WORKSPACE}" config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic ${BASIC_AUTH}"
+          fi
 
       - name: Detect metadata-only / docs-only changeset (fast-paths)
         # metadata-only (push/dispatch): a bot metadata commit whose entire diff is confined to a
