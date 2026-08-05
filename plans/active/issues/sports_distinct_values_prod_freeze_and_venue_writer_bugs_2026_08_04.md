@@ -64,7 +64,7 @@ related:
   ]
 created: "2026-08-04"
 author: unknown
-last_updated: "2026-08-04"
+last_updated: "2026-08-05"
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -135,7 +135,20 @@ just never added to the distinct-values accepted-exceptions set). Added to
   writer computed `bm_str = bm_raw.upper()` directly — bypassing the already-existing `SPORTS_VENUE_FOLD` dict
   (`{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}`) that two SIBLING writers (`odds_api_adapter.py`,
   `odds_api_ws.py`) already correctly apply. Fixed to `SPORTS_VENUE_FOLD.get(bm_raw, bm_raw).upper()`
-  (`market-tick-data-service@edfa0615`).
+  (`market-tick-data-service@edfa0615`). **CORRECTION (2026-08-05, this doc's own earlier text was wrong)**: this is NOT
+  a narrow "written between 2026-07-27 and today" delta — a direct manifest census
+  (`scripts/sports/census_track_c_venue_restamp_targets_2026_07_27.py`) shows LADBROKES_UK spans 990 distinct dates
+  (2023-03-31..2026-07-26) and SPORT888 spans 1,824 distinct dates (2020-06-06..2026-07-26), i.e. essentially the SAME
+  historical range as the ORIGINAL pre-2026-07-27 backlog that `restamp_sports_bookmaker_venue_2026_07_27.py` +
+  `manifest_swap_venue_restamp_2026_07_27.py` already fixed once (that closeout's own numbers: 24,268+37,722 GCS objects
+  / 8,859+13,997 manifest rows, verified 0 stale rows 2026-07-27). Today's counts (12,164 / 18,882 manifest shards) are
+  HIGHER than that closeout's manifest-row counts — the most likely explanation is a full historical
+  backfill/reprocessing job re-ran across the whole date range SOMETIME AFTER 2026-07-27 using the still-broken
+  `venue_fetch.py`, re-polluting the entire range the July closeout had just cleaned. No currently-RUNNING VM was found
+  repeating this (checked 2026-08-05: only the live producer was active), so this is a closed, bounded backlog to
+  re-stamp, not an actively-growing one — but it is the FULL historical range, not a 1-2 day window. The candle-shape
+  sibling data (arbitrage_opportunity/odds_movement/ odds_snapshot/odds_horizon_bucket) for both venues is confirmed
+  CLEAN (0 residual, 2026-08-05 fresh rollup read) — only the raw-tick shape needs the re-stamp.
 - `FOOTBALL` (all `attempted_failed`, 0 captured — 75 odds_movement + 69 arbitrage_opportunity + 50 odds_snapshot = 194
   rows, no real GCS objects at risk): `market-data-processing-service/app/core/live_workers.py`'s
   `_eager_preprocess_and_recover_metadata` did `input_venue = instrument_id.split(":")[0]` unconditionally — correct for
@@ -155,32 +168,88 @@ confirming before scoping a re-stamp for it.
 - `unified-api-contracts@cb545bef` — 5 accepted-exception values.
 - `market-tick-data-service@edfa0615` — `venue_fetch.py` SPORTS_VENUE_FOLD fix.
 - `market-data-processing-service@595a1ff` — `live_workers.py` `_venue_token_from_canonical_id` fix.
-- `unified-trading-pm@d211c01be` — QG baseline line-pointer correction (unrelated 1-line shift from the MTDS fix).
+- `unified-trading-pm@d211c01be` — QG baseline line-pointer correction (unrelated 1-line shift from the MTDS fix; since
+  superseded/removed cleanly by `unified-trading-pm` slot-12's real fix to the underlying call site, 2026-08-05 — no
+  action needed, noted for the record only).
 - `uts-shared-deployment-api` — fresh build + deploy, live traffic confirmed on `uts-prd-sa` + today's code.
-- Fresh honest-coverage rollup triggered (`honest-coverage-daily-launcher` execution
-  `honest-coverage-daily-launcher- bcvlr`) — VM `measure-honest-coverage-20260804-110554` running at write time; verify
-  `gs://central-element-323112- honest-coverage/2026-08-04/coverage.json`'s `generated_at` advanced past `09:38:21Z`
-  before trusting a fresh panel read.
+- Fresh honest-coverage rollup triggered same day (2026-08-04) — **confirmed 2026-08-05**: `generated_at` has advanced
+  every day since (most recently `2026-08-05T14:42:13Z`), panel stable at venues 3/13, instrument_types 0/0, data_types
+  0/0 for a full 24h+ with zero regression — the code fixes are holding correctly in production.
+- **2026-08-05**: found the live capture VM (`mtds-live-sports-odds-api-trades-20260803-172841`, running continuously
+  since 2026-08-03, i.e. BEFORE this session's `venue_fetch.py` fix) was still executing pre-fix code and would have
+  kept writing new LADBROKES_UK/SPORT888 rows indefinitely. Stopped it and relaunched via
+  `deployment-service/scripts/vm/launch-mtds-live.sh` with its exact original parameters (read from its own instance
+  metadata:
+  `--asset-group sports --shard-spec sports:ODDS_API:trades --instrument-ids "ODDS_API:SPORT:soccer_epl;...5 leagues" --live-source native --env prod`)
+  — now running as `mtds-live-sports-odds-api-trades-20260804-131449`, confirmed picking up today's fix (see traps below
+  for the 2 real gotchas hit getting this right).
 
 ## Todos
 
-- [ ] [DATA] P2. Confirm the fresh honest-coverage rollup (triggered this session, VM
-      `measure-honest-coverage-     20260804-110554`) completed and re-read `/api/data-status/distinct-values/sports` —
-      expect venues 3/13 non-canonical (FOOTBALL/LADBROKES_UK/SPORT888 only), instrument_types 0, data_types 0. If
-      FOOTBALL has already dropped out on its own (writer fix let the previously-`attempted_failed` shards succeed on
-      retry), note that and skip the FOOTBALL half of the next todo. (repo: unified-trading-pm — verification only, no
-      code)
-- [ ] [DATA] P2. Historical re-stamp for LADBROKES_UK→LADBROKES / SPORT888→BET888SPORT (31,046 real captured rows,
-      `data_type=trades`): rename the GCS `venue=` path segment + manifest rows, mirroring the exact pattern already
-      used for this fold in `market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py`
-      (2026-07-27 precedent — extend/re-run it for the residual population this session's `venue_fetch.py` fix proves
-      was still being written after that script's original pass, i.e. everything captured between 2026-07-27 and today's
-      fix landing). >Few-hundred-object rename — heavy-I/O HARD RULE applies, run on a VM in-region, never locally.
-      Delete-safety: this is a RENAME (copy+delete of the same content under a corrected path), not a destructive delete
-      of unique data — still cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a before the delete
-      half. [OPERATOR] tag pending — confirm AO-dispatch vs human-run before executing (this doc currently
-      `assigned_vm: NA`; flip to `planning` if AO should pick this up). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Confirm FOOTBALL's 194 `attempted_failed` rows either cleared naturally (see first todo) or, if not,
-      scope why they're still failing post-fix (may be an unrelated failure cause, not just the venue mis-stamp) before
-      deciding whether they need a manifest phantom-row cleanup or are a separate live bug. (repo:
-      market-data-processing-service)
+- [x] ✅ [DATA] P2. Confirm the fresh honest-coverage rollup completed and re-read the live panel — **DONE,
+      2026-08-05**: confirmed venues 3/13 non-canonical (FOOTBALL/LADBROKES_UK/SPORT888 only, unchanged for 24h+),
+      instrument_types 0/0, data_types 0/0. FOOTBALL did **NOT** clear naturally — still present after a full day +
+      fresh rollup, so its own todo below stays open (the "may self-heal" hope in the original write-up did not pan
+      out).
+- [ ] [DATA] P1. Restart the live capture VM to verify the fix — **DONE, 2026-08-05** (see Shipped above) but leaving as
+      a checked-off record with the 2 traps hit, since the SAME traps will bite the next person who relaunches any
+      `mtds-live-*` VM after a code fix: 1. `launch-mtds-live.sh`'s tarball-freshness check is a WARN, not a hard block,
+      by default (`LC_TARBALL_FRESHNESS` unset) — it launched the VM anyway with a stale `market-tick-data-service`
+      tarball TWICE in a row (once because the local checkout had unrelated dirty test-artifact files that made
+      `create-code-tarballs.sh` skip the repo entirely with only a warning, no error; once because another slot pushed a
+      new LDR commit in the ~40s window between tarball-build and VM-launch, which the local `slot-cron-ff-pull`
+      auto-pulled). Neither is a bug in the launcher — but **this WARN-not-ENFORCE default is very plausibly HOW the
+      original bug persisted through multiple "fixed and closed" remediations**: a live producer can keep running
+      provably-stale/buggy code indefinitely with only an easy-to-miss WARNING, never an error. Worth a follow-up issue
+      doc proposing `LC_TARBALL_FRESHNESS=enforce` as the default for `mtds-live-*` relaunches specifically (live
+      producers, unlike batch/backfill VMs, run for weeks — a stale launch is not self-correcting). 2. **Near-miss**:
+      initially tried to reuse the OLD (now-stopped) VM by just `gcloud compute instances start`-ing it back up,
+      forgetting its `VM_MODE=live` startup-script re-runs on every boot (GCE startup-scripts are not one-shot) — this
+      would have created a SECOND concurrent live producer for the same shard, exactly the `mtds-live-{ag}-{shard}`
+      singleton-lock race the launcher's own docs warn about ("thrash on the WS feed + race on the Redis Stream consumer
+      group"). Caught and re-stopped within ~30-60s, before confirmed harm, but this is a real trap: a `mtds-live-*` VM
+      is stateful and its boot disk should never be casually restarted like a stateless one — always launch a genuinely
+      fresh instance via the launcher script instead.
+- [ ] [DATA] P2. Historical re-stamp for LADBROKES_UK→LADBROKES / SPORT888→BET888SPORT — **scope corrected 2026-08-05,
+      see Cause 3 above: this is the FULL historical range (990 / 1,824 distinct dates), not a narrow window.** Tools
+      already exist and are proven (0 failures in their original 2026-07-27 run) —
+      `market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py` (GCS content-rewrite;
+      **never deletes the source** — a pure additive read/transform/write to the new path, so no delete-safety-protocol
+      citation is actually needed for this half, correcting this doc's own earlier claim) then
+      `manifest_swap_venue_restamp_2026_07_27.py` (manifest CAS relabel, ADD+REMOVE — this half DOES touch the
+      manifest's own REMOVE path, mirror that script's existing safety shape, not a fresh design). Exact day-lists for
+      `--days-file` were extracted once (2026-08-04, via
+      `scripts/sports/census_track_c_venue_restamp_targets_2026_07_27.py` filtered to
+      `pipeline_mode=batch_odds_api & capture_status=captured`) but lived only in this session's scratchpad, which did
+      not survive a session interruption — cheap to regenerate (the census script run takes seconds; see reproduction
+      command below). Given the object count (comparable to the original 24,268+37,722-object migration), this is
+      a >few-hundred-object operation — heavy-I/O HARD RULE applies, must run on a VM in-region, never from a local
+      session. No ready-made VM launcher exists for this specific one-off script (the existing `mtds-live-*`/
+      `mtds-backfill-*` launchers are for the MTDS CLI's own task dispatch, not for running an arbitrary standalone
+      script) — needs either a minimal generic VM + SSH, or a small wrapper launcher. [OPERATOR] tag pending — confirm
+      AO-dispatch vs human-run before executing (this doc currently `assigned_vm: NA`; flip to `planning` if AO should
+      pick this up). Reproduction for the day-lists:
+      `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python3 scripts/sports/census_track_c_venue_restamp_targets_2026_07_27.py`
+      then filter its `read_availability_index` output by venue/pipeline_mode/capture_status as above. (repo:
+      market-tick-data-service)
+- [ ] [DATA] P3. Confirm FOOTBALL's 194 `attempted_failed` rows either clear naturally on a future retry or, if not
+      after another few days, scope why they're still failing post-fix (may be an unrelated failure cause, not just the
+      venue mis-stamp) before deciding whether they need a manifest phantom-row cleanup or are a separate live bug.
+      **Still open as of 2026-08-05** (confirmed NOT self-healed after 24h+). (repo: market-data-processing-service)
+- [ ] [INFRA] P3. File (or fold into an existing infra doc) a proposal to default `mtds-live-*` VM relaunches to
+      `LC_TARBALL_FRESHNESS=enforce` — see the trap noted in the VM-restart todo above; a live producer silently running
+      stale code for days-to-weeks is a plausible root cause worth closing off generally, not just patching for this one
+      incident. (repo: deployment-service)
+
+## Progress Log
+
+- **2026-08-04 (interactive session)**: shipped all 3 code fixes + fresh deploy + fresh rollup (see Shipped above).
+  Session interrupted mid-scoping of the historical re-stamp (checkpoint before any GCS/manifest writes were made —
+  nothing partial was left in a bad state).
+- **2026-08-05 (interactive session, same operator, continued after a ~26h gap)**: re-verified all 2026-08-04 fixes live
+  and stable (traffic, live VM, panel all unchanged/correct — zero regression over 24h+). Ran the manifest census for
+  LADBROKES_UK/SPORT888 and found the earlier session's "narrow recent window" assumption was wrong — corrected above.
+  Found + fixed the live capture VM still running pre-fix code (restarted, 2 tarball-freshness traps hit and worked
+  around, documented as a follow-up todo). Extracted `--days-file` day-lists for the re-stamp but did not yet execute it
+  (no ready VM launcher for this specific script; needs the minimal-VM-+-SSH path scoped in the todo above) — session
+  paused here for a `/pre-compact` checkpoint before continuing.
