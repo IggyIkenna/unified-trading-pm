@@ -279,21 +279,10 @@ jobs:
           fetch-depth: 2
 
       - name: Detect metadata-only / docs-only changeset (fast-paths)
-        # metadata-only (push/dispatch): a bot metadata commit whose entire diff is confined to a
-        # known-safe file set for its exact message needs NO gate work:
-        #   chore(release): bump version to X            (semver-agent — pyproject.toml/uv.lock only)
-        #   chore(deps): pin X to Y[...]                  (dependency-update dep pin — pyproject.toml/
-        #                                                  uv.lock, PLUS Dockerfile(s) when a digest
-        #                                                  refresh rides the same commit)
-        #   chore(deps): refresh base-image digest pin    (dependency-update digest-only path — bot
-        #   (ARG BASE_IMAGE_DIGEST)                        commit touching ONLY Dockerfile(s), no
-        #                                                  pyproject/uv.lock change)
-        # The digest-only case (added 2026-08-05) previously fell through to the full gate on every
-        # UTL base-image republish fleet-wide — a single-line ARG bump can't change Python/TS
-        # behaviour, so it gets the same message+changed-file-set trust level pyproject.toml/uv.lock
-        # already have (no author check, consistent with the existing cases). This is the same
-        # commit shape whose Dockerfile-only diff caused agent-orchestrator PR #783's conflict.
-        # SSOT: plans/active/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md.
+        # metadata-only (push/dispatch): a bot metadata commit whose entire diff is
+        # pyproject.toml / uv.lock needs NO gate work:
+        #   chore(release): bump version to X   (semver-agent — version line)
+        #   chore(deps): pin X to Y             (dependency-update minor/patch — dep pin line)
         # Short-circuit every leg to GREEN in seconds (the commit only needs a check to ride the
         # staging→main promotion PR whose HEAD is this commit). SSOT: plan
         # semver_version_bump_skip_ci_promotion_block.
@@ -335,17 +324,10 @@ jobs:
             fi
             MSG="$(git log -1 --format=%s HEAD)"
             CHANGED="$(git diff --no-renames --name-only "${BEFORE}" HEAD)"
-            # Allowed changed-file set is PER message shape — a plain version bump / dep pin never
-            # legitimately touches a Dockerfile, so widening the allow-list only for the shapes that
-            # actually can (dep pin possibly riding a digest refresh; a pure digest refresh) keeps
-            # each case as narrow as the commit that produces it.
-            ALLOWED='^(pyproject\.toml|uv\.lock)$'
             case "${MSG}" in
-              "chore(release): bump version to "*) META=true ;;
-              "chore(deps): pin "*) META=true; ALLOWED='^(pyproject\.toml|uv\.lock|Dockerfile|Dockerfile\..*)$' ;;
-              "chore(deps): refresh base-image digest pin (ARG BASE_IMAGE_DIGEST)") META=true; ALLOWED='^(Dockerfile|Dockerfile\..*)$' ;;
+              "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
             esac
-            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE "${ALLOWED}" || true)"
+            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
             { [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; } || META=false
           fi
           DOCS_ONLY=false
@@ -927,15 +909,10 @@ jobs:
             fi
             MSG="$(git log -1 --format=%s HEAD)"
             CHANGED="$(git diff --no-renames --name-only "${BEFORE}" HEAD)"
-            # Mirror of the slice vcheck's per-message allow-list (2026-08-05) — MUST stay
-            # logic-identical, see that copy's comment for rationale.
-            ALLOWED='^(pyproject\.toml|uv\.lock)$'
             case "${MSG}" in
-              "chore(release): bump version to "*) META=true ;;
-              "chore(deps): pin "*) META=true; ALLOWED='^(pyproject\.toml|uv\.lock|Dockerfile|Dockerfile\..*)$' ;;
-              "chore(deps): refresh base-image digest pin (ARG BASE_IMAGE_DIGEST)") META=true; ALLOWED='^(Dockerfile|Dockerfile\..*)$' ;;
+              "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
             esac
-            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE "${ALLOWED}" || true)"
+            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
             { [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; } || META=false
           fi
           DOCS_ONLY=false
