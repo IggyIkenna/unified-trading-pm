@@ -138,7 +138,7 @@ for the 5 missing protocols). Finding C is a separate, lower-priority wiring ite
 ## Todos
 
 - [x] ✅ [DATA] P2. Add `lst_rates` to KELPDAO PROTOCOL_CAPABILITIES data_types — unified-api-contracts@881faded
-- [ ] [DATA] P2. Add `lst_rates` to RENZO PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
+- [x] ✅ [DATA] P2. Add `lst_rates` to RENZO PROTOCOL_CAPABILITIES data_types — unified-api-contracts@27b7881a
 - [ ] [DATA] P2. Add `lst_rates` to BEEFY PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
 - [ ] [DATA] P2. Add `lst_rates` to IDLE PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
 - [ ] [DATA] P2. Add `lst_rates` to PENDLE PROTOCOL_CAPABILITIES data_types (repo: unified-api-contracts)
