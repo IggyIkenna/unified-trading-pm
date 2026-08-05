@@ -804,7 +804,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   Drafted
   [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
   (14 conflict-cleared todos) +
-  [its finalize](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md), **both
+  [its finalize](/plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md), **both
   `status: draft` pending operator approval — neither is dispatched.** Three measured corrections landed directly rather
   than being left for a worker to trip over: (1) Track 19's
   `data_pipeline_self_healing_completion_residual_2026_07_24.md` claimed the dp-audit OOM fix was "ALREADY APPLIED to
