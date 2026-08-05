@@ -287,7 +287,7 @@ ground to open up, and it did:
       unrelated IAM gap on `commodity-signals-batch`, now fixed: `storage.objectCreator`→`uts-prd-sa`); 3) full success:
       `4/4 succeeded`, `DEPLOYMENT_COMPLETED exit_code=0` on `features-commodity-tradfi-20260805-000243`. **Verdict:**
       `features-service@d06919bf` resolves the issue — EIA/CFTC/Baker Hughes all respond normally from a GCP VM. Issue
-      doc both checkboxes flipped, status→resolved. — `unified-trading-pm@<sha>`
+      doc both checkboxes flipped, status→resolved. — `unified-trading-pm@bc13f1c94`
 
 - [ ] [DATA] P3. **Spot-check the TRADFI:volatility test-bucket parquet/manifest for concurrent-write corruption.**
       Check the written TRADFI:volatility parquet/manifest for the 2026-01-29..2026-01-30 window (test bucket
