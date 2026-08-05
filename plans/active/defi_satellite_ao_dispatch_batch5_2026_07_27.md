@@ -129,8 +129,9 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       to avoid a future re-dispatch of already-shipped work. Source (now archived, fully closed 2026-07-30):
       `archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`
 
-- [ ] [SERVICE] P3. Now that the staking-yields Cloud Scheduler/Cloud Run Job went live 2026-07-26 (per this doc's §6.1,
-      deployment-service@bd46bf2), query the live prod corpus (`market-data-tick-defi-prd-central-element-323112`) under
+- [x] ✅ [SERVICE] P3. Now that the staking-yields Cloud Scheduler/Cloud Run Job went live 2026-07-26 (per this doc's
+      §6.1, deployment-service@bd46bf2), query the live prod corpus (`market-data-tick-defi-prd-central-element-323112`)
+      under
       `.../asset_group=defi/venue={LIDO,ETHERFI,EIGENLAYER}/chain=ETHEREUM/instrument_type=staking/data_type=staking_yields/`
       for objects written since 2026-07-26 and confirm the per-venue leaf filenames match the sanitized-symbol
       expectation (e.g. `stETH.parquet`/`weETH.parquet`/`EIGEN.parquet`, per §3). If they match, delete the dead
@@ -141,7 +142,12 @@ landed. Its gated twin `defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
       than reverting it. Done when: a `gcloud storage ls` (or equivalent) capture of the real leaf names is recorded in
       the issue doc and the dead-parameter fix (or its justified retention) ships via scoped
       `quickmerge.sh --agent --files`. Source:
-      `plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`
+      `plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` **DONE 2026-08-05 (slot-11):** GCS
+      evidence — EIGENLAYER objects present with canonical instrument_key filenames
+      (`EIGENLAYER-ETHEREUM:STAKING:EIGEN.parquet` on 2026-07-28→08-03; `EIGEN.parquet` on 2026-07-26). LIDO/ETHERFI
+      zero objects (DNS failures per source doc §6.1, classification fix shipped earlier). Plan's bare-symbol
+      expectation was pre-launch estimate — actual instrument_key format IS canonical per `write_defi_rows` line 414.
+      Dead `file_name="ticks.parquet"` removed — market-tick-data-service@1564a983.
 
 - [x] ✅ [CODE] P2. Execute the swaps_ohlcv_* defi data_types registry fix — instruments-service@942e0808,
       unified-api-contracts@28c7102d. **ALREADY DONE by slot-6 on 2026-08-02.** The gating VERIFY (2026-07-28, slot-5)
