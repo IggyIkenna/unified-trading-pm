@@ -45,7 +45,7 @@ related:
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-29"
+last_updated: "2026-08-05"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -192,25 +192,25 @@ context_scope:
       the todo's own "if genuinely different, do not purge" branch.
 
       **UPDATE 2026-08-03 — items 1+2 resolved, figures now authoritative (see
-                                              `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
+                                                  `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
 
-                                              **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
-                                              authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
-                                              `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
-                                              full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
-                                              ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
-                                              `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
-                                              same cut.
+                                                  **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
+                                                  authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
+                                                  `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
+                                                  full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
+                                                  ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
+                                                  `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
+                                                  same cut.
 
-                                              **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
-                                              does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
-                                              `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
-                                              raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
-                                              non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
-                                              10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
-                                              intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
-                                              `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
-                                              `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
+                                                  **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
+                                                  does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
+                                                  `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
+                                                  raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
+                                                  non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
+                                                  10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
+                                                  intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
+                                                  `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
+                                                  `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
 
 - [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
       fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
@@ -418,12 +418,22 @@ context_scope:
   (`sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`, now archived,
   `status: resolved`) shows `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` aligned to `PER_DAY_PER_LEAGUE`,
   `resolved_by: unified-api-contracts@b73c95d5` (2026-07-25).
-- [ ] [DATA] P3. **UNBLOCKED 2026-07-28** — sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check. The parent's Track
-      V K1/K2 legacy-object DELETE has landed and is verified complete (`sports_consolidated_closeout_2026_07_19.md`
-      Track V K1/K2 todo, `market-tick-data-service@26201c44`, 345,852/345,852 deleted, 0 failed). Not a live defect
-      (the 87.2% ratio spike is a K1/K2 denominator-shrink artifact on already-dead residue, not a new outage) — this is
-      now the actionable re-check. Filed: `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service,
-      read-only). **Done when**: a fresh ratio check confirms the spike resolves as predicted.
+- [x] ✅ [DATA] P3. **UNBLOCKED 2026-07-28** — sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check. The parent's
+      Track V K1/K2 legacy-object DELETE has landed and is verified complete
+      (`sports_consolidated_closeout_2026_07_19.md` Track V K1/K2 todo, `market-tick-data-service@26201c44`,
+      345,852/345,852 deleted, 0 failed). Not a live defect (the 87.2% ratio spike is a K1/K2 denominator-shrink
+      artifact on already-dead residue, not a new outage) — this is now the actionable re-check. Filed:
+      `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service, read-only). **Done when**: a fresh
+      ratio check confirms the spike resolves as predicted. — **DONE 2026-08-05 (slot-4, data_engineering): spike
+      resolved as predicted.** Fresh live ratio check against the consolidated
+      `market-data-tick-sports-prd-central-element-323112` `_index/availability_index.parquet` (614,477 rows;
+      single-file column-pruned read `[capture_status, data_type, attempted_at]` mirroring
+      `meta_watchers._read_attempted_failed_cells` — no corpus walk): `data_type="trades"` now reads **captured=375,257,
+      attempted_failed=0, empty_confirmed=20,818 → ratio 0.00%** (was 87.2% = 58,016/66,545 on 2026-07-23). The 58,016
+      dead-residue `attempted_failed` rows are fully gone (0 remain, no `max_attempted_at`), the genuine `captured`
+      population is back on the lowercase axis (375,257 vs 8,529 on 07-23), and no uppercase `TRADES` twin remains in
+      the index. 0.00% is far below the 10% `ATTEMPTED_FAILED_RATIO_THRESHOLD` — no new alert, no code change needed
+      (read-only check per the todo).
 - **[DOC] P2.** `sports_features_layer_findings_sweep_2026_07_18.md` is NOT closed by this plan or by the parent
   closeout — 73 open todos there are the features-layer correctness backlog, deliberately not duplicated here (too large
   to fold in). Do not treat sports feature-layer correctness as done when this closeout or this child archives; that doc
@@ -474,3 +484,12 @@ context_scope:
   — VM `fts-backfill-20260805-045644` is still RUNNING (at day ~2020-06-10 of ~2,251, ~7h elapsed). Declining via GATED
   — features-recompute prerequisite not met. ML-readiness check results captured here so the next dispatch doesn't
   re-derive them.
+- **2026-08-05 (slot-4, data_engineering)** — P3 sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check: flipped
+  checkbox. Ran the fresh ratio check (see the flipped todo for full numbers): live read of
+  `market-data-tick-sports-prd-central-element-323112` `_index/availability_index.parquet` (614,477 rows, single-file
+  column-pruned read `[capture_status, data_type, attempted_at]`, memory-bounded via `run-bounded-analysis.sh` — the
+  index was 18 MiB / ~61% smaller than the 07-23 measurement, consistent with the K1/K2 DELETE removing the uppercase
+  twin + the 07-23 `source=api_football` wipe). `data_type="trades"`: **captured=375,257, attempted_failed=0,
+  empty_confirmed=20,818, ratio=0.00%** — the 87.2% spike resolved as predicted; no code change needed (read-only per
+  the todo). Also ack'd the operator's shared-host OOM directive: no subprocess launched by this session was OOM-killed
+  (only the bounded index read); heavy corpus-scale work stays on VMs / bounded wrappers per RULES.md § 1.
