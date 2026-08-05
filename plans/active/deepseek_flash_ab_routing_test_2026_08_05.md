@@ -205,17 +205,28 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `deepseek-v4-flash` 23 lifetime tasks / `null_spend=0`; `deepseek_message_usage` remaining `null_spend=0`. Fully
       repaired — every DeepSeek task_usage row and every message-ledger row now has a real, non-null spend_usd. Script
       deleted per its own `Lifecycle:` contract (0 remaining confirmed before delete) — `agent-orchestrator@433ab46`.
-- [ ] 17. [UI] P3. **Fleet table's `MODEL·OP` badge is misleading for DeepSeek-routed slots** — operator finding
+- [x] 17a. ✅ [UI] P3. **Fleet table's `MODEL·OP` badge is misleading for DeepSeek-routed slots** — operator finding
       (2026-08-05, screenshot review): the badge shows the Claude Code harness's own model TIER (e.g. "sonnet", from
       `model_tier.py`) next to the `DEEPSEEK` provider pill, which reads as "DeepSeek's Sonnet" — not a real thing.
       Confirmed live: a `slot_boot` event for a slot actually assigned to `deepseek-v4-flash` recorded
       `"model": "sonnet"` — the tier label carries no information about which DeepSeek variant is actually serving the
       request, and pro-vs-flash doesn't surface ANYWHERE on the Fleet table today (only in the Accounts/Task-Usage
-      panels via account_id/model filters). Two sub-asks: (a) show the real DeepSeek variant (pro/flash) on
-      DeepSeek-routed rows instead of/alongside the harness tier; (b) verify whether the `thinking: on/off` field is
-      even meaningful for a DeepSeek-routed worker (it's the Claude Code CLI's own flag, echoed regardless of provider —
-      unconfirmed whether DeepSeek's API honors it or silently ignores it) and label it honestly either way. Not started
-      — real remaining work, separate UI surface from todo 14's usage-panel changes.
+      panels via account_id/model filters). Split into two sub-asks; **(a) done this entry**: show the real DeepSeek
+      variant (pro/flash) on DeepSeek-routed rows INSTEAD of the harness tier — new `SlotView.deepseek_variant`
+      (`server/models/slots.py`), resolved server-side in `_slot_to_view` from a `variants_by_account` lookup built once
+      per `/api/state` request (same pattern as the existing `providers_by_account`), `AccountDef.variant` defaulting to
+      `"pro"` when unset. `ModelBadge` (`layout.tsx`, both Fleet table + card view call sites) renders `deepseekVariant`
+      instead of `model` when `provider === "deepseek"`, with a tooltip explaining why. Done-when: backend unit tests +
+      a live Playwright assertion the badge says "pro"/"flash", not "sonnet". — `agent-orchestrator@2941e88`; 6 new
+      pytest (`test_slot_view_deepseek_variant.py`), 1 new Playwright test extending `provider-badge.spec.ts`,
+      tsc/vitest clean, full QG green; deployed live (`i-0c9b283b31d6b5ca7`, `HEAD=2941e88`,
+      `systemctl is-active`→`active` — the `sudo -u ubuntu systemctl restart` step in `ao-self-pull.sh` failed under
+      SSM's root session AGAIN, same as todo 6/16's deploys; had to restart as root directly a second time).
+- [ ] 17b. [UI] P3. **Verify whether `thinking: on/off` is even meaningful for a DeepSeek-routed worker** — it's the
+      Claude Code CLI's own flag, echoed regardless of provider; unconfirmed whether DeepSeek's API actually honors it
+      or silently ignores it. Label the Fleet table's thinking-brain icon honestly either way once known. Not started —
+      needs real investigation (does DeepSeek's OpenAI/Anthropic-compatible endpoint accept/use a thinking param?), not
+      a guess.
 
 ## Codex SSOTs
 
