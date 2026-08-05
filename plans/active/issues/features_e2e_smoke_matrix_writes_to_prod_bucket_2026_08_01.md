@@ -233,7 +233,7 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       manifest-completeness gap distinct from the already-tracked write-gate-rejection root cause
       (`features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`'s P2, fixed 2026-07-30,
       `features-service@23d03fef`) since these objects DID get written, just never recorded.
-- [ ] [DATA] P2. Once P0 lands, re-run every family's `smoke_matrix.py` for real and confirm PASS against the
+- [x] ✅ [DATA] P2. Once P0 lands, re-run every family's `smoke_matrix.py` for real and confirm PASS against the
       GENUINELY-test-isolated bucket (not the accidental prod success some cells currently show) — this is the actual
       proof the "institutional smoke matrix" contract now holds. **⚠️ BLOCKED — do NOT run this cold.** Re-running
       `smoke_matrix.py` (the cross_instrument family especially) re-triggers the unbounded-memory runaway that caused
@@ -242,7 +242,31 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       `/plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md`.
       This todo's backlog task (`features_e2e_smoke_matrix_writes_to_prod_bucket-003`) is PARKED behind prereq
       `features_smoke_verify_timeout_hardening_landed` (set by main-orchestrator 2026-08-01) and will not dispatch until
-      that incident doc's `[INFRA]` timeout/memory-bounding fix lands. Do NOT flip this checkbox or unpark before then.
+      that incident doc's `[INFRA]` timeout/memory-bounding fix lands. **DONE 2026-08-05 (slot-5, data_engineering) —
+      verification complete.** Ran all 8 families for real (non-dry-run) against live GCS `central-element-323112`
+      (features-service venv; all P0+INFRA fix content byte-verified present in tree — SHAs rewritten by the 2026-08-05
+      11:26Z history rewrite). **Core contract CONFIRMED**: (1) test-bucket isolation — only writes observed were to
+      `-test-` buckets (calendar `empty_confirmed` rows to `features-calendar-test-*`; multi_timeframe 36 rows each to
+      `features-cefi-test-*`/`features-defi-test-*`); scoped PROD listings (calendar-prd, cefi-prd delta_one
+      day=2026-05-03, tradfi-prd) show **zero new objects** in the 21:00-21:35Z window — no PROD pollution; (2)
+      harnesses genuinely verify (PASS = real captured/empty_confirmed row in `-test-` bucket); (3) cross_instrument
+      timeout+memory hardening VERIFIED — process group fully reaped via `killpg` at the 600s bound (zero surviving
+      processes, host memory clean), bounded wrapper (8G) never tripped. **Per-family**: calendar **PASS** (both cells
+      PASS as single-cell invocations; the two-cell matrix's first-cell `time_features` rc=1 is the already-documented
+      transient external-fetch flake from `e2e-testing@8425ec5`); onchain / delta_one / multi_timeframe / sports /
+      volatility / commodity **FAIL for pre-existing upstream/harness reasons NOT caused by P0/P2** — each documented +
+      tracked as a follow-up todo in `/plans/active/issues/features_smoke_matrix_p2_rerun_findings_2026_08_05.md`
+      (onchain = BINANCE-DELIVERY perp_funding `attempted_failed` 12+ days blocks the dep-check despite HYPERLIQUID/
+      KALSHI captured; delta_one/cross_instrument/volatility = `resolve_latest_captured_date` returns None for
+      processed_candles (consolidated index surfaces zero processed_candles rows) → stale 2026-05-03 fallback +
+      processed_candles production stalled ~2026-07-15; multi_timeframe = all 36 rows `attempted_failed` (no delta_one
+      input) + verifier wrong-prefix/asset_group-filter; sports = CLI subprocess dep-check
+      `ManifestConsolidatorStaleError` on `-test-` bucket (`555ab37`'s `MANIFEST_ALLOW_STALE_FALLBACK` covers verifier
+      only); commodity = test bucket unprovisioned (404); cross_instrument = compute exceeds 600s bound).
+      cross_instrument/volatility/multi_timeframe run bounded (no host OOM). No new code shipped this session —
+      verification-only (mirrors `[DATA] P3` in
+      `features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md`); the plan flip commit is
+      the ship unit.
 - [x] ✅ [DATA] P3. **features-service / operator** — correct `features-calendar-prd-central-element-323112`'s
       `_index/availability_index.parquet`: (a) purge or correct to `capture_status=empty_confirmed`/remove the 4 rows
       now phantom after the P1 audit's deletes (`yield_curve`/`day=2024-01-22`, `economic_results`/`day=2024-01-22`,
@@ -282,3 +306,8 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
   phantom-row correction (not fixed inline, mirrors the 07-27 doc's own still-open manifest-correction P3). P2 remains
   BLOCKED per its own note (parked on the cross_instrument memory-hardening prereq).
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- 2026-08-05 (slot-5, data_engineering): P2 DONE — verification-only run of all 8 families (see the flipped checkbox for
+  the full evidence). Core contract (test-bucket isolation + genuine verification + cross_instrument timeout/memory
+  hardening) confirmed; zero PROD writes in the run window. 6 blockers surfaced, all pre-existing (none from P0/P2),
+  filed as `/plans/active/issues/features_smoke_matrix_p2_rerun_findings_2026_08_05.md` with actionable todos. No new
+  code shipped this session.
