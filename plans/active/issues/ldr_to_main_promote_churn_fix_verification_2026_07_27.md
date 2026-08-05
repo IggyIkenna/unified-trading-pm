@@ -21,7 +21,7 @@ summary: >
   stale land-mine and closes it on its next tick (~15-45min cadence) — so the churn window is bounded, not infinite, but
   every quickmerge ship that happens to find no such PR already open re-creates it, and the fleet ships constantly. This
   is the actual dominant churn source, not the bot mechanism I fixed earlier this session.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -49,7 +49,7 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
   ]
-resolved_by:
+resolved_by: 2026-08-05 verification (see Progress Log) — fix was already live, code + measurement confirm it
 depends_on: []
 ---
 
@@ -101,13 +101,23 @@ change mid-loop.
 
 ## Todos
 
-- [ ] [VERIFY] P1. Get operator confirmation, then remove quickmerge.sh's Option-B direct-PR-open step for PM
+- [x] ✅ [VERIFY] P1. Get operator confirmation, then remove quickmerge.sh's Option-B direct-PR-open step for PM
       (~scripts/quickmerge.sh lines 1784-1845) and replace with the same "land on LDR, exit, bot drains it" behavior
       every other repo already uses. Re-measure `quality-gates-v2` run count against a subsequent PM shipment window to
-      confirm the churn actually drops once quickmerge stops opening this PR.
-- [ ] [VERIFY] P2. Re-run this exact measurement (count `pull_request` `quality-gates-v2` runs on any open
+      confirm the churn actually drops once quickmerge stops opening this PR. **Already done** — read live
+      `scripts/quickmerge.sh` today (2026-08-05): the PM branch (~line 2137-2150) now prints "Option B: lands on LDR
+      trunk; ldr-to-main-promote.yml drains to main" and does NOT open a direct PR in the normal path — this IS the
+      proposed fix, already shipped. My own quickmerge run this session (docs(plans) commit, unified-trading-pm) printed
+      the confirming line live: "quickmerge stopped opening a competing direct PR here (churn fix, 2026-07-27)". So the
+      fix landed the SAME DAY this issue was filed; only the issue bookkeeping was never closed.
+- [x] ✅ [VERIFY] P2. Re-run this exact measurement (count `pull_request` `quality-gates-v2` runs on any open
       `head=live-defi-rollout, base=main` PR over a 45min window) after the fix ships, to get a genuine before/after
-      pair instead of a single-sided measurement.
+      pair instead of a single-sided measurement. **Done 2026-08-05**:
+      `gh pr list --repo IggyIkenna/unified-trading-pm     --state open` shows zero PRs with
+      `head=live-defi-rollout, base=main` (the churning shape) — the two open PRs target `base=live-defi-rollout`,
+      unrelated. `gh run list --workflow=quality-gates-v2.yml --limit 20`: 0 of the last 20 runs are `pull_request`
+      events on a `live-defi-rollout` head (vs. the 22-in-45min baseline this doc measured pre-fix). Churn confirmed
+      gone.
 
 ## na-eligibility-audit verdict
 
@@ -123,3 +133,15 @@ the E6 citation is real (grepped the archived batch2 doc directly) and found a f
 operator-gated; no RECLASSIFY candidate here.
 
 **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+
+## Progress Log
+
+- **2026-08-05**: found while investigating a fleet CI-capacity question — the two "operator-gated" todos above were
+  actually satisfied over a week ago. `scripts/quickmerge.sh`'s PM branch no longer opens a direct PR at all in the
+  normal path (confirmed by reading it live + my own quickmerge run this session printing the exact "churn fix,
+  2026-07-27" confirmation line) and a live measurement (0/20 recent `quality-gates-v2` runs on PM are `pull_request`
+  events on a `live-defi-rollout` head, 0 open churning-shape PRs) confirms the churn is gone. **Neither
+  na-eligibility-audit (2026-07-30, 2026-08-01) caught this — both re-confirmed "still operator-gated" without
+  re-checking the live code/measurement, just the doc's own stale todo text.** Marking resolved; both todos closed with
+  fresh evidence above. Worth a note for the audit process: KEEP-NA re-confirmations should spot-check the underlying
+  claim, not just the todo's phrasing, especially past ~1 week old.
