@@ -272,15 +272,19 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       then re-emit or directly correct the historical rows following the same snapshot-then-write, stop-on-surprise
       precedent as this doc's prior purges. — instruments-service@afdb1ad6 + market-tick-data-service@ce275975 +
       evidence in "Update 2026-08-03" below.
-- [ ] [DATA] P3. (found while fixing the todo above) **instruments-service** — audit `enumerate_expected_universe.py`'s
-      `_derive_pm_source_transport` for the SAME bug class (venue-blind `SOURCE_PRIORITY[0]` stamping) against every
-      OTHER `_VENUE_OVERRIDES` venue outside `asset_group="prediction"` (e.g. `tradfi` FRED/ECB/OFR/IBKR, `defi`
-      CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS) — spot-checked live 2026-08-03:
+- [x] ✅ [DATA] P3. (found while fixing the todo above) **instruments-service** — audit
+      `enumerate_expected_universe.py`'s `_derive_pm_source_transport` for the SAME bug class (venue-blind
+      `SOURCE_PRIORITY[0]` stamping) against every OTHER `_VENUE_OVERRIDES` venue outside `asset_group="prediction"`
+      (e.g. `tradfi` FRED/ECB/OFR/IBKR, `defi` CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS) — spot-checked live 2026-08-03:
       `_derive("tradfi", "ohlcv_1d", venue="IBKR")` currently returns `batch_fred`/`fred` (wrong — should be
       `batch_ibkr`/`ibkr` per the venue override), an untouched sibling instance of this exact defect, out of scope for
       this P2's prediction-only fix (rule-11 cross-AG verification not yet run for those asset_groups). Verify + fix at
       the source, then backstamp affected historical rows following this todo's
-      `restamp_prediction_kalshi_scaffold_     provenance_2026_08_03.py` precedent.
+      `restamp_prediction_kalshi_scaffold_     provenance_2026_08_03.py` precedent. — instruments-service@2b165597 + QG
+      green (5207 passed), generalized `if ag == "prediction" and venue` → `if venue` so ALL _VENUE_OVERRIDES venues
+      resolve correctly. Affected: tradfi (IBKR/ECB/OFR/YAHOO/EIA), cefi (HYPERLIQUID/ASTER/EXTENDED_STARKNET), defi
+      (CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS). 6 new unit tests + 5 regenerated golden fixtures. Backstamp of historical
+      rows is a follow-on data operation (per-asset_group restamp scripts per the Kalshi precedent).
 
 ## Update 2026-07-27 (slot-16) — combined residual-row diagnosis (batch2 todo): both sub-items already resolved, 0 rows to purge/backfill
 
