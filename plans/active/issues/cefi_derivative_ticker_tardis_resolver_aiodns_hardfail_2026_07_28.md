@@ -340,9 +340,10 @@ and the residual-KeyError defense-in-depth path.
       subject to the Tardis concurrency cap), which is infra craft (not data_engineering). The 6 symbols' date range
       spans ~2023-05-12 through 2026-07-28 (~3y, ~90 instrument-date shards). No code change needed (fix already
       shipped).
-- [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
-      `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) -- not investigated in either session, left open per both
-      sessions' scope discipline (small share of the fresh batch, ordinary-transient-looking).
+- [x] ✅ [DATA] P3. **DONE 2026-08-05 (slot-15 data_engineering) — investigated, no code change needed.** Small residual
+      tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
+      `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) — both signatures are static and already handled by
+      currently-shipped code going forward. See Progress Log for full investigation findings.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
@@ -568,3 +569,21 @@ and the residual-KeyError defense-in-depth path.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the now-superseded
   `tardis_concurrent_ip_lockout` background pointer for the two artifacts the new `[OPERATOR]` P1 todo (cycle the stuck
   live VM) actually needs: the launcher script to run and the VM-deletion-caution precedent doc it cites.
+- **2026-08-05 (slot-15 data_engineering, task `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-003`) —
+  investigated the residual ~262-row tails, both confirmed static, code already handles them going forward.**
+  **`UpstreamTimestampBiasError` on ASTER (~50 rows):** Fixed in `unified-api-contracts@4dfe960a` (2026-08-03) —
+  `classify_venue_error`'s `internal` fallback bucket now has an entry for `UpstreamTimestampBiasError` with
+  `ErrorAction.RETRY`, so any new occurrence is correctly classified. The ~50 historical ASTER rows predate this fix
+  (2026-07-28 batch). No new `UpstreamTimestampBiasError` rows observed in subsequent manifest reads. **No code change
+  needed** (fix already shipped, historical rows static). **`UNCLASSIFIED:404 GET https` on
+  BINANCE-FUTURES/BYBIT/DERIBIT (~122 rows originally, 10 in 2026-08-03 reading):** Traced through the Tardis download
+  paths. `tardis_csv_transport.py` (the CSV/batch download path used by `derivative_ticker`) already handles
+  `TardisHTTPError(404)` as honest absence (skip sentinel, lines 548-550 and 638-639). `tardis_stream_client.py` handles
+  HTTP 404 by returning empty bytes (lines 197-199). The `UNCLASSIFIED:404 GET https` error format does not match the
+  current `TardisHTTPError.__str__` format (`"Tardis HTTP 404"`), suggesting these rows were produced by a code path (or
+  code version) that no longer exists in the current tree — possibly a direct `aiohttp`/`httpx` error that escaped
+  before the Tardis-specific error wrapping was added, or an older error-string format. The decline from 122→10 rows
+  (2026-07-28→2026-08-03 readings) is consistent with the fix having shipped between the original batch and subsequent
+  sweeps. The 10 residual rows are likely from the stuck `mtds-live-cefi-consolidated-20260802-142543` VM (see
+  `[OPERATOR]` P1 above) running pre-fix code. **No code change needed** (current code handles 404 correctly; historical
+  rows will be retried by the next natural cefi backfill sweep, same disposition as the other P3 retry todos).
