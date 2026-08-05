@@ -22,7 +22,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/05-infrastructure/agent-orchestrator-api-host.md,
-    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
+    /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: "2026-08-05"
 last_updated: "2026-08-05"
@@ -257,9 +257,9 @@ Two follow-ups from that investigation:
 2. **Phase 4's AO-UI-only ruling (line ~208 below) is being partially reversed, same day, by direct operator instruction
    in the follow-up session**: kill/violation events should ALSO surface through deployment-api/ deployment-ui's
    existing resource-monitoring surfaces, not live only in AO's own world — tracked in
-   `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md` (+ gated finalize). This doc's own
-   Phase-4 checkbox text is left as-is (it accurately records what was decided AT THAT TIME) — this entry is the pointer
-   for a future reader who greps that line and would otherwise think AO-UI-only is still the standing decision.
+   `/plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md` (+ gated finalize). This doc's
+   own Phase-4 checkbox text is left as-is (it accurately records what was decided AT THAT TIME) — this entry is the
+   pointer for a future reader who greps that line and would otherwise think AO-UI-only is still the standing decision.
 
 ### 2026-08-05 (later session) — Phase 4 hardening
 

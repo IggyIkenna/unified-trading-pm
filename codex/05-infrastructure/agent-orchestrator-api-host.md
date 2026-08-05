@@ -21,7 +21,7 @@ related:
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/05-infrastructure/deployment-observability.md,
-    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
+    /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: 2026-05-30
 authoritative_for:
@@ -165,7 +165,7 @@ is fire-and-forget (does not block the enforcement loop) and streams into BigQue
 kill-status panel stays, but kill events are now ALSO visible in deployment-ui's per-VM resource-comparison page
 (`VmResourceComparison.tsx` expandable-row panel) via `GET /api/watchdog/kill-events`. Table schema:
 `ts TIMESTAMP, vm_name STRING, pid INT64, slot_id STRING, command STRING, reason STRING, rss_mb INT64, limit_mb INT64, pressure_level STRING, killed BOOL`.
-Full design: `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`; read path:
+Full design: `/plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md`; read path:
 `/codex/05-infrastructure/deployment-observability.md` § "Durable operational data — watchdog_kill_events".
 
 **Installation**: Bootstrap step 4.8 in `agent-orchestrator/scripts/bootstrap_vm.sh`. Self-healing liveness check in

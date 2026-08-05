@@ -27,7 +27,7 @@ related:
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
-    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
+    /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -617,9 +617,9 @@ TTL), `idle_spend` (daily rollup + per-resource idle rows), `reap_events` (one r
 `resource-watchdog.sh` via `POST /api/fleet/watchdog/kill-events` →
 `operational_data_writer.write_watchdog_kill_event()`; read via `GET /api/watchdog/kill-events` and deployment-ui's
 `VmResourceComparison.tsx` per-VM expandable-row panel; shipped 2026-08-05 per
-`/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`), `process_samples` (per-process category
-breakdown — worker_agent/orchestrator/ci/ao_plan_work/other — scoped to genuinely multi-tenant hosts only; **table
-exists, nothing publishes into it yet** as of 2026-07-27).
+`/plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md`), `process_samples` (per-process
+category breakdown — worker_agent/orchestrator/ci/ao_plan_work/other — scoped to genuinely multi-tenant hosts only;
+**table exists, nothing publishes into it yet** as of 2026-07-27).
 
 **Write path**: dedicated Pub/Sub topics (`resource-samples`, `run-ledger`) + NATIVE BigQuery subscriptions
 (`--use-table-schema --drop-unknown-fields`) — a flat JSON payload matching the target table's columns exactly,
@@ -642,7 +642,7 @@ columns). `unified_trading_library.lifecycle.daemon.HeartbeatDaemon` stays consu
 > `/codex/05-infrastructure/agent-orchestrator-api-host.md` § "Resource history sampler".
 >
 > **`watchdog_kill_events` is the first `deployment_operational_data` table with AO-host coverage** — shipped 2026-08-05
-> per `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`. The resource-watchdog
+> per `/plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md`. The resource-watchdog
 > (`resource-watchdog.sh`) dual-writes each kill event to both the AO-internal API (existing) and
 > `POST /api/fleet/watchdog/kill-events` (new), so kill events from the AO host now appear in this table and in
 > deployment-ui's `VmResourceComparison.tsx` per-VM panel. See `/codex/05-infrastructure/agent-orchestrator-api-host.md`
