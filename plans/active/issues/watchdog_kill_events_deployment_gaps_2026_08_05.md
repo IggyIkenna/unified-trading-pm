@@ -112,10 +112,10 @@ session).
 
 ## Todos
 
-- [ ] [INFRA] P2. Add `Environment=RW_DEPLOYMENT_API_URL=https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app` and
-      `Environment=RW_VM_NAME=ip-172-31-5-118` to
+- [x] ✅ [INFRA] P2. Add `Environment=RW_DEPLOYMENT_API_URL=https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app`
+      and `Environment=RW_VM_NAME=ip-172-31-5-118` to
       `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service` (repo unit file) so future
-      installs/deploys enable the dual-write. (repo: unified-trading-pm)
+      installs/deploys enable the dual-write. (repo: unified-trading-pm) — unified-trading-pm@7f324271b
 - [ ] [OPERATOR] P2. Update the LIVE unit `/etc/systemd/system/resource-watchdog.service` with the same two
       `Environment=` lines, then `systemctl daemon-reload && systemctl restart resource-watchdog`. Requires root (slot
       16 has no sudo). After restart, a real kill must produce a `killed=true` row in `watchdog_kill_events` (verify via
