@@ -140,9 +140,12 @@ at features-service@cc5c52b8). Left -004 checkbox `[ ]` — not false-completing
       whether the rows are stray/misclassified (remove/clean them or scope the gate's perp_funding probe to the venues
       the DEFI:onchain consumer actually reads, i.e. HYPERLIQUID per `perp_funding_rates_defi.py`) or a real capture gap
       (backfill), then re-verify the gate reopens on recent days. See finding 6 + Progress Log.
-- [ ] [DATA] P2. Sweep MDPS-input `kind="market-data"` sites in features-service to force `deployment_env="prod"` (repo:
-      features-service) — the 11 sites listed in What I found §2; mirror `resolve_mdps_candle_bucket`, add per-site
-      regression tests.
+- [x] ✅ [DATA] P2. Sweep MDPS-input `kind="market-data"` sites in features-service to force `deployment_env="prod"`
+      (repo: features-service) — features-service@ba385100 — the 11 sites listed in What I found §2 (sports gcs_paths.py
+      delegates to sports/config.py) + 3 same-class `market-data-tick-prediction` sites (cross_instrument cli
+      `_ingest_prediction`, prediction_cross_venue_dispatch, prediction_cross_venue_trade_dispatch), mirroring
+      `resolve_mdps_candle_bucket`; per-site regression tests pin `deployment_env="prod"` regardless of ambient env (dst
+      `tick-data` sink intentionally NOT forced — write sinks env-tier). QG green, landed on LDR.
 - [x] ✅ [INFRA] P2. Rebuild + republish the features-service code tarball (`create-code-tarballs.sh`) ahead of any
       features-e2e benchmark relaunch (repo: deployment-service) — verified already current at features-service@cc5c52b8
       (dry-run confirmed: tarball manifest SHA matches HEAD, no rebuild needed).
