@@ -158,11 +158,25 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s 2026-08-05 entry — or a different target if the
       fresh EBS throughput headroom (500 MB/s vs the old 125 MB/s ceiling) changes the calculus. Verify with a
       steady-state (not spot-check) load measurement before and after, matching the rightsizing plan's own unfinished
-      "longer-window measurement" todo. **Open question raised 2026-08-05, investigation in progress**: does AO's glue
-      pool still serve its own repo CI only, or has it (also/instead) become the runner capacity for escalation-dispatch
-      work (BLOCKED-worker questions routed to a DeepSeek-backed agent)? If escalation dispatch is real and consumes
-      this same pool, a naive CI-only concurrency cut could starve escalation throughput — the reduction target must
-      account for both workloads, not just CI, before executing.
+      "longer-window measurement" todo. **RESOLVED 2026-08-05 — open question answered, concurrency cut is clear to
+      proceed on this axis**: investigated whether AO's glue pool serves escalation-dispatch work in addition to its own
+      CI. It does NOT, on either count the operator expected: (1) AO's `quality-gates-v2.yml` still runs its own CI on
+      `[self-hosted, glue]` exactly like every other repo — unchanged. (2) The actual `/api/escalate` HTTP call fires
+      from `unified-trading-pm`'s `escalate-to-orchestrator.yml` — PM's glue pool, not AO's; AO's own
+      `escalate-to-orchestrator.yml` is vestigial (nothing calls it via `uses:`). (3) The worker that actually resolves
+      an escalation never touches a GHA runner at all — `server/escalation.py` spawns it onto an AO "slot" (a persistent
+      tmux session), a completely separate resource pool. So cutting AO's glue pool 2→1 only affects AO's own CI
+      throughput, not escalation capacity — safe to decide purely on that basis. **Separate, real finding surfaced by
+      this investigation** (not a CI-cost topic, flagging for the right owner): escalation dispatch is currently
+      HARD-PINNED to the Anthropic/Claude account pool (`autospawn.pick_headroom_account(...)` with no `provider=` arg
+      defaults to `"anthropic"`, `agent-orchestrator/server/autospawn.py:868-873`) — it does NOT use the DeepSeek/Claude
+      blended routing that regular backlog dispatch already has (`select_account_for_spawn()`, same file `:1216+`). The
+      operator's stated preference ("escalation work should be dispatchable to DeepSeek, we already have the
+      observability for it") is NOT true of the current code — `EscalationQueueRow`/`activity_log` tracks escalation
+      lifecycle but never DeepSeek spend, since escalations never route there today. Wiring escalation dispatch through
+      the existing blended-routing path is a real, scoped follow-up but belongs in an agent-orchestrator
+      dispatch/routing plan, not this CI-cost plan — not created here per the "ask before creating a plan" rule;
+      operator to decide where it lands.
 - [ ] [INFRA] P2. **Re-evaluate whether `unified-trading-library` and `e2e-testing`** (reverted to GitHub-hosted
       `ubuntu-latest` specifically due to the capacity crisis — see `self-hosted-qg-repos.txt`'s own changelog comments)
       can return to self-hosted now that the EBS throughput ceiling is raised. If yes, that's a direct GH Actions
