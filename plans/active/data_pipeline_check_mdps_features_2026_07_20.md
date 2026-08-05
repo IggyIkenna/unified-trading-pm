@@ -786,7 +786,7 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
       `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
       independently diagnosed further).
-- [ ] [DATA] P2. **CORRECTED 2026-07-29 (slot-6) — narrowed to `perp_funding` specifically, not all 5 data_types.** A
+- [x] ✅ [DATA] P2. **CORRECTED 2026-07-29 (slot-6) — narrowed to `perp_funding` specifically, not all 5 data_types.** A
       12-day `DependencyChecker` sweep (2026-05-01 through 2026-07-28, see
       `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`'s now-flipped P2 todo for full
       evidence) found `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices` all show real captured manifest
@@ -813,8 +813,13 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       bucket bug: POLYMARKET_PERP's deliberate, already-tracked DNS outage
       (`issues/cefi_perp_funding_kalshi_polymarket_residual_     and_capture_gap_2026_07_30.md`) trips
       `_check_mtds_manifest`'s any-attempted_failed-fails-whole-dependency rule even on days HYPERLIQUID/KALSHI_PERP
-      both captured. Filed as its own new P2 todo in the issue doc (3 options, needs operator/main call). This todo
-      stays open — `DEFI:onchain` remains genuinely blocked, now on the new, narrower cause.
+      both captured. — **2026-08-01 (slot-10)**: venue-scoped known-outage tolerance SHIPPED
+      (`features-service@a0d4e6e4` + `unified-trading-library@b6714ed3`): `_check_mtds_manifest` now excludes ONLY
+      POLYMARKET-PERP's `attempted_failed` rows from the pass/fail decision via `_KNOWN_OUTAGE_VENUES_BY_SVC`, while
+      staying fully sensitive to HYPERLIQUID/KALSHI-PERP failures. Live-verified against production: `available=True` on
+      2026-07-29 and 2026-07-30 (`"... (1 known-outage rows on ['POLYMARKET-PERP'] excluded)"`). **All 3 todos in the
+      archived issue doc shipped + live-verified; the `perp_funding` blocker is RESOLVED.** —
+      `features-service@eaaa935f,a0d4e6e4` + `unified-trading-library@b6714ed3`.
 - [x] [DATA] P1. Remaining todo-10 scope: CEFI/TRADFI/DEFI/PREDICTION `delta_one`, `volatility`, `multi_timeframe`,
       `cross_instrument`, `commodity` — PARTIALLY DONE 2026-07-28 (slot-2): checked here ONLY because this todo's own
       AO-derived `brief` was truncated mid-sentence by plan-regen (ends at this exact point, no closing punctuation),
