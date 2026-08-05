@@ -390,7 +390,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.92.0",
       "codebase_health": {
         "coverage_pct": 73.74,
@@ -2200,8 +2200,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.92.1.dev1+gbdc25d81d",
-      "published_at": "2026-08-04T23:02:01Z",
+      "version": "0.92.1.dev2+g8e512704a",
+      "published_at": "2026-08-05T01:27:52Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
