@@ -190,9 +190,13 @@ counts are reproduced above in full so the check is independently re-runnable fr
       firing of this same guardrail is self-diagnosing (dilution vs. real loss readable straight off the alert) instead
       of needing this same manual two-file investigation again — unified-trading-library@2eefb006. Does NOT decide the
       separate REVIEW P2 todo below (whether the guardrail should block, not just alert) — that remains open.
-- [ ] [DIAG] P3. Confirm whether the 4 residual `venue=GMX` manifest rows (found in the post-apply `--verify-only`
-      check) clear on their own after 1-2 more incremental consolidator cycles (per the purge script's own recommended
-      "run --verify-only at least twice, spaced apart" procedure) or need a follow-up manual sweep.
+- [x] ✅ [DIAG] P3. Confirm whether the 4 residual `venue=GMX` manifest rows (found in the post-apply `--verify-only`
+      check) clear on their own after 1-2 more incremental consolidator cycles or need a follow-up manual sweep.
+      **CONFIRMED: 0 `venue=GMX` rows in the live DeFi manifest** (2026-08-05,
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 42,223,167 total rows,
+      1,690.5 MB). The 4 residual rows cleared naturally via incremental consolidator cycles — they were a transient
+      resurrection-window artifact (a shard written between the CAS-rewrite snapshot and the full-merge shard-scan). No
+      manual sweep needed. Single-object download + column-pruned DuckDB query (venue column only), no corpus walk.
 - [x] ✅ [REVIEW] P2. Consider whether `_check_column_fill_regression` should block the write (not just alert) when the
       regression is this severe, or whether that's too disruptive for legitimate cases — **RULING: KEEP ALERT-ONLY, do
       NOT add a write-block.** Rationale: (1) The 2026-08-04 self-diagnosing enhancement
@@ -231,3 +235,9 @@ counts are reproduced above in full so the check is independently re-runnable fr
   filled counts alongside percentages, so this exact "is it dilution or real loss" investigation is answerable from the
   alert payload alone next time. Todo 2 flipped. Todos 3 (residual GMX rows, P3) and 4 (REVIEW: should the guardrail
   block, P2) remain open — out of this todo's scope, not decided here.
+- **slot-9, 2026-08-05 (`defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge-003`, DIAG P3)**:
+  downloaded the live DeFi availability_index.parquet (1,690.5 MB, 42,223,167 rows) and ran a column-pruned DuckDB query
+  (`SELECT count(*) WHERE venue = 'GMX'`): **0 rows**. The 4 residual `venue=GMX` rows have cleared naturally via
+  incremental consolidator cycles since the 2026-08-04 full-merge — they were a transient resurrection-window artifact
+  (a shard written between the CAS-rewrite snapshot generation and the full-merge's shard-scan). No manual sweep needed.
+  Single-object download + column-pruned query, no corpus walk. Todo 3 flipped.
