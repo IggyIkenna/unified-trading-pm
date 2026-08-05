@@ -64,12 +64,12 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the 12 freshly-shipped todos' checkboxes in `cefi_consolidated_closeout_2026_07_18.md`.**
-      For each of `cefi_consolidated_native_ao_extract_2026_07_25.md`'s 12 now-done todos, flip the corresponding
-      checkbox/section in the parent doc (each drafted todo's text cites its parent-doc Track/section as "Source"),
-      citing the extraction plan's shipped commit(s) — verify each cited commit actually exists before citing it. Repo:
-      unified-trading-pm. **Done when**: all 12 corresponding checkboxes/sections in
-      `cefi_consolidated_closeout_2026_07_18.md` are flipped with verified evidence.
+- [x] ✅ [REVIEW] P2. **Reconcile the 12 freshly-shipped todos' checkboxes in
+      `cefi_consolidated_closeout_2026_07_18.md`.** DONE 2026-08-05 — all 12 checkboxes/sections reconciled
+      (`unified-trading-pm@1ea317100`): candidates 1-9 updated in parent doc from "Dispatched"/"candidate N" to ✅ DONE
+      with evidence; candidate 10 (LIGHTER-ZKSYNC) MVP table row + execution-log items 6/6 updated; candidate 11
+      (BITGET-FUTURES) execution-log item 5 updated; candidate 12 (_DRYRUN_COLS) execution-log "Recommended next"
+      updated. All cited commits verified extant before citing. Repo: unified-trading-pm.
 - [ ] [REVIEW] P1. **Flip the 5 stale-checkbox findings in `cefi_consolidated_closeout_2026_07_18.md`, each with a fresh
       re-verification (do not trust the extraction plan's citations blindly — re-confirm against live state, since time
       has passed since the triage):** (1) the "Open todos surfaced in the execution log" carryover section — the
