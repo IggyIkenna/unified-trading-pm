@@ -1,9 +1,8 @@
 ---
 doc_type: issue
 title: >-
-  quality-gates-v2 fails fleet-wide with GitHub's generic "workflow file issue" (zero jobs created) — persists even
-  after a byte-identical revert of python-quality-gates-v2.yml to its last known-working version; root cause NOT
-  isolated, left open
+  quality-gates-v2 fails fleet-wide with GitHub's generic "workflow file issue" (zero jobs created) — ROOT CAUSE
+  CONFIRMED 2026-08-05: PUBLIC repos cannot use PM's PRIVATE reusable workflows (public→private hard block)
 summary: >-
   While chasing an unrelated LDR->main promotion timing measurement (ci_pipeline_speed_and_cost_redesign_2026_08_05.md),
   discovered `quality-gates-v2` fails INSTANTLY (zero jobs created, no check-runs, no billable time) with GitHub's
@@ -78,6 +77,36 @@ context_scope:
 PR that reaches the QG check gets an instant, zero-job failure. This is a full fleet-wide CI outage for the promotion
 pipeline, not a single-repo issue.
 
+## Root cause (CONFIRMED 2026-08-05 — public→private reusable-workflow access)
+
+**GitHub hard-blocks workflows in PUBLIC repositories from using reusable workflows in PRIVATE repositories.** The 17
+repos made public by `self_hosted_runner_public_repo_revert_2026_08_05.md` (operator-confirmed intentional) all call
+PM's PRIVATE reusable workflows
+(`IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml @live-defi-rollout`), so GitHub fails
+every such run at the parse stage with zero jobs — exactly this failure class. The fast-checkout.sh experiment and its
+byte-identical revert were **irrelevant**; only the repo-visibility change (public, ~08:00-13:00Z 2026-08-05) correlates
+with the break.
+
+Evidence (escalation `agt-6a6285`, slot 4):
+
+- Actual parse error, read from the run-page banner (the exact text the "needs UI access" note below was missing):
+  `Invalid workflow file: .github/workflows/quality-gates-v2.yml#L64` →
+  `error parsing called workflow ...: workflow was not found` for
+  `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`.
+- The SAME caller resolves fine from PRIVATE repos (`agent-orchestrator` v2 SUCCESS 21:27Z, `execution-service` 17:32Z)
+  and fails from every PUBLIC repo (unified-api-contracts, greeks-service, deployment-service, instruments-service,
+  unified-trading-library) with the identical signature.
+- PM's reusable-workflow access is already `access_level: "user"` (all same-user repos granted) — the grant does NOT
+  override the public→private prohibition. A fresh re-fire
+  (`gh workflow run quality-gates-v2.yml --ref promote/unified-api-contracts/fe46865f0c0a`) failed with the identical
+  parse error.
+- `image-build-gate.yml` fails identically on the same PRs because it likewise calls a private PM reusable workflow.
+
+**Fix direction (operator decision pending, escalation `agt-6a6285`)**: the reusable workflows
+(`python-quality-gates-v2.yml` + `image-build-validate.yml` + `notify-slack.yml`) must be hosted somewhere PUBLIC (new
+public repo, templates + callers re-pointed), OR the 17 repos revert to private. No GitHub setting bridges public-caller
+→ private-reusable.
+
 ## What's confirmed
 
 1. Failure signature: `gh run view <id>` shows `X This run likely failed because of a workflow file issue.` with **zero
@@ -97,9 +126,11 @@ pipeline, not a single-repo issue.
    promote branch (`promote/greeks-service/f35dc273b7df`) at `19:26:57Z` (commit `9c19b6f`); the resulting
    `quality-gates-v2` run (`31039463320`) failed with the same zero-job "workflow file issue" 8 seconds later.
 
-## What's NOT confirmed (needs UI access)
+## What was NOT confirmed (needs UI access) — now RESOLVED (see "Root cause" above)
 
-The exact broken reference/line. GitHub's REST API gives no detail for this failure class:
+The exact broken reference/line was the missing piece. GitHub's REST API gives no detail for this failure class; the
+run-page banner (fetched 2026-08-05 by escalation `agt-6a6285`) provided it: `quality-gates-v2.yml#L64` →
+`error parsing called workflow ...: workflow was not found`. REST-side symptoms documented below for reference:
 
 - `gh api repos/<repo>/actions/runs/<id>/jobs` → empty.
 - `gh api repos/<repo>/commits/<sha>/check-runs` → empty.
@@ -111,17 +142,14 @@ deployment-service equivalent) directly in a browser — the Actions UI renders 
 banner or annotation on the failed run, which the API does not surface. That text will almost certainly point straight
 at the broken line.
 
-## Hypotheses NOT yet ruled out
+## Hypotheses — RESOLVED 2026-08-05 (see "Root cause" above)
 
-- **A second regression landed in the same window**, separate from fast-checkout.sh, that hasn't been isolated (most
-  likely given the byte-identical revert didn't fix it).
-- **A GitHub-side transient/platform issue** — possible but hard to distinguish from (above) without the UI's error
-  text; if this is the cause, a later retry may simply start working with no code change needed (worth a fresh
-  empty-commit retrigger before assuming more code investigation is needed).
-- Something in `image-build-validate.yml` / `image-build-gate.yml`'s own chain (BOTH `quality-gates-v2.yml` and
-  `image-build-gate.yml` failed with the identical signature on the same PRs — they call _different_ PM reusable
-  workflows, which weakly suggests a cause common to both callers rather than callee-specific, but this wasn't
-  conclusively isolated).
+- **A second regression landed in the same window**, separate from fast-checkout.sh → **RULED OUT**: the real cause is
+  the repo-visibility (public) change; the fast-checkout commits and their byte-identical revert were coincidence.
+- **A GitHub-side transient/platform issue** → **RULED OUT**: the failure is deterministic and persisting on every
+  PUBLIC repo while PRIVATE repos succeed, so it is not transient.
+- Something in `image-build-validate.yml` / `image-build-gate.yml`'s own chain → **CONFIRMED as the same root cause**:
+  both call PRIVATE PM reusable workflows from the same PUBLIC caller, hence both fail identically.
 
 ## Evidence
 
@@ -140,6 +168,18 @@ at the broken line.
 
 ## Progress Log
 
+- **cicd escalation `agt-6a6285` (slot 4, 2026-08-05 ~22:35-22:50Z)**: ROOT CAUSE CONFIRMED. Got the run-page banner
+  text via WebFetch of `unified-api-contracts` run `31046782461` (the exact diagnostic the "needs UI access" note above
+  called for): `Invalid workflow file: quality-gates-v2.yml#L64` →
+  `error parsing called workflow ...: workflow was not found` for
+  `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`. Correlated it with
+  repo visibility: PRIVATE repos (`agent-orchestrator` v2 success 21:27Z, `execution-service` 17:32Z) resolve the same
+  reference; PUBLIC repos (unified-api-contracts, greeks-service, deployment-service, instruments-service,
+  unified-trading-library) all fail identically. PM's reusable-workflow access is `access_level: "user"` (all same-user
+  repos granted) yet public callers still fail — GitHub hard-blocks public→private reusable-workflow use. Confirmed with
+  a fresh `gh workflow run quality-gates-v2.yml --ref promote/unified-api-contracts/fe46865f0c0a` (failed with the same
+  parse error). This closes the "needs UI access" gap; the fix requires an operator decision (host reusable workflows
+  publicly, or revert the 17 repos to private). Escalated via `/blocked` with options.
 - **interactive-session 2026-08-05 (~18:00-19:30Z)**: discovered as a side effect while trying to measure a clean
   LDR->main promotion timing baseline (see `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`). Traced the failure
   fleet-wide (not repo-specific), watched another concurrent session revert the suspected cause twice, verified the
