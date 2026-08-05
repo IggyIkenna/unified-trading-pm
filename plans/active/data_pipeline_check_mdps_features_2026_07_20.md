@@ -988,3 +988,12 @@ staging launch. Measurement (multi-hour benchmark VMs) cannot complete in a boun
 skip-current-task GATED, per plans-run-to-actual-completion. Filed
 `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` (sibling same-class sweep, 11 sites +
 tarball + commodity-bucket + DEFI-benchmark follow-up todos).
+
+**Acks + process notes (same session)**: (1) Operator OOM directive 2026-08-05 acknowledged — NO heavy RAM/IO process
+was run locally this session; the single features-service `quality-gates.sh` ran under the shared-host QG cap (no
+concurrent full QG) and completed green. (2) A `git commit --amend` near-miss: the first features-service commit attempt
+was silently aborted by the ruff-format pre-commit hook (files modified → hook exit ≠ 0 → no commit), and the subsequent
+`--amend --no-edit` rewrote the freshly-pulled origin tip (slot-9's `feat(calendar)` commit) into a local dangling
+commit instead of creating a new one — recovered via `git reset --soft origin/live-defi-rollout` (dangling commit never
+pushed, reflog-recoverable) then a clean fresh commit `cc5c52b8`. Lesson: verify `git rev-list --count HEAD..origin`
+after a hook-aborted commit before using `--amend`.
