@@ -101,16 +101,21 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
 
 ## Ship state (in-flight)
 
-- **UAC edits made but NOT yet committed/pushed** (green-tree rule; UAC QG running 08-05 ~13:55Z):
+- **UAC removal SHIPPED `unified-api-contracts@5f441e0d`** (08-05, LDR, green-tree verified — UAC QG exit 0 before
+  commit):
   - `_defi.py` — removed AAVE `rewards` data_type + `collect-rewards` mtds_operation (matches bc397b93 shape).
   - `market_data_categories.py` — removed `fills` from POLYMARKET + KALSHI `VENUE_DATA_TYPE_CAPABILITIES`.
-  - **OPEN CONSISTENCY QUESTION (unresolved, ~30-min if owned)**: the AAVE `rewards` seed
-    (`defi_prediction_instrument_seeds.py:153`) and the `rewards` entries in `defi_venue_capabilities.py` for all 10
-    AAVE_V3 chains remain. The audit precedent cleaned seeds for LIDO/ETHERFI, so these surfaces likely also need
-    removal — UAC QG (which checks seed↔data_types consistency) will confirm whether they are now orphaned. Scope to the
-    same UAC commit or the follow-up when the gate's verdict lands.
-- **Blocker for MTDS shipping**: MTDS stays red until the UAC removal ships + the next editable-install view includes
-  it. Then re-gate MTDS (expect green) and ship the staged iterrows fix.
+- **CONSISTENCY FOLLOW-UP (tracked todo, not a blocker)**: UAC QG came back GREEN **with** the AAVE `rewards` seed
+  (`defi_prediction_instrument_seeds.py:153`) and the 10-chain AAVE_V3 `rewards` entries in `defi_venue_capabilities.py`
+  still present — so no UAC seed↔data_types consistency check fires on them; they are orphaned-but-unflagged by the
+  gate. The audit precedent (`bc397b93`, LIDO/ETHERFI seeds cleaned) says these surfaces should be cleaned too, but that
+  is UAC-owner consistency work, separate from the MTDS unblock — logged as `- [ ]` below.
+- **Blocker for MTDS shipping**: MTDS re-gate (08-05, after `5f441e0d` landed) — the editable-install view now includes
+  the removal; expect green, then ship the staged iterrows fix.
+
+## Follow-ups (tracked)
+
+- `- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards`seed + venue capabilities** — delete the AAVE_V3`rewards`seed in`defi_prediction_instrument_seeds.py:153`and the`rewards`entries for all 10 AAVE_V3 chains in`defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as `6e791b05`/`b2874193`).`
 
 ## Status / owner
 
