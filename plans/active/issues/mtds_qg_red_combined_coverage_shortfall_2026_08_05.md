@@ -124,18 +124,12 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
       WITH the diff is 80.63% (PASSES, vs 80.65% clean, −0.02pt); the earlier "76.21% drop" was a truncated-run artifact
       (aster flaky failure cut the suite → partial coverage). No compensating tests needed. — **Done 2026-08-05**,
       evidence: full QG run `/tmp/qg_with_diff.log`, coverage.xml 80.63%. (repo: market-tick-data-service)
-- [ ] [UAC] P1. **Remove `market_metadata` from `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI** —
-      `unified_api_contracts/registry/market_data_categories.py:2264,2269` (added by `6e791b05`, the same commit as the
-      `fills` declaration). Same declared-but-unwired class as `fills`; still blocks the MTDS gate —
-      `test_tier3_prediction_polymarket_no_crash` emits an instrument-less `market_metadata` row (sentinel strict
-      validation at `venue_fetch.py:606` warns but does NOT drop; `DATA_TYPES_BY_ASSET_GROUP["prediction"]` omits it;
-      `registry/data_type_capability.py:1026` records "market_metadata excluded — adapters do not yet write those
-      data_types to the manifest"). Owner: the UAC capability-declaration workers (fleet doc
-      `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`; identical dict/pattern to the `fills` removal at
-      `5f441e0d`). Unblock criterion: MTDS `quality-gates.sh` green — verified the pre-`6e791b05` venue map declared
-      only `trades`/`book_snapshot_5` (`git show 6e791b05^`) and the sentinel test passed in that state. (repo:
-      unified-api-contracts) — **UAC side shipped `unified-api-contracts@ce9d8f12` (08-05)**; MTDS re-gate running to
-      confirm green.
+- [x] ✅ [UAC] P1. **Remove `market_metadata` from `VENUE_DATA_TYPE_CAPABILITIES` for POLYMARKET + KALSHI** —
+      unified-api-contracts@ce9d8f12. `unified_api_contracts/registry/market_data_categories.py:2264,2269` (added by
+      `6e791b05`, the same commit as the `fills` declaration). Same declared-but-unwired class as `fills`; removed at
+      ce9d8f12 (identical dict/pattern to the `fills` removal at `5f441e0d`). Verified:
+      `rg '"market_metadata"' unified_api_contracts/registry/market_data_categories.py` → 0 hits; both venues now
+      declare only `trades` + `book_snapshot_5`, matching the pre-`6e791b05` green state. (repo: unified-api-contracts)
 
 ## Progress Log
 
