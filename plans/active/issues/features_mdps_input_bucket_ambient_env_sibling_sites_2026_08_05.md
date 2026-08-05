@@ -160,13 +160,50 @@ which is `dispatched` to another slot this session — did NOT duplicate it. Lef
 re-dispatches once -005 lands and the gate reopens on recent days. No heavy local compute run (run-bounded-analysis
 wrapper used; OOM directive 2026-08-05 acknowledged).
 
+### 2026-08-05 (slot-3, data_engineering) — BINANCE-DELIVERY regression diagnosed + fixed (gate probe scoped to HYPERLIQUID)
+
+**Diagnosis (confirms finding 6's stray/misclassified branch).** Dumped `perp_funding` rows from the CEFI manifest
+(`read_availability_index` on `market-data-tick-cefi-prd-central-element-323112`, 07-25→08-05, memory-bounded with
+`columns=`+`filters=`):
+
+- The `BINANCE-DELIVERY` `attempted_failed` shards on 07-26→08-04 are **manifest-only — 0 GCS objects** (targeted prefix
+  probe on 07-29 + 08-04: zero `venue=BINANCE-DELIVERY`/`data_type=perp_funding` blobs). They carry
+  `instrument_type=futures_chain`, `instrument_id=None` (chain-bundle shape), `pipeline_mode=batch_kalshi_perp` /
+  `source=kalshi_perp`, all `attempted_at` 2026-08-04/05 — written via the kalshi_perp pipeline by a recent MTDS run.
+- BINANCE-DELIVERY is NOT a perp_funding protocol (`perp_funding_handler.DEFAULT_PROTOCOLS` =
+  `{hyperliquid, kalshi_perp, polymarket_perp}`) and is dropped from the cefi MVP capture universe. Slot-5 found the
+  DEEPER root cause: no `VENUE_DATA_TYPE_CAPABILITIES` entry → `get_expected_data_types_for_venue` seeds perp_funding as
+  EXPECTED → daily attempted_failed (structural absence, not a backfill artifact).
+- **The DEFI:onchain consumer (`perp_funding_rates_defi.py`) reads HYPERLIQUID ETH only**, and HYPERLIQUID is `captured`
+  (07-30→08-04) / `empty_confirmed` (07-28/29) on every affected day — the consumer's real dependency was always
+  satisfied; only the stray row tanked the gate. → **Not a real capture gap; no backfill needed.**
+
+**Fix** (features-service@a7976931, task-prescribed approach): scoped the `market-tick-data-service-perp` probe to the
+venue the consumer actually reads via new `_REQUIRED_VENUES_BY_SVC = {HYPERLIQUID}` in `_evaluate_manifest_rows` —
+HYPERLIQUID still gates normally; a missing HYPERLIQUID row or HYPERLIQUID `attempted_failed` still fails honestly. 3
+regression tests added. Slot-5's independent known-outage-tolerance fix for the same regression landed at
+`features-service@46461ebc`; both compose (10 tests pass; no revert of the peer's shipped fix).
+
+**Re-verified live**: `DependencyChecker("central-element-323112").check_dependencies(d, "DEFI")` now returns
+`required_available=True` on **every** affected day 07-29→08-04 (was False on all; 2 known-outage rows excluded per
+day). 08-05 remains `required_available=False` solely because MTDS has not yet captured today's perp_funding (freshness,
+not the regression — matches slot-9/slot-12). This unblocks -004's gate re-verify + DEFI:onchain relaunch once MTDS's
+08-05 capture lands. Evidence: `scratch/perp_funding_dump.py` / `scratch/check_gcs_binance.py` /
+`scratch/verify_gate.py` (scratch, deleted after run).
+
 ## Todos
 
-- [ ] [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
-      re-closed the DEFI:onchain gate (repo: features-service gate + market-tick-data-service/manifest) — determine
-      whether the rows are stray/misclassified (remove/clean them or scope the gate's perp_funding probe to the venues
-      the DEFI:onchain consumer actually reads, i.e. HYPERLIQUID per `perp_funding_rates_defi.py`) or a real capture gap
-      (backfill), then re-verify the gate reopens on recent days. See finding 6 + Progress Log.
+- [x] ✅ [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
+      re-closed the DEFI:onchain gate (repo: features-service gate + market-tick-data-service/manifest) —
+      features-service@a7976931 — **diagnosis: rows are STRAY/misclassified, NOT a real capture gap** (manifest-only, 0
+      GCS objects under any `venue=BINANCE-DELIVERY`+`data_type=perp_funding` prefix; BINANCE-DELIVERY not in
+      `perp_funding_handler.DEFAULT_PROTOCOLS`; slot-5 root cause = no `VENUE_DATA_TYPE_CAPABILITIES` entry → phantom
+      expected perp_funding → daily attempted_failed). **Fix**: scoped the gate's perp_funding probe to the venue the
+      DEFI:onchain consumer actually reads (HYPERLIQUID) via new `_REQUIRED_VENUES_BY_SVC` (task-prescribed; slot-5's
+      known-outage tolerance also landed at 46461ebc, both compose + all 10 tests pass). **Re-verified live**:
+      `DependencyChecker("central-element-323112").check_dependencies(d, "DEFI")` returns `required_available=True` on
+      EVERY affected day 07-29→08-04 (was False on all); 08-05 remains only a freshness gap (MTDS hasn't run today's
+      perp_funding yet). QG green, landed on LDR. See slot-3 Progress Log.
 - [x] ✅ [DATA] P2. Sweep MDPS-input `kind="market-data"` sites in features-service to force `deployment_env="prod"`
       (repo: features-service) — features-service@ba385100 — the 11 sites listed in What I found §2 (sports gcs_paths.py
       delegates to sports/config.py) + 3 same-class `market-data-tick-prediction` sites (cross_instrument cli
