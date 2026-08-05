@@ -272,58 +272,11 @@ jobs:
       QG_GOVERNOR_MODE: ${{ inputs.self_hosted_runner_labels != '' && 'reservation' || 'token' }}
       QG_GOVERNOR_REPO: ${{ github.event.repository.name }}
     steps:
-      # Fast-path aware checkout (repo-clone I/O reduction, ci_pipeline_speed_and_cost_redesign_
-      # 2026_08_05.md): on a self-hosted runner whose pool has a fresh, cron-refreshed local
-      # mirror (RUNNER_BASE/repo — maintained by refresh-slot-repo.sh regardless of this change),
-      # fast-checkout.sh hardlink-copies it instead of a cold ~1.7GB network clone. Falls back to
-      # a plain clone (byte-identical to the old `actions/checkout@v4` step, same fetch-depth: 2)
-      # for EVERY case where the fast path isn't safe: GitHub-hosted ubuntu-latest (no
-      # RUNNER_BASE/script at all — this is the common case fleet-wide today), a runner pool
-      # whose script hasn't been deployed yet, a missing/stale mirror, or any fetch/checkout
-      # failure inside the script itself (it self-verifies HEAD before declaring success). No
-      # caller is worse off than before; only a canaried subset of pools benefit until this rolls
-      # out further.
-      #
-      # TWO BUGS caught live on the first canary run (2026-08-05), fixed here — a self-hosted
-      # runner does NOT leak its wrapper's RUNNER_BASE env var into the job (only GHA-native vars
-      # like GITHUB_WORKSPACE are guaranteed present), so this step derives the pool's own base
-      # dir from GITHUB_WORKSPACE's own path structure (<RUNNER_BASE>/<INSTANCE>/_work/<REPO>/
-      # <REPO>, this fleet's fixed work_folder="_work" registration convention) instead of
-      # trusting RUNNER_BASE. And `rm -rf "${GITHUB_WORKSPACE}"` while the shell's OWN cwd IS
-      # GITHUB_WORKSPACE (GHA's default for a `run:` step) breaks every subsequent command's
-      # getcwd() — this step now `cd`s to the parent dir first, before any removal.
-      - name: Checkout (fast-path aware)
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          cd "$(dirname "${GITHUB_WORKSPACE}")"
-          DERIVED_BASE="$(dirname "$(dirname "$(dirname "$(dirname "${GITHUB_WORKSPACE}")")")")"
-          SCRIPT="${DERIVED_BASE}/fast-checkout.sh"
-          echo "DEBUG: GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
-          echo "DEBUG: DERIVED_BASE=${DERIVED_BASE}"
-          echo "DEBUG: SCRIPT=${SCRIPT}"
-          ls -la "${DERIVED_BASE}/" 2>&1 | head -10 || echo "DEBUG: DERIVED_BASE not listable"
-          if [ -f "${SCRIPT}" ]; then
-            bash "${SCRIPT}" "${GITHUB_WORKSPACE}"
-          else
-            echo "no fast-checkout.sh at ${SCRIPT} (GH-hosted, or not yet deployed to this pool) -- plain clone"
-            # BUG (found live, 2nd canary run): a plain `git clone` of a PRIVATE repo with no
-            # credentials configured yet fails outright ("could not read Username for
-            # 'https://github.com': No such device or address" — a non-interactive credential
-            # prompt). Mirrors actions/checkout@v4's own order: init empty + configure the auth
-            # header FIRST, only then fetch — never an unauthenticated network op against a
-            # private repo.
-            rm -rf "${GITHUB_WORKSPACE}"
-            mkdir -p "${GITHUB_WORKSPACE}"
-            git init --quiet "${GITHUB_WORKSPACE}"
-            git -C "${GITHUB_WORKSPACE}" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
-            BASIC_AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0 2>/dev/null || printf 'x-access-token:%s' "${GH_TOKEN}" | base64)"
-            git -C "${GITHUB_WORKSPACE}" config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic ${BASIC_AUTH}"
-            git -C "${GITHUB_WORKSPACE}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
-            git -C "${GITHUB_WORKSPACE}" checkout --force --quiet "${GITHUB_SHA}"
-          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
+          fetch-depth: 2
 
       - name: Detect metadata-only / docs-only changeset (fast-paths)
         # metadata-only (push/dispatch): a bot metadata commit whose entire diff is confined to a
