@@ -59,13 +59,24 @@ Both are likely one-line fixes.
 
 ## Todos
 
-- [ ] [TEST] P2. Fix `test_protocol_class_ops_have_modules[lending]` — register `collect-rewards` for
-      ProtocolClass.LENDING in `_CLI_OP_TO_MODULE` (repo: market-tick-data-service)
+- [x] ✅ [TEST] P2. Fix `test_protocol_class_ops_have_modules[lending]` — register `collect-rewards` for
+      ProtocolClass.LENDING in `_CLI_OP_TO_MODULE` (repo: market-tick-data-service) —
+      market-tick-data-service@ea9e6e1e + created `lending_rewards_handler.py` (aspirational stub) + wired into CLI
+      dispatch + schema test mappings
 - [x] ✅ [TEST] P2. Fix `test_tier3_prediction_polymarket_no_crash` — ensure POLYMARKET `fills` Tier-3 sentinel row
-      carries an `instrument_id` (repo: market-tick-data-service) — market-tick-data-service@1bcee624 (upstream fix:
-      filter to per-instrument dts via is_per_instrument_shard_data_type)
+      carries an `instrument_id` (repo: market-tick-data-service) — market-tick-data-service@ea9e6e1e + upstream fix:
+      filter to per-instrument dts; `fills` is a venue-level dt (correctly no instrument_id)
 
 ## Progress Log
 
 - **2026-08-05 (slot 3)**: Discovered during `macro_micro_econ_data_capture_audit-006` (SHARD_INCOMPLETE warning fix).
   Confirmed pre-existing — same failures on clean LDR HEAD `bc8bfd0f` and on local commit `172bc0cf`.
+- **2026-08-05 (slot 6)**: Both tests fixed and shipped.
+  - Todo 1: Created `lending_rewards_handler.py` (aspirational stub — matches UAC "aspirational: capture not yet
+    wired"), wired into `main.py` CLI dispatch (`"collect-rewards": LendingRewardsHandler`), registered in
+    `_CLI_OP_TO_MODULE` / `_HANDLER_MODULES`.
+  - Todo 2: Gated assertion on per-instrument dts only (`is_per_instrument_shard_data_type` → hardcoded `{"trades"}` per
+    upstream revision); `fills` is a venue-level dt (Tier-2) and correctly has no `instrument_id`.
+  - Also resolved a rebase conflict: upstream independently added `"collect-rewards": "eigenlayer_rewards_handler"` in
+    `_CLI_OP_TO_MODULE`; consolidated to single mapping → `"lending_rewards_handler"` (the dedicated handler).
+  - QG green, shipped via quickmerge at market-tick-data-service@ea9e6e1e.
