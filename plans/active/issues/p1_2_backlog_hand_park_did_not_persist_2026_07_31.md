@@ -166,9 +166,13 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
       reproduction would have nothing to reproduce (there is no revert code path to trigger). Closing without a sandbox
       run; the static-analysis answer is conclusive on its own (unlike the 2026-07-12 case, which genuinely needed the
       sandbox to distinguish two live-reproducible symptoms).
-- [ ] [OPERATOR] P1. Re-apply the park to `live_event_log_warm_sink_recovery_and_cold_compaction-011` per "Recommended
-      decision" #1 above (actually perform the `backlog.yaml` file edit this time, then `POST /api/backlog/reload`), and
-      verify it survives one full `PlanRegenLoop` cycle before considering this resolved for that specific task.
+- [x] ✅ [SCRIPT] P1. **MOOT — park already applied and holding (2026-08-05, slot 8).** Live `/api/backlog` check
+      confirms `live_event_log_warm_sink_recovery_and_cold_compaction-011` is parked at `priority: 999`,
+      `status: queued`, `dispatched_to: null` — the park originally described in main's `BLK-085fef5e` answer has since
+      been applied (likely by a follow-up operator action after the process gap was identified) and is holding. Title
+      reads "⏸ PARKED 2026-07-31 (main, Option A — gated behind false prereq `p1-2-preconditions-met`)". No
+      re-application needed; the root cause is already documented in this issue doc. — unified-trading-pm (plan-flip
+      only, no code change)
 
 ## Progress Log
 
