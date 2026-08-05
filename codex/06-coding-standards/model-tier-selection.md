@@ -234,8 +234,10 @@ Code: `agent-orchestrator/server/regen_backlog_from_plan.py` (`_parse_frontmatte
 after the explicit-`effort:` override) → `server/backlog.py::BacklogTask` (`model`/`sonnet_variant`/`effort`/`thinking`)
 → `server/autospawn.py::_spawn_param_plan` (per-slot spawn plan, R2 2026-07-16 — NOT the deleted
 `_top_queued_task_params`) → `_resolve_task_model` (resolves the concrete snapshot, 2026-08-04). Shared threshold
-constant: `server/model_tier.py::LARGE_PLAN_TODO_THRESHOLD` (also used by `context_lifecycle.py`'s large-plan-worker
-carve-out from the worker exclusion, so the two never drift apart). Coverage audit:
+constant: `server/model_tier.py::LARGE_PLAN_TODO_THRESHOLD` (effort-tier derivation only, above — NOT used by
+`context_lifecycle.py` anymore: the 2026-08-05 ruling replaced its old large-plan-only carve-out with unconditional
+force-compact coverage for EVERY working task-worker slot, see
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`'s context-lifecycle section). Coverage audit:
 `unified-trading-pm/scripts/plans/audit_model_tier.py`. Until a plan declares `model_tier`, it silently defaults to
 Sonnet (model tier's silent default is UNCHANGED by the 2026-07-22 ruling — only effort's silent default changed).
 Backfilled opus set (2026-06-01): `master_to_live_defi`, `mdps_long_running_multi_shard_architecture_audit`,
