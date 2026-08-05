@@ -153,3 +153,25 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 ## Progress Log
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **2026-08-05 recurrence + false-completion found**: agent-orchestrator PR #783 (LDR→main promote) sat blocked ~2h40m+
+  on `sit-gate/fleet-green=failure`. Same signature as this issue — `instruments-service`'s `ci-status-update` dispatch
+  (run 30983625882) actually completed `success` at 07:06:28Z, but `cross-repo-invariants`'s poll loop gave up 7s
+  earlier (07:06:21Z), reporting `conclusion=unknown/timeout` and failing the whole 21-repo fleet stamp on a false
+  negative. **The widened-poll-budget fix this doc marks `[x]` done (system-integration-tests@69b93bc, committed
+  2026-08-04T22:31:53Z) was on LDR but had NEVER reached `main`** — verified live: `main`'s served copy of
+  `full-workspace-sit.yml` still read `seq 1 18` (the old 90s budget) at the time of this recurrence. Cause:
+  `system-integration-tests` was **113 commits behind its own LDR with ZERO open LDR→main promote PR** — not a
+  slow/stuck PR, no PR at all. Did not force that backlog through (too large/unreviewed-by-me for a same-turn call on a
+  fleet-critical CI-gating repo). The `[x]` above should be read as "fix authored + on LDR", not "fix live". Unblocked
+  via the same sanctioned workaround as 2026-07-27: `gh run rerun 30980838108 --failed` (system-integration-tests).
+  Separately, PR #783 also carried a genuine (trivial) Dockerfile `BASE_IMAGE_DIGEST` merge conflict; the fleet
+  promoter's deterministic take-LDR resolver dispatched 10+ times over 2h (all `conclusion=success` at the workflow
+  level, none actually resolving it — plausibly because Option-B squash commits always look like "unique non-merge
+  commits" vs LDR to that resolver's safety check, permanently disabling it for this promotion model), with no VM
+  conflict-resolution-agent visibly picking up the escalation. Resolved by hand (took LDR's current digest value) and
+  pushed to the bot-owned `promote/agent-orchestrator/*` branch; PR #783 merged clean at 09:43:02Z.
+  - [ ] [INFRA] P1. Investigate why system-integration-tests' own LDR→main promotion shows 0 open PR at 113 commits
+        behind — fleet promoter silently failing pre-PR-creation for this repo, or excluded some other way? And whether
+        the deterministic take-LDR resolver's "zero unique non-merge commits vs LDR" safety check is structurally
+        unsatisfiable for Option-B squash promotions (would explain repeated escalate-without- resolve fleet-wide, not
+        just this instance).
