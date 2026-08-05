@@ -213,14 +213,11 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       full QG green (1070s), landed.
 - [x] 7. ✅ [INFRA] P1. **`client-reporting-api` reverted** — `client-reporting-api@154ab790`, full QG green (946s),
       landed.
-- [ ] 8. [INFRA] P1. **`deployment-api` — STILL BLOCKED, not yet shipped.** Local revert applied + verified
-      content-clean. Twice failed pre-flight because its path-dependency `deployment-service` had uncommitted changes
-      from ANOTHER concurrent session on this shared host (`scripts/vm/launch-canonical-migration-vm.sh`) — not mine to
-      touch or commit. **Re-checked at session end: `deployment-service` is now clean** (the other session committed its
-      own file), so this todo is very likely unblocked now — retry
-      `bash scripts/quickmerge.sh "fix(ci): revert to     GitHub-hosted runners (public repo, GH Actions unmetered)" --agent --files ".github/workflows/main-backmerge-to-ldr.yml     .github/workflows/major-bump-issue-handler.yml .github/workflows/quality-gates-v2.yml     .github/workflows/request-major-bump.yml .github/workflows/semver-agent.yml     .github/workflows/staging-backmerge-to-ldr.yml .github/workflows/staging-lock-check.yml     .github/workflows/update-dependency-version.yml .github/workflows/version-registry-notify.yml"`
-      from `deployment-api/` as the very next action — not attempted this session due to context-limit cutoff, not a
-      real blocker.
+- [x] 8. ✅ [INFRA] P1. **`deployment-api` reverted** — `deployment-api@54a4444`, landed on LDR. First ship attempt hit
+      a genuine-but-unrelated flake: `test_reads_execute_concurrently_not_sequentially` (a wall-clock timing assertion,
+      `elapsed < sequential_cost * 0.65`) failed at 1.123s vs. a 0.78s threshold under shared-host CPU contention from
+      concurrent QG runs — confirmed flaky (not caused by this change, which touches only `.github/workflows/*.yml`) by
+      re-running the single test standalone, which passed cleanly in 0.35s. Retry succeeded.
 - [x] 9. ✅ [INFRA] P1. **`deployment-service` reverted** — `deployment-service@cb814e26`, full QG green (512s after one
       300s-wall-clock-SLA retry caused by governor queue-wait, not a real failure), landed.
 - [x] 10. ✅ [INFRA] P1. **`deployment-ui` reverted** — `deployment-ui@8cc6f863`, every self-hosted workflow reverted
@@ -230,22 +227,23 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 - [x] 12. ✅ [INFRA] P1. **`greeks-service` reverted** — `greeks-service@f35dc273`, full QG green (882s), landed.
 - [x] 13. ✅ [INFRA] P1. **`ibkr-gateway-infra` reverted** — `ibkr-gateway-infra@64ebd8d0`, full QG green (123s),
       landed.
-- [ ] 14. [INFRA] P1. **`instruments-service` — BLOCKED, not mine to fix, not yet shipped.** Local revert applied +
-      verified content-clean. Quickmerge's re-gate hit a genuine, PRE-EXISTING test failure unrelated to this CI-only
-      change:
-      `tests/unit/scripts/test_expected_universe_golden.py::TestGoldenByteIdentical::test_expected_matches_golden[prediction]`
-      — golden fixture expects 8 KALSHI/POLYMARKET `prediction_market` entries, actual has 0. Root cause: a DIFFERENT
-      concurrent session's `unified-api-contracts@72d11208` commit ("refactor(uac): delete dead code —
-      MVP_VENUE_DATA_TYPES, DEFI_VENUE_AXIS_OVERRIDES, Prediction inert matrix row") deleted the matrix row that
-      populated those entries — landed on this branch before my ship attempt. This is a real product/domain question
-      (was that deletion correct, does the golden fixture need regenerating) needing the owning agent's or operator's
-      judgment — **not** something to fix as part of a CI-runner-placement revert. Retry once that's resolved elsewhere;
-      until then this todo (and #16, which depends on it) stay blocked.
-- [x] 15. ✅ [INFRA] P1. **`market-data-processing-service` reverted** — `market-data-processing-service@b039ec2f`, full
-      QG green (211s), landed.
-- [ ] 16. [INFRA] P1. **`system-integration-tests` — BLOCKED transitively, not yet shipped.** Local revert applied +
-      verified content-clean. Pre-flight failure: depends on both `deployment-api` (#8) and `instruments-service` (#14)
-      as path dependencies — blocked on both clearing first, not a defect of its own. Retry after #8 and #14 land.
+- [x] 14. ✅ [INFRA] P1. **`instruments-service` reverted** — `instruments-service@064e2560`, landed on LDR. Was blocked
+      on a genuine, pre-existing golden-fixture test failure (`test_expected_matches_golden[prediction]`, caused by
+      another session's `unified-api-contracts@72d11208` deletion) — re-checked before retrying and confirmed fixed
+      upstream (test passes standalone, 2/2), so this was not something I needed to fix myself. A benign, unrelated
+      `uv.lock` drift (stale `schema-validation` extra metadata inherited from `unified-trading-library`'s own committed
+      lockfile, not declared in any pyproject.toml — pre-existing upstream inconsistency, not mine to fix) was excluded
+      from the `--files` commit and left untouched.
+- [x] 15. ✅ [INFRA] P1. **`market-data-processing-service` reverted** — `market-data-processing-service@7ccbfe84`, full
+      QG green (211s), landed. (Corrected SHA citation 2026-08-05: `b039ec2f` was the parent commit, not the revert
+      itself.)
+- [x] 16. ✅ [INFRA] P1. **`system-integration-tests` reverted** — `system-integration-tests@69875d4`, landed on LDR —
+      **the 17th and final repo, this plan's revert work is now 100% shipped.** Pre-flight still failed once after
+      #8/#14 landed, this time on the same benign `uv.lock` drift (see #14) surfacing in two OTHER path dependencies
+      (`market-data-processing-service`, `instruments-service`) — confirmed it was orphaned lockfile metadata (not real
+      WIP: the `schema-validation` extra it references isn't declared in any repo's `pyproject.toml`, only dangling in
+      `unified-trading-library`'s own already-committed `uv.lock`), discarded locally via `git checkout -- uv.lock` in
+      both repos (safe: purely regenerates on next `uv sync`, destroys no one's authored work), retried, landed clean.
 - [x] 17. ✅ [INFRA] P1. **`trading-agent-service` reverted** — `trading-agent-service@fb508071`, full QG green (95s),
       landed.
 - [x] 18. ✅ [INFRA] P1. **`unified-trading-api` reverted** — `unified-trading-api@7186c8e9`, full QG green (121s),
@@ -264,16 +262,13 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       method: `gh api repos/IggyIkenna/<repo>/actions/runners` DELETE + `systemctl stop`+`disable` the exact unit —
       never the buggy `teardown --POOL_TAG` path, per that plan's own documented incident). Do the 3 remaining repos
       (#8, #14, #16) in the SAME pass once they land, rather than two separate deregistration sweeps.
-- [ ] 22. [INFRA] P2. **Investigate `unified-trading-library`'s promotion-PR backlog** — found while spot-checking live
-      CI: 5 unmerged `promote/unified-trading-library/*` PRs stacked up (#746–#750) against `main`, and the newest
-      (#750, this session's `@2b83764f` revert commit) shows its `quality-gates-v2` promotion-PR run failing with
-      GitHub's generic "likely failed because of a workflow file issue" and zero scheduled jobs. **Ruled out as caused
-      by this session's change**: fetched the exact file content at that SHA directly from GitHub and validated it with
-      a real YAML parser (`python3 -c "import yaml; yaml.safe_load(...)"`) — parses cleanly, and the
-      `self_hosted_runner_labels: ""` pattern is the SAME one already proven working this session on `deployment-ui`/
-      `unified-trading-system-ui`'s promotion PRs (both real `success`). The 5-PR backlog predates this session's first
-      commit to the repo, so this looks like a pre-existing promotion-pipeline issue specific to
-      `unified-trading-library` — needs its own investigation, separate from this plan's scope.
+- [x] 22. ✅ [INFRA] P2. **`unified-trading-library`'s promotion-PR backlog — RESOLVED, not a bug.** Follow-up check:
+      PRs #746–#750 were each individually **closed (not merged)** at staggered times through 2026-08-05, and a fresh PR
+      #751 was open with all checks green (`semver-agent/label-check`, `sit-gate/fleet-green`,
+      `unified-trading-library-live-defi-rollout` Cloud Build all `SUCCESS`) and `MERGEABLE`. This matches
+      `ldr-to-main-promote-fleet.yml`'s close-and-recreate-on-new-diff behavior firing repeatedly under this session's
+      (and the wider shared host's) unusually high same-day commit volume on `unified-trading-library`'s dependents —
+      not a stuck pipeline. No fix needed.
 
 ## Progress Log
 
@@ -341,3 +336,40 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
   retry `system-integration-tests` once both clear (todo 16), (4) deregister old self-hosted runners for all 17 in one
   pass (todo 21), (5) investigate the `unified-trading-library` promotion backlog separately (todo 22, not blocking this
   plan), (6) todo 20's billing/load re-measurement once a few days have passed.
+
+- **2026-08-05 (resumed after `/compact`, session close-out): all 17/17 repos now landed — the revert is 100% shipped.**
+  Picked up exactly where the checkpoint left off:
+  - **`deployment-api`** (`@54a4444`): first attempt hit `test_reads_execute_concurrently_not_sequentially`, a
+    wall-clock timing assertion (`elapsed < sequential_cost*0.65`) that failed at 93% of the threshold under shared-host
+    CPU contention — confirmed flaky, unrelated to a workflow-file-only change, by re-running the single test standalone
+    (passed cleanly, 0.35s vs. 1.123s under load). Bare retry succeeded.
+  - **`instruments-service`** (`@064e2560`): re-checked the golden-fixture test before retrying — now passes (2/2),
+    fixed upstream by whoever owned that judgment call, exactly as todo 14 anticipated. Shipped clean.
+  - **`system-integration-tests`** (`@69875d4`) — the 17th and final repo. Pre-flight failed once more, this time on a
+    **different, previously-undiagnosed blocker**: `market-data-processing-service` and `instruments-service` both
+    showed a dirty `uv.lock` (unrelated to any of the workflow reverts). Traced it: both diffs added identical
+    `marker = "extra == 'schema-validation'"` entries for the SAME six packages, sourced from
+    `unified-trading-library`'s own `[[package]]` entry in the downstream lockfiles. Checked `unified-trading-library`
+    itself — its **committed** `uv.lock` already carries `provides-extras = ["schema-validation"]`, but `grep` found
+    that string **nowhere in its `pyproject.toml`** — i.e. the extra is dangling/orphaned lockfile metadata, not a real
+    declared dependency, and downstream `uv sync` regenerates this same diff on every run regardless of what anyone does
+    locally. Confirmed safe to discard (`git checkout -- uv.lock` in both repos) rather than treat as foreign WIP: it's
+    a derived artifact from an already-committed upstream inconsistency, not hand-authored work — discarding it destroys
+    nothing and it would regenerate identically if truly needed. Retried, landed clean.
+  - **Final verification**: `grep -rl 'runs-on:.*self-hosted'` across all 17 repos' `.github/workflows/` → **zero hits,
+    all 17**; all 17 working trees clean (`git status --short .github/workflows/` empty); all 8 private repos
+    (`agent-orchestrator`, `unified-trading-pm`, `strategy-service`, `e2e-testing`, `features-service`,
+    `market-tick-data-service`, `execution-service`, `ml-service`) independently confirmed to still carry their
+    self-hosted refs (9-41 hits each) — the split is exactly as intended, answering the operator's direct question: no
+    public-repo self-hosted CI ever ran pointlessly past this session's fixes.
+  - Also closed out todo 22 in the same pass: the `unified-trading-library` promotion-PR "backlog" (#746-750) was just
+    `ldr-to-main-promote-fleet.yml` closing and recreating the PR each time LDR advanced past its diff — expected under
+    this session's own high commit volume, not a stuck pipeline. PR #751 is open, green, mergeable.
+  - **Genuinely still open, in priority order**: todo 21 (deregister the now-idle old self-hosted runner registrations
+    for all 17 repos — confirmed via `gh api repos/IggyIkenna/alerting-service/actions/runners` that stale registrations
+    do still exist and sit idle; deferred this session rather than attempted, since it requires SSM access to the shared
+    CI runner VM to stop/disable the actual systemd units (GH-API-delete alone would leave the process running) and
+    touches shared infra other concurrent sessions may be relying on — this is cleanup, not correctness: the
+    billing-waste problem itself is already fully fixed by the `runs-on:` changes, since idle registrations cost nothing
+    and simply won't be assigned work); todo 20 (billing/load re-measurement — genuinely cannot be done yet, needs a few
+    days of elapsed real usage to be meaningful). **Plan stays `status: active`** — not archiving until 20 and 21 close.
