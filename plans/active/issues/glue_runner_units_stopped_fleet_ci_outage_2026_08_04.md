@@ -142,7 +142,30 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       "active" at the systemd level but hung mid-job for hours, then failing to re-register with GitHub even after
       restart. The watchdog must catch this too, not just crash-loop and cleanly-inactive**, e.g. alert on a runner
       whose `journalctl` shows "Running job" with no matching "completed" line for > N minutes, independent of systemd
-      `ACTIVE` state (which stays green throughout this failure mode).
+      `ACTIVE` state (which stays green throughout this failure mode). **Root-cause-of-the-original-stop investigation
+      (2026-08-04/05, interactive session, `/autonomous` continuation), operator-requested — inconclusive, documented so
+      the next investigator doesn't re-walk the same dead ends.** Confirmed via precise `journalctl`
+      (`-o short-precise`, correctly time-windowed) that all three units logged systemd's explicit
+      `Stopping <unit> - <description>...` line within the same ~30s window while each was mid-job — this is systemd's
+      own signature for an EXPLICIT stop request, not a self-exit (the JIT runner's own clean-exit path logs a distinct
+      "Runner listener exit with 0 return code" message instead, and that pattern fires constantly and harmlessly for
+      every other repo's runner throughout the surrounding log — it is NOT what happened here). Ruled out, each
+      independently verified live on the host: (1) SSH — `last -F` shows no login anywhere near the incident window
+      (most recent prior login was 11 days earlier); (2) AWS SSM — `list-commands` against the instance shows zero
+      commands (successful OR failed) in the incident window, from any identity; (3) cron/crontab — no job targets these
+      units or fires near that time; (4) systemd self-inflicted rate-limiting — ruled out directly, the unit file has
+      `StartLimitIntervalSec=0` with an explicit comment ("Never give up restarting — the glue-* pool exits after every
+      single job by design"), so a restart-rate lockout is structurally impossible for this unit; (5) the
+      `github-glue-slot-refresh-*` timers — a DIFFERENT, unrelated service (git-clone-refresh only, `Restart=no`,
+      oneshot) that happened to run a few minutes later and is a dead end; (6) GitHub's own audit log — unavailable via
+      API for this account (`404`, audit-log is an org/enterprise-only endpoint, this is a personal-account repo). No
+      `auditd` installed on the host, so there is no OS-level record of which process/session issued the stop.
+      **Remaining candidate, unprovable from this host alone**: a GitHub-side action (e.g. a runner removed/deregistered
+      via the GitHub API or UI) that the runner's own wrapper script propagates into a self-directed `systemctl stop` on
+      clean deregistration — would explain an explicit-stop signature with zero local trace, but confirming it needs
+      GitHub's audit log (org/enterprise plan) or the operator's own recollection of any action taken around
+      08:59:35–09:02:27 UTC on 2026-08-04, neither of which this session has access to. Genuine root cause: NOT
+      DETERMINED.
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the SAME planning VM
       (`ip-172-31-3-59`, instance `i-042a6332509482556`, unified-trading-pm's own writer pool) — root cause was a
       **diagnostic miss, not a genuinely unfixable hang**: my earlier "root cause NOT found" checks
