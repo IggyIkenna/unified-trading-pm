@@ -125,7 +125,7 @@ def main() -> int:
             to_update.append((item_id, num, repo, title, status))
 
     print(f"\nTasks to mark Done: {len(to_update)}")
-    for upd_item_id, upd_num, upd_repo, upd_title, upd_status in to_update:
+    for _upd_item_id, upd_num, upd_repo, upd_title, upd_status in to_update:
         print(f"  #{upd_num} ({upd_repo}) {upd_title}... [current: {upd_status}]")
 
     if not to_update:
@@ -139,7 +139,7 @@ def main() -> int:
             return 0
 
     updated = 0
-    for upd_item_id, upd_num, upd_repo, upd_title, upd_status in to_update:
+    for upd_item_id, upd_num, _upd_repo, _upd_title, upd_status in to_update:
         if upd_status == "Done":
             print(f"  #{upd_num} already Done, skip")
             continue

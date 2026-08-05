@@ -2,7 +2,7 @@
 
 Mega-audit Phase A6 (operator directive 2026-05-20). Per CLAUDE.md
 "Batch = Live (CRITICAL)" — live + batch are operational modes of the
-same pipeline. For every venue × data_type with a batch adapter, there
+same pipeline. For every venue x data_type with a batch adapter, there
 MUST be a live adapter (potentially from a different upstream source,
 but same schema + same manifest emission contract).
 
@@ -119,7 +119,7 @@ def extract_venue_data_type(path_str: str) -> tuple[set[str], set[str]]:
     return venues, data_types
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901 -- one-off audit script, not worth restructuring
     paths = walk_repos()
     print(f"Walking {len(paths):,} files across {len(ADAPTER_REPOS)} adapter repos ...", flush=True)
 
