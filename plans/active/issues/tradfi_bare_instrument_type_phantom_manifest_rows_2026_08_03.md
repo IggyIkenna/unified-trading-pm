@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [tradfi, manifest, phantom-rows, data-correctness, available_at, instrument_type, delete-safety]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -48,7 +48,7 @@ source:
   mtds_available_at_cross_asset_backfill-008), 2026-08-03, slot 14."
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,

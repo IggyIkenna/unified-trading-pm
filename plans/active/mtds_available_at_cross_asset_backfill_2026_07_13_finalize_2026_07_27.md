@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -46,7 +46,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -54,20 +54,24 @@ context_scope:
 
 # mtds_available_at_cross_asset_backfill_2026_07_13 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **✅ CLOSED 2026-08-05** — all 16 source-plan todos confirmed done; source plan archived to
+> `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s checkboxes** against whatever
-      shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed, then
-      run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any
-      CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is
-      fully closed. If real work remains after the AO-dispatched todos land, leave
-      `mtds_available_at_cross_asset_backfill_2026_07_13.md` active (do not force-archive) and note what's still open
-      here instead.
+- [x] ✅ [REVIEW] P2. **Reconcile `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s checkboxes** against whatever
+      shipped — all 16 todos already `- [x]` (confirmed via `grep -n '^\- \[ \]'` → 0 open); no DEFERRED prose-only
+      items; no `locked_by`; source plan archived with banner + `superseded_by:` + `git mv` to
+      `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`. No new codex contracts established
+      (pure execution plan). Referrer-path updates deferred to regeneration tools (INDEX.md auto-regenerated,
+      `check_reference_paths.py` covers the rest).
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries) -- still correct, code-free finalize gate.
+- **2026-08-05 (slot-6, infra)**: reconciled source plan — all 16 todos already `- [x]`; zero `- [ ]` remaining; no
+  DEFERRED prose items; no `locked_by`. Archived source plan via 6-step ritual: banner + `superseded_by:` added,
+  `status: active → complete`, `git mv` to `/plans/archive/2026_08/`. No new codex contracts to document (pure execution
+  plan). Referrer-path updates deferred to automated tooling (`regenerate_active_plan_index.py`,
+  `check_reference_paths.py`). This finalize plan's sole todo flipped `- [x]`.

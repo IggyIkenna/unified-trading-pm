@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [plan-hygiene, line-cap, archival, manifest-consolidator]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/archive/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md,
     /plans/archive/issues/dp_consolidator_scheduler_paused_prediction_recurrence_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -44,7 +44,7 @@ depends_on: []
 last_updated: 2026-07-31
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/task_template.md,
     /plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_progress_log_history_2026_08_01.md,

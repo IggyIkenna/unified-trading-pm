@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [data-correctness, manifest-consolidator, available_at, prediction, fill-rate]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
   ]
@@ -48,7 +48,7 @@ depends_on: []
 last_updated: 2026-08-02
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
     /codex/02-data/availability-manifest-and-data-status.md,

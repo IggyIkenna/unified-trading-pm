@@ -131,6 +131,8 @@ drift_direction: advance-code
     - **[DATA] P1.** Post-backfill relabel (after the 6 running backfill VMs finish)
     - **[SCRIPT] P2.** Relaunch features-sfi-progressive (code fix shipped, SPORTS re-run pending)
     - **[DATA] P2.** Enrichment completed clean at ~30-34% honest, ~70k unattempted/entity = API-Football daily-cap
+  - [`plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`](/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md)
+    — 0 open todos (shipped-history fork from `data_completion_sports_2026_07_24.md`; record-only, status: complete).
   - [`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`](/plans/active/sports_live_availability_and_source_latency_2026_07_24.md)
     (2 open, added to this index 2026-07-24 — was missing): Live-ODDS quota/book-set decision
     (BLOCKED-OPERATOR-DECISION)

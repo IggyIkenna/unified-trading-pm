@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 247 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 233 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (37)
+### cefi (31)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -58,14 +58,6 @@ by hand._
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
-- [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md) —
-  Third AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode)
-  immediately after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic)
-  and… **[ARCHIVED 2026-08-05]**
-- [`cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26`](../archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md)
-  — Gated closeout for cefi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
-  true until all 5 of that plan's todos are done. Mirrors the batch1/batch2 finalize pattern: reconcile each source
-  doc's… **[ARCHIVED 2026-08-05]**
 - [`cefi_satellite_ao_dispatch_batch4_2026_07_31`](./cefi_satellite_ao_dispatch_batch4_2026_07_31.md) **[draft]** —
   Fourth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-31 (scheduled autonomous
   dispatch, tranche=cefi). Phase 0 re-derived the covering-plan set via `generate_ag_closeout_audit_candidates.py` (101…
@@ -73,14 +65,6 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends:
   true until all 7 of that plan's todos are done. Mirrors the batch1/batch2/batch3 finalize pattern: reconcile each
   source…
-- [`cefi_satellite_ao_dispatch_batch5_2026_08_02`](../archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md)
-  **[archived]** — Fifth AO-dispatch batch for cefi, drafted 2026-08-02 against the five source docs the
-  `/ag-closeout-audit` cefi run named in the operator's 2026-07-30 interactive Q&A (dispatch explicitly AUTHORIZED in
-  that session, so this plan ships…
-- [`cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize`](../archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md)
-  **[archived]** — Gated closeout for cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4 finalize pattern:
-  reconcile each source…
 - [`cefi_satellite_ao_dispatch_batch6_2026_08_02`](./cefi_satellite_ao_dispatch_batch6_2026_08_02.md) **[draft]** —
   Sixth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-02 (scheduled autonomous
   dispatch, tranche=cefi, slot 8). Phase 0 re-derived the covering-plan set via
@@ -149,7 +133,7 @@ by hand._
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
   UTL…
 
-### defi (36)
+### defi (30)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -187,11 +171,6 @@ by hand._
 - [`defi_consolidated_closeout_2026_07_18`](./defi_consolidated_closeout_2026_07_18.md) — Single coordination plan that
   AGGREGATES (references, does NOT duplicate) every open defi + defi-touching IS/MTDS plan/issue into ONE ordered pass,
   mirroring cefi_consolidated_closeout_2026_07_18.md /…
-- [`defi_consolidated_native_ao_extract_2026_07_25`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md)
-  — **[ARCHIVED 2026-08-05]** — Fresh AO-eligibility triage of defi_consolidated_closeout_2026_07_18.md's OWN native
-  `- [ ]` todos. All 5 todos shipped; evidence reconciled back into defi_consolidated_closeout_2026_07_18.md.
-- [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — **[ARCHIVED 2026-08-05]** — Gated closeout, all 3 todos complete. Archived alongside its parent extraction plan.
 - [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04`](./defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md)
   — Operator corrected this session's initial posture (treating several findings as "low priority, scope only, defer") —
   the actual bar is ZERO non-canonical values across every axis, permanently, with live writers and backfills verified
@@ -219,9 +198,9 @@ by hand._
   true until all 12 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct
   source…
 - [`defi_satellite_ao_dispatch_batch5_2026_07_27_finalize`](./defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md)
-  — Gated closeout for defi_satellite_ao_dispatch_batch5_2026_07_27.md (ARCHIVED 2026-08-05). Machine-held via
-  depends_on + gate_on_depends: true until all 7 of that plan's todos are done. Mirrors batch1-4-finalize's pattern
-  (reconcile each distinct source doc's…
+  — Gated closeout for defi_satellite_ao_dispatch_batch5_2026_07_27.md — machine-held via depends_on + gate_on_depends:
+  true until all 7 of that plan's todos are done. Mirrors batch1-4-finalize's pattern (reconcile each distinct source
+  doc's…
 - [`defi_satellite_ao_dispatch_batch6_2026_07_30`](./defi_satellite_ao_dispatch_batch6_2026_07_30.md) — Sixth
   AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` role running the `/ag-closeout-audit`
   skill's Phase-1 (per-doc classify) + Phase-3 (conflict-check + draft) triage over all 66 defi AG-primary docs…
@@ -229,10 +208,6 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
-- [`defi_satellite_ao_dispatch_batch8_2026_08_02`](../archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md) —
-  ✅ **ARCHIVED 2026-08-05.** Eighth AO-dispatch batch for defi, produced by the scheduled `na_eligibility_auditor`
-  running `/na-eligibility-audit defi` (2026-08-02). Todo completed 2026-08-05 (force+skip AAVE-oracle sample-download
-  verified). Phase 0 found 34 defi-OWNED `assigned_vm: NA` docs (48 in the tranche's candidate set, 14 owned by…
 - [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](./defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch8_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until that plan's todo is done. Mirrors batch1-7-finalize: reconcile the single source doc…
@@ -257,23 +232,16 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
-  Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
-  unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.
-  Phases…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
   — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched…
-- [`mvp_backfill_defi_onchain_v10_2026_06_27`](../archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md) —
-  Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices)
-  for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis.
 - [`mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27`](./mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27.md)
   — Gated closeout for mvp_backfill_defi_onchain_v10_2026_06_27.md -- machine-held via depends_on + gate_on_depends:
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
   todo…
 
-### tradfi (27)
+### tradfi (24)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -299,10 +267,6 @@ by hand._
   Split out of instruments_foundation_completeness_2026_06_24.md (2026-07-24 line-cap remediation, 4-way split,
   operator- approved). Owns tradfi's gated G1→G5 rebuild — billable-venue guard, calendar/session fail-closed, CME/ES
   ohlcv + Yahoo…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
-  Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
-  unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.
-  Phases…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
   — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -365,7 +329,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (31)
+### sports (29)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -450,13 +414,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch5_2026_07_26.md — machine-held via depends_on +
   gate_on_depends: true until all 25 of that plan's todos are done. Mirrors batch3/batch4-finalize's pattern (reconcile
   each distinct source…
-- [`sports_satellite_ao_dispatch_batch6_2026_07_26`](./sports_satellite_ao_dispatch_batch6_2026_07_26.md) — Sixth
-  AO-dispatch batch for sports, produced by an `/ag-closeout-audit sports` run later on 2026-07-26 (autonomous mode,
-  operator away). batch5's Phase-1 snapshot was taken earlier the SAME day; its own execution then (a) split…
-- [`sports_satellite_ao_dispatch_batch6_2026_07_26_finalize`](./sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md)
-  — Gated closeout for sports_satellite_ao_dispatch_batch6_2026_07_26.md — machine-held via depends_on +
-  gate_on_depends: true until all 9 of that plan's todos are done. Mirrors the batch3/batch4/batch5-finalize pattern
-  (reconcile each…
 - [`sports_satellite_ao_dispatch_batch9_2026_08_04`](./sports_satellite_ao_dispatch_batch9_2026_08_04.md) **[draft]** —
   Ninth AO-dispatch batch for sports, produced by a fresh `/ag-closeout-audit sports` run (2026-08-04): 57 sports
   AG-primary docs classified via a per-doc Workflow pass (Phase 1), 42 came back orphaned (23 partial coverage, 19 never
@@ -473,7 +430,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (29)
+### prediction (28)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -499,10 +456,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
-  Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
-  unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.
-  Phases…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
   — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -579,7 +532,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (61)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -644,14 +597,6 @@ by hand._
   — Second half of the cross-cutting tranche's first AO-dispatch batch — see
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` for the full Phase-1/Phase-3 audit summary, the Deferred
   conflict-gated/operator-gated/time-gated sections…
-- [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26`](./cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
-  — Second AO-dispatch batch for the cross-cutting tranche, produced by re-invoking `/ag-closeout-audit cross-cutting`
-  after batch1/batch1b. Its dominant finding is a MEMBERSHIP gap, not a fresh-orphan gap: batch1's Phase-1 scope was 59
-  docs,…
-- [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize`](./cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md)
-  — Gated closeout for cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md — machine-held via depends_on +
-  gate_on_depends: true until all 14 todos are done. Reconciles each named source doc's checkboxes independently, then
-  re-checks…
 - [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01`](./cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
   **[draft]** — Third AO-dispatch batch for the cross-cutting tranche, produced by re-invoking
   `/ag-closeout-audit cross-cutting` (autonomous, scheduled `ag_closeout_auditor` dispatch `agt-a5c7d6`, slot 13). Phase
@@ -786,6 +731,9 @@ by hand._
 - [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
   — Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
   runs on Phase 0 completion.
+- [`resource_watchdog_host_guardian_2026_08_05`](./resource_watchdog_host_guardian_2026_08_05.md) — A persistent daemon
+  that monitors CPU, RAM, and swap for every process in the orchestrator cgroup and kills non-allowlisted processes that
+  exceed per-resource thresholds. Addresses the 2026-08-05 OOM incident (two exec(eval(stdin))…
 - [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md)
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
@@ -793,8 +741,11 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (16)
+### ao (17)
 
+- [`ao_fleet_cache_tokens_and_task_count_2026_08_05`](./ao_fleet_cache_tokens_and_task_count_2026_08_05.md) — Two small,
+  related agent-orchestrator dashboard gaps found while answering an operator question about the Fleet table's token
+  badge. (1) The live per-task and per-session token badges (Fleet table + Agents panel) show blended input+output…
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
@@ -853,12 +804,15 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (13)
+### ci (15)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
   archived (65/67 todos done, plan-line-cap remediation 2026-07-24): (1) the CI-runner-blocked full
   `generate-unified-openapi.sh`…
+- [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
+  target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
+  should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
 - [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
   The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
   Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
@@ -892,6 +846,9 @@ by hand._
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…
+- [`self_hosted_runner_public_repo_revert_2026_08_05`](./self_hosted_runner_public_repo_revert_2026_08_05.md) — 17 of
+  the 25-repo self-hosted CI fleet are PUBLIC GitHub repos, confirmed intentional by the operator 2026-08-05 — GitHub
+  Actions is unmetered on GitHub-hosted runners for public repos, so their self-hosted CI can revert to ubuntu-latest…
 - [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](./test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
   — Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
   market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
@@ -899,8 +856,11 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (17)
+### infrastructure (19)
 
+- [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
+  target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
+  should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
 - [`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03`](./ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md) —
   The AO orchestrator box (i-0c9b283b31d6b5ca7) colocates its own dispatch role with ~24 repos' self-hosted GitHub
   Actions runners — the confirmed root cause of the open fleet-wide capacity-crisis incident. This plan migrates the
@@ -958,6 +918,9 @@ by hand._
 - [`repo_scripts_governance_audit_2026_06_18`](./repo_scripts_governance_audit_2026_06_18.md) — Govern the scripts/
   directories across repos — add ruff-lint pass, audit for deprecation/deletion, and define the strict-quickmerge carve
   scope for D16.
+- [`self_hosted_runner_public_repo_revert_2026_08_05`](./self_hosted_runner_public_repo_revert_2026_08_05.md) — 17 of
+  the 25-repo self-hosted CI fleet are PUBLIC GitHub repos, confirmed intentional by the operator 2026-08-05 — GitHub
+  Actions is unmetered on GitHub-hosted runners for public repos, so their self-hosted CI can revert to ubuntu-latest…
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 

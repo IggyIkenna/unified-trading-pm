@@ -9,7 +9,7 @@ summary: >
   land. defi (3.0M rows) has NO existing capture-path available_at threading in its rebuild script, so it is
   audit-and-decide only in this plan, gated behind an explicit operator go/no-go given the sports CF-8 full-rebuild
   regression precedent. cefi is explicitly OUT OF SCOPE — its consolidator is stale/down, tracked separately.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi, defi, prediction]
 stage: [data]
@@ -44,7 +44,7 @@ source: >
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -54,6 +54,9 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer,
   ]
 ---
+
+> **ARCHIVED 2026-08-05** — all 16 todos complete across prediction/tradfi/defi backfill + infra guardrail; closeout
+> tracked in `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md`.
 
 # Cross-asset-group available_at manifest backfill (market-data-tick)
 
