@@ -117,13 +117,13 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: unified-trading-library
     file: unified_trading_library/manifest_writer/_maintenance.py
-    line: 537
+    line: 562
     function: rebuild_manifest_from_canonical_paths
     status: intentionally_bare_verbatim_schema_required
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: unified-trading-library
     file: unified_trading_library/manifest_writer/_maintenance.py
-    line: 802
+    line: 798
     function: merge_manifest_from_canonical_paths
     status: intentionally_bare_verbatim_schema_required
     successor: read_availability_index_bare_defi_callers_2026_07_27
@@ -133,12 +133,7 @@ entries:
     function: reconcile_manifest
     status: intentionally_bare_verbatim_schema_required
     successor: read_availability_index_bare_defi_callers_2026_07_27
-  - repo: unified-trading-library
-    file: unified_trading_library/manifest_writer/_writer_io.py
-    line: 196
-    function: lookup
-    status: intentionally_bare_verbatim_schema_required
-    successor: read_availability_index_bare_defi_callers_2026_07_27
+  # -- _writer_io.py:209 lookup() — REMOVED 2026-08-05 (slot-13): now has filters=date_filter, no longer bare.
 
   # -- pending_triage (10 sites) --
   - repo: execution-service
@@ -147,24 +142,8 @@ entries:
     function: resolve_manifest_capture_status
     status: pending_triage
     successor: read_availability_index_bare_defi_callers_2026_07_27
-  - repo: instruments-service
-    file: instruments_service/cli/main.py
-    line: 82
-    function: _run_coverage_status
-    status: pending_triage
-    successor: read_availability_index_bare_defi_callers_2026_07_27
-  - repo: instruments-service
-    file: instruments_service/cli/main.py
-    line: 154
-    function: _run_refresh_league_entity_coverage
-    status: pending_triage
-    successor: read_availability_index_bare_defi_callers_2026_07_27
-  - repo: instruments-service
-    file: instruments_service/cli/main.py
-    line: 294
-    function: _run_reprocess_shards
-    status: pending_triage
-    successor: read_availability_index_bare_defi_callers_2026_07_27
+  # -- instruments-service cli/main.py — REMOVED 2026-08-05 (slot-13): all 3 sites now fixed
+  #    (lines 85+159 projected with columns=, line 307 QG-allow'd per instruments-service@a325da86).
   - repo: market-tick-data-service
     file: market_tick_data_service/engine/orchestrator/venue_fetch.py
     line: 186
