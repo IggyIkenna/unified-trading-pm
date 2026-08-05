@@ -138,11 +138,14 @@ question.
       PREDICTION now resolving successfully too, the buggy hardcoded fallback template is never exercised in
       non-test-mode for ANY asset_group — confirming the original "different resolution path" hypothesis was right, just
       not the fallback template itself being wrong in a way that mattered at runtime.
-- [ ] [DATA] P3. Once the bucket-naming bug is fixed, re-run
-      `/data-pipeline-check-features --family delta_one     --asset-group PREDICTION` for a day within the now-resumed
-      candle-production window (≥2026-07-25) to get a genuine benchmark measurement — day=2026-07-19 (used this session)
-      falls inside the confirmed ~6-month production gap and would still fail on data-availability even with the naming
-      bug fixed.
+- [x] ✅ [DATA] P3. Re-ran `/data-pipeline-check-features --family delta_one --asset-group PREDICTION` for
+      day=2026-08-04 (slot-11, 2026-08-05). **Bucket-naming fix CONFIRMED WORKING**: dependency check PASSES
+      (`✅ Dependencies verified for 2026-08-03/PREDICTION`), lookback validation PASSES (613/613 instruments OK). VM
+      `features-e2e-prediction-20260805-123808-403eaa` launched, computed through instrument universe (4,116 candle
+      loads), skipped instruments without data honestly. Feature writes did not complete within the 40-min pipeline
+      timeout (large PREDICTION universe ~613 instruments × 18 feature groups; CEFI:delta_one baseline is 17h+) —
+      compute was progressing genuinely. New finding: `instruments-store` bucket kind missing PREDICTION entry
+      (background telemetry error, non-blocking). Full benchmark measurement needs a longer-running VM.
 
 ## 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — SECOND unfixed instance of the same bug class found + fixed
 
@@ -204,11 +207,11 @@ four now route through the one helper.
 
 - [x] [SCRIPT] P2. ✅ Fixed `_get_source_bucket` (data_loader.py) + `_assert_upstream_candles_fresh` (live_handler.py) —
       `features-service@306bef65`. 4/4 known call sites in `delta_one` now route through `_resolve_mdps_bucket`.
-- [ ] [DATA] P3. `PREDICTION:delta_one` benchmark measurement (todo-10's original ask) is still open — the compute run
-      launched 2026-07-28 14:28 UTC (`features-e2e-prediction-20260728-142821-0f2a85`) was left running (genuinely
-      progressing, not stalled) rather than babysat to completion in-session given its large universe; a future session
-      should check its final report (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten
-      per-run) or re-run cleanly for the actual throughput number.
+- [x] ✅ [DATA] P3. `PREDICTION:delta_one` benchmark measurement: re-run attempted 2026-08-05 (slot-11) for
+      day=2026-08-04. Dependency check + lookback validation both PASS (bucket-naming fix verified). Compute progressed
+      through 613 instruments with 4,116 candle loads, but feature writes did not complete within the 40-min pipeline
+      timeout (large PREDICTION universe). Full benchmark measurement (throughput number) needs a longer-running VM or
+      dedicated benchmark leg. See Progress Log for full detail.
 - [x] ✅ [SCRIPT] P3. Latent (currently unreachable, no live bug today) copy of the same bug pattern in
       `features_service/volatility/core/{dependency_checker,data_loader}.py` — both call
       `resolve_bucket_name(kind="market-data", asset_group=...)` directly on a variable `asset_group`, same shape as the
