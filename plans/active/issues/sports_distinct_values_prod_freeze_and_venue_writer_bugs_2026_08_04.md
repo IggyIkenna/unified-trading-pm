@@ -253,3 +253,16 @@ confirming before scoping a re-stamp for it.
   around, documented as a follow-up todo). Extracted `--days-file` day-lists for the re-stamp but did not yet execute it
   (no ready VM launcher for this specific script; needs the minimal-VM-+-SSH path scoped in the todo above) — session
   paused here for a `/pre-compact` checkpoint before continuing.
+
+## Deferred work after 2026-08-05
+
+| Item                                                              | State              | Blocked on                                                                                                                                                                              |
+| ----------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Historical GCS+manifest re-stamp (LADBROKES_UK/SPORT888)          | Not done           | Nobody — real work. Day-lists regenerate in seconds (recipe above); needs a clean VM (no ready-made launcher for this one-off script — build a minimal one, or SSH a fresh generic VM). |
+| FOOTBALL 194 `attempted_failed` phantom rows                      | Not done           | Nobody — confirmed NOT self-healing after 24h+; needs a short investigation into why the retry hasn't cleared them.                                                                     |
+| `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                                                                                                                                  |
+| LDR→main promotion of today's 5 shipped commits                   | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run.                                                                                                         |
+
+**Recommended next item**: the historical re-stamp (P2, real user-visible data-correctness gap, tooling already proven
+safe) — the VM-launch mechanics are the only remaining unknown, everything else (day-lists, scripts, safety shape) is
+already worked out above.
