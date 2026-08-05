@@ -432,13 +432,18 @@ defi/prediction, where MDPS always writes its own candle rows under its own `ser
 cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) therefore only needs to cover the sports
 `ODDS_API` path — no other asset_group needs the same row-scoping fix applied pre-emptively.
 
-- [ ] [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — 58,013 rows
-      in `market-data-tick-pred-prd-central-element-323112` carry `venue=KALSHI, data_type=trades` but
-      `source=polymarket_clob` (writes span 2026-07-11 05:56–06:00 UTC, a narrow ~4-minute window — looks like a single
-      misconfigured backfill/replay run rather than an ongoing writer bug). Confirm whether these rows are genuine
-      KALSHI trades mis-stamped with the wrong `source`, or genuine POLYMARKET trades mis-stamped with the wrong `venue`
-      — either way `source=`/`venue=` disagree with each other for this slice. Done-when: root cause identified + (if
-      genuinely mislabeled) a restamp plan. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — ROOT
+      CAUSE IDENTIFIED + DATA ALREADY RESTAMPED (slot 15, 2026-08-05). **Finding**: genuine KALSHI
+      trades/book_snapshot_5 rows mis-stamped with `source=polymarket_clob`. **Root cause**:
+      `_rebuild_prediction_cf11.py` CF-11 pass computed `bundle_pm`/`source` once for POLYMARKET outside the per-venue
+      loop, hardcoding `polymarket_clob` for every venue. Fix #1 (`3397e7ae`, Jul 10 16:52) fixed
+      `rebuild_prediction_manifest.py`; Fix #2 (`77065bd5`, Jul 11 07:16) fixed `_rebuild_prediction_cf11.py` — 58,013
+      rows written in the ~14h gap. **Current state**: all 370,426 KALSHI rows now correctly carry `source=kalshi` (0
+      rows with `source=polymarket_clob`). 306K rows restamped with Aug 2026 `written_at` by a subsequent manifest
+      rebuild. **No restamp plan needed** — data already corrected. Evidence: DuckDB query of
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` (185 MB, 2026-08-05)
+      confirms 0 rows with `venue=KALSHI AND source=polymarket_clob`; all 370,426 KALSHI rows carry `source=kalshi`.
+      Repo: market-tick-data-service (no code change — investigation only).
 - [ ] [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** — the P1 audit above
       classified DeFi as structurally low-risk by naming-convention analysis only (its `market-data-tick-defi-prd`
       manifest is 1.07 GB, judged disproportionate for this session's single-walk budget). Done-when: a single DuckDB
