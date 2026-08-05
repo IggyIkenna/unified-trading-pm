@@ -301,16 +301,28 @@ jobs:
           cd "$(dirname "${GITHUB_WORKSPACE}")"
           DERIVED_BASE="$(dirname "$(dirname "$(dirname "$(dirname "${GITHUB_WORKSPACE}")")")")"
           SCRIPT="${DERIVED_BASE}/fast-checkout.sh"
+          echo "DEBUG: GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+          echo "DEBUG: DERIVED_BASE=${DERIVED_BASE}"
+          echo "DEBUG: SCRIPT=${SCRIPT}"
+          ls -la "${DERIVED_BASE}/" 2>&1 | head -10 || echo "DEBUG: DERIVED_BASE not listable"
           if [ -f "${SCRIPT}" ]; then
             bash "${SCRIPT}" "${GITHUB_WORKSPACE}"
           else
             echo "no fast-checkout.sh at ${SCRIPT} (GH-hosted, or not yet deployed to this pool) -- plain clone"
+            # BUG (found live, 2nd canary run): a plain `git clone` of a PRIVATE repo with no
+            # credentials configured yet fails outright ("could not read Username for
+            # 'https://github.com': No such device or address" — a non-interactive credential
+            # prompt). Mirrors actions/checkout@v4's own order: init empty + configure the auth
+            # header FIRST, only then fetch — never an unauthenticated network op against a
+            # private repo.
             rm -rf "${GITHUB_WORKSPACE}"
-            git clone --quiet --no-checkout "https://github.com/${GITHUB_REPOSITORY}.git" "${GITHUB_WORKSPACE}"
-            git -C "${GITHUB_WORKSPACE}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
-            git -C "${GITHUB_WORKSPACE}" checkout --force --quiet "${GITHUB_SHA}"
+            mkdir -p "${GITHUB_WORKSPACE}"
+            git init --quiet "${GITHUB_WORKSPACE}"
+            git -C "${GITHUB_WORKSPACE}" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
             BASIC_AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0 2>/dev/null || printf 'x-access-token:%s' "${GH_TOKEN}" | base64)"
             git -C "${GITHUB_WORKSPACE}" config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic ${BASIC_AUTH}"
+            git -C "${GITHUB_WORKSPACE}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
+            git -C "${GITHUB_WORKSPACE}" checkout --force --quiet "${GITHUB_SHA}"
           fi
 
       - name: Detect metadata-only / docs-only changeset (fast-paths)

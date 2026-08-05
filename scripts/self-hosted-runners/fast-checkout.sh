@@ -93,7 +93,14 @@ REPO_URL="https://github.com/${GITHUB_REPOSITORY}.git"
 plain_clone() {
   log "plain clone path: ${REPO_URL} @ ${GITHUB_SHA}"
   rm -rf "${TARGET}"
-  git clone --quiet --no-checkout "${REPO_URL}" "${TARGET}"
+  # BUG fixed 2026-08-05 (found live on the 2nd canary run): a plain `git clone` of a PRIVATE
+  # repo with no credentials configured yet fails outright ("could not read Username for
+  # 'https://github.com': No such device or address" — a non-interactive credential prompt).
+  # Mirrors actions/checkout@v4's own order: init empty + configure the auth header FIRST, only
+  # then fetch — never an unauthenticated network op against a private repo.
+  mkdir -p "${TARGET}"
+  git init --quiet "${TARGET}"
+  git -C "${TARGET}" remote add origin "${REPO_URL}"
   configure_git_credentials "${TARGET}"
   git -C "${TARGET}" fetch --quiet --depth=2 origin "${GITHUB_REF}"
   git -C "${TARGET}" checkout --force --quiet "${GITHUB_SHA}"
