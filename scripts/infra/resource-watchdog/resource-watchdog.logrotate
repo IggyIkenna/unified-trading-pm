@@ -13,6 +13,16 @@
 #
 # Install target: /etc/logrotate.d/resource-watchdog (copied by bootstrap_vm.sh
 # Step 4.8 / install-resource-watchdog-retention.sh).
+#
+# `su root root` is required, not optional (found live 2026-08-05): /var/log on
+# the orchestrator VM is `root:syslog`, group-writable -- logrotate's own
+# hardening refuses to rotate a file under a directory that isn't exclusively
+# root-writable unless a per-stanza `su` directive says which user/group to run
+# as, even though the system's global /etc/logrotate.conf already sets
+# `su root adm` (that global default does not reliably cascade into this
+# per-file stanza; declaring it here makes rotation work regardless of
+# processing order). Confirmed live: without this, logrotate -d silently
+# skipped the file every run ("insecure permissions") -- rotation never fired.
 
 /var/log/resource-watchdog.log {
     daily
@@ -22,4 +32,5 @@
     missingok
     notifempty
     create 0644 root root
+    su root root
 }
