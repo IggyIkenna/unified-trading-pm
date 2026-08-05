@@ -137,11 +137,16 @@ jobs:
           import json
           with open("workspace-manifest.json") as f:
               m = json.load(f)
+          # ldr_terminal (2026-08-05): a repo whose LDR branch IS the deploy target — it never
+          # promotes anywhere (not staging, not main-direct), unlike ldr_main which promotes
+          # LDR->main directly. Must be excluded here independent of staging_dormant_mode, or
+          # a future dormant-mode flip would silently sweep it into the staging drain.
+          NEVER_PROMOTE = ("ldr_main", "ldr_terminal")
           dormant = bool(m.get("staging_dormant_mode"))
           for k, v in m.get("repositories", {}).items():
               if k.startswith("_"):
                   continue
-              if dormant or (isinstance(v, dict) and v.get("promotion_model") == "ldr_main"):
+              if dormant or (isinstance(v, dict) and v.get("promotion_model") in NEVER_PROMOTE):
                   print(k)
           PYEOF
           )
@@ -209,9 +214,11 @@ jobs:
           # LDR→staging drain PR for them just jams (stuck drain + CodeBuild action_required + PAT churn).
           # This clears those blockages AT THE SOURCE. Reversible: flip staging_dormant_mode off / unset
           # ldr_main and the drain resumes for that repo (the through-staging path for major/breaking/operator).
+          # ldr_terminal (2026-08-05): same exclusion as ldr_main here — see the orphan-drain
+          # step above for why this must not depend solely on the (separately-toggled) dormant flag.
           dormant = bool(m.get("staging_dormant_mode"))
           def _main_direct(cfg):
-              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") == "ldr_main")
+              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") in ("ldr_main", "ldr_terminal"))
           repos = {
               k for k, v in m.get("repositories", {}).items()
               if not k.startswith("_") and not _main_direct(v)
