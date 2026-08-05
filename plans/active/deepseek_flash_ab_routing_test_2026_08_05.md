@@ -41,8 +41,14 @@ context_scope:
     agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/deepseek_usage.py,
+    agent-orchestrator/server/deepseek_usage_poller.py,
     agent-orchestrator/server/routes/backlog.py,
+    agent-orchestrator/server/models/accounts.py,
+    agent-orchestrator/server/models/backlog.py,
+    agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/dashboard/src/TaskUsageWindows.tsx,
+    agent-orchestrator/dashboard/src/layout.tsx,
+    agent-orchestrator/scripts/orchestrator/repair_unpriced_deepseek_spend.py,
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 supersedes:
@@ -166,6 +172,50 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       persist. Out of scope to build inside this A/B test; flag as a follow-up if the operator agrees it's worth it.
 - [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
       plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
+- [x] 14. ✅ [BACKEND] [UI] P1. **Per-turn/per-task efficiency metrics** — operator ask (2026-08-05): avg turns/task,
+      context/task, and cache-read/cache-write/output/non-cache-input tokens per turn, with real
+      $ values, on both usage
+      surfaces so pro-vs-flash throughput (not just $) is comparable. Backend: `turn_count`
+      summed into `TaskUsageWindowTotals`/`UsageWindowTotals`, a new `_compute_task_window_stats` query against
+      `TaskUsageRow` for account-scoped task stats, all `*_per_turn`/`avg_*` fields computed server-side (None-safe on
+      zero-division). Frontend: a second table on both `TaskUsageWindowsPanel` and the Accounts panel's
+      `DeepSeekUsageTable`. Done-when: unit + Playwright coverage, QG green. — `agent-orchestrator@fff23c5`; 2431→2436
+      pytest (5 new), 2 new Playwright specs (`deepseek-per-turn-metrics.spec.ts`, both passing against the live e2e
+      fixture), tsc/vitest clean.
+- [x] 15. ✅ [BACKEND] P1. **Fix `spend_usd` NULL-poisoning bug found live during todo 14** — a `<synthetic>` transcript
+      turn (Claude Code's own locally-generated message marker, never sent to any provider) had no `_PRICE_PER_MILLION`
+      entry, so `price_usage` returned `None` for it — a KNOWN
+      $0 turn treated as an unknown one,
+      poisoning `spend_usd` to `None` for the whole task/window it fell in (`window_task_usage_totals`'s "any unpriced
+      row poisons the window" rule). Confirmed live: 13 real `deepseek-v4-pro` task_usage rows and 10 of 20
+      `deepseek-v4-flash` rows (50%!) were silently blank on the Task Token Usage panel because of this — actively
+      undermining this plan's own $/task
+      comparison. Fixed `price_usage` to treat `"<synthetic>"` as a real $0 spend. Done-when: dedicated unit test + a
+      repair script for already-poisoned rows. — `agent-orchestrator@fff23c5`,
+      `test_price_usage_synthetic_marker_is_known_zero_spend`.
+- [x] 16. ✅ [OPERATOR] P2. **Run `repair_unpriced_deepseek_spend.py --apply` on the live orchestrator VM** — todo 15
+      shipped the code fix but existing NULL-spend rows need this one-off repair pass (dry-run first, per the script's
+      own contract) to actually recover. Tagged `[OPERATOR]`-adjacent since it mutates live production rows directly via
+      SSM, same provenance as todo 6. Delete the script (per its own `Lifecycle:` marker) once a live dry-run confirms 0
+      remaining NULL-spend rows in both tables. — dry-run then `--apply` both run via SSM against `i-0c9b283b31d6b5ca7`:
+      Phase 1 (`deepseek_message_usage`) repaired 618/618 NULL rows (pure DB, no I/O). Phase 2 (`task_usage`) repaired
+      23/1000 — the other 977 are Anthropic-subscription rows with no registered price at all (expected, not a bug); 23
+      exactly matches the 13 pro + 10 flash null-spend rows found earlier this session. **Post-apply verification
+      (2026-08-05 23:20 UTC), direct query against `state.db`**: `deepseek-v4-pro` 392 lifetime tasks / `null_spend=0`;
+      `deepseek-v4-flash` 23 lifetime tasks / `null_spend=0`; `deepseek_message_usage` remaining `null_spend=0`. Fully
+      repaired — every DeepSeek task_usage row and every message-ledger row now has a real, non-null spend_usd. Script
+      deleted per its own `Lifecycle:` contract (0 remaining confirmed before delete) — `agent-orchestrator@433ab46`.
+- [ ] 17. [UI] P3. **Fleet table's `MODEL·OP` badge is misleading for DeepSeek-routed slots** — operator finding
+      (2026-08-05, screenshot review): the badge shows the Claude Code harness's own model TIER (e.g. "sonnet", from
+      `model_tier.py`) next to the `DEEPSEEK` provider pill, which reads as "DeepSeek's Sonnet" — not a real thing.
+      Confirmed live: a `slot_boot` event for a slot actually assigned to `deepseek-v4-flash` recorded
+      `"model": "sonnet"` — the tier label carries no information about which DeepSeek variant is actually serving the
+      request, and pro-vs-flash doesn't surface ANYWHERE on the Fleet table today (only in the Accounts/Task-Usage
+      panels via account_id/model filters). Two sub-asks: (a) show the real DeepSeek variant (pro/flash) on
+      DeepSeek-routed rows instead of/alongside the harness tier; (b) verify whether the `thinking: on/off` field is
+      even meaningful for a DeepSeek-routed worker (it's the Claude Code CLI's own flag, echoed regardless of provider —
+      unconfirmed whether DeepSeek's API honors it or silently ignores it) and label it honestly either way. Not started
+      — real remaining work, separate UI surface from todo 14's usage-panel changes.
 
 ## Codex SSOTs
 
@@ -223,6 +273,30 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   pass while still missing this real-world skew — the test should exercise the full `select_account_for_spawn` path, not
   just the accumulator helper) and to todo 9 (expect unequal sample sizes between pools; that's fine to report, not
   something to force into balance).
+- **2026-08-05 23:04-23:16 UTC — per-turn/per-task metrics shipped; live spend_usd repair applied**: operator asked (via
+  a screenshot of the Accounts panel) for avg turns/task, context/task, and cache-read/write/output/input tokens per
+  turn with real
+  $ values on both usage panels — shipped as `agent-orchestrator@fff23c5` (todo 14). While building it,
+  the operator separately flagged the Task Token Usage panel's Spend/Avg-$/task
+  columns rendering blank for real traffic — root-caused to a `<synthetic>` transcript-turn marker (Claude Code's own
+  locally-generated message stub, never sent to any provider) having no price-table entry, which poisoned `spend_usd` to
+  `None` for the WHOLE task/ window it fell in (todo 15). Fixed in the same ship; then ran
+  `repair_unpriced_deepseek_spend.py` live via SSM (todo 16): dry-run showed 618/618 `deepseek_message_usage` rows
+  repairable (pure DB, no I/O) and 23/1000 `task_usage` rows repairable — the other 977 are Anthropic-subscription rows
+  that never had a registered price to begin with (not a bug; `TaskUsageRow`'s own docstring already documents this),
+  and 23 matches EXACTLY the 13 pro + 10 flash null-spend rows found earlier in this same session's investigation.
+  Applied live — see next entry for the post-apply count. Separately, reviewing the Fleet table for this same screenshot
+  surfaced todo 17 (harness-tier "sonnet" label is meaningless/misleading next to the DEEPSEEK provider badge;
+  pro-vs-flash doesn't surface on the Fleet table at all) — filed as a tracked todo, not started, real remaining UI work
+  on a different surface than todo 14's usage panels.
+- **2026-08-05 ~23:17 UTC — deploy + repair-apply verification pending**: `ao-self-pull.sh` hit the SAME dirty-gate
+  class as todo 6 (`ao_self_pull_stalled_by_untracked_backup_files_2026_07_29`) — this time an untracked, 0-byte
+  `data/agent_orchestrator.db` file, traced to this SAME session's own earlier `sqlite3.connect()` DB-discovery script
+  (SQLite auto-creates an empty file on connect to a nonexistent path — a side effect of read-only-INTENDED exploration,
+  not a real artifact). Deleted, deploy proceeded clean; `systemctl restart orchestrator` then failed under the
+  `sudo -u ubuntu` wrapper (needs root, not the ubuntu user) — retried as root directly, confirmed `HEAD=fff23c5` +
+  `systemctl is-active`→`active`. Repair script `--apply` run immediately after; result being verified now — see the
+  next Progress Log entry (or this plan's Deferred table if not yet closed out) for the actual post-apply row counts.
 
 ## Deferred work after 2026-08-05
 
@@ -234,8 +308,11 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                      | Todo 8                                                            |
 | Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                      | Operator                                                          |
 | Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
+| Todo 17 — Fleet table's misleading "sonnet" tier label + unverified thinking-flag meaning for DeepSeek slots                                           | **Not done** — real work, separate UI surface (Fleet table, not the usage panels todo 14 touched)                                                                                       | Nothing — pick up directly                                        |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
-selection). Do not re-poll the fleet in the meantime — todo 7 already confirmed the mechanism works; further early
-checks just burn an SSM round-trip without changing the answer to anything actionable yet.
+selection). Do not re-poll the fleet for the A/B split itself in the meantime — todo 7 already confirmed the mechanism
+works; further early checks just burn an SSM round-trip without changing the answer to anything actionable yet. Todo 17
+(Fleet-table label fix) is real, standalone work that could be picked up independently of the 24h wait if there's
+appetite for it.
