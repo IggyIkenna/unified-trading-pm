@@ -163,6 +163,15 @@ same UAC-churn class:
   either UAC reverts/defers the un-wired declarations, or MTDS's `_PER_AG_SHARD_COUNTS["DEFI"]` is bumped 2856→2958 by
   the DECLARING side (with a comment citing the exact UAC commit that added the 102). MTDS-owner bumping the pin to
   chase UAC churn is a lockstep anti-pattern (masks the drift); the declaring side owns the pin bump.
+- **CORRECTION (16:48Z, slot-7 — VERIFIED WIRED, NOT aspirational)**: the +102 delta is the 29th DEFI data_type
+  dimension `oracle_prices` (2958 = 102 venues × 29 data_types, was 102×28=2856). This is NOT an unwired/aspirational
+  declaration like the rewards/fills/market_metadata removals above — `oracle_prices` is (a) a valid
+  `DATA_TYPES_BY_ASSET_GROUP["defi"]` entry (`market_data_categories.py:237`, "Chainlink oracle price snapshots") AND
+  (b) genuinely wired in MTDS (`cli/handlers/oracle_prices_handler.py` + `_oracle_prices_constants.py` +
+  `_oracle_prices_preflight.py` + `_oracle_prices_freshness.py`; `defi_catalog_reader.py` enumerates it). So the pin
+  SHOULD be 2958 — the correct resolution is a lockstep pin bump, NOT a UAC removal. The operator's removal ruling
+  (5f441e0d/ce9d8f12) does NOT apply here. MTDS-owner slot-7 applies the pin bump (2856→2958, citing this verified wired
+  evidence) as the small+clear reconciliation to unblock the green-tree gate.
 - **Unrelated to the two resolved blockers above** and to the staged iterrows fix (slot-7's 6-file bundle touches
   `engine/` readers only; the rule11 test is UAC-registry-driven shard enumeration). But it blocks the SAME green-tree
   commit boundary, so the unblock chain is now: UAC removals (done) → **rule11 lockstep bump (this addendum)** → aster
