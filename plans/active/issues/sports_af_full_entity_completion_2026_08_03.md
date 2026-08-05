@@ -75,7 +75,7 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                      |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc    |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 153,148 already resolved, **49,734 needed** (was 56,940 on 08-04, real -7,206) |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 157,453 already resolved, **49,442 needed** (was 56,940 on 08-04, real -7,498) |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
@@ -181,11 +181,12 @@ not urgent enough to block this campaign.
 - [ ] [SCRIPT] **P0** (reprioritized, near-complete). **Launch PLAYER_STATS MVP-96 backfill**
       (`--entity PLAYER_STATS 2020-06-06 <today>`) once the singleton lock frees up — only **998 needed shards**
       (2026-08-05 re-census), should converge fast.
-- [ ] [SCRIPT] P1. **Launch TEAMS all-leagues backfill** (47,020 needed, 2026-08-05 re-census — dropped from 64,723;
-      likely 1 call/league not 1 call/shard, confirm real call cost before estimating timeline; may complete far faster
-      than the shard count implies). Reprioritized above STANDINGS/INJURIES given the sharpest drop.
-- [ ] [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** (51,740 needed, 2026-08-05 re-census — dropped from
-      64,439). Same discipline.
+- [ ] [SCRIPT] P1. **Launch TEAMS all-leagues backfill** (46,786 needed as of 2026-08-05T19:11Z — **IN PROGRESS**,
+      `af-backfill-20260805-201310` launched 20:13Z after FIXTURE_STATS's rate slowed; likely 1 call/league not 1
+      call/shard, confirm real call cost before estimating timeline; may complete far faster than the shard count
+      implies).
+- [ ] [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** (51,114 needed, 2026-08-05 re-census — dropped from
+      64,439). Same discipline. Next up after TEAMS.
 - [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, unchanged — no backfill run against it yet)
       — likely per-fixture-date cadence, apply the daily stop/resume discipline.
 - [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved above: LEAGUES is a retired
@@ -555,3 +556,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-05T18:52Z** — `af-backfill-20260805-171010` still healthy, ~161.7min elapsed (still going), left running.
   **FIXTURE_STATS crossed below 50,000 needed for the first time**: 51,438→49,734 (-1,704). Total genuine progress since
   this VM launched: 56,940→49,734, a 12.7% reduction in one continuous run. Everything else flat.
+- **2026-08-05T19:11Z-20:13Z — deliberate entity switch.** FIXTURE_STATS's rate at ~180min elapsed clearly slowed:
+  49,734→49,442, only -292 (vs. ~1,000-1,700/check earlier in this same run). Rather than let a diminishing-returns run
+  keep occupying the singleton lock while TEAMS (46,786 needed) sits completely untouched, deliberately stopped the
+  still-healthy VM (`gcloud compute instances delete af-backfill-20260805-171010`) and launched TEAMS
+  (`af-backfill-20260805-201310`), confirmed RUNNING. FIXTURE_STATS ends this stretch at 49,442 needed (from 56,940 —
+  7,498 shards resolved, ~13.2% of its total, over one ~3-hour run). Will return to FIXTURE_STATS/FIXTURE_LINEUPS after
+  TEAMS/STANDINGS.
