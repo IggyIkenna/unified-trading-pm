@@ -133,8 +133,8 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
       follow-up: remove from `_EVM_EXTENDED_RATE_CONFIGS`; if their rate data is genuinely useful, route through a
       separate `yield_bearing_rates` data_type instead. (Repo: market-tick-data-service; investigation complete — no
       code change needed for this todo; removal is a follow-up.)
-- [ ] [DATA] P3. Remove `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` from
-      `_EVM_EXTENDED_RATE_CONFIGS` in
+- [x] ✅ [DATA] P3. Remove `IDLEDAI-BEST` / `IDLEUSDC-BEST` / `IDLEUSDT-BEST` / `PENDLE-SY-wstETH` / `PENDLE-SY-weETH`
+      from `_EVM_EXTENDED_RATE_CONFIGS` in
       `market-tick-data-service/market_tick_data_service/cli/handlers/_lst_extended_rates.py` (and the sibling
       `PENDLE-SY-weETH` which has the same structural issue — Pendle SY token, not an LST, also silently dropped by
       `_drop_unmapped_tokens`). Per investigation above: all 4 are `YIELD_BEARING` instruments that produce `lst_rates`
