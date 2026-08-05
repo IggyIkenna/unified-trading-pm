@@ -261,14 +261,14 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       `_derive_pm_source_transport`-equivalent logic) so CF-3/CF-4 can actually reach GREEN — do this in the SAME
       maintenance pass as the CF-8 available_at backfill rather than a separate production touch on this twice-regressed
       surface. **Gate re-verified 2026-08-05 (slot-16): still FALSE, no dispatchable work.** Repo: instruments-service.
-- [ ] [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
+- [x] ✅ [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
       Needs care: must NOT also suppress cefi's genuine, still-live, unadjudicated Era-B gap (521,513 rows) — the
       exception has to be keyed to tradfi specifically (or to an explicit per-AG adjudicated-exception registry), not a
       blanket "any AG" carve-out, mirroring the caution already applied to the sports skip-signal-false-negative and
       CF-8-denominator checker fixes in sibling docs (root-causing != safely fixing; a rushed fix risks masking a future
-      genuine regression). Repo: unified-trading-library.
+      genuine regression). Repo: unified-trading-library. — unified-trading-library@d3fb74d7
 - [x] ✅ [DATA] P3. Gate-check + documentation for the legacy trades-row backfill todo above — verified
       `sports-cf8-maintenance-window-scheduled` still FALSE (2026-08-05), filed BLK-40c4da25 (resolved: option C, park —
       do not execute), retagged the parent todo `BLOCKED-OPERATOR — BLK-d9137d48`. No dispatchable work until operator
