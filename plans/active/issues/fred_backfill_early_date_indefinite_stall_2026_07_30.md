@@ -380,12 +380,14 @@ anywhere.
   `git -C <repo>` — a persisted cwd silently runs both halves of a compound check in ONE repo. (3) Security flag
   (OPERATOR-OWNED, NOT mine to delete): 5 copies of the live `orch-dashboard-deployer@central-element-323112` GCP SA
   private key sit world-readable in shared `/tmp/tmp-*.json` (downloaded 2026-08-04 14:32→21:02). Recommend `shred -u`
-  if the key is still active — any slot on this host can read it. (4) Measurement trap (grep display artifact): on this
-  host, `rg`/`grep` output can TRUNCATE/MANGLE long identifier substrings (`GapBackln`, `Backln` for
-  `GapBackfill`/`Backfill`), so substring greps like `rg "fill"` return false positives (every "backfill" contains
-  "fill"). Diagnosing the POLYMARKET `fills` blocker, this nearly misread as "MTDS has fills wiring" (the real answer:
-  no fills capture — only `scripts/` rebuild one-offs). Grep-then-READ the actual line before concluding; prefer
-  word-boundary or exact-string greps (`git grep '"fills"'`).
+  if the key is still active — any slot on this host can read it. **CORRECTION (2026-08-05, slot-7)**: the files now sit
+  at mode `600` (permission tightened since the flag was written), so the "any slot can read it" exposure is resolved;
+  the rotation/shred recommendation still stands as operator-owned (the key was downloaded to a shared host and 5 copies
+  remain on disk). (4) Measurement trap (grep display artifact): on this host, `rg`/`grep` output can TRUNCATE/MANGLE
+  long identifier substrings (`GapBackln`, `Backln` for `GapBackfill`/`Backfill`), so substring greps like `rg "fill"`
+  return false positives (every "backfill" contains "fill"). Diagnosing the POLYMARKET `fills` blocker, this nearly
+  misread as "MTDS has fills wiring" (the real answer: no fills capture — only `scripts/` rebuild one-offs).
+  Grep-then-READ the actual line before concluding; prefer word-boundary or exact-string greps (`git grep '"fills"'`).
 
 - **2026-08-05 (slot-7, SHIP)**: **P3 iterrows fix SHIPPED `market-tick-data-service@5d428486`** (LDR, 2026-08-05). Path
   to green: (1) three prior reds resolved — 5.94 pyright-header ratchet 237→238 (slot-6 `lending_rewards_handler.py`
