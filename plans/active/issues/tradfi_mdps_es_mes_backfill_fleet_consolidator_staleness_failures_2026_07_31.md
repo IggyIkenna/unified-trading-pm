@@ -158,11 +158,27 @@ ops/follow-up:
       market-data-processing-service@43b043b. `rows_out` spot-check should be re-run once the FIXED code is on a fresh
       relaunch of this fleet (the currently-running `011358`/`014643` waves pinned an OLDER tarball and will still
       silently produce 0 candles even though they show "alive" — being alive was never sufficient evidence here).
-- [ ] [INFRA] P3. Identify what launched the `011358` wave (not found by this worker — check `agent-orchestrator`
+- [x] ✅ [INFRA] P3. Identify what launched the `011358` wave (not found by this worker — check `agent-orchestrator`
       dispatch logs / other `dp-fleet-monitor` escalations around 01:13Z) so future incidents don't need to re-derive
       "who else might already be fixing this" from the registry by hand. If it was another `data_pipeline_failure`
       escalation worker, no action needed — just confirms the multi-escalation dispatch model is working as intended for
-      a fleet-wide failure.
+      a fleet-wide failure. — **ANSWERED 2026-08-05 (slot 11, infra).** The `011358` wave (7 `es` VMs,
+      `mdps-backfill-tradfi-y20{20..26}es-20260731-011358`) was launched by **slot 9**, working on task
+      `tradfi_satellite_ao_dispatch_batch5-001` (plan `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, P1 todo
+      "Re-run the ES/MES per-contract backfill a third time"). Evidence from agent-orchestrator activity log (queried
+      via `GET /api/activity?since=...&until=...`): - 00:43:09Z slot 9 progress: _"resuming: finishing leftover
+      unified-trading-library test fix (tradfi staleness-budget), then checking in-flight VM state for ES/MES 3rd
+      re-run"_ - 01:21:02Z slot 9 progress: _"poll 0 @ 2026-07-31T01:21:01Z: 0/7 shards self-deleted, 7 still running
+      (post-staleness-fix relaunch)"_ - 01:21:09Z slot 9 progress: _"found+fixed a real data-correctness bug mid-task:
+      instruments-tradfi consolidator staleness-budget missing (unified-trading-library@2fa09f1d), was false-tripping
+      ~95%+ of dates. Killed corrupted 1st relaunch, relaunched clean 2nd attempt with fix live, confirmed working."_
+      The 7-VM count matches the `es` group exactly (y2020es through y2026es). Slot 9 independently discovered the same
+      staleness-budget gap (the UTL fix `75b5735` landed at 00:34:02Z, before their launch) and relaunched the `es`
+      shards as part of their existing tradfi satellite task — NOT via a `data_pipeline_failure` escalation.
+      **Verdict**: this was a planned tradfi batch task independently fixing the same root cause in-flight, not another
+      escalation worker. The multi-agent dispatch model is working as intended — the issue doc's original framing
+      slightly underestimated the mechanism (assumed escalation-only) but the conclusion is correct: no process change
+      needed.
 - [x] ✅ [DATA] P2. `mdps-backfill-tradfi-y2026es-20260731-023743`'s dead `run.log` shows 42 dates hard-failing —
       market-data-processing-service@c861fd0 (calendar-aware dependency check for TRADFI non-trading days)
       `DEPENDENCY CHECK FAILED` (`market_data_processing_service.app.core.dependency_checker`, raw GCS blob-existence

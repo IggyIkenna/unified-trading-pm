@@ -93,12 +93,12 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_aster_cefi_defi_bucket_2026_07_13.py`, mirroring
       `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s pattern (per-day `Counter` +
       `record_vm_progress(day)` gated on `apply`). Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, same
-      pattern. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_tardis_filename_canonical_2026_07_17.py`, same
-      pattern. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_dex_pool_symbol_shape_2026_07_09.py`, same pattern.
-      Repo: market-tick-data-service.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, same
+      pattern — market-tick-data-service@e58592a5.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_cefi_tardis_filename_canonical_2026_07_17.py`, same
+      pattern — market-tick-data-service@9acc780e.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_dex_pool_symbol_shape_2026_07_09.py`, same pattern —
+      market-tick-data-service@a4b26ff7.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_legacy_gas_fees_venue_2026_07_30.py`, same pattern.
       Repo: market-tick-data-service.
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`, same

@@ -234,9 +234,10 @@ confirm no further self-grants happened in the interim.
       verified `ENV=prod ./tofu.sh plan` shows 0 diff for all 28 (confirmed by direct GCS-state read, not just tofu's
       own report). No live GCP resource mutated. Unrelated concurrent drift in the same root (other slots' in-flight
       work: 17 add / 5 change / 3 destroy) was left untouched — did not run `tofu apply` on the full plan.
-- [ ] [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
+- [x] ✅ [DOCS] P3. Cross-reference this doc from `bucket_iam_write_protection_per_tier_2026_06_09.md`'s Phase 2 (P2.1b
       already scopes "remove the god-SA objectAdmin" — note there that even a completed P2.1b leaves
-      `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm)
+      `projectIamAdmin`/`serviceAccountAdmin` live unless this doc's P1/P2 also land). (repo: unified-trading-pm) —
+      unified-trading-pm@<SHA>
 
 ## Progress Log
 

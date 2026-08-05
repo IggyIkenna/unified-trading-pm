@@ -34,7 +34,7 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-08-04
 locked_by:
 locked_since:
 ---
@@ -145,19 +145,24 @@ range) and read their raw bm_minutes_to_kickoff distributions from the market-da
 mechanism directly (manifest data is circumstantial; raw bm_minutes is the direct signal). This is a bounded VM task
 (~20 shard reads, not a corpus walk).
 
-- [ ] [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** (repo: market-data-processing-service,
-      `bucket_assignment_adapter.py`). Operator-gated — this diagnosis only surfaces the options; the operator must
-      choose.
-- [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@f267bb19d
+- [x] ✅ [DATA] P2. **(a) Design decision: T-18h horizon or widened T-24h cap** —
+      market-data-processing-service@814ead6. Operator chose Option A (T-18h, target=1080, cap=45) via BLK-cd0e638f.
+      Added T-18h between T-24h and T-12h in TIER1_HORIZONS, shrinking the 615-min dead zone into two gaps
+      (270+255=525min, >55% reduction). 9 buckets now.
+- [x] ✅ [DATA] P2. **(b) Audit odds_api scraper cadence for fixture-count gating** — unified-trading-pm@5fe93fbec
       (audit-only; no MTDS code changes needed) (repo: market-tick-data-service, `odds_api_adapter.py` + live
       connector). **VERDICT: NOT fixture-count-gated.** The fetch loop iterates over
       `fetch_timestamps = _compute_fetch_timestamps(kickoffs, offsets)` where `kickoffs` = unique kickoff times, NOT
       fixtures. API call count = `len(unique_kickoff_times) × 8 offsets` (minus 5-min dedup). Low-fixture days produce
       MORE calls (scattered kickoffs → less dedup), not fewer. Root cause of low capture is likely bookmaker coverage /
       update-frequency, not scraper throttling. See Progress Log.
-- [ ] [DATA] P2. **(c) Sample 20 candidate dates for bm_minutes distribution** (repo: market-data-processing-service,
-      bounded VM task — read ~20 raw shards from the market-data bucket, confirm dead-zone distribution). Evidence:
-      manifest-based candidate list above.
+- [x] ✅ [DATA] P2. **(c) Sample 20 candidate dates for bm_minutes distribution** —
+      market-data-processing-service@9c1dbf5 (repo: market-data-processing-service, bounded VM task — read ~20 raw
+      shards from the market-data bucket, confirm dead-zone distribution). **VERDICT: Dead zone confirmed (8.0%
+      aggregate across 1.65M rows) but NOT the primary driver of low weekday capture.** Weekdays have ZERO dead-zone
+      entries (bm_minutes cluster near kickoff at median=125-230); weekends have 4.7-9.5% dead zone. Low weekday capture
+      (9-16%) is driven by fewer total rows (fewer fixtures/bookmakers), not the dead zone. Script:
+      `scripts/sample_bm_minutes_distribution.py`. See Progress Log.
 
 ## Progress Log
 
@@ -165,6 +170,38 @@ mechanism directly (manifest data is circumstantial; raw bm_minutes is the direc
   weekdays confirmed at 9-16% capture rates. No pure-dead-zone dates found (<=5 rows, 0 captured). Global distribution:
   25.6% captured, 58.6% empty_confirmed, 0.5% attempted_failed. Source stratification shows `mdps_odds_horizon_bucket`
   dominates at 616K rows (aggregate sentinel). Issue doc filed with 3 recommended follow-up todos.
+- **2026-08-04 ~22:54Z (slot 4)**: **Audit (c) complete — dead zone confirmed but NOT the primary driver of low weekday
+  capture.** Script `scripts/sample_bm_minutes_distribution.py` read raw ODDS_API bm_minutes_to_kickoff for 20 dates
+  (1.65M rows total) from `market-data-tick-sports-prd-central-element-323112`. Key findings:
+
+  **Dead zone (765 < bm_minutes < 1380) is REAL but affects WEEKENDS, not weekdays:**
+  - Aggregate: 8.0% of 1.65M rows in dead zone
+  - Weekends (9 dates): median bm_minutes=245, mean dead_zone=7.7% (range 4.7-9.5%)
+  - Weekdays (9 dates): median bm_minutes=230, mean dead_zone=0.0% (ZERO dead-zone entries on all 9 weekdays)
+
+  **The plan's hypothesis is PARTIALLY WRONG:** the low-capture December 2025 weekdays (9-16%) are NOT suffering from
+  dead-zone losses. Their bm_minutes distributions cluster near kickoff (median 125-230min, all well below the 765min
+  dead-zone floor). They simply have fewer total rows — the scraper runs but produces fewer odds because there are fewer
+  fixtures and fewer bookmakers covering low-profile midweek matches. The dead zone is a real structural gap that costs
+  ~8% of rows, but it costs weekends (high-fixture, high-volume days) proportionally, not the low-capture weekdays.
+
+  **Weekend vs weekday contrast (the actual pattern):**
+  - High-capture weekends (63-77%): 18K-285K rows, medians 245-276, 8-9.5% dead zone
+  - Low-capture weekdays (9-16%): 367-31K rows, medians 125-230, 0% dead zone
+  - The dead zone exists on weekends because there are enough rows at diverse bm_minutes offsets to fill the gap;
+    weekdays are too sparse near kickoff to even reach the gap
+
+  **2025-12-24 anomaly:** median=15,905 min (~11 days pre-kickoff) — Christmas Eve effect, odds published far in
+  advance. All rows >48h range.
+
+  **2 dates had no raw ODDS_API data** (2024-06-18, 2024-11-12 — both Tuesdays, likely pre-backfill or genuinely no odds
+  published for those dates).
+
+  **Implication for item (a):** a T-18h horizon or widened T-24h cap would recover the 8% dead-zone loss on weekends but
+  would do NOTHING for the low-capture weekdays. The weekday problem is a data-coverage/availability problem (fewer
+  bookmakers, fewer fixtures), not a bucketing artifact. The dead-zone fix is still worthwhile (8% recovery on
+  high-volume days) but insufficient alone.
+
 - **2026-08-04 ~23:XXZ (slot 11)**: **Audit (b) complete — odds_api scraper is NOT fixture-count-gated.** Full code
   trace of `odds_api_adapter.py` (batch) + `odds_api_ws.py` (live connector):
 

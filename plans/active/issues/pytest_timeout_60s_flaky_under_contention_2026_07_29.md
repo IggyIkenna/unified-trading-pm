@@ -206,7 +206,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       extensive prior evidence already refutes that) — it may reflect the `ci-failure-watcher` auto-cancel pattern
       masking timeouts before they reach terminal failure, or genuine temporary quiet. Either way, this todo's watch
       obligation is discharged; the class is confirmed NOT closed (see Progress Log 2026-07-30 through 2026-08-03).** —
-      unified-trading-pm@298060b37 (this flip). First candidate (run `30521493649`, instruments-service) turned out to
+      unified-trading-pm@2b306803a (this flip). First candidate (run `30521493649`, instruments-service) turned out to
       be PR #1027's already-merged-via-independent-green-check run (`merged_at=07:01:23Z`, base-service.sh's real
       `d4aaaf666` fix landed 07:14:18Z) — the exact "orphaned noise, predates the actual full fix" pattern this doc's
       own 2026-07-30 entries already diagnosed twice for #1026/#1027; NOT counted as post-fix evidence (self-corrected

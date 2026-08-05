@@ -204,3 +204,11 @@ identity alongside the two already documented.
   data-status Honest Coverage card + Distinct Values panel (same rollup) both recover, not just the launcher mechanics.
   IaC-tracked via `deployment-service@f5c77e58` (mirrors the existing default-compute-SA binding pattern in
   `honest_coverage_scheduler.tf`). `status: open` → `resolved`.
+- **2026-08-05 (interactive session, `/autonomous`, follow-up health check)**: re-verified the cron independently,
+  several days later, to confirm the fix is durable (not just the one-off manual trigger). `gcloud storage ls -l`:
+  `2026-08-05/coverage.json` exists (4.40MiB, written `00:36:20Z`) — timing matches the regular ~00:30 UTC nightly cron,
+  not a manual trigger, confirming the AUTOMATED schedule is healthy post-fix, not just the manual verification run. One
+  residual gap noted, not fixed: `2026-08-03/` has zero objects (the cron's midnight run that day predated the same-day
+  fix landing). Not backfilling it — a coverage snapshot is a point-in-time measurement of that date's corpus state;
+  regenerating it today would reflect today's state mislabeled as 2026-08-03's, which is fabrication, not recovery.
+  Leaving as a known, explained, single-day historical gap rather than manufacturing a false snapshot.

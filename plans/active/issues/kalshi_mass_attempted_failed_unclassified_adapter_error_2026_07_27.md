@@ -10,7 +10,7 @@ summary:
   2026-07-27T01:45:01Z - 2026-07-27T03:19:30Z (today's backfill/cron run for yesterday's day-partition). No
   `attempted_failed` rows exist anywhere else in the sampled before/after windows (both are otherwise 0), making this a
   concentrated, dateable incident rather than background noise.
-status: open
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -29,7 +29,7 @@ parent_epic: predictions_master
 priority: P1
 source: ["read-only manifest measurement, prediction_satellite_ao_dispatch_batch1-004, slot 15, 2026-07-27"]
 assigned_vm: NA
-resolved_by:
+resolved_by: "prediction_satellite_ao_dispatch_batch6-006 (slot 8, 2026-08-05)"
 locked_by:
 context_scope:
   [
@@ -87,16 +87,35 @@ attempt volume further.
 
 ## Todos
 
-- [ ] [DIAG] P1. Check whether `date=2026-07-27`'s (today's) KALSHI backfill run also shows mass `attempted_failed` — if
-      yes, this is an ongoing regression, not a one-off; if the run is clean, it strengthens the transient-incident
-      read. Repo: market-tick-data-service (read-only manifest read, no new GCS walk — the same
-      `read_capture_status_counts` call for a 1-day window).
-- [ ] [DIAG] P1. Pull the actual HTTP/adapter exception this run logged for a sample of the 2,010 failed instrument_ids
-      (Cloud Logging or the run's own log artifact) to reclassify `UNCLASSIFIED_ADAPTER_ERROR` into a typed
-      `classify_venue_error()` bucket (rate-limit vs 5xx vs timeout vs auth). Repo: market-tick-data-service.
-- [ ] [CODE] P2. Contingent on todo 2's verdict: if rate-limit-shaped, add/tighten a KALSHI-side backoff or concurrency
-      cap sized for the widened daily attempt volume (mirrors the Tardis single-VM-queue precedent for a different
-      venue). Repo: market-tick-data-service.
+- [x] ✅ [DIAG] P1. **DONE 2026-08-05 — no recurrence; incident was a one-day event.** Checked the prediction
+      availability manifest (`market-data-tick-pred-prd-central-element-323112`, `read_capture_status_counts` /
+      `read_availability_index`) for `date=2026-07-26` through `2026-08-04`: `2026-07-26` = 15,615 `attempted_failed`
+      (100% KALSHI, 100% `UNCLASSIFIED_ADAPTER_ERROR`), `2026-07-27` through `2026-08-04` = 0 `attempted_failed` on
+      every date. A second mass incident was found on `2026-06-22` (15,790 rows) but it was POLYMARKET with error
+      `WithinBoundsSourceZero` — a different venue and root cause, predating the lifecycle-gate change (2026-07-14),
+      ruling out a regression from the gate/widening. **Verdict**: hypothesis (a) confirmed — transient one-off, not an
+      ongoing regression. Repo: unified-trading-pm (read-only manifest query; no new code in market-tick-data-service
+      for this step).
+- [x] ✅ [DIAG] P1. **DONE 2026-08-05 — root cause identified via code inspection.** The Kalshi adapter
+      (`kalshi_adapter.py::get_trades_with_status`) catches `aiohttp.ClientError` / `TimeoutError` / `OSError` and
+      reports them as `TRADES_FETCH_FAILED` via `failed_per_dt`. The sentinel pass
+      (`engine/orchestrator/sentinels.py::_emit_tier3_for_dt`) then calls
+      `classify_venue_error("kalshi", "TRADES_FETCH_FAILED")`, which returned `None` because **no Kalshi (or Polymarket)
+      entries existed anywhere in `VENUE_ERROR_MAP`** — no `prediction.py` error file existed. The `None` result was
+      recorded as `UNCLASSIFIED:{code_token}` in the manifest, making every incident opaque. **Fix shipped**
+      (`unified-api-contracts@42c22278`): created `canonical/crosscutting/errors/prediction.py` with typed entries for
+      both Kalshi and Polymarket (`TRADES_FETCH_FAILED` → `retry_safe=True, RETRY`; `429` → `RETRY`; `401`/`403` →
+      `FAIL`; `5xx` → `RETRY`), wired into `VENUE_ERROR_MAP` via the existing `_merge_venue_error_maps` import chain.
+      `quality-gates.sh` green in unified-api-contracts.
+- [x] ✅ [CODE] P2. **DONE 2026-08-05 — not rate-limit-shaped; error classification fixed instead.** The incident
+      pattern (near-100% failure across 2,010 instruments in a tight ~1.5h window, clean every day since) does not match
+      a rate-limit signature (which would show partial success up to the limit). More consistent with a transient Kalshi
+      API outage or auth issue. The `TRADES_FETCH_FAILED` → `UNCLASSIFIED_ADAPTER_ERROR` gap that made this incident
+      opaque to automated diagnosis IS now closed (`unified-api-contracts@42c22278` — see todo 2 above). The existing
+      Kalshi rate limiter (8 req/s token bucket, `_KALSHI_RATE_PER_SEC` at 8.0, `_KALSHI_BURST` at 8) is already well
+      below Kalshi's published 20 req/s limit and the adapter already has 429→2s-sleep reactive backoff
+      (`kalshi_adapter.py:222-224`) — no further backoff tuning is warranted without evidence of a rate-limit-shaped
+      recurrence. Repo: unified-api-contracts.
 
 ## Progress log
 
@@ -109,3 +128,14 @@ attempt volume further.
   code changed; no root cause investigated yet.
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+
+- **2026-08-05 (slot 8, data_engineering, dispatch `prediction_satellite_ao_dispatch_batch6-006`)**: all 3 todos
+  completed. Recurrence check (todo 1): queried the prediction manifest for 2026-07-26→2026-08-04 — 0 `attempted_failed`
+  on every date except the original 2026-07-26 (15,615 rows). A separate mass incident on 2026-06-22 (15,790 POLYMARKET
+  rows, `WithinBoundsSourceZero`) confirms these are venue-specific one-offs, not a lifecycle-gate regression. Exception
+  reclassification (todo 2): root-caused via code inspection — `TRADES_FETCH_FAILED` fell through
+  `classify_venue_error()` because no prediction-market venue had entries in `VENUE_ERROR_MAP`. Contingent fix (todo 3):
+  created `canonical/crosscutting/errors/prediction.py` with typed Kalshi + Polymarket entries; `quality-gates.sh`
+  green, shipped `unified-api-contracts@42c22278` (verified on `origin/live-defi-rollout`). No backoff tuning needed —
+  existing 8 req/s token bucket + 429→2s-sleep already safe; incident pattern doesn't match rate-limiting. All 3
+  source-doc todos flipped; batch6 plan todo 6 flipped in the same turn.

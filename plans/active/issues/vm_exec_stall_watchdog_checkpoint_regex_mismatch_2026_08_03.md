@@ -224,9 +224,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                                                                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                                                                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                                                                                  todos 6 and 7 below.
+                                                                                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                                                                      todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -381,7 +381,7 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       already uses — reused, not duplicated. An unvetted launcher keeps the pre-existing safe default (page_operator). 5
       new regression tests (classify/gating, unvetted-stays-paged, default-off-stays-paged, full
       classify→finding→route_finding delegation proof); 290 existing tests unaffected; basedpyright clean.
-- [ ] [INFRA] P3. **`tradfi-catalogue-canon`'s per-shard progress lines never reach the tee'd log the stall watchdog
+- [x] ✅ [INFRA] P3. **`tradfi-catalogue-canon`'s per-shard progress lines never reach the tee'd log the stall watchdog
       reads — an architectural gap no `STALL_PROGRESS_REGEX` value can fix** (found during todo 5's sweep).
       `_catalogue_canon_cmd()` (launch-canonical-migration-vm.sh:932-948) forks each of `CANON_SHARDS` (default 16)
       shards to its OWN redirected file (`> /tmp/canon_shard${i}.log 2>&1 &`), `wait`s for every shard, and only THEN
@@ -390,12 +390,17 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       files scanned (t=%.1fs)", every 200 files) is real and well-formed, but it is trapped inside the per-shard file
       for the ENTIRE multi-hour run — the watchdog only ever sees byte growth from the periodic `PIPELINE_HEARTBEAT`
       emitter, i.e. this category is in the SAME undetected-hang class as the original `10/42 cefi-content-apply` sat-
-      hung incident, silently, for however long CANON_SHARDS>1 is used. Fix requires a real code change (not a metadata
-      tweak): fan the per-shard logs into the parent's own stdout as they're written (e.g. a `tail -F` per shard piped
-      into the parent process, or have each shard write its progress line to both its own file AND a shared fd/FIFO) so
-      the tee'd log actually reflects live per-shard progress, THEN set
-      `STALL_PROGRESS_REGEX=progress [0-9]+/[0-9]+ files scanned`. Scope precisely (which fan-in mechanism, whether it
-      changes shard exit-code aggregation) before implementing — not a one-line fix. (repo: deployment-service)
+      hung incident, silently, for however long CANON_SHARDS>1 is used. Fix: fan the per-shard logs into the parent's
+      own stdout as they're written (e.g. a `tail -F` per shard piped into the parent process, or have each shard write
+      its progress line to both its own file AND a shared fd/FIFO) so the tee'd log reflects live per-shard progress,
+      THEN set `STALL_PROGRESS_REGEX=progress [0-9]+/[0-9]+ files scanned`. (repo: deployment-service) —
+      `deployment-service@87ad58c`, `quality-gates.sh` green (250s, 3077 passed), quickmerge landed on
+      `live-defi-rollout`, SHA verified ancestor of origin. Fixed `_catalogue_canon_cmd()` to fan each shard's output to
+      BOTH the per-shard log file AND the parent's stdout via `>(tee /tmp/canon_shard\${i}.log)` process substitution
+      (preserves `$!` = python PID so per-PID `wait` correctly detects shard failures — does NOT regress the rc_all fix
+      from 2026-07-20). Added `STALL_PROGRESS_REGEX=progress [0-9]+/[0-9]+ files scanned` for the category. Updated
+      tests: removed `tradfi-catalogue-canon` from the no-stall-regex guard, added it to the positive regex-verification
+      parametrize with the exact expected regex value.
 - [ ] [INFRA] P3. **`*-iah`/`*-iah-purge`'s progress marker is gated on a per-asset_group candidate_count that is
       unverified per bucket — setting the regex blind risks a WORSE false-kill than today's fallback** (found during
       todo 5's sweep). `migrate_instrument_availability_hive_2026_08_03.py` /

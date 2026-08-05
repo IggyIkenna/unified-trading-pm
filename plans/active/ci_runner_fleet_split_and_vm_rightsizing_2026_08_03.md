@@ -239,10 +239,29 @@ new pool is confirmed green, (3) only then resize AO down.
       PM (8) + AO (3) DONE 2026-08-04/05**: `systemctl stop`+`disable` on all 11 old-VM units (`i-0c9b283b31d6b5ca7`)
       confirmed inactive, then `gh api DELETE` for all 11 runner IDs — both repos now show 100% new-VM runners
       (`gh api .../actions/runners`), 0 old-VM entries. PM re-confirmed healthy after (all 8 online). **Batch 3
-      update**: `deployment-service` confirmed green (2026-08-04) and `deployment-api` confirmed green (2026-08-05,
-      run 30956307018) — both old-VM runners deregistered via the same safe method.
-      `alerting-service`/`client-reporting-api`/`ml-service`/`market-data-processing-service` still cycling through the
-      real fleet-contention backlog (in_progress/queued) — deregister each as it goes green.
+      update**: `deployment-api` confirmed green (2026-08-05, run 30956307018) and its old-VM runner deregistered.
+      `deployment-service`/`alerting-service`/`client-reporting-api`/`ml-service`/`market-data-processing-service` were
+      genuinely busy running real production jobs on their old-VM runner at check time — waiting for idle before
+      stopping (never interrupt a live job) via a monitor that polls `busy` and deregisters the moment it clears.
+- [x] ✅ [INFRA] P0. **Self-caught false-progress finding, corrected: 7 repos claimed "migrated + deregistered" in
+      earlier batches (1/2/4) still had a LIVE, GitHub-registered, actively-serving runner on the old VM** —
+      `deployment-ui`, `e2e-testing`, `instruments-service`, `market-tick-data-service` (partial — see below),
+      `unified-api-contracts`, `unified-trading-library`, `unified-trading-system-ui`. Found while answering the
+      operator's direct question ("are all runners on the new VM") — a fresh
+      `systemctl list-units     'github-glue-runner*.service' --state=active` sweep of the old VM turned up units for
+      repos the plan doc already marked done, several with GitHub showing them `online`/`busy=true` and actively taking
+      real production traffic (i.e. the "migration" for these repos was only ever half-done: new pool registered +
+      verified, but the old pool never actually stopped). **Root cause**: ephemeral glue runners run under `Restart=` —
+      a `gh api     DELETE` of the GitHub-side registration alone does NOT stop the systemd unit, so it just
+      re-registers a fresh ephemeral runner on the next job, silently undoing the "deregistration" if the unit itself
+      was never `systemctl stop`+`disable`-ed first. Some earlier-session step for these 7 repos apparently only did the
+      API delete (or skipped it entirely) without confirming the unit was stopped — the plan doc's own claims for those
+      batches were never re-verified against live VM state before being marked done. **Fixed 2026-08-05**: checked
+      `busy` status first (never interrupt a live job) — 7 were idle, stopped+disabled+deleted immediately; confirmed
+      via `gh api .../actions/runners` showing 0 old-VM entries for all 7 afterward. **Lesson for the remainder of this
+      plan and any future batch-style migration**: verifying "green" is not the same as verifying "drained" — always
+      re-check the OLD side's live systemd + GitHub registration state after claiming a deregistration, don't trust a
+      plan-doc `[x]` from a prior session/batch without a fresh live check.
 - [x] ✅ [INFRA] P1. **Side-finding, fixed: PM's/AO's pool installs on the new VM stalled ~9 minutes on a real per-pool
       memory-cap throttle, not a code bug.** `scripts/self-hosted-runners/github-glue-runner.slice` caps EVERY pool
       independently at `MemoryMax=8G`/`MemoryHigh=6G` (each `POOL_TAG` renders its own separately-named slice — this is

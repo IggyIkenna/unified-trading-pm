@@ -91,5 +91,12 @@ details preserved), while other pools in the same shard succeed normally.
 - [x] ✅ [DATA] P1. Per-row `build_instrument_id` failure isolation in `write_defi_rows` — catch ValueError per-row
       instead of aborting the entire batch, so one malformed pool symbol doesn't block the whole protocol+chain+date
       shard. Repo: `market-tick-data-service`. — market-tick-data-service@badbcbde
-- [ ] [SCRIPT] P2. Re-run the 33 failing shard-dates after the fix to recover the blocked pool data. Repo:
-      `market-tick-data-service`.
+- [x] ✅ [SCRIPT] P2. Re-run the 33 failing shard-dates after the fix to recover the blocked pool data. Repo:
+      `market-tick-data-service`. — batch re-run `ok=31 fail=0` (`/tmp/rerun_dex_32.log`, all `RESULT … OK`); per-shard
+      row counts sushiswap (87,80,262,339,302,407,469,588 + 2021-09-15=238 probe), trader_joe_v2 (412,538,624,570,565),
+      uniswap_v4 (50,56,76,106,109,106,111,110,103,106,112,117,135,136,130,135,133,128); ORCA 2026-07-22 already
+      honestly `empty_confirmed SOURCE_RETURNED_ZERO` (forward-only RPC, no write needed). Stale all-blank coarse
+      `attempted_failed` rows overwritten via `DefiManifestRecorder.record_captured` (all-blank key,
+      `batch_onchain_subgraph`, source=onchain_subgraph) — 32 captured overwrites absorbed by the consolidator.
+      Verified: base index clean of `attempted_failed` (updated 2026-08-05T00:37:50); reader census
+      `remaining attempted_failed build_instrument_id dex_pool_state rows: 0`.

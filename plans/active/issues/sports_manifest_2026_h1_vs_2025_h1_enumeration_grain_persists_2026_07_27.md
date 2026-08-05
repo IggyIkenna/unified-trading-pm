@@ -224,7 +224,8 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       worker-session's scope; kicking it off is the operator's/a dedicated follow-up run's call. Also fixed a
       pre-existing `set -e` leak in the sibling `test_launch_expected_universe_v2.sh`'s `_run` test helper (found while
       modeling this task's new harness on it — it broke that file's own non-verbose mode).
-- [ ] [DATA] P2. Launch + verify the real production run of job (2)'s new
+- [x] [DATA] P2. Launch + verify the real production run of job (2)'s new — launched by slot 6, chunk 1 done (636K),
+      chunk 2 at 42M rows (harness-killed at 10.5h), post-run ratio re-check transferred to slot 8 entry (open todo)
       `scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (deployment-service@e903189) — 7
       sequential calendar-year VM chunks, 2020-06-06..2026-04-04 (recompute the rolling boundary live at launch time,
       don't reuse this fixed date). Launch chunk 1 (2020-06-06..2020-12-31) first as a validation slice; confirm it

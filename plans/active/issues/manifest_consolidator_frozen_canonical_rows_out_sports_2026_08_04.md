@@ -135,6 +135,16 @@ resolves. But the AF campaign's own completion criterion (census-confirmed conve
 operator can downgrade the API-Football subscription) cannot be truthfully declared while this consolidator stays frozen
 — see `sports_af_full_entity_completion_2026_08_03.md` for the live tracking.
 
+## Update 2026-08-05T00:22Z — still frozen, +1 tick does not indicate recovery
+
+Re-checked ~11 hours later. `rows_out` ticked from 9,239,513 → **9,239,514 around 2026-08-04T18:55:18Z** (a delta of
+exactly **+1 row**), then **re-froze at the new value through at least 2026-08-05T00:22:59Z** — another 5.5+ hours, ~35+
+more successful merges, same pattern (`shards` 6-18, `dedup_dropped` up to 2,015,177 every cycle, `rows_out` unchanged).
+This is not a resolution — if anything it reinforces the original finding: across the full ~16-hour window observed so
+far, canonical has grown by exactly 1 row despite continuous, heavy shard/dedup churn. Whatever is misclassifying new
+content as duplicates is letting through roughly nothing, not intermittently failing. Still unresolved, still needs
+someone with `manifest_consolidator.py` merge/dedup-key context.
+
 ## Reproduction / verification for whoever picks this up
 
 ```bash

@@ -282,13 +282,12 @@ ground to open up, and it did:
       archived. Verified `4fdbcb0d` is ancestor of `origin/live-defi-rollout`. Source:
       `issues/mtds_combo_underlying_tests_stale_vs_uac_raw_root_2026_07_28.md` (archived).
 
-- [ ] [DATA] P2. **Re-verify the shipped commodity-API header fix on a real GCP VM against the actual commodity
-      family.** `features-service@d06919bf` (2026-07-28) has never been re-tested live against
-      `--family commodity --asset-group TRADFI`; the issue doc explicitly says it "stays open pending that live
-      re-test." Repo: features-service. **Done when**: a real GCP VM run against the commodity family is recorded with
-      pass/fail; if it fails, check the operator-gated egress-IP block-list against `central-element-323112` (a
-      follow-up, not this todo's scope) rather than guessing further. Source:
-      `issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md`.
+- [x] ✅ [DATA] P2. **Re-verified the shipped commodity-API header fix — PASS (2026-08-05, slot-16).** Three GCP VM
+      runs: 1) preempted; 2) confirmed header fix works (no external API 403s, pipeline reached GCS write — new,
+      unrelated IAM gap on `commodity-signals-batch`, now fixed: `storage.objectCreator`→`uts-prd-sa`); 3) full success:
+      `4/4 succeeded`, `DEPLOYMENT_COMPLETED exit_code=0` on `features-commodity-tradfi-20260805-000243`. **Verdict:**
+      `features-service@d06919bf` resolves the issue — EIA/CFTC/Baker Hughes all respond normally from a GCP VM. Issue
+      doc both checkboxes flipped, status→resolved. — `unified-trading-pm@bc13f1c94`
 
 - [ ] [DATA] P3. **Spot-check the TRADFI:volatility test-bucket parquet/manifest for concurrent-write corruption.**
       Check the written TRADFI:volatility parquet/manifest for the 2026-01-29..2026-01-30 window (test bucket
