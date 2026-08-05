@@ -21,11 +21,12 @@ summary: >-
   time/tooling (see Blocker) — filed as a big finding (data-correctness, cross-repo, actively regressing
   honest-coverage) per workspace findings-triage rather than executing a purge or fabricated fold against an unconfirmed
   population.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [market-tick-data-service, instruments-service, deployment-api, unified-trading-pm]
+repos:
+  [market-tick-data-service, market-data-processing-service, instruments-service, deployment-api, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, canonicalisation, composite-venue, manifest, honest-coverage, data-correctness, distinct-values, blocker]
 related:
@@ -50,7 +51,7 @@ source: >-
   Operator/dispatching-session task: "fold the 22 non-canonical composite venues on the DeFi distinct-values panel",
   premised on mirroring the resolved 9-venue precedent. Investigation disproved the premise; this doc is the resulting
   big-finding writeup, not the originally-requested fold script.
-resolved_by:
+resolved_by: interactive session 2026-08-05, root-caused via trace_composite_venue_provenance_2026_08_05.py
 locked_by:
 locked_since:
 supersedes:
@@ -297,28 +298,55 @@ this finding still needs:
 from a proper in-region VM (per the heavy-I/O rule) or via a Cloud Run / BigQuery-backed read path rather than this
 interactive session's local network path.
 
+## RESOLVED 2026-08-05 — NOT a bug, NOT phantom data. False alarm from probing the wrong path/vocabulary.
+
+**Root cause of this doc's own false "no backing data" verdict**: every GCS probe in this doc's original investigation
+checked the MTDS `raw_tick_data/` path convention — but `service_name=market-data-processing-service` (identified via a
+VM-run row-level provenance trace, `trace_composite_venue_provenance_2026_08_05.py`, the exact query this doc's own
+Blocker section specified) writes to a COMPLETELY DIFFERENT top-level prefix in the SAME bucket:
+`processed_candles/by_date/day={D}/pipeline_mode=batch_onchain_subgraph/timeframe={TF}/data_type=dex_pool_swaps/ instrument_type=POOL/venue={VENUE}/*.parquet`
+— derived candle data, not raw ticks. This is the SAME wrong-vocabulary/wrong-path trap this workspace's own CLAUDE.md
+already warns about (Solana AMM writes `instrument_type=solana_amm_pool`, not `pool` — this session made the analogous
+mistake at the PATH-PREFIX level instead of the vocabulary level).
+
+**Real backing data CONFIRMED** via a live `gcloud storage ls` check against MDPS's actual path shape, sampled across 4
+dates (2023-01-01, 2024-06-01, 2025-01-01, 2025-06-01): real parquet objects exist for all 22 flagged venues, e.g.
+`venue=SUSHISWAP_V3-AVALANCHE/SUSHISWAP_V3-AVALANCHE:POOL:0x8c29...parquet`, Creation Time `2026-08-03T22:00:38Z` —
+squarely inside the flagged `written_at` window (2026-08-03T08:50:32Z..2026-08-04T08:52:52Z), proving this object was
+genuinely copied, not fabricated.
+
+**One-time, already-completed backfill campaign, NOT a live/recurring writer**: the code is
+`market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py` (`# Lifecycle: oneoff`),
+launched via `deployment-service/scripts/vm/launch-backfill-defi-dex-swaps-source-correction-vm.sh` (a singleton-locked
+one-off SPOT VM, never a Cloud Scheduler/Cloud Run Job — confirmed zero Terraform references anywhere). It copies
+`dex_pool_swaps` bytes from a mistagged `pipeline_mode=batch_onchain_rpc` path to the correct
+`pipeline_mode=batch_onchain_subgraph` path (`gcs_copy_object`, real content, no fabrication) and calls
+`ManifestWriter(...).record_captured(...)` per cell. This campaign is independently documented in
+`plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` (launched 2026-08-03T09:38Z, survived
+5+ SPOT preemptions, terminal VERDICT at 2026-08-04T08:53:03Z:
+`already_covered=6055 needs_copy=813150 copied=813150 recorded_cells=46683 copy_errors=0`) — matching this doc's own
+flagged window end to within 11 seconds.
+
+**Disposition**: no fold, no purge, no fix needed. The manifest rows are correct; the "big finding" is closed as a false
+alarm caused by this doc's own investigation checking the wrong bucket path prefix. The remaining open question (NOT
+urgent, NOT this doc's scope) is whether the DeFi distinct-values panel should exempt `processed_candles`-layer venues
+from the same canonicalisation rule that flags composite `PROTOCOL-CHAIN` names as non-canonical in `raw_tick_data/` —
+that's a panel-scoping question for whoever owns the distinct-values UI, not a data-correctness bug.
+
 ## Todos
 
-- [ ] [DIAG] P1. On a network-capable VM (per the heavy-I/O rule — never from an interactive/local session), run the
-      row-level provenance query this doc's Blocker section specifies (`service_name`, `written_at`,
-      `enumerator_run_id`, `pipeline_mode`, `source` for all 22 venues) against the live DeFi
-      `_index/availability_index.parquet`. Done-when: the exact writer (script name or Cloud Run Job) and exact
-      `written_at` timestamp cluster are identified, confirming or refuting the catalogue-expansion /
-      `expected-universe-v2-defi` timing correlation in finding 5 above, and confirming or refuting whether this is a
-      single one-time event (like Pattern B in the sibling contamination doc) or an ongoing/daily leak (which would mean
-      it recurs every 01:30 UTC cycle until fixed).
-- [ ] [DIAG] P1. Once the writer is identified, determine whether it is STILL LIVE (would re-corrupt on the next run) or
-      already a one-off event that has stopped — if still live, this becomes the priority fix (mirroring the
-      `instruments-service@f651ff8b` chain-allowlist-guard precedent for the structurally similar Pattern-B case), gated
-      as its OWN `[OPERATOR]`-tagged or safe-idempotent-justified todo per normal AO authoring rules once the fix is
-      scoped.
-- [ ] [DATA] P2. Once the writer + its real backing-data question are resolved, re-run this doc's own GCS probe
-      methodology (§3 above) against whatever path the identified writer actually targets (rather than the guessed paths
-      this session tried) to determine definitively whether real backing data exists. If yes → a fold script mirroring
-      `fold_legacy_composite_venue_objects_2026_07_31.py`'s pattern is appropriate (copy-then-register,
-      non-destructive). If no (confirmed fabricated/phantom rows) → a purge mirroring
-      `purge_lighter_derivative_ticker_prefix_schema_violation_rows_2026_07_30.py`'s pattern is appropriate (CAS-safe
-      manifest-only delete, snapshot-first). Do not guess; this doc's own investigation shows guessing here is unsafe.
+- [x] ✅ [DIAG] P1. **DONE 2026-08-05.** Ran the row-level provenance query on a VM
+      (`trace_composite_venue_provenance_2026_08_05.py`,
+      `canonical-migration-defi-composite-venue-trace-20260805-183909`). Writer = `market-data-processing-service`,
+      `pipeline_mode=batch_onchain_subgraph`, `source=onchain_subgraph`, `written_at`
+      2026-08-03T08:50:32Z..2026-08-04T08:52:52Z (98,351 rows, 100% `capture_status=captured`).
+- [x] ✅ [DIAG] P1. **DONE 2026-08-05 — one-off, already stopped, will NOT recur.** Confirmed via the script's own
+      `# Lifecycle: oneoff` marker + zero Cloud Scheduler/Terraform wiring + the archived plan's own terminal VERDICT
+      log line. No fix needed — it already finished successfully.
+- [x] ✅ [DATA] P2. **DONE 2026-08-05 — real backing data CONFIRMED, no fold/purge needed.** Re-ran the GCS probe
+      against MDPS's actual `processed_candles/` path (not the guessed `raw_tick_data/` paths this doc's original
+      investigation tried) — real parquet objects exist for all 22 venues, content-timestamped inside the exact campaign
+      window. See "RESOLVED" section above for full detail.
 
 ## Progress Log
 
