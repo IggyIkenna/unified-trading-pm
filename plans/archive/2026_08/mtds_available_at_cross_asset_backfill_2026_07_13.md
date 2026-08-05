@@ -481,3 +481,19 @@ Expected completion ~21:15-21:30 UTC; then immediately: force-consolidate → fi
 `[[VM_PROGRESS]] last_completed_date=… monotonic=true`, `grep -cE "Traceback|ERROR|Killed|OOM" <log>` = 0. The watchdog
 Monitor dies with this session — re-arm if the run is still alive; the per-VM shard accumulate mode makes any re-apply
 idempotent, so killing/restarting is safe (resumes at the next un-enriched chunk).
+
+**Run-1 CRASH (2026-08-05 20:38:44 UTC, slot-15)**: run `20260805T203318Z-ddb19404` (PID 782156) died SILENTLY
+mid-chunk-47 (2020-11-18..24) — last log line "chunk 47: enriching", no completion line, 0 Traceback/ERROR/OOM markers.
+Chunks 1-46 completed cleanly (**3,396 cells enriched, write_errors 0**, monotonic progress). **Root-cause probe**:
+standalone `enrich_chunk` for chunk 47 via the SAME shipped reader completed in 12.7s (147 enriched, exit 0, peak RSS
+2.6 GB) → NOT a deterministic reader/data bug; the crash was environmental (transient shared-host memory pressure — the
+crash window overlapped a doc-only PM quickmerge + other slots' full QG load). **Lesson: do NOT run a QG/quickmerge/
+pytest on this shared host while the apply is alive** (keep the apply's 2.6 GB peak clear of stacked load).
+
+**Run-2 relaunch (2026-08-05, slot-15)**: relaunched immediately after this commit, SAME command WITHOUT
+`MANIFEST_ALLOW_STALE_FALLBACK=true`, log `/tmp/rebuild_defi_apply_2026_08_05_run2.log` (run-1 log kept as evidence).
+Find the live PID via `pgrep -f rebuild_defi_available_at` (expect ~30-45 min to 2026-08-04). Per-VM shards are
+idempotent — a partial run recovers by re-running the same command. **Next session**: `tail -5 <run2 log>` for
+`[[VM_PROGRESS]] last_completed_date=… monotonic=true`; on process EXIT verify no crash markers + the final completed
+chunk, then force-consolidate → fill-rate verify → resume cron → `/done` (protocol above). Do NOT run QG/quickmerge
+while it is alive.
