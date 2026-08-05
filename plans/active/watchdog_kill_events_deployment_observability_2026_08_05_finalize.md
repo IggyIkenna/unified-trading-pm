@@ -52,9 +52,9 @@ Machine-held (`depends_on` + `gate_on_depends: true`) until every todo in
 
 ## Todos
 
-- [ ] [REVIEW] P1. Reconcile every completed todo in the source plan against its actual evidence (re-verify the cited
+- [x] ✅ [REVIEW] P1. Reconcile every completed todo in the source plan against its actual evidence (re-verify the cited
       commit/build exists, re-run the cited check if cheap to do so) — this is a self-contained plan (not a batch-style
-      extraction from other source docs), so no other doc's checkboxes need reconciling.
+      extraction from other source docs), so no other doc's checkboxes need reconciling. — unified-trading-pm@8b0eca67b
 - [ ] [REVIEW] P2. Re-check the source plan's Deferred item ("extend the dual-write pattern to other host-local incident
       classes") — if the operator has since expressed interest, spin it into a new tracked todo/plan; if not, leave it
       as a closed record.
