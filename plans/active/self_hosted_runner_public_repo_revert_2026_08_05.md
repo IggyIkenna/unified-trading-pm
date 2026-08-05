@@ -174,46 +174,80 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Todos
 
-- [ ] [INFRA] P0. **Map the exact revert mechanism per workflow file** across the 17 public repos — for each distinct
-      self-hosted workflow filename found, state whether it's covered by `rollout-workflow-templates.sh` (→ remove from
-      `self-hosted-qg-repos.txt` + re-run), a different rollout script (name it), or hand-maintained per-repo (→ needs a
-      `hosted-baseline.sh`-style per-file hosted-form derivation). Done-when: a table exists (in this doc's Progress
-      Log) covering every self-hosted filename seen across the 17 repos with its confirmed mechanism — no revert todo
-      below should proceed against an unconfirmed mechanism.
-- [ ] [INFRA] P0. **Confirm `hosted-baseline.sh`'s snapshot scope** — read `MANIFEST.tsv` and check whether any entries
-      correspond to a target repo other than `unified-trading-pm`, or whether the tool is genuinely PM-workflow-scoped
-      only. Done-when: stated definitively, feeding directly into todo 1's mechanism map.
-- [ ] [INFRA] P1. **Revert `alerting-service`** — all self-hosted workflows back to `ubuntu-latest` per the confirmed
-      mechanism (todo 1); remove from `self-hosted-qg-repos.txt` if templated. Verify a real green CI run post-revert
-      (cite run URL). Deregister its self-hosted runner (`gh api .../actions/runners` DELETE +
-      `systemctl stop`+`disable` the exact unit — never the buggy `teardown --POOL_TAG` path, per the documented
-      incident in `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`).
-- [ ] [INFRA] P1. **Revert `batch-live-reconciliation-service`** — same procedure as above. Verify + deregister, cite
+- [x] 1. ✅ [INFRA] P0. **Mapped the exact revert mechanism — DONE 2026-08-05, resolved differently than assumed.**
+      `rollout-workflow-templates.sh` byte-copies 11 templates (not 6) verbatim from `scripts/workflow-templates/` —
+      only `quality-gates-v2.yml.tmpl`/`semver-agent.yml.tmpl` were allowlist-parameterized before this session; the
+      other 9 (`main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`,
+      `staging-backmerge-to-ldr.yml`, `staging-lock-check.yml`, `update-dependency-version.yml`,
+      `version-registry-notify.yml`, `image-build-gate.yml` [no runs-on], `notify-slack.yml` [deliberately
+      ubuntu-latest]) were hardcoded `[self-hosted, glue]` for EVERY repo regardless of visibility — no per-repo lever
+      existed. **Fixed at the source**: added a `{{RUNS_ON}}` placeholder + `get_runs_on_value()` helper to
+      `rollout-workflow-templates.sh` (same `self-hosted-qg-repos.txt` allowlist `get_qg_runner_labels()` already used),
+      applied to all 8 runner-bearing templates — `unified-trading-pm@3240ec79e`. A remaining set of per-repo bespoke
+      files (not fleet-templated at all: `uac-registry-sync.yml`/`uic-openapi-sync.yml`/`plan-alignment-agent.yml`/
+      `publish-package.yml`/`canary-offline.yml`/`pr-watcher.yml`/`schema-health.yml`/`weekly-validation.yml`/
+      `full-workspace-sit.yml`/`performance-test.yml`/`sit-plan-sync-agent.yml`/`smoke-test-gate.yml`/`ci.yml`/
+      `deploy-uat-on-merge.yml`/`orphan-audit.yml`/`ui-quality-gates.yml`) were found self-hosted too (none are
+      fleet-health watchdogs — all normal build/test/sync/deploy jobs) and reverted by direct per-repo edit, since no
+      template owns them.
+- [x] 2. ✅ [INFRA] P0. **Confirmed `hosted-baseline.sh` is PM-workflow-scoped only** — `MANIFEST.tsv`'s 56 entries are
+      all PM's own workflow filenames (`REPO_ROOT` resolves relative to the script's own location, which only exists in
+      PM's checkout). It does not cover any of the 17 target repos. Reverts for those instead went through
+      `rollout-workflow-templates.sh`'s new parameterization (todo 1) or direct edit for bespoke files.
+- **Unplanned but required fix, found via PM's own quality gates**: the `{{RUNS_ON}}` placeholder broke
+  `detect_template_drift.py --workflows`'s byte-compare (it globs `*.yml` only, assuming flat templates are always
+  byte-identical across the fleet — a template containing a placeholder can never match a rendered repo copy). Renaming
+  the 8 templates to `.yml.tmpl` would have silently dropped `main-backmerge-to-ldr.yml`/ `staging-backmerge-to-ldr.yml`
+  from `CRITICAL_PROMOTE_TEMPLATES`' missing-copy escalation (a real regression on the documented Tier-C runaway-promote
+  guard, Gap 6) — fixed instead by detecting substitution by CONTENT (`b"{{RUNS_ON}}" in template_bytes`) rather than
+  extension, preserving every other check. `unified-trading-pm@3240ec79e` (bundled with todo 1's fix); baseline
+  re-written, ratcheted down 140 now-stale entries.
+- [x] 3. ✅ [INFRA] P1. **`unified-api-contracts` reverted** — `unified-api-contracts@36de8ef7`, full QG green (464s),
+      landed on LDR trunk.
+- [x] 4. ✅ [INFRA] P1. **`unified-trading-library` reverted** — `unified-trading-library@2b83764f`, full QG green
+      (209s), landed on LDR trunk. (Shipped 2nd — both `alerting-service`/others declare it + `unified-api-contracts` as
+      path deps; quickmerge's pre-flight refuses a downstream ship while an upstream dep has uncommitted changes, so
+      dependency order matters here, not just per-repo independence.)
+- [ ] 5. [INFRA] P1. **Revert `alerting-service`** — all self-hosted workflows back to `ubuntu-latest`; local edit
+      applied and verified content-clean, quickmerge IN FLIGHT (queued behind shared-host QG-token contention from other
+      concurrent sessions on this host, not a failure). Verify a real green CI run post-land (cite run URL). Deregister
+      its self-hosted runner (`gh api .../actions/runners` DELETE + `systemctl stop`+`disable` the exact unit — never
+      the buggy `teardown --POOL_TAG` path, per the documented incident in
+      `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`).
+- [ ] 6. [INFRA] P1. **Revert `batch-live-reconciliation-service`** — local edit applied, quickmerge IN FLIGHT (same
+      queue). Verify + deregister, cite evidence.
+- [ ] 7. [INFRA] P1. **Revert `client-reporting-api`** — local edit applied, not yet shipped. Verify + deregister, cite
       evidence.
-- [ ] [INFRA] P1. **Revert `client-reporting-api`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `deployment-api`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `deployment-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `deployment-ui`** — every self-hosted workflow EXCEPT `ui-quality-gates-v2.yml` (already
-      correctly `ubuntu-latest`, leave untouched). Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `fund-administration-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `greeks-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `ibkr-gateway-infra`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `instruments-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `market-data-processing-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `system-integration-tests`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `trading-agent-service`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `unified-api-contracts`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `unified-trading-api`** — same procedure. Verify + deregister, cite evidence.
-- [ ] [INFRA] P1. **Revert `unified-trading-library`** — same procedure; note this repo cycled through the self-hosted
-      starvation revert/re-add loop twice already for unrelated (contention, not billing) reasons per
-      `self-hosted-qg-repos.txt`'s own header — a revert here is now for a different, permanent reason (public billing)
-      and should not be treated as a 3rd cycle of the same flaky-recurrence pattern.
-- [ ] [INFRA] P1. **Revert `unified-trading-system-ui`** — every self-hosted workflow EXCEPT `ui-quality-gates-v2.yml`
-      (already correctly `ubuntu-latest`, leave untouched). Verify + deregister, cite evidence.
-- [ ] [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered, confirming
-      the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average before vs.
-      after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own still-open
-      "longer-window measurement" gap). Update that plan's issue doc
+- [ ] 8. [INFRA] P1. **Revert `deployment-api`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 9. [INFRA] P1. **Revert `deployment-service`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 10. [INFRA] P1. **Revert `deployment-ui`** — every self-hosted workflow reverted locally EXCEPT
+      `ui-quality-gates-v2.yml` (already correctly `ubuntu-latest`, left untouched); not yet shipped. Verify +
+      deregister, cite evidence.
+- [ ] 11. [INFRA] P1. **Revert `fund-administration-service`** — local edit applied, not yet shipped. Verify +
+      deregister, cite evidence.
+- [ ] 12. [INFRA] P1. **Revert `greeks-service`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 13. [INFRA] P1. **Revert `ibkr-gateway-infra`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 14. [INFRA] P1. **Revert `instruments-service`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 15. [INFRA] P1. **Revert `market-data-processing-service`** — local edit applied, not yet shipped. Verify +
+      deregister, cite evidence.
+- [ ] 16. [INFRA] P1. **Revert `system-integration-tests`** — local edit applied, not yet shipped. Verify + deregister,
+      cite evidence.
+- [ ] 17. [INFRA] P1. **Revert `trading-agent-service`** — local edit applied, not yet shipped. Verify + deregister,
+      cite evidence.
+- [ ] 18. [INFRA] P1. **Revert `unified-trading-api`** — local edit applied, not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 19. [INFRA] P1. **Revert `unified-trading-system-ui`** — every self-hosted workflow reverted locally EXCEPT
+      `ui-quality-gates-v2.yml` (already correctly `ubuntu-latest`); not yet shipped. Verify + deregister, cite
+      evidence.
+- [ ] 20. [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered,
+      confirming the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average
+      before vs. after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own
+      still-open "longer-window measurement" gap). Update that plan's issue doc
       (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) with the dated result rather than duplicating
       it here.
 
@@ -223,5 +257,20 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
   cross-referenced against `self-hosted-qg-repos.txt`, plus a full-fleet `runs-on:` sweep). Operator confirmed all 17
   identified repos are intentionally public and asked for this to be tracked as a human/local plan (not AO-dispatched —
   each revert needs live-judgment verification against an unconfirmed mechanism landscape, same class of reasoning the
-  original migration plan used). No files touched yet — todos 1-2 (mechanism confirmation) must land before any repo's
-  revert proceeds.
+  original migration plan used).
+- **2026-08-05 (execution)**: Operator said "please do execute." Todos 1-2 resolved the mechanism landscape — found the
+  9 non-quality-gates/semver templates were unconditionally hardcoded self-hosted with NO per-repo lever at all (bigger
+  gap than assumed). Fixed at the template-mechanism level (not per-repo hacks) so the allowlist becomes the single
+  source of truth for runner placement fleet-wide, matching the existing quality-gates-v2/semver-agent pattern —
+  `unified-trading-pm@3240ec79e`. Caught and fixed a real regression risk along the way: the fix's own placeholder broke
+  `detect_template_drift.py`'s byte-compare gate; content-based (not extension-based) substitution detection fixes it
+  without disabling the Tier-C runaway-promote missing-copy guard. Applied the runs-on revert locally across all 17
+  target repos (verified zero remaining `self-hosted` references fleet-wide via direct grep sweep before shipping
+  anything) plus a broader-than-expected set of bespoke non-templated self-hosted files discovered along the way.
+  Shipped `unified-api-contracts` and `unified-trading-library` first (dependency order — quickmerge's pre-flight
+  refuses a downstream repo ship while an upstream path-dependency has uncommitted changes; several of the 17 declare
+  these two as deps). `alerting-service`/`batch-live-reconciliation-service` are queued mid-ship behind other concurrent
+  sessions' QG token usage on this shared host (`qg-governor` 2-token cap) — not a failure, just contention outside this
+  session's control. Remaining 13 repos have their local revert applied and verified but are not yet shipped. **Next**:
+  land the 2 in-flight ships, then continue shipping the remaining 13 in dependency-safe pairs, verify a real green CI
+  run per repo, then deregister each repo's old self-hosted runner.
