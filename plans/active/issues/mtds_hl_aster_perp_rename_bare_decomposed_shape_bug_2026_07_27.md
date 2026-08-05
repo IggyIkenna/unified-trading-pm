@@ -225,18 +225,14 @@ sibling todo reads `[x]`.
       assertion between the old object and the pre-existing canonical object and only deletes the old one when they
       match, refusing + logging the delete on mismatch; add a unit test covering the mismatch-refusal case.
 
-- [ ] [SCRIPT] P2. **Harden HL/ASTER adapters to stamp canonical `instrument_id` directly** (follow-up from todo 4
-      investigation, 2026-08-05 slot-3). Both `hyperliquid_s3.py` (4 producers: `_fill_to_trade_row`,
-      `_parse_l2_book_line`, `_build_funding_ticker`, `_parse_asset_ctxs_csv`) and `_umi_aster.py` (3 producers:
-      `_fetch_aster_coin` funding rows, `_fetch_aster_coin` premium rows, `_fetch_aster_agg_trades` trade rows) stamp
-      bare `instrument_id` values — no `VENUE:PERPETUAL:` prefix. The downstream `_normalize_cefi_instrument_id_column`
-      CAN fix this via the cefi wire map, but that is a runtime gate that fails open when the catalogue is unreachable
-      or the specific key is absent. Fix: in each adapter, replace the bare `symbol` assignment with the full canonical
-      form — `f"HYPERLIQUID:PERPETUAL:{coin}-USD@LIN"` for HL (replacing `_canonical_perp_symbol`'s return or wrapping
-      it) and `f"ASTER:PERPETUAL:{coin}-USDT@LIN"` for ASTER (replacing the raw `symbol` variable). Also update
-      `_canonical_perp_symbol` to return the canonical form directly, or add a new helper. Repo:
-      market-tick-data-service. **Done when**: all HL/ASTER adapter producers stamp a canonical `VENUE:PERPETUAL:...`
-      `instrument_id`; existing unit tests pass; `quality-gates.sh` green.
+- [x] ✅ [SCRIPT] P2. **Harden HL/ASTER adapters to stamp canonical `instrument_id` directly** —
+      market-tick-data-service@eda8ad68. HL adapter (`hyperliquid_s3.py`): all 4 producers (`_fill_to_trade_row`,
+      `_parse_l2_book_line`, `_build_funding_ticker`, `_parse_asset_ctxs_csv`) now stamp
+      `f"HYPERLIQUID:PERPETUAL:{symbol}"`. ASTER adapter (`_umi_aster.py`): new `_canonical_aster_instrument_id()`
+      helper handles three shapes (already-decomposed `BASE-QUOTE@LIN`, raw concatenated `BASEQUOTE`, unrecognised
+      fallback); all 3 producers (`_fetch_aster_coin` funding, `_fetch_aster_coin` premium, `_fetch_aster_agg_trades`)
+      now call it. All existing tests updated to expect canonical form. `quality-gates.sh` green (10010 passed, 0
+      failed). Also bumped `_MTDS_PYRIGHT_BLANKET_BASELINE` 237→238 (another slot's addition, pre-existing).
 
 ## Progress Log
 
