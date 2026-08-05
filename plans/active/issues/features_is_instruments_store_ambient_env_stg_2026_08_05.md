@@ -111,6 +111,19 @@ data. The DEFI:onchain benchmark now unblocked on this axis (fix shipped).
 
 ## Progress Log
 
+### 2026-08-05 (slot-4, data_engineering) — fixed the 3rd-relaunch onchain compute-path ambient-env leaks (todo 2)
+
+Two leaks surfaced on the 3rd DEFI:onchain relaunch (`features-e2e-defi-20260805-225415-060995`): the raw-tick reader
+and the startup-validation IS-availability check both resolved buckets with the ambient `DEPLOYMENT_ENV` (no override
+existed). Added `deployment_env=` to UTL `get_bucket_name` + `get_instruments_bucket` (threads to `resolve_bucket_name`,
+WINS over ambient env; backward compatible — default None preserves behavior), then pinned `deployment_env="prod"` at
+both sites: `mtds_canonical_reader.read_canonical_defi_parquets` (every `raw_tick_data` read now hits
+`market-data-tick-defi-prd-*`) and `startup_validation.validate_upstream_instruments` (`instruments-store-*-prd-*`).
+Runtime-verified the override flips `-stg-`→`-prd-` under an ambient `DEPLOYMENT_ENV=stg`; 4 regression tests (2 UTL
+resolution-under-stg + 1 startup_validation kwarg-pin + 1 features reader kwarg-pin). Ship: features-service@21119021 +
+unified-trading-library@b078d5ba, QG green both repos, SHAs verified on origin/live-defi-rollout. Benchmark re-run for a
+clean full-throughput number tracks -056.
+
 ### 2026-08-05 (slot-9, data_engineering) — found + fixed inline on onchain during the DEFI:onchain benchmark relaunch (-004)
 
 The -004 DEFI:onchain benchmark relaunch (`features-e2e-defi-20260805-223356-060995`, 2nd launch after the stale-tarball
@@ -130,7 +143,7 @@ sweep). Fixed both onchain sites (`batch_handler._count_is_defi_instruments` + `
       cross_instrument `engine/cefi_wire_bridge.py:133` (sports config fallback for consistency), mirroring
       `_count_is_defi_instruments` @58702715; per-site regression tests pin `deployment_env="prod"` regardless of
       ambient env. QG green + quickmerge — features-service@4b2edbd5
-- [ ] [DATA] P2. Fix the onchain compute-path ambient-env leaks found on the 3rd DEFI:onchain relaunch (repo:
+- [x] ✅ [DATA] P2. Fix the onchain compute-path ambient-env leaks found on the 3rd DEFI:onchain relaunch (repo:
       features-service + unified-trading-library) — (a) `onchain/adapters/mtds_canonical_reader.py:203`
       `get_bucket_name("market_data", "defi")` has no `deployment_env` override → resolves `-stg-` under a staging
       launch; switch to `resolve_bucket_name(kind="market-data", asset_group="defi", deployment_env="prod")` (or add the
@@ -138,4 +151,6 @@ sweep). Fixed both onchain sites (`batch_handler._count_is_defi_instruments` + `
       health_factor / liquidation_events) hits the real `-prd-` bucket; (b)
       `unified_trading_library/startup_validation.py` IS-availability check → force `-prd-` instruments-store.
       Regression tests pin prod under ambient staging. QG green + quickmerge both repos. Then re-run the DEFI:onchain
-      benchmark for a clean full-throughput number (tracks -056).
+      benchmark for a clean full-throughput number (tracks -056). — features-service@21119021 +
+      unified-trading-library@b078d5ba; benchmark re-run for a clean number remains tracked by
+      `data_pipeline_check_mdps_features-056`.
