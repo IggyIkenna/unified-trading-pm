@@ -276,15 +276,16 @@ architecture (L0–L4)".
 # Conditional domain index — read a target's codex SSOT ONLY when your task touches it
 
 - **Working on a SERVICE?** Read that service's architecture doc first, skip the rest. Always-true:
-  **instruments-service owns reference data; venue lists + adapter KEYS are UAC data** (`VENUE_TO_ADAPTER_KEY`; IS is
-  the thin resolver — `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
-  `…/instrument-universe-registry-consolidation.md`); **MTDS is market-data only**; service CLIs use
-  `--operation`/`--mode`/`--asset-group` (`/codex/06-coding-standards/cli-convention.md`); shard-level failure
-  isolation, no `raise` in per-shard loops, classify via UAC `classify_venue_error()`
-  (`/codex/04-architecture/shard-level-failure-isolation.md`); service infra requirements (STEP 5.61 `ServiceBootstrap`,
-  5.62 `make_health_router`, `ApiKeyReloader`, typed config-reloaders, UAC schema provenance) →
-  `/codex/06-coding-standards/config-reloader-pattern.md`. **NO service↔service deps** (T4 depends only on
-  UTL/UAC/`unified-*-interface`; integrate by API contract + mocks; SIT fires at the staging boundary) →
+  **instruments-service owns reference data** (`InstrumentRecord` carries `source_archive_url_template` + coverage
+  windows; live REST/WS endpoints are in UAC registries, not InstrumentRecord); venue lists + adapter KEYS are UAC
+  data** (`VENUE_TO_ADAPTER_KEY`; IS is the thin resolver —
+  `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`, `…/instrument-universe-registry-consolidation.md`);
+  **MTDS is market-data only**; service CLIs use `--operation`/`--mode`/`--asset-group`
+  (`/codex/06-coding-standards/cli-convention.md`); shard-level failure isolation, no `raise` in per-shard loops,
+  classify via UAC `classify_venue_error()` (`/codex/04-architecture/shard-level-failure-isolation.md`); service infra
+  requirements (STEP 5.61 `ServiceBootstrap`, 5.62 `make_health_router`, `ApiKeyReloader`, typed config-reloaders, UAC
+  schema provenance) → `/codex/06-coding-standards/config-reloader-pattern.md`. **NO service↔service deps** (T4 depends
+  only on UTL/UAC/`unified-*-interface`; integrate by API contract + mocks; SIT fires at the staging boundary) →
   `/codex/04-architecture/tier-and-import-architecture.md`, `/codex/06-coding-standards/integration-testing-layers.md`.
 - **Working on DATA / manifest / pipeline?** 4-state `capture_status`; canonical schema v9 but **trust the actual
   distribution, not the constant**; `expected_unattempted` materialised by the WRITER (never re-derived); `source=` is
