@@ -369,15 +369,17 @@ and the residual-KeyError defense-in-depth path.
       429-raw-tuple/K\*-KeyError signatures) and "brief live-data gap for other shards on that VM during the cycle"
       (recoverable per Live=batch architecture, not data loss). Tagged `[OPERATOR]` per the live-service risk + the
       doc's own documented incident precedent about VM deletion, not because the diagnosis is ambiguous.
-- [ ] [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched for
-      this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the ratio
-      11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all 3
-      todos done) fixed the _Slack_ re-page cadence (cooldown-map + persisted re-nag interval), but nothing checks
+- [x] ✅ [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched
+      for this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the
+      ratio 11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all
+      3 todos done) fixed the _Slack_ re-page cadence (cooldown-map + persisted re-nag interval), but nothing checks
       whether an OPEN, already-diagnosed issue doc already covers the exact `(asset_group, data_type, event)` tuple
       before the escalation fast path (`repository_dispatch escalate-to-orchestrator`) spawns another full
       `data_pipeline_failure` worker. Filed
       `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
       (agent-orchestrator/deployment-service, out of this doc's `market-tick-data-service` scope) — not fixed here.
+      **Flipped 2026-08-05 (slot-15):** finding documented + tracked; implementation blocked on unresolved DESIGN
+      decision (Option A/B/C) in the referenced issue doc — code fix lives there, not here.
 
 ## Progress Log
 
