@@ -228,13 +228,19 @@ just belongs on a different layer than instrument_type does, and conflating the 
       fixed** — see Progress Log's 31-venue table (a different bug class: the actual/genesis layer over-claiming a start
       date with zero real captures, filed as a new P2 DESIGN todo below). **`debt_token`** intentionally OUT OF SCOPE —
       tracked in `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` (now RESOLVED — see that doc).
-- [ ] [CODE] P2. ~~Fix `_L5_VENUES` (finding 4) to read from `VENUE_DATA_TYPE_CAPABILITIES`~~ **← `_L5_VENUES` part
+- [x] ✅ [CODE] P2. ~~Fix `_L5_VENUES` (finding 4) to read from `VENUE_DATA_TYPE_CAPABILITIES`~~ **← `_L5_VENUES` part
       RESOLVED-BY-DELETION (2026-07-18):** it was added by `market-tick-data-service@0908bda7` (order_flow_imbalance L2
       feature) and removed entirely by `market-tick-data-service@a4fb3d13`, which retired that feature (zero consumers /
-      zero prod rows / duplicated MDPS). `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits. **STILL OPEN
-      (onchain, not cefi):** audit `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py`, byte-copy of
-      `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]`) and `_PROTOCOL_TO_DATA_TYPE` (`solana_defi_handler.py`, the
-      `"kamino"`/`"kamino_lending"` split mismatch) for the same read-from-UAC fix. (repo: market-tick-data-service)
+      zero prod rows / duplicated MDPS). Verified 2026-08-05: `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits.
+      No code changes needed — already deleted. **The onchain parts (`_SOURCE_COVERAGE_START`, `_PROTOCOL_TO_DATA_TYPE`)
+      split to the separate todo below.** — unified-trading-pm@<sha>
+- [ ] [CODE] P2. **Audit and fix `_SOURCE_COVERAGE_START` and `_PROTOCOL_TO_DATA_TYPE` to read from UAC (finding 4,
+      onchain part).** `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py:188-198`, byte-copy of
+      `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]` — the same `(venue, data_type) -> start_date` facts live in UAC's
+      `VENUE_DATA_TYPE_CAPABILITIES`) and `_PROTOCOL_TO_DATA_TYPE` (`solana_defi_handler.py:249-261`, the
+      `"kamino"`/`"kamino_lending"` split — maps protocol→data_type with no corresponding UAC entry for the split, a
+      structural mismatch) should read from UAC rather than hardcoding facts UAC already declares. (repo:
+      market-tick-data-service)
 - [ ] [CODE] P2. Add the missing `book_snapshot`/`market_metadata`/`fills` declarations to
       `VENUE_DATA_TYPE_CAPABILITIES["POLYMARKET"/"KALSHI"]` (finding 5) and retire deployment-api's parallel
       `PREDICTION_DATA_TYPE_META` once UAC is complete. This is independent of the CEFI/DEFI/TRADFI combinator redesign
