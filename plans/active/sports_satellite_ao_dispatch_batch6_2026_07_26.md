@@ -228,9 +228,9 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       state; item 3 is shipped with unit tests and `quality-gates.sh` green. Source:
       `issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`.
 
-- [x] [SCRIPT] P3. ✅ **DONE 2026-07-28 — instruments-service@696921d3, this was a stale duplicate of the source issue
-      doc's own todo (never flipped here).** Full per-script audit + the one genuine gap found
-      (recover_fixtures_from_truthset.py::_write_per_league_parquet, fixed) — see
+- [x] [SCRIPT] P3. ✅ **DONE 2026-07-28 — instruments-service@b03b7994 (rebased from 696921d3), this was a stale
+      duplicate of the source issue doc's own todo (never flipped here).** Full per-script audit + the one genuine gap
+      found (recover_fixtures_from_truthset.py::_write_per_league_parquet, fixed) — see
       /plans/archive/issues/sports_player_stats_empty_write_followups_2026_07_26.md (archived, resolved) for the
       complete per-script verdict list. quality-gates.sh --no-fix: 5009 passed, 0 failed. ~~Audit
       `instruments-service/scripts/` for the missing "refuse to write an empty/0-row result" guard that caused the

@@ -17,7 +17,7 @@ summary: >-
   been invisible because the existing unit test only asserts the 21 names exist as columns, never that they hold real
   data — and no downstream consumer materially exercised this frame numerically until the 2026-07-26 CLV retrain (the
   first real `GradientBoostingClassifier.fit()` call against a SPORTS frame).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [backtest]
@@ -44,7 +44,10 @@ source:
   ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md — that fix
   (features-service, out[col]=pd.NA -> np.nan) resolves the DTYPE bug but does not, and cannot, restore the missing
   computations behind these 21 columns; that is this doc's separate scope."
-resolved_by:
+resolved_by: >-
+  RULED 2026-07-28 (operator-decisions pass, batch6 todo 11): BUILD all 5 groups, not prune. Groups 1-3 implemented
+  (features-service@961c4ad9). Groups 4-5 investigated 2026-07-30: need cross-fixture aggregation, documented.
+  [OPERATOR/DESIGN] checkbox flipped + status→resolved during batch6-finalize todo 1 reconciliation (2026-08-05).
 locked_by:
 locked_since:
 context_scope:
@@ -115,10 +118,12 @@ NOT attempting to improvise 21 formulas here.
 
 ## Recommended decision
 
-- [ ] [OPERATOR/DESIGN] P3. Decide, per the 5 unfilled column groups above, which are still wanted vs. should be pruned
-      from `MULTISOURCE_XG_COLUMNS`. For each group kept, scope a properly-sized follow-up todo (source data location,
-      formula, done-when) before dispatching as AO work — this doc intentionally stops at diagnosis, per the "figure out
-      how X should look" dispatch-scope rule.
+- [x] ✅ [OPERATOR/DESIGN] P3. **RULED 2026-07-28 (operator-decisions pass, batch6 todo 11): BUILD all 5 groups, not
+      prune.** Groups 1-3 (per-source passthrough, source disagreement metrics, derived consensus) implemented —
+      `features-service@961c4ad9` (35 unit tests, QG green). Groups 4-5 (historical accuracy, league rank) investigated
+      2026-07-30: need cross-fixture team-level aggregation not available in this per-fixture calculator; documented
+      with rationale, not silently dropped. See `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 11 for full
+      evidence.
 - [x] ✅ [REVIEW] P3. **DONE 2026-07-30 — checked, NOT the same bug.** Read
       `features_service/sports/calculators/season_context.py` (433 lines) in full. `writer.py`'s comment ("initialized
       to pd.NA and only filled when matchday/standings data is available") describes real, deliberate honest-absence

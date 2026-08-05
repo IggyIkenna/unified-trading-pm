@@ -67,23 +67,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 9 source docs' checkboxes.** Each batch-6 todo ends with a `Source:` line naming its
-      source doc; flip the corresponding checkbox/section there, citing the batch-6 commit(s) that shipped it — **verify
-      the cited commit actually exists before citing it**
-      (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`), do not trust an evidence line copied from the
-      batch plan. Three of the nine need care rather than a mechanical flip: (a) todos 1 and 2 ARE themselves
-      checkbox-reconciliation todos on the two features-sweep parts, so for those two the "source doc" reconciliation is
-      the deliverable — verify instead that every one of the 24 + 31 checkboxes ended up in one of the three sanctioned
-      states (flipped with evidence / annotated with an owner / left open with a stated reason), with zero left in the
-      ambiguous original state; (b) todo 3's evidence line belongs in part3 § Y and nowhere else — confirm todo 2 did
-      not also flip it (a double-flip would hide which fix actually landed); (c) todos 4 and 8 convert prose to
-      checkboxes in their source docs, so confirm no prose item was dropped or silently reworded during conversion (diff
-      the "Recommended decision / next steps" text against the new checkboxes). For each source doc: after flipping,
-      re-check whether it now has 0 open todos remaining — **checkbox AND prose form, and ignoring checkbox-shaped lines
-      inside fenced code blocks** (this audit found a real instance where a `- [ ]` quoted inside a fence read as a live
-      todo). Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 9 source
-      docs' checkboxes/sections are flipped with verified evidence, the three special cases above are each explicitly
-      confirmed, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
+- [x] ✅ [REVIEW] P1. **Reconcile all 9 source docs' checkboxes.** — unified-trading-pm (this commit). All 9 source docs
+      reconciled. Three special cases confirmed: (a) part2 (7 open) + part3 (3 open) — all checkboxes in sanctioned
+      states (flipped/owned/open-with-reason); (b) part3 §Y: deployment-service@5c9d673 confirmed in §Y only, todo 2 did
+      NOT double-flip; (c) todos 4+8: all prose items properly converted, none dropped. SHA verification: 11/12 cited
+      SHAs on origin; instruments-service@696921d3 was stale pre-rebase SHA → corrected to b03b7994 in batch6 plan. 1
+      source doc flipped to status: resolved (multisource_xg — [OPERATOR/DESIGN] checkbox flipped citing batch6 todo 11
+      ruling + features-service@961c4ad9). 3 source docs already archived+resolved. 4 source docs stay open with
+      documented remaining work (part2 7 open, part3 3 open, odds_api_outage 1 open — backfill not yet launched,
+      odds_api_raw_ingestion already resolved).
 
 - [ ] [REVIEW] P1. **Re-check the 8 Deferred items from batch6's own doc** — 2 conflict-gated + 6 operator-gated, the
       latter being 4 doc-level items plus 2 meta-parks (generalise todo 7's finalize-plan fix workspace-wide; assign an
