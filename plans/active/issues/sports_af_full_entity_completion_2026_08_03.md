@@ -71,17 +71,17 @@ as resolved (see Progress Log). Numbers below are the LATEST re-census, post con
 Log 2026-08-05T16:04Z entry — treat these as more current than the 08-04 figures but the consolidator is still not fully
 healthy, so even these may understate true progress).
 
-| Entity           | Scope                        | Status (2026-08-05)                                                                                     |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                    |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc  |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 84,555 already resolved, **56,403 needed** (was 56,940 on 08-04, real -537)  |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet) |
-| **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                             |
-| **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)          |
-| **STANDINGS**    | **all-383**                  | 108,653 expected, 56,913 already resolved, **51,740 needed** (was 64,439 on 08-04, **-12,699**)         |
-| **TEAMS**        | **all-383**                  | 108,653 expected, 61,633 already resolved, **47,020 needed** (was 64,723 on 08-04, **-17,703**)         |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.             |
+| Entity           | Scope                        | Status (2026-08-05)                                                                                       |
+| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                      |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc    |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 102,923 already resolved, **54,810 needed** (was 56,940 on 08-04, real -2,130) |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
+| **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
+| **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
+| **STANDINGS**    | **all-383**                  | 108,653 expected, 57,485 already resolved, **51,168 needed** (was 64,439 on 08-04, **-13,271**)           |
+| **TEAMS**        | **all-383**                  | 108,653 expected, 61,844 already resolved, **46,809 needed** (was 64,723 on 08-04, **-17,914**)           |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -546,3 +546,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   does NOT affect anything in THIS doc** — the census figures above read the canonical directly and their movements
   track real backfill activity regardless of whether the "stuck" periods were a bug or expected no-op re-merges; every
   needed-count and progress claim in this doc stands as-is.
+- **2026-08-05T17:34Z** — `af-backfill-20260805-171010` still healthy, ~83.5min elapsed, left running. Re-census shows
+  the biggest single-check FIXTURE_STATS jump yet: 56,403→54,810 (-1,593), consistent with the long run finally
+  accumulating substantial real work. STANDINGS (51,740→51,168, -572) and TEAMS (47,020→46,809, -211) also ticked down
+  further — small continued drift, correcting last check's read that the backlog-drain was "a one-time jump, not an
+  ongoing trend": it's continuing, just at a much smaller rate now than the initial big jump. PLAYER_STATS/INJURIES
+  unchanged (no backfill run against either this window).
