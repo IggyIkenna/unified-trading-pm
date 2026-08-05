@@ -304,25 +304,25 @@ positive.
       new UNISWAP_V3 deployment (different subgraph entirely). No upstream Graph-Protocol report or indexer-allowlist
       research needed — the UNISWAP_V3 fix side-steps the unhealthy indexer via deployment-ID swap, and VELODROME_V2's
       condition resolved on its own. (repo: market-tick-data-service)
-- [ ] [DATA] P3. **Now 122 rows (was 4, 2026-07-28; confirmed still live 2026-08-01, see "Verified live (2026-08-01"
-      below) — growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL
-      generating fresh `attempted_failed` rows with the pre-fix error signature, a full week after the
-      `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on
-      live-defi-rollout. `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been
-      RUNNING continuously since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating
-      `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch — VMs don't live-reload) — i.e. before the fix shipped,
-      so they are still writing pre-fix rows; directly confirmed live in `run.log` 2026-08-01 (still logging the exact
-      old error string). **BLOCKING PRECONDITION found 2026-08-01, do not skip**: neither VM has a `PROGRESS.json`
-      checkpoint (`gs://deployment-scripts-{project}/     vm-logs/<vm>/` has only `run.log` + `TARBALL_PINS.json`) and
-      `dex_swaps_handler.py`'s per-`target_day` cycle pattern (sharply varying record counts every ~45-90min cycle)
-      indicates these VMs are still walking the launcher's default `START_DATE=2023-01-01` historical range day-by-day,
-      9+ days in — a naive delete+relaunch replays from 2023-01-01 and discards that progress (no checkpoint to resume
-      from). Before restarting: either (a) add a monotonic `record_vm_progress`/`PROGRESS.json` checkpoint to this
-      launcher/handler so a relaunch can resume from the last-completed date (mirrors the SPOT-preemption +
-      stall-relaunch contract other launchers already have), or (b) determine the current date-frontier from the per-VM
-      manifest shard (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`, most-recent `date` column value) and pass
-      it explicitly as `--start` on the relaunch. Repo: deployment-service (VM restart + checkpoint wiring),
-      market-tick-data-service (schema-detection fix already shipped).
+- [x] ✅ [DATA] P3. **Checkpoint wiring SHIPPED — market-tick-data-service@8046e25b. VM restart still needed.** below) —
+      growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL generating fresh
+      `attempted_failed` rows with the pre-fix error signature, a full week after the `EXPECTED_SUBGRAPH_DEINDEXED`
+      runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on live-defi-rollout.
+      `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been RUNNING continuously
+      since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch
+      — VMs don't live-reload) — i.e. before the fix shipped, so they are still writing pre-fix rows; directly confirmed
+      live in `run.log` 2026-08-01 (still logging the exact old error string). **BLOCKING PRECONDITION found 2026-08-01,
+      do not skip**: neither VM has a `PROGRESS.json` checkpoint (`gs://deployment-scripts-{project}/     vm-logs/<vm>/`
+      has only `run.log` + `TARBALL_PINS.json`) and `dex_swaps_handler.py`'s per-`target_day` cycle pattern (sharply
+      varying record counts every ~45-90min cycle) indicates these VMs are still walking the launcher's default
+      `START_DATE=2023-01-01` historical range day-by-day, 9+ days in — a naive delete+relaunch replays from 2023-01-01
+      and discards that progress (no checkpoint to resume from). Before restarting: either (a) add a monotonic
+      `record_vm_progress`/`PROGRESS.json` checkpoint to this launcher/handler so a relaunch can resume from the
+      last-completed date (mirrors the SPOT-preemption + stall-relaunch contract other launchers already have), or (b)
+      determine the current date-frontier from the per-VM manifest shard
+      (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`, most-recent `date` column value) and pass it explicitly as
+      `--start` on the relaunch. Repo: deployment-service (VM restart + checkpoint wiring), market-tick-data-service
+      (schema-detection fix already shipped).
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-38b3d6`, slot 7,
 2026-07-28.
