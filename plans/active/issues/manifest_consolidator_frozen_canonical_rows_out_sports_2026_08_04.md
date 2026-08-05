@@ -155,3 +155,22 @@ gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name=
 
 If `rows_out` is still flat, next step is reading `manifest_consolidator.py`'s merge/dedup key logic directly (not just
 log output) to find why genuinely-new per-VM shard rows are being classified as duplicates of existing canonical rows.
+
+## Update 2026-08-05T16:04Z — genuine bursty recovery in progress, not fixed, still worth tracking
+
+Pulled the full trend from 2026-08-05T01:26Z through 16:04Z (~14.5h). **`rows_out` is now moving for real**: from
+9,241,283 (01:26Z) to 9,270,239 (16:04Z), **+28,956 rows**. The pattern is bursty, not steady: long stuck plateaus
+(1-2.5h each, e.g. 01:52Z→04:16Z flat, 06:59Z→08:45Z flat, 12:19Z→14:00Z flat, 15:38Z→16:04Z flat-so-far) interleaved
+with active windows of small, steady per-cycle growth (e.g. 08:52Z→12:19Z: ~600-1,000 rows added roughly every 10min,
+totaling ~16,257 rows over that one window alone). This is a materially different shape than the original finding (a
+full, unbroken 16h dead flat-line from 08:06Z 08-04 through 18:55Z 08-04) — something has genuinely changed for the
+better, though it is NOT a clean fix: the plateaus mean the underlying misclassification bug is still firing some
+fraction of the time, just not permanently. Confirms real, substantial downstream effect: a re-census now shows
+STANDINGS (64,439→51,740 needed, -12,699) and TEAMS (64,723→47,020 needed, -17,703) dropping dramatically — neither
+entity has had an AF backfill VM launched against it this entire campaign (verified via `gcloud compute operations list`
+— no STANDINGS/TEAMS-named or otherwise-suspicious af-backfill launches), so this is very likely backlogged work from
+OTHER routine sports jobs (enrichment crons, fixtures-schedule crons — this bucket serves the whole sports-prd estate,
+not just AF) that was sitting unconsolidated during the freeze and is now draining through. Still not root-caused at the
+code level — flagging the plateau/burst pattern as an additional clue for whoever picks this up (sounds like an
+intermittent lock-contention or partial-batch-skip condition, not a permanent logic bug, given it now completes real
+merges some fraction of the time).

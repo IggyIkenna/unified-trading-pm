@@ -66,20 +66,22 @@ does not close.
 
 Per `unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_ENTITY_LEAGUE_COVERAGE`:
 
-**✅ CORRECTED 2026-08-04T09:00Z** — both census scripts fixed to treat `empty_confirmed` as resolved (see Progress
-Log). Numbers below are the corrected re-census, shipped `instruments-service@579421bf`.
+**✅ CORRECTED 2026-08-04T09:00Z, RE-CENSUSED 2026-08-05T16:04Z** — both census scripts fixed to treat `empty_confirmed`
+as resolved (see Progress Log). Numbers below are the LATEST re-census, post consolidator-backlog-drain (see Progress
+Log 2026-08-05T16:04Z entry — treat these as more current than the 08-04 figures but the consolidator is still not fully
+healthy, so even these may understate true progress).
 
-| Entity           | Scope                        | Status (2026-08-04)                                                                                    |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------ |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                   |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,278 expected (non-MVP), 77,092 already resolved, **56,940 needed** (corrected; was 69,171 pre-fix)  |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,278 expected (non-MVP), 52,085 already resolved, **58,523 needed** (corrected; was 69,165 pre-fix)  |
-| **PLAYER_STATS** | **MVP-96**                   | 42,369 expected, 41,363 already resolved, **only 1,006 needed** — nearly done (corrected; was 17,440!) |
-| **INJURIES**     | **all-383**                  | 108,647 expected, 45,938 already resolved, **62,709 needed** (corrected; was 100,745 pre-fix)          |
-| **STANDINGS**    | **all-383**                  | 108,647 expected, 44,208 already resolved, **64,439 needed** (corrected; was 84,947 pre-fix)           |
-| **TEAMS**        | **all-383**                  | 108,647 expected, 43,924 already resolved, **64,723 needed** (corrected; was 67,741 pre-fix, small Δ)  |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.            |
+| Entity           | Scope                        | Status (2026-08-05)                                                                                     |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                    |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc  |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 81,685 already resolved, **56,646 needed** (was 56,940 on 08-04, real -294)  |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet) |
+| **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                             |
+| **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)          |
+| **STANDINGS**    | **all-383**                  | 108,653 expected, 56,913 already resolved, **51,740 needed** (was 64,439 on 08-04, **-12,699**)         |
+| **TEAMS**        | **all-383**                  | 108,653 expected, 61,633 already resolved, **47,020 needed** (was 64,723 on 08-04, **-17,703**)         |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.             |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -88,10 +90,11 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, corrected: 192,877 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 270,873 pre-fix, a ~29%
-reduction) **+ 115,463 across FIXTURE_STATS+FIXTURE_LINEUPS** (was 136,574 pre-fix, a ~15% reduction). LEAGUES excluded
-per the resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon**
-since it could converge quickly once dispatched.
+**Grand total needed, 2026-08-05: 162,467 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~16% drop — mostly STANDINGS/TEAMS backlog draining, see Progress Log) **+ 115,169 across
+FIXTURE_STATS+FIXTURE_LINEUPS** (was 115,463 on 08-04). LEAGUES excluded per the resolved verdict below. **PLAYER_STATS
+is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly once
+dispatched.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 
@@ -176,14 +179,15 @@ not urgent enough to block this campaign.
       census scripts had an empty_confirmed blind spot, fixed (`instruments-service@579421bf`). See the corrected table
       above. **PLAYER_STATS reprioritized to P0** — only 1,006 needed (was 17,440), genuinely near-complete.
 - [ ] [SCRIPT] **P0** (reprioritized, near-complete). **Launch PLAYER_STATS MVP-96 backfill**
-      (`--entity PLAYER_STATS 2020-06-06 <today>`) once the singleton lock frees up — only **1,006 needed shards**
-      (corrected), should converge fast.
-- [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, corrected) — likely per-fixture-date
-      cadence, apply the daily stop/resume discipline.
-- [ ] [SCRIPT] P2. **Launch STANDINGS all-leagues backfill** (64,439 needed, corrected) — same discipline.
-- [ ] [SCRIPT] P2. **Launch TEAMS all-leagues backfill** (64,723 needed, corrected — barely moved from the pre-fix
-      67,741 since TEAMS was already mostly `captured`, BUT likely 1 call/league not 1 call/shard — confirm real call
-      cost before estimating timeline; may complete far faster than the shard count implies).
+      (`--entity PLAYER_STATS 2020-06-06 <today>`) once the singleton lock frees up — only **998 needed shards**
+      (2026-08-05 re-census), should converge fast.
+- [ ] [SCRIPT] P1. **Launch TEAMS all-leagues backfill** (47,020 needed, 2026-08-05 re-census — dropped from 64,723;
+      likely 1 call/league not 1 call/shard, confirm real call cost before estimating timeline; may complete far faster
+      than the shard count implies). Reprioritized above STANDINGS/INJURIES given the sharpest drop.
+- [ ] [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** (51,740 needed, 2026-08-05 re-census — dropped from
+      64,439). Same discipline.
+- [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, unchanged — no backfill run against it yet)
+      — likely per-fixture-date cadence, apply the daily stop/resume discipline.
 - [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved above: LEAGUES is a retired
       entity (no write path since 2026-05-07); there is nothing to launch. Excluded from this campaign's remaining scope
       and from the grand-total needed count.
@@ -485,23 +489,19 @@ are genuinely in scope for the operator's "no exceptions" directive.
   separate fleet's contention sharing the same zone. Not investigated further (out of this campaign's scope; the
   resolved `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` doc is the right home if anyone picks that up).
   Relaunched FIXTURE_STATS once more (`af-backfill-20260804-130914`), confirmed RUNNING.
-- **2026-08-04T13:29Z-13:37Z** — `-130914` ran a genuinely decent ~11min but an immediate re-census showed exactly zero
-  movement. Initially attributed this to ordinary consolidator lag (per-VM shard writes confirmed real via run.log,
-  mechanism seemed to just need time to fold in). **Superseded by the 2026-08-04T13:37Z finding below** — it's not lag,
-  the consolidator is genuinely frozen. Relaunched FIXTURE_STATS regardless (`-132909`, then `-133748`) since the
-  underlying per-fixture data writes are durable independent of this.
-- **2026-08-04T13:37Z — MAJOR FINDING, separate issue doc filed.** After `-133748` ran 22+ min with the consolidator
-  STILL showing zero canonical movement, dug into the actual `uts-prod-manifest-consolidator-instruments-sports` Cloud
-  Run job execution logs (not just scheduler health). **The consolidator's canonical `rows_out` has been frozen at
-  exactly 9,239,513 for 5+ hours (2026-08-04T08:06Z→13:08Z+), across ~35+ successful merges**, despite processing 3-15
-  shards and 187-2,000,000 `dedup_dropped` rows every single cycle — the arithmetic
-  (`dedup_dropped = rows_in - rows_out`) holds exactly every time, meaning every row entering the merge across the
-  ENTIRE sports-prd bucket (not just AF — enrichment crons, fixtures schedules, other backfills all write here) is being
-  classified as a duplicate and dropped, not merged in. This is NOT the previously-resolved staleness/loud-fail issue —
-  this consolidator reports `success=True error=-` every cycle, believing it's working normally; the existing liveness
-  watchdog only checks heartbeat age, not output growth, so it wouldn't catch this. Filed
-  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` with full evidence/repro steps — out of this
-  campaign's scope to root-cause (needs someone with context on `manifest_consolidator.py`'s merge/dedup logic).
+- **2026-08-04T13:37Z — MAJOR FINDING, separate issue doc filed.** (`-130914` ran ~11min, immediate re-census showed
+  zero movement; initial "ordinary consolidator lag" theory superseded by this finding.) After `-133748` ran 22+ min
+  with the consolidator STILL showing zero canonical movement, dug into the actual
+  `uts-prod-manifest-consolidator-instruments-sports` Cloud Run job execution logs (not just scheduler health). **The
+  consolidator's canonical `rows_out` has been frozen at exactly 9,239,513 for 5+ hours (2026-08-04T08:06Z→13:08Z+),
+  across ~35+ successful merges**, despite processing 3-15 shards and 187-2,000,000 `dedup_dropped` rows every single
+  cycle — the arithmetic (`dedup_dropped = rows_in - rows_out`) holds exactly every time, meaning every row entering the
+  merge across the ENTIRE sports-prd bucket (not just AF — enrichment crons, fixtures schedules, other backfills all
+  write here) is being classified as a duplicate and dropped, not merged in. This is NOT the previously-resolved
+  staleness/loud-fail issue — this consolidator reports `success=True error=-` every cycle, believing it's working
+  normally; the existing liveness watchdog only checks heartbeat age, not output growth, so it wouldn't catch this.
+  Filed `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` with full evidence/repro steps — out of
+  this campaign's scope to root-cause (needs someone with context on `manifest_consolidator.py`'s merge/dedup logic).
   **Practical implication for this campaign**: keep launching backfills (real data keeps accumulating durably, confirmed
   independent of this bug), but census-confirmed convergence cannot be truthfully declared for ANY entity in this doc
   while the consolidator stays frozen — treat every "needed" figure in this doc as a stale floor, not current truth,
@@ -514,3 +514,21 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (`af-backfill-20260805-013103`), confirmed RUNNING. Root cause of the idle gap not investigated (outside this doc's
   scope to diagnose the scheduling mechanism itself) — noting it so a future tick doesn't assume continuous coverage
   between Progress Log entries.
+- **2026-08-05T16:04Z-16:09Z — genuine re-census movement, second (bigger) idle gap, venv incident, all closed out.**
+  Four things this check: (1) **Second idle gap, worse than the first**: `af-backfill-20260805-013103` was preempted at
+  00:54:37Z after a ~23min run, and the lock sat idle **15+ hours** (vs. 10+ hours last time) until this check —
+  relaunched immediately (`af-backfill-20260805-171010`). This is now a recurring pattern (2 occurrences, growing) worth
+  flagging even though its root cause (a scheduling/session-continuity gap, not this doc's mechanism to fix) is out of
+  scope here. (2) **Consolidator: genuine bursty recovery, not a fix** — `rows_out` grew 9,241,283→9,270,239 (+28,956)
+  over ~14.5h, in bursty stuck-then-active cycles rather than a clean resolution; full detail in the issue doc's
+  2026-08-05T16:04Z update. (3) **First real census movement in over a day**: FIXTURE_STATS needed dropped 56,940→56,646
+  (-294, genuine, from this campaign's own backfills). STANDINGS (64,439→51,740, -12,699) and TEAMS (64,723→47,020,
+  -17,703) dropped dramatically too, despite **zero AF backfill VMs ever launched against either entity this campaign**
+  (verified via `gcloud compute operations list` — no such launches) — almost certainly backlogged work from other
+  routine sports jobs (enrichment/fixtures-schedule crons) draining through as the consolidator catches up, not a
+  parallel dispatch to coordinate with. Summary table above updated to the 2026-08-05 figures. (4)
+  **instruments-service's `.venv` was genuinely missing** (confirmed via `ls`, sibling repos had theirs intact) — fixed
+  via `uv sync` per the documented troubleshooting step (`per-tab-worktrees.md` § Troubleshooting), not investigated
+  further since the fix worked cleanly. **Given STANDINGS/TEAMS are now closer to done than
+  FIXTURE_STATS/FIXTURE_LINEUPS (51,740/47,020 vs. 56,646/58,523), worth reprioritizing them once the current entity
+  stalls** — updated todos below.
