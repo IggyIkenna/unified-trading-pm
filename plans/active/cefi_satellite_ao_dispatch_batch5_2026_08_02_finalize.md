@@ -2,13 +2,13 @@
 doc_type: plan
 title: CeFi satellite AO batch 5 — finalize (reconcile source docs + close the deferral + archive)
 summary: >-
-  Gated closeout for cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on + gate_on_depends:
-  true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4 finalize pattern: reconcile each
-  source doc's checkboxes once its batch-5 todo lands, re-check batch5's single Deferred item (the KEEP-NA-ruled
-  marker-format prod migration) for a cleared gate, close the one corpus gap batch5 identified but deliberately did not
-  fix mid-batch (the bitfinex/bitget reclassified doc has no paired finalize sibling), then archive batch5 via the
-  standard 6-step ritual.
-status: active
+  Gated closeout for /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via
+  depends_on + gate_on_depends: true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4
+  finalize pattern: reconcile each source doc's checkboxes once its batch-5 todo lands, re-check batch5's single
+  Deferred item (the KEEP-NA-ruled marker-format prod migration) for a cleared gate, close the one corpus gap batch5
+  identified but deliberately did not fix mid-batch (the bitfinex/bitget reclassified doc has no paired finalize
+  sibling), then archive batch5 via the standard 6-step ritual.
+status: complete # (was: active) 2026-08-05 archival sweep: all 4 todos [x], no locked_by
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-5, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize.md,
     /plans/active/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md,
@@ -47,7 +47,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -55,9 +55,9 @@ context_scope:
 
 # CeFi satellite AO batch 5 — finalize
 
-> **Machine-gated on `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 5 tasks in that plan are `done`. `sequential: true` because the
-> archival todo must run last and depends on the reconciliation todos ahead of it.
+> **Machine-gated on `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md`** (`depends_on` +
+> `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan are `done`.
+> `sequential: true` because the archival todo must run last and depends on the reconciliation todos ahead of it.
 
 > **Distinct `[TAG] P<n>.` prefixes on every todo below** — deliberately, per `task_template.md` § 4's 2026-07-31
 > finding: when the self-archival todo lands in the SAME commit as its own `git mv`, the AO done-gate's tag+priority
@@ -107,10 +107,16 @@ context_scope:
       by someone else), and `check_finalize_plan_coverage.py` no longer reports that doc as uncovered. Repo:
       unified-trading-pm.
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`** via the standard 6-step ritual: migrate
-      every remaining Deferred item to a tracked todo elsewhere (todo 2 above should have resolved or re-confirmed it —
-      verify nothing silently vanishes) → add the archive banner → run the codex-alignment check (batch5 creates no new
-      durable contract; confirm still true) → grep the corpus for every referrer of
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch5_2026_08_02.md`** via the standard 6-step ritual: migrate
+      — unified-trading-pm@ARCHIVE_SHA every remaining Deferred item to a tracked todo elsewhere (todo 2 above should
+      have resolved or re-confirmed it — verify nothing silently vanishes) → add the archive banner → run the
+      codex-alignment check (batch5 creates no new durable contract; confirm still true) → grep the corpus for every
+      referrer of `cefi_satellite_ao_dispatch_batch5_2026_08_02` and repoint each to the archived path → clear
+      `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus
+      referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside
+      it in the same commit. every remaining Deferred item to a tracked todo elsewhere (todo 2 above should have
+      resolved or re-confirmed it — verify nothing silently vanishes) → add the archive banner → run the codex-alignment
+      check (batch5 creates no new durable contract; confirm still true) → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch5_2026_08_02` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same

@@ -24,7 +24,7 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-08-02"
@@ -61,12 +61,12 @@ context_scope:
 > **🟢 RESOLVED + ARCHIVED 2026-08-02.** All 4 todos done: P0 root-caused + fixed (`market-tick-data-service@7a730cd6`),
 > P1 registered the already-written orphan data (`market-tick-data-service@9415ef7a`), P2 re-scoped + launched the ASTER
 > MDPS candle backfill (`mdps-backfill-cefi-20260802-140125`, continues running independently — its output is registered
-> for free by `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md`'s existing SCRIPT P3 additive manifest
-> reconciliation todo, no new tracking needed). **No new durable contract from this doc** — codex-alignment check: the
-> fix (`ManifestWriter(per_vm_shards=True)` on `OnchainPerpBatchHandler`) already matches the existing established
-> pattern (`rebuild_sports_manifest_v9.py` / `recover_tradfi_chain_manifest_registration_2026_07_22.py`) and needed no
-> new codex doc. Moved to `/plans/archive/issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`; corpus
-> referrers updated.
+> for free by `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md`'s existing SCRIPT P3 additive
+> manifest reconciliation todo, no new tracking needed). **No new durable contract from this doc** — codex-alignment
+> check: the fix (`ManifestWriter(per_vm_shards=True)` on `OnchainPerpBatchHandler`) already matches the existing
+> established pattern (`rebuild_sports_manifest_v9.py` / `recover_tradfi_chain_manifest_registration_2026_07_22.py`) and
+> needed no new codex doc. Moved to `/plans/archive/issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`;
+> corpus referrers updated.
 
 ## What I found
 

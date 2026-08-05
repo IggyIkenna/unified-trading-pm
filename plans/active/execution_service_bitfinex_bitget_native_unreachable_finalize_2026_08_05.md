@@ -38,8 +38,8 @@ source: >-
   Shape (b) bolt-on finalize sibling per /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 1
   — the 2026-07-30 na-eligibility-audit reclassified this doc NA → planning in place but did not create the paired
   _finalize sibling that both the naming SSOT and task_template.md § 4's finalize-plan-coverage rule require. Batch5's
-  closeout (cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md todo 3) identified the gap and explicitly deferred
-  it to this doc.
+  closeout (/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md todo 3) identified the gap
+  and explicitly deferred it to this doc.
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code

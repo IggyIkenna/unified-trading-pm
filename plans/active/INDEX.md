@@ -73,13 +73,14 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends:
   true until all 7 of that plan's todos are done. Mirrors the batch1/batch2/batch3 finalize pattern: reconcile each
   source…
-- [`cefi_satellite_ao_dispatch_batch5_2026_08_02`](./cefi_satellite_ao_dispatch_batch5_2026_08_02.md) — Fifth
-  AO-dispatch batch for cefi, drafted 2026-08-02 against the five source docs the `/ag-closeout-audit` cefi run named in
-  the operator's 2026-07-30 interactive Q&A (dispatch explicitly AUTHORIZED in that session, so this plan ships…
-- [`cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize`](./cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md)
-  — Gated closeout for cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on + gate_on_depends:
-  true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4 finalize pattern: reconcile each
-  source…
+- [`cefi_satellite_ao_dispatch_batch5_2026_08_02`](../archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md)
+  **[archived]** — Fifth AO-dispatch batch for cefi, drafted 2026-08-02 against the five source docs the
+  `/ag-closeout-audit` cefi run named in the operator's 2026-07-30 interactive Q&A (dispatch explicitly AUTHORIZED in
+  that session, so this plan ships…
+- [`cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize`](../archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md)
+  **[archived]** — Gated closeout for cefi_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on +
+  gate_on_depends: true until all 5 of that plan's todos are done. Mirrors the batch1 through batch4 finalize pattern:
+  reconcile each source…
 - [`cefi_satellite_ao_dispatch_batch6_2026_08_02`](./cefi_satellite_ao_dispatch_batch6_2026_08_02.md) **[draft]** —
   Sixth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-02 (scheduled autonomous
   dispatch, tranche=cefi, slot 8). Phase 0 re-derived the covering-plan set via

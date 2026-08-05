@@ -77,8 +77,8 @@ resolved_by: cefi_satellite_ao_dispatch_batch5_2026_08_02
 ## What's deferred, and why
 
 > **📤 THE TODO BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
-> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo `[SCRIPT] P3` ("Run the additive
-> MDPS manifest reconciliation for the cefi trades gap-fill campaign, on a VM") — `status: active`,
+> tranche=cefi).** `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo `[SCRIPT] P3` ("Run the
+> additive MDPS manifest reconciliation for the cefi trades gap-fill campaign, on a VM") — `status: active`,
 > `assigned_vm: planning` — carries it verbatim (same function, bucket, service_name, prefix, `r20251225` rationale, and
 > safe-idempotent justification) and Source-cites this doc; its done-when explicitly includes flipping the open checkbox
 > below once the merge runs to completion. Leave `assigned_vm: NA` here — flipping it would create a second, competing

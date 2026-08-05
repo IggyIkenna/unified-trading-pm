@@ -21,7 +21,7 @@ tags: [tardis, concurrency-guard, mtds, live-leg, false-premise, ssot-contradict
 related:
   [
     /plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-02
@@ -41,7 +41,7 @@ context_scope:
     deployment-service/scripts/vm/launch-mtds-live.sh,
     market-tick-data-service/market_tick_data_service/live/connectors/tardis_machine_ws.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 ---
 
