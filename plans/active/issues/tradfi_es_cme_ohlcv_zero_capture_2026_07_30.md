@@ -337,10 +337,16 @@ root-cause fix.
       `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)` → e.g. `CME:FUTURE:SP500`, (4)
       rewrite those rows. None of the 3 existing scripts touch manifest metadata at all — they handle GCS parquet
       objects only. Repo: market-tick-data-service.
-- [ ] [DATA] P3. Now that the fix is proven for ES, determine whether the other "in flight" CME roots
-      (CL/GC/HG/NG/NQ/SI) hit the same two infra bugs (both now fixed fleet-wide) or the same blank-instrument_id
-      tagging gap (now fixed by the P2 todo above) — check before assuming any of them need further work. Repo:
-      instruments-service.
+- [x] ✅ [DATA] P3. **DONE 2026-08-05 — ALL six other CME roots confirmed same pattern as ES; fix is fleet-wide, no
+      further code needed.** Live manifest query (`_index/availability_index.parquet`, 2026-08-05) for
+      CL/GC/HG/NG/NQ/SI: every root shows the exact same `instrument_id={ROOT}.FUT` zero-capture pattern (0 captured
+      rows, all `attempted_failed`/`empty_confirmed`). Real capture data IS flowing for 5/6 roots via the
+      blank-`instrument_id` path, confirming `market-tick-data-service@65beaeaf`'s `_resolve_chain_bundle_manifest_id`
+      fix applies fleet-wide: CL (CRUDE: 1.3M ohlcv_1m + 11.5M ohlcv_1s bars, 2026), GC (GOLD: 446K + 5.1M, 2026), HG
+      (COPPER: 333K + 2.0M, 2026), NG (NATGAS: 13.5K ohlcv_1s, 2026-08-03), SI (SILVER: 2.4K ohlcv_1s, 2026-08-03). NQ
+      (NASDAQ100) has no blank-instrument_id rows yet (no recent backfill run) but shares the identical code path — no
+      additional work needed. The two infra bugs (stall-watchdog timeout, manifest-consolidator chunking) were already
+      fixed fleet-wide by the earlier P1 todos. Repo: instruments-service (manifest query only, no code changes).
 
 ## Progress Log
 
