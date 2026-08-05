@@ -126,10 +126,10 @@ codebase).
       2026-07-29T01:05Z pause is documented in an already-resolved sibling issue,
       `/plans/archive/issues/dp_watcher_003_consolidator_scheduler_paused_maintenance_window_gap_2026_07_29.md`: both
       `uts-prod-manifest-consolidator-market-data-prediction-cron` and `…-tradfi-cron` were deliberately paused that day
-      by `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own tracked pause→apply→resume backfill
-      sequence — the resume half was INTENTIONALLY deferred pending that plan's apply step (still open as of this
-      writing: `mtds_available_at_cross_asset_backfill-006`/`-009`), not a failure. The ~20h "stuck" duration this doc
-      measured was simply how long that plan's apply step took to get scheduled, not evidence of a broken mechanism.
+      by `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own tracked pause→apply→resume
+      backfill sequence — the resume half was INTENTIONALLY deferred pending that plan's apply step (still open as of
+      this writing: `mtds_available_at_cross_asset_backfill-006`/`-009`), not a failure. The ~20h "stuck" duration this
+      doc measured was simply how long that plan's apply step took to get scheduled, not evidence of a broken mechanism.
       **Was it caught silently with no alerting?** No — it WAS correctly, loudly detected: DP-WATCHER-003
       (`consolidator_scheduler_watcher.py`) pages CRITICAL for exactly this case by design (confirmed in the same
       archived doc), and the `uts-prod-consolidator-liveness-watchdog` this doc's own investigation found flagging both

@@ -88,10 +88,10 @@ context_scope:
 # TradFi satellite AO batch 5 — fresh audit extraction
 
 > **✅ RESOLVED 2026-08-02 (was: 🟡 tradfi backfill VM launches BLOCKED fleet-wide).** The tradfi market-data
-> manifest-consolidator cron (owning plan: `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`) was
-> resumed 2026-08-02, re-verified live 2026-08-03T19:33Z (`ENABLED`, index fresh) — tradfi download-VM launches work
-> normally again. Details (now archived):
-> `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
+> manifest-consolidator cron (owning plan:
+> `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`) was resumed 2026-08-02, re-verified
+> live 2026-08-03T19:33Z (`ENABLED`, index fresh) — tradfi download-VM launches work normally again. Details (now
+> archived): `/plans/archive/2026_08/tradfi_ohlcv_backfill_oom_preflight_fails_paused_consolidator_2026_08_02.md`.
 
 > **Status: active — approved + dispatched 2026-07-30 (`5a6bbefc3`, "activate 9 fresh ag-closeout-audit dispatch
 > batches").** This pass originally ran on the scheduled daily worker as `status: draft` per the ag-closeout-audit
@@ -336,16 +336,16 @@ ground to open up, and it did:
       is recorded. Source: `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
 
       **Mechanism (a) confirmed (slot-7, 2026-07-30, static code read)**: `related_data_types` was missing from
-                  `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
-                  dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
-                  `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
-                  2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
-                  inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
-                  2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
-                  (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
-                  branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
-                  regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
-                  `quality-gates.sh` green (1999 passed, 0 failed).
+                      `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` — the `_streaming_filter_slice` strict `== data_type` branch
+                      dropped every raw `ohlcv_1m`/`ohlcv_1s` row against the requested `ohlcv_15m`/`ohlcv_24h` output type →
+                      `symbols_processed=0` deterministically. **Fix shipped** `market-data-processing-service@0671953` (slot-5,
+                      2026-08-03): added `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]` to both adapters, now takes the
+                      inclusive `.isin()` branch. **Instrumentation shipped** `market-data-processing-service@ca546fd` (slot-15,
+                      2026-08-05): added DEBUG-level pre/post-filter row-count logging + a WARNING when every row is dropped
+                      (pre>0→post=0 — the exact `symbols_processed=0` signature), covering both the `related_data_types` inclusive
+                      branch and the strict `==` branch, so a future recurrence of this class of bug is NEVER silent again. 3
+                      regression tests added (full-drop WARNING, partial-drop DEBUG-only, related_data_types inclusive-branch). Full
+                      `quality-gates.sh` green (1999 passed, 0 failed).
 
 - [x] ✅ [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by

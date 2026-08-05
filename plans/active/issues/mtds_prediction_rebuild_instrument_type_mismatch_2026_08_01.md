@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [data-correctness, available-at, manifest-writer, prediction, instrument-type, dedup-key, straggler-rows]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
@@ -49,7 +49,7 @@ depends_on: []
 last_updated: 2026-08-03
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
