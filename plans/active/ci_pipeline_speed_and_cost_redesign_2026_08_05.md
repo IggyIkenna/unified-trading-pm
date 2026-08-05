@@ -130,6 +130,21 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       operator asked for: ~300 tasks/day, expected CI-minute footprint at some stated per-task assumption, actual
       measured footprint, and where the delta comes from (concurrency fan-out, retries/re-triggers, the already-fixed
       digest-refresh churn, or something not yet found).
+- [ ] [INFRA] P1. **Warm git-object cache for JIT-ephemeral runner checkouts** (operator, 2026-08-05: "why fresh-clone
+      every time when we already keep clones current via cron"). Confirmed live: `glue-runner-run.sh`'s JIT-ephemeral
+      branch runs `rm -rf _work/* _diag/*.log` before EVERY job, and `python-quality-gates-v2.yml`'s `actions/checkout`
+      steps use `fetch-depth: 1`/`2` — shallow, but still a genuine cold network clone every run (no existing git
+      history to fetch against once `_work` is wiped). No reference-clone/warm-mirror mechanism exists anywhere in this
+      setup today (verified: zero hits for `--reference`/`--shared`/mirror patterns across
+      `scripts/self-hosted-runners/` and `.github/workflows/`). Proposed design — same "lives OUTSIDE `_work`, survives
+      the wipe" pattern this codebase already uses for `RUNNER_TOOL_CACHE`: maintain a cron-refreshed bare mirror clone
+      per repo (same idea as the existing per-slot `slot-cron-ff-pull.sh`, just serving the runner instead of a
+      worktree), and have each job's checkout use `git clone --reference <mirror> --dissociate` against it — `_work`
+      still gets wiped fresh every job (isolation preserved, the actual reason the wipe exists), but the git OBJECT DATA
+      is already local, so only genuinely new commits since the last cron refresh come over the network. Needs real
+      testing before rollout (confirm `actions/checkout`'s behavior against a pre-seeded reference, or replace it with a
+      custom checkout step) — this touches every job on the shared runner, don't ship blind. Directly reduces disk WRITE
+      I/O on the same EBS volume this session's capacity investigation was about.
 
 ## Codex SSOTs
 
