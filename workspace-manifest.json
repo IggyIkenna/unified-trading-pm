@@ -959,7 +959,7 @@
         "large_file_count": 0,
         "qg_red_reason": "pytest"
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
     "strategy-service": {
@@ -1172,7 +1172,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "large_file_count": 0,
@@ -1220,7 +1220,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 37,
         "coverage_pct": null,
