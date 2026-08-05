@@ -84,8 +84,8 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
 
 ## Todos
 
-- [ ] [DATA] P1. Create the `deployment_operational_data.watchdog_kill_events` BigQuery table using the same
-      table-creation mechanism `reap_events`/`idle_spend` were created with (see
+- [x] ✅ [DATA] P1. Create the `deployment_operational_data.watchdog_kill_events` BigQuery table using the same —
+      deployment-service@688d925 table-creation mechanism `reap_events`/`idle_spend` were created with (see
       `/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md` for that mechanism — do not
       invent a new one). Schema:
       `ts TIMESTAMP, vm_name STRING, pid INT64, slot_id STRING, command STRING, reason     STRING, rss_mb INT64, limit_mb INT64, pressure_level STRING, killed BOOL`.
