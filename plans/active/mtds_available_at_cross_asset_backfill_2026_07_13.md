@@ -396,12 +396,16 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       existing rebuild script touches captured defi rows — `rebuild_defi_manifest.py` only does gap-filling). Full
       completion mandate for the next todo — do not ship a partial/MVP version of this shim or backfill only a subset of
       the 3.0M rows. (repo: NA — this todo records the decision; implementation is the next todo)
-- [ ] [DATA] P3. **No longer stretch/optional — retagged 2026-07-28, same GO ruling as the todo above.** Implement the
-      chosen defi backfill mechanism (the shim + new backfill entrypoint above) with unit-test coverage and a dry-run
-      preview before any live write, then apply for real across the full 3.0M-row defi captured corpus (no partial
-      subset) — follow the same dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction and
-      tradfi above, including the same 2026-07-28 Governance-section ruling that the cron pause/resume itself needs no
-      further operator scheduling round-trip. (repo: market-tick-data-service, unified-trading-library)
+- [x] ✅ [DATA] P3. **No longer stretch/optional — retagged 2026-07-28, same GO ruling as the todo above.** Implement
+      the chosen defi backfill mechanism (the shim + new backfill entrypoint above) with unit-test coverage and a
+      dry-run preview before any live write, then apply for real across the full 3.0M-row defi captured corpus (no
+      partial subset) — follow the same dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction
+      and tradfi above, including the same 2026-07-28 Governance-section ruling that the cron pause/resume itself needs
+      no further operator scheduling round-trip. (repo: market-tick-data-service, unified-trading-library) — **SHIPPED
+      2026-08-05**: market-tick-data-service@fe68844c (shim in `_defi_manifest.py::_emit_captured_add` + new
+      `scripts/rebuild_defi_available_at.py` full-corpus backfill + snapshot/pause/resume/fillrate helpers +
+      `reset_source_returned_zero_manifest.py` TID251 fix) — QG-green (10037 passed, dtz/tid251 baseline). Apply
+      protocol = next todo.
 
 ## Codex SSOTs
 
