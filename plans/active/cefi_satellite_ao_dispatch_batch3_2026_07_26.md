@@ -198,6 +198,11 @@ context_scope:
 and promoted to a dispatchable todo above (backfill the resolved-venue majority, reclassify the bare-venue residual);
 this section is retained only as the original conflict record for provenance:
 
+> **🟢 Gate cleared → batch4 candidate (re-verified 2026-08-05, slot-7 finalize todo 2).** Todo 6 executed 2026-07-31
+> (`unified-trading-pm@a3922f9c9`); E6 CF7 doc confirms 0 blank-`data_type` `captured` rows in live manifest,
+> bare-`OKX`×7 reclassified, cross-cutting COINBASE(7) independently verified at 0. Nothing left to extract here — the
+> conflict was fully resolved within batch3 itself.
+
 - **Blank-`data_type` cefi manifest rows — two docs in two tranches claim overlapping ground with different
   dispositions.** `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` proposes
   root-causing **9,750** blank-`data_type` `captured` rows and "either backfill the correct `data_type` per row or
@@ -244,22 +249,53 @@ operator-gated ground confirmed this run:
   open todo in **another tranche** (`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`, `[INFRA] P1`, "Restore
   the manifest consolidator (R5-fix-5)"). Reverting first would re-break every cefi backfill launch. Extract in a later
   batch once that todo lands.
+
+  > **🟢 Gate cleared → batch4 candidate (re-verified 2026-08-05, slot-7 finalize todo 2).** The batch1b `[INFRA] P1`
+  > consolidator-restore todo is ✅ DONE (2026-07-26): all 6 consolidator crons ENABLED, ≥5 consecutive successful runs
+  > each, IS CLI succeeds without `MANIFEST_ALLOW_STALE_FALLBACK` across all 5 `instruments-store-*` buckets. The cefi
+  > backfill launcher (`launch-cefi-instruments-backfill.sh`) no longer carries the flag — verified absent on disk
+  > (2026-08-05). The flag remains in other launchers (`launch-mtds-live.sh`, `launch-features-vm.sh`,
+  > `launch-mtds-backfill-vm.sh`, `launch-instruments-backfill-vm.sh`) only behind `$TEST_RUN` guards (test tier only).
+  > The blocking condition ("consolidator healthy") is satisfied — the revert is effectively done. A batch4 todo can now
+  > extract this: remove the flag from the GCS-uploaded `setup-data-pipeline-vm.sh` if it still carries it, and verify
+  > the cefi launcher's test-tier path is also clean.
+
 - **features-service raw cefi day-scan is unbounded** (`issues/cefi_residual_followups_after_honest_done_2026_07_17.md`,
   `[BACKEND] P2`). The doc itself sequences it AFTER its sibling `[BACKEND] P1` schema-gap todo — and that sibling is
   operator-gated, not AO-eligible: shaping the flat L5 MTDS schema into the calculators' `bids`/`asks`/`mid_price`
   contract is a **feature-definition change** (formula-hash, `/codex/02-data/feature-formula-versioning.md`), which the
   doc explicitly declines to invent. Both stay deferred until that definition is ruled.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** Both `[BACKEND] P1` (schema-gap —
+  > feature-definition change) and `[BACKEND] P2` (day-scan unbounded) remain OPEN (`- [ ]`) in the source doc. No
+  > feature-definition shaping decision has been ruled since the doc was authored (2026-07-17). The 5 raw feature groups
+  > still cannot consume real MTDS data, and the day-scan remains unbounded. The gate condition ("that definition is
+  > ruled") has not been met.
+
 - **`create-code-tarballs.sh` per-repo dirty-tree SKIP** (`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`
   `[SCRIPT] P3`). Cross-plan file collision: `prediction_cross_venue_arb_and_coverage_2026_07_24.md:102` and
   `prediction_consolidated_closeout_2026_07_18.md:406` both carry an OPEN `[OPS] P2` on the **same script** for a
   different defect (the concurrent-fleet tarball-overwrite race). Two live claims on one file across two tranches —
   bundle them, don't race them.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** Both prediction-tranche `[OPS] P2` claims
+  > remain OPEN (`- [ ]`): `prediction_cross_venue_arb_and_coverage_2026_07_24.md:172` (tarball-overwrite race) and
+  > `prediction_consolidated_closeout_2026_07_18.md:449` (same defect). Neither shipped, neither withdrawn. The two live
+  > claims on one file across two tranches still need bundling before this can be drafted as a cefi batch item.
+
 - **cefi zero-capture data_type gaps** (`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` `[SCRIPT] P2`,
   "`perp_funding`=0 captured, `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738"). Measured 2026-06-24; the
   2026-07-26 live re-read in `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` reports a
   materially different picture, and the `futures_chain`/`options_chain` population is the already-P0-tracked DERIBIT
   Tardis-403 backlog. Re-measure before drafting, or it dispatches a worker against month-stale numbers into contested
   ground.
+
+  > **🔴 Still blocked (re-verified 2026-08-05, slot-7 finalize todo 2).** The 2026-06-24 numbers are now 6 weeks stale.
+  > The E6 CF7 doc's 2026-07-26 broader re-measurement confirms the DERIBIT `futures_chain`/`options_chain` population
+  > (~112-124K each) is already P0-tracked (Tardis-403 backlog), but the specific `perp_funding=0` / `ohlcv_1m=738`
+  > counts have NOT been re-measured against the live index since 2026-06-24. A fresh `data_type`-level census against
+  > the current availability index is still needed before a batch4 todo can be scoped — without it, a worker would be
+  > dispatched against 6-week-stale numbers.
 
 ## Deferred — too-large-or-risky-for-a-batch-todo
 
@@ -270,6 +306,10 @@ operator-gated ground confirmed this run:
   Dated Findings 8/9/10 supersede each other inside the same file and the file's own table is self-labelled STALE.
   `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` already excluded this doc on live-conflict grounds; that exclusion
   still holds. Needs its own dedicated session, not a batch slot.
+
+  > **🔴 Still too-large/risky for a batch todo (re-verified 2026-08-05, slot-7 finalize todo 2).** Doc `status: open`
+  > with 1 open todo and 0 completed — the migration is still live and actively draining. The batch1 exclusion rationale
+  > (live-conflict, prose-only residual, needs dedicated session) still holds unchanged.
 
 ## Reconciliation
 

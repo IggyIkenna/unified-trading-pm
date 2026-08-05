@@ -78,19 +78,24 @@ context_scope:
       `[BACKEND] P2` stays open (operator-gated). 1 open — does NOT reach zero. - `data_completion_cefi_2026_07_15.md`:
       E6 CF-7 edit verified landed (corrected 11.61% figure + COINBASE=0 + link). Many open checkboxes remain — does NOT
       reach zero.
-- [ ] [REVIEW] P1. **Re-check batch3's own Deferred items for cleared gates.** Walk each Deferred entry in
-      `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` and re-verify its specific blocking condition: (a) the PARKED
-      cross-tranche blank-`data_type` conflict — has the operator ruled which disposition wins (backfill per-row vs
-      reclassify-as-malformed-aggregate)? (b) the `MANIFEST_ALLOW_STALE_FALLBACK` revert — has
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s consolidator-restore todo landed? (c) the
-      features-service day-scan — has the feature-definition shaping decision been ruled? (d) `create-code-tarballs.sh`
-      — have the two prediction-tranche `[OPS] P2` claims on the same script shipped or been withdrawn? (e) the cefi
-      zero-capture data_type gaps — re-measure against the live index before deciding (the 2026-06-24 numbers are
-      month-stale). For any gate that has cleared, record it as ready for a `batch4` extraction — **do not draft the
-      todo here**, this finalize plan's scope is reconciliation, not fresh drafting. For any still open, record an
-      explicit re-verified confirmation; do not re-ask an operator question that is already outstanding. **Done when**:
-      each Deferred entry carries either a "gate cleared → batch4 candidate" note or a dated re-verification that it is
-      still blocked.
+- [x] ✅ [REVIEW] P1. **Re-check batch3's own Deferred items for cleared gates.** — unified-trading-pm@<SHA> Walked all
+      6 Deferred entries in `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (2026-08-05, slot-7): **(a) 🟢 Gate
+      cleared — blank-`data_type` conflict**: resolved 2026-07-28, executed as batch3 todo 6
+      (`unified-trading-pm@a3922f9c9`), 0 blank-`data_type` rows, bare-OKX×7 reclassified. Already resolved within
+      batch3 itself — nothing left to extract. **(b) 🟢 Gate cleared → batch4 candidate —
+      `MANIFEST_ALLOW_STALE_FALLBACK` revert**: batch1b consolidator-restore `[INFRA] P1` ✅ DONE (2026-07-26), all 6
+      consolidator crons healthy, cefi launcher no longer carries the flag (verified absent on disk 2026-08-05). The
+      revert is effectively done; a batch4 todo can remove the flag from the GCS-uploaded `setup-data-pipeline-vm.sh` if
+      still present. **(c) 🔴 Still blocked — features-service day-scan**: both `[BACKEND] P1` (schema-gap) and
+      `[BACKEND] P2` (day-scan) remain OPEN in `cefi_residual_followups_after_honest_done_2026_07_17.md`. No
+      feature-definition shaping decision ruled since 2026-07-17. **(d) 🔴 Still blocked — `create-code-tarballs.sh`**:
+      both prediction-tranche `[OPS] P2` claims (`prediction_cross_venue_arb_and_coverage_2026_07_24.md:172` +
+      `prediction_consolidated_closeout_2026_07_18.md:449`) remain OPEN — neither shipped nor withdrawn. **(e) 🔴 Still
+      blocked — zero-capture `data_type` gaps**: 2026-06-24 numbers now 6 weeks stale; `perp_funding`/`ohlcv_1m` counts
+      never re-measured against the live index. **(f) 🔴 Still too-large/risky — chain-drop doc**: `status: open`, 1
+      open todo, migration still actively draining; batch1 exclusion rationale holds unchanged. **Summary**: 2 of 6
+      gates cleared (a, b), 4 still blocked (c, d, e, f). Each Deferred entry now carries a dated re-verification note
+      (2026-08-05) directly in the batch3 plan.
 - [ ] [PM] P2. **Hand the 2 provably-shipped stale checkboxes to a reconcile pass.** This audit found (but deliberately
       did not flip) that `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s two `P1` todos — the `[DESIGN]`
       cross-check against the DERIBIT-COMBO venue-registry purge, and the `[WRITER]` combo-shape guard-widen/port into
