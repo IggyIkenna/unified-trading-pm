@@ -153,8 +153,20 @@ dispatch_alert() {
   | GH_TOKEN="$token" gh api "repos/${GH_REPO}/dispatches" --input - 2>&1 | sed 's/^/[glue-runner-watchdog] /'
 }
 
-mapfile -t units < <(systemctl list-units --type=service --all --no-legend 2>/dev/null \
-  | grep glue | grep -v token-refresh | grep -v slot-refresh | awk '{print $1}')
+# BUG fixed 2026-08-05 (found live: this watchdog never once alerted, confirmed via an empty
+# alerted-units state file despite a REAL 89-restart agent-orchestrator crash-loop earlier this
+# same session): a bare `systemctl list-units --type=service --all` with NO pattern argument
+# does not reliably enumerate JIT-ephemeral glue-N template instances that have cycled out of
+# systemd's in-memory unit cache between jobs — verified live, it returned only 1 line (this
+# watchdog's OWN unit, self-matched by the old `grep glue` filter) even with ~68 real
+# glue-runner units genuinely present on the host. Passing an explicit PATTERN argument forces
+# systemd to actively resolve matching units instead of only reporting whatever's already
+# "interesting" in its cache — confirmed live: `list-units --all "github-glue-runner*"` reliably
+# returns all 68. This also naturally excludes the watchdog's own unit (named
+# `glue-runner-crash-loop-watchdog.service`, no `github-` prefix), so the old `grep glue`
+# self-match is gone too, not just papered over.
+mapfile -t units < <(systemctl list-units --type=service --all --no-legend "github-glue-runner*" 2>/dev/null \
+  | grep -v token-refresh | grep -v slot-refresh | awk '{print $1}')
 
 currently_crashlooping=()
 for unit in "${units[@]}"; do
