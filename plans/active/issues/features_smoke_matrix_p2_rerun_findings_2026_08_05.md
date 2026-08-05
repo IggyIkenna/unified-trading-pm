@@ -182,12 +182,12 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       a `feature_family` filter (mirrors cross_instrument fix pattern). Both bugs fixed — e2e-testing@4de46e8. Note:
       this makes the harness HONEST, but the cell will still FAIL until the delta_one input (Finding 2) is available,
       since all 36 current rows are `attempted_failed`. (repo: e2e-testing)
-- [ ] [SCRIPT] P2. **e2e-testing** — extend `sports/smoke_matrix.py`'s `MANIFEST_ALLOW_STALE_FALLBACK=true` to the
-      `_invoke_cli()` subprocess env (currently set only in the verifier's post-CLI read path at line ~295). The sports
-      CLI's own dependency check fail-closes with `ManifestConsolidatorStaleError` on `features-sports-test-*` (whose
-      consolidated index is deliberately never built — `-test-` buckets are exempt from the consolidator scheduler per
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Coverage exemptions"), so the smoke can't even reach
-      the verifier. Mirror `e2e-testing@555ab37`'s pattern into the subprocess env. (repo: e2e-testing)
+- [x] ✅ [SCRIPT] P2. **e2e-testing** — extend `sports/smoke_matrix.py`'s `MANIFEST_ALLOW_STALE_FALLBACK=true` to the
+      `_invoke_cli()` subprocess env — e2e-testing@e07806d. Added
+      `env.setdefault("MANIFEST_ALLOW_STALE_FALLBACK", "true")` to `_run_cell()`'s subprocess env block (line ~359),
+      mirroring `e2e-testing@555ab37`'s verifier-side pattern. The CLI subprocess's own dependency check now tolerates
+      the deliberately-absent consolidated index for `-test-` buckets, so the smoke can reach the verifier. (repo:
+      e2e-testing)
 - [ ] [OPERATOR] P2. **infra** — provision the commodity `-test-` bucket.
       `features-commodity-test-central-element-323112` does not exist (verified: only PROD
       `commodity-signals-batch-central-element-323112` exists in the 103-bucket listing; the provisioned features test
