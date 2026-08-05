@@ -131,12 +131,13 @@ b4bac708, so it may now be stale and in need of removal.
 
 - [x] ✅ [DATA] P1. Add `LA_LIGA_2` to the instruments-service sports league catalogue. — unified-api-contracts@b4bac708
       (note: SSOT is in UAC, not instruments-service)
-- [ ] [DATA] P1. Re-emit LA_LIGA_2 ODDS manifest rows for the 846 (date, league) cells with real GCS objects. (repo:
-      instruments-service)
+- [x] ✅ [DATA] P1. Re-emit LA_LIGA_2 ODDS manifest rows for the 846 (date, league) cells with real GCS objects. —
+      instruments-service@80077c74 (repo: instruments-service, script: reemit_la_liga2_odds_manifest_rows.py; dry-run
+      confirmed 846 cells, 2020-06-10→2026-05-18; apply wrote 846 manifest rows to per-VM shard with canonical
+      league_id=SEGUNDA_DIVISION)
 - [x] ✅ [VERIFY] P2. Re-run manifest-vs-GCS cross-reference for ODDS — **846 LA_LIGA_2 cells still GCS-only** (todo #2
       not yet executed). Manifest downloaded 2026-08-05 ~07:30 UTC, 113MB, 9,246,416 rows. ODDS: 372,910 rows, 30
       leagues with captured>0, 383 distinct leagues total. LA_LIGA_2: 0 manifest rows (confirmed). BRASILEIRAO: 962
       captured + 1,885 empty in manifest (the reported +1 GCS-only edge case was not independently verified — full GCS
-      walk was too heavy for in-session). Root cause unchanged from original finding: todo #2 (re-emit LA_LIGA_2 ODDS
-      manifest rows) has not been executed yet. Verification should be re-run after todo #2 completes. — slot-2
+      walk was too heavy for in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2
       @2026-08-05 ~07:30Z
