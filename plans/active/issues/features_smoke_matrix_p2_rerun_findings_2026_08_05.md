@@ -141,13 +141,19 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       08-02: 2101) and the live raw VM `mtds-live-cefi-consolidated-20260802` actively records 08-02→08-05 — so this is
       an MDPS processed_candles DERIVATION gap, NOT upstream absence. Live availability gap starving production
       delta_one/cross_instrument/volatility feature compute, as hypothesized.
-- [ ] [DATA] P1. **market-data-processing-service / operator** — launch a cefi `processed_candles` recent-date catch-up
-      backfill to close the confirmed gap (2026-07-26 → today; data_type=trades; full cefi venue set
+- [x] ✅ [DATA] P1. **market-data-processing-service / operator** — launch a cefi `processed_candles` recent-date
+      catch-up backfill to close the confirmed gap (2026-07-26 → today; data_type=trades; full cefi venue set
       HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET). Safe-idempotent justification: RESUME_MODE=full skip-enabled re-run
       under `launch-mdps-backfill-vm.sh` (skip-enabled shards re-run on preemption per spot-vms-for-backfill);
       re-running skips already-processed dates, so no data is destroyed or duplicated — reversibility is inherent. Use
       RESUME_START_DATE=2026-07-26, RESUME_END_DATE=$(date +%F). This closes the delta_one/cross_instrument/ volatility
-      upstream starvation identified above. (repo: market-data-processing-service / deployment-service)
+      upstream starvation identified above. (repo: market-data-processing-service / deployment-service) — **LAUNCHED
+      2026-08-05 (slot-13): `mdps-backfill-cefi-20260805-222335`** (SPOT e2-standard-8 250G, mode=full,
+      RESUME_START_DATE=2026-07-26, RESUME_END_DATE=2026-08-05, MDPS_DATA_TYPES='trades', MDPS_VENUES='HYPERLIQUID
+      LIGHTER-ZKSYNC EXTENDED-STARKNET'). Verified RUNNING: candles written to
+      `processed_candles/by_date/day=2026-07-26/pipeline_mode=batch_hyperliquid/`; per-VM manifest shard
+      `_index/per_vm/mdps-backfill-cefi-20260805-222335.parquet` advancing (159 entries / 7 new). Also closed a
+      pre-existing IAM gap (event-sink 403 — see Progress Log).
 - [x] ✅ [DATA] P2. **market-tick-data-service / features-service** — root-cause BINANCE-DELIVERY `perp_funding`
       `attempted_failed` on every date 07-24→08-04 in the cefi PROD manifest (persistent, not transient). **Chose (b)**
       — added BINANCE-DELIVERY to `features_service/onchain/app/core/dependency_checker.py`'s
@@ -221,3 +227,10 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
   structural root fix as a new P3 todo above (narrow caps + reclass). OOM-acknowledgement: no process launched by this
   slot was OOM-killed today; all GCS reads ran column-pruned + date-filtered under `run-bounded-analysis.sh` (one
   over-wide probe was correctly capped/killed by the 4G guard — no host impact).
+- 2026-08-05 (slot-13, data_engineering): **Catch-up backfill LAUNCHED + verified (todo flipped).**
+  `mdps-backfill-cefi-20260805-222335` (SPOT e2-standard-8 250G, mode=full, RESUME_START_DATE=2026-07-26,
+  RESUME_END_DATE=2026-08-05, MDPS_DATA_TYPES='trades', MDPS_VENUES='HYPERLIQUID LIGHTER-ZKSYNC
+  EXTENDED-STARKNET`) via `launch-mdps-backfill-vm.sh`. RUNNING with live candle output (`processed_candles/by_date/day=2026-07-26/
+  pipeline_mode=batch_hyperliquid/`) + per-VM manifest shard advancing (159 entries / 7 new). No cell overlap with the concurrent ASTER-only `mdps-backfill-cefi-20260802-140125`. **Bonus finding (fixed inline + verified): the MDPS event-sink `GcsEventSink`403s on`central-element-323112-events`for`uts-prd-sa`— its project-level`storage.objectAdmin`is conditional-scoped to Group A/B`-prd-`buckets only, so event JSONL writes to the shared events bucket were silently dropped (47,638 occurrences on the ASTER VM's log too — pre-existing fleet-wide, not from this launch). Granted bucket-scoped`roles/storage.objectCreator`to`uts-prd-sa`
+  (least-privilege) + verified live: event objects for this VM grew 8→161 and 403s ceased at 22:29Z.
+  OOM-acknowledgement: no process launched by this slot was OOM-killed; all heavy compute is on the VM (nothing local).
