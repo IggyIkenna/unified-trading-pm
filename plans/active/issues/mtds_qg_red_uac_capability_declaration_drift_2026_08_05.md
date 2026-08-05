@@ -83,5 +83,10 @@ locked_by:
   which of (a)/(b) each resolves to).
 - **Unblock criterion**: MTDS `bash scripts/quality-gates.sh` green on LDR baseline. Once green, the staged iterrows fix
   ships immediately.
+- **Fleet-wide context**: slot-14 reports the SAME UAC churn wave reds instruments-service's defi expected-universe
+  golden (`instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md`): 12 `PROTOCOL_CAPABILITIES`
+  commits 2026-08-05 11:07Z→12:29Z, with nobody owning lockstep golden regen. The two blocking commits here (`6e791b05`
+  @12:07Z, `b2874193` @12:15Z) landed inside that wave — a fleet-wide mid-audit state, not a single rogue declaration.
+  Operator resolution should cover the wave (aspirational-vs-wired decision per declaration), not just these two.
 - **NOTIFIED**: operator via this doc (cross-repo, CI-red — big-finding class,
   `/codex/11-project-management/ plan-priority-tier-and-dispatch-ordering.md` findings triage).
