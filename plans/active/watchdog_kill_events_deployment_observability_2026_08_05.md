@@ -99,11 +99,15 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       the new writer. No new auth model — reuse whatever the existing fleet ingest routes in
       `deployment-api/deployment_api/routes/fleet.py` already use. Done when a `curl` POST with a synthetic payload
       returns 2xx and the row is visible via `bq query` within a minute. — deployment-api@7d79433
-- [ ] [INFRA] P2. Wire `resource-watchdog.sh`'s `_rw_notify_orchestrator()` (or a sibling function, additive — do not
+- [x] ✅ [INFRA] P2. Wire `resource-watchdog.sh`'s `_rw_notify_orchestrator()` (or a sibling function, additive — do not
       remove the existing AO-internal POST) to ALSO POST each kill event to the new deployment-api ingest route from the
       prior todo. Fire-and-forget, same pattern as the existing orchestrator POST (must not block the watchdog's
       enforcement loop on network I/O). Done when a live (or `--dry-run`-simulated) kill produces a row in
-      `watchdog_kill_events` within the same tick.
+      `watchdog_kill_events` within the same tick. — unified-trading-pm@08f6a9571 Evidence: Added
+      `_rw_notify_deployment_api()` sibling function to `resource-watchdog.sh` that POSTs to
+      `POST /api/fleet/watchdog/kill-events` (additive dual-write alongside existing AO-internal POST). Opt-in via
+      `RW_DEPLOYMENT_API_URL` env var. Dry-run sends `killed: false`; live kill sends `killed: true`. Fire-and-forget
+      with 3s connect / 5s max-time. config.yaml updated with new keys.
 - [ ] [BACKEND] P2. Add a `GET` read route in deployment-api (e.g. `/api/watchdog/kill-events?vm_name=&hours=`)
       returning recent rows, following `GET /api/vm-resources/rolling`'s query-shape conventions in
       `deployment-api/deployment_api/routes/vm_resource_history.py`. Done when the route returns real rows for the AO
