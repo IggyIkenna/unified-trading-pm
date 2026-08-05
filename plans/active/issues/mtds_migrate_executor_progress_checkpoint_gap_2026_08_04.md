@@ -104,7 +104,7 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_live_sanitized_stem_to_canonical_2026_07_20.py`,
       same pattern — market-tick-data-service@9134ff7e.
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to `migrate_prediction_trades_legacy_bundle_2026_07_28.py`, same
-      pattern — market-tick-data-service@9ba50aa0 (peer preempted; slot-4 verified on origin).
+      pattern — market-tick-data-service@9ba50aa0 (slot-4) + @ad9de1ac (slot-7, race — both landed).
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`, same pattern —
       market-tick-data-service@6ddb0374 (peer slot-8).
