@@ -319,8 +319,16 @@ and the residual-KeyError defense-in-depth path.
       rows, but a PERMANENT gap across every date ever attempted for these 6 symbols) to a case-sensitivity bug: the IS
       catalogue stores HYPERLIQUID's k-prefixed meme coins uppercased, but the SDK's coin lookup is case-sensitive. See
       Root cause #3 above. Corrects the prior session's "delisting/rename" guess.
-- [ ] [DATA] P3. If pursued: retry the 290 historical `Resolver requires aiodns library` rows (now fixed going forward,
-      not retroactively) via a normal idempotent backfill re-attempt -- no code change needed, purely operational.
+- [x] ✅ [DATA] P3. If pursued: retry the 290 historical `Resolver requires aiodns library` rows (now fixed going
+      forward, not retroactively) via a normal idempotent backfill re-attempt -- no code change needed, purely
+      operational. — **DISPOSITION 2026-08-05 (slot-9 data_engineering):** Both fix commits
+      (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID) verified ancestors of
+      `origin/live-defi-rollout`. No new aiodns rows since the 2026-07-28 sweep — the 290 are static. Retrying requires
+      a VM launch (`launch-cefi-sharded-backfill.sh` or `launch-cefi-forward-poll.sh`), which is infra craft (not
+      data_engineering). The 290 rows (0.18% of total derivative_ticker attempted_failed) don't warrant a dedicated VM
+      launch — fold into the next cefi backfill sweep that naturally covers the affected Tardis venues (DERIBIT,
+      COINBASE-FUTURES, OKX-FUTURES, BYBIT, BINANCE-FUTURES, OKX) and dates (~2026-07-28). No code change needed (fix
+      already shipped).
 - [ ] [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the case-insensitive
       resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not urgent.
 - [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
