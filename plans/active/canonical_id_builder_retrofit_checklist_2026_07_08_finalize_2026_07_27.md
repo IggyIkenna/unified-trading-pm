@@ -60,16 +60,27 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s checkboxes** against whatever
-      shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed, then
-      run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any
-      CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is
-      fully closed. If real work remains after the AO-dispatched todos land, leave
-      `canonical_id_builder_retrofit_checklist_2026_07_08.md` active (do not force-archive) and note what's still open
-      here instead.
+- [x] ✅ [REVIEW] P2. **Reconcile `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s checkboxes** against
+      whatever shipped — **DONE 2026-08-05 (slot-3, `review`).** All 14 checkboxes in the source plan were already
+      flipped `[x]` by prior workers. Every cited landing commit verified reachable on `origin/live-defi-rollout`
+      (instruments-service@`d2c73500`, `ca2f44e5`, `70eaaa4a`, `d09e0cf4`, `0247912d`;
+      market-tick-data-service@`2d59869f`, `fbe8abb9`, `3ee21c8c`; unified-trading-pm@`8e39617f9`). **NOT archived** —
+      real residual work remains (see Progress Log below). Source plan stays `active`.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries), unchanged — code-free finalize gate, all entries
   still resolve.
+- **2026-08-05 (slot-3, `review`)** — Reconciliation complete. All 14 source-plan checkboxes already flipped; all cited
+  commits verified. **Residual work found (NOT archived — source plan stays active):**
+  1. **8 un-migrated ad hoc `instrument_key` f-string sites** (found during 2026-08-01 todo-2 pass, still present at
+     2026-08-05): `ankr.py:86`, `mantle.py:86`, `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` (all
+     `:LST:`), `kamino.py:199` (`:SOLANA_VAULT:` — TYPE-correct per todo 1 but still not builder-routed),
+     `pendle.py:274` (`:YIELD_BEARING:` — same, TYPE-correct but ad hoc). These use correct enum values so the retrofit
+     is pure DRY (passthrough=True, no behavior change), same pattern as the 16 already-done sites.
+  2. **Type-filter verification outstanding** — the 7 token types
+     (A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL) from todo 1's resolution were never confirmed against
+     the P0 "23 DeFi adapters silently return empty" type-filter bug
+     (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`). May already be fixed but was never verified. Source
+     plan left `active`; these should be promoted to tracked checkboxes or filed as a follow-up issue.
