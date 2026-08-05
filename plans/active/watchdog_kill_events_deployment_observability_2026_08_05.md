@@ -122,10 +122,10 @@ new deployment-api ingest route, not a replacement of the existing AO-internal p
       the AO host: timestamp, command, reason, rss_mb/limit_mb. Done when the panel renders real data for the AO host in
       a local dev run against the live deployment-api. — deployment-ui@adac737 | pw:L2 ✓ | regression:
       tests/smoke/vm-resource-rolling-window.spec.ts
-- [ ] [DOC] P3. Update `/codex/05-infrastructure/agent-orchestrator-api-host.md`'s "Resource watchdog" section and
+- [x] ✅ [DOC] P3. Update `/codex/05-infrastructure/agent-orchestrator-api-host.md`'s "Resource watchdog" section and
       `/codex/05-infrastructure/deployment-observability.md` to document the new dual-write (AO-internal +
       deployment-api) and note this supersedes the Phase-4 AO-UI-only scope for kill events specifically. Done when both
-      docs' `last_reviewed` are bumped and cross-link the new route/table.
+      docs' `last_reviewed` are bumped and cross-link the new route/table. — unified-trading-pm@25cf1931c
 - [ ] [REVIEW] P3. End-to-end verify: trigger a real or `--dry-run`-simulated watchdog kill on the live orchestrator VM
       and confirm it appears in the deployment-ui panel within 2 minutes, without any regression to the existing
       AO-internal kill-relay-to-slot behavior (the mechanism that tells an agent not to re-spawn a killed process). Done
