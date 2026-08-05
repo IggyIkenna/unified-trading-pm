@@ -392,6 +392,16 @@ default from an external reference.
 - [x] [INFRA] P2. ✅ Made `one_task_per_session_enabled` gate 1 sequential-plan-aware, scoped to `provider=="deepseek"`
       only (Claude's ~5min/1hr cache TTL makes the same skip a plausible net loss there; DeepSeek's disk cache verified
       to survive hours-to-days). — `agent-orchestrator@b310c68`.
-- [ ] [OPERATOR] P2. Run `backfill_task_usage.py --apply` on the orchestrator VM once the dry-run (dispatched 2026-08-05
-      via SSM, CommandId `17ae0cb4-4385-4e83-b5a3-d7184f605cd0`, i-0c9b283b31d6b5ca7/ap-northeast-1) confirms sane
-      numbers.
+- [x] [OPERATOR] P2. ✅ Run `backfill_task_usage.py --apply` on the orchestrator VM once the dry-run confirms sane
+      numbers. — Blocked twice on the way, both found+fixed same session: (1) the unscoped full-history dry-run (3259
+      candidates) didn't complete in a 1h SSM timeout — root cause a real O(candidates) perf bug
+      (`find_slot_transcripts`/ `scan_session_usage` re-globbed/re-parsed per candidate with no caching); fixed via
+      per-slot/per-file caching — `agent-orchestrator@ac02c79` — cut a `--since 2026-07-29` (1236 candidates) dry-run
+      from >20min-incomplete to 39s. (2) `--apply` then hit a live schema-drift bug (`task_usage` missing the
+      `backfilled` column on the real VM, `create_all_tables()` never alters an existing table) that turned out to ALSO
+      be breaking `/done` fleet-wide — see `plans/active/issues/task_usage_schema_drift_done_outage_2026_08_05.md` for
+      the full incident (fixed live via `ALTER TABLE`, plus a deeper isolation fix — `agent-orchestrator@7a7dd8d` — so a
+      usage-write failure can never roll back `/done` again). **Final `--apply` run**: `matched=1236 unmatched=0`,
+      verified live via `GET /api/backlog/usage/windows`: 1h=5 tasks/$0.47, 5h=54 tasks, 24h=269 tasks, 7d=1235 tasks,
+      lifetime=1252 tasks (37.3M input / 234.5M cache-creation / 26.8B cache-read / 54.2M output tokens) — the
+      dashboard's Task Usage Windows panel is now populated with real data end to end.

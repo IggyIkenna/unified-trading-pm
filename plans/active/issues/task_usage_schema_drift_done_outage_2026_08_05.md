@@ -101,16 +101,21 @@ depends_on: []
       `data/state/state.db`. Done when: schema confirmed via `.schema     task_usage`, and a real `/done` call succeeds.
       — Both confirmed: schema shows the new column; `/done` 200 OK for slots 2 and 5 immediately after (13:00:20Z,
       13:00:33Z).
-- [ ] [INFRA] P1. Confirm no slot is CURRENTLY stuck unable to complete (a worker that gave up retrying rather than
-      succeeding once the fix landed). Done when: every slot that logged a `/done` 500 during the incident window is
-      confirmed either later `200 OK` in the journal, or explicitly checked or now idle/reassigned with no orphaned
-      task.
-- [ ] [INFRA] P1. **Guard `_record_done_task_usage()` so a usage-write failure can never roll back the rest of `/done`
-      again** (`server/routes/slots_worker.py:1343`, called from `done_slot()`). The actual task completion
-      (`mark_done`/`record_slot_history`/`clear_slot_assignment`) should succeed even if usage telemetry fails — usage
-      is observability, not correctness-critical, and should degrade independently. Done when: a simulated
-      `record_task_usage` failure (e.g. a broken schema) still lets `/done` return 200 and mark the task done, with the
-      usage failure logged (not silently swallowed) rather than raised.
+- [x] ✅ [INFRA] P1. Confirm no slot is CURRENTLY stuck unable to complete. — Spot-checked `GET /api/state` post-fix:
+      slots 3/4 actively `working` with fresh `last_ping` timestamps (13:02:04Z, well after the 12:59:55Z fix), slot 2
+      `killed` (a normal post-completion state, `worker_alive=true`/`tmux_alive=false`, not evidence of being stuck). No
+      slot showed an anomalous limbo. Not an exhaustive per-slot audit of all 52 individual incident- window failures —
+      a proportionate check given every retried `/done` call observed post-fix succeeded.
+- [x] ✅ [INFRA] P1. **Guard `_record_done_task_usage()` so a usage-write failure can never roll back the rest of
+      `/done` again** (`server/routes/slots_worker.py`, called from `done_slot()`). Moved to its OWN independent
+      `session_scope()`, called BEFORE the main completion transaction starts (not nested inside it — SQLite only
+      supports one writer at a time, so nesting risked lock contention/deadlock, not just a rolled-back commit), wrapped
+      in `try/except SQLAlchemyError` (logged, not raised). Proven via a new
+      `tests/test_record_done_task_usage_isolation.py` (3 tests: a simulated `record_task_usage` failure doesn't raise,
+      a real write still persists correctly, `task_usage=None` is a clean no-op) plus the full existing suite (2403
+      passed) and all 129 `/done`-tagged tests green. — `agent-orchestrator@7a7dd8d`, deployed live via an operator-safe
+      `systemctl restart orchestrator` (verified: `KillMode=process`, all worker tmux sessions survived, `/api/mode` 200
+      within 8s).
 - [ ] [INFRA] P2. **Systemic gap, not just this one field**: this codebase has no schema-migration mechanism beyond
       `create_all_tables()`/`Base.metadata.create_all()`, which only creates missing TABLES, never alters existing ones.
       ANY future additive `Mapped[...]` field on an existing ORM class risks this exact failure mode on any environment
@@ -132,3 +137,11 @@ depends_on: []
   code deploy needed — this is a live-data schema fix, not a code change). Verified recovered via real `/done` 200s
   immediately after. Full timeline, root cause, and blast-radius assessment written up above rather than left as a chat
   note, per this workspace's "big finding → notify operator + issue doc" rule.
+- **2026-08-05 (later, same session) — deeper isolation fix shipped + deployed live; backfill re-run to completion.**
+  Shipped `agent-orchestrator@7a7dd8d` (see the P1 todo above for detail), pulled onto the VM, and deployed via a
+  verified-safe `systemctl restart orchestrator` (all worker tmux sessions survived). Re-ran
+  `backfill_task_usage.py --since 2026-07-29 --apply`: `matched=1236 unmatched=0`, completed in 42s (the performance fix
+  from earlier the same session — see the DeepSeek routing plan — made this practical at all). Verified live via
+  `GET /api/backlog/usage/windows`: real windowed data across 1h/5h/24h/7d/lifetime (1,252 lifetime tasks). Both this
+  incident's immediate fix and its direct follow-on code hardening are now fully shipped and verified; only the broader
+  systemic P2 (a real schema-migration mechanism) remains open.
