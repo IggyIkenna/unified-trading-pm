@@ -10,7 +10,7 @@ summary: >-
   turned out to be STALE on a fresh read (2 native todos are fully superseded by newer findings in sibling docs — see
   the Conflicts section, deliberately left un-touched in the source doc per this task's scope). Only 4 conflict-clear,
   bounded candidates survived, spanning 3 repos.
-status: active
+status: complete # (was: active) 2026-08-05 archival: all 5 todos [x], evidence cited inline on each checkbox; reconciled back into defi_consolidated_closeout_2026_07_18.md via /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md
 nature: process
 asset_group: [defi]
 stage: [data]

@@ -7,7 +7,7 @@ summary: >-
   defi_consolidated_closeout_2026_07_18.md's own native checkboxes (the ONLY source doc here — this extraction did not
   pull from any other satellite doc), re-checks the 2 staleness findings recorded in the extraction plan's Conflicts
   section to see whether they're now actionable, and archives the extraction plan once done.
-status: active
+status: complete # (was: active) 2026-08-05 archival: all 3 todos [x], extraction plan archived to /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md alongside this finalize doc
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -78,7 +78,7 @@ context_scope:
       736 is **already flipped `[x] ✅`** (resolved 2026-08-01): all 19 remaining rows confirmed phantom, folded into
       the existing `:401` P0 purge. Still unscoped as a standalone mechanism, but moot — the rows have a disposition
       path. No new candidate item to draft. **Evidence**: `unified-trading-pm` plan-only edit (this flip).
-- [ ] [DOC] P3. **Archive `defi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P3. **Archive `defi_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no remaining Deferred items need migrating (this plan's Deferred table is
       a reference classification, not open work — verify none of it silently needs a new todo) → add the archive banner
       → run the codex-alignment check (none expected — no new durable contract) → grep the corpus for every referrer of
