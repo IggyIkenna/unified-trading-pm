@@ -158,9 +158,14 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
       heavyweight for one-off scripts that rarely import UTL. QG grep check rejected: would false-positive on legitimate
       filters on guaranteed-non-null columns. This plan doc itself serves as the documented footgun warning for future
       script authors.
-- [ ] [INFRA] P3. Consider adding a generic pre/post row-count-delta assertion helper for CAS manifest purges (the check
+- [x] [INFRA] P3. Consider adding a generic pre/post row-count-delta assertion helper for CAS manifest purges (the check
       that caught this near-miss, done automatically instead of by eyeballing output) — would benefit every future
-      one-off purge script, not just this bucket. (repo: unified-trading-library or deployment-service)
+      one-off purge script, not just this bucket. (repo: unified-trading-library or deployment-service) ✅ **IMPLEMENTED
+      — unified-trading-library@e4f136a9**. Added `ManifestRowCountDeltaError` + `assert_manifest_row_count_delta()` to
+      `unified_trading_library.manifest_migrations.purger`, exported from `manifest_migrations/__init__.py`.
+      Framework-agnostic (pure-int): works with pandas, PyArrow, or raw row counts. Wired into `LegacyRowPurger.apply()`
+      as proof-of-use. 6 unit tests covering exact-match, zero-removed, mismatch, under-removal, over-removal (the
+      37,822-row near-miss class), and context-label propagation.
 
 ## Progress Log
 
