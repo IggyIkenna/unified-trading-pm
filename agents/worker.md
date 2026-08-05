@@ -23,7 +23,7 @@ does:
     /boot-per-shippable-unit loop)
   - Fresh-pull every repo to origin/live-defi-rollout before each task; ship via Pass-1 quality-gates.sh → Pass-2
     quickmerge --agent
-  - Post /progress heartbeats every ~10 min while working; flip the plan checkbox same-turn (cross-repo PM flip when
+  - Post /progress heartbeats every ~5 min while working; flip the plan checkbox same-turn (cross-repo PM flip when
     applicable)
   - /blocked on genuine ambiguity (with options + recommendation), then continue on non-blocked work; file findings
     issue docs before /done
@@ -199,8 +199,8 @@ Read brief + done_definition carefully and do it.
 
 ### 3) PROGRESS
 
-Call every ~10 minutes of active work (matches the Heartbeat HARD RULE below; server flags stale at 25 min), AND
-whenever you start a distinct sub-step:
+Call every ~5 minutes of active work (matches the Heartbeat HARD RULE below; server flags stale at 25 min), AND whenever
+you start a distinct sub-step:
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
@@ -208,14 +208,21 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
   -d '{
     "task_id": "<task.id>",
     "message": "short one-line status (e.g. \"writing the new docstring\")",
-    "context_used_pct": <0-100, your current estimate>
+    "context_used_pct": <0-100, from a FRESH /usage call — see below, never a remembered estimate>
   }'
 ```
 
-You can poll your own current usage by running `/usage` in this session — round the displayed percentage to
-`context_used_pct`. When your context fills (>~70% used), run `/compact` before continuing so this long-lived
-`/boot`→work→`/done` loop stays lean and never blows the window. This is the VOLUNTARY, earlier trigger — keep following
-it; the HARD RULE below is the enforced backstop, not a replacement for it.
+**Always run `/usage` immediately before you report `context_used_pct` — never send a remembered/mental estimate.**
+`/usage` is the only accurate source; the number is not something to reason about from how long the session feels. This
+matters most right after a `/compact`: a compact excludes the pre-compact messages from your actual context window, but
+your own sense of "how much we've covered this session" does not reset the same way — reporting from memory instead of a
+fresh `/usage` call systematically OVER-reports, because it still counts messages that have actually been dropped from
+context. (Live incident, 2026-08-05: workers sat pinned above 90% after compaction should have brought them back down —
+the self-report never reflected the real drop, so the compaction-detection logic never saw it and the force-compact
+trigger never re-armed.) Re-run `/usage` fresh every single time, especially your first report after any `/compact`.
+When your context fills (>~70% used), run `/compact` before continuing so this long-lived `/boot`→work→`/done` loop
+stays lean and never blows the window. This is the VOLUNTARY, earlier trigger — keep following it; the HARD RULE below
+is the enforced backstop, not a replacement for it.
 
 **HARD RULE — the `directive` field (codified 2026-07-25, `ao_worker_context_lifecycle_gap_2026_07_25.md`).** The
 `/progress`, `/done`, `/boot`, and `/heartbeat` responses each carry an optional typed `directive` field
@@ -578,10 +585,10 @@ move between crafts as you work down the plan.
 - Only escalate (issue doc + `/blocked` or `/skip`) if the task is genuinely outside EVERY craft, needs a human-only
   hard-stop, or is truly mis-scoped (not just a different craft than your previous task).
 
-## Heartbeat — /progress every ~10 min WHILE WORKING (HARD RULE)
+## Heartbeat — /progress every ~5 min WHILE WORKING (HARD RULE)
 
 **This is mandatory and the most-violated rule.** Between meaningful steps WHILE WORKING, call /progress **at least
-every 10 minutes** with a brief status. It is easy to get absorbed in one long task (editing, QG, sub-agents) for 30–50
+every 5 minutes** with a brief status. It is easy to get absorbed in one long task (editing, QG, sub-agents) for 30–50
 min without a single /progress call — DON'T. The server flags you `stale` after 25 min with no ping. Consequences when
 you go silent: the operator sees you as dead/idle and loses trust in the fleet view; the main agent's monitor may
 interrupt or re-dispatch your task, wasting work.
@@ -591,11 +598,12 @@ So: after roughly every commit, or every few edits, or before/after any QG or su
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
   -H 'Content-Type: application/json' \
-  -d '{"context_used_pct": <0-100>, "message": "<what you just did / are doing>"}'
+  -d '{"context_used_pct": <0-100, from a FRESH /usage call>, "message": "<what you just did / are doing>"}'
 ```
 
-Long QG runs are fine — just send "running QG" first and the timestamp resets. Treat 10 min of silence as a bug in your
-own loop.
+Long QG runs are fine — just send "running QG" first and the timestamp resets. Treat 5 min of silence as a bug in your
+own loop. Run `/usage` fresh before every one of these calls (see the PROGRESS section above) — don't reuse a number
+from your last report, especially right after a `/compact`.
 
 **Never `nohup <cmd> & echo $!` to background a long-running script (HARD RULE, codified 2026-07-27/28,
 `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`).** This detaches the real
