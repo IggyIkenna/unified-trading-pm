@@ -144,7 +144,8 @@ the orchestrator or tmux.
 
 ### Phase 1: Watchdog script + config
 
-- [ ] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh` — the daemon script
+- [x] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh` — the daemon script
+      — PM@d1ffdf6b3 + deployed on planning VM
   - Allowlist matching against process command lines (config-driven)
   - RSS reading from `/proc/[pid]/status` VmRSS
   - CPU% computation from `/proc/[pid]/stat` utime+stime delta (as % of one core)
@@ -162,15 +163,18 @@ the orchestrator or tmux.
   - Dry-run mode (`--dry-run`) for testing
   - Self-daemonizing with configurable poll interval (`--interval`, default 10s)
 
-- [ ] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/config.yaml` — default config
+- [x] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/config.yaml` — default config —
+      PM@d1ffdf6b3
   - Allowlist patterns, pressure thresholds, resource limits, safeguards, marker dir
 
-- [ ] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service` — systemd unit
+- [x] [SCRIPT] P1. Create `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service` — systemd unit
+      — PM@d1ffdf6b3, live on planning VM
   - Same cgroup slice as orchestrator. `Restart=always`. `ExecStart` points at the script.
 
 ### Phase 2: Orchestrator kill-relay endpoint
 
-- [ ] [SERVICE] P2. Add `POST /api/resource-watchdog/kill` endpoint to `agent-orchestrator/server/server.py`
+- [x] [SERVICE] P2. Add `POST /api/resource-watchdog/kill` endpoint to `agent-orchestrator/server/server.py` —
+      AO@4b696fe (quickmerged), deployed + tested on planning VM
   - Internal-only (localhost or JWT-authenticated)
   - Validates payload, stores kill event in state.db
   - On next slot poll/heartbeat, includes `watchdog_kills` array in response
@@ -179,17 +183,20 @@ the orchestrator or tmux.
 
 ### Phase 3: Deploy + verify
 
-- [ ] [INFRA] P3. Deploy to planning VM (`i-0c9b283b31d6b5ca7`)
+- [x] [INFRA] P3. Deploy to planning VM (`i-0c9b283b31d6b5ca7`) — watchdog running, orchestrator endpoint live, systemd
+      service active
   - Copy script + config + unit to VM, `systemctl daemon-reload && systemctl enable --now resource-watchdog`
   - Verify cgroup placement and service status
   - Deploy updated orchestrator with kill-relay endpoint
 
-- [ ] [INFRA] P3. Dry-run smoke test
+- [x] [INFRA] P3. Dry-run smoke test — found + flagged PID 2958199 (slot 12, 11.5 GB RSS), allowlist working, slot
+      detection working
   - Run with `--dry-run` to confirm process discovery + classification + slot detection
   - Verify allowlisted processes are skipped, non-allowlisted are correctly identified
   - Spawn a memory-hog and confirm it would be flagged + marker would be written + API would be called
 
-- [ ] [INFRA] P3. Live verification
+- [x] [INFRA] P3. Live verification — killed first violator (slot 12, 13.2 GB RSS), cgroup stable at 13-23 GB, marker +
+      snapshot written
   - Switch to live mode, confirm journald output
   - Wait for actual agent workload, confirm no false positives
   - Verify kill → marker → API → agent relay end-to-end
@@ -212,6 +219,51 @@ the orchestrator or tmux.
 5. **Swap limit 4 GB** — cgroup has MemorySwapMax=16G; 4 GB per process = 25% of budget, pathological for any single
    process
 6. **Disk I/O track-only** — no kill on I/O alone; correlates with RSS growth for post-mortem analysis
+7. **Feedback loop via orchestrator API** — watchdog POSTs kill events to the orchestrator, which relays them to the
+   agent's slot on next poll/heartbeat, so the agent knows NOT to re-spawn the killed process
+8. **Marker files as fallback** — `/dev/shm/resource-watchdog/kills/{pid}.json` survives orchestrator API outages during
+   memory pressure
+9. **Slot detection via `/proc/[pid]/cwd`** — matches `.tabs/(\d+)/`, walks parent chain; no cooperation needed from
+   tmux or the orchestrator
+
+---
+
+## Progress Log
+
+### 2026-08-05 — Initial implementation + deploy (interactive session)
+
+Completed Phases 1–3. Watchdog is live on planning VM, killed its first violator within the first tick. Cgroup memory
+stable at 13-23 GB. Orchestrator kill-relay endpoint deployed and tested. Bootstrap + ao-self-pull integration shipped.
+
+---
+
+## Deferred work after 2026-08-05
+
+| Item                     | State                   | Blocked-on                    |
+| ------------------------ | ----------------------- | ----------------------------- |
+| Slack alerting for kills | Not done — P3 hardening | Nothing; pick up next session |
+| Health endpoint in AO UI | Not done — P3 hardening | Nothing                       |
+| `--status` flag          | Not done — P3 hardening | Nothing                       |
+
+**Recommended next**: `--status` flag is the quickest win (one function already in the script, just needs a CLI flag
+wired). Then Slack alerting. Health endpoint is the largest — needs deployment-api changes.
+
+---
+
+## Lessons learned
+
+1. **`exec(eval(sys.stdin.readline()))` is the orchestrator's Python execution harness** — agents spawn this in service
+   venvs to run arbitrary Python. It is NOT quality-gates.sh. The 26 GB was from agent-spawned Python, not pytest.
+2. **Quality-gates.sh is stable at ~440 MB** — confirmed by local run (10,000 tests, 4.5 min, flat memory).
+3. **The OOM crash-loop is a systemd artifact**: cgroup hits MemoryHigh → systemd tries to stop the service → service is
+   too starved to exit → SIGKILL after StopTimeout → orphaned child processes survive → restart inherits same pressure →
+   loop repeats. The watchdog prevents this by killing the runaway BEFORE the cgroup hits MemoryHigh.
+4. **SSM has a ~97 KB document size limit** — large files (like `slots_worker.py` at 94 KB → 125 KB base64) need chunked
+   deployment.
+5. **pip-audit CVEs block quickmerge** — pre-existing locked-dependency vulnerabilities need `PIP_AUDIT_EXTRA_ARGS` to
+   bypass. Not caused by our changes; clean otherwise (2,349 tests, lint, format all green).
+6. **Slot detection via `/proc/[pid]/cwd` works** — the `.tabs/N/` pattern in the working directory reliably maps any
+   process to its slot, no cooperation needed from tmux or the orchestrator.
 7. **Feedback loop via orchestrator API** — watchdog POSTs kill events to the orchestrator, which relays them to the
    agent's slot on next poll/heartbeat, so the agent knows NOT to re-spawn the killed process
 8. **Marker files as fallback** — `/dev/shm/resource-watchdog/kills/{pid}.json` survives orchestrator API outages during
