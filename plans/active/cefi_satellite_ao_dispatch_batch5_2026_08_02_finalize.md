@@ -65,21 +65,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 source docs' checkboxes against the landed batch-5 todos.** Batch 5's 5 todos draw
-      from 3 source docs: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (all 3 of its todos
-      — P1 and P2 land together via batch5's launcher todo, P3 via the skill-doc todo, so this doc SHOULD reach zero
-      open items); `/plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md` (its sole open
-      todo, so this doc SHOULD also reach zero);
-      `/plans/active/issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` (its THIRD `[DATA] P3` todo
-      only — its first two are batch4's, leave them alone) and
-      `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md` (its
-      `[DATA] P3` only — its `[DATA] P2` stays open by design, see todo 2). For each landed batch-5 todo, flip the
-      corresponding checkbox in its named source doc citing the shipping commit — **verify each cited commit actually
-      exists and is reachable on `origin/live-defi-rollout` before citing it**, do not trust a source doc's own copy of
-      an evidence line. Then, per source doc, re-check whether it now has zero open items in **both** checkbox AND prose
-      form, and flip `status: resolved` only on a genuine zero. **Done when**: every landed todo's source checkbox is
-      flipped against a verified commit, and each of the 4 source docs' remaining-open count is explicitly re-stated
-      rather than assumed.
+- [x] ✅ [REVIEW] P1. **Reconcile all 4 source docs' checkboxes against the landed batch-5 todos.** —
+      unified-trading-pm@3632a17b4. All commits verified on origin/live-defi-rollout. Source-doc status: -
+      `mtds_live_smoke_vm_not_tardis_guarded`: all 3 checkboxes done (P1+P2 NOT-A-BUG, P3 shipped @509b2553c) →
+      **resolved**, 0 remaining. - `mdps_backfill_cefi_trades_gap_fill_completion`: both checkboxes done (manifest merge
+      shipped, IAM fixed) → **resolved**, 0 remaining. - `cefi_consolidated_vm_aster_data_landing_recheck`: batch5's
+      third P3 done (liquidations NOT-A-BUG); 2 remaining open (batch4's P2+P3 gcloud checks) — NOT resolved. -
+      `cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans`: batch5's P3 done (catalogue-completeness:
+      id-form mismatch); 1 remaining open (Deferred P2 marker-format migration, still BLOCKED-OPERATOR-DECISION) — NOT
+      resolved. Each cited SHAs reachable on origin: ✅. Remaining-open counts explicitly stated: ✅.
 
 - [ ] [REVIEW] P2. **Re-check batch5's single Deferred item for a cleared gate.** The deferred item is
       `/plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`'s
