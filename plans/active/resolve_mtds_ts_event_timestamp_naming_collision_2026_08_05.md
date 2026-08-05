@@ -115,21 +115,21 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
       calculator that reads raw tick columns by name. Audit complete 2026-08-05 (slot-2). Findings below.
 
       **Findings summary:**
-                      - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
-                      - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
-                        `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
-                        use `"timestamp"` column name but are test fixtures only.
-                      - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
-                        `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
-                        `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
-                        (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
-                        `pl.col("timestamp").dt.truncate("1m")`).
-                      - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
-                        `validate_input()` missing-column check.
-                      - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
-                      - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
+                          - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
+                          - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
+                            `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
+                            use `"timestamp"` column name but are test fixtures only.
+                          - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
+                            `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
+                            `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
+                            (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
+                            `pl.col("timestamp").dt.truncate("1m")`).
+                          - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
+                            `validate_input()` missing-column check.
+                          - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
+                          - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
 
-                      **Follow-up todos filed below (Phase 3, items 3a-3b).**
+                          **Follow-up todos filed below (Phase 3, items 3a-3b).**
 
 - [x] ✅ [DATA] P2. **features-service** — migrate 5 cross-instrument raw-tick calculators to accept `ts_event` as an
       alternative to `timestamp` in `required_columns` + computation — features-service@719f926c + evidence: 6 files (5
@@ -144,8 +144,10 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
       issue). - `_make_mock_book_df` / `_make_mock_trades_df` (raw_data_loader.py:88,105): dual-write both columns in
       mock DataFrames so tests cover both names. Unit test: verify each calculator accepts input with ONLY `ts_event`
       (no `timestamp` column) after migration.
-- [ ] [DATA] P3. **all repos** — grep for `["']timestamp["']` column-access patterns in any reader of MTDS-written raw
-      tick parquet (exclude MDPS which is handled in Phase 2). Catalog any hardcoded `timestamp`→`ts_event` assumptions.
+- [x] ✅ [DATA] P3. **all repos** — grep for `["']timestamp["']` column-access patterns in any reader of MTDS-written
+      raw tick parquet (exclude MDPS which is handled in Phase 2). Catalog any hardcoded `timestamp`→`ts_event`
+      assumptions. — unified-trading-pm@<SHA> + evidence: fleet-wide grep across all 28 repos, zero new uncataloged MTDS
+      raw-tick readers found; full catalog in Progress Log.
 
 **Phase 4 — Remove the alias (after all consumers confirmed migrated, ≥2 weeks after Phase 1 lands):**
 
@@ -173,3 +175,31 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
   live since 2026-04-16; 2026-06-10 census found 24/24 sampled parquets carry `timestamp` name. Recommended phased
   approach: dual-write `ts_event` + `timestamp` (Phase 1) → migrate MDPS (Phase 2) → audit remaining consumers (Phase 3)
   → remove alias (Phase 4).
+- **2026-08-05 (slot-5, data_engineering)**: Phase 3 item 3 fleet-wide grep complete. Comprehensive search across all 28
+  repos (excl MDPS) for `["']timestamp["']` column-access patterns. **No new uncataloged MTDS raw-tick readers found.**
+  Full catalog:
+  - **Already cataloged & handled**: MDPS (excluded, Phase 2), features-service `raw_data_loader.py` (clean,
+    column-name-agnostic), `mtds_fred_reader.py` (clean, uses `date`/`yield_pct`), 5 cross-instrument calculators
+    (already migrated to dual-accept `timestamp`/`ts_event` in Phase 3 item 3b), UTL `timestamp_validation.py` (already
+    handles both names per plan survey).
+  - **Not MTDS raw-tick readers** (all `timestamp` refs are for other data products): features-service delta_one OHLCV
+    candles (`candle_resampler.py`, `ohlcv_passthrough.py`, `feature_writer.py`, `_tf_cluster_helper.py`),
+    multi_timeframe features (`tf_session_context.py`, `orchestrator.py`), onchain DeFi data (`lst_features.py`,
+    `data_loader.py`, `feature_writer.py`), volatility features, cross-instrument prediction-market calculators
+    (`cross_venue_arb_detector.py`, `polymarket_*.py`, `realized_implied_vol.py`, `cross_venue_calculator.py`,
+    `paired_spec_resolver.py`, `prediction_cross_venue_*.py`) — all read features/candles/prediction-market data, not
+    MTDS TradFi raw tick; execution-service (L2 depth, benchmarks, order instructions — all DeFi/internal, not MTDS raw
+    tick); ml-service (features parquet, not MTDS raw tick); unified-trading-api (JSON response metadata);
+    client-reporting-api (trade/deposit records); instruments-service fixture scripts; e2e-testing
+    `validate_shards_4pillar.py` (validates ALL pillars' schemas against current aliased shape — already noted in plan
+    survey, not a new reader).
+  - **Generic utility (low relevance)**: UTL `base_loader.py:92-96` auto-converts Int64 `timestamp`→datetime for any
+    parquet. Column-name-agnostic by nature — would simply skip conversion if column were `ts_event`. Safe under Phase 1
+    dual-write.
+  - **Cross-instrument calculators NOT in the original 5**: `cross_venue_arb_detector.py`, `polymarket_microstructure`,
+    `polymarket_temporal`, `realized_implied_vol.py`, `cross_venue_calculator.py`, `paired_spec_resolver.py`,
+    `prediction_cross_venue_dispatch.py`, `prediction_cross_venue_trade_dispatch.py` — all verified to read
+    features/candles/prediction-market data, NOT MTDS raw tick. `base_calculator.py` provides the validation framework
+    used by the 5 already-migrated calculators; no hardcoded column names.
+  - **Conclusion**: Plan's blast-radius survey (2026-08-05) was complete. Zero additional hardcoded `timestamp`
+    consumers to migrate. Phase 4 alias removal is gated only on the already-identified consumers.
