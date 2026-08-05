@@ -39,7 +39,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
+    /plans/archive/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
     /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
     /plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md,
@@ -67,7 +67,7 @@ context_scope:
   [
     features-service/features_service/cross_instrument/cli/handlers/batch_handler.py,
     e2e-testing/scripts/cross_instrument/smoke_matrix.py,
-    /plans/active/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
+    /plans/archive/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
     /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
   ]
 ---

@@ -18,7 +18,7 @@ summary: >-
   individually live-verified this session. This means the "institutional smoke matrix" design's own stated contract —
   every file's docstring says "verify GCS parquet under -test- bucket" / "TEST manifest row" — has been FALSE for every
   family, for an unknown period, every time these harnesses actually ran a non-dry-run leg.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -61,7 +61,7 @@ source:
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: 2026-08-05
 context_scope:
   [
     e2e-testing/scripts/calendar/smoke_matrix.py,
@@ -70,6 +70,10 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-05** — all 4 todos done (P0 routing fix, P1 prod-pollution audit + cleanup, P2 re-verification,
+> P3 manifest correction). P2's verification surfaced 6 pre-existing (non-P0/P2) blockers, tracked separately in
+> `/plans/active/issues/features_smoke_matrix_p2_rerun_findings_2026_08_05.md`.
 
 # `smoke_matrix.py` harnesses silently target PROD buckets — `IS_TEST_RUN=true` alone does not route to `-test-`
 
