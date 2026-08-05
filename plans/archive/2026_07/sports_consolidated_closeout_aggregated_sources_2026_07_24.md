@@ -173,7 +173,9 @@ drift_direction: advance-code
     - **[DATA] P0.** T2.9 — MDT `(sports, odds, trades)` schema contract drifted from reality (BIG FINDING)
     - **[DATA] P0.** T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index
   - [`plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
-    — 0 open todos.
+    — 0 open todos. **DECIDED 2026-07-23**: naming scheme canonicalized per
+    [`sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
+    (Option A, UAC-as-SSOT); scoped 3-repo migration in flight — do not re-litigate.
   - [`plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`](/plans/archive/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md)
     — 0 open todos.
   - [`plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`](/plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md)
