@@ -117,15 +117,15 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
 
 ## Recommended decision / Todos
 
-- [ ] [DATA] P1. **features-service / e2e-testing** — root-cause why
-      `resolve_latest_captured_date(market-data,     cefi/tradfi, processed_candles)` returns None: the consolidated
-      `availability_index.parquet` for `market-data-tick-{ag}-prd-...` surfaces ZERO `processed_candles` rows (verified
-      via `read_availability_index`, both default and `MANIFEST_ALLOW_STALE_FALLBACK=true`), even though
-      processed_candles GCS blobs exist (`processed_candles/by_date/day=2026-05-03/` has 50+ blobs, back to 2019-03-30)
-      and the delta_one dep-checker reads a manifest that DOES contain them for 2026-05-03. Either fix the resolver's
-      read path (align with the dep-checker's manifest source) or fix the consolidated-index gap. Until fixed,
-      delta_one/cross_instrument/ volatility smokes fall back to the hardcoded 2026-05-03 date and fail. (repo:
-      features-service or e2e-testing; scope: resolver + consolidated index)
+- [x] ✅ [DATA] P1. **features-service / e2e-testing** — root-cause why
+      `resolve_latest_captured_date(market-data, cefi/tradfi, processed_candles)` returns None —
+      features-service@0179af31. **Root cause**: `processed_candles` is a GCS path prefix, NOT a manifest `data_type`
+      column value. MDPS writes candle output rows with data_types like `ohlcv_1m`, `ohlcv_15s`, etc.
+      (service_name=`market-data-processing-service`). The literal `data_type == "processed_candles"` filter matched
+      ZERO rows. **Fix**: when `data_type="processed_candles"`, `resolve_latest_captured_date` now reads `service_name`
+      too and filters by `service_name="market-data-processing-service"` AND `data_type` starting with `"ohlcv_"`.
+      Verified live against CEFI PRD manifest: returns 2026-05-23 (was None); TRADFI: returns 2026-08-04 (was None). All
+      9 existing tests pass.
 - [ ] [DATA] P1. **market-tick-data-service / operator** — determine whether cefi `processed_candles` production
       genuinely stalled ~2026-07-15 (0 blobs observed for 2026-07-31/2026-08-01 in `market-data-tick-cefi-prd-...`). If
       MDPS output stopped, that is a live upstream availability gap starving production delta_one/cross_instrument/
