@@ -36,7 +36,7 @@ resolved_by:
 context_scope:
   [
     /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
@@ -253,11 +253,11 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 
 > **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All four follow-up
 > todos below are already claimed VERBATIM as a single combined todo in
-> `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of NULL/bare
-> `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its items (1)-(4)
-> map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it is NOT
-> ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate of that
-> extraction, so the shared conflict-check
+> `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of
+> NULL/bare `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its
+> items (1)-(4) map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it
+> is NOT ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate
+> of that extraction, so the shared conflict-check
 > (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
 > only, `assigned_vm` unchanged. **The live blocker is batch5's draft status**, which is the same unanswered operator
 > question already queued as item 5 in
@@ -407,10 +407,10 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
   unchanged.** All 4 follow-up todos (added by the 2026-07-27 post-drain re-measurement) are bounded root-cause-and- fix
   work with named repos and named entry points — the strongest RECLASSIFY candidate in this tranche on content alone.
-  The shared conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already
-  extracts items (1)-(4) verbatim as one combined todo citing this doc as its `Source:`, and encodes the cross-doc
-  "investigate the YAHOO_FINANCE axis once, cite from all three" sequencing that a whole-doc flip would break. See the
-  note added above the follow-up todos.
+  The shared conflict-check returned CONFLICT:
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts items (1)-(4) verbatim as
+  one combined todo citing this doc as its `Source:`, and encodes the cross-doc "investigate the YAHOO_FINANCE axis
+  once, cite from all three" sequencing that a whole-doc flip would break. See the note added above the follow-up todos.
 
 - **2026-07-31 (slot 3, data_engineering, `tradfi_satellite_ao_dispatch_batch5_2026_07_29` todo 4)** — worked all 4
   follow-up items end-to-end. Re-measured live (single-object manifest read, no GCS walk): all 4 populations are

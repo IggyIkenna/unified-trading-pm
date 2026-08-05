@@ -311,13 +311,14 @@ by hand._
   — Gated closeout for tradfi_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 11 of that plan's todos are done. Mirrors the batch1_finalize pattern (reconcile each
   of the 11 distinct…
-- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29.md) — Fifth
-  AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-07-29 (autonomous mode,
-  scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against the…
-- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md)
+- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](../archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md)
+  — Fifth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-07-29 (autonomous
+  mode, scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against
+  the… **🟢 ARCHIVED 2026-08-05 — all 15 todos done.**
+- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize`](../archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md)
   — Gated closeout for tradfi_satellite_ao_dispatch_batch5_2026_07_29.md — machine-held via depends_on plus
   gate_on_depends: true until all 15 of that plan's todos are done. Mirrors the batch1/batch2/batch3/batch4-finalize
-  pattern: reconcile…
+  pattern: reconcile… **🟢 ARCHIVED 2026-08-05 — all 3 todos done.**
 - [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01.md) **[draft]** —
   Sixth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-08-01 (autonomous
   mode, scheduled daily worker). Phase 0 rediscovered the covering set as 13 docs (up from the 11 a stale…

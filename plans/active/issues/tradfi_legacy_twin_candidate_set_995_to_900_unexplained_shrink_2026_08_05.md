@@ -7,8 +7,8 @@ summary: >-
   anywhere in the corpus. The report was regenerated (modification date 2026-07-30T04:08:14Z, not 2026-07-10), so a
   later sweep changed the candidate population. This matters because the report is the delete's candidate list — an
   unexplained mutation is an unexplained mutation of a delete's blast radius. Tracked here per
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md` todo 2's explicit instruction ("explain
-  with cited evidence, or file its own issue doc — never close as accepted").
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md` todo 2's explicit instruction
+  ("explain with cited evidence, or file its own issue doc — never close as accepted").
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -19,7 +19,7 @@ tags: [tradfi, data-correctness, orphan-sweep, legacy-twins, candidate-set, unex
 related:
   [
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
   ]
 created: "2026-08-05"
 author: slot-13 (infra worker, finalize-plan todo 2)

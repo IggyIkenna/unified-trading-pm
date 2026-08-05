@@ -31,7 +31,7 @@ source:
   ]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]

@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [tradfi, manifest-consolidator, staleness-budget, data-correctness, false-positive]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
   ]
 created: 2026-07-31

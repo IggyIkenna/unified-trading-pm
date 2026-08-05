@@ -52,7 +52,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -100,10 +100,11 @@ scope).
 ## Recommended decision
 
 > **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All three todos below
-> are already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
-> ("Trace/fix 3 distinct-value mis-stamp clusters", whose `Source:` cites this doc by name; its items (1)-(3) map 1:1
-> onto the three todos here). That batch doc is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT
-> dispatched today. Flipping this doc's `assigned_vm` would dispatch a duplicate, so the shared conflict-check
+> are already claimed VERBATIM as one combined todo in
+> `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Trace/fix 3 distinct-value mis-stamp
+> clusters", whose `Source:` cites this doc by name; its items (1)-(3) map 1:1 onto the three todos here). That batch
+> doc is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT dispatched today. Flipping this doc's
+> `assigned_vm` would dispatch a duplicate, so the shared conflict-check
 > (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
 > only. Note also that the `YAHOO_FINANCE` half (todo 2) is the SAME question batch5's sibling todo sourced from
 > `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` owns; batch5 already encodes the
@@ -144,9 +145,9 @@ scope).
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
   unchanged.** All 3 todos are bounded, deterministic-outcome work and would otherwise have been a clean RECLASSIFY; the
   shared conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) returned
-  CONFLICT because `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts all three verbatim
-  as one combined todo citing this doc as its `Source:`. See the note added above the todos. Live blocker is batch5's
-  `status: draft`, not this doc's classification.
+  CONFLICT because `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts all three
+  verbatim as one combined todo citing this doc as its `Source:`. See the note added above the todos. Live blocker is
+  batch5's `status: draft`, not this doc's classification.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: trimmed context_scope from 7 to 6 entries (dropped two generic dispatch-batch/closeout
   provenance links) and added the `VENUES_BY_ASSET_GROUP` registry file the `YAHOO_FINANCE` todo would edit.

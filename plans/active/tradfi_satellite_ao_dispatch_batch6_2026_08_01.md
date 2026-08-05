@@ -36,8 +36,8 @@ tags: [tradfi, ao-dispatch, close-out, batch-6, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,

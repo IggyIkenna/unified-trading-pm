@@ -157,5 +157,5 @@ cost-constrained CME-options-only backfill) will silently get the full universe 
   workers in this same sharded run, so repathing them from here would create N-way merge conflicts at integration. Two
   real dependencies also need confirming first: `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` is
   documented as owning the job of re-checking this doc, and
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s first todo still asks for the mvp_mode wiring that
-  has now already shipped — that batch5 todo is itself stale and should be flipped in the same pass.
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s first todo still asks for the mvp_mode
+  wiring that has now already shipped — that batch5 todo is itself stale and should be flipped in the same pass.

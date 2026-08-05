@@ -127,7 +127,7 @@ dropped/flagged as a single bad-row anomaly.
       ≈58,300 (matches the reported `58317`); as ms/s the magnitude would be even further off and doesn't match — only
       the ns-read-as-µs interpretation reproduces the observed value. **Confirmed systemic via a second independent
       occurrence, same day**: the identical mechanism was already root-caused + fixed for CME combo `ESM6-ESU6` on this
-      same `2026-05-07` date (`/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` lines 865-899,
+      same `2026-05-07` date (`/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` lines 865-899,
       `market-data-processing-service@f179c96` — added a `>= 1e18 → unit="ns"` magnitude-heuristic branch to
       `_convert_to_processing_dt`, verified live in `base_adapter.py` lines 285-314). Since IBIT/ETHA's raw values are
       also ~1.778e18 (crosses the same `>=1e18` threshold), **the already-shipped `f179c96` fix generically covers this

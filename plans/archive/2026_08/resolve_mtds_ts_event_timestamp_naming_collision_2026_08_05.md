@@ -17,7 +17,7 @@ tags: [data-correctness, naming-collision, timestamp, ts_event, MTDS, MDPS, trad
 related:
   [
     /plans/active/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
   ]
 created: 2026-08-05
 last_updated: 2026-06-27
@@ -119,21 +119,21 @@ pipeline), e2e-testing, and possibly client-reporting-api scripts.
       calculator that reads raw tick columns by name. Audit complete 2026-08-05 (slot-2). Findings below.
 
       **Findings summary:**
-                                                  - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
-                                                  - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
-                                                    `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
-                                                    use `"timestamp"` column name but are test fixtures only.
-                                                  - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
-                                                    `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
-                                                    `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
-                                                    (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
-                                                    `pl.col("timestamp").dt.truncate("1m")`).
-                                                  - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
-                                                    `validate_input()` missing-column check.
-                                                  - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
-                                                  - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
+                                                          - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
+                                                          - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
+                                                            `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
+                                                            use `"timestamp"` column name but are test fixtures only.
+                                                          - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
+                                                            `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
+                                                            `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
+                                                            (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
+                                                            `pl.col("timestamp").dt.truncate("1m")`).
+                                                          - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
+                                                            `validate_input()` missing-column check.
+                                                          - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
+                                                          - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
 
-                                                  **Follow-up todos filed below (Phase 3, items 3a-3b).**
+                                                          **Follow-up todos filed below (Phase 3, items 3a-3b).**
 
 - [x] ✅ [DATA] P2. **features-service** — migrate 5 cross-instrument raw-tick calculators to accept `ts_event` as an
       alternative to `timestamp` in `required_columns` + computation — features-service@719f926c + evidence: 6 files (5
