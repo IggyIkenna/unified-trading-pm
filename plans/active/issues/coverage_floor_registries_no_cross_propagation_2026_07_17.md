@@ -290,11 +290,15 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       CURVE/UNISWAP_V3/BALANCER/AAVE_V3 re-baselined for non-min-chain differences (expected per-chain launch dates, not
       registry errors). Falsifier KNOWN_DIVERGENCES: 7→4 DeFi entries (3 fully resolved, 4 narrowed to non-min-chain
       differences). All 11 falsifier tests pass; full `quality-gates.sh` green.
-- [ ] [DATA] P3. Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys and
+- [x] ✅ [DATA] P3. Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys and
       `venue_mapping.py`'s instrument-type/chain-suffixed keys (e.g. `BINANCE` →
-      `{BINANCE-SPOT, BINANCE-FUTURES,     BINANCE-DELIVERY}`, `CURVE` →
+      `{BINANCE-SPOT, BINANCE-FUTURES, BINANCE-DELIVERY}`, `CURVE` →
       `{CURVE-ETHEREUM, CURVE-AVALANCHE, CURVE-OPTIMISM}`) — a prerequisite for the P1 falsifier todo above to compare
-      the two registries key-by-key instead of by coincidental name match. (repo: unified-api-contracts)
+      the two registries key-by-key instead of by coincidental name match. (repo: unified-api-contracts) —
+      **unified-api-contracts@a9a27144**: Added `BARE_KEY_TO_VENUE_MAPPING_KEYS` dict in `coverage_starts.py` (12 CeFi +
+      9 DeFi entries); updated `check_coverage_floor_registry_drift.py` to resolve from explicit mapping (replacing
+      suffix-allowlist approach with lookup + exact-match fallback); added `_validate_mapping_completeness()` two-way
+      gate check (stale references + undeclared mappings); 5 new tests (16/16 pass); full `quality-gates.sh` green.
 
 ## Progress Log
 
