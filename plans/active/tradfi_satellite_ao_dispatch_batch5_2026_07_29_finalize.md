@@ -76,8 +76,8 @@ context_scope:
 
 ## Todos
 
-- [x] ✅ [REVIEW] P1. **Reconcile all 15 distinct source docs.** — `unified-trading-pm@<sha>` (slot 3, 2026-08-05). For
-      each of `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s now-done todos, flip or update the corresponding
+- [x] ✅ [REVIEW] P1. **Reconcile all 15 distinct source docs.** — `unified-trading-pm@23644962b` (slot 3, 2026-08-05).
+      For each of `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s now-done todos, flip or update the corresponding
       checkbox in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-5 commit(s)
       that shipped it — verify the actual shipped commit exists before citing it. **Pay particular attention to todos
       4/5/6** (the FX/YAHOO_FINANCE coordination cluster): confirm the coordination actually happened as instructed (one
