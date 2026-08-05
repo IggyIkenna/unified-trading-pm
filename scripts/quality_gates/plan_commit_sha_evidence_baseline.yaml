@@ -1,73 +1,76 @@
-fabricated_sha_citation_baseline: 23
+fabricated_sha_citation_baseline: 24
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_citations:
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
     line: 353
     cited: deployment-service@8a8125e
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 272
     cited: unified-trading-pm@cbd511a
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 320
     cited: unified-trading-pm@2f9646585
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
     line: 78
     cited: deployment-api@56f2060e
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
-    line: 589
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
+    line: 608
     cited: instruments-service@1a31edc7
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md
     line: 955
     cited: unified-trading-pm@f7af03a1a
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md
     line: 955
     cited: agent-orchestrator@0b62753
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
     line: 721
     cited: unified-trading-pm@b06abdf96
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
     line: 735
     cited: agent-orchestrator@f2266e8
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/github_actions_operator_gated_followups_2026_07_17.md
     line: 755
     cited: unified-trading-pm@b06abdf96
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
     line: 324
     cited: instruments-service@d9418e6e
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/l2_book_microstructure_capture_2026_07_13.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/l2_book_microstructure_capture_2026_07_13.md
     line: 138
     cited: unified-api-contracts@a7a14187
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
     line: 272
     cited: deployment-ui@1ad86d5
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
     line: 312
     cited: deployment-ui@1ad86d5
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
     line: 319
     cited: deployment-ui@1ad86d5
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md
     line: 163
     cited: unified-trading-pm@369df5695
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md
     line: 170
     cited: unified-trading-pm@369df5695
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
     line: 270
     cited: unified-api-contracts@29c3672ff
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
     line: 139
     cited: unified-trading-pm@6586b8a2e
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/defi_code_codex_drift_2026_05_27.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/defi_code_codex_drift_2026_05_27.md
     line: 122
     cited: unified-api-contracts@5626079e
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md
+    line: 616
+    cited: market-tick-data-service@531a07d8
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
     line: 111
     cited: features-service@7f800b45
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md
     line: 217
     cited: instruments-service@aaa0866c
-  - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
     line: 145
     cited: unified-trading-pm@2f9646585
