@@ -63,11 +63,19 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
 
 ## Todos
 
-- [ ] [DOC] P1. Once all 7 of `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s todos are `[x]`, reconcile each of the
-      7 distinct source docs (see that plan's Todos section, each ending `Source: ...`) — flip/annotate their own
-      checkboxes with the batch-5 commit SHA, so a doc read independently (outside this batch) shows accurate state.
-      Repo: unified-trading-pm. Done when: all 7 source docs show an annotation citing the batch-5 todo + commit SHA
-      that closed their item.
+- [x] ✅ [DOC] P1. — **unified-trading-pm@5245e6c0a.** Once all 7 of `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s
+      todos are `[x]`, reconcile each of the 7 distinct source docs (see that plan's Todos section, each ending
+      `Source: ...`) — flip/annotate their own checkboxes with the batch-5 commit SHA, so a doc read independently
+      (outside this batch) shows accurate state. Repo: unified-trading-pm. Done when: all 7 source docs show an
+      annotation citing the batch-5 todo + commit SHA that closed their item. **Reconciliation results (2026-08-05,
+      slot-11):** (1) `defi_track5_coverage_mvp_backfill` — 🟡 parked annotation (IS/MTDS audit moved to conflict-gated,
+      BLOCKED-OPERATOR-DECISION). (2) `defi_instrument_availability_duplicate_instrument_key_rows` — archived/resolved,
+      no change. (3) `defi_pool_chain_collision_curve_balancer_gap` — archived/resolved, no change. (4)
+      `defi_staking_yields_lst_rates_handler_gaps` — flipped leaf-name verification `[x]`
+      (market-tick-data-service@1564a983). (5) `defi_swaps_ohlcv_candle_data_types_axis_gap` — all checkboxes already
+      `[x]` with matching SHAs, no change. (6) `mtds_dex_pools_swaps_backfill_verification` — batch5 independent
+      corroboration note added. (7) `mtds_instruments_metadata_hive_canonicalisation_reader_gap` — batch5 independent
+      corroboration note added.
 - [ ] [DOC] P2. Re-check the 2 conflict-gated Deferred items (`architecture_v2_drift_leg_specs_and_manifest_residue`
       CARRY_STAKED_BASIS delete-vs-re-leg call; `defi_track5_coverage_mvp_backfill`'s PYTH SPOT-backfill overlap with
       batch3's C6) — if the operator has ruled on the strategy-domain call, or if batch3's C6 Pyth backfill has landed
@@ -102,3 +110,7 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
   `depends_on` + `gate_on_depends: true`. Note for whoever runs todo 1: batch5 now has 3 of 7 todos closed (one more was
   verified-stale + flipped 2026-08-02), so only 4 source docs remain to reconcile, not 7.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal.
+- **2026-08-05 (slot-11, data_engineering)**: Todo 1 — all 7 batch5 source docs reconciled. Batch5 prereq confirmed (all
+  7 todos `[x]`). Source doc states: #1 parked (conflict-gated), #2/#3 archived/resolved no-change, #4 flipped `[x]`
+  (market-tick-data-service@1564a983), #5 already `[x]` with matching SHAs, #6/#7 batch5 corroboration notes added.
+  Shipped unified-trading-pm@5245e6c0a.
