@@ -95,10 +95,12 @@ Run a fresh orphan sweep for tradfi and compare the class-B population against b
 
 ## Todos
 
-- [ ] [DATA] P1. **Run a fresh tradfi orphan sweep and record the current class-B population.** Run
-      `migration_orphan_sweep.py` for `--asset-group tradfi` (read-only), record the `B_legacy_duplicate` count, and
-      compare against both the 995 (2026-07-10) and 900 (2026-07-30) baselines. If the sweep script has changed since
-      2026-07-10, note the version used. (repo: instruments-service)
+- [x] ✅ [DATA] P1. **Run a fresh tradfi orphan sweep and record the current class-B population.** —
+      instruments-service@2ff3aa80. Fresh sweep confirms **B_legacy_duplicate=900** (A=1,288,476, C=191, C2=7,327,602,
+      D=64,221, E=782 over ~8.74M classifiable objects + 60,456 unknown-prefix objects). The current class-B population
+      is **900** — matching the 2026-07-30 dry-run, NOT the 2026-07-10 figure of 995. Sweep script at commit `2ff3aa80`
+      (`fix(migration): guard defi venue-chain split against non-chain suffixes`). Exit code 1 = expected (class-E=782 >
+      0 triggers CF-17 acceptance bar).
 - [x] ✅ [DOC] P1. **Correct the stale 995 figure everywhere it appears** in
       `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` — unified-trading-pm@1b0f98c82. All 5
       operational references updated from 995→900; historical quote (line 79) preserved with editorial note pointing to
