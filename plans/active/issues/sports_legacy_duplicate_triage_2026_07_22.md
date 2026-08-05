@@ -351,16 +351,18 @@ Recommended next steps, in priority order:
       permanent legacy-only data.** Zero live readers/writers (§4), matches the flat-legacy 28,100-row precedent (no
       delete, no migrate, leave as-is). `sports_reference_v2/` objects stay `no-migrate-first`. Option (b) is a separate
       product decision, not required to close this issue.
-- [ ] 6. [DATA] P3. **Migrated from `/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`
+- [x] ✅ 6. [DATA] P3. **Migrated from `/plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md`
       todo 5 on archival (2026-08-03).** Root-cause and retire whatever wrote 764
       `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
-      tree, not canonical `sports_reference/by_date/`) around 2026-06-24. Low urgency (byte-identical duplicates, no
-      correctness impact, mtimes cluster at a single past date so it does not look like an active ongoing writer), but
-      it's an undocumented migration-script side-effect worth tracing to its source script and either fixing (write to
-      the correct canonical path) or deleting. Note: the 764 pre-floor cells this duplicate population was originally
-      measured against were wiped 2026-08-03 (`sports_reference_v2_1492_row_canonical_copy_2026_08_03.md` todo 2) —
-      confirm whether the writer is still active for POST-floor days before tracing it as a live bug vs. historical-only
-      cleanup.
+      tree, not canonical `sports_reference/by_date/`) around 2026-06-24. **DONE 2026-08-05 (slot 4,
+      data_engineering).** Root cause: `migrate_sports_canonical_v9.py` `_canon_instr_reference()` accepted
+      `tree_prefix` but ignored it, doing a blind `str.replace` that kept the source tree prefix — for
+      `sports_reference_v2/by_date/` objects this inserted `pipeline_mode=batch_api_football` in-place in the legacy
+      tree instead of rewriting to canonical `sports_reference/by_date/`. Fix: when `tree_prefix != SPORTS_REF_PREFIX`,
+      rewrite the prefix to canonical `sports_reference/by_date` before returning. Writer confirmed historical-only
+      (one-off migration script, `Lifecycle: oneoff`, mtimes cluster at 2026-06-24, no ongoing writer for post-floor
+      days). Fix is forward-looking — if the script is ever re-run (e.g. for the remaining 16 post-floor
+      `sports_reference_v2` days), it now writes to the correct canonical tree. `market-tick-data-service@b1bdd7f0`.
 - [x] ✅ 3. [CODE] P2. **Repoint or retire the two flat-legacy readers — DONE (instrumented, not removed)** 2026-07-25
       (slot 7, data_engineering). Removal was NOT the safe choice: ~478 of the 28,100 post-floor rows have zero
       canonical twin at any path variant and rely on these readers as their sole surviving data source — removing either
