@@ -206,11 +206,16 @@ context_scope:
       `prediction_canonical_identity_migration_2026_07_08.md` (the sibling plan this todo was to coordinate with on the
       separate `canonical_instrument_id` field) is already archived (`plans/archive/2026_07/`) — no live cross-plan
       conflict remains.
-- [ ] [DATA] P3. **Cross-reference, don't duplicate, the TradFi combo-leg fix** — finding 7 (CBOE/VX spreads bypassing
-      `InstrumentLeg`/COMBO entirely) already has its own dedicated plan,
-      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. Note there that the new `build_leg()` helper is
-      now available for that plan to use once its pending `[DECISION]` (per-leg `VENUE:` prefix drop) resolves — do not
-      re-scope that work into this plan.
+- [x] ✅ [DATA] P3. **Cross-reference, don't duplicate, the TradFi combo-leg fix** — DONE 2026-08-05 (slot-7,
+      `data_engineering`), `unified-trading-pm@<sha>`. The TradFi combo-leg plan
+      (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) has already integrated `build_leg()` from this
+      plan's builder infrastructure (P3 todo: `unified-api-contracts@e1023c80`, `instruments-service@de870864`,
+      2026-07-26), the VENUE: prefix-drop decision resolved (P1 todo, `_build_leg_key()` → UAC
+      `build_leg(include_venue=…)`), and the 1-4 leg hard cap extended cross-asset-group per the operator spec (Deribit
+      P2 todo, `instruments-service@9416be7d`). The only remaining open item in that plan is `[OPERATOR]`-gated
+      (historical catalog `--apply` re-run). Two-way cross-reference now in place: the TradFi plan's `related` field
+      links back to this checklist plan (`unified-trading-pm@<sha>`). No code changes needed — the `build_leg()`
+      infrastructure this todo wanted to flag for that plan was already adopted before this checkbox was reached.
 - [x] ✅ [DATA] P3. **DECIDED — yes, refactor `ccxt_adapter.py` to call the shared builder —
       instruments-service@70eaaa4a.** Operator guidance: no real ambiguity here (explicitly "no output change" either
       way per this todo's own framing) — do it for consistency, same for the MTDS callers below. Not urgent, pick up
