@@ -348,10 +348,11 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       used during root-cause. Retired the confirmed-stale old instance
       (`gcloud compute instances delete mtds-live-cefi-consolidated-20260802-130832`) once the new one was verified
       healthy. (repo: deployment-service)
-- [ ] [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally by
-      this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
+- [x] ✅ [DATA] P3. File a SEPARATE issue doc for the two pre-existing, unrelated chronic findings surfaced incidentally
+      by this check: `OKX-FUTURES trades` intermittent zero-capture (going back to at least `2026-07-20`, live pipeline)
       and `POLYMARKET-PERP perp_funding` permanently `attempted_failed` since at least `2026-07-28` (batch pipeline).
-      Neither is caused by the tarball-staleness incident this doc tracks. (repo: market-tick-data-service)
+      Neither is caused by the tarball-staleness incident this doc tracks. — unified-trading-pm@858b88eb9 (repo:
+      market-tick-data-service)
 
 ## Codex SSOTs
 
