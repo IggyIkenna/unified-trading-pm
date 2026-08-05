@@ -243,7 +243,7 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       This todo's backlog task (`features_e2e_smoke_matrix_writes_to_prod_bucket-003`) is PARKED behind prereq
       `features_smoke_verify_timeout_hardening_landed` (set by main-orchestrator 2026-08-01) and will not dispatch until
       that incident doc's `[INFRA]` timeout/memory-bounding fix lands. Do NOT flip this checkbox or unpark before then.
-- [ ] [DATA] P3. **features-service / operator** — correct `features-calendar-prd-central-element-323112`'s
+- [x] ✅ [DATA] P3. **features-service / operator** — correct `features-calendar-prd-central-element-323112`'s
       `_index/availability_index.parquet`: (a) purge or correct to `capture_status=empty_confirmed`/remove the 4 rows
       now phantom after the P1 audit's deletes (`yield_curve`/`day=2024-01-22`, `economic_results`/`day=2024-01-22`,
       `economic_events`/`day=2026-07-29`, `economic_results`/`day=2026-08-01` — all `capture_status=captured` pointing
@@ -255,7 +255,12 @@ identical `_invoke_cli()` shape so are near-certain but not individually re-veri
       P3 (2 older phantom `time_features` rows from the original 07-27 incident) — consider resolving both in the same
       pass since they're the identical manifest-correction mechanism. No GCS object exists for any of these rows
       (confirmed above), so this is a manifest-row-only correction — find or use the appropriate
-      `ManifestWriter`/consolidator correction path rather than hand-editing the parquet.
+      `ManifestWriter`/consolidator correction path rather than hand-editing the parquet. —
+      **features-service@66919769**. (a) Applied to prod: 4 `record_empty` rows written via
+      `ManifestWriter.record_empty()` CAS merge (same pattern as 07-27 P3 at `5706e1a3`); post-verify confirms 0 phantom
+      captured rows; all 4 targets now `empty_confirmed`. (b) Root cause: `calendar_orchestrator.py`'s
+      `_write_success_manifest` broad `except Exception` (line 636-642) silently swallows transient manifest recording
+      failures; self-limiting (ad-hoc smoke invocations, not recurring); objects already deleted in P1 audit.
 
 ## Progress Log
 
