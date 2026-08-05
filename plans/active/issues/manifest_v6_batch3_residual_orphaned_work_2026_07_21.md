@@ -141,9 +141,11 @@ overhead.
   per this workspace's SSOT-direction rule; this issue doc is the resolution record — no edit made to the archive
   itself).
 
-- [ ] [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards —
-      gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data would be
-      misleading). (repo: deployment-api)
+- [x] ✅ [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards
+      — deployment-api@c250348 + evidence: AXIS_CENSUS_COLUMNS extended,
+      get_schema/get_data_status_manifest/get_schema_for_shard params added, manifest service plumbing wired, 8 files +
+      tests — gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data
+      would be misleading). (repo: deployment-api)
 
   **BLOCKED on dependency (2026-07-21, BLK-3f4c6134, confirmed by main)**: dispatched to a worker who checked
   `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` and found todos 5-8 (prove W1 emits v6, migrate v5→v6 objects,
