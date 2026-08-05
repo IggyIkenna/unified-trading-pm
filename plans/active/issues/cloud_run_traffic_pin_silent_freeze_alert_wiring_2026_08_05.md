@@ -155,15 +155,15 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       by deliberately triggering a canary rollback against a disposable/UAT Cloud Run revision and confirming the Slack
       message actually arrives. (repo: deployment-service or unified-trading-pm, whichever owns the alert-policy
       IaC/console config)
-- [ ] [INFRA] P2. Build a periodic drift check (scheduled job, mirroring the `slot_drift_check.py` /
-      `ci-status-consolidator` cadence pattern already used elsewhere) that, for every Cloud Run service with a
-      `-main-deploy`-style auto-deploy trigger (`deployment-api`, `deployment-ui`, `unified-trading-system-ui`'s UAT
-      service), compares live `status.traffic` against `status.latestReadyRevisionName` and alerts (dedup_key +
-      cooldown_min, fire-on-transition per the established `notify-slack.yml` convention) when they diverge beyond a
-      reasonable grace window. This is the ONLY mechanism that would have caught the actual incident in this doc (a
-      manual pin, not a `canary-deploy.sh` rollback) — the log-based alert above only covers the `canary-deploy.sh`
-      rollback path specifically. (repo: deployment-service, or wherever the fleet's periodic health-check jobs already
-      live)
+- [x] ✅ [INFRA] P2. Build a periodic drift check — deployment-service@74fb6ac (scheduled job, mirroring the
+      `slot_drift_check.py` / `ci-status-consolidator` cadence pattern already used elsewhere) that, for every Cloud Run
+      service with a `-main-deploy`-style auto-deploy trigger (`deployment-api`, `deployment-ui`,
+      `unified-trading-system-ui`'s UAT service), compares live `status.traffic` against
+      `status.latestReadyRevisionName` and alerts (dedup_key + cooldown_min, fire-on-transition per the established
+      `notify-slack.yml` convention) when they diverge beyond a reasonable grace window. This is the ONLY mechanism that
+      would have caught the actual incident in this doc (a manual pin, not a `canary-deploy.sh` rollback) — the
+      log-based alert above only covers the `canary-deploy.sh` rollback path specifically. (repo: deployment-service, or
+      wherever the fleet's periodic health-check jobs already live)
 - [ ] [DATA] P3. Once the drift check above exists, consider whether it subsumes/duplicates the still-open cold-start
       investigation's detection needs
       (`deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) — that doc's root cause is
