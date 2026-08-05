@@ -412,9 +412,17 @@ anywhere.
 **Shipped (2026-08-05, slot-7)**: P3 iterrows fix landed on LDR as `market-tick-data-service@5d428486` (5-file bundle: 2
 readers + 3 regression tests), after a QG-green full gate on a fair field (field=3, cap 4; log
 `/home/ubuntu/.cache/qg-tmp/mtds-qg-slot7-iterrows3.log`, exit=0, 10007 passed / 0 failed + 6 passed, STEP 5.94 ratchet
-holds at 237). The pin-rise explanation was corrected at `market-tick-data-service@655c9320`. Remaining: `/done` task
-`fred_backfill_early_date_indefinite_stall-008`. Consistency follow-up (AAVE `rewards` seed + venue-capability surfaces,
-not gate-blocking) is tracked in `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` → Follow-ups.
+holds at 237). The pin-rise explanation was corrected at `market-tick-data-service@655c9320`. Consistency follow-up
+(AAVE `rewards` seed + venue-capability surfaces, not gate-blocking) is tracked in
+`mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` → Follow-ups.
+
+**Task close-out (08-05 17:48Z, slot-7)**: the backlog TaskRow `fred_backfill_early_date_indefinite_stall-008` shows
+`cancelled` — a regen-prune artifact of the checkbox flip, NOT an abandoned dispatch. Once the `- [x]` todo left the
+plan's open set, the PlanRegenLoop pruned its TaskRow to `cancelled`; nothing was lost (deliverable on LDR
+`market-tick-data-service@5d428486`, todo flipped with evidence). A `/heartbeat` (17:48Z) to `/api/slots/7/heartbeat`
+returned `cancel_task=-008` + `dispatch_reason=cancelled` and cleared slot-7's binding one-shot (`clear_slot_assignment`
+→ idle, `current_task=null`); there were no in-flight files to revert. A fresh session should read `cancelled` here as
+the expected terminal state of a flipped todo.
 
 **Operational lesson (08-05, slot-7)**: a detached `nohup … bash scripts/quality-gates.sh` on this shared host was
 killed mid-pytest at ~85% (log ends abruptly, no exit file) — the fleet was running 5+ QGs in a wave (14:03Z). Re-ran
