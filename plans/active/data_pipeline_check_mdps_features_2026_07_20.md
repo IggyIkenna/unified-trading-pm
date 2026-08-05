@@ -842,7 +842,10 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       the shipped `(delta_one,CEFI)` timeout override makes a single fresh VM viable when ungated; TRADFI:volatility
       needs the options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below). Do
       NOT launch CEFI without operator go-ahead; do NOT re-run TRADFI/DEFI before the named gap closes. Repo:
-      features-service.
+      features-service. — **2026-08-05 (slot-8)**: CEFI gate DONE (benchmark ran 08-02, real number 8.38 s/inst-day);
+      TRADFI:volatility stg-bucket infra blocker FIXED + shipped `features-service@cc5c52b8`; commodity test-bucket +
+      DEFI:onchain benchmark still pending — see Progress Log +
+      `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`.
 
 ### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
 
@@ -968,3 +971,20 @@ OR-logic); Baker Hughes fix `features-service@31b66b81` shipped. Benchmark VMs a
 gaps, not the original data gaps: (1) `market-data-tick-tradfi-stg-*` does not exist (launcher passes `--env staging`;
 VM never sees PROD `futures_chain`), (2) `commodity-signals-batch-test-*` does not exist. Original upstream data gaps
 RESOLVED; benchmark re-test gated on infra provisioning. Report: `/tmp/features-e2e-reports/` (total=2 failed=2).
+
+### 2026-08-05 (slot-8, data_engineering) — -056 re-dispatched; all 3 gates re-verified; TRADFI stg-bucket blocker fixed + shipped
+
+Re-picked up `data_pipeline_check_mdps_features-056`. Re-verified all 3 gates fresh: **CEFI** — DONE, no gate remains
+(operator go-ahead BLK-ddb925b1 used 08-02, real number 16.76 s/instrument / 8.38 s/instrument-day, resolved
+`cefi_delta_one_benchmark_vm_operator_approved_2026_07_29.md`). **TRADFI:volatility/commodity** — upstream raw-tick gap
+CLOSED (slot-16) but the re-test hit a NEW infra blocker: the MDPS input bucket (`market-data` kind, env-tiered
+`-test-`/`-prd-` ONLY) resolved with ambient `DEPLOYMENT_ENV_SHORT=stg` under the `--env staging` VM launch →
+never-provisioned `market-data-tick-tradfi-stg-*` → 404. FIXED + shipped `features-service@cc5c52b8` (forces
+`deployment_env="prod"` in `resolve_mdps_candle_bucket` + volatility `get_input_bucket`, mirrors the delta_one fix; QG
+green; verified on origin). Still pending before a TRADFI re-run: features-e2e code-tarball rebuild (manual build) +
+`commodity-signals-batch-test-*` bucket not provisioned. **DEFI:onchain** — gate OPEN (perp_funding resolved 08-01,
+live-verified available=True 07-29/30); benchmark not yet re-run; `onchain/config.py:109` same-class stg risk under
+staging launch. Measurement (multi-hour benchmark VMs) cannot complete in a bounded session → declined via
+skip-current-task GATED, per plans-run-to-actual-completion. Filed
+`issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` (sibling same-class sweep, 11 sites +
+tarball + commodity-bucket + DEFI-benchmark follow-up todos).
