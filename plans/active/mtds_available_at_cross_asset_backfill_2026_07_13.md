@@ -384,7 +384,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (`DefiManifestRecorder` in `_defi_manifest.py`) that never threads `available_at` at all (blanket `""` for all of
       them, not a per-data_type formula gap). A handful of non-defi files living in the same directory (cefi/tradfi) use
       different, unrelated write paths.
-- [ ] [DATA] P2. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate** (no specific operator
+- [x] ✅ [DATA] P2. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate** (no specific operator
       answer was given for this go/no-go; applying the standing workspace theme instead: full backfills/migrations get
       done — as long as not superseded by newer work — and this one isn't; cost is a one-time manifest-only compute
       pass, nowhere near the pre-approved $100 threshold; "audit-and-decide" was the only gate, not a real blocker).
