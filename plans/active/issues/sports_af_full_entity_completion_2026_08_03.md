@@ -75,7 +75,7 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                      |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc    |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 130,762 already resolved, **52,515 needed** (was 56,940 on 08-04, real -4,425) |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 140,807 already resolved, **51,438 needed** (was 56,940 on 08-04, real -5,502) |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
@@ -546,16 +546,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   does NOT affect anything in THIS doc** — the census figures above read the canonical directly and their movements
   track real backfill activity regardless of whether the "stuck" periods were a bug or expected no-op re-merges; every
   needed-count and progress claim in this doc stands as-is.
-- **2026-08-05T17:34Z** — `af-backfill-20260805-171010` still healthy, ~83.5min elapsed, left running. Re-census shows
-  the biggest single-check FIXTURE_STATS jump yet: 56,403→54,810 (-1,593), consistent with the long run finally
-  accumulating substantial real work. STANDINGS (51,740→51,168, -572) and TEAMS (47,020→46,809, -211) also ticked down
-  further — small continued drift, correcting last check's read that the backlog-drain was "a one-time jump, not an
-  ongoing trend": it's continuing, just at a much smaller rate now than the initial big jump. PLAYER_STATS/INJURIES
-  unchanged (no backfill run against either this window).
-- **2026-08-05T17:53Z** — `af-backfill-20260805-171010` still healthy, ~103min elapsed (its longest run of the
-  campaign), left running. Continued real FIXTURE_STATS progress: 54,810→53,692 (-1,118). STANDINGS/TEAMS trickle
-  continues at the same small rate (51,168→51,114, 46,809→46,786). PLAYER_STATS/INJURIES unchanged.
-- **2026-08-05T18:13Z** — `af-backfill-20260805-171010` still healthy, ~123min elapsed, left running. FIXTURE_STATS
-  continues steadily: 53,692→52,515 (-1,177). STANDINGS/TEAMS are now completely flat vs. the last check (51,114/46,786,
-  unchanged) — the small passive trickle noted the last two checks appears to have paused for now; not concerning, just
-  noting the pattern isn't perfectly continuous. PLAYER_STATS/INJURIES unchanged.
+- **2026-08-05T17:34Z-18:32Z (condensed)** — `af-backfill-20260805-171010` kept running healthily through this whole
+  window (83.5min→142min elapsed), producing the campaign's most consistent steady progress: FIXTURE_STATS
+  56,403→54,810→53,692→52,515→51,438 across 4 checks (~1,000-1,600 shards/check). STANDINGS/TEAMS ticked down a bit
+  early in the window (51,740→51,114, 47,020→46,786) then went flat — confirms the earlier "backlog drain" was a
+  continuing-but-decaying trickle, not a clean one-time event, and it appears to have settled now. PLAYER_STATS/INJURIES
+  unchanged throughout (no backfill run against either).
