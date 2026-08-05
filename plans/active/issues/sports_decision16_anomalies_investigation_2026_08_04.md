@@ -215,13 +215,12 @@ Recommended follow-ups (not executed here — this is a read-only diagnosis):
       trigger objects (0 remained); 31 trigger dates >= 2026-01-01 kept. §3a: soft-delete retention = 2,592,000s (30d,
       fresh check 2026-08-05). Script: `scripts/prune_player_values_snapshot_trigger_junk_2026_08_05.py`.
 
-- [ ] [CODE] P3. **Add `standings`/`teams` to `SPORTS_DATA_TYPE_TO_FOLDER` in UAC `gcs_paths.py`** (repo:
-      unified-api-contracts). The phantom auditor's `candidate_parquet_paths()` returns empty for these data_types
-      because they're unregistered in the folder map, causing all STANDINGS/TEAMS phantom flags to be false positives.
-      The path template should match the actual writer path:
-      `sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/asset_group=sports/entity={standings|teams}/league={league_id}/*.parquet`.
-      This resolves the 920-row STANDINGS/TEAMS phantom residual tracked in
-      `/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`.
+- [x] ✅ [CODE] P3. **Add `standings`/`teams` to `SPORTS_DATA_TYPE_TO_FOLDER` in UAC `gcs_paths.py`** (repo:
+      unified-api-contracts@8ffcf66ac). PRE-EXISTING: both `"STANDINGS": "standings"` and `"TEAMS": "teams"` were
+      already present in `SPORTS_DATA_TYPE_TO_FOLDER` (lines 76-78) and `SPORTS_DATA_TYPE_LAYOUT` (lines 161-162,
+      `PER_DAY_PER_LEAGUE`) since 2026-05-01. The plan author's diagnosis that these were unregistered was stale —
+      `candidate_parquet_paths("STANDINGS"/"TEAMS", day, league_id)` returns valid candidate paths. No code change
+      needed.
 
 - [ ] [DESIGN] P3. **Evaluate whether the sports reference standings/teams cache should be date-keyed** (repo:
       instruments-service). Currently `_fetch_and_cache_standings` holds a single in-memory cache of the latest
