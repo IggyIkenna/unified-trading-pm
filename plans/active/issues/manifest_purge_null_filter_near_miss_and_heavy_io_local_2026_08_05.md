@@ -149,10 +149,15 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
       risk), matches the exact same delete-safety shape already used successfully for this session's earlier tradfi
       phantom-row purges. Verify 0 remaining matches after. (repo: unified-trading-pm or instruments-service, whichever
       owns manifest-hygiene one-off scripts per `/codex/06-coding-standards/script-homes.md`)
-- [ ] [INFRA] P3. Consider whether a shared helper (e.g. in UTL) for "null-safe boolean mask + filter" is worth adding,
+- [x] [INFRA] P3. Consider whether a shared helper (e.g. in UTL) for "null-safe boolean mask + filter" is worth adding,
       or whether a lint/grep-based QG check for `Table.filter(` calls that don't null-guard their mask first would catch
       this class of bug earlier. Scope before committing to either — this is a "worth a look", not confirmed necessary
-      yet. (repo: unified-trading-library)
+      yet. (repo: unified-trading-library) ✅ **RESULT: Neither worth implementing.** Scope completed 2026-08-05 — ~15
+      `table.filter(mask)` call sites found across one-off scripts; only `delete_aster_overseeded_capability_rows.py`
+      correctly null-guards (proving the one-liner pattern is learnable without a helper). UTL helper rejected: too
+      heavyweight for one-off scripts that rarely import UTL. QG grep check rejected: would false-positive on legitimate
+      filters on guaranteed-non-null columns. This plan doc itself serves as the documented footgun warning for future
+      script authors.
 - [ ] [INFRA] P3. Consider adding a generic pre/post row-count-delta assertion helper for CAS manifest purges (the check
       that caught this near-miss, done automatically instead of by eyeballing output) — would benefit every future
       one-off purge script, not just this bucket. (repo: unified-trading-library or deployment-service)
@@ -162,3 +167,12 @@ lightweight bucket-metadata update, not a manifest rewrite, so it was safe to do
 - **2026-08-05 (interactive session)**: near-miss happened, caught, and reverted within the same short window; fixed the
   adjacent 30-day retention finding on 3 sports-prd buckets; filed this doc per the operator's mid-incident correction
   that the underlying purge work belongs on a VM, and per the "every follow-up is a `- [ ]` todo, never prose" rule.
+- **2026-08-05 (slot 9, task manifest_purge_null_filter_near_miss-002)**: Scoped the null-safe-filter question.
+  Findings: ~15 `table.filter(mask)` call sites across one-off scripts (MTDS, instruments-service); only
+  `delete_aster_overseeded_capability_rows.py:84` null-guards its mask with `pc.fill_null(mask, pa.scalar(False))`. All
+  others pass raw masks to `.filter()`. Recommendation: neither a UTL helper nor a QG grep check is worth implementing.
+  UTL helper rejected because target audience is one-off scripts (temporary, rarely import UTL) and the fix is a
+  one-liner. QG grep check rejected because it can't distinguish safe filters on guaranteed-non-null columns from
+  dangerous ones — a hard-gate false positive would block legitimate code. The plan doc itself serves as adequate
+  documentation of the footgun; `delete_aster_overseeded_capability_rows.py` proves the correct pattern is already
+  learnable without tooling.
