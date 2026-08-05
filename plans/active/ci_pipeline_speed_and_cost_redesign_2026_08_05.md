@@ -197,10 +197,25 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       passed cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both
       watched-not-guaranteed — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature
       recurs, revert per the same precedented per-repo playbook (not a new investigation).
-- [ ] [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` (RESTART_THRESHOLD=5 default) actually paged**
-      for agent-orchestrator's 89-restart crash-loop found this session. If it didn't fire, that's a real alerting gap
-      on top of the crash-loop bug itself — worth its own fix so the NEXT crash-loop doesn't need a live manual
-      investigation to surface.
+- [x] ✅ [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` actually paged — CONFIRMED IT DIDN'T, FOUND
+      AND FIXED THE ROOT CAUSE, 2026-08-05.** `unified-trading-pm@6d1ae8463`, deployed live to
+      `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (MD5-verified). Confirmed on the live host: the
+      `alerted-units` state file was completely empty, and `journalctl` showed every single 5-min tick since
+      2026-08-05T00:00 logging `OK -- 0/1 glue-runner units crash-looping` — meaning it has NEVER once alerted, for ANY
+      crash-loop, ever (not just AO's). **Root cause**: `systemctl list-units --type=service --all` with NO pattern
+      argument does not reliably enumerate JIT-ephemeral `glue-N` template instances that have cycled out of systemd's
+      in-memory unit cache between jobs — the "1" unit it DID see was its own service
+      (`glue-runner-crash-loop-watchdog.service`, self-matched by the old bare `grep glue` filter, since its own name
+      contains "glue"). Verified live: during a burst of active CI dispatch (this session's own canary-run testing), the
+      bare query returned exactly 1 line despite ~68 real glue-runner units genuinely present; passing an explicit
+      pattern (`"github-glue-runner*"`) to force systemd to actively resolve matching units instead of only reporting
+      whatever's cached reliably returned all 68 during that SAME active window — a fix confirmed by direct before/after
+      comparison, not just code review. (During a subsequent quiet moment with zero active CI, it correctly reports 0/0
+      — JIT-ephemeral units genuinely aren't "loaded" when nothing is running, which is correct behavior, not a
+      regression; the fix's job is to catch units DURING an active crash-loop, which is inherently an "active" systemd
+      state that should remain visible regardless of overall fleet activity.) Also naturally excludes the watchdog's own
+      unit going forward, since it doesn't match the `github-` prefix. **Real impact**: every glue-runner crash-loop or
+      wedge incident since this watchdog was deployed has gone unalerted — a confirmed, not hypothetical, alerting gap.
 - [ ] [INFRA] P3. **Once real GH billing numbers exist (todo 1)**, produce the actual cost-vs-volume reconciliation the
       operator asked for: ~300 tasks/day, expected CI-minute footprint at some stated per-task assumption, actual
       measured footprint, and where the delta comes from (concurrency fan-out, retries/re-triggers, the already-fixed
