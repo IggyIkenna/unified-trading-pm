@@ -747,9 +747,9 @@ context_scope:
   cover (a) a DIAGNOSTIC-only pass on the frozen onchain consolidator (fixes only if trivial; otherwise "remediation
   stays open pending a human design decision" — so step 1 does...
 - **`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`**: Conflict check found no genuine conflict:
-  defi_consolidated_native_ao_extract_2026_07_25.md (line 170) already independently classified this exact doc as
-  human-only for the same reasons. No plan in the covering set attempts to build the indexer, generalize the sig-index
-  script, or author the implementation plan. The...
+  /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md (line 170) already independently classified
+  this exact doc as human-only for the same reasons. No plan in the covering set attempts to build the indexer,
+  generalize the sig-index script, or author the implementation plan. The...
 
 ## Note — 1 mistag found, not actioned here (flag for a follow-up retag)
 

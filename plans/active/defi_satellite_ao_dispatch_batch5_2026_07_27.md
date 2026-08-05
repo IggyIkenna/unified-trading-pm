@@ -295,7 +295,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 
 ### Self-gated covering-plan doc (no action needed — will clear on its own)
 
-- `defi_consolidated_native_ao_extract_2026_07_25_finalize.md` — status:draft, machine-gated
+- `/plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md` — status:draft, machine-gated
   (`depends_on: [defi_consolidated_native_ao_extract_2026_07_25]`, `gate_on_depends: true`) — its 3 todos become
   dispatchable automatically once its parent plan's 4 todos complete. Not an orphan needing a fresh draft.
 

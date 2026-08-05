@@ -5,9 +5,10 @@ title:
   been silently failing since ~2026-08-01
 summary: >-
   Live-verified via a manual `gcloud run jobs execute honest-coverage-daily-launcher --wait` (run to confirm the
-  launcher-SSOT-cleanup repoint in defi_consolidated_native_ao_extract_2026_07_25.md landed correctly): the launcher
-  fetch itself now succeeds (confirms that fix), but the job then fails at `gcloud compute instances create` with `The
-  user does not have access to service account 'uts-prd-sa@central-element-323112.iam.gserviceaccount.com'. User:
+  launcher-SSOT-cleanup repoint in /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md landed
+  correctly): the launcher fetch itself now succeeds (confirms that fix), but the job then fails at `gcloud compute
+  instances create` with `The user does not have access to service account
+  'uts-prd-sa@central-element-323112.iam.gserviceaccount.com'. User:
   'instruments-service-cloud-run@central-element-323112.iam.gserviceaccount.com'`. Root cause is the SAME DP-VM-002
   `lc_tier_service_account()` rollout (2026-08-01) already tracked in
   `prod_vm_launch_missing_service_account_user_grant_2026_08_02.md` and
@@ -27,7 +28,7 @@ related:
   [
     /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
-    /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07//plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
   ]
 created: 2026-08-03
@@ -49,8 +50,8 @@ resolved_by:
   deployment-service@f5c77e58."
 source:
   [
-    "defi_consolidated_native_ao_extract_2026_07_25.md INFRA P3 (honest-coverage launcher SSOT cleanup), slot-7,
-    2026-08-03",
+    "/plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md INFRA P3 (honest-coverage launcher SSOT
+    cleanup), slot-7, 2026-08-03",
   ]
 drift_direction: advance-code
 context_scope:
@@ -65,10 +66,10 @@ context_scope:
 
 ## What happened
 
-While shipping `defi_consolidated_native_ao_extract_2026_07_25.md`'s honest-coverage launcher SSOT cleanup todo (repoint
-`honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased bucket-root `vm/` GCS path to the
-`code/deployment-service/scripts/vm/` path `create-code-tarballs.sh`'s bare-launcher loop auto-publishes), I manually
-triggered the live Cloud Run Job to verify the repoint end-to-end
+While shipping `/plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md`'s honest-coverage launcher
+SSOT cleanup todo (repoint `honest_coverage_scheduler.tf`'s Cloud Run Job fetch command from the special-cased
+bucket-root `vm/` GCS path to the `code/deployment-service/scripts/vm/` path `create-code-tarballs.sh`'s bare-launcher
+loop auto-publishes), I manually triggered the live Cloud Run Job to verify the repoint end-to-end
 (`gcloud run jobs execute honest-coverage-daily-launcher --region=asia-northeast1 --project=central-element-323112 --wait`),
 per this craft's "never launch blind" north-star.
 

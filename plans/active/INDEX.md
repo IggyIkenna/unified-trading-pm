@@ -186,12 +186,11 @@ by hand._
 - [`defi_consolidated_closeout_2026_07_18`](./defi_consolidated_closeout_2026_07_18.md) — Single coordination plan that
   AGGREGATES (references, does NOT duplicate) every open defi + defi-touching IS/MTDS plan/issue into ONE ordered pass,
   mirroring cefi_consolidated_closeout_2026_07_18.md /…
-- [`defi_consolidated_native_ao_extract_2026_07_25`](./defi_consolidated_native_ao_extract_2026_07_25.md) — Fresh
-  AO-eligibility triage of defi_consolidated_closeout_2026_07_18.md's OWN native `- [ ]` todos (not its satellite source
-  docs — those already got the defi_satellite_ao_dispatch_batch1_2026_07_25.md treatment). Of 19 open native todo…
-- [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](./defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
-  — Gated closeout for defi_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each shipped todo's evidence back into…
+- [`defi_consolidated_native_ao_extract_2026_07_25`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md)
+  — **[ARCHIVED 2026-08-05]** — Fresh AO-eligibility triage of defi_consolidated_closeout_2026_07_18.md's OWN native
+  `- [ ]` todos. All 5 todos shipped; evidence reconciled back into defi_consolidated_closeout_2026_07_18.md.
+- [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](../archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md)
+  — **[ARCHIVED 2026-08-05]** — Gated closeout, all 3 todos complete. Archived alongside its parent extraction plan.
 - [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04`](./defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md)
   — Operator corrected this session's initial posture (treating several findings as "low priority, scope only, defer") —
   the actual bar is ZERO non-canonical values across every axis, permanently, with live writers and backfills verified
