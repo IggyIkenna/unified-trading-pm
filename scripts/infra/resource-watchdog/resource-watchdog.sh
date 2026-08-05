@@ -423,6 +423,50 @@ _rw_enforce_process() {
 
 # ── Status / introspection ────────────────────────────────────────────────────
 
+_rw_status_json_path() {
+    echo "${RW_STATUS_FILE:-/dev/shm/resource-watchdog/status.json}"
+}
+
+_rw_write_status_file() {
+    # Write a lightweight status JSON snapshot for the orchestrator to read.
+    # Called once per poll tick so the AO UI always has fresh data.
+    local status_file; status_file="$(_rw_status_json_path)"
+    local status_dir; status_dir="$(dirname "$status_file")"
+    mkdir -p "$status_dir" 2>/dev/null || return 0
+
+    local pressure cgroup_mem rss_limit_kb rss_limit_gb cgroup_max_gb cgroup_mem_gb
+    pressure="$(_rw_pressure_level)"
+    cgroup_mem="$(_rw_cgroup_memory_current)"
+    rss_limit_kb="$(_rw_rss_limit_kb)"
+    rss_limit_gb=$(( rss_limit_kb / 1024 / 1024 ))
+    cgroup_max_gb=$(( CGROUP_MEMORY_MAX / 1024 / 1024 / 1024 ))
+    cgroup_mem_gb=$(( cgroup_mem / 1024 / 1024 / 1024 ))
+
+    local last_kill_iso="null"
+    if (( LAST_KILL_TIMESTAMP > 0 )); then
+        last_kill_iso="\"$(date -d "@$LAST_KILL_TIMESTAMP" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "unknown")\""
+    fi
+
+    local uptime_sec; uptime_sec="$(awk '{print int($1)}' /proc/uptime 2>/dev/null || echo 0)"
+
+    cat > "$status_file" <<STATUS_EOF
+{
+  "pressure_level": "${pressure}",
+  "cgroup_mem_gb": ${cgroup_mem_gb},
+  "cgroup_max_gb": ${cgroup_max_gb},
+  "rss_limit_gb": ${rss_limit_gb},
+  "dry_run": ${DRY_RUN},
+  "poll_interval_sec": ${POLL_INTERVAL},
+  "allowlist": "$(echo "$ALLOWLIST" | sed 's/"/\\"/g')",
+  "kill_count": ${_RW_KILL_COUNT:-0},
+  "last_kill_iso": ${last_kill_iso},
+  "uptime_seconds": ${uptime_sec},
+  "orchestrator_url": "${ORCHESTRATOR_URL}",
+  "marker_dir": "${MARKER_DIR}"
+}
+STATUS_EOF
+}
+
 _rw_status() {
     local pressure cgroup_mem rss_limit
     pressure="$(_rw_pressure_level)"
@@ -481,6 +525,9 @@ _rw_main_loop() {
         for spid in "${stale[@]}"; do
             unset "CPU_PREV_UTIME[$spid]" "CPU_PREV_STIME[$spid]" "CPU_PREV_TIMESTAMP[$spid]" "CPU_OVER_THRESHOLD_SINCE[$spid]" 2>/dev/null || true
         done
+
+        # Write status snapshot for orchestrator / AO UI consumption
+        _rw_write_status_file
 
         sleep "$POLL_INTERVAL"
     done
