@@ -191,6 +191,31 @@ not the regression — matches slot-9/slot-12). This unblocks -004's gate re-ver
 08-05 capture lands. Evidence: `scratch/perp_funding_dump.py` / `scratch/check_gcs_binance.py` /
 `scratch/verify_gate.py` (scratch, deleted after run).
 
+### 2026-08-05 (slot-2, data_engineering) — TRADFI:volatility probe-axis bug FIXED+shipped; DEFI IS-catalogue stg leak found
+
+Dispatched to `data_pipeline_check_mdps_features-056`. Launched the TRADFI:volatility benchmark
+(`features-e2e-tradfi-20260805-223553-a8233c`, window 2026-07-28..08-04, `--legs benchmark`); the VM FAILED the
+dependency check: `no captured options_chain or futures_chain shards found` for 2026-07-28. Root-caused a REAL
+probe-axis bug: `features_service/volatility/core/dependency_checker.py` probes
+`check_dependency_via_manifest(data_type="options_chain"/"futures_chain")`, but the v8 manifest registers chain shards
+under the **instrument_type** column (verified live: `instrument_type=options_chain captured:6` +
+`futures_chain captured:63` for 2026-07-28, `service_name=market-tick-data-service`, `data_type=ohlcv_1s/1m`) — a
+`data_type=options_chain` probe can never match. FIXED + shipped: `unified-trading-library@bf2757d7` (optional
+`instrument_type` filter on `check_dependency_via_manifest`, additive, +2 regression tests) +
+`features-service@10caf96e` (volatility gate probes `instrument_type`, tests updated). Re-verified live:
+`validate_can_run` True for 2026-07-28/29 + 2026-08-04/TRADFI on the real manifest. QG green both repos.
+
+DEFI:onchain gate independently re-verified **OPEN** post-`a7976931` (matches slot-3's re-verify):
+`required_available=True` on 2026-07-29→08-04; only 08-05 fails (freshness). The concurrent slot's relaunched DEFI
+benchmark (`features-e2e-defi-20260805-223356-060995`, post-tarball a7976931) PASSED the gate
+(`✅ Dependencies verified for 2026-08-02/DEFI`, exit 0) BUT produced ZERO output — **NEW ambient-env stg leak in the
+instruments-service catalogue read**: `404 .../instruments-store-defi-stg-central-element-323112/...` →
+`IS DEFI catalogue returned 0 instruments — IS_CATALOGUE_EMPTY, skipping` → empty "Processing completed successfully".
+Root cause: `features_service/onchain/cli/handlers/batch_handler.py`
+`resolve_bucket(kind="instruments-store", asset_group="defi")` lacks the `deployment_env="prod"` pin (mirror
+`onchain/config.py::get_input_bucket`). New todo below. This is the remaining blocker on -004's DEFI:onchain relaunch
+now that the perp_funding gate is open.
+
 ## Todos
 
 - [x] ✅ [DATA] P2. Diagnose + fix the BINANCE-DELIVERY perp_funding `attempted_failed` regression (07-29→08-04) that
@@ -221,6 +246,14 @@ not the regression — matches slot-9/slot-12). This unblocks -004's gate re-ver
       bucket was never provisioned; only `commodity-signals-batch-central-element-323112` existed. **Fix: provisioned
       `gs://commodity-signals-batch-test-central-element-323112`** (ASIA-NORTHEAST1, uniform-bucket-level-access,
       labels: managed-by=terraform-canonical, env=test, kind=features-commodity).
+- [ ] [DATA] P2. Fix the onchain instruments-service catalogue stg leak
+      (`features_service/onchain/cli/handlers/batch_handler.py`
+      `resolve_bucket(kind="instruments-store", asset_group="defi")` — pin `deployment_env="prod"` like
+      `onchain/config.py::get_input_bucket`), then relaunch the DEFI:onchain benchmark to measure the real number (repo:
+      features-service) — verified 2026-08-05 (slot-2): perp_funding gate is OPEN post-a7976931, but the IS catalogue
+      resolves `instruments-store-defi-stg-*` (never provisioned) → 0 instruments → empty "success"
+      (`features-e2e-defi-20260805-223356-060995`).
 - [ ] [DATA] P3. Re-verify the DEFI:onchain dependency gate on a recent day once the sibling sweep ships, then relaunch
       the DEFI:onchain features-e2e benchmark to measure the real number (repo: features-service) — remains tracked in
-      `data_pipeline_check_mdps_features-056`.
+      `data_pipeline_check_mdps_features-056`. **2026-08-05 (slot-2)**: gate re-verified OPEN (07-29→08-04); the
+      relaunch is now blocked on the IS-catalogue stg leak (new P2 todo above), not the perp_funding gate.

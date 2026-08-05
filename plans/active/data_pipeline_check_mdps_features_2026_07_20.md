@@ -464,50 +464,6 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 
 ## Progress Log
 
-### 2026-07-31 (slot-4) — todo 14 DONE: ship-verification + post-phase codex audit (scoped, NOT a whole-plan rule-9 close)
-
-Dispatched to todo 14 ("Ship everything via quickmerge --agent per repo; flip these checkboxes same-turn; rule-9 final
-report. Post-phase codex audit"). Read the full plan first (1000+ lines across the active file + its extracted history)
-to confirm scope before acting — this plan is NOT finished (11b/11c orphan-migration, the gated per-family features
-numbers, 10-followup-a/b all remain genuinely OPEN), so a whole-plan "rule-9 final report" declaring completion would
-violate the plans-run-to-actual-completion HARD RULE. Todo 14 itself, however, is a scoped hygiene/wrap-up item
-(ship-verify + flip + codex audit), which IS fully addressable now:
-
-1. **Ship-verification**: checked `git status --porcelain=v1 --branch` across all 8 repos this plan touches
-   (unified-trading-library, market-data-processing-service, features-service, deployment-service, unified-trading-pm,
-   ml-service, strategy-service, market-tick-data-service) in this slot — every one reads clean, `HEAD` ==
-   `origin/live-defi-rollout`, nothing ahead/behind/dirty. Every commit cited in this plan's own Todos (1-13, 15,
-   9a/9b/11a/etc.) has already landed via the normal quickmerge flow across ~20 prior sessions; there was nothing left
-   to ship.
-2. **Post-phase codex audit**: re-read this plan's own "Codex SSOTs" section + grepped the archived history for anything
-   explicitly deferred "to the post-phase codex audit." Found one concrete item: the 2026-07-20 operator-stated
-   "window-active vs shard-fetched" two-signal contract (WINDOW activity → parquet NaN/0-volume bin; SHARD-DAY
-   fetch-status → manifest 4-state `capture_status`) was journaled in the plan's history with an explicit note "belongs
-   in `/codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex audit." Promoted it now, as its own
-   named section ("Window-active vs shard-fetched — the two-signal contract") placed directly after the existing "MDPS
-   downstream consumption contract (4-state routing)" section, and cross-linked it to the already-existing Phase 3A CeFi
-   adapter audit's "inverse phantom" (all-NaN-OHLC-but-`captured`) discussion so the two related concepts sit next to
-   each other. While auditing that discussion, surfaced one genuine remaining code gap the archived note also flagged
-   but was never turned into a tracked todo: no driver (`/data-pipeline-check-mdps` or `/data-pipeline-check-features`)
-   currently asserts the inverse-phantom case for a FRESH write (the existing reconciler is a historical scan-only tool
-   for pre-writegate rows) — filed as new todo `14-followup` ([SCRIPT] P1, above) rather than absorbed into this
-   doc-only todo's scope, per findings-triage.
-3. **CLAUDE.md one-liner for the two new skills**: checked `wc -c cursor-configs/CLAUDE.md` = 40,958 bytes against the
-   documented 40KB / ~10k-tok QG-enforced hard cap (`check_agent_rules_size_cap.py`) — 2 bytes of headroom, no room to
-   add anything without violating the cap (which the doc's own governing rule explicitly forbids raising). Also checked
-   for precedent: neither sibling skill already shipped in this same family (`/data-pipeline-check-mtds`,
-   `/data-pipeline-check-is`) has a CLAUDE.md one-liner either — the domain index's "Working on DATA / manifest /
-   pipeline?" section covers the shared manifest/coverage contracts, not individual skill names. Concluded: NOT adding a
-   CLAUDE.md line is the correct disposition (consistent with existing precedent + the hard cap), not a gap — codex is
-   already the correct SSOT for this per the CLAUDE.md's own "SSOT direction" rule, and both skills are independently
-   discoverable via the harness's own skill registry (both already appear in the live skill list).
-4. No code changed this session (docs-only + one plan-hygiene edit); nothing to quickmerge for this specific todo beyond
-   the PM-repo plan/codex doc edits themselves.
-
-**Disposition**: todo 14 DONE — its own scope (ship-verify, flip, codex audit) is fully closed. The PLAN remains ACTIVE
-(genuinely open work: 11b/11c, the gated features-numbers todo, 10-followup-a, 14-followup) — no rule-9 whole-plan
-closing report follows from this todo, and the plan should NOT be archived.
-
 ### 2026-07-31 (slot-8, data_engineering) — todo 14-followup DONE: inverse-phantom content_check shipped to both drivers
 
 Dispatched to `data_pipeline_check_mdps_features-058` (todo 14-followup). Added the shared `check_inverse_phantom()`
@@ -845,7 +801,11 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       features-service. — **2026-08-05 (slot-8)**: CEFI gate DONE (benchmark ran 08-02, real number 8.38 s/inst-day);
       TRADFI:volatility stg-bucket infra blocker FIXED + shipped `features-service@cc5c52b8`; commodity test-bucket +
       DEFI:onchain benchmark still pending — see Progress Log +
-      `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`.
+      `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`. — **2026-08-05 (slot-2)**:
+      TRADFI:volatility dep-gate probe-axis bug FIXED+shipped (`unified-trading-library@bf2757d7` +
+      `features-service@10caf96e`) — gate now passes live for 07-28/29 + 08-04; benchmark relaunch needs a features
+      tarball rebuild. DEFI:onchain gate OPEN (a7976931) but the benchmark yields ZERO output — onchain IS-catalogue stg
+      leak (new P2 todo, issue doc).
 
 ### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
 
@@ -999,3 +959,27 @@ was silently aborted by the ruff-format pre-commit hook (files modified → hook
 commit instead of creating a new one — recovered via `git reset --soft origin/live-defi-rollout` (dangling commit never
 pushed, reflog-recoverable) then a clean fresh commit `cc5c52b8`. Lesson: verify `git rev-list --count HEAD..origin`
 after a hook-aborted commit before using `--amend`.
+
+### 2026-08-05 (slot-2, data_engineering) — TRADFI:volatility dep-gate probe-axis bug FIXED+shipped; DEFI IS-catalogue stg leak found
+
+Re-dispatched to -056. Launched the TRADFI:volatility benchmark (`features-e2e-tradfi-20260805-223553-a8233c`, window
+2026-07-28..08-04, `--legs benchmark`); the VM FAILED the dependency check
+(`no captured options_chain or futures_chain shards found` for 2026-07-28). Root-caused a REAL probe-axis bug: the
+volatility gate probes `check_dependency_via_manifest(data_type="options_chain"/"futures_chain")`, but the v8 manifest
+registers chain shards under the **instrument_type** column (verified live: `instrument_type=options_chain captured:6` +
+`futures_chain captured:63` for 2026-07-28, `service_name=market-tick-data-service`). FIXED + shipped:
+`unified-trading-library@bf2757d7` (optional `instrument_type` filter on `check_dependency_via_manifest`, +2 tests) +
+`features-service@10caf96e` (volatility gate probes `instrument_type`). Re-verified live: `validate_can_run` True for
+07-28/29 + 08-04/TRADFI. QG green both repos, landed on LDR.
+
+DEFI:onchain gate re-verified **OPEN** post-`a7976931` (`required_available=True` 07-29→08-04; matches slot-3). The
+concurrent slot's relaunched DEFI benchmark (`features-e2e-defi-20260805-223356-060995`, post-tarball a7976931) PASSED
+the gate (`✅ Dependencies verified for 2026-08-02/DEFI`) but produced ZERO output — **NEW ambient-env stg leak in the
+onchain instruments-service catalogue read** (`404 instruments-store-defi-stg-*` → 0 instruments → empty success). Root
+cause: `onchain/cli/handlers/batch_handler.py` `resolve_bucket(kind="instruments-store", ...)` lacks the
+`deployment_env="prod"` pin. New P2 todo in the issue doc.
+
+**Disposition**: -056 checkbox stays `[ ]` (numbers not all measured). TRADFI:volatility benchmark is now unblocked
+(gate fixed) but needs a features tarball rebuild + a fresh VM; DEFI:onchain needs the IS-catalogue fix;
+TRADFI:commodity test-bucket provisioned but not yet benchmarked. Declined via skip GATED per
+plans-run-to-actual-completion.
