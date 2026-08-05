@@ -84,9 +84,10 @@ resolved_by:
 > below once the merge runs to completion. Leave `assigned_vm: NA` here — flipping it would create a second, competing
 > dispatch path for the identical work.
 
-- [ ] [DATA] P3. **CORRECTED 2026-07-30 (ag-closeout-audit cefi) — do NOT call `rebuild_manifest_from_canonical_paths`
-      as originally written below; it wholesale-REPLACES this co-located bucket's entire manifest index and would
-      silently delete essentially the whole CEFI `raw_tick_data` manifest to register 7 candle rows.** Confirmed via
+- [x] ✅ [DATA] P3. **CORRECTED 2026-07-30 (ag-closeout-audit cefi) — do NOT call
+      `rebuild_manifest_from_canonical_paths` as originally written below; it wholesale-REPLACES this co-located
+      bucket's entire manifest index and would silently delete essentially the whole CEFI `raw_tick_data` manifest to
+      register 7 candle rows.** Confirmed via
       `issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` (P0 data-correctness finding, same
       bucket-layout hazard, fixed 2026-07-27 by shipping an additive sibling function) — this doc predates that fix by
       one day and was never updated to use it. Run
