@@ -361,6 +361,16 @@ anywhere.
   `/plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (resolution options for the
   declaring UAC-owner side). Working tree holds the 5 ready-to-ship files; unshipped until a decision lands.
 
+- **2026-08-05 (slot-7, session-only lessons, durable)**: (1) `/check-agent-orchestrator` is UNUSABLE from this slot —
+  `aws sts` identity `ikenna-worker` lacks `ssm:SendCommand` (AccessDenied on the orchestrator VM). Per the skill that
+  is an operator infra/credentials matter, not something to route around; do not re-attempt blind. (2) Measurement trap:
+  reading ahead/behind with a STALE remote-tracking ref (no `git fetch` first) misreads a busy shared branch — I briefly
+  misread PM as "ahead 1" that was actually a foreign push I hadn't fetched. Always `git fetch` then read; use explicit
+  `git -C <repo>` — a persisted cwd silently runs both halves of a compound check in ONE repo. (3) Security flag
+  (OPERATOR-OWNED, NOT mine to delete): 5 copies of the live `orch-dashboard-deployer@central-element-323112` GCP SA
+  private key sit world-readable in shared `/tmp/tmp-*.json` (downloaded 2026-08-04 14:32→21:02). Recommend `shred -u`
+  if the key is still active — any slot on this host can read it.
+
 ## Deferred work after 2026-08-05
 
 | Item                                                                                      | State / why deferred                                                                                                                                                                     | Blocked-on                                                                                                                                                                                                                             |
