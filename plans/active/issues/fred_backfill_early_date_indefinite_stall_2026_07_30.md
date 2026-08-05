@@ -369,7 +369,12 @@ anywhere.
   `git -C <repo>` — a persisted cwd silently runs both halves of a compound check in ONE repo. (3) Security flag
   (OPERATOR-OWNED, NOT mine to delete): 5 copies of the live `orch-dashboard-deployer@central-element-323112` GCP SA
   private key sit world-readable in shared `/tmp/tmp-*.json` (downloaded 2026-08-04 14:32→21:02). Recommend `shred -u`
-  if the key is still active — any slot on this host can read it.
+  if the key is still active — any slot on this host can read it. (4) Measurement trap (grep display artifact): on this
+  host, `rg`/`grep` output can TRUNCATE/MANGLE long identifier substrings (`GapBackln`, `Backln` for
+  `GapBackfill`/`Backfill`), so substring greps like `rg "fill"` return false positives (every "backfill" contains
+  "fill"). Diagnosing the POLYMARKET `fills` blocker, this nearly misread as "MTDS has fills wiring" (the real answer:
+  no fills capture — only `scripts/` rebuild one-offs). Grep-then-READ the actual line before concluding; prefer
+  word-boundary or exact-string greps (`git grep '"fills"'`).
 
 ## Deferred work after 2026-08-05
 
