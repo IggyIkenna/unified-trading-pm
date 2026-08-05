@@ -60,9 +60,13 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
 
 ## Todos
 
-- [ ] [ENGINEER] P3. Re-run `sync-archetype-capability-to-ui.sh --write`, verify the UI's `quality-gates.sh` stays green
-      against the regenerated `coverage.ts`, and grep UAC's `architecture_v2` enums/types against the UI mirror for any
-      other renamed/drifted export — fix any found the same way this issue's parent was fixed.
+- [x] ✅ [ENGINEER] P3. Re-run `sync-archetype-capability-to-ui.sh --write`, verify the UI's `quality-gates.sh` stays
+      green against the regenerated `coverage.ts`, and grep UAC's `architecture_v2` enums/types against the UI mirror
+      for any other renamed/drifted export — fix any found the same way this issue's parent was fixed. —
+      unified-trading-system-ui@7cd80d34 + evidence: sync script regenerated coverage.ts (+1034/-144), UI enums.ts
+      mirrored all 60 UAC StrategyArchetype values (+41), 9 families (+PORTFOLIO), 16 AllocatorArchetype values (+8),
+      sleeve_mix InstrumentTypeV2; all downstream Record<K,V> consumers updated; quality-gates.sh green (tsc clean, 288
+      tests pass, 51.39% coverage, build OK).
 
 ## Progress Log
 
