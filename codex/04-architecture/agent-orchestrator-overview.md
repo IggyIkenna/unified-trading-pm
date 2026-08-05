@@ -160,6 +160,32 @@ when the bucket env is set. On the AWS host, `ORCHESTRATOR_S3_BUCKET=uts-orchest
 disaster-recovery target (a VM restart otherwise loses `state.db`). Snapshot _recency_ is not currently asserted — a
 broken loop looks like a working one until state is lost (tracked in the AO close-out plan).
 
+### Schema changes to an EXISTING table — the migration-dict + completeness-test convention (HARD RULE)
+
+`create_all_tables()` (`server/bootstrap.py`) is `Base.metadata.create_all(engine)` — idempotent per-table by NAME, not
+per-column: it only creates a table that's missing entirely, it never `ALTER TABLE`s a table that already exists. Every
+long-lived deployed VM has every current table already created, so a NEW field added to an EXISTING ORM class (`SlotRow`
+/ `AgentRow` / `TaskUsageRow` / `AccountUsageRow`) is invisible on that VM until something explicit runs an
+`ALTER TABLE ADD COLUMN` — this has caused two real production incidents from the identical mistake ("added the ORM
+field, forgot the matching entry"): `context_directive_issued`/`context_directive_grace_reports` (2026-07-25) and
+`task_usage.backfilled` (2026-08-05, `/plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md` — a ~2h
+fleet-wide `/done` outage).
+
+**The convention**: `_add_missing_columns()` + one named per-table dict constant (`_SLOTS_MIGRATION_COLUMNS` /
+`_AGENTS_MIGRATION_COLUMNS` / `_TASK_USAGE_MIGRATION_COLUMNS`, all in `server/bootstrap.py`, called from
+`create_all_tables()`) does the column-existence-check + `ALTER TABLE` for any table that predates a given column — safe
+to run on every startup. **Every additive field on an existing ORM class needs an entry in the matching dict in the SAME
+commit** — this is a hand-maintained mirror of the ORM model, not an automatic diff, so it depends on the author
+remembering the second edit. A true automatic `PRAGMA table_info` vs. ORM-model differ was considered (2026-08-05,
+`/plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md`) and deliberately deferred as more
+novel/riskier code on the live startup path for no incremental safety benefit once the completeness test below exists.
+
+**The safety net**: `tests/test_migration_completeness.py` statically compares each covered ORM class's declared columns
+against its `_BASELINE_*_COLUMNS` (the table's ORIGINAL shape, pre-migration-tooling — free via `create_all_tables()` on
+any environment new enough to lack the table) union its migration dict — a column in neither set fails the test by name,
+before it ships. Adding a NEW table gets its whole initial column set for free (baseline case); adding a column to an
+EXISTING table needs an `_add_missing_columns(...)` dict entry, or this test catches it.
+
 ## Auth — long-lived setup-tokens
 
 Every account in `data/config/accounts.json` authenticates via an `oauth_token_env_file` (`~/.claude-accounts/<id>.env`

@@ -62,13 +62,13 @@ context_scope:
 > (previously blended input+output only, even though the done-task drill-down and windowed panel already had the full
 > split); a `tasks_completed` counter next to the tmux badge distinguishes a freshly-spun-up slot from one that's run
 > many sequential tasks; and — the one deferred item this plan's own todo 1 created —
-> `task_usage_schema_drift_done_ outage_2026_08_05.md`'s open P2 systemic-gap todo is now resolved and cited, not left
-> dangling. Codex-alignment: `/codex/04-architecture/agent-orchestrator-overview.md` § "Schema changes to an EXISTING
-> table" is a NEW subsection documenting the `_add_missing_columns()` dict + completeness-test convention this plan's
-> investigation surfaced (the mechanism already existed, hand-maintained; this plan added the missing `task_usage`
-> entry + the static test that catches a future forgotten entry before it ships). No other follow-ons were deferred.
-> Moved to `/plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md`; corpus referrers updated in the
-> same commit.
+> `/plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md`'s open P2 systemic-gap todo is now resolved
+> and cited, not left dangling. Codex-alignment: `/codex/04-architecture/agent-orchestrator-overview.md` § "Schema
+> changes to an EXISTING table" is a NEW subsection documenting the `_add_missing_columns()` dict + completeness-test
+> convention this plan's investigation surfaced (the mechanism already existed, hand-maintained; this plan added the
+> missing `task_usage` entry + the static test that catches a future forgotten entry before it ships). No other
+> follow-ons were deferred. Moved to `/plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md`; corpus
+> referrers updated in the same commit.
 
 ## Background
 

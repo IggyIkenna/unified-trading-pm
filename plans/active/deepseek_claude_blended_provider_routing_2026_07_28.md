@@ -399,9 +399,9 @@ default from an external reference.
       per-slot/per-file caching — `agent-orchestrator@ac02c79` — cut a `--since 2026-07-29` (1236 candidates) dry-run
       from >20min-incomplete to 39s. (2) `--apply` then hit a live schema-drift bug (`task_usage` missing the
       `backfilled` column on the real VM, `create_all_tables()` never alters an existing table) that turned out to ALSO
-      be breaking `/done` fleet-wide — see `plans/active/issues/task_usage_schema_drift_done_outage_2026_08_05.md` for
-      the full incident (fixed live via `ALTER TABLE`, plus a deeper isolation fix — `agent-orchestrator@7a7dd8d` — so a
-      usage-write failure can never roll back `/done` again). **Final `--apply` run**: `matched=1236 unmatched=0`,
+      be breaking `/done` fleet-wide — see `/plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md`
+      for the full incident (fixed live via `ALTER TABLE`, plus a deeper isolation fix — `agent-orchestrator@7a7dd8d` —
+      so a usage-write failure can never roll back `/done` again). **Final `--apply` run**: `matched=1236 unmatched=0`,
       verified live via `GET /api/backlog/usage/windows`: 1h=5 tasks/$0.47, 5h=54 tasks, 24h=269 tasks, 7d=1235 tasks,
       lifetime=1252 tasks (37.3M input / 234.5M cache-creation / 26.8B cache-read / 54.2M output tokens) — the
       dashboard's Task Usage Windows panel is now populated with real data end to end.

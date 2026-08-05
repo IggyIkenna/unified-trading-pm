@@ -10,13 +10,13 @@ summary: >-
   (confirmed: no other repo's `pyproject.toml`/`requirements*.txt`/`package.json` references it). Despite that, this
   repo was `promotion_model: "ldr_main"`, meaning every LDR commit spawned a fresh LDR→main promote PR (closing the
   prior one as superseded) that re-ran `quality-gates-v2` for zero downstream benefit — and when that promote PR hit a
-  genuine merge conflict (see `task_usage_schema_drift_done_outage_2026_08_05.md`'s sibling investigation, same day),
-  `main` sat 751 commits behind LDR for 3+ hours. Separately, and worse: the dashboard's own NEW auto-deploy workflow
-  (`deploy-dashboard.yml`, shipped earlier the same day) was wired to trigger on `push:[main]` — so the stuck main
-  promotion silently blocked the dashboard from auto-deploying too, even though the dashboard's deploy target has
-  nothing to do with the promotion pipeline's SIT/quality-gate concerns. Fixed by introducing a new, more restrictive
-  `promotion_model` value, `ldr_terminal` ("this repo's LDR branch is the deploy target; never promote anywhere"), and
-  retargeting `deploy-dashboard.yml` to trigger on `push:[live-defi-rollout]` directly.
+  genuine merge conflict (see `/plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md`'s sibling
+  investigation, same day), `main` sat 751 commits behind LDR for 3+ hours. Separately, and worse: the dashboard's own
+  NEW auto-deploy workflow (`deploy-dashboard.yml`, shipped earlier the same day) was wired to trigger on `push:[main]`
+  — so the stuck main promotion silently blocked the dashboard from auto-deploying too, even though the dashboard's
+  deploy target has nothing to do with the promotion pipeline's SIT/quality-gate concerns. Fixed by introducing a new,
+  more restrictive `promotion_model` value, `ldr_terminal` ("this repo's LDR branch is the deploy target; never promote
+  anywhere"), and retargeting `deploy-dashboard.yml` to trigger on `push:[live-defi-rollout]` directly.
 status: open
 nature: issue
 asset_group: [ao]
@@ -26,7 +26,7 @@ scope: [admin, engineer]
 tags: [agent-orchestrator, ci-cd, promotion-model, ldr-terminal, ci-cost, big-finding]
 related:
   [
-    /plans/active/issues/task_usage_schema_drift_done_outage_2026_08_05.md,
+    /plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
