@@ -802,7 +802,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   the next pass: derive membership from this doc's Track/Sources lists UNION the epic filter, never the epic filter
   alone.** All 49 were classified by per-doc read (single-threaded — no `Workflow`/`Task` tool exists in that runtime).
   Drafted
-  [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
+  [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
   (14 conflict-cleared todos) +
   [its finalize](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md), **both
   `status: draft` pending operator approval — neither is dispatched.** Three measured corrections landed directly rather

@@ -33,7 +33,7 @@ tags: [agent-orchestrator, backlog-dispatch, regex-parsing, operator-gate-retag,
 related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
@@ -54,7 +54,7 @@ context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/CLAUDE.md,
   ]
 ---
@@ -76,7 +76,7 @@ plans/active/infra_capture_and_devops_leftovers_2026_07_06.md:70
 Contrast with the correctly-handled `[OPERATOR]`-tag case (same file family, same 2026-07-28 pass):
 
 ```
-plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md:395
+plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md:395
   - [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — the operator ruling below is
         the standing approval this todo needs...
   _OPERATOR_TAG_PREFIX_RE.match(description) -> "[DATA] P2. " (leading cluster only) -> "[OPERATOR]" NOT in it

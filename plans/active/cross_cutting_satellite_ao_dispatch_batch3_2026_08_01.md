@@ -27,7 +27,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
