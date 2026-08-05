@@ -266,8 +266,8 @@ Covers:
   asset_group")). **CORRECTED 2026-07-11**: LIGHTER-ZKSYNC / EXTENDED-STARKNET / PACIFICA-SOLANA are **CeFi, NOT DeFi**
   — v10 decision #4 (UAC `unified_api_contracts.canonical.crosscutting.mvp_scope`: "classified cefi everywhere —
   reconciled vs the instruments-side which already had them cefi"). The later, UAC-SSOT-backed classification is carried
-  by `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (lines 71-75: "LIGHTER / EXTENDED / PACIFICA are CeFi,
-  NOT DeFi (v10 decision #4) — do NOT backfill them here. Any older plan treating them as DeFi is stale and
+  by `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` (lines 71-75: "LIGHTER / EXTENDED / PACIFICA
+  are CeFi, NOT DeFi (v10 decision #4) — do NOT backfill them here. Any older plan treating them as DeFi is stale and
   SUBORDINATE"). Synced per `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 - **DeFi data pipeline E2E**: features-onchain → strategy → execution. 8 archetypes pass Phase 1 batch e2e (per
   `defi_e2e_pipeline`).
@@ -613,10 +613,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                          ```
+                                                                                                                                                                                                              gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                              ```
 
-                                                                                                                                                                                                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                              [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -858,7 +858,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > instruments-side which already had them cefi"). The Extended row below already carries this correction (Closed
 > SUPERSEDED 2026-05-20); the Pacifica/Lighter rows' "declare DEFI venue capabilities" phrasing (audit notes below) is
 > the same stale premise — read as CeFi. Later, UAC-SSOT-backed classification:
-> `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Synced per
+> `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Synced per
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 
 - [x] **[SUPERSEDED]** [AGENT] P0. ~~**Extended** — UAC: add to `VENUES_BY_ASSET_GROUP['defi']`. Adapter:
@@ -1160,16 +1160,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                          VM ran current code without a refresh.
+                                                                                                                                                                                                              `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                              (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                              VM ran current code without a refresh.
 
-                                                                                                                                                                                                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                              Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                              (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                              `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                              Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                              (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1249,8 +1249,8 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       / EXTENDED-STARKNET / PACIFICA-SOLANA), not DeFi and not a new `clob_dex` asset_group: v10 decision #4
       (`unified_api_contracts.canonical.crosscutting.mvp_scope`, 2026-06-27 — "classified cefi everywhere — reconciled
       vs the instruments-side which already had them cefi"). Later, UAC-SSOT-backed classification carried by
-      `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Checkbox left as-is (this edit is a drift
-      annotation only; checkbox-state reconciliation is a separate finding class). Synced per
+      `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Checkbox left as-is (this edit is
+      a drift annotation only; checkbox-state reconciliation is a separate finding class). Synced per
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 - [ ] [SCRIPT] P1. **Phase 5 — Extended unblocking.** Starknet RPC template + OHLCV adapter for Extended. Blocked until
       Phase 1 ships Starknet chain entry + Phase 4 asset_group decision.
@@ -1819,7 +1819,7 @@ gate MET.
 - `market_tick_data_to_100pct_2026_05_05.plan.md` (DeFi slice) — full plan archived after split per asset_group.
 - `cefi_venue_universe_expansion_2026_05_01.plan.md` (DEX-perp half) — Lighter / Extended / Pacifica re-classified to
   DeFi asset_group (**STALE 2026-07-11**: reversed by v10 decision #4 — these venues are CeFi, NOT DeFi; see
-  `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75; synced per
+  `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75; synced per
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` finding 37); CeFi venues (Bitfinex / Bitget
   / Kraken) lifted into `cefi_master`.
 - `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (1 absorbed item) — `poolGetSnapshots` historical-TVL DeFi-pool

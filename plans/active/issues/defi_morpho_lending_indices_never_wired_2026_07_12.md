@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [defi, lending_indices, morpho, coverage-gap, dead-code, mvp-backfill]
 related:
   [
-    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md,
   ]
@@ -37,7 +37,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/data_completion_defi_2026_07_15.md,
     /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
@@ -97,7 +97,7 @@ serve both instruments-service `fetch_markets()` discovery AND market-tick-data-
 history). Import search confirms it is **never called from any handler** —
 `grep -rl morpho_adapter market_tick_data_service/` only matches the adapter's own file + `adapters/defi/__init__.py`'s
 export line. This is the same dead-code-from-launch pattern as
-`plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.6 (ORCA/RAYDIUM/KAMINO `dex_pool_state`): real,
+`plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.6 (ORCA/RAYDIUM/KAMINO `dex_pool_state`): real,
 apparently-finished adapter code that was simply never plugged into the dispatch path a real backfill VM invokes.
 
 ## Why it matters

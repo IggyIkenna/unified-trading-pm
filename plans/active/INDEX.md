@@ -265,9 +265,9 @@ by hand._
   — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched…
-- [`mvp_backfill_defi_onchain_v10_2026_06_27`](./mvp_backfill_defi_onchain_v10_2026_06_27.md) — Backfill all DeFi
-  on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices) for the v10 DeFi
-  MVP scope on SPOT VMs, respecting per-protocol genesis.
+- [`mvp_backfill_defi_onchain_v10_2026_06_27`](../archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md) —
+  Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices)
+  for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis.
 - [`mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27`](./mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27.md)
   — Gated closeout for mvp_backfill_defi_onchain_v10_2026_06_27.md -- machine-held via depends_on + gate_on_depends:
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched

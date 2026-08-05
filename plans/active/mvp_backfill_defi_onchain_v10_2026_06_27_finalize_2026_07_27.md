@@ -54,19 +54,25 @@ context_scope:
 
 # mvp_backfill_defi_onchain_v10_2026_06_27 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todo is done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **✅ COMPLETE 2026-08-05 — reconciled + archived by slot-2 (review).** Source plan
+> `/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` archived via the 6-step ritual. This finalize
+> plan's sole todo is done — it is now eligible for its own archival.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s checkboxes** against whatever shipped --
-      flip the G2 honest-coverage gate-check todo to `- [x]` citing the landing commit/measured result, confirm no
-      residual work was missed, then run the standard 6-step archival ritual (migrate DEFERRED items, banner,
-      codex-alignment check, update any CLAUDE.md/codex pointer on a new contract, update every referrer's path
-      corpus-wide, clear lock) since this plan is already almost entirely shipped. If real work remains, leave
-      `mvp_backfill_defi_onchain_v10_2026_06_27.md` active and note what's still open here instead.
+- [x] ✅ [REVIEW] P2. **Reconciled `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s checkboxes** against whatever shipped
+      — all 19 todos already flipped; source plan archived to
+      `/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` via the 6-step ritual (no DEFERRED items,
+      archived banner + `superseded_by` added, codex-alignment check clean, 13 referrers path-updated, no lock to
+      clear). Two cited SHAs (`instruments-service@0fe364ff`, `unified-trading-library@d6c8f2b3`) exist only on
+      wip-preserve refs — both have documented explanations in the plan's own narrative. No residual work remains. —
+      unified-trading-pm@&lt;SHA&gt;
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries) -- still correct, code-free finalize gate.
+- **slot-2 (review) 2026-08-05**: reconciled all 19 source-plan checkboxes (all already flipped), verified 23/25 cited
+  SHAs on origin (2 on wip-preserve with documented explanations), executed 6-step archival: no DEFERRED items, archive
+  banner + `superseded_by` added, codex-alignment check clean (execution vehicle, no new contracts), 13 referrers
+  path-updated via bulk sed. Source plan archived to `plans/archive/2026_08/`.
