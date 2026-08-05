@@ -227,3 +227,8 @@ green.
   `unified-trading-pm`, an MTDS path that doesn't exist there makes `git show` fail silently, so `grep -c` reads 0 and
   the AST read reads "CLEAN" = a FALSE "fix landed" verdict. Cross-check every such result against `git diff --stat` in
   the same cwd (empty when the cwd is the wrong repo).
+- **2026-08-05 (data_engineering slot-12) 2nd PRE-COMPACT RE-VERIFICATION — verdict: Safe to compact, state
+  bit-identical**: re-audited ~20:0x UTC. PM@`381da29a3` (cd-trap lesson above committed + pushed, ahead=0, clean); MTDS
+  still HEAD=origin=`87e9e100` (ahead=0), 3 gas_fee files still unshipped in working tree (correct — blocked); watcher
+  `bcrml7ser` + heartbeat `b35hyqyfr` alive, owner fix still NOT landed (origin `87e9e100`). Nothing new at risk; `/tmp`
+  harnesses regenerable from the recipes above. Resume = wait for watcher `RATCHET_FIX_LANDED` → NEXT STEP 1-6 above.
