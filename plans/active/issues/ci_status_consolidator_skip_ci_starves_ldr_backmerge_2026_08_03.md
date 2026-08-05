@@ -140,3 +140,22 @@ resolution.
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **2026-08-05 ~13:30-13:45 UTC corroboration (live investigation, not a dispatched escalation)**: same signature, far
+  wider blast radius than the original single-repo report. A live Slack alert ("LDR→main fleet bot: 0 promoted, 18
+  blocked") led to reading `ldr-to-main-promote-fleet.yml` run `31010492508` (13:30:22Z) directly — **15+ repos**
+  simultaneously showed `GATE BLOCK <repo>: ci_status=FAILING (cached='FAILING', live='MAIN_GREEN'/'SIT_VALIDATED')`
+  (agent-orchestrator, execution-service, features-service, greeks-service, market-data-processing-service, ml-service,
+  strategy-service, client-reporting-api, deployment-api, deployment-service, and others) — every one already healthy
+  live, blocked only by the stale manifest cache. Root cause matches this doc exactly: the underlying trigger this time
+  was `instruments-service` genuinely regressing on `main` (separate, real bug, tracked in
+  `instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md`), which flipped a batch of `ci_status`
+  writes that then hit this same `[skip ci]`-suppresses-the-backmerge gap fleet-wide, not just for the one repo that
+  actually regressed. **Self-resolved without manual intervention by the next tick (13:45:33Z)** — consistent with
+  `main-backmerge-to-ldr.yml`'s own hourly `schedule: 0 * * * *` fallback (not `[skip ci]`-suppressed, per
+  `/codex/08-workflows/ci-cd-flow.md`) eventually sweeping the drift, not a manual `main-backmerge-to-ldr.yml` dispatch
+  as in the original 2026-08-03 report — so the WORST case here is bounded to roughly the backmerge's own hourly cadence
+  (up to ~60min blast-radius-wide), not indefinite, but that's still real fleet-wide promotion downtime with zero
+  alerting on the condition itself (only the downstream symptoms — "N blocked" / arm-failed PRs — are visible, and
+  neither names this cache-staleness mechanism as the cause). Neither proposed fix (a) or (b) has been applied yet;
+  still P2/open. Recorded here rather than as a new issue doc since the mechanism, evidence shape, and fix options are
+  identical to what's already tracked.
