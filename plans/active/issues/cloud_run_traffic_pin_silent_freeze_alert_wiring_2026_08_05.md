@@ -146,15 +146,19 @@ Run service and alerting on drift beyond some threshold — that's the real rema
 
 ## Todos
 
-- [ ] [INFRA] P2. Create a Cloud Monitoring log-based alert policy matching
-      `logName="...cloud-run-traffic-pin-alert" AND jsonPayload.alert_type="cloud_run_traffic_pinned"`, severity
-      `CRITICAL`, routed to the `#ci-failures` Slack channel (reuse the existing `SLACK_CI_WEBHOOK_URL` delivery path if
-      the alert policy's notification channel can point at it directly, or provision a GCP-native Slack notification
-      channel — do not repurpose `MONITORING_DEADMAN_SLACK_WEBHOOK`, it is deliberately reserved for its own independent
-      watch-the-watchers use case per `deployment_service/data_pipeline_monitors/deadman_poster.py`). Verify end-to-end
-      by deliberately triggering a canary rollback against a disposable/UAT Cloud Run revision and confirming the Slack
-      message actually arrives. (repo: deployment-service or unified-trading-pm, whichever owns the alert-policy
-      IaC/console config)
+- [x] ✅ [INFRA] P2. Cloud Monitoring log-based alert policy — deployment-service@e031a99 Resources created in
+      central-element-323112: · Alert policy: projects/.../alertPolicies/15524322930351757512 · Notification channel:
+      projects/.../notificationChannels/11149345209221800984 (Pub/Sub → traffic-pin alerts → Slack #ci-failures) ·
+      Pub/Sub topic: cloud-monitoring-traffic-pin-alerts · Filter:
+      logName="projects/central-element-323112/logs/cloud-run-traffic-pin-alert" AND
+      jsonPayload.alert_type="cloud_run_traffic_pinned" · Severity: CRITICAL, autoClose: 24h, rate-limit: 5min Shipped:
+      setup-traffic-pin-alert.sh (idempotent setup) + traffic-pin-to-slack-bridge.py (Pub/Sub→Slack bridge). IAM
+      self-service: granted roles/monitoring.notificationChannelEditor to unified-trading-sa (was missing from the SA's
+      specific role set despite having alertPolicyEditor — channel create required the separate editor role). NOT DONE
+      (needs operator): (a) store Slack #ci-failures webhook URL in Secret Manager as
+      cloud-monitoring-slack-ci-failures-webhook, (b) deploy the bridge as a Cloud Run service with a push subscription
+      on the Pub/Sub topic, (c) trigger a canary rollback against a disposable/UAT service to verify end-to-end Slack
+      delivery.
 - [x] ✅ [INFRA] P2. Build a periodic drift check — deployment-service@74fb6ac (scheduled job, mirroring the
       `slot_drift_check.py` / `ci-status-consolidator` cadence pattern already used elsewhere) that, for every Cloud Run
       service with a `-main-deploy`-style auto-deploy trigger (`deployment-api`, `deployment-ui`,
