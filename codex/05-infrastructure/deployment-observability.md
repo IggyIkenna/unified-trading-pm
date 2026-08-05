@@ -27,6 +27,7 @@ related:
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
+    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -610,9 +611,15 @@ reference.
 
 **Tables** (all partitioned `DATE(ts)`/`DATE(completed_at)`, clustered): `resource_samples` (per-VM cpu/mem/disk,
 ~1/min), `run_ledger` (one row per completed/failed run — the durable answer past the 30-day `deployments/archive/` GCS
-TTL), `idle_spend` (daily rollup + per-resource idle rows), `reap_events` (one row per reaped VM), `process_samples`
-(per-process category breakdown — worker_agent/orchestrator/ci/ao_plan_work/other — scoped to genuinely multi-tenant
-hosts only; **table exists, nothing publishes into it yet** as of 2026-07-27).
+TTL), `idle_spend` (daily rollup + per-resource idle rows), `reap_events` (one row per reaped VM),
+`watchdog_kill_events` (one row per resource-watchdog kill/violation —
+`ts, vm_name, pid, slot_id, command, reason, rss_mb, limit_mb, pressure_level, killed`; written by the AO host's
+`resource-watchdog.sh` via `POST /api/fleet/watchdog/kill-events` →
+`operational_data_writer.write_watchdog_kill_event()`; read via `GET /api/watchdog/kill-events` and deployment-ui's
+`VmResourceComparison.tsx` per-VM expandable-row panel; shipped 2026-08-05 per
+`/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`), `process_samples` (per-process category
+breakdown — worker_agent/orchestrator/ci/ao_plan_work/other — scoped to genuinely multi-tenant hosts only; **table
+exists, nothing publishes into it yet** as of 2026-07-27).
 
 **Write path**: dedicated Pub/Sub topics (`resource-samples`, `run-ledger`) + NATIVE BigQuery subscriptions
 (`--use-table-schema --drop-unknown-fields`) — a flat JSON payload matching the target table's columns exactly,
@@ -632,9 +639,16 @@ columns). `unified_trading_library.lifecycle.daemon.HeartbeatDaemon` stays consu
 > deployment-service-launched VMs (backfill/live-data workers heartbeating through `HeartbeatDaemon`) — it has ZERO rows
 > for the central agent-orchestrator API host (`i-0c9b283b31d6b5ca7`), which isn't a deployment-service target. For that
 > host's own RAM/CPU/disk history (and its separate resource-watchdog kill-audit log), see
-> `/codex/05-infrastructure/agent-orchestrator-api-host.md` § "Resource history sampler". A follow-up plan
-> (`/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`) is onboarding the AO host into this
-> table too, plus surfacing watchdog kill events through this same read path.
+> `/codex/05-infrastructure/agent-orchestrator-api-host.md` § "Resource history sampler".
+>
+> **`watchdog_kill_events` is the first `deployment_operational_data` table with AO-host coverage** — shipped 2026-08-05
+> per `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`. The resource-watchdog
+> (`resource-watchdog.sh`) dual-writes each kill event to both the AO-internal API (existing) and
+> `POST /api/fleet/watchdog/kill-events` (new), so kill events from the AO host now appear in this table and in
+> deployment-ui's `VmResourceComparison.tsx` per-VM panel. See `/codex/05-infrastructure/agent-orchestrator-api-host.md`
+> § "Resource watchdog — Dual-write to deployment-api" for the watchdog-side write path and table schema.
+> `resource_samples`/`run_ledger` still have zero AO-host rows (those tables remain
+> deployment-service-launched-VM-only); extending them to the AO host is a separate, future scope decision.
 
 **Known gaps** (tracked in the plan, not repeated here; updated 2026-07-28 — TTL + process-category publishing both
 shipped since the paragraph above was first written): the cross-VM comparison page filters by service-name text only,

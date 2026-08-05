@@ -21,6 +21,7 @@ related:
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: 2026-05-30
 authoritative_for:
@@ -154,6 +155,18 @@ non-allowlisted processes exceeding per-resource thresholds:
 `/dev/shm/resource-watchdog/kills/{pid}.json` (tmpfs) and POSTs to the orchestrator's internal API
 (`POST /api/resource-watchdog/kill`). The orchestrator relays the kill event to the owning slot via its next
 `/heartbeat` response so the agent knows NOT to re-spawn the killed workload — "offload to a spot VM."
+
+**Dual-write to deployment-api (additive, 2026-08-05)**: In addition to the existing AO-internal POST above, the
+watchdog also POSTs each kill event to deployment-api's `POST /api/fleet/watchdog/kill-events` ingest route
+(`_rw_notify_deployment_api()` in `resource-watchdog.sh`, opt-in via `RW_DEPLOYMENT_API_URL` env var). This second write
+is fire-and-forget (does not block the enforcement loop) and streams into BigQuery
+`deployment_operational_data.watchdog_kill_events` — the same durable-operational-data surface as `reap_events` and
+`idle_spend`. This **supersedes** the Phase-4 AO-UI-only scope for kill events specifically: the AO dashboard's own
+kill-status panel stays, but kill events are now ALSO visible in deployment-ui's per-VM resource-comparison page
+(`VmResourceComparison.tsx` expandable-row panel) via `GET /api/watchdog/kill-events`. Table schema:
+`ts TIMESTAMP, vm_name STRING, pid INT64, slot_id STRING, command STRING, reason STRING, rss_mb INT64, limit_mb INT64, pressure_level STRING, killed BOOL`.
+Full design: `/plans/active/watchdog_kill_events_deployment_observability_2026_08_05.md`; read path:
+`/codex/05-infrastructure/deployment-observability.md` § "Durable operational data — watchdog_kill_events".
 
 **Installation**: Bootstrap step 4.8 in `agent-orchestrator/scripts/bootstrap_vm.sh`. Self-healing liveness check in
 `ao-self-pull.sh` (every ~15 min). Service unit:
