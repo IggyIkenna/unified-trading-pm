@@ -278,10 +278,18 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       denominator measures from first actual captured instrument, not venue/platform launch. Removed POLYMARKET from
       `check_coverage_floor_registry_drift.py`'s `KNOWN_DIVERGENCES` (now 9 baselined, down from 10). Falsifier confirms
       clean (0 new findings, 0 stale baseline). (repo: unified-api-contracts)
-- [ ] [DATA] P3. Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO) and
+- [x] ✅ [DATA] P3. Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO) and
       decide the AAVE_V3 chain-axis question — either add a per-chain axis to `DEFI_SOURCE_COVERAGE_START` (matching
       `venue_mapping.py`'s `PROTOCOL-CHAIN` grain) or explicitly document that the flat value is intended as the
-      min-across-chains and verify each current value actually is the min. (repo: unified-api-contracts)
+      min-across-chains and verify each current value actually is the min. (repo: unified-api-contracts) — **DONE
+      2026-08-05 (slot-15) — unified-api-contracts@1e190b0b.** Updated `DEFI_SOURCE_COVERAGE_START` to match
+      `venue_mapping.py`'s manifest-verified ETHEREUM-chain dates: CURVE 2020-01-19→2020-01-20, UNISWAP_V2
+      2020-05-04→2020-05-06, UNISWAP_V4 2025-01-31→2025-01-30 (dropped TODO), BALANCER 2021-05-13→2021-04-22, LIDO
+      2020-12-19→2020-12-18. AAVE_V3 2022-03-16→2022-03-12 (min across POLYGON/AVALANCHE/ARBITRUM/OPTIMISM), documented
+      as min-across-chains. UNISWAP_V2/V4/LIDO fully resolved (single ETHEREUM chain, no remaining mismatch).
+      CURVE/UNISWAP_V3/BALANCER/AAVE_V3 re-baselined for non-min-chain differences (expected per-chain launch dates, not
+      registry errors). Falsifier KNOWN_DIVERGENCES: 7→4 DeFi entries (3 fully resolved, 4 narrowed to non-min-chain
+      differences). All 11 falsifier tests pass; full `quality-gates.sh` green.
 - [ ] [DATA] P3. Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys and
       `venue_mapping.py`'s instrument-type/chain-suffixed keys (e.g. `BINANCE` →
       `{BINANCE-SPOT, BINANCE-FUTURES,     BINANCE-DELIVERY}`, `CURVE` →
