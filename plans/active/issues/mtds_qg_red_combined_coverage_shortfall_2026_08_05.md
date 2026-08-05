@@ -105,9 +105,12 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
 
 ## Todos
 
-- [ ] [DATA] P1. Fix the 2 pre-existing failing unit tests in market-tick-data-service (collect_handler_schema
+- [x] ✅ [DATA] P1. Fix the 2 pre-existing failing unit tests in market-tick-data-service (collect_handler_schema
       `[lending]` protocol-class ops, orchestrator tier3_polymarket no-crash sentinel): flaky-vs-real, then stabilize or
-      fix. Unblocks all MTDS commits fleet-wide. (repo: market-tick-data-service)
+      fix. Unblocks all MTDS commits fleet-wide. — **Done 2026-08-05**, root cause resolved by
+      unified-api-contracts@5f441e0d (removed unwired AAVE rewards + POLYMARKET fills declarations); MTDS@51f778d4
+      already sources _PROTOCOL_TO_DATA_TYPE from UAC. Verified: both previously-failing test files now 191/191 passed
+      (0.68s). (repo: market-tick-data-service)
 - [x] [DATA] P2. (slot-12) Confirm market-tick-data-service combined coverage stays ≥79% WITH the gas_fee
       dead-code-removal diff applied. **DISMISSED by full-run measurement**: the authoritative full quality-gates.sh run
       WITH the diff is 80.63% (PASSES, vs 80.65% clean, −0.02pt); the earlier "76.21% drop" was a truncated-run artifact
