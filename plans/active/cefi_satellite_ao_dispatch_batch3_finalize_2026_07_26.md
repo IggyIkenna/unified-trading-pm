@@ -96,18 +96,16 @@ context_scope:
       open todo, migration still actively draining; batch1 exclusion rationale holds unchanged. **Summary**: 2 of 6
       gates cleared (a, b), 4 still blocked (c, d, e, f). Each Deferred entry now carries a dated re-verification note
       (2026-08-05) directly in the batch3 plan.
-- [ ] [PM] P2. **Hand the 2 provably-shipped stale checkboxes to a reconcile pass.** This audit found (but deliberately
-      did not flip) that `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s two `P1` todos — the `[DESIGN]`
-      cross-check against the DERIBIT-COMBO venue-registry purge, and the `[WRITER]` combo-shape guard-widen/port into
-      `tardis_cefi_shards.py` — are recorded as already complete in
-      `cefi_4surface_migration_execution_log_2026_07_24.md` item 7 ("INVESTIGATED, NO CODE NEEDED … the guard-widen
-      already shipped this session, `mtds@2ddc6d4a` … `tardis_cefi_shards.py` already shares the fixed classifier").
-      Verify `mtds@2ddc6d4a` is reachable on `origin/live-defi-rollout` and that `tardis_cefi_shards.py` genuinely
-      routes through the shared fixed classifier (read the code, do not trust the claim); if both hold, flip the 2
-      checkboxes citing that sha and the execution-log entry. If either fails to verify, record the discrepancy instead
-      and leave the checkboxes open. Do NOT touch that doc's remaining 2 `[DATA] P2` todos — the 15,119-row
-      partition-move `--apply` is held by an explicit 2026-07-23 operator ruling. Repo: unified-trading-pm. **Done
-      when**: both checkboxes are flipped with verified evidence, or a written finding explains why verification failed.
+- [x] ✅ [PM] P2. **Hand the 2 provably-shipped stale checkboxes to a reconcile pass.** — unified-trading-pm@<sha>
+      Verified 2026-08-05 (slot-11): (1) `mtds@2ddc6d4a` IS reachable on `origin/live-defi-rollout`
+      (`git merge-base --is-ancestor` confirmed). (2) `tardis_cefi_shards.py:310,611` calls the shared
+      `self._classify_row_instrument_type(s, venue)` — the exact method `2ddc6d4a` fixed by hoisting
+      `is_deribit_combo_symbol_shape` above the venue-label branch for bare `DERIBIT`. Both ingestion paths confirmed
+      covered (no duplicate classifier to port). (3) `cefi_4surface_migration_execution_log_2026_07_24.md` item 7
+      independently records this as "INVESTIGATED, NO CODE NEEDED." The two P1 checkboxes in
+      `issues/deribit_combo_perpetual_partition_move_2026_07_21.md` §9 (`[DESIGN] P1` + `[WRITER] P1`) are already `[x]`
+      with full evidence — no flip needed, both already cite `mtds@2ddc6d4a` and the execution-log entry. The remaining
+      2 `[DATA] P2` todos were NOT touched (15,119-row `--apply` still operator-gated per §7).
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed each — verify none silently vanish, especially the PARKED conflict) → add the
