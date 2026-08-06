@@ -211,3 +211,38 @@ merged-away→LEAVE). mtds_qg_red:27/:65 stale ref to archived features_gas_fees
 
 **Checker blind-spot finding (recommended follow-up, out of shard):** check_reference_paths.py BARE_MD_RE misses
 relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and counting → future all-run / tooling fix.
+
+### B3 (batch 3) — 10 docs read in full (batch8 + finalize / data_pipeline_check_mdps_features + finalize / defi_pipeline_e2e / instruments_cefi_g1_g5 / backfill_smoke / cefi_legacy_bucket / honest_coverage_shard_dimension / mtds_pipeline_check_enumerate / phantom_audit / okx_futures)
+
+**Pending candidates:**
+
+- C1 [P2] — data_pipeline_check_mdps_features_finalize:12 `status: active` vs :57-58 body banner "draft — NOT
+  dispatched". KEY CONTEXT: 2026-07-30 ruling makes finalizes active-from-the-start ("Status: active from the start
+  (2026-07-30 ruling — no double gate)" per batch4/batch8 finalize headers) → the BODY BANNER is the stale side, not
+  frontmatter. Same class as B2-C1 (defi_pipeline_finalize). FIX: replace stale body banner with the ruling banner.
+  (Both docs writable.)
+- M1 [P2] — okx_futures:133-139 `[SCRIPT] P1` open, all gates cleared (operator RULED option A 2026-08-06 :128-132;
+  docstring reconciliation DONE-ELSEWHERE @ market-tick-data-service@8a6bbc97 per batch8:157-164; sub-part (b) Option-B
+  revert now dead). Todo names shipped sha + remains open → flip candidate. **BUT okx_futures doc is GRACE (16:22) →
+  report only.**
+- M3 [P3] — honest_coverage:474-475 `[x]` marker whose own text says "NOT closed here — genuinely contested... left
+  open". Inverse-flip: checked box hides an open item. FIX: un-flip to `- [ ]` or annotate — VERIFY in STEP 4.
+- A1 [P3] — data_pipeline_check_mdps_features:193 `[DATA] P0` first physical line ends mid-phrase ("NEW todo (was 8's
+  remaining scope). [DATA] P0. Complete the automated `/data-pipeline-check-mdps` skill's OWN"); done-when +
+  GATED-on-`mdps-e2e-shared-host-teardown-fixed` live on continuation lines (invisible to _parse_open_todos). FIX:
+  restructure first line + explicit "not machine-enforced" guard.
+- A2/Z1 [P3] — mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md (WRITABLE): ZERO checkboxes,
+  `assigned_vm: planning`, open P1 defect (enumerate_mtds_shards mvp_only=True → CEFI/SPORTS zero shards) with concrete
+  2-option remediation :130-141 prose-only. Zero-checkbox sweep duty → convert to canonical todos.
+- C3 [P3] — cefi_master:631 "5 active plans declare parent_epic: cefi_master" vs 21 measured (48 incl. issues/) —
+  auto-populated 2026-05-21, never refreshed. Same class across all 5 epics (infra 19v47, instruments 16v19, manifest
+  16v15, aofm 6v7 — other tranches). FIX for cefi_master: regenerate via populate tooling or hand-correct count.
+- C2 [P3] — closeout Track 6 aster unresolved (dup of T-C1) — grace.
+- C4 [P3] — closeout:51 + aggregated_sources:41 last_updated stale — grace.
+- M2 [P3] — agent_operating_framework_master:305/308/311 open boxes N/A-superseded (retagged by AO-tranche reconciler) —
+  other tranche, report.
+- S2 [P3] — closeout:182 "Phase D/E DONE" phrase stale after RE-OPEN — grace.
+- A3/A4 — batch8(+finalize) READY; okx_futures correctly NA.
+- H1-H6 — hedges: mostly grace/observations (instruments_master routing gap, closeout overlap flags, aggregated_sources
+  aster "0 open"+digest conflict, dp_catalog "resolved, 2 open", okx AAPL-USD research, operator-gated --apply with no
+  checkboxes).
