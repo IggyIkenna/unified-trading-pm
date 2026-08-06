@@ -101,7 +101,7 @@ version (2) can do it on demand during a failure window.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Make deployment-api's two `reap_stale()` callers distinguish "census unavailable" from "census
+- [x] ✅ [BACKEND] P2. Make deployment-api's two `reap_stale()` callers distinguish "census unavailable" from "census
       healthy and empty" and pass `running_vm_names=None` (not `{}`) to `DeploymentsRegistry.reap_stale()` on API
       failure, mirroring the deployment-service fix (`deployment-service@4ee514e`): change
       `deployment_api/vm_utils.py:list_running_vm_names` to return `set[str] | None` (None on failure) and update
@@ -109,10 +109,18 @@ version (2) can do it on demand during a failure window.
       for `deployment_api/routes/vm_deployments.py:reconcile_vm_deployments`, treat an empty/failed
       `get_vm_instance_details` the same way (pass None). Add regression tests that a transient list-API failure does
       NOT reap a stale-heartbeat registration as `vm_not_running` (heartbeat-age-only fallback). **Done when**: both
-      callers pass None on census unavailable, regression tests cover the failure path, QG green. Repo: deployment-api.
+      callers pass None on census unavailable, regression tests cover the failure path, QG green. Repo: deployment-api —
+      deployment-api@3e1d3fa.
 
 ## Progress Log
 
+- 2026-08-06 (slot 8, data_engineering worker, deployment_api_reaper_empty_set_over_reap_sibling-001): shipped fix —
+  deployment-api@3e1d3fa. Changed `list_running_vm_names` → returns `set[str] | None` (None on failure);
+  `get_vm_instance_details` → returns `dict | None` (None on failure). Updated both callers
+  (`sync_service.reap_stale_deployments` and `routes.vm_deployments.reconcile_vm_deployments`) to pass
+  `running_vm_names=None` when census is unavailable. Updated `_compute_vm_deployments` and `get_vm_deployment` to
+  degrade `None`→`{}`. Added 4 regression tests: census-unavailable→None in reconcile endpoint,
+  census-available/None/empty-set in sync_service reaper. QG green, 85/85 tests pass.
 - 2026-08-06 (slot 4, cefi_satellite_ao_dispatch_batch4-003): filed as the sibling finding to
   `cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md` Finding 3 — the
   deployment-service root cause + fix is in that doc's item 2 (shipped `deployment-service@4ee514e`); deployment-api's
