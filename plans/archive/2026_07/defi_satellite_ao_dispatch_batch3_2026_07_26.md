@@ -120,19 +120,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                                                                                                      chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                                                                                                      pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                                                                                                      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                                                                                                      the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                                                                                                      chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                                                                                                      2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                                                                                                      6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                                                                                                      timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                                                                                                      `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                                                                                                          chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                                                                                                          pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                                                                                                          `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                                                                                                          the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                                                                                                          chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                                                                                                          2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                                                                                                          6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                                                                                                          timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                                                                                                          `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                                                                                                      **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                                                                                                      `returns`/onchain reconfirmed). Evidence:
-                                                                                                                                      `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                                                                                                          **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                                                                                                          `returns`/onchain reconfirmed). Evidence:
+                                                                                                                                          `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -718,3 +718,36 @@ part of this plan was migrated elsewhere.
       **Next step**: notify operator — IS redeployment is [OPERATOR] action (Cloud Run deploy or workflow trigger).
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-06 ~04:00Z (slot-12, data_engineering, `defi_satellite_ao_dispatch_batch3-015`, pre-compact checkpoint)** —
+  **Safe to compact: YES** (ahead=0 fleet-wide, PM@92acadaa2 + MTDS@202bacc9 pushed).
+
+  **What was at risk and is now saved**:
+  - **MTDS fix shipped + verified**: `market-tick-data-service@202bacc9` (LDR, QG green) — modified
+    `_filter_pyth_rows_to_is` to union IS-enumerated pairs with static `_PYTH_FEEDS` pairs. Verified via
+    `pyth-lst-backfill-20260806-035000` (1-day VM, exit_code=0): all 12 PYTH SOLANA feeds captured including BTC/USD,
+    ETH/USD, INF/USD. JTO/RAY/WIF/JUP/USDC also captured (MTDS@cd017a1c). This is a self-contained fix independent of IS
+    republishing.
+  - **`[DATA] P2` flipped** with evidence (PM@92acadaa2).
+  - **Issue doc resolved**: BTC/ETH/INF data-loss regression documented and closed.
+  - **Lessons preserved** (see below).
+
+  **What is deliberately NOT saved**:
+  - VM `pyth-lst-backfill-20260806-010524` and `pyth-lst-backfill-20260806-035000` logs — regenerable from GCS.
+  - Background task outputs in scratchpad — transient monitor logs.
+
+  **Key lessons for the next session**:
+  1. `_filter_pyth_rows_to_is` is the SINGLE point where Pyth feeds are silently dropped — IS catalogue gaps cause real
+     data loss if the filter only respects IS enumeration without the collector's own static feed list as a backstop.
+  2. `load_oracle_feeds_for_date` reads from GCS `instrument_availability/by_date/` blobs, NOT a live IS API — IS code
+     fixes on LDR take effect only after IS republishes (via `instruments-service-daily-trigger`, Cloud Scheduler →
+     Workflow, 08:30 UTC daily). The `gcloud scheduler jobs run` command can manually trigger this.
+  3. IS `quality-gates-v2` CI is red (pre-existing `pytest` failure from stale UAC dependency resolution) — may block
+     LDR→main promotion and service redeployment.
+  4. The union fix (set union vs separate `or` clause) was chosen for zero-line-cost — the file was at 902 lines and
+     needed trimming to stay under the 900-line cap.
+  5. **Correction**: The pre-compact checkpoint at 2026-08-06 01:06Z claimed the VM was "actively collecting all 12 Pyth
+     feeds including BTC/ETH" — this was WRONG. BTC/ETH/INF were only captured for 4 of 23 dates (pre-IS-blob window).
+     The remaining 19 dates were silently dropped by the IS filter.
+
+  **Resume**: all batch3 items are done. Remaining: `[DATA] P3` (instrument_id naming reconciliation) is tracked
+  separately in the issue doc — not in this dispatch's scope.
