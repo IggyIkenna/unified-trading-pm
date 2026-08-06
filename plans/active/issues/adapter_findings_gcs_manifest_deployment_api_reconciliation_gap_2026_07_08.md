@@ -97,10 +97,11 @@ context_scope:
    mismatch, just in the opposite direction: manifest said phantom, GCS had the real file). **Not checked this session**
    for any of the 59 adapter-layer findings.
 3. **deployment-ui / deployment-api level** — the actual coverage.json v2 response
-   (`/codex/06-coding-standards/data-status-endpoint-contract.md`) and what deployment-ui renders from it. This is what
-   an operator actually looks at day to day, and it's the layer this whole multi-week instrument-completion effort
-   exists to make trustworthy. **Not checked this session at all** — no deployment-api endpoint was hit, no
-   deployment-ui page was loaded, for any of the 59 findings.
+   (`/codex/02-data/honest-coverage-model.md` § "coverage.json v2 schema (CK1)"; UI consumer surface:
+   `/codex/03-deployment/data-status-ui-surface.md`) and what deployment-ui renders from it. This is what an operator
+   actually looks at day to day, and it's the layer this whole multi-week instrument-completion effort exists to make
+   trustworthy. **Not checked this session at all** — no deployment-api endpoint was hit, no deployment-ui page was
+   loaded, for any of the 59 findings.
 
 ## Why this matters (concrete, using the operator's own example)
 

@@ -60,7 +60,7 @@ depends_on: [instruments_foundation_phase0_cross_cutting_2026_07_24]
 source:
   [
     "plan-hygiene split of instruments_foundation_completeness_2026_06_24.md, 2026-07-24 (operator-approved, see
-    plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
+    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
   ]
 ---
 
@@ -69,7 +69,7 @@ source:
 **Split provenance (2026-07-24):** this plan was extracted from
 [`instruments_foundation_completeness_2026_06_24.md`](instruments_foundation_completeness_2026_06_24.md) (the umbrella)
 as part of the operator-approved plan-line-cap remediation
-(`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row #14 — 4-way split). **`depends_on`
+(`/plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row #14 — 4-way split). **`depends_on`
 [`instruments_foundation_phase0_cross_cutting_2026_07_24.md`](instruments_foundation_phase0_cross_cutting_2026_07_24.md)
 for GATE 0** — the cross-cutting prerequisites (observability, Honest-Coverage v2, canonical-form single-SoT migration)
 that block G2. The umbrella (`instruments_foundation_completeness_2026_06_24.md`) stays the process SSOT + rolling

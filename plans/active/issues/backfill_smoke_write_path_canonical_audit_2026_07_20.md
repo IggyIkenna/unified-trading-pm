@@ -270,14 +270,14 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
 
 ## Follow-up todos
 
-- [x] 1. [DATA] P1. **[already covered by
-      plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, see that doc for execution]**
+- [x] [DATA] P1. **[already covered by
+      /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, see that doc for execution]**
       instruments-service: canonicalise the `instrument_availability` write to
       `…/day={D}/pipeline_mode={m}/asset_group={ag}/venue={V}/instruments.parquet` using the sink **PREFIX** mechanism
       (`sports_fixtures.py:99-113` is the working reference), NOT the partition dict — the UTL sink sorts keys
       alphabetically (`protocol_impls.py:26`). Provenance: this audit § 3b/§ 3c.
-- [x] 2. [DATA] P1. **[already covered by plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see
-      that doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail —
+- [x] [DATA] P1. **[already covered by /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see that
+      doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail —
       `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
       `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
       `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
@@ -299,10 +299,18 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `assigned_vm: planning` batch as a `[DOC] P3` todo citing
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a) as its own `Source:`. Tracked there, not
       here.
-- [ ] 6. [DATA] P3. instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
-      `partition={"group","day","venue"}` → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat
-      `day=/venue=`) are in the canonical shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit
-      § 2 rows 9-10.
+- [x] ✅ [DATA] P3. **Scope question answered by action — RULED in-scope 2026-07-21 (R2):**
+      `/codex/02-data/     non-canonical-path-inventory.md` row 16 — `market_lifecycle`/`futures_contracts` "share this
+      same disposition (co-fixed, co-migrated)" — and `/codex/02-data/canonical-cutover-register.md` §6b "siblings: ✅
+      same fix applied" (sink-PREFIX fix `unified-trading-library@43fa6f3f` + `instruments-service@a9be6ce9`, in force
+      2026-07-22, shipped in the same commit as todo 1's fix per archive plan
+      `instrument_availability_hive_canonicalisation_2026_07_21.md` todos 4-5; co-migrated 2026-08-03).
+      instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`, `partition={"group","day","venue"}`
+      → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat `day=/venue=`) are in the canonical
+      shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit § 2 rows 9-10. Residual:
+      prediction's `market_lifecycle` `day=/group=/venue=` unrecognized shape is tracked in
+      `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` (register:410) —
+      outside this todo's cefi scope. (Flipped 2026-08-06 by plan-reconcile; leading number stripped.)
 
 ## Progress Log
 

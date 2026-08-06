@@ -128,19 +128,24 @@ this historical spot-check date. No follow-up needed for these two.
       to confirm the venue now passes all 3 legs. Root cause (above) shows 2026-03-15 predates COINBASE-CDE's own
       registration date — this is not a fixable bug for THIS historical date, so a re-run would just reproduce the same
       (correct) `no_parquet_at`/absent verdict. No code changed for this date; the venue is expected to stay absent for
-      any date before 2026-07-10 (or 2025-12-12, pending the registry-discrepancy follow-up below).
+      any date before 2026-07-10 (or 2025-12-12 — the registry-discrepancy follow-up is the next todo, DONE 2026-07-30:
+      the adapter now derives `_CDE_REGISTRATION_DATE` from
+      `VenueMapping().get_instrument_discovery_start("COINBASE-CDE")` = 2025-12-12, so the 2025-12-12→2026-07-10 window
+      is fetchable, not absent; caveat clause resolved 2026-08-06 by plan-reconcile).
 
-- [x] ✅ [CODE] P2. **DONE 2026-07-30 — instruments-service@f9fa7587.** Crash-harden `_zero_records_non_sports` for
-      pre-launch CeFi venues + resolve the COINBASE-CDE launch-date discrepancy. (1) Added a `pre_launch_venues`
-      honest-absence short-circuit to `_zero_records_non_sports` (mirroring the existing DeFi-pre-genesis /
-      TradFi-non-trading-day / NO_ADAPTER_YET patterns): a new `_pre_launch_venues_from_raw_fetch()` classifier in
-      `process_fetch.py` flags a venue only when EVERY raw pre-filter URDI record carries an explicit
-      `available_from_datetime` after the requested date; when every remaining active venue qualifies, the new
-      `_stamp_pre_launch_venues()` helper writes `expected_unattempted`(`EXPECTED_PRE_VENUE_LAUNCH`) instead of raising
-      `RuntimeError` — extracted to its own function to stay under the QG 200-line function-size cap. A mixed batch
-      where some venue is zero for a genuinely different reason still raises (verified by test). (2) Reconciled the
-      discrepancy: `coinbase_cde.py`'s `_CDE_REGISTRATION_DATE` was a stale hardcoded `2026-07-10` (the date the REST
-      endpoint was live-confirmed) that had silently diverged from `unified-api-contracts`'
+- [x] ✅ [CODE] P2. **DONE 2026-07-30 — instruments-service@82d86feb** (the `f9fa7587` sha cited at write time is the
+      pre-history-rewrite twin — not on origin/live-defi-rollout; identical tree; corrected 2026-08-06 by
+      plan-reconcile). Crash-harden `_zero_records_non_sports` for pre-launch CeFi venues + resolve the COINBASE-CDE
+      launch-date discrepancy. (1) Added a `pre_launch_venues` honest-absence short-circuit to
+      `_zero_records_non_sports` (mirroring the existing DeFi-pre-genesis / TradFi-non-trading-day / NO_ADAPTER_YET
+      patterns): a new `_pre_launch_venues_from_raw_fetch()` classifier in `process_fetch.py` flags a venue only when
+      EVERY raw pre-filter URDI record carries an explicit `available_from_datetime` after the requested date; when
+      every remaining active venue qualifies, the new `_stamp_pre_launch_venues()` helper writes
+      `expected_unattempted`(`EXPECTED_PRE_VENUE_LAUNCH`) instead of raising `RuntimeError` — extracted to its own
+      function to stay under the QG 200-line function-size cap. A mixed batch where some venue is zero for a genuinely
+      different reason still raises (verified by test). (2) Reconciled the discrepancy: `coinbase_cde.py`'s
+      `_CDE_REGISTRATION_DATE` was a stale hardcoded `2026-07-10` (the date the REST endpoint was live-confirmed) that
+      had silently diverged from `unified-api-contracts`'
       `venue_mapping.py::venue_start_dates["COINBASE-CDE"] = "2025-12-12"` — venue_mapping.py's own comment shows that
       value was already the MEASURED correction (real backward-paginated trade history probed 2026-07-14) and that the
       2026-07-10 floor "understated ~7 months of fetchable trades." No `unified-api-contracts` change was needed — the

@@ -3,7 +3,8 @@ doc_type: issue
 title: >-
   Shard 24's -065001 relaunch died to an ordinary SPOT preemption 70s post-insert, false-paged CRITICAL
   DP_VM_GONE_NO_CAPTURE — confirms deployment-service@09a2374 (shipped ~1h later off a tradfi VM repro) generalizes to
-  the cefi-content-migration family too; that fix is NOT YET in the live monitor image
+  the cefi-content-migration family too; deploy-lag gap since closed 2026-08-02 (the :latest image postdates the fix
+  commit per batch4's re-check), test-pass half of the done-when still unverified per the Progress Log 2026-08-06 entry
 summary: >-
   DP-VM-002 escalation (`agt-143fcc`, slot 4, data_pipeline_failure) for
   `canonical-migration-cefi-content-24-relaunch20260731-065001`. Root cause confirmed via direct GCE Operations API +
@@ -136,8 +137,13 @@ pre-`docker build`, which reads like a controlled deploy pipeline step rather th
 live, UI-serving production service) — flagging rather than guessing, per this role's own
 `does_not: guess at an ambiguous fix`.
 
-**Relaunch-budget state**: per `RB-INFRA-RELAUNCH`'s flat `≤2/(vm-prefix,day)` bound (no preemption carve-out in the
-runbook text), `canonical-migration-cefi-content-24-*` has used 2/2 today (`-032606` wedge + `-065001` preemption). Did
+**Relaunch-budget state**: per `RB-INFRA-RELAUNCH`'s flat `≤2/(vm-prefix,day)` bound — which since 2026-08-02 carries a
+root-cause-diagnosed carve-out (`/codex/15-runbooks/incidents/rb_infra_relaunch.md` §Bounds, ruled 2026-08-02: the bound
+resets for a relaunch that is not blind retry — root cause diagnosed, a fix shipped, AND this exact launch is the first
+attempt made with that fix live; page the operator with the diagnosis + shipped-fix reference before invoking; no
+carve-out existed in the runbook text at this doc's 2026-07-31 filing — qualified 2026-08-06 by plan-reconcile;
+applicability to this shard is an operator call, as `09a2374` fixed the monitor, not the launch path) —
+`canonical-migration-cefi-content-24-*` had used 2/2 on the filing day (`-032606` wedge + `-065001` preemption). Did
 **not** relaunch a 3rd time — verified no other agent had either (`vm-logs/` listing re-checked immediately before
 filing this doc, no new `-24-` object appeared).
 

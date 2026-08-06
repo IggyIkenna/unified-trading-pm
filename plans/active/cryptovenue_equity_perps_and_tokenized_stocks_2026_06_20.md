@@ -222,18 +222,18 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
       (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
       one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
-- [ ] [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
-      VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
-      XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
-      ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
-      data_source_continuity BARCHART_VIX*\* constants + SourceWindow, `_umi_yahoo`/tradfi adapters, IS enumerator,
-      multiple UAC tests, CLAUDE.md "VIX 15m: Barchart preload" note, docs); (2) VERIFY no live MVP cell is
-      source=barchart + the VIX path uses VX-futures-databento (repoint any straggler FIRST); (3) DELETE the
-      adapter/client/source-entries (remove code, no deprecation shim); remove `barchart` from every source enum /
-      SOURCE_PRIORITY / continuity registry; (4) UPDATE CLAUDE.md VIX note → VX-futures-via-databento; (5) update the
-      source-priority/parity tests (deleting a source must not break them). The new parity gate then finds NO
-      source=barchart-with-no-adapter (cross-check). If Barchart is load-bearing somewhere unexpected → STOP + flag.
-      Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
+- [x] ✅ [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart — CLOSED 2026-08-06 (plan-reconcile verification).** Per
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` (CORRECTED 2026-07-25): Barchart RETIRED 2026-06-24 (operator
+      ruling, plan-reconcile finding 375) and no longer wired anywhere — verified workspace-wide: no adapter module
+      (`adapters/tradfi/` has none; "No live Barchart adapter is needed"), capability block removed
+      (`capability_declarations/_tradfi.py`), absent from `SOURCE_PRIORITY`/possible-source sets and
+      `VENUES_BY_ASSET_GROUP["tradfi"]` (possible_manifest.py:223 `# barchart retired 2026-06-24`), VIX 15m aggregates
+      from VX futures via databento XCBF.PITCH; the close-out shipped in `unified-api-contracts@844c5ee6b` (2026-06-24,
+      "feat(tradfi): close-out — KRX/Yahoo venue + parity gate + Barchart removal + databento floor precision", verified
+      ancestor of origin/live-defi-rollout). Residues = comments/docstrings only + the dead `"BARCHART": "VIX_15m"` key
+      at `market-tick-data-service/scripts/smoke_matrix.py:143` (unreachable — registry no longer emits BARCHART) + the
+      intentional quarantine list `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` (KEEP). Follow-up: delete the dead
+      `smoke_matrix.py:143` key in market-tick-data-service.
 
 ## Progress Log
 
@@ -602,11 +602,15 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:
       deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **IN PROGRESS** (this session) —
       see Progress Log.
-- [ ] [DATA] P2. **BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin, KRX
-      primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
-      DBEQ.BASIC is US-only). Until sourced these perps have a dispersion-only (cross-crypto-venue) leg, no cash hedge.
-      Repo: instruments-service (vendor ask → operator). **DEFERRED** — needs an operator credential/vendor decision
-      (Korea equities).
+- [ ] [DATA] P2. **KRX cash-equity twin for perp basis — residual is a LIVE (low-latency) feed, not reference data.**
+      Batch KRX reference + daily OHLCV shipped 2026-06-24 (`unified-api-contracts@844c5ee6b`: HYUNDAI 005380.KS /
+      SAMSUNG 005930.KS / SK Hynix 000660.KS, venue=KRX, source=yahoo, genesis 2019-01-02 — the "source a Korea-equity
+      reference + tick vendor" ask is CLOSED), and per `/codex/02-data/tradfi-databento-sourcing-ssot.md` KRX is NOT
+      operator-blocked (freely available via Yahoo, adapters exist). Residual: a low-latency cash-equity feed for
+      intraday BASIS execution (Yahoo is batch daily/15m, guardrail-clamped, not streaming; databento DBEQ.BASIC remains
+      US-only). BLOCKED-DATA tag dropped 2026-08-06 (plan-reconcile — resolved); operator decision needed only if the
+      basis trade is prioritized (precedent: `krx_equity_twin_no_source_2026_06_28.md` — operator declined a vendor
+      then).
 - [ ] [SCRIPT] P1. market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for
       the equity-perps as a first-class data_type (the venue's DISCLOSED mark — needed for basis = mark−index and for
       OFF-HOURS synthetic-mark detection where the cash tape is closed). These ride the existing CeFi

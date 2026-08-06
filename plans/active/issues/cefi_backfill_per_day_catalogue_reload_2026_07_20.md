@@ -108,9 +108,12 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process, or a cross-process `CeFiCatalogReader`
-      cache)** — the interim per-year sharding mitigation only hides the per-day catalogue-reload waste behind
-      parallelism; neither of the two proper-fix options above has been implemented.
+- [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process — the 2026-08-04 cProfile, § Profile findings
+      below, shows the cross-process download/parse-cache "Option B" fixes only ~0.4% of the total time and is "the
+      wrong design for the stated problem"; Option A is the evidence-backed direction)** — the interim per-year sharding
+      mitigation only hides the per-day catalogue-reload waste behind parallelism; neither proper-fix option is
+      implemented. (Choice deliberately kept open — the profile section is "operator information only — neither is
+      adopted here"; annotated 2026-08-06 by plan-reconcile.)
 
 ## Profile findings — cProfile breakdown of the ~17s CPU block (2026-08-04)
 

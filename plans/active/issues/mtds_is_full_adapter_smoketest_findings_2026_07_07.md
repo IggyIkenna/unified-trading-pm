@@ -127,7 +127,9 @@ the entire date's capture (schema mismatch, uncaught).
   (`ContractCustomError` not caught) — FLUID's `lending_indices` is 100% broken in practice.
 - **[YIELD_STAKING]** `market-tick-data-service/.../defi/ethena_adapter.py:249-268,270-285` — `oracle_prices`/`apy`
   unconditionally return fabricated hardcoded values (`1.0`/`0.0`) under fake source tags — a direct violation of the
-  workspace's "never silent placeholders" HARD RULE.
+  workspace's "never silent placeholders" HARD RULE (`/codex/02-data/honest-absence-downstream-handling.md`: "they do
+  NOT expect, demand, or fabricate placeholder rows to fill the gap" — citation re-pointed 2026-08-06 by plan-reconcile;
+  the rule's home is honest-absence, not data-pipeline-correctness-hard-rule.md).
 - **[PREDICTION]** `unified_api_contracts/external/polymarket/schemas.py:74-75` — `bids`/`asks` typed
   `list[list[float]]` but the real API returns `list[dict]` — `ValidationError` on every real order-book fetch, uncaught
   through the full call chain (`polymarket_adapter.py:207,459-498,761-800`), **crashing the entire date's
