@@ -61,6 +61,8 @@ related:
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -80,7 +82,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -280,6 +282,24 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **`/ag-closeout-audit tradfi` 2026-08-06 (slot 3, dispatch agt-7d91ed, sharded scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass (Phase 0 via `generate_ag_closeout_audit_candidates.py`, extended with a direct dump
+  for the full member list). 54 real tradfi-primary candidates classified via a 54-agent Workflow against the 11-doc
+  covering set: 1 excluded (genuine mistag, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` is 100% defi/cefi),
+  15 archivable now, 2 archivable-after-planned-work, 36 orphaned (11 partial, 25 never-touched) — up from batch6's 12,
+  mostly newly-surfaced findings (2 issue docs postdate batch6's 2026-08-01 cutoff; several others' latest dated
+  Progress Log section moved since). Phase 3 re-verified batch6's own Deferred items first (batch5's MDPS
+  `continuous_future` re-test DID ship 2026-08-03, but the result — 20.8%, up from 18.9% — did NOT clear
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s blocker, so it correctly stays deferred), then
+  conflict-checked the 36 orphans: 4 cleared (from 5 source docs — 2 combined into one todo touching the same file) and
+  are drafted as `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ gated finalize), `status: draft` pending
+  operator review — including `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s 0%-twin-coverage root-cause
+  investigation, which batch6_finalize's own todo 2 explicitly anticipated as "a batch7 todo." The other 32 orphans stay
+  deferred across 5 categories in batch7's own Deferred/Flagged sections (too-large-or-risky, operator-gated,
+  self-dispatched-already/stale-tag, already-drafted-elsewhere-pending-promotion, cross-tranche-owned) — see that plan
+  for the full per-doc accounting. **Standing-state note**: `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` has sat
+  `status: draft`, unreviewed, for 5 days as of this pass — flagging for operator attention, not re-drafting its
+  content.
 - **2026-08-04 (slot-16, review — `tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 2
   reconciliation)**: reconciled this closeout doc's own native content against the parent extraction's 9 completed todos
   (verified by slot-13, 2026-08-04, in the finalize plan's todo 1). Changes in this commit: (a) MVP-cell table — all 6
