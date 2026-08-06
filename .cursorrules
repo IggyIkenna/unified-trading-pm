@@ -25,6 +25,6 @@ See `.cursor/rules/` for detailed PM-specific rules:
 
 ## Finding docs/rules/SSOTs
 
-Grep `DOC_INDEX.generated.md` first (regen: `.venv/bin/python scripts/docs/gen_doc_index.py` if stale/absent —
+Grep `DOC_INDEX.generated.md` first (regen: `bash scripts/docs/refresh-doc-index.sh` if stale/absent —
 never read it whole). Narrow with frontmatter facets, e.g. `rg -l '^authoritative_for:.*<topic>' codex/`. Full
 doctrine: `cursor-configs/CLAUDE.md` § "Doc retrieval".

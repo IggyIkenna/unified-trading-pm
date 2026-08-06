@@ -15,9 +15,9 @@
 > **Every role's boot message opens with**: read this file before any other action.
 >
 > **Doc retrieval — retrieve less but right**: grep `unified-trading-pm/DOC_INDEX.generated.md` (L0; per-clone
-> gitignored; regen `scripts/docs/gen_doc_index.py`; never read whole) → `rg -l '^authoritative_for:.*<topic>' codex/` →
-> confirm `summary:` → open only the confirmed doc → `code_refs` for the doc→code jump. Full rule: workspace CLAUDE.md §
-> "Doc retrieval".
+> gitignored; regen `bash scripts/docs/refresh-doc-index.sh`; never read whole) →
+> `rg -l '^authoritative_for:.*<topic>' codex/` → confirm `summary:` → open only the confirmed doc → `code_refs` for the
+> doc→code jump. Full rule: workspace CLAUDE.md § "Doc retrieval".
 
 ---
 

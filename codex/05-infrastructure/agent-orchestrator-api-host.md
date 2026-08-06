@@ -136,7 +136,7 @@ Service unit: `scripts/orch-watchdog.service`. Install: `bash scripts/install-wa
 
 Cross-process resource guardian deployed 2026-08-05 after two back-to-back OOM incidents where agent-spawned
 `exec(eval(sys.stdin.readline()))` Python processes ballooned to 26 GB + 27.7 GB RSS, consuming the entire orchestrator
-cgroup (`MemoryMax=54G`) and causing a 3× crash-loop. SSOT:
+cgroup (`MemoryMax=56G` — see § "Resource limits" above) and causing a 3× crash-loop. SSOT:
 `/plans/active/resource_watchdog_host_guardian_2026_08_05.md`.
 
 A systemd service (`resource-watchdog.service`, `After=orchestrator.service`) polls every 10 seconds and kills
@@ -238,7 +238,7 @@ aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 
     "sudo grep -E \"VIOLATION|KILL\" /var/log/resource-watchdog.log | tail -100"
   ]' --query 'Command.CommandId' --output text
 
-# Current + historic-peak cgroup memory for orchestrator.service (54 GiB hard cap):
+# Current + historic-peak cgroup memory for orchestrator.service (56 GiB hard cap):
 aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
   --document-name AWS-RunShellScript --parameters commands='[
     "cat /sys/fs/cgroup/system.slice/orchestrator.service/memory.current /sys/fs/cgroup/system.slice/orchestrator.service/memory.peak"

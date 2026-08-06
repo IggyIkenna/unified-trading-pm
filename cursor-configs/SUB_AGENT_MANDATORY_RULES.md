@@ -134,7 +134,7 @@ Other: operator can type a custom answer
 ## When in doubt — retrieve less but right
 
 **Grep the L0 doc index first**: `unified-trading-pm/DOC_INDEX.generated.md` (per-clone, gitignored; regen
-`.venv/bin/python scripts/docs/gen_doc_index.py`; grep it, NEVER read whole). Narrow with frontmatter facets —
+`bash scripts/docs/refresh-doc-index.sh`; grep it, NEVER read whole). Narrow with frontmatter facets —
 `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; confirm its `summary:` line, open ONLY that doc; its
 `code_refs` jumps doc→code. Fallbacks: the curated domain pointers in `cursor-configs/CLAUDE.md` — `codex/02-data/`
 (manifest/data), `codex/04-architecture/` (services/DeFi/funds), `codex/05-infrastructure/` (VM/infra),

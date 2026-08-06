@@ -504,8 +504,13 @@ explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, e
 ### Enforcement
 
 `MissingSourceError` (UTL `manifest_writer.py`) is raised when `record_captured(category="tradfi", ...)` is called
-without a non-empty `source=` kwarg. Non-TradFi categories (`cefi`, `defi`, `onchain`, etc.) are unaffected — `source`
-defaults to `""` for those cells.
+without a non-empty `source=` kwarg. At the time this section was written (2026-05-30), non-TradFi categories (`cefi`,
+`defi`, `onchain`, etc.) were unaffected — `source` defaulted to `""` for those cells.
+
+> **Superseded by the 2026-06-01 generalization above** (§ "Generalised beyond TradFi"): `MissingSourceError` now also
+> fires for any **multi-source** cell in ANY asset group, not just TradFi — e.g. defi `oracle_prices`/
+> `native_staking_rates`, sports `FIXTURES`. A non-TradFi category is only "unaffected" when it has a single external
+> source (`default_source()` auto-stamps it) or no external source at all.
 
 QG STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`, wired into
 `unified-trading-library/scripts/quality-gates.sh`) performs a static AST walk to catch new `record_captured` callsites

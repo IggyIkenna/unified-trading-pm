@@ -68,10 +68,10 @@ Ground truth: `agent-orchestrator/server/model_tier.py` (`SONNET_LIGHT_MODEL`/`S
 
 ## The two tiers
 
-| Tier           | Model             | Context | Cost          | Use when                                                                        |
-| -------------- | ----------------- | ------- | ------------- | ------------------------------------------------------------------------------- |
-| **Default**    | `claude-sonnet-5` | **1M**  | Low           | Everything — including large plans/multi-file context. This is the AO standard. |
-| **Escalation** | `claude-opus-4-8` | 1M      | High (~5-10×) | ONLY main orchestrator role, cross-repo architecture judgment, trading judgment |
+| Tier           | Model             | Context | Cost          | Use when                                                                                                     |
+| -------------- | ----------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Default**    | `claude-sonnet-5` | **1M**  | Low           | Everything — including large plans/multi-file context. This is the AO standard.                              |
+| **Escalation** | `claude-opus-4-8` | 1M      | High (~5-10×) | ONLY main orchestrator role (cross-repo/trading judgment retired as opus triggers 2026-08-04 — sonnet-5 now) |
 
 Both tiers now have the same 1M context ceiling — Opus is never chosen because a plan is "too big to fit," only because
 the TASK itself is one of the three qualitative categories above.
@@ -201,14 +201,13 @@ multi-file context natively — this is the standard for AO planning-VM-eligible
 - Large trackers/umbrella plans with 100+ todos (e.g. `sports_consolidated_closeout`-style closeouts) — size alone is
   never a reason to escalate; set `effort: max` instead
 
-**`opus-required`** — is main-orchestrator ROLE work, OR is a genuine cross-repo architecture/trading JUDGMENT call
-(never "the plan is big" or "many files are involved" — those stay Sonnet 5 at high effort):
+**`opus-required`** — is main-orchestrator ROLE work (never "the plan is big" or "many files are involved" — those stay
+Sonnet 5 at high effort; cross-repo architecture judgment and trading judgment were RETIRED as opus triggers 2026-08-04,
+see "Opus — only for this" above — both now run on sonnet-5, `sonnet_variant: default`):
 
 - Master plan refresh + inventory regeneration (main-orchestrator role)
-- Cross-repo architecture DESIGN DECISION (UAC schema + UTL + 3+ services — the tradeoff judgment, not the file count)
 - Full workspace impact pre-audit for a public API change, where assessing blast radius is itself the judgment call
 - Work-split drafting itself (main-orchestrator role — allocating scope across the fleet)
-- Trading judgment calls (position sizing, risk-limit calibration, archetype topology)
 
 Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch (same logical
 unit as the substantive change — do NOT mass-sweep, per Findings Triage).

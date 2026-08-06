@@ -1,16 +1,19 @@
 ---
 doc_type: issue
 title:
-  "docs-reconcile 2026-08-02 — 2 genuine operator-decision parks (cursor-rules/ purpose; a locked doc's broken source
-  field)"
+  "docs-reconcile 2026-08-02 — 3 genuine operator-decision parks (cursor-rules/ purpose; locked docs' broken frontmatter
+  fields)"
 summary: >-
-  Two findings from the 2026-08-02 docs-reconcile autonomous sweep that the skill's own contract requires parking for
-  the operator rather than auto-fixing: (1) what the 25-file `cursor-rules/` tree is actually FOR today, now that it's
+  Three findings across two docs-reconcile autonomous sweeps that the skill's own contract requires parking for the
+  operator rather than auto-fixing: (1) what the 25-file `cursor-rules/` tree is actually FOR today, now that it's
   confirmed NOT synced to the real canonical `.cursor/rules/` tree (150 files, 0 overlap) -- an authority call about
   intent, not a correctness call; (2) `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` carries
   `locked_by: live-defi-rollout`, so its broken `source:` frontmatter entry (a brace-expansion path with a redundant
   `unified-trading-pm/` prefix) cannot be auto-fixed per the HARD RULE against editing a locked doc's frontmatter
-  without sign-off.
+  without sign-off; (3) added 2026-08-06 -- 14 `plans/active/issues/*.md` docs (incl. the same
+  `macro_micro_econ_data_capture_audit_2026_06_05.md` from item 2) all carry a `locked_by`-gated, mechanically truncated
+  `summary:` field (12 of 14 cut at exactly 200 chars mid-word/mid-link), pre-drafted replacements ready to apply on
+  sign-off.
 status: open
 nature: issue
 asset_group: [meta]
@@ -101,6 +104,43 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   low real-world cost since `source:` is a provenance field, not a navigation aid). Other: operator can type a custom
   answer.
 
+## 🚧 BLOCKED-OPERATOR-DECISION 3 — 14 locked issue-docs with truncated `summary:` frontmatter (added 2026-08-06)
+
+- [ ] [DOCS] P2. **Apply (or authorize applying) the pre-drafted replacement `summary:` on 14 `locked_by`-gated
+      `plans/active/issues/*.md` docs.**
+
+  All 14 carry a real `locked_by` value (13× `live-defi-rollout`, 1× `harsh-fleet-audit`) — per the same HARD RULE as
+  item 2 above, none were auto-fixed. This is a distinct, larger recurrence of the exact same gate, found by today's
+  `/docs-reconcile --autonomous` sweep's summary-quality hunter (Phase 1) and independently re-verified programmatically
+  (string length + `locked_by` re-check against live frontmatter, not just the hunter's report). 12 of the 14 are
+  truncated at EXACTLY 200 characters — strong evidence of a mechanical cap applied at authoring/backfill time, not
+  scattered human error; the other 2 are shorter but equally cut off mid-sentence/mid-link. All 14 replacement summaries
+  below were derived by reading each doc's full body, not guessed from the title.
+
+  | Doc (under `plans/active/issues/`)                                                    | Current tail (truncation point)         | Proposed replacement `summary:`                                                                                                                                                                                                                                                                                                                                                                                                                |
+  | ------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `cve_affected_pinned_deps_remediation_2026_06_18.md`                                  | `...What breaks    ...` (raw table row) | Follow-up to lift the fleet-wide `--ignore-vuln` pip-audit CVE allowlist once each entry's real blocker clears — re-verifies every ignored CVE against current locked versions, drops moot/fixed entries, corrects stale mischaracterizations, and closes newly-found gaps (e.g. a missed fastapi/starlette bump).                                                                                                                             |
+  | `backfill_vm_slack_alert_e2e_verification_2026_06_23.md`                              | `...With ~50 running VMs, that...`      | E2E verification of the backfill-VM Slack-alert path found four gaps: the heartbeat-stall watcher was OOM-killed every tick before writing its sentinel (fixed in code, not yet deployed), Python stdout/stderr isn't captured in Cloud Logging for fleet monitors/alerting, Slack delivery isn't end-to-end observable, and delivered alerts were generic because the UTL envelope was never unwrapped.                                       |
+  | `batch_live_reconciliation_service_audit_2026_05_27.md`                               | `...what a...`                          | Full repo audit of batch-live-reconciliation-service (BLRS), the T+1 nightly batch-vs-live reconciliation orchestrator: documents its multi-stage DAG, data flow, and CLI/API surface, and catalogues codex↔code drift plus misplaced cross-repo responsibilities as ✅-decided vs ❓-needs-operator items tracked in §7.                                                                                                                      |
+  | `capability_wizard_analysis_findings_2026_06_11.md`                                   | `...2026_06_11.m...` (broken mid-link)  | Running log of bugs, gaps-in-understanding, conflicting truths, and dual-but-different implementations found while building the capability wizard/manifest — companion to the gap-discovery tracker (which covers missing capabilities/registries instead); each finding tagged OPEN / FIXED / TRIAGED with evidence.                                                                                                                          |
+  | `capability_wizard_gap_discovery_2026_06_11.md`                                       | `...agents only when...`                | Running pool of gaps surfaced while building the capability wizard/manifest — items are UNACKED scope that graduate into todos on the parent plan, taxonomized as missing_registry / missing_extraction / needs_code_scan / logical_dead_end; companion to the analysis-findings doc (which tracks bugs/conflicts).                                                                                                                            |
+  | `defi_code_codex_drift_2026_05_27.md`                                                 | `...audit-resu...`                      | Actionable tracker for 13 code↔codex drifts (D1–D13) found re-reading the actual DeFi pipeline Python (MTDS/MDPS/UAC/features-service) against codex SSOTs — stale data-type names, legacy bucket prefixes, an unimported adapter, catalog gaps, banned-provider references, and more; full record in the companion audit-result doc.                                                                                                          |
+  | `fleet_audit_triad_deferred_followups_2026_06_01.md`                                  | `...not to be actioned until...`        | Operator-deferred ('let it be') follow-up tail from the three 2026-05-27 fleet-audit plans (canonical_vm_log_archival, cefi_venue_backfill_coverage_remediation, deployment_ui_vm_and_venue_coverage_visibility) after they were archived — captures un-actioned items (e.g. archive crons never `tofu apply`'d) so nothing is silently lost; not to be worked until the operator activates it.                                                |
+  | `fleet_data_acquisition_health_2026_06_21.md`                                         | `...(all data_ty...`                    | Operator-requested sweep of every data-acquisition VM lane's run.log (~75 VMs) on 2026-06-21: confirms all lanes running with zero fleet-wide rate-limiting, most lanes actively capturing data, and catalogues fixable code errors found per lane (cefi tick-schema validation, SOURCE_PRIORITY mismatches, mtds version-surface drift) with follow-up todos.                                                                                 |
+  | `issue_docs_remediation_sweep_2026_06_02.md`                                          | `...Outcome: a large fraction of "...`  | Consolidated dispatch tracker from a 2026-06-02 code-audit of every plans/active/issues/*.md doc verifying each open claim against current code — a large fraction were already fixed after the docs were written; remaining real gaps are re-tracked here per-repo as canonical dispatchable todos, each source doc archived once its items here are verified complete.                                                                       |
+  | `macro_micro_econ_data_capture_audit_2026_06_05.md`                                   | `...a whole tier of _fr...`             | Coverage audit of macro (economic-calendar) vs micro (market-structure) data capture: micro is captured well across nearly every asset group (L3/L4), macro is essentially TradFi-only and thin, and a free-tier vendor category is coded but not backfilled (capacity ≠ backfill) — includes a vendor cost/coverage refresh and an architecture-direction decision log.                                                                       |
+  | `perp_funding_data_semantics_and_cadence_2026_06_16.md`                               | `...reads \`data_type=...\``            | Four correctness gaps in how perp funding is annualised and time-stamped, found building a carry_staked_basis analysis: two funding-cadence registries (UAC vs UTL) disagree and one is wrong, `funding_timestamp` is off by one settlement for most venues, the cadence table has no historical tracker, and DERIBIT's timestamp can't be safely derived from scratch — funding is a P0 input to net-carry ranking.                           |
+  | `tradfi_backfill_oom_remediation_2026_06_24.md`                                       | `...a fresh tarball alone do...`        | Root-causes the 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls (DP_VM_STALL) as an OOM crash-loop, not the databento chunk-decode hang some earlier fixes targeted — each fresh per-chunk process balloons to ~15GB within minutes on an e2-standard-4; documents the fix and tracks several later, mechanistically-distinct stall findings from follow-up verification.                                                                       |
+  | `live_mode_event_sink_topic_missing_2026_06_21.md` (resolved)                         | `...crashed at startup with:`           | RESOLVED — the first-ever live MTDS launch crashed at startup because UTL's sink-factory derives the live lifecycle-event Pub/Sub topic as `{service_name}-events`, which terraform never provisions per-service (only a shared `service-lifecycle-events` topic exists) — a fleet-wide gap since no service had run live mode before; unblocked by creating the missing MTDS topic, same wall awaits every other service's first live launch. |
+  | `instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` (superseded) | `...both pre-existing...:`              | SUPERSEDED — duplicate discovery of the same instruments-service QG-RED blocker (FOOTYSTATS violates the IS/UAC sports-venue disjointness invariant + a golden-fixture drift) already filed, more completely, in the archived `instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`; kept for corpus trail only, do not dispatch its todos.                                                                                      |
+
+  A: **Apply all 14 replacements as-is** (each was derived from the doc's own full body, not guessed). [RECOMMENDED —
+  all 14 are pure `summary:` frontmatter swaps, zero body/content changes, lowest-risk field on a locked doc] B:
+  **Unlock the 14 docs first** (clear `locked_by`/`locked_since` if the lock is stale — 10 of 14 have no `locked_since`
+  at all, and the 4 that do are 2+ months old as of 2026-08-06), then let the next docs-reconcile run auto-fix them
+  normally. C: **Leave as-is** — the truncation is cosmetic (L2 retrieval degradation only, not a correctness bug) and
+  not worth an exception to the locked-doc rule. Other: operator can type a custom answer.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. 4 other commits from this same sweep already shipped
@@ -149,3 +189,18 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   passes don't. Other: operator can type a custom answer.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **docs-reconcile 2026-08-06** (dispatch agt-cea8ef): independently re-confirmed items 1 and 2's underlying facts a
+  4th/3rd time (own `find` + frontmatter re-parse, not a re-read of this doc's prior entries). Made ONE narrow, factual
+  edit distinct from resolving BLOCKED-OPERATOR-DECISION 1 itself: `.cursor/rules/pm-repo-context.mdc:26-29` previously
+  read as though whether `cursor-rules/` still exists were itself unresolved ("What `cursor-rules/` is for today is
+  unresolved — flagged for operator review" with no mention it had already been archived) — that framing is stale and
+  actively misleading to a fresh reader four days after the archival, independent of the still-fully-open "what should
+  replace it" question. Updated it to state the archival as the now-undisputed fact it is (3 independent audit passes
+  agree) and point here for the still-open follow-on question, WITHOUT touching BLOCKED-OPERATOR-DECISION 1's own open
+  A/B/C framing above and WITHOUT archiving this issue doc (both stay exactly as prior passes left them, pending the
+  explicit confirmation already requested 2026-08-03). Flagging the deviation from "leave `pm-repo-context.mdc`
+  untouched too" explicitly here in case the operator disagrees with drawing that line — easy to revert
+  (`unified-trading-pm` history has the prior wording). Added BLOCKED-OPERATOR-DECISION 3 (14 locked docs, truncated
+  `summary:` frontmatter) — a same-gate recurrence found by this run's Phase 1 summary-quality hunter, independently
+  re-verified (string length + live `locked_by` re-check) before parking rather than auto-fixing. Full Phase 5 report in
+  this run's `/done` evidence + chat transcript (dispatch agt-cea8ef).
