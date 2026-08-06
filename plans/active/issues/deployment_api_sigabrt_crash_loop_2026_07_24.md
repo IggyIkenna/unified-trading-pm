@@ -39,7 +39,7 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md,
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
     deployment-api/gunicorn.conf.py,
@@ -738,12 +738,12 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       BEFORE `130c3a2`'s `09:09:02Z` commit, so it structurally cannot carry the profiling code) — every revision built
       from `130c3a2` (`00408-xd2` through `00412-rqj`, all `Ready=True`) has 0% traffic. This is not an oversight: the
       companion tracker
-      `/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` (status:
-      open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance pending
-      that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic yet.
-      Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in the
-      last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's a
-      pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
+      `/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`
+      (status: open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance
+      pending that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic
+      yet. Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in
+      the last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's
+      a pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
       `jsonPayload.message:"memory-profile"` sweep of the last 2 days returns **zero rows** — the instrumentation has
       never fired in production because its code has never received a real request. This todo's own literal ask (read
       the next SIGKILL's memory-profile lines) has no data to read, and won't until the coldstart doc's cutover clears —
@@ -826,7 +826,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   _durability_ was over-read on a single lucky 4-sample window. Instead: the bar for treating this cold-start P0 as
   **durably** closed is raised to **N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods,
   zero exit(0) failures**. Ongoing tracking stays in the companion finding-6 doc
-  (`/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, P2,
+  (`/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, P2,
   `assigned_vm: planning`, open) — that is the live tracker; this doc's checkboxes stay flipped with this recurrence
   noted. **Downstream gate:** any live-traffic cutover to a fresh revision (e.g.
   `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a "resolved" reading of this doc — the
