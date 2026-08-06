@@ -86,7 +86,7 @@ being permanently red for market-tick-data-service. Low urgency, low risk, strai
       bump) across the 16 affected repos listed above — read that script's own docs/dry-run mode first, this is a
       multi-repo change and should go through each repo's own quickmerge, not a single mega-commit. — shipped per-repo
       via quickmerge: alerting-service@7865ecd, batch-live-reconciliation-service@56df5cd, client-reporting-api@d4a06b1,
-      deployment-api@7bcb262, deployment-service@f8cf3d4, execution-service@2ff643b4, features-service@261e09b,
+      deployment-api@7bcb262, deployment-service@55d50a2e, execution-service@2ff643b4, features-service@261e09b,
       fund-administration-service@6f10930, instruments-service@d07b24b8, market-data-processing-service@3868cf5,
       ml-service@d631123, strategy-service@308bdfd3, trading-agent-service@82df60a, unified-trading-api@5503ffb (spec
       normalized to canonical `aiohttp>=3.14.3,<4.0.0` string form for strict-compare alignment)

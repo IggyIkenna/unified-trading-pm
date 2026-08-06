@@ -146,7 +146,7 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       context-scout marker's claimed count (regex `\((\d+) entries?\)`) vs. the live `context_scope` list length and
       report every disagreement — beyond just today's 13-doc STALE sample. **Done when**: a report of every mismatched
       doc in the full corpus exists (this may surface instances beyond the 4 found here, since a doc can carry this bug
-      while still reading UP_TO_DATE). — unified-trading-pm@92bd7b601
+      while still reading UP_TO_DATE). — unified-trading-pm@a4bc3a0c8e
 - [x] ✅ [DOC] P2. **Close the detection gap** (gated on todo 1's root-cause finding): decide whether
       `scripts/plan-hygiene/generate_context_scope_inventory.py`'s Phase 0 STALE/UP_TO_DATE verdict logic should be
       extended to also flag a marker-count-vs-actual-count mismatch as its own verdict (e.g. `COUNT_MISMATCH`), so this
