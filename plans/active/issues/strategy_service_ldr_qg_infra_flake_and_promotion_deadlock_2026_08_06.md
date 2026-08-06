@@ -309,7 +309,7 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 
 ## Follow-ups (added 2026-08-06 ~07:57Z)
 
-- [ ] [CICD] P0. Complete strategy-service LDR→main: **PR #498** (head `c744644b`, resolve-merge; tree == LDR
+- [x] [CICD] P0. Complete strategy-service LDR→main: **PR #498** (head `c744644b`, resolve-merge; tree == LDR
       `4393c2a4`). **PRs #496/#497 are SUPERSEDED** — the fleet bot closed each when LDR advanced (LDR: 9af7501d →
       `32f0a859` dep-re-pin 0.96.0 → `4393c2a4` CI-template rollout; bot closed #496 09:42:57Z and #497 10:01:05Z,
       opened #497 then #498). **Root cause (09:40Z, still governs):** only a PR-triggered v2 run satisfies the PR's
@@ -340,6 +340,13 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       bot signal, SIT run 31094524862 SUCCESS, desc "full-workspace-sit @ 10:45:34Z"); auto-merge ARMED (SQUASH). **v2
       PR run 31095759328 QUEUED on dd11550a — MUST COMPLETE, do NOT cancel**; on SUCCESS #499 auto-merges → verify main
       HEAD == promote squash (tree 308bdfd3) → POST /done (`one_shot_complete: true`). Provenance: agt-e33f21.
+      **RESOLVED (11:52Z): GATE GREEN + PROMOTED.** v2 PR run 31095759328 COMPLETED SUCCESS ~11:52Z (both legs incl. the
+      ~15-min cache-save — the glue-runner slow save is EXPECTED, NOT a hang; run-1's premature cancel was the error).
+      Auto-merge fired immediately: **PR #499 MERGED 11:52:31Z (SQUASH)** → strategy-service `main` HEAD =
+      **`53d68535`** `chore(promote): LDR → main (Option-B direct)`, body `Promoted-From-LDR: 308bdfd31bbb…`; **tree
+      match VERIFIED** (origin/main tree `83976a3b…` == LDR `308bdfd3` tree — aiohttp >=3.14.3 +
+      unified-api-contracts >=0.96.0 floors both landed on main). Wall resolved. **Done: 2026-08-06 11:52Z** —
+      agt-e33f21 posts `/api/slots/15/done` (`one_shot_complete: true`). Provenance: agt-e33f21.
 - [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
       #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
       recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
