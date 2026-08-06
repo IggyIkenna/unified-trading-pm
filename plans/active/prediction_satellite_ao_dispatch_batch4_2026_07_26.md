@@ -747,6 +747,9 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   min before its death) already deleted them; idempotent re-verify, harmless. **Durable resume state**: live checkpoint
   synced every 5 min to `_ops/4bi_run_checkpoint_latest.jsonl`; adapted driver + watchdog uploaded to
   `_ops/4bi_scratchpad_2026_08_06/run_4bi_delete_s13.py` + `4bi_watchdog_s13.sh`; inputs `legacy_348_days.txt` +
-  `legacy_presence.json` already there. On completion: verify all 348 dates deleted (0 legacy objects remaining via
+  `legacy_presence.json` already there. Completion verification tool `verify_4bi_deletion_s13.py` (re-lists each date's
+  legacy prefix via the migration's own `_LEGACY_PREFIX_TPL` + `_SHAPE3B_MARK`, PASS only when 0 remaining
+  `/data_type=prediction_trades/` objects + 0 report anomalies/errors; smoke-tested PASS on a processed day) uploaded to
+  the same GCS scratchpad. On completion: run it over all 348 dates (0 legacy objects remaining via
   `gcs_describe_object`/presence re-scan), 0 anomalies, then flip 4b-i's checkbox with final counts.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
