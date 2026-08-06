@@ -246,3 +246,92 @@ relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and c
 - H1-H6 — hedges: mostly grace/observations (instruments_master routing gap, closeout overlap flags, aggregated_sources
   aster "0 open"+digest conflict, dp_catalog "resolved, 2 open", okx AAPL-USD research, operator-gated --apply with no
   checkboxes).
+
+## Resume guide (written at /pre-compact 2026-08-06 ~20:25 UTC — context was compacted mid-run)
+
+**Run state:** STEP 1-3 complete (6/8 hunters in: B0, B1, B2, B3, T, M). PENDING: hunter B4 (batch 4) + codex-alignment
+hunter results (background agents — completion re-invokes the session). STEP 4 (adversarial verify) → STEP 5 (apply on
+review branch `plan_reconciler/agt-bf8439`) → STEP 6 (route) → STEP 7 (PR + result POST) → STEP 8 (/done) NOT started.
+
+**Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
+needed (dedup'd across hunters):
+
+1. **Flips/splits**: B1-M1 `_DRYRUN_COLS` cefi_4surface:793 (sha instruments-service@1284606a — verify reachable +
+   `'chain' in _DRYRUN_COLS` at instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220,
+   then split: flip resolved half + new scoped todo for re-run/decide).
+2. **Body-banner aligns** (2026-07-30 "no double gate" ruling = body banner is the stale side): B2-C1
+   defi_pipeline_finalize:57, B3-C1 data_pipeline_check_mdps_features_finalize:57-58 — replace "draft — NOT dispatched"
+   banner with the ruling banner (pattern: batch4_finalize:57 / batch8_finalize:58-60).
+3. **Contradiction text aligns** (reader-verifiable): B2-C2 cefi_backfill:111 Option-B dead (doc's own cProfile
+   :144-152); B2-C3 cefi_enumeration_audit dual verdicts (add cross-ref); B2-C4 cefi_residual_followups:110-122 stale
+   --apply instruction (28,755 dropped/0 residual at :516-529); B2-C5 canonical_path_oracle resolved_by frontmatter
+   (:57-61 vs body :287-293); B0-C1 aster Phase-2 Deferred table "Not started" vs [x] todos :177-187; B0-C3 shard24:5-6
+   headline; B0-C4 coinbase_cde:130-131 stale "pending" caveat; T-C7 deribit_binance_finalize:76-79 "never recovered".
+4. **Todo-format (mechanical)**: backfill_smoke:284/302, candle_divergence:442/485 (strip leading number),
+   canonical_path_oracle:321 (move BLOCKED-UPSTREAM-DESIGN after priority — manual, no fixer rule). B3-A1
+   data_pipeline_check_mdps_features:193 first-line truncation restructure.
+5. **AG-closeout linkage (writable 2 of 6)**: features_universe_filter:20 + mtds_cefi_docker:31 add
+   `/plans/active/cefi_consolidated_closeout_2026_07_18.md` to related:. (4 grace: book_snapshot5,
+   derivative_ticker_aiodns, liquidations_count_stale, mtds_live_mode.)
+6. **Dangling relative refs (writable 8 refs / 4 docs)**: candle_feature:311/390/497/505, backfill_smoke:279,
+   cefi_4surface:57, instruments_cefi_g1_g5:63/72 → repoint to /plans/archive/... per M rulings.
+7. **Zero-checkbox (2 docs)**: B1-Z1 mtds_pipeline_check_process_killed:174-185 → 3 follow-ups as todos; B3-A2/Z1
+   mtds_pipeline_check_enumerate_shards (planning, zero checkboxes) → add `- [ ] [SCRIPT] P1` todo for option (b)
+   per-asset-group fallback.
+8. **Inverse-flip**: B3-M3 honest_coverage:474-475 [x] on "NOT closed" item → un-flip/annotate after reading.
+9. **Epic count drift**: B0-C6/B3-C3 cefi_master:631 "5 active plans" vs 21 — check
+   scripts/plans/populate_epic_bodies_2026_05_21.py for a scoped regen before hand-fixing.
+10. **Archive candidates (cross-tranche grep REQUIRED first)**: coinbase_cde (3/3 [x], sha-evidenced) —
+    features_universe_filter NOT archive-ready (B0-C2 premature LC_TARBALL flip unresolved).
+11. **last_updated bumps (P3)**: cefi_4surface:40, defi_pipeline_finalize:26, cefi_onchain_perp:42, ml_training:35.
+12. **C3 [P3] cefi_4surface:113-116** box rename (enumeration half only) — optional.
+
+**GRACE-ONLY (report, never edit):** aggregated_sources (C1/C2/C3/C5/C6/S1 + 15 dangling refs), closeout (T-C1/C4/S2),
+okx_futures M1, data_completion_cefi refs, cefi_satellite_batch7 refs,
+book_snapshot5/derivative_ticker/liquidations/mtds_live_mode orphan fixes, mtds_qg_red refs, cefi_track7/e4_e8 refs, all
+3 terminal-status violations (sit_stamp, sports_mtds_oom, omniroute superseded — omniroute:16:22 touch).
+
+**STEP 6 routing candidates (already enumerated):** T-C1 (ASTER closeout Track 6 vs aggregated_sources — P1 normative
+pair, both grace), T-C2 (archived cutover ALL-COMPLETE vs fleet truth), H1 (cefi_ml deferred P2 no owner), B2-C6 (units
+mix — ambiguous), epic regen scope question.
+
+**STEP 7 mechanics:** prettier touched .md → stage BY NAME → commit `docs(plans): reconcile ...` → push
+plan_reconciler/agt-bf8439 →
+`gh pr create --base live-defi-rollout --head plan_reconciler/agt-bf8439 --title "docs(plans): daily reconciliation agt-bf8439 [review]"`
+→ POST /api/plan_health/result with full JSON → STEP 8 loop-and-wait → POST /api/slots/12/done.
+
+## Deferred work after 2026-08-06
+
+| item                                                     | state/why deferred                                       | blocked-on             |
+| -------------------------------------------------------- | -------------------------------------------------------- | ---------------------- |
+| STEP 4 adversarial verification of ~30 candidates        | Not done — hunters still returning (B4, codex-alignment) | hunter completion      |
+| STEP 5 apply of 12 writable fix groups (above)           | Not done                                                 | STEP 4 verdicts        |
+| STEP 6 route (T-C1/T-C2/H1/units/epic-regen)             | Not done                                                 | STEP 4                 |
+| STEP 7 PR + result POST                                  | Not done                                                 | STEP 5/6               |
+| STEP 8 /done                                             | Not done                                                 | STEP 7                 |
+| Grace-deferred fixes (~25 refs/orphans in 13 grace docs) | Cannot be done yet — 12h grace window                    | elapsed time; next run |
+| All 3 terminal-status-archived violations                | Cannot be done yet — grace (touched today)               | elapsed time; next run |
+
+**Next item: collect B4 + codex-alignment hunter results, then run the STEP-4 verifier fan-out (shas:
+instruments-service@1284606a, market-tick-data-service@8a6bbc97 via `git merge-base --is-ancestor` in
+../instruments-service / ../market-tick-data-service; archive-cross-tranche greps for the 2 archive candidates).**
+
+## Lessons learned this run (don't re-learn)
+
+- **Issue-doc frontmatter schema (pre-commit enforced)**: `status` ∈ {blocked, false-positive, open, resolved,
+  superseded} (NOT `active`); `nature` is SCALAR (list crashes docspec `_validate_value` — TypeError unhashable);
+  required keys: parent_epic, priority, assigned_vm; `resolved_by:` present-but-empty; `related:` must be leading-slash
+  `/plans/...`.
+- **Grace computation one-liner**:
+  `for f in $(ls plans/active/*.md plans/active/issues/*.md); do ct=$(git log -1 --format=%ct -- "$f"); [ -n "$ct" ] && [ "$ct" -ge $(( $(date +%s) - 43200 )) ] && echo "$f"; done`
+  — 316 docs in grace today; the corpus is heavily churned (bulk touches at 18:38 UTC).
+- **check_reference_paths.py blind spot (found + documented by M)**: relative `plans/...` refs are invisible to BOTH
+  format and existence checks (`BARE_MD_RE` matches no-slash names only) — 36+ dangling cefi refs this run; also
+  `find_moved_doc_referrers.sh` misses the same class. Tooling-fix follow-up filed in M's report.
+- **check_ag_closeout_linkage.py**: orphan = fails BOTH BFS≤3 over resolvable related: AND filename-stem mention in
+  family docs; fixing all 6 cefi orphans returns the corpus gate to the 69 baseline.
+- **Finalize body banner vs frontmatter**: 2026-07-30 "no double gate" ruling → finalizes are active-from-the-start; a
+  "draft — NOT dispatched" body banner on a finalize is the STALE side (frontmatter active is correct).
+- **seed_frontmatter.py refuses foreign-dirty files** — hand-edit instead.
+- **Plan reviewer notes**: aggregated_sources digest drift vs sources is chronic (its own :793 todo tracks it; every
+  digest entry needs re-verification against the source doc before citation).
