@@ -151,12 +151,19 @@ for **up to 2 MINUTES**: main agent ANSWERS → apply + finish; main replies "ex
 → STOP + free the slot (the question persists for the operator; their answer re-dispatches). Do NOT exceed the 2-min
 bound — this is shared CI-firefighter capacity.
 
-PING THE AUTHORING SLOT on COMPLETION (outcome FYI to the originator — distinct from the dashboard alert above):
+PING THE AUTHORING SLOT on COMPLETION (outcome FYI to the originator — distinct from the dashboard alert above). **Skip
+this step if `$AUTHORING_SLOT` is not a real numbered slot** — `/api/slots/{slot_id}/message` requires an integer path
+param and 4xxs on anything else (known non-numeric sources: the `ci-reconcile` sentinel and the empty string;
+`github_actions_billing_wall_recurrence_2026_07_29.md`). There is no real originator to notify in that case — the
+dispatch-time Slack alert (`escalation.py`'s `_notify_authoring_slot`, fired when this wall was first dispatched)
+already covers the FYI:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
-  -H 'Content-Type: application/json' \
-  -d '{"content": "conflict_resolver '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — resolved+auto-merge-enabled, closed-superseded, or stopped: needs operator (asked via /blocked) because ...>"}'
+if [[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]; then
+  curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
+    -H 'Content-Type: application/json' \
+    -d '{"content": "conflict_resolver '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — resolved+auto-merge-enabled, closed-superseded, or stopped: needs operator (asked via /blocked) because ...>"}'
+fi
 ```
 
 COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20` A1,

@@ -116,10 +116,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 ## Todos
 
 - [x] ✅ [DEVOPS] P2. **Roll the cloudbuild empty-tag guard out to the consumer repos — RE-SCOPED per operator ruling
-      (2026-07-30) into two explicit, ordered steps.** The original one-line todo assumed a clean
-      `rollout-cloudbuild.py --apply` sweep; the would-drop-content guard that shipped 2026-07-28
-      (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so the rollout mechanism it assumed
-      no longer exists. Do the steps in order — step 2 is not startable for a repo until step 1 has cleared that repo.
+      (2026-07-30, `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`) into two explicit,
+      ordered steps.** The original one-line todo assumed a clean `rollout-cloudbuild.py --apply` sweep; the
+      would-drop-content guard that shipped 2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the
+      19 consumers, so the rollout mechanism it assumed no longer exists. Do the steps in order — step 2 is not
+      startable for a repo until step 1 has cleared that repo.
   1. **Resolve the per-repo drift first.** Ground truth is
      `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` (seeded 2026-07-28): **15 of 19 consumers carry
      content their mapped template does not** — `deployment-api` (26), `strategy-service` (13), `features-service` (12),
@@ -181,8 +182,18 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `github_actions_operator_gated_followups_2026_07_17.md` (`[VERIFY] P2` + `[REVIEW] P2`). Batch4 **D4-2** /
     **D4-3**, both recorded there as "held for a cleaner batch-5 extraction".
 
-- [ ] [BACKEND] P3. **Fix the structural `authoring_slot="ci-reconcile"` ping mismatch.** Every bare-LDR (`pr_number=0`)
-      `ldr_qg_failure` escalation the scheduler raises passes the literal string `authoring_slot="ci-reconcile"`
+- [x] ✅ [BACKEND] P3. **DONE-ELSEWHERE 2026-08-06 (duplicate of batch1's completed item) + structural fix completed.**
+      The core fix shipped 2026-08-03 as `unified-trading-pm@41f193405` (flipped in batch1): Direction 1 — `cicd.md`'s
+      completion-ping step now guards on `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`, skipping non-numeric sentinels
+      (`ci-reconcile`, empty string). Verified here (slot 14) by faithful simulation of the scheduler-raised bare-LDR
+      completion path: `AUTHORING_SLOT=ci-reconcile` emits no POST (no 400), a numeric slot still pings, and the server
+      4xxs any non-numeric slot path (`/api/slots/ci-reconcile/message` → 422) — confirming the bug the guard avoids.
+      Completed the structural fix this session by extending the same guard to `agents/conflict_resolver.md` +
+      `agents/data_pipeline_failure.md` (the identical unguarded completion-ping pattern on the other two
+      authoring-slot-pinging worker docs; `authoring_slot` is an unvalidated `str` at the escalate API, so the bug can
+      recur there). Both repos' `quality-gates.sh` green. Original text preserved below for record. **Fix the structural
+      `authoring_slot="ci-reconcile"` ping mismatch.** Every bare-LDR (`pr_number=0`) `ldr_qg_failure` escalation the
+      scheduler raises passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a numbered slot — so the mandated "ping the authoring slot
       on completion" step in `unified-trading-pm/agents/cicd.md` always 400s (`POST /api/slots/ci-reconcile/message` →
       `int_parsing`, the path expects an int; reproduced `agt-69e9e4`/slot 14, 2026-07-29). The server's own
@@ -389,3 +400,13 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   flipped with the build id cited. Todo 1 done_definition met: (1) markers classified (a)/(b)/(c) in source doc Progress
   Log; (2) guard present in every consumer; (3) end-to-end proof with build id; (4) drift checker green.
   `check_cloudbuild_template_drift.py` EXIT 0.
+- **2026-08-06 (batch5 todo 3, slot 14 — backend_engineer) — TODO 3 COMPLETE (done-elsewhere + structural completion).**
+  This todo duplicated batch1's already-completed item: the source doc's 3 prevention todos migrated to batch1 on
+  2026-08-02, and batch1 flipped the `authoring_slot="ci-reconcile"` 400 item 2026-08-03 with the fix shipped as
+  `unified-trading-pm@41f193405` (Direction 1 — `cicd.md`'s completion-ping guards on
+  `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`). Verified (not code-read-alone): faithful simulation of the scheduler-raised
+  bare-LDR completion path with `AUTHORING_SLOT=ci-reconcile` emits no POST; numeric `14` still fires; the server 4xxs
+  `/api/slots/ci-reconcile/message` (422), confirming the 400 the guard prevents. Completed the STRUCTURAL fix by
+  extending the same guard to `agents/conflict_resolver.md` + `agents/data_pipeline_failure.md` (same unguarded ping;
+  `authoring_slot` is `str`-unvalidated at the escalate API). PM `quality-gates.sh` green; agent-orchestrator
+  `quality-gates.sh` green. Sibling guards + flip shipped in this session's commit.

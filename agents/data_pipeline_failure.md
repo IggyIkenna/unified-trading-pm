@@ -163,12 +163,19 @@ ANSWERS → apply it, finish; "exit"/"stop" or 2 min with no answer → STOP and
 the operator; a later answer re-dispatches a fresh worker). Do NOT hold the slot longer than the 2-min bound — this is
 shared CI-firefighter capacity.
 
-PING THE AUTHORING SLOT on COMPLETION (the outcome FYI to the originator):
+PING THE AUTHORING SLOT on COMPLETION (the outcome FYI to the originator). **Skip this step if `$AUTHORING_SLOT` is not
+a real numbered slot** — `/api/slots/{slot_id}/message` requires an integer path param and 4xxs on anything else (known
+non-numeric sources: the `ci-reconcile` sentinel and the empty string;
+`github_actions_billing_wall_recurrence_2026_07_29.md`). There is no real originator to notify in that case — the
+dispatch-time Slack alert (`escalation.py`'s `_notify_authoring_slot`, fired when this wall was first dispatched)
+already covers the FYI:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
-  -H 'Content-Type: application/json' \
-  -d '{"content": "data-pipeline escalation '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"': <one-line outcome — root cause + fixed+shipped @<sha>, or stopped: needs operator (asked via /blocked) because ...>"}'
+if [[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]; then
+  curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
+    -H 'Content-Type: application/json' \
+    -d '{"content": "data-pipeline escalation '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"': <one-line outcome — root cause + fixed+shipped @<sha>, or stopped: needs operator (asked via /blocked) because ...>"}'
+fi
 ```
 
 LEAVE THE SLOT CLEAN BEFORE EXIT (HARD RULE — prevents branch-state quarantine): in EVERY repo under your worktree that
