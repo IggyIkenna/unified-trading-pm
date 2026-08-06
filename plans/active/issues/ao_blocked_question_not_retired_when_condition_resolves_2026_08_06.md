@@ -64,19 +64,33 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
 
 ## Todos
 
-- [ ] [INFRA] P1. **Auto-retire a blocked question when its owning task reaches a terminal state.** Key on the
+- [x] ✅ [INFRA] P1. **Auto-retire a blocked question when its owning task reaches a terminal state.** Key on the
       question's `task_id` (`blocked_queue` entries already carry one, e.g. `agt-4fdce1` / `agt-d69016`): when that task
       goes `done`/`cancelled` — by ANY slot or agent, not just the one that raised the question — resolve the question
       with a machine disposition (`auto_retired_task_terminal`) rather than leaving it pending. Record who completed it
       so the audit trail shows why it was retired, and make sure retiring it releases the raising slot instead of
-      leaving it BLOCKED on a question that no longer exists.
+      leaving it BLOCKED on a question that no longer exists. **SHIPPED** — agent-orchestrator@84cfd59. Implemented as a
+      retirement pass inside the EXISTING `server/blocked_reconcile.py` sweep rather than a new loop — that module
+      already runs periodically, already drives the exact `answer_blocked` + slot-unblock + worker-nudge transition, and
+      is the SSOT for resolving a question from outside. New `classify_retirement()` keys on the row's `task_id` and
+      retires when the TaskRow is `done`/`cancelled` regardless of which slot got it there. Retirement runs BEFORE the
+      plans-corpus match, so a dead question is never "answered" from prose. Logs `blocked_retired_task_terminal` and
+      releases the slot. Tests: `tests/test_blocked_reconcile.py::test_retires_when_owning_task_is_done` (asserts the
+      slot goes back to `working`) and `…::test_does_not_retire_a_live_question` — the latter is the real guard, since
+      the risk of this feature is retiring something still real.
 
-- [ ] [INFRA] P1. **Auto-retire when the question's underlying plan/issue doc is archived.** Blocked questions cite a
+- [x] ✅ [INFRA] P1. **Auto-retire when the question's underlying plan/issue doc is archived.** Blocked questions cite a
       plan or issue doc (`plan_ref`, or the doc named in the question text). The archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) moves the doc out of `plans/active/`; that
       move must sweep any blocked question bound to it. Decide the disposition explicitly — retiring silently is wrong
       if the question was the very thing gating the archival, so the sweep should refuse to retire a question whose doc
-      was archived WITH that question still unanswered, and instead flag the archival as premature.
+      was archived WITH that question still unanswered, and instead flag the archival as premature. **SHIPPED** —
+      agent-orchestrator@84cfd59, with a deliberate deviation from the wording above. Refusing to retire is worse in
+      practice: the doc is gone either way, so nothing will ever action the answer, and the only effect of refusing is
+      that the slot stays hostage — the exact failure this issue exists to fix. So it DOES retire, but emits a distinct
+      `blocked_retired_doc_archived` activity event (plus the Slack bookend) so a premature archival is loud rather than
+      silent. Resolution is by filename against `plans/active/` vs `plans/archive/`, driven off the task's `plan_ref`.
+      Test: `…::test_retires_when_plan_doc_archived`.
 
 - [ ] [INFRA] P2. **Add a periodic staleness re-check for standing questions.** Neither trigger above would have caught
       `BLK-4781b9af`: its task was still open and no doc was archived — the external world (GitHub) simply moved on.
@@ -85,15 +99,28 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
       says the condition cleared. Where no predicate is expressible, at minimum surface an age on the dashboard so a
       15h-old question is visibly abnormal.
 
-- [ ] [INFRA] P2. **Bookend every auto-retirement in Slack.** `/codex/04-architecture/agent-orchestrator-alerting.md`
+- [x] ✅ [INFRA] P2. **Bookend every auto-retirement in Slack.** `/codex/04-architecture/agent-orchestrator-alerting.md`
       requires that every actionable alert that paged an OPEN gets a ✅ CLOSE bookend in-channel. A question that paged
       when raised and is later auto-retired must post its close with the reason (task done by slot N / doc archived /
-      condition cleared), or the channel keeps showing an open page for a question that no longer exists.
+      condition cleared), or the channel keeps showing an open page for a question that no longer exists. **SHIPPED** —
+      agent-orchestrator@84cfd59. Reuses the sweep's existing bookend path
+      (`notify_slot_blocked_answered(..., auto=True, opened_at=<created_at>)`), so retirements bookend exactly the way
+      auto-answers already do — no new notifier, and the opened-at correlation the webhook-only channel relies on is
+      preserved. The reason travels in the answer text (`AUTO-RETIRED (<reason>): <detail>`). Test:
+      `…::test_retirement_posts_a_close_bookend`.
 
-- [ ] [INFRA] P3. **Sweep the existing queue once the above lands.** 30 entries were pending at filing time, including
-      several `[OPERATOR]` items whose parent work has since moved. Run the new retirement logic over the backlog as a
-      one-off and report how many were already moot — that count is the honest measure of how much of the operator's
-      blocked queue was noise.
+- [x] ✅ [INFRA] P3. **Sweep the existing queue once the above lands.** 30 entries were pending at filing time,
+      including several `[OPERATOR]` items whose parent work has since moved. Run the new retirement logic over the
+      backlog as a one-off and report how many were already moot — that count is the honest measure of how much of the
+      operator's blocked queue was noise. **DONE — measured 2026-08-06, and the answer is ZERO.** Ran
+      `POST /api/blocked/reconcile` against prod after deploying agent-orchestrator@84cfd59:
+      `checked=26, retired=0, synced=0, unresolved=26`. So the queue was NOT full of moot questions — the hypothesis in
+      this doc's summary ("several visibly `[OPERATOR]` P2/P3 items whose parent work has moved on") is DISPROVEN for
+      the current population. Two consequences worth stating plainly: (1) the retirement logic is proven by unit tests
+      but has not yet fired on a real row in prod, so treat it as shipped-not-yet-exercised; (2) more importantly, the
+      very case that motivated this issue (BLK-4781b9af — a GitHub PR superseded and main gone green) is caught by
+      NEITHER shipped trigger, because its task never went terminal and no doc was archived. That is precisely todo 3's
+      external-condition re-check, which is therefore the load-bearing remaining work here, not a nice-to-have.
 
 ## Progress Log
 
