@@ -172,14 +172,36 @@ context-checked by H10 Part B).
 - parked_in_issue_doc: this findings doc
 - agent_skips: 0 (all items routed or applied; grace-skipped items explicitly recorded for next run)
 
-## Run progress — pre-compact checkpoint 2026-08-06 20:31 UTC
+## Run progress — pre-compact checkpoint 2, 2026-08-06 (late session)
 
-**State**: STEP 3 in flight — 10 read-only hunters launched in parallel (all model=sonnet, full
-SUB_AGENT_MANDATORY_RULES injected). Results arrive as notifications; each feeds STEP 4 (adversarial verify: refuter +
-confirmer, tiebreaker on splits; HARD-evidence bar for flips = sha reachable on `origin/live-defi-rollout` via
-`git merge-base --is-ancestor`, or artifact live via grep-then-READ). Then STEP 5 (apply on review branch only), STEP 6
-(route via `/blocked` + file here), STEP 7 (PR plan_reconciler/agt-24f4b0 → live-defi-rollout), STEP 8 (/done when no
-open questions).
+**State**: STEP 3 done (10 hunters), STEP 4 done for all mechanical/hard-evidence items, STEP 5/6 done (commit
+`751b07578`, 30 files), STEP 7 done (PR #2397 + plan-health result POSTed). **In flight**: adversarial REFUTER/CONFIRMER
+pair verifying the 9 applied flips (agents `a9bc71675ba87031b` + `a92c401f0086a9fc1` — completion re-invokes this
+session). **Awaiting**: operator answers to BLK-997409b9 (track5/v10 unpark flag), BLK-555a42f7 (KALSHI a/b/c),
+BLK-68917b3e (lst_oracle unlock+archive) — read via GET /api/slots/7/messages.
+
+**Next item** (resume here): collect the pair's verdicts → apply any REFUTE follow-up fixes on the review branch →
+collect operator answers → apply → `POST /api/slots/7/done` with
+`{"task_id": "", "sha": "<head>", "evidence": "...", "one_shot_complete": true}` — MUST NOT exit without /done.
+
+## Lessons (2026-08-06 run — carry forward)
+
+- **Bash CWD races between parallel calls**: a `cd` in one call changes CWD for OTHERS in the same batch (struck twice
+  this run — sed/git-log silently ran in the wrong repo). EVERY Bash call must self-`cd <abs>`.
+- **Edit requires Read-tool registration**: sed/grep/rg do NOT register a file for the Edit tool — a `Read` (any window)
+  must precede the first Edit of a file in the session.
+- **plan-health result route**: `POST /api/plan-health/result` (HYPHEN, not `_`), header
+  `X-Orchestrator-Secret: $ORCHESTRATOR_INTERNAL_SECRET` (present in dispatch env), body
+  `{"dispatch_id": ..., "findings": {"contradictions": [...], "doc_drift": [...]}}` — the GHA Haiku shape.
+- **curl -d payloads with embedded single quotes break shell quoting** — write the JSON to a temp file and use
+  `--data @file` (then delete the file).
+- **lst_rate flips were line-cap-gated for a week**: the sibling findings doc's todo-2 gate ("after todo 1 split lands")
+  is now moot (doc at 992L, under cap) — flips applied directly; sibling doc left untouched (grace).
+- **`[OPERATOR]`-tag retag rule bites in reverse**: perp_daily_ctx's [OPERATOR-DECISION] P3's premise resolved by an
+  OLDER ruling (07-28) — grep the cited doc's RESOLVED banner before trusting a "still-open" claim (H5 caught it).
+- **v10 GATE MET ≠ per-instrument shard-key progress**: archive-complete plans can still leave dispatch flags genuinely
+  unresolved (track5 unpark condition) — annotate + route, don't flip.
+- **Hunter H8 died mid-response on a connection error** — SendMessage resume with context intact worked cleanly.
 
 **Hunter roster (10)**:
 
