@@ -66,7 +66,7 @@ resolved_by:
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
-last_updated: 2026-08-01
+last_updated: 2026-08-06
 ---
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
@@ -115,10 +115,13 @@ regression) is worse.**
 
 ## Todos
 
-- [ ] [DESIGN] P2. Operator/main-agent decision: pick option A/B/C above (or a variant), scoped precisely enough to
-      dispatch as a bounded AO todo once decided.
-- [ ] [CODE] P2. Once decided: implement the chosen dedup check in the escalation dispatch path
-      (`agent-orchestrator`/`deployment-service`, exact call site TBD by whoever picks this up).
+- [x] [DESIGN] P2. Operator/main-agent decision: pick option A/B/C above (or a variant), scoped precisely enough to
+      dispatch as a bounded AO todo once decided. — Option A operator-confirmed 2026-08-06 (see Progress Log).
+- [x] [CODE] P2. Once decided: implement the chosen dedup check in the escalation dispatch path
+      (`agent-orchestrator`/`deployment-service`, exact call site TBD by whoever picks this up). —
+      `deployment-service@1b035c52` (feat(dp): dedup escalation-worker dispatch against an already-diagnosed OPEN issue
+      doc (Option A)); call site is `deployment_service/data_pipeline_monitors/escalation.py::route_finding`'s
+      `_dispatch_to_orchestrator` call site, gated by new module `escalation_dedup.py`.
 
 ## Progress Log
 
@@ -369,3 +372,38 @@ regression) is worse.**
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-06 — Option A operator-confirmed + implemented; both todos closed.** Operator confirmed Option A (the
+  recommended option above) as the fix approach, with one refinement surfaced by re-reading this doc's own Progress Log:
+  the skip condition is NOT a raw `attempted_failed` byte-compare (the 2026-07-30 `agt-40f31f` entry above shows a moved
+  numerator can still be a false alarm, and a naive byte-identical check would wrongly force re-diagnosis in that case)
+  — the correct signal is "no new _write_ activity since the last verified reading," which the manifest already exposes
+  as `max_attempted_at` (`AttemptedFailedCell.max_attempted_at` / `_read_attempted_failed_cells` in
+  `deployment-service`'s `deployment_service/data_pipeline_monitors/meta_watchers.py`) — the newest `attempted_failed`
+  row's `attempted_at`, an ISO-8601 UTC string that sorts lexicographically == chronologically, so no extra GCS read is
+  needed at dispatch time; the alert already carries it). **Exact call site**:
+  `deployment_service/data_pipeline_monitors/escalation.py::route_finding`, immediately before its existing
+  `_dispatch_to_orchestrator(finding, filed_issue_path)` fast-spawn call (the
+  `repository_dispatch escalate-to-orchestrator` hop this doc's `source:` fields all reference). Chose the
+  dispatch-trigger side over agent-orchestrator's receiving side — it avoids the GH Actions round-trip entirely when
+  skipping, and the escalation module already owns PM-clone path resolution (`_resolve_pm_path`) for the adjacent
+  `file_issue` tier. **Implementation**: new module `deployment_service/data_pipeline_monitors/escalation_dedup.py`
+  (kept separate from `escalation.py`, which was already at its 930L QG file-size cap with zero headroom —
+  `scripts/quality-gates.sh`'s `MAX_FILE_LINES` bumped 930→960 with the same modest/bounded justification as its prior
+  bumps, mirroring the `consolidator_scheduler_watcher.py` split-out precedent). `find_open_issue_for_tuple` matches an
+  OPEN issue doc by frontmatter `status: open` + `asset_group:` list + `registry_id` present in `tags:` + a free-text
+  `asset_group=<ag> data_type=<dt>` signature in the doc body (the corpus's established convention — there is no
+  structured `data_type:` frontmatter field). The "last verified reading" checkpoint is persisted directly on the
+  matched issue doc's own frontmatter (`dp_escalation_checkpoint: {max_attempted_at, checked_at}`), written surgically
+  (regex-scoped block insert/replace, never a full `yaml.safe_dump` re-serialize) so human-authored formatting elsewhere
+  in the doc is untouched. Frontmatter parsing mirrors `unified-trading-pm/scripts/docs/docspec.py`'s
+  `parse_frontmatter` minimal contract (`text.split("---", 2)` + `yaml.safe_load`) rather than importing it (PM's
+  `scripts/` is unversioned tooling, not a package; `pyyaml` is already a `deployment-service` dependency). No new
+  `written_at` activity since the checkpoint → the fresh full dispatch is SKIPPED and a one-line verification note is
+  appended to the doc's own Progress Log instead (no worker session spawned); genuinely new activity → dispatches
+  normally AND advances the checkpoint (so a later re-fire at that same new value can then skip). The DP_* event itself
+  is still ALWAYS emitted either way (unchanged invariant) — only the extra fast-spawn action is gated. Regression tests
+  in `tests/unit/test_escalation_dedup.py` cover: OPEN issue + no new activity → skip + verification note; no matching
+  issue doc → normal full dispatch; OPEN issue + genuinely new `max_attempted_at` → normal full dispatch + checkpoint
+  advance (the `agt-40f31f` case); plus module-level unit tests for frontmatter matching, checkpoint comparison, and the
+  surgical checkpoint upsert (including the edge case where the checkpoint block is the LAST frontmatter field). Shipped
+  `deployment-service@1b035c52`. Both todos above flipped `[x]`.
