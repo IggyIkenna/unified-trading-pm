@@ -215,6 +215,15 @@ run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet
 # terminal-status doc, never on the pre-existing backlog being cleared by
 # terminal_status_archival_backlog_sweep_2026_07_25.md.
 run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)" hard python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet
+# Create-only archival-commit guard (issue 2026-08-06) — `git commit --only -- <new-path>` after a
+# `git mv` commits the ADD side of a rename but silently EXCLUDES the DELETE side, leaving a live
+# plans/active/issues/<stem>.md twin next to the archive copy that then diverges. This ABSOLUTE check
+# hard-fails on ANY plans/archive/issues/*.md whose active twin also exists in the same tree (the 5
+# known live pairs + any new create-only residue). Distinct from the terminal-status ratchet above
+# (that only catches unarchived terminal docs; this catches the twin that the create-only commit
+# leaves behind). The 5 current pairs are reconciled by the issue doc's P2 todo; never lower this to
+# advisory to make the sweep pass.
+run_check "Create-only archival guard (archive/active duplicate pairs)" hard python3 "$SCRIPT_DIR/check_create_only_archive_commits.py" --quiet
 # assigned_vm:NA corpus size ratchet (operator directive 2026-07-27) — the NA backlog (doc count +
 # open-todo count over assigned_vm:NA + status in {active,open}) must not grow unattended. Most NA
 # content is genuinely operator-gated/judgment work and correctly stays NA — the point is not to
