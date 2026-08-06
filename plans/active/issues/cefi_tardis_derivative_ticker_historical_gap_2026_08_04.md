@@ -67,9 +67,34 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       Per-VM manifest: 68,313 entries. Total records across gap: ~1.4B+. Evidence: run.log Processed date markers for
       all 94 days, GCS objects confirmed, per-VM manifest at
       gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/cefi-fwd-20260804-021235.parquet.
+- [ ] [DATA] P1. **RE-OPENED 2026-08-06 (slot-9) — the backfill above ran its 94 days but did NOT land raw
+      `derivative_ticker` for the 6-8 CEX-Tardis target venues.** Bounded coverage probe (reader-exact path
+      `raw_tick_data/by_date/day=…/pipeline_mode=batch_tardis/asset_group=cefi/venue={7 mapped}/instrument_type=perpetual/     data_type=derivative_ticker/`,
+      83 days 2026-05-16→08-06, list-only, not a corpus walk): ~0 objects for
+      `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`DERIBIT` across 2026-05-23→2026-08-06 —
+      only tiny remnants (a few coins 06-22→06-27, `BITFINEX-FUTURES` 07-22/07-24). Root cause: those venues' Tardis
+      instrument-store lookups 404'd during the run (this doc's own "5 venues consistently 404 on instrument-store"
+      note), so their shards were never captured; the resumed forward cron (08-03+) also shows 0 for them. Pre-gap
+      window (05-16→05-22) retains the original data. **Action: root-cause the instrument-store 404 for these venues,
+      re-run the backfill window 2026-05-23→2026-08-02, AND verify the resumed cron captures them going forward — the
+      raw input must land before `defi_cefi_venue_chain_axis_contamination-011`'s corpus recompute (gated, NOT run) can
+      proceed.** Evidence: coverage matrix in this doc's 2026-08-06 Progress Log entry.
 
 ## Progress Log
 
+- **slot-9 2026-08-06 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-011`)**: **CORRECTION — the ✅
+  backfill todo above overstates what landed.** The VM completed all 94 days, but the raw `derivative_ticker` for the
+  CEX-Tardis target venues (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES/DERIBIT) is essentially ABSENT
+  from the cefi bucket at the corpus reader's exact path across the whole gap window + post-gap days. Coverage matrix
+  (list-only, reader-exact prefix, 7 mapped raw venues × 83 days 2026-05-16→08-06): pre-gap 05-16→05-22 holds the
+  original 247-492 objects/venue; 05-23→08-06 is ~0 everywhere except a few coins on 06-22→06-27 (2-3 objects) and
+  BITFINEX-FUTURES on 07-22/07-24 (41-60). The venue dirs that DID get populated (COINBASE-FUTURES, ASTER,
+  EXTENDED-STARKNET, LIGHTER-ZKSYNC, OKX-FUTURES) are NOT the corpus-reader venues — the ~1.4B-record claim is spread
+  across those, not the target venues. The backfill's own note ("5 venues consistently 404 on instrument-store:
+  BINANCE-FUTURES/BYBIT/DERIBIT/BINANCE-DELIVERY/OKX") is the smoking gun — those shards were never captured, and the
+  resumed forward cron (08-03→08-06) shows the same 0. The cited per-VM manifest
+  (`_index/per_vm/cefi-fwd-20260804-021235.parquet`) now 404s (not found — likely cleaned up post-run). This blocks the
+  perp-funding corpus recompute; follow-up todo added above.
 - **slot-9 2026-08-04**: `launch-cefi-forward-poll.sh 2026-05-01 2026-08-02` already launched
   (`cefi-fwd-20260804-021235`, e2-standard-8, `asia-northeast1-c`, started ~2026-08-04T02:12:40Z) — covers both
   per-venue gap-starts (2026-05-01 and 2026-05-22) through 2026-08-02 in one sequential single-VM pass, respecting the
