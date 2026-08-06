@@ -53,29 +53,39 @@ context_scope:
 
 ### From `prediction_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- Prediction manifest + data canonicalisation (legacy->canonical single-walk, L3 owner for prediction))
 
-- [ ] [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd`
-      at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed
-      empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this
-      walk** (CODE side — writers emit `asset_group=` — already shipped via archived
-      `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only). Server-side
-      `gcs_copy_object` (layout-aware: prediction = `raw_tick_data/`/`processed_candles/`). RUN ON A VM via
-      `VM_TASK=canonical-migration` (gated on L0 tarball-prune fix) OR locally if object count is small (P0 audit
-      decides). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
-
-- [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
-      `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately). **(MIGRATED FROM:
+- [ ] [DATA] P0. **SUPERSEDED (plan_reconciler agt-65e60a, 2026-08-06) — see "2026-07-13 — Plan A
+      `canonical_question_group` OBJECT-LAYER migration" below, which explicitly states it "supersedes the C0/
+      E-checklist copy-walk above for the _object shape_ question; the copy-walk itself already ran" and confirms (same
+      section, "Current state") the legacy buckets are 404/gone — there is no legacy-bucket input left for this item to
+      act on. Real live scope is the "Phased next steps" section instead. Left unchecked rather than `[x]` since the
+      copy-walk's later section, not this literal item, is what actually shipped.** C0 ONE bundled walk: copy legacy
+      `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd` at the canonical path (env-tier +
+      `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed empty-reasons.
+      **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this walk** (CODE
+      side — writers emit `asset_group=` — already shipped via archived `venue_axis_asset_group_vocabulary_2026_04_25`;
+      this is historical data+manifest only). Server-side `gcs_copy_object` (layout-aware: prediction =
+      `raw_tick_data/`/`processed_candles/`). RUN ON A VM via `VM_TASK=canonical-migration` (gated on L0 tarball-prune
+      fix) OR locally if object count is small (P0 audit decides). **(MIGRATED FROM:
       `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
-      `kalshi_*`) on every prediction cell in THIS walk (path/`pipeline_mode` → `source` column), re-consolidate into
-      the `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
-      `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
-      VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
-      addition AND its cells stamp `kalshi_*` as source. Do NOT open a separate prediction source walk. **[CODE-WIRED —
-      slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is already in place:
-      UAC `SOURCE_PRIORITY` carries `("prediction","trades")=["polymarket_clob"]`, `("prediction","book_snapshot")`,
-      `("prediction","prediction_canonical_question_group")`, and
+- [ ] [DATA] P0. **SUPERSEDED (plan_reconciler agt-65e60a, 2026-08-06) — same reason as the C0 item above**: the
+      "2026-07-13" combined-design section supersedes this rider too (no interim pure-copy step, per that section's own
+      operator ruling). Real live scope is "Phased next steps." C-pipeline_mode RIDER: the `pipeline_mode=` partition
+      for prediction lands in THIS walk (satisfies `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do
+      NOT run it separately). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **SUPERSEDED (plan_reconciler agt-65e60a, 2026-08-06) — same reason as the C0 item above.** Real live
+      scope is "Phased next steps"; verify that section's source-stamping requirement covers this rider's intent before
+      assuming it's fully dropped. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` /
+      `polymarket_gamma_api` / `kalshi_*`) on every prediction cell in THIS walk (path/ `pipeline_mode` → `source`
+      column), re-consolidate into the `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays
+      distinguishable). Closes `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**:
+      Polymarket/Kalshi remain VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when
+      Kalshi lands it is a venue addition AND its cells stamp `kalshi_*` as source. Do NOT open a separate prediction
+      source walk. **[CODE-WIRED — slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE
+      foundation is already in place: UAC `SOURCE_PRIORITY` carries `("prediction","trades")=["polymarket_clob"]`,
+      `("prediction","book_snapshot")`, `("prediction","prediction_canonical_question_group")`, and
       `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]` (+ `EMISSION_LATENCY_MS_BY_SOURCE` entries), and the
       UTL `manifest_writer.add()/record_captured_*` AUTO-STAMP the sole external source via `default_source` for
       single-source cells (no `MissingSourceError` — `source_required` is False). So **live/new writes already stamp
@@ -85,10 +95,11 @@ context_scope:
       2026-06-03). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
-      `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; the API source
-      per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal `bucket_name_ssot…`
-      Phase 6/7 waits on for the prediction legacy bucket decommission. **(MIGRATED FROM:
+- [ ] [DATA] P0. **SUPERSEDED (plan_reconciler agt-65e60a, 2026-08-06) — same reason as the C0 item above.** Real live
+      scope is "Phased next steps." Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS =
+      0**; canonical `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank;
+      the API source per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal
+      `bucket_name_ssot…` Phase 6/7 waits on for the prediction legacy bucket decommission. **(MIGRATED FROM:
       `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
@@ -143,9 +154,15 @@ context_scope:
 > market_lifecycle, …) — this migration's actual scope is the **`trades`/`prediction_trades` subset of that corpus
 > only** (see "Scope: which data_type" below), not the full 5.42M.
 
-**Codex SSOTs for this section**: `/codex/02-data/per-asset-group-bucket-layouts.md` ~L121 ("PREDICTION (post-Plan A
-target)" table row — the ratified object shape); `/codex/02-data/pipeline-mode-partition.md` § "Predictions migration
-(Plan A)"; `/codex/02-data/availability-manifest-and-data-status.md` § "Bundled data_types"
+**Codex SSOTs for this section** (corrected by plan_reconciler agt-65e60a 2026-08-06 — the previous citation pointed at
+a stale table row and a section title that doesn't exist in the cited doc; this doc's OWN "Current state" above already
+describes the corrected reality, it was the citation that was wrong): `/codex/02-data/prediction-schema-paths.md` § "⚠️
+SHIPPED-DESIGN CORRECTION (slot-5, 2026-06-03)" (raw objects stay per-CID; the `canonical_question_group=` bundle is
+manifest-only, never a physical object path — supersedes `/codex/02-data/per-asset-group-bucket-layouts.md` ~L121's
+PREDICTION post-Plan-A row, which still shows the pre-correction bundled-object shape and needs a codex-side fix, filed
+separately) and § "Migration (predictions Plan A Phase 3.A reconciler)" (was mis-cited as
+`/codex/02-data/pipeline-mode-partition.md` § "Predictions migration (Plan A)," a section that does not exist in that
+doc); `/codex/02-data/availability-manifest-and-data-status.md` § "Bundled data_types"
 (`prediction_canonical_question_group` / `PREDICTION_GROUPS`). No conflicting in-flight migration found:
 `gcloud compute instances list` (2026-07-13) shows no prediction/canonical-migration VM running; the only
 prediction-adjacent active plans are `prediction_canonical_identity_migration_2026_07_08.md` (instruments-service
