@@ -343,6 +343,58 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
       agent-orchestrator)
 
+<!-- Operator rulings 2026-08-06 (slot-3 session): shard plan-reconciler, ui as the 10th tranche, Saturday `all` run,
+     guard on lifecycle-complete. PM half SHIPPED unified-trading-pm@d11d0a765; the AO half below was NOT started in
+     that session because slot-1 (@5087f30, capacity queue) and slot-6 (@5941552, picker claim-skip) were both live in
+     exactly these files — deliberately deferred rather than three-way raced. -->
+
+- [ ] [SCRIPT] P1. Shard `install-plan-reconciler-timer.sh` per topic tranche, mirroring
+      `install-ag-closeout-auditor-timer.sh` (per-tranche idempotency guard, batched fan-out with its own
+      `MAX_CONCURRENT_TRANCHES` cap, one `{"mode": "reconcile", "tranche": "<t>"}` POST each). The role-doc half is
+      already live (`agents/plan_reconciler.md` accepts `$TRANCHE`, unified-trading-pm@d11d0a765) and is
+      backward-compatible — no tranche passed still runs `all` — so this can land independently. Motivating measurement
+      (every retained run, read from the live agents table 2026-08-06): 7 of 8 ended `reaped-stale`, several dead within
+      2-5 min of spawn; the one completion ran 13.5h (00:01:32→13:29:00) holding a slot all day. (repo:
+      agent-orchestrator)
+- [ ] [SCRIPT] P1. Saturday exception in the same installer: on Saturday fire ONE unsharded `{"mode": "reconcile"}`
+      `all` run and hold the per-tranche shards back that day (operator ruling — Saturday is the low fleet-activity
+      window, and not running shards the same day keeps the whole-corpus sweep from racing 10 siblings over the same
+      docs). Sun-Fri stays sharded. Contract is documented in `cursor-configs/skills/plan-reconcile/SKILL.md` § "The
+      scheduled cadence that resolves that trade-off" — the installer must match it or the two drift. (repo:
+      agent-orchestrator)
+- [ ] [SCRIPT] P1. Add `ui` to `ALL_TRANCHES` in `install-ag-closeout-auditor-timer.sh:115` and
+      `install-na-eligibility-auditor-timer.sh:108` (both still hardcode the 9-tranche list) and re-install both units.
+      `ui` has been a real `asset_group` enum value since 2026-07-30 but has NEVER been dispatched: live records show
+      9/9 tranches every day 08-02..08-06, `ui` never among them — so UI orphan coverage and UI `assigned_vm:NA`
+      validity have gone unaudited since the tranche was created. The skills + role docs are already on 10
+      (unified-trading-pm@d11d0a765); the dispatchers are the last stale copy. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Fix every scheduled dispatch script's today-already-ran guard to key on the linked agent's
+      `agent_exit_reason == "lifecycle-complete"` (plus still-in-flight `queued`/live-`dispatched` rows), not bare
+      `status == "dispatched"`. `/api/scheduled-jobs/recent` already joins `agent_status`/`agent_exit_reason` in, so the
+      data needs no new endpoint. Today a run that dies 2 minutes in still marks the day done and blocks every retry: on
+      08-03 plan_reconciler died 1m48s in and on 08-04 5m14s in, and in both cases the corpus got zero reconciliation
+      while the Scheduled Jobs panel showed a clean green `dispatched`. Must compose with the capacity queue
+      (agent-orchestrator@5087f30) — a `queued` row means work is still pending and must NOT trigger a re-dispatch.
+      (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Persist the one-shot `/done` evidence string — `_done_one_off()` (`server/routes/slots_worker.py`)
+      archives the AgentRow and logs `{agent_id, kind, lifecycle}`, dropping `req.evidence` entirely (re-verified still
+      true at agent-orchestrator@5941552). Five of the seven scheduled jobs carry their whole report headline in that
+      field by role-doc contract — `plan_reconciler`, `docs_reconciler`, `ag_closeout_auditor`,
+      `na_eligibility_auditor`, `context_scout_auditor` — and it is written into a field nothing reads. Store it on the
+      AgentRow (or in the activity `details`) and surface it in the dashboard's Scheduled Jobs panel, which today can
+      only show the dispatch attempt. (repo: agent-orchestrator)
+- [ ] [DATA] P2. No durable transcript exists for any scheduled run: `/api/agents/{id}/log` is a live
+      `tmux capture-pane`, Claude runs on the alt-screen where tmux keeps NO scrollback, and there is no `pipe-pane`. A
+      run reaped mid-flight leaves nothing recoverable beyond what it had already committed — and 32 of 65 retained
+      auditor runs (49%) ended `reaped-stale`. Decide between `pipe-pane` to a gitignored per-run log and indexing the
+      Claude session JSONL that already exists on the VM outside the repo, then wire it. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P3. Give `plan_reconciler` + `docs_reconciler` a mid-run checkpoint. Their siblings
+      (`na_eligibility_auditor`, `context_scout_auditor`) commit a dated per-doc marker as they go, so a killed run
+      resumes where it stopped; these two batch every write into their Phase 4/5 apply, so a kill before that loses the
+      entire run. `plan_reconciler` has the worst record in the fleet (7 of 8 reaped-stale) precisely because it holds
+      everything to the end of a very long pass. Sharding (todo above) shortens the window but does not close it. (repo:
+      agent-orchestrator)
+
 ## Progress Log
 
 - **worker slot-16 2026-08-06 (todo 8 — plan-reconciler timer re-install, this task)**: ATTEMPTED + BLOCKED-ON-OPERATOR
