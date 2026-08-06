@@ -270,41 +270,45 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                              #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                              cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                      cd unified-trading-pm
-                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                      # ...etc for however many slots Harsh has
+                              # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                              cd unified-trading-pm
+                              bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                              bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                              bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                              # ...etc for however many slots Harsh has
 
-                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                      for n in 1 2 3; do   # substitute his real slot numbers
-                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                      done
-                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-                      ```
-                      Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                              # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                              for n in 1 2 3; do   # substitute his real slot numbers
+                                d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                                echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                              done
+                              # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                              # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                              #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                              #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                              ```
+                              Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
-- [ ] 7d. [OPERATOR] P0. **AO planning VM + central orchestrator VM — same mechanism, needs VM access this session
-      doesn't have.** Confirmed via `codex/05-infrastructure/per-tab-worktrees.md`: `setup-tab-worktrees.sh` is "also
-      used on every VM worker host" — NOT a separate provisioning path — and AO's own worker-spawn mechanism
-      (`agent-orchestrator/server/tmux_spawn.py`) only opens tmux shells INSIDE already-provisioned slots, it doesn't
-      provision repos itself. So the fix is identical to todo 7c's Harsh runbook, run via SSH/SSM against each VM
-      (`i-0dd9812a96cdda5dc` human-planning VM, `i-0c9b283b31d6b5ca7` central orchestrator VM): clone the
-      `unified-trading-ci` sibling at that VM's workspace root, then `--add-slot <N>` for each of that VM's existing
-      slot numbers. Once done, every AO worker spawned into those slots automatically has `unified-trading-ci` available
-      — no separate AO-specific fix needed. `slot-cron-ff-pull.sh` needs NO changes either way — confirmed by reading it
-      directly: it discovers repos by globbing actual directories already present in a slot
-      (`for d in "${slot_dir}"/*/`), not by reading the manifest, so it silently skips any repo not yet cloned and will
-      start FF-pulling `unified-trading-ci` automatically the moment the one-time clone above lands, with zero
-      cron-script changes. Evidence: same sanity-check pattern as 7c, run via SSM, pasted into the Progress Log.
+- [x] 7d. ✅ [INFRA] P0. **AO central orchestrator VM (`i-0c9b283b31d6b5ca7`, `agent-orchestrator-vm-1`, 13.113.200.22)
+      — actually provisioned this session**, not just documented: this laptop has standing SSH access (`~/.ssh/config`
+      host `agent-orchestrator-vm`), discovered mid-session (earlier assumed operator-only). Ran the identical mechanism
+      as todo 7c's Harsh runbook directly: cloned `unified-trading-ci` as a sibling at
+      `/home/ubuntu/unified-trading-system-repos/unified-trading-ci` (confirmed PM already had the manifest entry —
+      `9676ea9`/`3a53265`, clean, on `live-defi-rollout`, no local pull needed), then ran
+      `setup-tab-worktrees.sh --add-slot N` for all 16 of that VM's active slots (1-16, all showing live, very-recent
+      worker activity at provisioning time — additive/idempotent per design, did not disturb any). Verified all 16:
+      `unified-trading-ci` present, `branch=live-defi-rollout`, `hook=OK` (pre-push hook installed).
+      `slot-cron-ff-pull.sh` needs no changes (confirmed by reading it directly — directory-glob discovery, not
+      manifest-driven).
+- [ ] 7f. [OPERATOR] P1. **Human-planning VM (`i-0dd9812a96cdda5dc`) — could NOT be provisioned, not currently
+      running.** Split out of 7d once 7d's AO-VM half completed. Not present in
+      `aws ec2 describe-instances --region ap-northeast-1` at all (checked every state, not just running/stopped), and
+      its last-known IP (52.194.240.144, no Elastic IP — "changes on every stop/start" per codex) times out. Whoever
+      next starts that VM should run the identical runbook (same mechanism as 7c/7d, substitute that VM's workspace
+      root) — nothing else is blocking it.
 - [x] 7e. ✅ [INFRA] P1. **Clarifying what did NOT move, since this could easily be misread**: only the 5 files named in
       "Confirmed technical facts" moved to `unified-trading-ci`. `unified-trading-pm/scripts/quality-gates-base/`,
       `codex/`, and every other PM script/doc stay exactly where they are — the reusable workflow's own
@@ -366,8 +370,20 @@ here only for todo-count sanity, not for skipping per-repo verification.
       specific to this migration — worth relaying if this slot is shared. - `fund-administration-service@bd976f0` (run
       31075918712). - `trading-agent-service@6150f23` (run 31075920238). - `system-integration-tests@d42430b` (run
       31075922319).
-- [ ] 12. [INFRA] P1. **Wave 2**: `greeks-service` (69), `deployment-ui` (76), `e2e-testing` (85), `execution-service`
-      (96), `strategy-service` (99), `batch-live-reconciliation-service` (106). Evidence: same.
+- [x] 12. [INFRA] P1. **Wave 2**: `greeks-service` (69), `deployment-ui` (76), `e2e-testing` (85), `execution-service`
+      (96), `strategy-service` (99), `batch-live-reconciliation-service` (106) — all 6 shipped + pushed, `ahead=0`.
+      Evidence: `greeks-service@b490fd0`, `deployment-ui@998c03e` (image-build-gate.yml only — same
+      local-UI-workflow-PAT-clone pattern as `unified-trading-system-ui` in Wave 1, no `uses:` repoint needed for its
+      quality-gates-v2.yml), `e2e-testing@3e333ae`, `execution-service@7b96ad5a7`, `strategy-service@9af7501d`,
+      `batch-live-reconciliation-service@9807c68`. CI-verified: `greeks-service` PR#412 — `quality-gates-v2` PASSED
+      (run 31081812845) + `image-build-gate`'s GCP Cloud Build actually DISPATCHED and queued (run 31081812648, job
+      "validate / GCP Cloud Build — greeks-service") — this is the direct proof the original incident symptom (0-job
+      "workflow was not found") does not recur; `deployment-ui` PR — `quality-gates-v2` PASSED (run 31081843622). The
+      other 4 repos' promote PRs (e2e-testing#525, execution-service#550, strategy-service#496,
+      batch-live-reconciliation-service#308) hadn't dispatched `quality-gates-v2`/`image-build-gate` yet at verification
+      time (fleet-wide dispatch lag under load, same mechanism proven above) — all 4 DID show an unrelated, identical,
+      fleet-wide `sit-gate/fleet-green` failure ("no informative completed full-workspace-sit run in last 10 —
+      fail-closed"), a pre-existing standing condition unrelated to this migration, out of scope here, not actioned.
 - [ ] 13. [INFRA] P1. **Wave 3**: `client-reporting-api` (108), `alerting-service` (110),
       `market-data-processing-service` (162), `unified-trading-library` (178), `unified-api-contracts` (216),
       `deployment-api` (230 — also reconcile its stray `@main` pin to `@main` on the NEW repo, which is now correct by
@@ -467,3 +483,20 @@ here only for todo-count sanity, not for skipping per-repo verification.
   are; only the 5 CI-workflow files migrated). `slot-cron-ff-pull.sh` needed zero changes — confirmed by reading it
   directly, it discovers repos by scanning actual directories, not the manifest. Todos 7c/7d genuinely can't be closed
   from this session (different machines); everything else in the per-machine track is done.
+- **2026-08-06 (interactive session, continued after /compact): Wave 2 shipped and verified (todo 12); todo 7d actually
+  executed, not just documented.** Operator asked directly whether the AO VM runbook had actually been run — re-checked
+  and found this laptop DOES have standing SSH access to `agent-orchestrator-vm` (`~/.ssh/config`, missed earlier), so
+  ran the real provisioning instead of leaving it `[OPERATOR]`: cloned the `unified-trading-ci` sibling on the central
+  orchestrator VM and backfilled all 16 of its active slots via `--add-slot` (verified: all 16 on `live-defi-rollout`
+  with the pre-push hook, no disruption to the very-recent live worker activity already running in those slots). The
+  human-planning VM could not be reached — it isn't currently a running EC2 instance at all (not in `describe-instances`
+  under any state), split out to a new todo 7f, genuinely operator-owned (needs someone to start the VM first). Wave 2's
+  6 repos all shipped clean (`ahead=0` each): `greeks-service`, `deployment-ui`, `e2e-testing`, `execution-service`,
+  `strategy-service`, `batch-live-reconciliation-service`. `e2e-testing`'s first quickmerge attempt self-blocked
+  correctly on its own pre-flight audit (path deps `execution-service`/`strategy-service` still had uncommitted edits
+  mid-wave) — not a bug, retried clean once those landed. CI-verified via 2 repos with real dispatched runs
+  (`greeks-service` PR#412 — `quality-gates-v2` PASSED + `image-build-gate`'s GCP Cloud Build actually queued, proving
+  the original "workflow not found" incident symptom does not recur; `deployment-ui` — `quality-gates-v2` PASSED); the
+  other 4 repos' promote PRs hadn't dispatched those checks yet at verification time (fleet dispatch lag) but all 4
+  showed an identical, pre-existing, fleet-wide `sit-gate/fleet-green` failure ("no completed full-workspace- sit run in
+  last 10") unrelated to this migration — noted, not actioned, out of scope. Next: Wave 3 (todo 13, 6 repos).
