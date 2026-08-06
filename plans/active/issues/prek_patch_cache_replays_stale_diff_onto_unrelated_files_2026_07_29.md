@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-07-29
 author: unknown
-last_updated: "2026-08-03" # release pipeline actually fixed (was a manual workaround); durable uv.sources fix shipped to all 7 repos; human-planning VM resolved; prune-cron registered (see Progress Log)
+last_updated: "2026-08-06" # 2026-08-06: reproduced live 3x during an unrelated archival session (wrong-file-set + stale-index-bookkeeping flavors, not garbled-YAML); new [REVIEW] P1 todo asks whether it's the same closed root cause recurring or a distinct concurrent-index-mutation bug (see Progress Log). Was "2026-08-03": release pipeline actually fixed (was a manual workaround); durable uv.sources fix shipped to all 7 repos; human-planning VM resolved; prune-cron registered.
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -210,25 +210,25 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
 
       **What slot-8 actually shipped for piece (2), 2026-07-30**: `worker-host-preflight.sh`'s prek check (STEP 4c) now
-                                                                                                          parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
-                                                                                                          version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
-                                                                                                          on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
-                                                                                                          (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
-                                                                                                          below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
-                                                                                                          `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
-                                                                                                          lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
-                                                                                                          (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
-                                                                                                          dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
-                                                                                                          (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
-                                                                                                          PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
-                                                                                                          actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
-                                                                                                          larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
-                                                                                                          than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
-                                                                                                          orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
-                                                                                                          (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
-                                                                                                          is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
-                                                                                                          call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
-                                                                                                          #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
+                                                                                                              parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
+                                                                                                              version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
+                                                                                                              on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
+                                                                                                              (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
+                                                                                                              below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
+                                                                                                              `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
+                                                                                                              lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
+                                                                                                              (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
+                                                                                                              dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
+                                                                                                              (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
+                                                                                                              PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
+                                                                                                              actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
+                                                                                                              larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
+                                                                                                              than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
+                                                                                                              orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
+                                                                                                              (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
+                                                                                                              is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
+                                                                                                              call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
+                                                                                                              #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
 
 - [x] [OPERATOR] P2. **RESOLVED 2026-07-31 (slot-1, harsh_pc) — this todo's premise (a stock version upgrade is
       sufficient) turned out to be WRONG, so what got shipped is a different and stronger fix than what was asked.**
@@ -360,6 +360,21 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       `clean=5 corrupt=0` before reporting OK; a version that clears the floor but fails the harness now FAILs preflight
       with an explicit remediation pointer, instead of a false green. Shipped in the same commit as the
       `bootstrap_vm.sh` fork-wheel switch above.
+- [ ] [REVIEW] P1. **NEW 2026-08-06.** Determine whether the 2026-08-06 reproduction (see Progress Log entry below -- a
+      `plans/archive/issues/` archival commit that created the new-path file but never removed the old-path duplicate,
+      twice producing a commit with the wrong file set on this same working tree) is the SAME mechanism this doc already
+      root-caused and fixed (the `keeper.rs` stash/rollback bug, patched in the `IggyIkenna/prek` fork + deployed
+      fleet-wide via `[tool.uv.sources.prek]`), or a DISTINCT concurrent-index-mutation bug -- multiple agents'
+      `git add`/prek hook runs interleaving on the SAME shared working tree/index at once, which is a different failure
+      class than one process's own stash/restore cycle replaying its own stale patch. Check: (a) is the patched
+      `IggyIkenna/prek@0.4.12` actually the binary in use on this host/session (confirm via `prek --version` and the
+      fork's commit-hash suffix), (b) does the corruption harness
+      (`scripts/hooks/prek-keeper-fix/prek-corruption-harness.sh`) reproduce THIS specific symptom (a rename landing as
+      create-only, no delete) when run under genuinely concurrent multi-process load rather than the single- process
+      stash/restore cycle it already tests, (c) if the mechanism is confirmed distinct, file a new
+      `plans/active/issues/<slug>_2026_08_06.md` scoped to concurrent-multi-agent-index-mutation specifically rather
+      than reopening this doc's already-closed single-process root cause. done-when: the mechanism is named
+      (same-as-this-doc, or distinct-and-filed) with evidence either way. Repo: unified-trading-pm / agent-orchestrator.
 
 ## Progress Log
 
@@ -788,3 +803,48 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   install or via the durable `uv.sources` auto-heal mechanism.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **2026-08-06 (archival-ritual worker, issue-doc-archival sweep) — reproduced live, three times, on this exact working
+  tree today; NOT archiving this doc despite it reading "fully resolved" (2026-08-05) above, per explicit scope
+  instruction, until the open question below is answered.** While archiving 7 unrelated resolved issue docs in
+  `plans/active/issues/` -> `plans/archive/issues/`, hit the identical class of symptom this doc's 2026-07-30 entries
+  describe (a commit landing with the wrong file set) rather than the garbled-YAML flavor from this doc's earlier
+  entries:
+  1. **Concrete pre-existing instance found and fixed this session** (not self-caused, but confirms the mechanism is
+     currently live): `plan_health_tests_leak_real_slack_alerts_2026_07_24.md`'s 16:10 archival commit
+     (`unified-trading-pm@dcf897c30`) created the file at `plans/archive/issues/` but never removed the sibling
+     duplicate left behind at `plans/active/issues/` — a `create`-only, not a real rename/delete. A later, unrelated
+     commit (`unified-trading-pm@ee72c276d`, 18:26 same day) then edited the stale active-path duplicate, unaware it had
+     already been archived, producing two diverging copies of the same doc. Both real edits were merged into the single
+     surviving archive-path copy and the duplicate was removed (`unified-trading-pm@a62bdd8ea`). Full account in that
+     doc's own Progress Log.
+  2. **Live during this session's own commits**: every `git commit --only -m "<msg>" -- <exact paths>` attempt (no prior
+     `git add`, per this doc's own established workaround) still triggered prek's "Unstaged changes detected,
+     stashing.../Restored unstaged changes from `<patch>`" cycle on nearly every invocation — expected/benign when OTHER
+     concurrent agents' unrelated files are genuinely dirty in this shared working tree (prek stashes/restores whatever
+     is unstaged regardless of `--only`'s path-scoping, which only scopes what gets COMMITTED, not what the hook chain
+     stashes). Twice, branch-drift auto-pull (`git pull --rebase --autostash`, fired by the `check-branch-drift` hook
+     when a concurrent agent's push landed mid-attempt) was followed by already-committed, already-pushed files of mine
+     (`issue_doc_author_field_ssot_contradiction_2026_08_04.md`, then a batch of 5 more) showing as staged+unstaged
+     modified (`MM`) immediately after. On inspection every one of these had an EMPTY `git diff HEAD` (byte-identical
+     content, confirmed before touching anything) — pure index bookkeeping left over from the autostash-pop not
+     perfectly reconciling staged-vs-unstaged state, not actual content corruption; cleaned via `git restore --staged`.
+     Did not independently reproduce actual GARBLED content this session — only the wrong-file-set (finding 1) and the
+     stale-index-bookkeeping (finding 2) flavors.
+  3. **The reliable workaround confirmed working**: `git commit --only -m "<msg>" -- <exact paths>` (no prior `git add`)
+     is what actually got every commit to land with the correct file set this session, across 8 multi-file archival
+     commits, several requiring a retry after branch-drift pull. Plain `git add <paths>` + `git commit` was also used
+     successfully in a few spots once `--only` rejected an already-`git mv`'d path as "not known to git" (a real
+     `--only` limitation on a rename whose old-path side was already gone from the working tree, not itself corruption)
+     — always followed by `git status --porcelain` verification of the staged set before committing, never a blind
+     `git add .`/`-A`.
+
+  **Open question, not resolved here** (out of scope for a doc-archival task; filed as the new `[REVIEW] P1` todo above
+  rather than left as this paragraph): finding 1 above is a genuine "commit landed with the wrong file set" instance on
+  2026-08-06, on the exact class this doc's title describes -- but this doc's own 2026-08-03/08-05 entries closed the
+  single-process `keeper.rs` root cause and deployed a fleet-wide fix. Is finding 1 (a) the same single-process
+  mechanism recurring because the patched binary isn't actually in effect on whichever host/session produced
+  `dcf897c30`, or (b) a DIFFERENT failure class entirely -- e.g., two genuinely concurrent agents' commits interleaving
+  on the SAME shared working tree/index (this repo has no per-slot worktree isolation for `docs(plans):` commits the way
+  code changes get per-tab clones), which no single-process stash/restore fix would address. `status` stays `open`
+  pending that answer -- not archiving this doc per the explicit scope instruction for this session.
