@@ -52,6 +52,7 @@ assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # e2e DeepSeekUsagePoller overwrites hand-seeded Accounts-panel fixture
