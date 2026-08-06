@@ -84,14 +84,21 @@ is just wrong to assume it won't fire.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Identify which background loop (if any) resets a `dispatched`+`dispatched_to` `TaskRow` when the
+- [x] ✅ [BACKEND] P2. Identify which background loop (if any) resets a `dispatched`+`dispatched_to` `TaskRow` when the
       target slot has no live worker, confirm it's the cause of the `E2E-DISPATCHED` seed drift described above (add a
       log line / breakpoint / temporarily disable loops one at a time against the isolated e2e backend). Repo:
-      agent-orchestrator.
-- [ ] [SCRIPT] P2. Once root-caused, fix either the seed script (`tests/e2e/fixtures/seed_e2e_state.py`) or the
+      agent-orchestrator. — **ROOT-CAUSED `agent-orchestrator@e761cb1`** (ancestor-verified on
+      `origin/live-defi-rollout`): the culprit is `WorkerLivenessWatchdog._reclaim_orphaned_dispatched_tasks`, named
+      explicitly in the inline comment that commit adds to `dashboard/tests/e2e/fixtures/seed_e2e_state.py`.
+- [x] ✅ [SCRIPT] P2. Once root-caused, fix either the seed script (`tests/e2e/fixtures/seed_e2e_state.py`) or the
       reconciler so `backlog-detail.spec.ts`'s Queue-lag/sort tests pass deterministically on every run — re-run
       `npx playwright test --project=chromium tests/e2e/backlog-detail.spec.ts` 3× in a row as the done-condition (no
-      flake). Repo: agent-orchestrator.
+      flake). Repo: agent-orchestrator. — **FIXED `agent-orchestrator@e761cb1`** (same commit, ancestor-verified): the
+      seed script now sets `current_task="E2E-DISPATCHED"` on the SlotRow so the watchdog no longer reclaims it. Shipped
+      as a side-effect of `ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md`; the sibling doc
+      `/plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` already credited this fix
+      (2/2 passing across 3 consecutive Playwright runs) while these two checkboxes were left unflipped — found by
+      `/plan-reconcile ao` 2026-08-06.
 
 ## Codex SSOTs
 

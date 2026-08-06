@@ -88,14 +88,22 @@ backfill).
 
 ## Open TODOs
 
-- [ ] [DOCS] P1. **Update the two codex docs that still describe the OLD always-pin model** (now stale after
+- [x] ✅ [DOCS] P1. **Update the two codex docs that still describe the OLD always-pin model** (now stale after
       `agent-orchestrator@867b1731e`). `/codex/12-agent-workflow/work-philosophy.md` says "tasks pin to the first slot
       that claims one — slots.py:\_claim_plan_for_slot; cross-agent speed comes from more plans"; and
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` describes `_claim_plan_for_slot` pinning a
       plan's siblings. Both must be corrected to: pinning is now GATED on `sequential: true`; non-sequential plans fan
       out to N slots (intra-plan concurrency is the default, matching `task_template.md` §4). **Operator sign-off
       required before editing a codex SSOT** (workspace HARD RULE — codex edits are never autonomous). **Gate**: neither
-      doc describes unconditional pinning; both cite the sequential gate + the shipping sha.
+      doc describes unconditional pinning; both cite the sequential gate + the shipping sha. — **DONE 2026-08-06 —
+      operator ruled during `/plan-reconcile ao` (interactive Q&A, "Fix both codex docs now"), then applied.**
+      `/codex/12-agent-workflow/work-philosophy.md` L4/L3 bullet and
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` RC-2 both rewritten: pinning is stated as
+      GATED on `sequential: true`, no-op otherwise (siblings stay `target_slot=None, affinity="none"`), each citing
+      `agent-orchestrator@867b1731e`; the stale "Fleet parallelism ≈ active-plan count" claim is replaced with "≈ the
+      count of independently-ready TASKS". Verified against the live docstring at
+      `agent-orchestrator/server/state_store/slots.py:124-146`. Gate met: neither doc now describes unconditional
+      pinning.
 - [x] ✅ [BACKEND] P1. **DONE 2026-07-29 (self-serviced — credential re-triage pass).** This session's ambient AWS
       identity (`assumed-role/uts-orchestrator-epic-role`) is NOT the same identity previously denied `ssm:SendCommand`
       (`ikenna-worker`) — live-tested `aws ssm send-command` against `i-0c9b283b31d6b5ca7` and it worked immediately, no

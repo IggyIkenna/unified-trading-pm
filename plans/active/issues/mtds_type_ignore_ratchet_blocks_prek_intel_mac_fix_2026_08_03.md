@@ -100,9 +100,14 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
 
 - [ ] [SCRIPT] P2. Root-cause the exact `# type: ignore` occurrence that pushed the count to 659, and either fix it with
       an exact rule code or get the baseline properly raised.
-- [ ] [SCRIPT] P2. Once unblocked, ship the already-verified prek Intel-Mac uv.sources fix in
+- [x] ✅ [SCRIPT] P2. Once unblocked, ship the already-verified prek Intel-Mac uv.sources fix in
       `market-tick-data-service/pyproject.toml`+`uv.lock` (already sitting correct in the working tree, just
-      uncommitted) via the exact quickmerge command in "Recommended next step" above.
+      uncommitted) via the exact quickmerge command in "Recommended next step" above. — **SHIPPED
+      `market-tick-data-service@b55cf9ad`** (2026-08-03, ancestor-verified on `origin/live-defi-rollout`):
+      `git show b55cf9ad -- pyproject.toml` confirms `[[tool.uv.sources.prek]]` split into separate `arm64`/`x86_64`
+      marker branches, exactly this fix. It landed bundled inside a larger multi-purpose commit rather than standalone
+      via the recommended command, which is why the checkbox was never flipped — found by `/plan-reconcile ao`
+      2026-08-06.
 - [ ] [SCRIPT] P3. Look at why `quality-gates.sh --no-fix` standalone treats STEP 5.95 as non-fatal ("ALL QUALITY GATES
       PASSED" despite the ❌ line) while `quickmerge.sh`'s internal re-gate treats the identical finding as fatal —
       likely intentional (re-gate may run a stricter/full mode) but worth a comment or confirming, since the

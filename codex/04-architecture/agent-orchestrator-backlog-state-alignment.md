@@ -163,9 +163,14 @@ the task's craft role, overriding the plan's `assigned_role` per-task (mapped ta
 carries multiple crafts. `TaskBrief.assigned_role` is returned to the worker; `SlotRow.last_role` tracks the craft it
 last served. The worker ADOPTS a new craft (reads `agents/<role>.md`) on a role change and NEVER `/skip`s a
 role-mismatch (`worker.md` HARD RULE) — killing the dispatch→refuse→skip thrash. `_claim_plan_for_slot` pins a plan's
-sibling tasks to the first-claiming slot with `affinity="medium"` (+ `queued_at` reset), so the plan sticks to one owner
-but a slow owner spills to a free slot after the timeout. **Fleet parallelism ≈ active-plan count** (split work into
-separate plans for parallelism).
+sibling tasks to the first-claiming slot with `affinity="medium"` (+ `queued_at` reset) **only when the plan is
+`sequential: true`** — the pin is gated on `task.sequential` (2026-07-24 operator ruling,
+`agent-orchestrator@867b1731e`) and is a NO-OP for the default non-sequential plan, whose siblings stay
+`target_slot=None, affinity="none"` and fan out freely. For a pinned sequential plan a slow owner still spills to a free
+slot after `target_slot_timeout_seconds`. **Fleet parallelism ≈ the count of independently-ready TASKS, not active-plan
+count** — one non-sequential plan's N independent same-priority todos dispatch to N slots concurrently
+(`task_template.md` §4); splitting into separate plans is required only for a real ordering dependency or same-file
+overlap.
 
 **RC-3 — slot_skips hygiene.** A per-(slot,task) skip expires after `slot_skip_ttl_hours` (default 24h, config,
 0=disable) in `slot_skipped_tasks(ttl_hours=)`, so a stale skip can't starve dispatch across respawns; the prune clears
