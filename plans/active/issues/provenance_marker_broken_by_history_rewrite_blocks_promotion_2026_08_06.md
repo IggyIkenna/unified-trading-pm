@@ -252,3 +252,21 @@ Two reasons, mirroring the UTL-34-bypass precedent
     and the 4th (alerting-service) turns out not to have been broken by this bug at all. A SIT-on-LDR run was dispatched
     for alerting-service's current tree during this verification; whether it clears on a subsequent cron tick is being
     tracked separately, not as part of this bug's resolution.
+- **2026-08-06, alerting-service's ACTUAL root cause identified (by the coordinating agent, a distinct bug, DONE scope
+  confirmed)** — Waited for the dispatched full-workspace-sit run (`31110890960`) to complete (`completed success` at
+  14:41:19Z), then re-triggered `ldr-to-main-promote-fleet.yml` once to check whether alerting-service now clears (run
+  `31112100462`, completed 14:45:00Z). It did NOT: the fleet run still logged
+  `SIT GATE BLOCK alerting-service: … sit_validated_tree='4610b8ed52fd…'` — the IDENTICAL stale tree hash as before the
+  SIT run, even though that SIT run had just passed. The coordinating agent found the real cause in parallel:
+  `system-integration-tests/.github/workflows/full-workspace-sit.yml`'s SIT-stamping step requires the checked-out
+  branch to literally be named `live-defi-rollout`; a SIT run dispatched against a pinned target SHA (exactly the
+  `SIT-on-LDR` dispatch this doc's own fix triggers) checks out in DETACHED-HEAD state, so the stamp is silently skipped
+  even though the tests pass — `fail-closed → dispatch SIT → SIT passes → stamp skipped → still fail-closed`, forever.
+  This is a genuinely distinct, unrelated bug in `system-integration-tests`, not `promote_provenance_range.py` —
+  confirms the correction above (alerting-service was never broken by THIS doc's ancestry bug) and explains why the
+  original #335-343 closed-PR loop looked identical in symptom. A separate agent is fixing it in
+  `system-integration-tests`; per the coordinator's explicit instruction, no further re-triggering or watching of
+  alerting-service's promotion from this task — that fix and its own verification are out of scope here. **This doc's
+  own root-cause fix is COMPLETE and fully verified**; the one open thread (instruments-service/UTL/MDPS's genuine
+  19/N-commit foreign-bypass backlogs) remains the documented, intentionally-not-auto-fixed follow-up per the "Tactical
+  unblock in parallel" option above.
