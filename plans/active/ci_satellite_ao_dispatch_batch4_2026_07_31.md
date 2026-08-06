@@ -95,11 +95,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] [INFRA] P2. **Implement the STAGE 1.6 dormancy-aware `scripts/quickmerge.sh` dependency gate (already
+- [x] ✅ [INFRA] P2. **Implement the STAGE 1.6 dormancy-aware `scripts/quickmerge.sh` dependency gate (already
       operator-decided) + delete the now-redundant `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint its
-      referrers.** Two small, independent, already-fully-decided `quickmerge.sh`-touching fixes, combined into one todo
-      per the same-file-contention note above (do them sequentially within one session, do not split into two concurrent
-      todos):
+      referrers.** — unified-trading-pm@b02ba28c7 Two small, independent, already-fully-decided `quickmerge.sh`-touching
+      fixes, combined into one todo per the same-file-contention note above (do them sequentially within one session, do
+      not split into two concurrent todos):
   1. **STAGE 1.6 dormancy gate — na-eligibility-audit 2026-08-01: VERIFIED ALREADY DONE, drop this sub-item.** Performed
      exactly the live-code verification this todo itself demands: `scripts/quickmerge.sh`'s current working tree
      (`_dep_versions_behind`) already reads `dormant = bool(rm.get('staging_dormant_mode', False))` /
