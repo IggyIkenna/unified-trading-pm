@@ -14,6 +14,8 @@
 #   MIN_COVERAGE      — e.g. 70
 #   RUN_INTEGRATION   — e.g. false
 #   PYTEST_WORKERS    — explicit worker count override; default is 1 (memory-frugal)
+#   PYTEST_TIMEOUT_RETRIES — retries on timeout-only pytest failures (xdist-contention flake
+#                            class; serial re-run); 0 disables; default 1
 #   LOCAL_DEPS        — e.g. ("unified-trading-library")
 #
 # Optional caller variables:
@@ -883,6 +885,35 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     # (not renamed to PYTEST_TIMEOUT_SECONDS) since it is already a live, documented
     # override in real agent/operator use (e.g. plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
     PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-150} -q -r a --tb=short --no-header --durations=25"
+
+    # ── Retry-once-on-timeout (xdist/scheduler-contention flake class) ──────────
+    # Mirror of base-library.sh's identical fix — a fixed wall-clock per-test budget
+    # under xdist `-n auto` / a contended host can fire on a genuinely instant test
+    # (0.04-2s in isolation) descheduled past the budget by sibling workers or co-resident
+    # jobs. The 60→150s raise reduced but did NOT close the class (at load avg 50+ even
+    # CPU-bound sync tests were starved 15+ min). SSOT:
+    # plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md.
+    # Retry-once-on-timeout targets the MECHANISM, not the threshold: when EVERY failure
+    # in a run is a pytest-timeout, re-run exactly those tests serially (minimal
+    # contention); a genuine hang times out AGAIN on the retry and still fails the gate.
+    # Disable: PYTEST_TIMEOUT_RETRIES=0. Real failures fail the gate outright.
+    PYTEST_TIMEOUT_RETRIES="${PYTEST_TIMEOUT_RETRIES:-1}"
+    _qg_pytest_timeout_retry() {
+        local _tids _nt _nf
+        _tids=$(grep -E '^FAILED [^ ]+ - Failed: Timeout' "$_pytest_log" 2>/dev/null | sed -E 's/^FAILED ([^ ]+) - .*/\1/' | tr '\n' ' ' || true)
+        _nt=$(printf '%s' "$_tids" | wc -w | tr -d ' ')
+        [ "${_nt:-0}" -gt 0 ] || return 1
+        _nf=$(grep -cE '^(FAILED|ERROR) [^ ]+ - ' "$_pytest_log" 2>/dev/null || true)
+        [ "${_nf:-0}" = "$_nt" ] || return 1
+        log_warn "pytest-timeout on ${_nt} test(s) — ALL failures are timeouts; serial re-run (retry-once-on-timeout for the xdist-contention flake class)"
+        # shellcheck disable=SC2086  # intentional word-split: _tids is a space-separated nodeid list
+        if "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${_tids} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket --timeout=${PYTEST_TIMEOUT:-150} -q -r a --tb=short --no-header 2>&1; then
+            log_success "retry-on-timeout: the ${_nt} timed-out test(s) passed clean serially — scheduling contention, not a hang"
+            return 0
+        fi
+        return 1
+    }
+
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
@@ -929,7 +960,12 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
         _pytest_rc=${PIPESTATUS[0]}
         if [ "$_pytest_rc" -ne 0 ]; then
-            exit 1
+            # Retry-once-on-timeout: only when EVERY failure is a pytest-timeout (see helper above).
+            if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry; then
+                _pytest_rc=0
+            else
+                exit 1
+            fi
         fi
         # Remind: when RUN_INTEGRATION=true but no integration tests exist yet, nudge author.
         if [ "$RUN_INTEGRATION" = "true" ] && [ "$_HAS_INTEGRATION" = false ] && [ "$QUICK_MODE" != true ]; then
@@ -939,7 +975,12 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
         _pytest_rc=${PIPESTATUS[0]}
         if [ "$_pytest_rc" -ne 0 ]; then
-            exit 1
+            # Retry-once-on-timeout: only when EVERY failure is a pytest-timeout (see helper above).
+            if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry; then
+                _pytest_rc=0
+            else
+                exit 1
+            fi
         fi
     fi
     log_ok "Tests PASSED"
