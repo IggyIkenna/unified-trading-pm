@@ -232,6 +232,14 @@ run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3
 # baseline as each remaining flagged plan/epic is split/trimmed; it should reach 0.
 run_check "Line caps (plans 500/1000, epics 2000 — no exemption, ratchet)" hard "$SCRIPT_DIR/check_line_caps.sh" --quiet
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
+# Silent-default-effort ratchet (2026-08-05 follow-up to the AO dashboard effort/
+# affinity/blocked-reason visibility work) — a living plan that sets assigned_role but
+# declares neither effort: nor thinking_tier: resolves its reasoning-effort tier to
+# whatever the role's generic default is (often model_tier.py's hardcoded "medium")
+# with nobody having deliberately chosen that for THIS plan. Same shrinking-ratchet
+# shape as the hard ratchets above (effort_signal_baseline.yaml): hard-fails only when
+# the CURRENT count exceeds the baseline, never on the pre-existing 211-plan debt.
+run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"

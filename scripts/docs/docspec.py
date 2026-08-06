@@ -72,6 +72,13 @@ AGENT_LIFECYCLE = frozenset({"persistent", "one_shot", "scheduled"})
 # (sonnet-5) is for harder/judgment-heavy roles, escalation, and CI. Absent on a
 # sonnet role == "light". Meaningless (and left unvalidated) on opus/haiku/fable roles.
 AGENT_SONNET_VARIANT = frozenset({"light", "default"})
+# Plan-level reasoning-effort override — mirrors agent-orchestrator's
+# server/model_tier.py EFFORT_LADDER verbatim (ground truth per this workspace's
+# CLAUDE.md § Model tier). `thinking_tier` on a plan reuses AGENT_THINKING above —
+# same vocabulary as an agent-role's thinking field, and
+# regen_backlog_from_plan._parse_frontmatter_thinking_tier accepts exactly that set
+# (max/high/medium/mechanical/off/none) for a plan's `thinking_tier:` too.
+PLAN_EFFORT = frozenset({"low", "medium", "high", "xhigh", "max"})
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
@@ -143,6 +150,11 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("source", Req.O, "scalar"),
         FieldSpec("assigned_role", Req.E, "registry", registry="role"),
         FieldSpec("context_scope", Req.E, "free_list"),
+        # Reasoning-effort override (elective — most plans rely on assigned_role's
+        # derived tier, or the todo-count fallback, and declare neither of these).
+        # See PLAN_FORMAT.md's frontmatter block for the full derivation order.
+        FieldSpec("effort", Req.E, "enum", PLAN_EFFORT),
+        FieldSpec("thinking_tier", Req.E, "enum", AGENT_THINKING),
     ],
     "epic": [
         FieldSpec("name", Req.R, "scalar"),
