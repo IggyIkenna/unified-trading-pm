@@ -180,7 +180,44 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
       `dashboard/tests/e2e/context-pressure-bar.spec.ts` "a stale cell visibly de-emphasises the fill and number" —
       **pw:L2 ✓** (3 specs green in that file).
 
+- [x] ✅ [INFRA] P1. **Extend the same saturation protection to the MAIN agent.** Filed + closed 2026-08-06 after the
+      operator asked what was actually left: the original five fixes covered WORKER slots only, and main — which has no
+      `SlotRow`, so none of the slot-based recovery reaches it — still had the exact bug. `main_agent_keeper.py`'s two
+      failover paths (rate-limit ~L385, auth-failed ~L558) passed `resume_session_id=stored_sid` unconditionally, and
+      `context_lifecycle._recover_wedged_target()` deliberately bailed for `slot_id is None`, logging an error and
+      recovering nothing. This mattered more than its position in the list suggests: main is designed to run for DAYS
+      (`context_lifecycle`'s own docstring), so it is the session most likely to reach the hard limit — the live one has
+      been up since 2026-08-04. **SHIPPED — agent-orchestrator@33b3415 + @6d791f6.** (1) Both keeper paths now null the
+      resume target when saturated, so the EXISTING "no stored_sid → fresh respawn" branch fires unchanged (one decision
+      point, no new branch); logged as `main_agent_resume_skipped_context_saturated`. (2) A wedged main is now genuinely
+      recovered: kill the session + clear its `AgentRow.claude_session_id` so AgentKeeper's respawn cannot reload the
+      over-limit transcript. **A pane-only gate would have silently no-opped** — caught by verifying against the real
+      session rather than trusting the first implementation: main's PANE parse returned `None` (its context readout had
+      scrolled out of the captured window) while its `AgentRow` read a perfectly good 44%. @6d791f6 reads the durable
+      row FIRST and falls back to the pane, because a gate that cannot fire is worse than no gate — it looks fixed.
+      Verified live post-deploy: row reads 44%, gate returns "resumable" (44 < `resume_fresh_context_pct` 80), i.e. it
+      is now measuring instead of blind. 5 tests:
+      `tests/test_context_lifecycle.py::test_main_saturation_gate_prefers_the_durable_agentrow_reading`,
+      `…::test_main_saturation_gate_drops_the_resume_target`, `…::test_main_saturation_gate_allows_a_resumable_session`,
+      `…::test_main_saturation_gate_is_none_on_an_unreadable_pane` (fail-open on a bad measurement),
+      `…::test_wedged_main_is_recovered_not_just_logged`.
+
 ## Progress Log
+
+### 2026-08-06 (later) — MAIN-agent coverage closed; issue fully resolved
+
+Operator asked what was actually remaining on the context front. Answer at that point: one real gap, and it was mine —
+the fixes were worker-scoped, leaving the main agent exposed to the identical resume-a-saturated-transcript bug. Closed
+it (todo 7 above), which took two commits because the first implementation was measurably blind: verifying the gate
+against the live main session showed the pane parse returning None where the durable `AgentRow` had 44%.
+
+**Coverage now, stated plainly:** worker slots (SlotRow-reported pct), review slots (slot-bound, same path), and main
+(AgentRow-reported pct, pane fallback) all refuse a saturated `--resume` and all have a wedge-recovery path that clears
+the resume target before respawn. Client-side auto-compact is re-enabled underneath all three as the final net —
+verified clean across all 16 slot clones, not just the main workspace root.
+
+**This issue is COMPLETE.** 7/7 todos, every one shipped, deployed to the orchestrator VM and verified against live
+state rather than only unit-tested.
 
 ### 2026-08-06 — filed (interactive session, slot 2 host `hk`)
 
