@@ -80,6 +80,5 @@ Verified: `main`'s `quality-gates-v2` run completed `success` at 2026-08-06T08:2
 
 ## Remaining housekeeping (not urgent — main is already green)
 
-- [ ] [DEVOPS] P3. PR #835 (`fix/missing-notify-slack`, still OPEN) is now redundant — its fix landed via `33eeded3` on
-      a different path. Close it as superseded, or confirm it has zero remaining diff vs `main` and merge it trivially.
-      Cosmetic GH housekeeping only; does not affect CI health.
+- [x] ✅ [DEVOPS] P3. PR #835 closed as superseded (2026-08-06) — confirmed its head commit (`33eeded3`) was the exact
+      sha that already reached `main` directly, so the PR was a pure no-op. No content lost.
