@@ -147,3 +147,192 @@ all phases complete) · E8 dangling `plans/ai/` ref (:1550, dir gone).
 **Grace-deferred:** `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` codex-ref path swap (3h — GRACE;
 `codex/11-project-management/plan-completion-and-archival-discipline.md` → `12-agent-workflow/…`, verified moved) ·
 native_ao_extract draft banner + last_updated (GRACE, context-only).
+
+---
+
+## Run state — resume here (compaction checkpoint 2026-08-06 ~23:10 UTC)
+
+**Status: STEP 4 near-complete (6/6 pair verdicts in; MECH-1a + MECH-2 still in flight). STEP 5-8 pending. Branch
+`plan_reconciler/agt-132fc8`, pushed, ahead=0 (c81c90238).**
+
+### Verdict log
+
+- **V1 [P0] odds-launch — CONFIRMED both sides; fix direction corrected by refuter + verified by reconciler.** Quotes
+  verbatim; no doc entry after 08-02 in the 3 docs clears the blocker. **BUT the blocker was resolved OUTSIDE the docs
+  on 2026-08-03**: operator purchased a 10,000,000-credit top-up (BLK-6728ec9a Option B) — verified by me in
+  `plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` (`status: resolved`, L21;
+  `x-requests-remaining: 14992590` L48-49/L159-160; "10,000,000-credit top-up on top of the recurring 5,000,000/month
+  base" L132-133). None of the 3 docs mentions it. **Apply = reconcile all 3 docs to RESOLVED** (texts below), NOT
+  block-the-launch. Concurrency guard now exists (`deployment-service@28c8d5f`, cap 1). No operator question needed
+  (already answered 08-03); notify informational.
+- **V2 [P1] s2_foldin flip — CONFIRMED both sides.** Refuter ran a LIVE `gcloud compute instances list` check: VM
+  `fts-backfill-20260806-012831` **still RUNNING ~21h after launch** (done-when definitively unmet). Flip commit
+  `1fb2dbf56` (slot-4, 01:34:28Z) ~15 min after slot-13's revert `0610e690e` (01:19:01Z) of the identical pattern.
+  **Sub-finding REFUTED**: todo `--force` (L398, in-VM CLI cmd) vs progress `--redo-all` (L516, launcher invocation) are
+  TWO LAYERS of one invocation (launcher `--redo-all` composes CLI `--force`, launcher L192-194) — no flag fix; fold a
+  clarifying clause into the revert note. Revert note text below.
+- **V3 [P1] candle todo-3 — CONFIRMED both sides.** Flip commit `e0a44adb4` (slot-11, 2026-08-04 22:19:46Z). Cited
+  execution doc has **17 todos not 20**; its todo 14 + BIG-FINDING log exclude this deliverable; audits
+  07-30/08-03/08-04 all call todo 3 open; sibling `tradfi_manifest_content_recovery_completion_2026_07_24.md` L343 still
+  `- [ ]` (Databento 1,328 cells) and its L350 "verify+close" `[x]` carries placeholder SHA `unified-trading-pm@<SHA>`
+  (evidence-fabrication violation). Revert text below. **Cross-tranche (FILE only):** L350 flip revert → tradfi tranche.
+- **MECH-1b [last_updated ×33] DONE** — full table below; **no KEEP cases**; docs #7 (`mdps_sports_honest_absence`) and
+  #15 (`sports_index_recency`) need the `last_updated:` line ADDED; preserve quoting style; doc 33 (epic) preserves its
+  inline `# was:` comment.
+- **MECH-1a [19 items] DONE — 19/19 CONFIRM-STALE, no rejections** (drop-in replacement texts are re-derivable from the
+  cited lines; each fix direction is documented in the registry). Two EXTRA stale surfaces flagged beyond the cited
+  lines: #5 cf8 — the frontmatter SUMMARY (L11 "did not isolate the exact line…") is also stale, amend alongside the
+  title; #6 fixtures_schedule — title (:4) AND body heading (L39) carry the same stale "85", mirror "at least 86". #4
+  (sports_index_recency status→resolved) wants a Progress-Log line noting the 2026-08-06 flip. #17 (track_x) needs BOTH
+  the revert AND a new `- [ ]` re-author todo (proposal drafted). #15 (process_killed) proposes 3 `- [ ] [OPS] P2` todos
+  from the 3 prose bullets.
+- **MECH-2 [paths/epic]: still in flight** — apply per its verdict (edit list below).
+
+### Apply texts (confirmed)
+
+**V1-DocA** (`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`, top of file, above the 🟢 RESOLVED
+2026-07-29 banner):
+
+> 🟠 CORRECTED 2026-08-06 — the 2026-08-02 "both gates are clear" claim below predates the same-day discovery (in
+> `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` P1) that the-odds-api.com was OUT OF USAGE CREDITS
+> (`x-requests-remaining: -772`, `/v4/historical` 401 since 2026-08-01 12:40:24Z — a NEW blocker, distinct from the July
+> DEACTIVATED_KEY one; corroborated by `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` todo 2). That quota
+> blocker is RESOLVED 2026-08-03: operator purchased a 10,000,000-credit top-up (BLK-6728ec9a Option B), live-verified
+> `x-requests-remaining: 14992590` — see
+> `plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` (resolved). Launch is
+> genuinely unblocked on the credential side; re-verify live (curl `/v4/historical/...` → non-401) before launching per
+> standing discipline, and respect the sibling OOM P1 (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`): small
+> chunk sizes, no blind relaunch.
+
+**V1-DocB** (`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`): (a) retag P1 first line: "**BLOCKED-CREDENTIALS
+2026-08-02 → RESOLVED 2026-08-03** (10M top-up landed, live-verified `x-requests-remaining: 14992590`; quota doc
+archived resolved) — the do-NOT-relaunch directive below is superseded; re-verify live via curl before any launch." (b)
+append to embedded L173 block: "(2026-07-31 state — superseded by the 2026-08-02 quota marker above, itself RESOLVED
+2026-08-03; not current, act only after live re-verification)."
+
+**V1-DocC** (`mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`, on the [OPERATOR] P2 todo L183-189): append
+"✅ RESOLVED 2026-08-03 — operator topped up 10M credits (BLK-6728ec9a); live-verified `x-requests-remaining: 14992590`;
+SPORTS/ODDS_API force-refetch is unblocked."
+
+**V2 revert** (`sports_closeout_track_s2_foldin_2026_07_25.md` L391 `- [x]` → `- [ ]` + note appended to the todo
+body, + a Progress Log entry):
+
+> **Corrected 2026-08-06 (plan_reconciler agt-132fc8)**: this todo was `[x]`-flipped at relaunch (08-06, slot-4) with
+> its own done-when ("VM exit 0, manifest rows written for enriched dates") unmet — VM `fts-backfill-20260806-012831`
+> was still RUNNING (slot-16 verified at 02:34Z; live re-verified RUNNING 2026-08-06 ~22:30Z via
+> `gcloud compute instances list`), no exit signal, no manifest rows yet. Reverted to `[ ]` so the backlog re-derives
+> it; re-flip only on VM exit 0 + manifest rows for enriched dates — same correction slot-13 applied to the identical
+> 08-05 launch-flip pattern. Flag note: launcher `--redo-all` composes CLI `--force` (lock bypass ≠ CLI force); do NOT
+> relaunch with bare launcher `--force` — it would skip every date (2026-07-18 silent-no-op class).
+
+**V3 revert** (`candle_feature_canonical_path_divergence_2026_07_20.md` L317 — replace the `- [x] ✅ VERIFIED …` stamp +
+false "all 20 todos [x]" claim; keep L320-330 continuation verbatim):
+
+> `- [ ] 3. [DATA] P1. **REVERTED 2026-08-06 (false-progress audit, plan_reconciler agt-132fc8) — falsely flipped [x] 2026-08-04 (slot-11, e0a44adb4)** — the cited `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md`covers the PATH migration (17 todos [x], not 20) + the executor's leaf-id-resolution CODE, but its own todo-14 + BIG-FINDING entries explicitly exclude this deliverable ("TRADFI's ~7.1M quarantined objects = its todo 3 ... NOT duplicated by this plan's todo list"); no content-read leaf-id resolution pass has run and no accept-the-loss operator ruling exists (unanswered authority call per 2026-07-30/08-03/08-04 audits; gating deliverable`tradfi_manifest_content_recovery_completion_2026_07_24.md`L343 still`-
+> [ ]`).** Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*`→`VENUE:TYPE:SYMBOL`) or rule the migration
+> naming acceptable.
+
+Also check candle todo 2 (L311-316, same class — "Repair itself is still pending P7 `--apply`") and revert if confirmed
+on read.
+
+### MECH-1b values (apply; preserve quoting style; add line where missing)
+
+| Doc                                   | new value                          |     | Doc                              | new value    |
+| ------------------------------------- | ---------------------------------- | --- | -------------------------------- | ------------ |
+| estate_orphan_assessment              | 2026-08-06                         |     | data_completion_sports           | 2026-08-03   |
+| instruments_remaining_work_audit      | 2026-08-06                         |     | predictions_ml_walk_forward      | 2026-08-06   |
+| mtds_is_full_adapter_smoketest        | 2026-08-06                         |     | sports_arb_decay                 | "2026-08-03" |
+| autonomous_session_operator_decisions | "2026-08-05"                       |     | sports_odds_feature_naming_canon | "2026-08-03" |
+| ml_training_launchers                 | 2026-08-06                         |     | sports_catalog_league_grain      | 2026-08-03   |
+| mdps_features_deadcode                | 2026-08-06                         |     | sports_group_c                   | "2026-08-03" |
+| mdps_sports_honest_absence            | **ADD** 2026-08-06                 |     | s2_foldin                        | "2026-08-06" |
+| sports_cf8                            | 2026-08-06                         |     | track_x_hygiene                  | "2026-08-06" |
+| batch_odds_outage                     | 2026-08-06                         |     | exchange_fixed_odds_fork         | "2026-08-03" |
+| halftime                              | 2026-08-06                         |     | track_h_gated                    | "2026-08-03" |
+| footystats                            | 2026-08-06                         |     | track_h_prereqs                  | "2026-08-03" |
+| dependency_check                      | 2026-08-06                         |     | native_ao_extract_finalize       | "2026-08-03" |
+| backfill_smoke                        | 2026-08-05                         |     | s2_foldin_finalize               | "2026-08-03" |
+| adapter_findings                      | 2026-08-05                         |     | track_x_finalize                 | "2026-08-03" |
+| sports_index_recency                  | **ADD** 2026-08-06                 |     | fork_finalize                    | "2026-08-03" |
+| phantom_audit                         | 2026-08-06                         |     | canonical_universe               | 2026-08-06   |
+| sports_master (epic)                  | 2026-08-02 (keep `# was:` comment) |     |                                  |              |
+
+### Edit list — STEP 5 apply (non-grace ≥18h unless marked; per-verdict)
+
+- REVERT: s2_foldin:391 (V2 text) · candle:317 (V3 text) · candle:311-316 todo 2 (check) · track_x:150-160 (MECH-1a #17)
+- BANNERS: V1 reconcile ×3 docs (texts above) · stats_delayed:214-215 (V4 wave 2) · part2 K0:560-577 (V5 wave 2) ·
+  canonical_universe:371-372 floor (V6 wave 2) · canonical_universe:424 codex-ref repoint (V8 wave 2) ·
+  dependency_check:293-301 RE-TRIAGE (MECH-2 #5a)
+- STATUS/COUNTS (MECH-1a, 19 items): process_killed:72 · sports_catalog:65 · footystats:52 ·
+  sports_index_recency:28→resolved · cf8:3-4+40 · fixtures:7 · force_fetch:13+181 · scattered:22-23 · halftime:121,127 ·
+  batch5:11 · sweep:666-669 · part2:752 · finalize:57 · process_killed:174-185 · track_x:62 · honest_absence:27 ·
+  footystats:186-188
+- last_updated: MECH-1b table above (33 docs)
+- PATHS (MECH-2): mdps_features×4+../ · catalog_league_grain×3 · group_c+odds_feature_naming related · predictions_ml
+  gate→629 · dependency_check refs×2 · backfill_smoke provenance+text · convention refs×7
+  (footystats:27→`/plans/archive/2026_07/instruments_service_docs_consolidation_2026_07_08.md`; backfill_smoke:37;
+  adapter_findings:38; phantom:26; cf8:26; peripheral:29→`/plans/active/sports_consolidated_closeout_2026_07_19.md`) ·
+  canonical_universe p2_history×2+counts · fork:346-348
+- EPIC `sports_master.md`: E1 golden-window banner+paths (:67-75,:20,:71) · E3 SFI freeze un-block (:1351-1353) · E4 P0
+  wait-condition (:448-449) · E5 master-plan cross-refs (:1546-1549) · E7 critical-path row (:367) · E8 dangling
+  plans/ai (:1550) · E6 last_updated→2026-08-02 (:62) · **E2 roster hand-edit** (25 declared vs 16 listed; 6
+  archived-as-active rows; 17 missing; count line; populator has NO epic filter — do not run in shard; flag fleet
+  re-run)
+- GRACE-DEFERRED (do NOT edit): batch10_finalize:79 codex path · native_ao_extract banner+last_updated
+- CROSS-TRANCHE (FILE only): tradfi_manifest_content_recovery_completion L350 placeholder-SHA flip
+
+### P0 odds-launch — resolved-outside-docs (no operator question needed)
+
+The contradiction is real and reconciled per V1 texts; the underlying blocker was already answered by the operator on
+2026-08-03 (10M top-up, BLK-6728ec9a, archived quota doc resolved). Informational notify only; the tracked
+`[OPERATOR] P0` follow-up below becomes "confirm docs reconciled" — self-owned.
+
+### Tracked follow-ups (`- [ ]`)
+
+- [ ] [DOC] P1. `mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp` — convert prose remediation to `- [ ]`
+      todos or flip `assigned_vm` → NA (owner decision; planning+orchestrator-agent with zero checkboxes).
+- [ ] [DOC] P2. `sports_track_h_denominator_prereqs` todo 1 (batch_footystats copy+swap) — reviewer re-verify fresh
+      census (0 non-registry `league_id` rows; 15,980/15,980 PASS reported) + flip.
+- [ ] [DOC] P2. Archive `instruments_service_sports_footystats_uac_overlap_qg_red` after unlock —
+      `locked_since: 2026-05-21` predates `created: 2026-07-30` (impossible metadata); fix or `[unlock-plan]` first.
+- [ ] [DOC] P2. Archive `sports_index_recency_masked_captured_atoms` after status → resolved.
+- [ ] [DOC] P3. `batch10_finalize` codex path swap
+      (`codex/11-project-management/plan-completion-and-archival-discipline.md` → `12-agent-workflow/…`) — grace expires
+      2026-08-07 ~03:30Z.
+- [ ] [DOC] P3. `sports_consolidated_native_ao_extract` stale draft banner + last_updated (grace).
+- [ ] [DOC] P2. Fleet re-run `scripts/plans/populate_epic_bodies_2026_05_21.py` (all-epic roster regeneration;
+      sports_master hand-fixed this run).
+- [ ] [DOC] P2. Cross-tranche file: `tradfi_manifest_content_recovery_completion` §B.5 "verify+close" placeholder-SHA
+      flip (trafdi tranche).
+
+### Deferred work after 2026-08-06
+
+| Item                                                    | State              | Blocked on                          |
+| ------------------------------------------------------- | ------------------ | ----------------------------------- |
+| MECH-1a + MECH-2 verdicts                               | Cannot be done yet | harness notifications (auto-arrive) |
+| Wave-2 verify V4/V5/V6/V7/V8                            | Cannot be done yet | wave-1 slots + verdicts             |
+| STEP 5 apply (~35 edits)                                | Not done           | verdicts                            |
+| STEP 6 route (informational notify + `_agent_pings.md`) | Not done           | STEP 5                              |
+| STEP 7 PR + result POST `/api/plan_health/result`       | Not done           | STEP 5-6                            |
+| STEP 8 `/done`                                          | Operator-owned     | operator answers                    |
+
+**Recommended next:** apply V1/V2/V3 confirmed texts + MECH-1b last_updated (all verdicts in hand) as the first STEP-5
+commit class, then MECH-1a/MECH-2 as their verdicts land, then wave 2.
+
+### Lessons (this run)
+
+- **Grace**: name-date ≠ git-change-date — re-check `git log -1 --format=%ct` per doc immediately before editing (caught
+  batch10_finalize at 3h while named 08-06).
+- **Adversarial verification earns its keep**: V1-refuter found the 08-03 top-up that the confirmer missed — without the
+  pair, I'd have bannered BLOCKED-CREDENTIALS on an already-resolved blocker. Always cross-check beyond the candidate
+  docs (the resolution lived in an archived doc).
+- `populate_epic_bodies` has NO epic filter → in sharded runs, hand-edit the shard's epic roster + flag a fleet re-run.
+- **Circular-evidence class**: flips citing "covered by doc X (all todos [x])" where X's own todos defer the work back
+  (candle todo 3 ↔ B.5; "all 20" vs actual 17) — check the cited doc's closure conditions, not just its checkboxes.
+- **Layered-flag class**: `--force` (CLI) vs `--redo-all` (launcher) can be one invocation at two layers — verify the
+  launcher's composition logic before flagging a discrepancy (refuter did; I wouldn't have).
+- Live `gcloud` checks by verifiers are decisive for VM-state claims (V2: still RUNNING ~21h).
+- Verifier prompts must carry the candidate contract inline (/tmp prompt files die with the session — this section
+  exists because of that).
+- The heartbeat nudge fires on aggregate slot state (agent-orchestrator ahead=1, market-tick-data-service dirty=1 —
+  inherited, untouched); verify before reacting.
