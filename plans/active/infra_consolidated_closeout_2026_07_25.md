@@ -375,7 +375,7 @@ not data-pipeline).
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B) — confirmed shipped today
   (`deployment-ui@727298b`, 2026-08-01 01:42 UTC) and the file confirmed genuinely quiet corpus-wide (no other active
   plan holds an unshipped claim on it). Drafted
-  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
+  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
   (single todo, no finalize twin per the single-todo carve-out, `status: draft` — operator flip required). G1/G2
   (`base-service.sh`/`base-library.sh` serialization) remain gated, unchanged. G4 (`PYTEST_UNIT_DIR`) reconfirmed
   already resolved elsewhere (shipped 2026-07-31). G5's MTDS >900-line-tail sub-item reconfirmed already resolved
