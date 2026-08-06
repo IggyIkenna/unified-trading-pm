@@ -39,15 +39,28 @@ resolved_by:
 
 ## Flips verified
 
-(pending STEP 4)
+- cefi_4surface:793 `_DRYRUN_COLS` — code half [x] @ instruments-service@97801b5d (1284606a = pre-rewrite twin, NOT
+  cited); re-run/decide half split to new todo (promote scratchpad script first)
+- cryptovenue:225 Barchart removal — [x] @ unified-api-contracts@844c5ee6b (ancestor-verified) + codex retirement
+  2026-06-24; residual = dead smoke_matrix.py:143 key
+- backfill_smoke:302 todo 6 — [x] "answered by action" (R2 co-fix/co-migration, utl@43fa6f3f + is@a9be6ce9; register
+  §6b)
+- honest_coverage:474-475 — [x] KEPT (flip legitimate, 65f653fd9); leading-bold annotated CLOSED-2026-08-03
 
 ## Contradictions
 
-(pending)
+- T-C1 [P1] ASTER attempted_failed: closeout Track 6 "unresolved" vs aggregated_sources "resolved 07-26, 150" — both
+  GRACE → ROUTED Q1
+- T-C2 [P1] archived cutover "ALL COMPLETE" vs fleet 10/44 incomplete — archived doc → ROUTED Q2
+- B2-C3 enum audit dual verdicts — resolved via SUPERSEDED cross-ref (Class B 08-05 live read wins)
+- B2-C6 units mix (rows/groups) — ambiguous → ROUTED Q6b
 
 ## Doc-drift
 
-(pending)
+- 27 codex-alignment findings (hunter C): 14 CODEX-STALE (7 P1) → flag-only, ROUTED Q6c for sweep plan; 3 mis-citations
+  re-pointed (adapter_findings, candle_feature, smoketest)
+- 9 PLAN-WRONG → all fixed in STEP 5 (8 applied; C8 archive_exempt dual-direction ROUTED Q5)
+- cefi_master epic count 5-vs-19 → ROUTED Q4 (regen deferral)
 
 ## Hygiene fixes
 
@@ -55,23 +68,37 @@ resolved_by:
 
 ## Filed
 
-(pending)
+- plans/active/issues/plan_reconciler_findings_2026_08_06.md (this doc) = run journal + durable todo surface
+- Codex-drift sweep follow-up todo added (see Deferred table) pending operator answer on Q6c
 
 ## Archive candidates (operator review)
 
-(pending)
+- coinbase_cde (3/3 [x] sha-evidenced) — NOT auto-archived: locked_by + split verdict → ROUTED Q3
+- features_universe_filter — NOT archive-ready (premature LC_TARBALL flip unresolved; locked_by)
+- instruments_batch1 (5/5 [x]) — NOT archive-ready (false-completion-claim vehicle issue, grace)
+- 3 terminal-status-archived violations — all grace, report-only
 
 ## Refuted (dropped by verify)
 
-(pending)
+- A3 honest_coverage inverse-flip — REFUTED (flip legitimate, evidence chain verified) → annotate-only
+- A4 archive-ready "stale pending" blocker — REFUTED (dated narrative; subject todo DONE)
+- B6 shard24 headline defect — tiebreaker: confirmer evidence won (image postdates fix; UPDATE_TIME=2026-08-02T15:23:00)
+  → minimal title reword applied
+- B1 Option-B drop — refuter won: annotate-don't-drop (doc deliberately keeps choice open)
 
 ## Coverage (hunters / batches / docs)
 
-(pending)
+- 8/8 hunters: B0-B4 (5×10-doc batches), T (topic), M (mechanical adjudicator), C (codex-alignment) — 50 writable docs
+  covered, all reports recorded above
+- STEP 4: 8 verifier agents (refuter+confirmer × 4 clusters) — 27 candidates verified; splits: A4 (route), B1
+  (annotate), B6 (tiebreaker by direct evidence)
+- STEP 5: 13 commits applied on plan_reconciler/agt-bf8439 (12 doc-fix commits + findings updates)
 
 ## Plans not reached
 
-(pending)
+- None in the writable set: all 50 writable cefi docs were read by ≥1 hunter; 43 grace docs were report-only (recorded
+  per-hunter)
+- Epic regen (cefi_master) deliberately NOT applied — ROUTED Q4
 
 ## Hunter reports received
 
@@ -602,3 +629,37 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
 - B6 — shard24 title :3-6 tail clause → "deploy-lag gap since closed 2026-08-02 (image postdates fix commit —
   batch4:latest UPDATE_TIME=2026-08-02T15:23:00 verified), test-pass half of done-when still unverified per Progress Log
   :195-197". [OPERATOR] P2 todo :154-163 stays open.
+
+## STEP 6 routing log (all POSTed to operator, can_continue: true — none block the run)
+
+- **Q1 [P1]** ASTER attempted_failed contradiction (closeout vs aggregated_sources) — rec A (aggregated_sources current;
+  annotate closeout on next writable pass)
+- **Q2 [P1]** archived cutover ALL-COMPLETE vs fleet truth — rec B (leave archived doc as written)
+- **Q3 [P2]** coinbase_cde archive unlock — rec B (keep active; locked flag; safer default)
+- **Q4 [P2]** cefi_master epic count 5-vs-19 — rec B (defer whole-corpus regen to Saturday all-run / dedicated plan;
+  dry-run verified whole-corpus blast radius)
+- **Q5 [P2]** deribit_finalize archive_exempt dual-direction — rec C (leave both; tooling real, codex gap minor)
+- **Q6 [P2/P3]** batch: H1 volume-feature fate (a) keep deferred; B2-C6 units (b) report-only; codex-drift sweep (c)
+  file tracked todo — rec A
+
+**Codex-drift sweep follow-up (pending Q6c answer — do not dispatch before operator answer):**
+
+- [ ] [DOC] P1. Dedicated codex-drift sweep plan: fold the 14 CODEX-STALE findings (7 P1) into their SSOTs —
+      orphan-object-detection.md:291-294, honest-absence-downstream-handling.md:1246-1258, per-asset-group-bucket-
+      layouts.md:129, availability-manifest-and-data-status.md:69-70 + shard-level-failure-isolation.md:97-98 +
+      :813/:834/:986, data-lineage-MTDS-features-ml.md:123-128, vm-launcher-runbook.md:364-369/:510-516,
+      data-pipeline-alerts.md:144, pipeline-mode-partition.md:167-168/:127, instruments-foundation-and-catalogue-
+      completeness.md:319-320/:514-515, tradfi-databento-sourcing-ssot.md:328, cross-asset-canonical-target-ssot.md:
+      469-470 — full evidence per finding in this doc's hunter-C section. Codex edits are operator-gated: the plan must
+      carry [OPERATOR] approval + the findings doc citation.
+
+## Deferred work after 2026-08-06 (run-close)
+
+| item                                                    | state/why deferred                                | blocked-on               |
+| ------------------------------------------------------- | ------------------------------------------------- | ------------------------ |
+| STEP 8 operator answers (Q1-Q6) → apply                 | Cannot be done yet — answers pending in dashboard | operator reply           |
+| Codex-drift sweep (14 CODEX-STALE findings)             | Operator-gated (Q6c) + codex edits are gated      | operator approval        |
+| cefi_master epic body regen (5→19)                      | Whole-corpus regen deferred                       | Saturday all-run / Q4    |
+| coinbase_cde archival (unlock + 6-step ritual)          | locked_by + operator question Q3                  | Q3 answer                |
+| ASTER attempted_failed annotation on closeout           | GRACE (read-only this run)                        | grace window + Q1 answer |
+| epic regen + archival rituals from other tranches' runs | out of shard scope                                | their runs               |
