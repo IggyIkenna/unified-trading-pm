@@ -46,6 +46,16 @@ code_refs:
 
 ## Full Pipeline: LDR → Cloud Build
 
+> **The unit of work lands on `live-defi-rollout` (LDR) and stops.** A slot ships via `quickmerge --agent --files`,
+> which commits to LDR. The **LDR→main fleet promoter** (`ldr-to-main-promote-fleet.yml`, cron `*/15`) opens a standing
+> per-repo promote PR (head=LDR) and auto-merges it when all three MVP gates are green — **directly to `main`, no
+> staging hop**. `staging` is KEPT as a branch but is **DORMANT** behind a reversible per-repo toggle
+> (`promotion_model: ldr_main` in `workspace-manifest.json`; see `/codex/08-workflows/ci-cd-flow.md` § "Branch model"
+> for the full topology + staging re-entry procedure).
+>
+> This is the operator-facing summary; the engineer-view SSOT with the full mermaid diagram, branch table, and
+> per-workflow drill-down is `/codex/08-workflows/ci-cd-flow.md`.
+
 ```
 1. Push to live-defi-rollout (LDR)
    └─ bash scripts/quality-gates.sh          ← FULL: lint+tests+typecheck+codex+pip-audit
@@ -56,42 +66,49 @@ code_refs:
 2. bash scripts/quickmerge.sh "msg" --agent --files '...'
    └─ reads .qg_last_passed_sha — SHA AND config (ENVIRONMENT/DEPLOYMENT_ENV) must both match
       SHA/config mismatch / missing → EXIT 1 ("Run quality-gates.sh on current HEAD first")
-      SHA + config match → skip Pass 2 QG re-runs → commit + push branch + gh pr create → staging
-                  auto-merge enabled on PR immediately
+      SHA + config match → skip Pass 2 QG re-runs → commit + push to LDR
+      (Pass 1 QG wrote the sentinel on this exact SHA; Pass 2 only ships it)
 
-3. workspace-qg GHA fires on the staging PR  ← triggers: push [main,staging] + PR→[main,staging]
-   └─ ubuntu-latest, fresh dep clone, published tag resolution
-      quality-gates.sh --no-fix (full suite — independent verification)
-      on failure → posts to #ci-failures Slack with PR link + source/target branch
+3. LDR→main fleet promoter picks up the new LDR HEAD
+   └─ ldr-to-main-promote-fleet.yml (cron */15) — standing per-repo promote PR (head=LDR, base=main)
+      GATE SET (exactly three, all must be green before auto-merge arms):
+      a) sit-gate/fleet-green — fleet-shared SIT signal (full-workspace-sit.yml green?)
+         → posted as a commit status on every promote-PR head, unconditionally
+      b) quality-gates-v2 — per-repo CI on the promote PR (head=LDR, base=main)
+      c) quickmerge-provenance — check_strict_quickmerge.py verifies the Quickmerge: trailer
+      └─ all 3 green → auto-merge (squash) → main
 
-4. PR auto-merges to staging on green
-   └─ dispatch: qg-passed → PM cloud-build-router
+4. On push to main:
+   a) semver-agent.yml — parses commit prefix, mints git tag (vX.Y.Z), bumps pyproject.toml
+   b) publish-package dispatcher → AR wheel publish
+   c) cloud-build-router.yml → Cloud Build / CodeBuild image build
+      └─ clone deps (live-defi-rollout branch)
+         docker build
+         quality-gates.sh --no-fix --quick inside container (lint+codex only, no tests)
+         push to Artifact Registry (tagged :VERSION :SHORT_SHA :latest)
+         CVE scan — CRITICAL gate
+         notify-deployment dispatch to deployment-service
+   d) main-backmerge-to-ldr.yml — FF-only merge of main back into LDR (on push + hourly drift-tick)
 
-5. semver-agent: parses commit prefix → bumps pyproject.toml
-   → commits to staging → workspace-qg re-runs → if green, staging-to-main fires
-
-6. staging-to-main.yml: squash-merges staging → main
-
-7. Cloud Build triggers on main
-   └─ clone deps (live-defi-rollout branch)
-      docker build
-      quality-gates.sh --no-fix --quick inside container (lint+codex only, no tests)
-      push to Artifact Registry (tagged :VERSION :SHORT_SHA :latest)
-      CVE scan — CRITICAL gate
-      notify-deployment dispatch to deployment-service
+5. staging — DORMANT (0 repos route through it today)
+   └─ reversible per-repo toggle: flipping a repo off ldr_main routes it LDR→staging→main
+      (major/breaking version bump or explicit operator decision — see ci-cd-flow.md § "Staging
+      re-entry procedure" for the exact uncomment + manifest-flip steps)
 ```
 
-**Branch protection enforcement** (both `staging` and `main`):
+**Branch protection enforcement** (`main` only):
 
-- Required status check: `quality-gates-v2` — nothing merges without CI green (v1 `quality-gates`/`workspace-qg`
-  **RETIRED 2026-05-29** — see `/codex/08-workflows/ci-cd-flow.md` § quality-gates-v2 and
-  `plans/active/ci_canonical_v2_migration_2026_05_29.md` for migration history)
-- Applies to all PRs regardless of how created (manual or quickmerge)
-- Caller file: `.github/workflows/quality-gates-v2.yml`; callee: `python-quality-gates-v2.yml` in PM
+- Required status checks on `main`: `quality-gates-v2` + `sit-gate/fleet-green` (for `ldr_main` repos;
+  `pin_branch_protection_rulesets.py` requires `sit-gate/fleet-green` ONLY for `promotion_model=ldr_main` repos — never
+  `unified-trading-pm` / `system-integration-tests`, whose main-bound path differs).
+- `staging` has NO branch protection rulesets — it is dormant (drain crons stopped); if reactivated the same gates apply
+  (SIT re-homed onto a frozen LDR snapshot + `quality-gates-v2` + quickmerge-provenance).
+- Caller file: `.github/workflows/quality-gates-v2.yml`; callee: `python-quality-gates-v2.yml` in PM.
+- v1 `quality-gates`/`workspace-qg` **RETIRED 2026-05-29** — see `/codex/08-workflows/ci-cd-flow.md` § quality-gates-v2.
 
 **Note on LDR:** `live-defi-rollout` has no remote CI — `quality-gates-v2` does NOT trigger on LDR pushes. Local
-`quality-gates.sh` + sentinel is the only gate on LDR. This is by design: LDR is a rapid-dev branch; remote CI fires
-only at the staging PR boundary.
+`quality-gates.sh` + sentinel is the only gate on LDR. This is by design: LDR is a rapid-dev integration trunk; remote
+CI fires only at the LDR→main promote-PR boundary.
 
 ---
 
@@ -113,39 +130,69 @@ recorded configuration doesn't match what this run resolved. Partial runs (`--sk
 
 ---
 
-## Gate 2 — Staging via Quickmerge (Pass 2)
+## Gate 2 — Quickmerge (Pass 2)
 
 ```bash
-bash scripts/quickmerge.sh "feat: description"              # standard → staging
-bash scripts/quickmerge.sh "feat!: breaking" --to-staging    # breaking change → staging
-bash scripts/quickmerge.sh "feat: work" --agent              # agent session
-bash scripts/quickmerge.sh "fix: dep" --dep-branch "feat/X"  # cross-repo feature
+bash scripts/quickmerge.sh "feat: description" --agent --files '...'   # agent session (canonical)
+bash scripts/quickmerge.sh "feat: work" --agent                        # agent session (all files)
+bash scripts/quickmerge.sh "feat!: breaking" --to-staging               # breaking change → staging (dormant path)
+bash scripts/quickmerge.sh "fix: dep" --dep-branch "feat/X"             # cross-repo feature
 ```
 
-Quickmerge: fast-forwards staging to HEAD, creates PR targeting main, triggers full CI.
+Quickmerge: verifies the Pass 1 sentinel (SHA + config match) → commits + pushes to LDR. That's it — the unit of work
+lands on LDR and stops. The LDR→main fleet promoter handles promotion from there. `staging` is NOT the default
+destination; `--to-staging` is the dormant exception path for a major/breaking bump routed through staging.
 
-**Operator safety checklist before pushing to staging**:
+**Operator safety checklist before pushing to LDR**:
 
-- `git fetch` first — 0 incoming on staging before pushing
-- Never `git push` directly — quickmerge is the only sanctioned path
-- Breaking change (`feat!:`)? Use `--to-staging` to avoid premature main promotion
+- `git fetch` first — ensure your clone is current against `origin/live-defi-rollout`
+- Never `git push` directly for code — quickmerge is the only sanctioned path
+- Breaking change (`feat!:`)? Default still goes LDR→main direct; `--to-staging` only if a repo is explicitly routed off
+  `ldr_main` (see `/codex/08-workflows/ci-cd-flow.md` § "Staging re-entry procedure")
 - Cross-repo dep update? Use `--dep-branch` to bundle feature + dep in one PR
+- After quickmerge lands, verify: `git merge-base --is-ancestor <SHA> origin/live-defi-rollout`
 
 ---
 
 ## Gate 3 — Main Promotion + Semver Bump
 
-CI on staging triggers `semver-agent.yml`:
+The LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`, cron `*/15`) opens a standing per-repo promote PR
+(head=LDR, base=main) with a **frozen per-SHA head** — it never rebases, so the gate status stays stable.
+
+**The three MVP gates** (the ONLY things that block auto-merge; see `/codex/08-workflows/ci-cd-flow.md` § "The MVP gate
+set" for the retired/advisory-only list):
+
+1. **`sit-gate/fleet-green`** — fleet-shared SIT signal. Computed each tick from the last COMPLETED
+   `full-workspace-sit.yml` run on `system-integration-tests` and posted as a commit status on every promote-PR head
+   unconditionally (fail-CLOSED on any read gap/error).
+2. **`quality-gates-v2`** — per-repo CI on the promote PR. The canonical required check on every `ldr_main` repo's main
+   ruleset.
+3. **quickmerge-provenance** — `check_strict_quickmerge.py` verifies the `Quickmerge:` trailer on every commit in the
+   promote-PR diff; only quickmerge'd content reaches main.
+
+All three green → the promoter arms `gh pr merge --auto --squash --delete-branch` and the PR merges to `main`.
+
+**On push to `main`**, `semver-agent.yml` fires:
 
 1. Parses latest commit prefix (`feat:` → minor, `fix:` → patch, `feat!:` → minor on 0.x.x)
-2. Calls `update-dependency-version.yml` in downstream repos via `repository_dispatch`
-3. On success: bumps version in `pyproject.toml` → creates staging commit → CI runs again → if green, promotes to main
+2. Mints a git tag (`vX.Y.Z`) on the squashed merge commit
+3. Bumps version in `pyproject.toml`
+4. Calls `update-dependency-version.yml` in downstream repos via `repository_dispatch`
+5. `publish-package` dispatcher publishes the wheel to Artifact Registry
+6. `main-backmerge-to-ldr.yml` merges the reconciled `main` back into LDR (FF-only, never force; on push + hourly
+   drift-tick) so LDR stays current
 
 **Major bumps** are blocked from auto-promotion:
 
 - `request-major-bump.yml` creates an Issue with `major-bump-pending` label
 - Operator comments `/approve` on the issue to execute
 - See `/codex/08-workflows/version-graduation.md` for full 1.0.0 graduation procedure
+
+**The `promotion_model` toggle (reversible, per-repo).** Today **24 repos are `ldr_main`** (LDR→main direct) and
+**`unified-trading-pm` runs its own dedicated `ldr-to-main-promote.yml` Option-B path**, so **0 repos route through
+staging**. Flipping a repo off `ldr_main` (a major/breaking version bump or an explicit operator decision) routes THAT
+repo LDR→staging→main again — the gates are UNCHANGED (same three), staging just adds the hop. Do not describe staging
+as the default path; it is the dormant exception.
 
 ---
 
