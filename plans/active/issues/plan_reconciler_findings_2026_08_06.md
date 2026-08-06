@@ -400,6 +400,82 @@ in-flight audit-family doc, collision risk). Root cause of same-day staleness: g
     consistent; ci_registry todo 3 correctly open (3-consecutive-green done-when unmet), todo 4 CONCLUSIVE [x]. No
     findings beyond the above.
 
+## Hunter results — E (infra issues batch 2, 20 docs) — 2026-08-06
+
+19 findings; hunter over-marked grace — orchestrator re-measured: deployment_service_live_event_log,
+na_doc_tranche_inventory, docs_reconcile_autonomous_sweep, na_eligibility_incremental_diff are WRITABLE (14h), so
+E-5/E-14 become fixes; E-8/9/E-15 stay report/route (content-level, STEP-4-decided). Two flip-candidate-INVERSES ([x] on
+not-fixed work) + one spurious-lock discovery (unlocks an archival candidate). Out-of-shard flags routed, not actioned.
+
+1. **G** `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md:120-127` — P1 flip-inverse:
+   `- [x]` on "DID NOT RECUR 2026-08-06 — inconclusive, not fixed" + "Left open as a real latent risk" (unbounded gsutil
+   code unchanged). Box [x] while text says not-fixed → must stay open or latent risk needs its own tracker. GRACE —
+   report only. (:46 bare source ref, P3.)
+2. **G** `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md:158` vs `:236-237,252` — P1
+   flip-inverse: [x] INFRA P3 "DONE 2026-08-04 (operator-forced cutover)" while Progress Log says "leaving P3 open
+   (SIGABRT root cause still unresolved... not a clean resolution)"; 08-06 archive audit agrees. Follow-up [INFRA] P1
+   open at :247. GRACE — report only. (:41 last_updated stale, P3.)
+3. **G** `deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md:170-212` — P2 structural:
+   soak-evidence block has runaway leading whitespace (lines 855-932 chars; :178 starts with ~170 spaces) — renders as a
+   giant code block; exact class fixed in plan_quality_four_line (739c7411b) but never here. GRACE — report only. (:178
+   bare dead cite of archived setup_data_pipeline doc, P3.)
+4. **G** `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md:104-110` — P2: [x] "Final drain
+   confirmation on/after 2026-08-09" admits its own done-when (≤9% bloat) NOT met — "This flip records the 08-06
+   verification cycle, NOT the final drain"; duplicate-titled `- [ ]` sibling (:114-121) is the honest tracker. GRACE —
+   report only. (:106 "byte-identical" vs 3 differing totals; :29 last_updated stale — both P3.)
+5. **W?** `deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md:32` — P3: last_updated 08-03 vs 08-06
+   entries. No material contradiction; [OPERATOR] P3 legitimately open (batch7 holds the bounded read-only half). → bump
+   (verify grace at apply).
+6. **G** `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md:34` — P2 **spurious lock**:
+   `locked_since: 2026-05-21` PREDATES `created: 2026-07-21` by 2 months (copy-paste artifact) — the `locked_by` lock
+   may be invalid, unblocking archival. OUT OF SHARD (ui-tranche, retagged 07-30) — ROUTE to ui shard.
+7. **G** `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md:9` — P2 resolved-unclosed: all 3 todos [x]
+   (:59,70,77), Progress Log "all 3 items... now done" (:113-114), `status: open` — archival candidate blocked only by
+   the suspect lock (#6). OUT OF SHARD — ROUTE to ui shard (this matches G-hunter's archive-candidate shape flag).
+8. **G** `docs_reconcile_autonomous_sweep_2026_07_30.md:228` vs `:367-368` — P1: P0-A [x] "RESOLVED 2026-08-02, option A
+   applied" vs the doc's OWN 08-03 end-to-end audit listing P0-A among "2 survivors" still-open authority calls; no
+   Progress Log entry records the flip. Irreconcilable in-doc. GRACE — report only.
+9. **G** `docs_reconcile_autonomous_sweep_2026_07_30.md:236-238` — P2: P0-A resolution's only shipped-SHA evidence "does
+   not resolve in any local clone, most likely a transcription typo" — a P0 outage-class (08-15 cliff) resolution with
+   unresolvable evidence. Orchestrator should re-verify the `grep -rl "last_reviewed: 2026-05-17"` zero-match claim
+   (:232-233) rather than trust the typo'd SHA. GRACE — report only + route.
+10. **W** `host_root_disk_full_transient_2026_07_13.md:42` — P2: `related:` cites qg_host_governor_severe_contention at
+    non-existent ACTIVE path + missing leading slash; `context_scope:` (:35) cites the ARCHIVED path correctly. → fix:
+    repoint related to /plans/archive/issues/ path.
+11. **G** `issue_docs_remediation_sweep_2026_06_02.md:263-268,437-445` — P2: mid-sentence "CLOSED 2026-08-06
+    (na-eligibility-audit)" insertions mangle D8 + G-TRACE todos (original sentences broken, lone "_provider name_"
+    remnant); both boxes `- [x] ✅` while inserted text says "checkbox never flipped" — direct self-contradiction.
+    CLOSED claims themselves backed (batch1:444/:722 verified contain the ships). GRACE — report only.
+12. **G** `issue_docs_remediation_sweep_2026_06_02.md:22-47` — P2: related/source list 8+ bare-path refs at ACTIVE
+    locations for docs that are ARCHIVED (gcs_hive_partition, alerting_fp_rate [archived per own body :334],
+    softdelete_log_churn, api_host_chronic_impairment, cefi_processed_candles, mdps_state_adapter,
+    running_vm_fleet_status, uniswap_v3_28k); context_scope cites them correctly. GRACE — report only.
+13. **W** `legacy_bucket_template_literals_2026_07_16.md:28-33` — P2: `related:` uses BANNED `../`-relative refs
+    (`../sports_legacy_bucket_cutover...`, `../../epics/sports_master.md`) resolving to dead ACTIVE paths; context_scope
+    cites the same targets archived+slash-correct. → fix: repoint to /plans/archive/2026_07/ + /plans/epics/ forms. (:36
+    last_updated 07-16 stale — bump, P3.)
+14. **W?** `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md:52` — P3: last_updated
+    "2026-07-30" vs 08-06 KEEP-NA entry. → bump (verify grace at apply).
+15. **G** `na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md:166-168` — P1:
+    Progress Log 08-06 parks BLOCKED-OPERATOR-DECISION on premise "batch7 `status: draft`" — FALSE: batch7 is
+    `status: active` (frontmatter :18), already holds BOTH claims as open `- [ ]` todos, finalize twin exists → option
+    (A) appears to have happened; this doc's 2 open todos may be double-tracked with batch7. → ROUTE: operator
+    re-adjudication needed.
+16. **G** `na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md:97` vs
+    `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md:351` — P2: doc-18 table claims gate_on_depends has
+    "Real: 0" open todos ("both real todos `- [x]`") but the target has a REAL open `[BACKEND] P1` outside any fence
+    (:351, added 08-02, reinforced 08-06) → misclassified as 0-open archival candidate. (Fence analysis itself correct —
+    the 5 phantom todos ARE fenced.) GRACE — report only.
+17. **G** `plan_quality_four_line_defense_architecture_2026_07_23.md:189,263` — P3: cites
+    `plan_line_cap_remediation_2026_07_23.md` as "still `status: open`" / "the tracked owner" — now ARCHIVED with
+    `status: resolved`; 5 cites all bare filenames. GRACE — report only. POSITIVE: claimed 08-06 whitespace fix VERIFIED
+    applied (739c7411b; no >40-space lines) — do NOT re-fix.
+18. **G** `per_venue_scope_key_provisioning_incomplete_2026_07_23.md:57` — P3: body cite missing leading slash (target
+    exists archived). OUT OF SHARD (cefi-tranche) — report only.
+19. Clean docs (no findings): deployment_api_inventory_alert_gate (ui, single open [HUMAN] P2 KEEP-NA),
+    e2e_login_persona_handoff_helper, git_health_not_clean (citations live — batch3:154 open todo matches),
+    gitignore_sync_script (todo 1 [x] pm@78a3740bf real), lc_verify_tarball_freshness.
+
 ## Hunter results — F (infra issues batch 3, 13 docs) — 2026-08-06
 
 19 findings; 2 docs clean (production_readiness_checklist_file_missing, silent_wrong_answer_audit). No true missed-flip
