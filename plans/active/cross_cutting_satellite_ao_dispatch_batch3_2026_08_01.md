@@ -128,20 +128,16 @@ source: >-
       reloaders' actual behavior to the SSOT. Independent of that doc's unresolved A/B/C safety-guard decision (follow-
       up 1, operator-gated — do not touch that question here). **Done when**: the SSOT documents both reloaders with the
       same depth as the existing `StrategyConfigReloader` section, and the source doc's follow-up 2 checkbox is flipped.
-- [ ] [DOCS] P0. **Correct the mbp_10/CME scope framing + audit the `DP_RUN_MOSTLY_EMPTY` suppression decision for that
-      cell.** Source: `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s second open item. Edit
-      `plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to state
-      plainly that the CME/`mbp_10` UAC registry restriction is a confirmed-still-intentional operator MVP-scope
-      decision, not an open gap (that doc's own "Resolution — mbp_10" section already carries this framing internally —
-      this is a top-of-doc/summary correction so the framing isn't buried). Then audit the `DP_RUN_MOSTLY_EMPTY`
-      detector (`deployment-service` data-pipeline monitors) to determine whether the (tradfi, CME, `mbp_10`) cell
-      should be suppressed or reclassified as expected, following the same narrowing precedent already used for the
-      KRX/ICE/CBOE cells in that same sub-issue doc, and implement whichever the precedent implies. **This is a content
-      edit to a tradfi-titled doc; re-verify no concurrent tradfi-tranche edit is in flight on that file immediately
-      before committing** (verified clear as of this batch's authoring — 2026-08-01, zero commits in the preceding 6h,
-      no `locked_by`). **Done when**: the framing correction is committed, the suppression/reclassify decision is
-      implemented or explicitly recorded as already-correct-as-is, and
-      `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s second open item checkbox is flipped.
+- [x] ✅ [DOCS] P0. **Correct the mbp_10/CME scope framing + audit the `DP_RUN_MOSTLY_EMPTY` suppression decision for
+      that cell.** — `unified-trading-pm` (tradfi doc framing correction, 2026-08-06) + `deployment-service@ba40e4a`
+      (known-dead registry entry). Source: `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s second open item.
+      Edited `plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to
+      add a prominent top-of-doc resolution banner stating plainly that the CME/`mbp_10` UAC registry restriction is a
+      confirmed-still-intentional operator MVP-scope decision, not an open gap. Added `("tradfi", "mbp_10")` to
+      `KNOWN_DEAD_CELLS` in `deployment-service`'s `known_dead_cells_registry.py` (same precedent as `ohlcv_15m`/CBOE),
+      which suppresses `DP_RUN_MOSTLY_EMPTY` for this cell so long as no new `attempted_failed` rows appear after the
+      `narrowed_at` date (2026-07-15). 2 new unit tests. QG green, quickmerge landed.
+      `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s second open item checkbox flipped.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION)
 
