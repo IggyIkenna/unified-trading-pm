@@ -56,9 +56,11 @@ assigned_vm: planning
 resolved_by:
   "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback) + uac@502ef57e
   (colon-guard fail-loud on build_instrument_id + defi ID_FORM widening, § 7 items 2+4); surface-A re-run DONE
-  2026-07-27 (§ 7 P1, unified-trading-pm slot-15) — 1,697 colon_wire live population confirmed gone, new batch-side
-  bare-wire-symbol finding tracked as § 7 P2; residual followups tracked in § 7 (quarantine disposition) and the
-  batch=live divergence issue"
+  2026-07-27 (§ 7 P1, unified-trading-pm slot-15) — the original '1,697 colon_wire live population confirmed gone' claim
+  was a FALSE NEGATIVE (CORRECTION 2026-07-27, slot-12: the sampled window 2026-07-20..07-27 missed the real live window
+  day=2026-06-21..06-29; a direct listing found 63 colon_wire objects still present, migrated to canonical, 0 remaining,
+  via batch_live_filename_divergence_sanitize_symbol_2026_07_20.md § 5 P1), new batch-side bare-wire-symbol finding
+  tracked as § 7 P2; residual followups tracked in § 7 (quarantine disposition) and the batch=live divergence issue"
 context_scope:
   [
     /codex/02-data/four-surface-reconciliation-procedure.md,
@@ -297,12 +299,15 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       `(OKX-FUTURES, FUTURE, batch_tardis)`: 224. This is NOT covered by § 7 item 2's `build_instrument_id` colon-guard
       (that guard only fires on a symbol carrying an embedded `:`; a bare symbol like `AAOI` has none, so it
       mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
-      verdict" scope) — tracked as a new todo below. - [ ] [SERVICE] P2. Root-cause + fix the batch-side
-      bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual, OKX-FUTURES/FUTURE, DERIBIT/FUTURE via
-      `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the MTDS batch writer path that, unlike the
-      colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never wraps a colon-less symbol into
-      `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
+      verdict" scope) — tracked as a new todo below.
+
+- [ ] [SERVICE] P2. Root-cause + fix the batch-side bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual,
+      OKX-FUTURES/FUTURE, DERIBIT/FUTURE via `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the
+      MTDS batch writer path that, unlike the colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never
+      wraps a colon-less symbol into `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
       (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) and the EXTENDED adapter's own id derivation.
+      (Moved to a standalone list item 2026-08-06 by plan-reconcile — the mid-line form was invisible to the backlog
+      regen's line-start-anchored `- [ ]` regex.)
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
       instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
@@ -318,7 +323,7 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       unchecked. Regression tests: `tests/unit/test_partition_path_is_canonical.py`
       (`test_defi_canonical_stem_per_type_is_clean`, `test_defi_bare_symbol_stem_is_non_canonical_by_id_form`,
       `test_defi_gmx_chainless_perpetual_is_canonical`, `test_is_canonical_instrument_id` DeFi cases).
-- [ ] BLOCKED-UPSTREAM-DESIGN [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence
+- [ ] [DATA] P2. BLOCKED-UPSTREAM-DESIGN — The legitimately-unresolvable objects need a quarantine / honest-absence
       disposition (separate design) — gated on `fail_hard_canonical_enforcement_design_2026_07_20.md`'s own still-open
       `[DESIGN] P1. Close the three §5 gaps` todo; not independently worker-actionable until that lands. **Re-confirmed
       2026-08-02 (slot-12)**: `unified_api_contracts/canonical/quarantine.py` (`is_quarantined_instrument_id` /

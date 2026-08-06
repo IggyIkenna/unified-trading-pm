@@ -135,9 +135,13 @@ bucket vanished.
 
 1. **Possible unrecoverable data loss.** If any of the (at-least-838, possibly more by 2026-06-01) legacy-only cells
    were never copied into the `-prd` canonical bucket before 2026-07-14, that data is very likely gone — GCS bucket
-   deletion is not a soft/reversible operation in this gcloud SDK (`gcloud storage buckets list --soft-deleted` is not a
-   recognized flag on the installed SDK, 569.0.0), and the only backup found is a small, ~2-month-old, probably
-   metadata-only snapshot.
+   deletion IS soft/reversible only within the bucket's soft-delete retention window (per
+   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended 2026-07-28: a deleted BUCKET resource is
+   restorable within its retention window via the same mechanism as objects, verified by a FRESH same-run
+   `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check — the missing `--soft-deleted` CLI flag on SDK 569.0.0 is
+   a tooling gap, not irreversibility; mechanism clause corrected 2026-08-06 by plan-reconcile), and that window (fleet
+   baseline 7 days) expired ~2026-07-21, a week before this finding — so the practical verdict stands; and the only
+   backup found is a small, ~2-month-old, probably metadata-only snapshot.
 2. **Plan-corpus is now factually wrong.** Two active plans (`data_completion_cefi_2026_07_15.md`'s own "Orphan sweep
    - bucket-state evidence" / E4 gap-fill / E8 delete todos, and `legacy_bucket_dual_write_decommission_2026_07_24.md`
      line 123-154's "L6 decommission" + "version-aware delete" todos for cefi) all describe pending work — reading
