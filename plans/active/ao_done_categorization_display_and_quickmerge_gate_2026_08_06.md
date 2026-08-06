@@ -159,13 +159,16 @@ is the SSOT for branch-pair PROPAGATION lag ONLY"). So Track D dispatches from `
       `stuck_promotion_pr`/`ldr_main_qg_failure`/`harness_lint` wall-type tests. Done-when:
       `test_provenance_blocked_is_a_valid_wall_type` + the full `test_escalation.py` suite (108 tests) green. —
       agent-orchestrator@a2a254d
-- [x] 2. ✅ [BACKEND] P1. Updated `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s wall_type
-      validation (5 spots: 2 input descriptions, the `workflow_dispatch` options array, the case-statement accept list,
-      the case-statement error message) to accept `provenance_blocked` — also backfilled `harness_lint`'s pre-existing
+- [ ] [BACKEND] P1. Updated `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s wall_type validation
+      (5 spots: 2 input descriptions, the `workflow_dispatch` options array, the case-statement accept list, the
+      case-statement error message) to accept `provenance_blocked` — also backfilled `harness_lint`'s pre-existing
       absence from the 3 documentation-only spots (case-statement itself already accepted it; only the docs/dropdown
       were stale) while already touching those exact lines. Done-when: `python3 -c "import yaml; yaml.safe_load(...)"`
-      parses clean + all 5 occurrences present. — unified-trading-pm@<pending, see Deferred table>
-- [x] 3. ✅ [BACKEND] P1. Wired the actual dispatch into `scripts/cicd/ldr_to_main_fleet_promote.sh`'s
+      parses clean + all 5 occurrences present. **NOT SHIPPED** — re-opened 2026-08-06 by /plan-reconcile ao: checkbox
+      was flipped without the commit+push (direct Commit+Push+Flip HARD RULE violation); blocked on
+      `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` clearing (or an operator/agent
+      re-baselining the unrelated `workflow-template-parity` drift).
+- [ ] [BACKEND] P1. Wired the actual dispatch into `scripts/cicd/ldr_to_main_fleet_promote.sh`'s
       `provenance_check_ok()`, right after it posts the PR comment: builds a `context` string carrying `$_PROV_OUT`
       verbatim (the real `check_strict_quickmerge.py` output, naming the violating commit(s) — the worker doesn't have
       to re-derive what's already known) plus tip-vs-mid-history remedy guidance, JSON-safe via `jq -n --arg` (the
@@ -179,7 +182,10 @@ is the SSOT for branch-pair PROPAGATION lag ONLY"). So Track D dispatches from `
       a re-typed copy — confirmed the exact JSON payload `jq` produces is well-formed with correct field names/types,
       backtick/newline/quote content properly escaped, and `GH_TOKEN` propagates) + `shellcheck` (clean — the one SC2016
       info-note on the new line is the same accepted single-quote-intentional pattern the pre-existing `_PROV_BODY` code
-      two lines above already carries). — unified-trading-pm@<pending, see Deferred table>
+      two lines above already carries). **NOT SHIPPED** — re-opened 2026-08-06 by /plan-reconcile ao: checkbox was
+      flipped without the commit+push (direct Commit+Push+Flip HARD RULE violation); blocked on
+      `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` clearing (or an operator/agent
+      re-baselining the unrelated `workflow-template-parity` drift).
 
 ## Track C — Fleet + Backlog Detail done-categorization display
 

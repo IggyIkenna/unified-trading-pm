@@ -78,9 +78,9 @@ source: >-
       `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st + 2nd items — leave its
       3rd item, the operator-decision ask, untouched). **Done when**: both flips are committed with the `docs(plans):`
       prefix and cite the real commit sha(s).
-- [ ] [INFRA] P0. **Re-check whether the 1 conflict-gated declined item's named gate has cleared since 2026-08-06, and
-      spin it into batch 8 if so.** The gated item: `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s 1st item
-      (LDR-triggered `quality-gates-v2` template extension) was parked because it targets the same files as
+- [ ] [INFRA] P0. **Re-check the conflict-gated declined item's gate and spin it into batch 8 if it has cleared.** The
+      gated item: `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s 1st item (LDR-triggered `quality-gates-v2`
+      template extension) was parked because it targets the same files as
       `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. Check whether that sibling plan's todo 18 has since
       landed (and if so, whether it already covers the `ci_trigger_branch`-style parameterization this item needs, or
       leaves a residual gap worth its own todo) — per this skill's iterative-drain methodology, re-check the SPECIFIC

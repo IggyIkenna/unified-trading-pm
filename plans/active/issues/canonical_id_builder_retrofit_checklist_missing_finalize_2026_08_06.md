@@ -47,6 +47,7 @@ source: >-
   `finalize-plan-coverage` (`scripts/quality_gates/check_finalize_plan_coverage.py`, baseline
   `finalize_plan_coverage_baseline.yaml` = 0). Clean-tree check (stash of the unrelated diff) reproduces the identical
   failure at LDR HEAD — not introduced by the context-scope work.
+depends_on: []
 ---
 
 # canonical_id_builder_retrofit_checklist is missing its gated finalize plan
