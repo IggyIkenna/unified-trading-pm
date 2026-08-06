@@ -86,6 +86,15 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-06** — status=resolved (ACKED-INTO-CODE), 0 open todos. Fixed + shipped
+> `agent-orchestrator@b94f4f8` (verified landed on `origin/live-defi-rollout` via `git merge-base --is-ancestor`, not
+> just quickmerge's own message), full `quality-gates.sh` green (2493 passed, 4 skipped, 0 failed), CI green
+> (`quality-gates-v2` + Deploy Dashboard both success on the shipping commit). **Live-verified on the orchestrator VM**
+> (`i-0c9b283b31d6b5ca7`, read-only AWS SSM check): the running `orchestrator` systemd service's checkout HEAD
+> (`de73f931b80fddb9dda49c4a860033ac5b0ae3ea`, self-pulled + restarted 2026-08-06 09:23:22 UTC) is a descendant of
+> `b94f4f8` — the fix is live in production, not just merged. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # AO forced-compact injection: a wedged submit permanently disables further force attempts, letting context climb unchecked past every threshold
 
 ## Evidence
