@@ -322,6 +322,13 @@ cl-2026 @03-04 ~19h, nyse-2025-d01 @03-04 ~38h, cboe-vx-2026 @03-04 ~19h, mbt-20
 nyse-2023-d01 @05-12 ~14h). Re-extrapolate from `PROGRESS.json` rather than trusting these exact hours — the point is it
 is a **multi-day hold**, not minutes.
 
+**CORRECTION (2026-08-06T~16:25Z) — the 15–46h estimate was pessimistic.** The early-run average was inflated by VM
+spin-up; a two-snapshot delta (16:05Z vs 16:25Z) shows marginal rates ~4–8× faster. Corrected lock-clear ETA: **~6–12h
+worst case**, and most VMs finish in 1–4h (nasdaq-2024-d05 @2024-12-14 and nyse-2024-d05 @11-30 are ~20–60 min out;
+cboe-vx/btc-2026 @03-25, mbt-2024 @07-21, met-2024 @06-16 ≈ 1–2h; cl-2026 @03-18, es-2020 @04-21, met-2025 @04-08,
+nasdaq-2024-d02 @05-23 ≈ 2–4h; worst case ~5–12h: met-2023 @03-11, nasdaq-2025-d02 @05-09, nyse-2023-d01 @05-26,
+nyse-2024-d02 @05-09, nyse-2025-d02 @05-02). Still a multi-hour wait — keep-waiting decision unchanged.
+
 **Watcher hardening (learned):** a `gcloud ... | wc -l` watcher false-fires `count==0` on a transient gcloud error
 (empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
 hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
