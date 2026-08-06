@@ -143,7 +143,7 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       exists in the commit's tree, hard-fails with a pointer to the two-path `--only` fix. Wire into
       `scripts/plan-hygiene/run_hygiene_sweep.sh` as a new check. Verify: fails on the 5 known live duplicates (all
       currently present), passes on a proper rename, passes on a clean corpus. (repo: unified-trading-pm) —
-      unified-trading-pm@20e9d748c (`check_create_only_archive_commits.py` + wired into `run_hygiene_sweep.sh` as a hard
+      unified-trading-pm@5bfe78fca (`check_create_only_archive_commits.py` + wired into `run_hygiene_sweep.sh` as a hard
       check). Verified: fails on the 5 known duplicate pairs at HEAD; `--commit` mode flags the create-only signature on
       `7accf8ecf`; scratch-repo reproduction confirms proper rename (`R100`) + clean corpus pass and the two-path
       `--only` fix clears it.
@@ -169,8 +169,13 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
 
 ## Progress Log
 
+- 2026-08-06 (slot-15, review): **SHA correction** — P1's shipped evidence was first cited as
+  `unified-trading-pm@20e9d748c` (pre-rebase LOCAL commit object, still present in this slot's clone). Quickmerge
+  squash-landed the change on LDR as `unified-trading-pm@5bfe78fca` (on `origin/live-defi-rollout`). `20e9d748c` is a
+  dangling object — not on any branch/ref, unresolvable in sibling clones → would have tripped the
+  `plan-commit-sha-evidence` ratchet (at baseline=2 boundary). Evidence above corrected to `5bfe78fca`.
 - 2026-08-06 (slot-15, review): P1 shipped — `scripts/plan-hygiene/check_create_only_archive_commits.py` (new) + wired
-  into `run_hygiene_sweep.sh` as a hard check (unified-trading-pm@20e9d748c). Behavior verified: HEAD scan hard-fails on
+  into `run_hygiene_sweep.sh` as a hard check (unified-trading-pm@5bfe78fca). Behavior verified: HEAD scan hard-fails on
   the 5 live duplicate pairs; `--commit <sha>` mode flags the exact create-only signature on `7accf8ecf` (147
   archive-issue adds with surviving active twins); scratch-repo reproduction confirms proper rename (`R100`) and clean
   corpus pass, create-only fails, and the two-path `--only` fix clears it. Incidental: while running PM Pass-1 QG, hit a
