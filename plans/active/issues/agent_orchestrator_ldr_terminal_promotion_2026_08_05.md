@@ -152,6 +152,23 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       `ldr_terminal`-aware retarget of `semver-agent.yml.tmpl` — genuinely non-trivial (943 lines, ~20+ hardcoded `main`
       references, 2 cited past incidents from similar retargeting mistakes). Not needed today since nothing consumes
       agent-orchestrator's version number.
+- [ ] [INFRA] P2. Fix propagation lag: `unified-trading-pm`'s own `main` branch still reads
+      `agent-orchestrator.promotion_model="ldr_main"` (confirmed 2026-08-06, `main`'s `workspace-manifest.json` via
+      `contents` API) — the 2026-08-05 LDR fix (commit `19ee79963`) never reached `main` because unified-trading-pm's
+      own LDR→main promotion has been stuck behind repo-blocker `RB-04f4f852` (`qg_red`, plan-commit-sha-evidence
+      ratchet regression). The scheduled (`schedule`-triggered, `main`-context) `ldr-to-main-promote-fleet.yml` run
+      reads that stale `main` copy and keeps generating spurious `agent-orchestrator` LDR→main promote PRs (confirmed:
+      `agent-orchestrator#804`, "chore(promote): LDR → main (Option-B direct)", created 2026-08-06T00:48:11Z, body
+      literally says `promotion_model=ldr_main` — the exact CI-spend waste + main-merge-conflict-risk this whole issue
+      doc was written to eliminate; `agent-orchestrator#784`, the escalation that surfaced this thread, predates the
+      2026-08-05 16:12 fix so is unrelated to this regression). Done when: (a) `RB-04f4f852` resolves and `main` picks
+      up `promotion_model=ldr_terminal` via the normal pipeline, (b) `agent-orchestrator#804` is closed (not merged — it
+      should never have been opened) once the manifest catches up, and (c) consider whether
+      `ldr-to-main-promote-fleet.yml`'s `schedule` trigger should read the manifest from `live-defi-rollout` instead of
+      `main` so a stuck PM promotion can never re-open this staleness window for any repo, not just agent-orchestrator.
+      — Found while closing out escalation `agt-bc6d06` (ldr_qg_failure, agent-orchestrator#784); that escalation itself
+      is resolved (PR784 merged, `quality-gates-v2` green on LDR since 2026-08-05T16:18Z) — this todo is a distinct
+      downstream finding, out of scope for that one-shot fix.
 
 ## Progress Log
 
@@ -164,3 +181,11 @@ Confirmed by direct code/config reading before changing anything (not assumed):
   anything that isn't literally `"ldr_main"`.
 - **context-scout 2026-08-05**: populated context_scope (6 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (cicd escalation agt-bc6d06)**: dispatched to fix `ldr_qg_failure` on `agent-orchestrator#784` — verified
+  it was already resolved (PR784 merged 2026-08-05T09:48:49Z, well before the 2026-08-05 16:12 `ldr_terminal` fix;
+  `quality-gates-v2` on LDR confirmed green across 9+ consecutive runs since 2026-08-05T16:18:33Z, no new push since).
+  While verifying, found this doc's fix has NOT fully propagated: `unified-trading-pm@main`'s manifest still shows
+  agent-orchestrator as `ldr_main` (stuck behind repo-blocker `RB-04f4f852`), and the scheduled fleet-promote run keeps
+  re-opening spurious agent-orchestrator promote PRs off that stale copy (`#804`, opened 2026-08-06T00:48). Logged as a
+  new P2 todo above rather than fixed in-session (root cause is a different repo's qg_red blocker, out of scope for a
+  one-shot ldr_qg_failure escalation).
