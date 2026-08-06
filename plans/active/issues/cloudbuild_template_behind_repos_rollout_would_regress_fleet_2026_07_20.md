@@ -269,9 +269,10 @@ silently regresses the fleet again.
   - **`check_cloudbuild_template_drift.py` GREEN (exit 0)** against the post-ship LDR state; baseline re-ratcheted DOWN
     to the residual (b) set (ibkr 1→0) and the note now records the per-repo (b) WHY. Every touched consumer's
     `cloudbuild.yaml` parses as valid YAML and passes `check_cloudbuild_substitutions.py`.
-  - **End-to-end proof**: a manual `gcloud builds submit` (storageSource, so `SHORT_SHA` is empty) must recover via the
-    `VERSION` fallback instead of `invalid reference format` — run on the real infra, build id cited in the plan flip
-    when complete.
+  - **End-to-end proof EXECUTED 2026-08-06 (slot 3)**: manual `gcloud builds submit` on execution-service, build
+    `4d265c51-5ca0-4349-b48f-80d4f7179430` — `SHORT_SHA` empty (storageSource), `extract-version` wrote
+    `VERSION=0.0.0.dev0`, build step's `SAFE_SHA`→`VERSION` fallback resolved, docker build proceeded normally.
+    Recovered via `VERSION` fallback instead of dying with `invalid reference format` / exit 125. ✅
 
 - **2026-08-06 (batch5 todo 1 worker, slot 15) — STEP-2 GUARD COMPLETED; slot-4/5's claims did NOT match LDR at
   pickup.** Fresh-pull + live re-measure at pickup showed the slot-5 "shipped" claim was FALSE on
@@ -348,8 +349,10 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
 
 ## Follow-ups
 
-- [ ] [DEVOPS] P2. Run the end-to-end proof on real infra: a manual gcloud builds submit (storageSource, empty
-      SHORT_SHA) must recover via the VERSION fallback instead of invalid reference format/exit 125 — cite the build id.
+- [x] ✅ [DEVOPS] P2. Run the end-to-end proof on real infra: a manual gcloud builds submit (storageSource, empty
+      SHORT_SHA) must recover via the VERSION fallback instead of invalid reference format/exit 125 — build
+      `4d265c51-5ca0-4349-b48f-80d4f7179430` (execution-service, 2026-08-06 slot 3), recovered via `VERSION=0.0.0.dev0`
+      fallback ✅.
 
 > **2026-08-06 archive-candidate audit**: Re-scoped rollout shipped + drift checker GREEN, but the todo's own step-2
 > done-when 'Prove at least ONE repo end-to-end' remains outstanding — 2026-08-06 Progress Log lists it as 'run on the

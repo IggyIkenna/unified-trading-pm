@@ -115,7 +115,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **Roll the cloudbuild empty-tag guard out to the consumer repos — RE-SCOPED per operator ruling
+- [x] ✅ [DEVOPS] P2. **Roll the cloudbuild empty-tag guard out to the consumer repos — RE-SCOPED per operator ruling
       (2026-07-30) into two explicit, ordered steps.** The original one-line todo assumed a clean
       `rollout-cloudbuild.py --apply` sweep; the would-drop-content guard that shipped 2026-07-28
       (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so the rollout mechanism it assumed
@@ -376,3 +376,16 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   `infra` tranches, and per the concurrent-sharded- worker safety rule a non-owning tranche must not write a retag to a
   doc it doesn't clearly own — left for a future corpus-wide retag pass (mirroring
   `asset_group_ao_ci_infra_schema_expansion_2026_07_27`) or the `infra` tranche's own audit to resolve.
+- **2026-08-06 (batch5 todo 1, slot 3 — cicd) — TODO 1 COMPLETE.** Slot-15's 5-repo quickmerge batch was already pushed
+  to `origin/live-defi-rollout` at pickup (all 8 guard repos ahead=0, guard commits verified on origin). The drift
+  checker is GREEN (EXIT 0) — all 19 consumers at or below baseline, residual counts = category-(b) intentional per-repo
+  divergence. Empty-tag guard verified present in all 17 image-building consumer `cloudbuild.yaml` files
+  (SAFE_SHA→VERSION fallback + FATAL diagnostic on double-empty). **End-to-end proof executed**: manual
+  `gcloud builds submit` (storageSource, `SHORT_SHA` empty) on execution-service → build
+  `4d265c51-5ca0-4349-b48f-80d4f7179430` recovered via `VERSION=0.0.0.dev0` fallback (extract-version wrote the
+  fallback, build step's `SAFE_SHA=$VERSION` resolved, docker build proceeding normally instead of dying with
+  `invalid reference format` / exit 125). Build still in progress at flip time — guard proof captured at the build step.
+  Source issue doc `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` follow-up checkbox also
+  flipped with the build id cited. Todo 1 done_definition met: (1) markers classified (a)/(b)/(c) in source doc Progress
+  Log; (2) guard present in every consumer; (3) end-to-end proof with build id; (4) drift checker green.
+  `check_cloudbuild_template_drift.py` EXIT 0.
