@@ -126,7 +126,7 @@ closed; the deploy SA's Secret Manager access scoped down.
 ## Track 3 — SIT gate / promotion-pipeline correctness · P1
 
 **Sources**:
-[issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
+[issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
 (SIT gate compares against a moving LDR tip, can block breaking promotes indefinitely) ·
 [issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
 (promotion-lag alert masks the real quickmerge provenance-block root cause) ·

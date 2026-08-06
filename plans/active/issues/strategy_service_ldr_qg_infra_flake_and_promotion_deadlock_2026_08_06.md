@@ -199,7 +199,7 @@ independently dispatches `full-workspace-sit`, each cancelling the others' queue
 this doc's own remaining todos): `unified-trading-pm@16c9653eb` adds a cross-subshell `mkdir`-based mutex so only ONE
 `full-workspace-sit` dispatch fires per tick, shared between the fleet-green auto-retrigger and the per-repo dispatch;
 `system-integration-tests@59e0e5b` is a companion sha-pin fix for the related (but distinct) moving-tree race. Full
-writeup: `plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` (now `resolved`).
+writeup: `plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` (now `resolved`).
 This should let a full-workspace-sit run actually survive to completion on the fleet bot's next tick — worth re-checking
 `sit-gate/fleet-green` before assuming this doc's own remaining todos (re-post signal on PR #495 head, backmerge
 deadlock) are still blocked on a red SIT signal specifically.

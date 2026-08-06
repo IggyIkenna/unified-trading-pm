@@ -32,7 +32,7 @@ tags: [agent-orchestrator, dispatch, external-gate, promote-gate, auto-unpark, r
 related:
   [
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
-    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
+    /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -53,7 +53,7 @@ locked_by:
 context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
+    /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md,
     agent-orchestrator/server/auto_park.py,
