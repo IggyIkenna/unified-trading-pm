@@ -40,6 +40,7 @@ source:
 drift_direction: advance-process
 estimate_class: refactor
 depends_on: []
+context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/08-workflows/ci-cd-flow.md, scripts/quickmerge.sh]
 ---
 
 # Orphaned live CVE fix on dead slot 5 — mechanical worker rescue needed
@@ -89,3 +90,4 @@ Hence this durable issue so a worker picks it up cleanly.
   orphan (not-on-LDR via `merge-base --is-ancestor`). Zero-loss (wip-preserved), so no emergency, but it's a live
   security fix sitting unshipped — flagged P1 for the next available worker cycle over routine cleanup, per review's
   recommendation. Main did NOT push it (main never pushes code; deps go via quickmerge dep gates).
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

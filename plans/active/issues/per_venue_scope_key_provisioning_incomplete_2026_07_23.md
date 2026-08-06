@@ -172,3 +172,4 @@ All three are real design/priority calls, not something determinable from code o
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict, all
   3 open todos still explicitly [HUMAN]-tagged (one operator-only credential creation, two stated design/priority
   calls); unchanged since.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

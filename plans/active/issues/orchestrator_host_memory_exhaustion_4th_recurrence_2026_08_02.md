@@ -37,6 +37,7 @@ context_scope:
     /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
     scripts/dev/run-bounded-analysis.sh,
     features-service/features_service/cross_instrument,
+    /plans/active/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 ---
 
@@ -322,3 +323,6 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   RSS-killer is closer to option 1 than option 2/3 (still one shared ~54GiB ceiling, not per-slot reservations or
   admission control), so it may reduce recurrence frequency without fully closing the question; that's still the
   operator's call. Cross-linked both docs' `related:` so they're no longer siloed.
+- **context-scout 2026-08-06**: re-scouted; added `/plans/active/resource_watchdog_host_guardian_2026_08_05.md` (the
+  2026-08-05 systemd RSS-killer, a live instance of this doc's recommended option 1, cross-linked but not yet in
+  context_scope), now 6 entries.

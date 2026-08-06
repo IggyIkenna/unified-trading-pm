@@ -41,6 +41,12 @@ source:
 drift_direction: advance-process
 estimate_class: refactor
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+  ]
 ---
 
 # Orphaned worktree WIP (slot-12 x3 + slot-8 bd0e231f) — mechanical worker rescue
@@ -156,3 +162,4 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   convention, batch6 itself stays `assigned_vm: NA` even for cleared-eligible content (see
   `fleet_git_health_ip_185...`'s marker today for the citation). Not reclassified — would create a competing/duplicate
   dispatch claim against batch6 once activated.
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

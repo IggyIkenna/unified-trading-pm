@@ -284,3 +284,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   because the `[BACKEND] P2` readiness-probe todo embeds a `/codex/04-architecture/autonomous-recovery-matrix.md` edit,
   which is never autonomous.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -304,3 +304,4 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   incidents) keeps this doc's dispatcher-dedup todos live: the backlog still occasionally hands one todo to two slots
   simultaneously — the earliest-wins ship gate is the working backstop, but the dispatch-side dedup remains the real
   fix.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

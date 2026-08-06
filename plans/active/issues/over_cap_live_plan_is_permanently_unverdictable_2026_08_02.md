@@ -173,3 +173,4 @@ than acted on:
   long-wall-clock launch, or independent judgment) is recorded in the audit's own commit message
   (`473cccf03`/`b381cbb11`) since it could not be persisted into the source doc; the doc's own content is unchanged from
   HEAD.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

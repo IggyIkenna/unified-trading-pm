@@ -62,6 +62,7 @@ context_scope:
     /codex/07-security/self-hosted-runner-security-posture.md,
     /codex/07-security/gha-wif-migration.md,
     agent-orchestrator/scripts/bootstrap_vm.sh,
+    /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
   ]
 locked_since:
 ---
@@ -242,3 +243,7 @@ a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdic
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged from prior scout — still accurate: the 2
   sibling same-day incident docs, the 2 codex SSOTs the root-cause section cites, and `bootstrap_vm.sh` STEP 5.5).
   Correctly NA.
+- **context-scout 2026-08-06**: re-scouted; added
+  `/plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (same shared
+  `~/.config/gcloud` mutable-state hazard, flagged for cross-link by the 2026-08-04 na-eligibility-audit entry but not
+  yet in context_scope), now 6 entries.

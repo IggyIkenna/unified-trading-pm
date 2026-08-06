@@ -385,3 +385,4 @@ investigated further here, out of scope for this doc.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the 2
   sibling capacity/contention docs plus the `host_resources.py` module the swap-tile fix lives in).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

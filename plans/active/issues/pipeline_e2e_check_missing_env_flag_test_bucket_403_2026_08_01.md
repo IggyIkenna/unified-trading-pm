@@ -321,3 +321,4 @@ Both QG-green + quickmerge-landed + verified on `origin/live-defi-rollout`.
   repo todos routes its remaining 403s through, the self-service-identity codex SSOT the IAM grant relied on, the shared
   `launcher_common.sh` tier-SA resolver at the root of the bug, and the shared `pipeline_e2e_check/launcher.py` VM-poll
   module traced while closing the retry-logic finding.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -116,3 +116,4 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
 - **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Today's edit that
   put this doc back in incremental scope was the context-scout backfill above, not a content change; both open items
   remain a genuine tri-way breaking-contract design decision ([OPERATOR]) and its gated follow-up test ([TEST]).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

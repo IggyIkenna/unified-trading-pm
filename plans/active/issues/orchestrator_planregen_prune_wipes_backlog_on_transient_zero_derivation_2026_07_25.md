@@ -156,3 +156,4 @@ incident window.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged from prior scout — still accurate: the
   duplicated-content doc, the archived batch1 plan that shipped the two DONE todos, and the pool-exhaustion trigger
   doc).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

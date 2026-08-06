@@ -202,3 +202,4 @@ to this task's `prereqs.prerequisites` list, so there is nothing to gate on.
   skipped the task with `reason_code: "PARKED"` instead so the `auto_park` skip-counter has a chance to durably park it
   via its own code path. No code changed this session — investigation-only.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

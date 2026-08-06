@@ -193,3 +193,4 @@ noted here only so the two aren't conflated.
   outcome. 4-tranche doc, cefi-flagship evidence
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged from prior scout — still accurate: the 2
   source scripts the hardcoded bucket-map lives in, the cockpit-side sibling plan, and the cron's terraform schedule).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
