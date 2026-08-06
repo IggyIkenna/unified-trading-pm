@@ -321,12 +321,17 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       content sentinel SUCCESS, QG-checks leg PASSED (10:14:06Z), now in the ~15-min uv-cache save (started 10:14Z),
       tests slice queued — MUST COMPLETE, do NOT cancel**. **NEW (10:16Z): LDR advanced a 3rd time → `308bdfd3`
       "fix(deps): bump aiohttp floor >=3.14.3 (CVE-2026-59881/-69243/-69244)" (10:08:40Z).** #498's tree (based on
-      `4393c2a4`) LACKS the CVE fix — promoting it would put a stale, CVE-floor-missing tree on main. **Auto-merge
-      DISABLED on #498 (10:16Z) as a stale-tree guard.** Expect the fleet bot to supersede #498 → open a fresh PR for
-      `308bdfd3` (~18-min cadence, ~10:27Z). On that PR: resolve take-LDR (same recipe) → post fleet-green on its head →
-      let its PR-triggered v2 gate it → on SUCCESS it auto-merges → verify main HEAD → POST /done
-      (`one_shot_complete: true`). If the bot does NOT supersede and #498's v2 completes first, do NOT let #498 merge
-      (stale tree) — re-check why the bot hasn't moved before any manual action. Provenance: agt-e33f21.
+      `4393c2a4`) LACKS the CVE fix — promoting it would put a stale, CVE-floor-missing tree on main (main still has
+      `aiohttp>=3.14.1`). **Auto-merge DISABLED on #498 (10:16Z) as a stale-tree guard.** **Bot mechanism (10:35Z): the
+      fleet bot DEFERS supersession while the current promote PR's own v2 run is non-terminal**
+      (`ldr_to_main_fleet_promote.sh` L848-871 in-flight guard — "existing promote PR has quality-gates-v2 still running
+      — not superseding this tick"). #498 NOT being superseded is EXPECTED until v2 run 31092068911 reaches terminal
+      (tests leg already PASSED 10:35Z; in final cache-save). On terminal, the next fleet tick closes #498 + deletes
+      `promote/strategy-service/4393c2a4d22f` + opens **#499** (ref `promote/strategy-service/308bdfd31bbb` @ 308bdfd3).
+      #499 will conflict on BOTH `unified-api-contracts` (main `>=0.92.0` → LDR `>=0.96.0`) and `aiohttp` (`>=3.14.1` →
+      `>=3.14.3`) → resolve take-LDR (same recipe) → post fleet-green on its head → let its PR-triggered v2 gate it → on
+      SUCCESS it auto-merges → verify main HEAD → POST /done (`one_shot_complete: true`). Do NOT manually merge #498
+      (stale tree, CVE-missing). Provenance: agt-e33f21.
 - [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
       #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
       recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
@@ -488,6 +493,13 @@ trunk — expect promote-PR churn while other slots/fleet push to it.
   `promote/<repo>/<new-tip>` PR). A conflict-resolution merge on a superseded promote branch is MOOT — verify the PR is
   still OPEN (and its head ref still exists) BEFORE pushing a resolution, and expect to re-resolve per PR. Each fresh PR
   has the same pyproject.toml dep-floor conflict → the take-LDR recipe is ~5 min, mechanical.
+- **The fleet bot's supersede is v2-GATED, not time-based**: it will NOT close a promote PR whose OWN head SHA still has
+  a non-terminal quality-gates-v2 run (`ldr_to_main_fleet_promote.sh` L848-871 "not superseding this tick" guard — it
+  lets the in-flight gate finish, then supersedes on the NEXT fleet tick, declared */5 ~delivered */15). So "bot hasn't
+  superseded after LDR moved" is EXPECTED while the old PR's v2 is mid-run — let every promote PR's v2 reach terminal
+  before expecting supersession. The earlier "~18-min cadence" observation was this guard in action, not a schedule.
+  Corollary: CANCELING an in-flight promote-PR v2 run is doubly bad — it keeps the guard non-terminal, so the bot never
+  supersedes AND the required check reads FAILED.
 - **The promote resolve-merge head (c744644b) ≠ LDR tip (4393c2a4)** even though the tree is identical — so the fleet
   bot's `sit-gate/fleet-green` status (stamped only on the LDR tip) is NOT on the PR head, and the PR stays BLOCKED on
   it. Post the IDENTICAL fleet-shared status on the PR head yourself (fetch the bot's exact description + target_url
