@@ -182,7 +182,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       decision). Source: `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: a SPORTS
       honest-absence candle timeframe produces a real manifest row (not a WARNING log with zero rows written), proven on
       one re-run day in `market-data-processing-service`.
-- [ ] [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
+- [x] ✅ [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, combined into one sequential pass per
       the skill's same-source-doc rule) in `market-data-processing-service`: (1) grep the failing VM's `run.log` (e.g.
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`) for `❌ Exception processing` to locate the
@@ -195,7 +195,20 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       2025-12-24/2025-12-18 until this investigation's conclusion lands. Source:
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: the raising frame/exception
       is named (via whichever step first identifies it) and documented in the doc's Progress Log, or all 3 steps are
-      exhausted with a documented "raise-free, cause still unknown" conclusion.
+      exhausted with a documented "raise-free, cause still unknown" conclusion. — **RESOLVED 2026-08-06 (slot-4). Root
+      cause: findings 3+4 = same bug as finding 1, fixed by `market-data-processing-service@33b323c`/`8358b9f` (already
+      shipped 2026-08-01).** The 50 `ticks_migrated_*.parquet` files (eager path) are 100% honest-absence (all rows
+      outside the pre-match horizon) → `processed_timeframes=[]`, `errors=[]` → the PRE-fix formula
+      `success = len(errors)==0 and len(processed_timeframes)==len(valid_tfs)` yields `success=False` with
+      `error_message=None` → `process_handler.py:468` prints "Unknown error". No exception is ever raised (0 hits in
+      `134301` run.log for `❌ Exception processing` / `❌ Error processing` / `classify_and_emit_error` /
+      `falling back to eager` / `⚠️ Error in` / `Traceback`). The 588 `ticks.parquet` files (streaming path,
+      `success=error_count==0` correct since `1cdf3ecf`) succeeded — 50+588=638 exactly matches the summary. The
+      finding-3/4 VMs ran a floating (unpinned) MDPS tarball lacking the fix (TARBALL_PINS.mdps floating; the doc's
+      "HEAD=`0fc0448`" reference is a `_backmerge` commit not on LDR). Local repro (slot-4) on current LDR HEAD: the
+      exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)` over all 50
+      `ticks_migrated` files → `failed=0`. No code change needed — fix already shipped. The `[SCRIPT]` no-relaunch STOP
+      in the source doc is now cleared. See source doc Progress Log 2026-08-06.
 - [ ] [CODE] P2. Investigate-then-fix finding 5 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` in `market-data-processing-service`:
       first grep findings-3/4's VM `run.log`s (e.g. `mdps-backfill-sports-pcskip-20260801-130846-2bf067` /
@@ -714,6 +727,22 @@ recovery > 120s (probe limit); `polymarket_clob` recovery null (no break observe
 `gs://deployment-scripts-central-element-323112/vm-logs/uts-rate-calibration-probe*/`.
 
 Both probe VMs self-deleted. Registry updated: deployment-service@0eb9c36.
+
+### 2026-08-06 — findings-3+4 MDPS "Unknown error" crash root-caused (slot-4)
+
+Closed the `[DIAG] P1` todo (findings 3+4 of `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`)
+— **the crash is the SAME bug as finding 1, already fixed by `market-data-processing-service@33b323c`/`8358b9f`**. The
+50 `ticks_migrated_*.parquet` files (eager path; 100% honest-absence — every row dropped by the pre-match-horizon
+filter) produced `processed_timeframes=[]`, `errors=[]`, so the PRE-fix formula
+`success = len(errors)==0 and len(processed_timeframes)==len(valid_tfs)` gave `success=False` with `error_message=None`
+→ `process_handler.py:468`'s `or "Unknown error"`. No exception is ever raised (null greps for `❌ Exception processing`
+/ `❌ Error processing` / `classify_and_emit_error` / `falling back to eager` / `⚠️ Error in` / `Traceback` in
+`134301`'s run.log). The 588 `ticks.parquet` files (streaming, `success=error_count==0` correct since `1cdf3ecf`)
+succeeded — 588+50=638 matches the summary exactly. The finding-3/4 VMs ran a floating MDPS tarball lacking the fix
+(TARBALL_PINS.mdps unpinned; the doc's "HEAD=`0fc0448`" claim is a `_backmerge` commit not on LDR). Local repro on
+current LDR HEAD (slot-4): the exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)`
+over all 50 `ticks_migrated` files → `failed=0`. **No code change needed** — the fix is already shipped; the source
+doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
 
 ## Codex SSOTs
 
