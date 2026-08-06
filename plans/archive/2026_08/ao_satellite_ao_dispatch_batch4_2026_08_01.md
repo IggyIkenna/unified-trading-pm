@@ -13,7 +13,7 @@ summary: >-
   already shipped 2026-07-24 by `ao_remediation_b_code_chain_2026_07_23`, predating this doc's own drafting by a week;
   see `/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` for full evidence. This batch now
   carries the one remaining genuine item: the failover release-signal fix.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -59,6 +59,13 @@ context_scope:
 ---
 
 # AO satellite AO batch 4
+
+> **🔴 ARCHIVED 2026-08-06 — COMPLETE (all todos `[x]`, unlocked).** Archival ritual finished by `/plan-reconcile ao`:
+> the file-move to `plans/archive/2026_08/` and the corpus-wide referrer repoint had already been done, but the
+> `status:` flip (`active` → `complete`) and this banner — steps 2 and 6 of the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — were never applied, leaving a
+> physically-archived doc still declaring itself active. Its gated successor is
+> `/plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`.
 
 > **Renamed from "batch 2" 2026-08-01** — this doc was originally authored as
 > `ao_satellite_ao_dispatch_batch2_2026_08_01.md`, colliding with the pre-existing, already-active

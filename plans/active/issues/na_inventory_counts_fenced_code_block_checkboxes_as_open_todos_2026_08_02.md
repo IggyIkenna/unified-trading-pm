@@ -149,10 +149,11 @@ bug, which is why the fix belongs in a shared helper rather than patched per-scr
       fence-stripping helper over N per-script patches. **Done when**: `check_todo_format.sh` no longer flags
       `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md:66-68`, and each remaining script is either fixed
       or confirmed not to count checkboxes, with the disposition recorded here. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. After the two above land, re-run `check_na_corpus_ratchet.py --update-baseline` so
-      `na_corpus_baseline.yaml`'s `max_na_open_todos` reflects the corrected count instead of the inflated one, and note
-      the old → new numbers in the commit message (a baseline MOVE for a measurement fix, not a laundered regression).
-      **Done when**: the baseline matches a fence-aware count. (repo: unified-trading-pm)
+- [ ] [SCRIPT] P3. **DO NOT RUN until todos 1+2 have landed** (ordering NOT machine-enforced — no `sequential:` flag):
+      re-run `check_na_corpus_ratchet.py --update-baseline` so `na_corpus_baseline.yaml`'s `max_na_open_todos` reflects
+      the corrected count instead of the inflated one, and note the old → new numbers in the commit message (a baseline
+      MOVE for a measurement fix, not a laundered regression). **Done when**: the baseline matches a fence-aware count.
+      (repo: unified-trading-pm)
 
 ## Plan-destination note (resolved 2026-08-02)
 
