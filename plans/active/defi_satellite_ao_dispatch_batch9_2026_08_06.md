@@ -122,14 +122,20 @@ over all pending draft batches) that independently spot-verified every todo belo
       into one todo, cite both on close). Done when: a fresh `_index/availability_index.parquet` read confirms 0 of the
       12,425 target gas_fees legacy rows remain, and the consolidator cron has completed >=4 clean post-resume
       `--verify-only` cycles.
-- [ ] [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
+- [x] ✅ [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
       strategy-service's `run_paper` entrypoint (`service_entry.py`) to construct and pass the already-shipped
       `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}` fields (today always `None`/unset, so
       `run_paper` always runs the full unconstrained universe), with unit tests proving flag-set curtailment matches
       `_curtailment_reason_for_spec`'s existing semantics and flag-unset stays byte-identical to today. Repo:
       strategy-service. Source: `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`. Done when:
       `run_paper`'s CLI accepts and threads all three allow-list flags into `PaperUniverseConfig`,
-      `quality-gates.sh --no-fix` is green, and new tests cover both the flag-set and flag-unset paths.
+      `quality-gates.sh --no-fix` is green, and new tests cover both the flag-set and flag-unset paths. **SHIPPED
+      `strategy-service@8ee9894e`** — `--archetypes`/`--venue-allowlist`/`--currency-allowlist` added in
+      `service_entry.py` `_add_strategy_extra_args`, threaded into `PaperUniverseConfig` via
+      `build_paper_universe_config` (`paper_run_handler.py`); 16 unit tests in
+      `tests/unit/cli/handlers/test_paper_run_cli_flags.py` cover flag-set (== hand-built `_curtailment_reason_for_spec`
+      semantics) and flag-unset (→ `None`, byte-identical). `quality-gates.sh --no-fix` green (5746 passed), landed on
+      LDR.
 - [ ] [AUDIT] P3. **Classify every `_dex_pools_parsers.py` venue-parser** as Messari-daily-shape (emits
       `tvl_usd`/`volume_usd`/`fees_usd`/`fee_rate_bps`) vs legacy-cumulative-shape like `_parse_balancer` (emits
       `swap_volume`/`swap_fees`/`total_shares`, no delta computed). Repo: market-tick-data-service. Source:
