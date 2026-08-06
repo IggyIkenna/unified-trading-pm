@@ -53,7 +53,7 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
 assigned_role: infra
 drift_direction: flat
-last_updated: 2026-08-04
+last_updated: 2026-08-06
 source: ["interactive session, operator-driven, 2026-08-04"]
 resolved_by:
 locked_by:
@@ -337,6 +337,18 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       consulted it). Re-measure the same 7-day window post-deploy; `working` should go to ~0. If it does not, the
       remaining cases are a genuinely wedged-but-rendering pane and need a different signal than `classify_pane`. (repo:
       agent-orchestrator)
+- [ ] [DATA] P2. Mid-run session death may NOT be fully closed by the collision fix (agent-orchestrator@5941552) —
+      re-check before treating todo -009 as settled. Evidence 2026-08-06 15:42 UTC: two `kind=cicd` `main_ci_red`
+      escalators reaped-stale in the same pruner pass — `agt-80c470` (slot 2, 4155s runtime -> dispatched ~14:32, BEFORE
+      the 15:04:08 fix commit, so NOT evidence) and **`agt-53f733` (slot 10, 1189s -> dispatched ~15:22, AFTER the fix
+      commit and after the 15:18:40 restart that plausibly loaded it)**. The second one is the interesting case, with
+      two caveats that stop it being a clean refutation: (a) it is a single event, and (b) the VM's exact checkout SHA
+      at the 15:18:40 restart was not captured, so "the fix was live" is inferred from the auto-pull cadence, not
+      proven. It also died ~14min AFTER a restart rather than during one, which does not match the restart-collision
+      signature 5941552 fixes — so this may be a DIFFERENT mid-run death mechanism rather than a regression. Resolve by
+      capturing the running SHA at reap time (the observability todo above is the enabler) and watching whether
+      `kind=cicd` reaped-stale continues at the pre-fix rate (baseline: 72 reaped-stale/7d, 71 of them `role=custom`).
+      (repo: agent-orchestrator)
 - [ ] [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
       omits `job_name` (agent-orchestrator@5087f30). Once the queue has a few days of live evidence, decide whether to
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
@@ -511,3 +523,46 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
   correctly refuses claimed slots, the scheduled timer queues instead of dropping. 5 new regression tests (plan_health +
   escalation pickers skip claimed slots in the has_session()==False TOCTOU gap; `_done_one_off` + reset release the
   claim).
+
+- **slot-1 2026-08-06 (operator-driven session: AO UI "Scheduled tasks" errors — real or false positive?)**: ROOT-CAUSED
+  - SHIPPED + DEPLOYED. Live sample: 500 dispatch-attempt records, 2026-08-02T16:30Z..08-06T08:35Z. Verdict: the errors
+    were REAL and the panel was UNDER-reporting. Breakdown — dispatched 73 (14.6%), no_capacity 415 (83%), timeout 11,
+    error 1, quarantined **0** (the tell). Decomposing the 415: no-headroom 247 · no-free-slot 121 · **dirty-state
+    quarantine 42 (mislabelled)** · protected_live_peer 3 · tmux spawn failure 2.
+
+  Three distinct causes, only two of them capacity:
+  1. **Account headroom (247, the dominant one)** — 4 of 6 Claude accounts sat at 99% weekly (sub-b/sub-f rate_limited,
+     sub-c/sub-d disabled); 08-05 alone produced 225 rows. NOT a host-resource problem: VM measured 16 vCPU, 61 GB RAM,
+     load 2.27, 184 GB free disk. Operator hypothesis "should it run on a separate VM" — answered NO: the scarce
+     resource is a shared account-level weekly quota that follows the ACCOUNT, not the host. Fixed by @5087f30 (queue).
+  2. **Slot contention (121)** — designed-in finite-capacity wait; reserve/batch already tuned 08-04. Same queue fix.
+  3. **NOT resource at all (42)** — a dead `instruments-service.broken-empty-clone-20260805` artifact wedged spawn every
+     tick 08-04..06; auto-clean landed same morning (`_is_dead_quarantine_artifact`), last quarantine 06:31:54Z, clean
+     from 07:51Z. Its 42 rows were filed as benign `no_capacity` by the one-phrase grep — see @5087f30's classifier fix.
+
+  **Two corrections to earlier session claims** (recorded so they are not re-derived): (a)
+  `unknown plan_health mode 'cefi_reconciliation'` was ALREADY fixed — the mode is valid in current code and on the VM;
+  the 08-05 21:43 error was an older deployed build, and it dispatched fine from 08-06 04:06. (b) `.tabs/6` and
+  `.tabs/12` do NOT have broken refs — they hold 5 intact, clean BFG pre-history-rewrite backup repos each (5.8 GB),
+  every backup HEAD byte-identical to and present in the live repo. KEEP them:
+  `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06` uses their existence as evidence, and slots
+  6/12 may hold the last surviving copies.
+
+  **Reaped-stale ("dispatched but never completed") — HALF FIXED, stated plainly.** 18 of 47 dispatches with a known
+  terminal state ended `reaped-stale`; 72 such events in 7 days, 71 `role=custom`. Two DISTINCT mechanisms:
+  - _Spawn-phase false positive — FIXED_ (@9d26598): the working-pane guard in `check_spawn_heartbeat_timeouts` sat
+    AFTER the retry-cap branch, which `continue`s, so a capped slot never consulted it. Measured 07-30..08-06: 45 cap
+    declarations, pane at cap = frozen 19 / no_session 11 / **working 8** / idle 7 — the 8 were false by construction.
+    Guard hoisted above the cap branch + re-arms `_spawn_cap_alerted` on recovery; regression test added.
+  - _Mid-run session death — NOT FIXED, root cause NOT established._ Long-runners (26420s, 51302s observed) lose their
+    tmux session with no clean `/done`. Unattributable today: no `kill_session`, watchdog reclaim, or systemd signal is
+    logged — only the pruner noticing after. The observability todo above is the prerequisite; see also the new P2 on
+    whether @5941552 fully closed this class.
+
+  **Deployed 15:04 UTC** (operator-approved sudo): all 7 timer units re-installed (TimeoutStartSec 2450→6000 on
+  plan-reconciler/docs-reconciler/context-scout; plan-reconciler ALSO picked up the repo's intended cadence widening
+  `*:00`→`0/2:00`), orchestrator restarted. Verified on the RUNNING API, not assumed: `job_name` in the request schema,
+  `.status`/`.queue_key` in the response, `scheduled_job_queue` table created (note: the real DB is
+  `data/state/state.db` — a stale `state.db` at the repo root will mislead a check), `_drain_scheduled_jobs` wired at
+  2/tick. Restart caused no collateral: 2 genuine reaped-stale after vs 11 in the equivalent 2h window before, and 14
+  clean `/done` completions since.
