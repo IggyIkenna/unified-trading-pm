@@ -329,6 +329,15 @@ cboe-vx/btc-2026 @03-25, mbt-2024 @07-21, met-2024 @06-16 ≈ 1–2h; cl-2026 @0
 nasdaq-2024-d02 @05-23 ≈ 2–4h; worst case ~5–12h: met-2023 @03-11, nasdaq-2025-d02 @05-09, nyse-2023-d01 @05-26,
 nyse-2024-d02 @05-09, nyse-2025-d02 @05-02). Still a multi-hour wait — keep-waiting decision unchanged.
 
+**MATERIAL EVENT (2026-08-06T~18:05Z) — new backfill wave RESET the lock.** At ~18:00Z a fresh `tradfi-bf-*` wave
+launched (13 VMs: NYSE 2023 d01–d05, NASDAQ 2023 d01–d05, CME g01 es-es-2020 / met-met-2023 / mbt-mbt-2024 /
+met-met-2024), on top of the 6 original long-pole VMs still running → **19 RUNNING**. The drain to 0 is no longer near:
+the new year-shard wave realistically adds **+8–12h** (same ~8–10h runtime as the 08:00Z wave). New VMs were <5 min old
+(no PROGRESS.json yet, booting normally) at first sighting. Owner/launcher of the new wave NOT identified from within
+this slot — assumed another dispatch of the same batch or a sibling task. Keep-waiting decision UNCHANGED (legitimate
+concurrent backfills; no `--force`), but the horizon is now indeterminate — re-check the fleet before assuming a clear
+ETA.
+
 **Watcher hardening (learned):** a `gcloud ... | wc -l` watcher false-fires `count==0` on a transient gcloud error
 (empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
 hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
