@@ -307,7 +307,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -342,10 +342,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
-        "warn_file_count": 17,
-        "coverage_pct": null,
         "large_file_count": 0,
-        "qg_red_reason": "qg"
+        "coverage_pct": 83.84,
+        "warn_file_count": 17,
+        "qg_red_reason": "pytest"
       }
     },
     "deployment-service": {
@@ -1087,7 +1087,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1114,8 +1114,8 @@
       "codebase_health": {
         "large_file_count": 0,
         "coverage_pct": 9.57,
-        "qg_red_reason": "qg",
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "trading-agent-service": {
@@ -1274,10 +1274,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
+        "large_file_count": 7,
+        "coverage_pct": 89.29,
         "warn_file_count": 22,
-        "large_file_count": 7
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1310,9 +1310,9 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": null,
+        "coverage_pct": 73.78,
+        "warn_file_count": 0,
         "qg_red_reason": "qg"
       }
     },
