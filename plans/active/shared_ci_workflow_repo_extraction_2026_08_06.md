@@ -268,9 +268,30 @@ migrated as canary, and `unified-trading-pm`, migrated last in Phase 5). Each wa
 wave — same discipline as `self_hosted_runner_public_repo_revert_2026_08_05.md`'s one-repo-at-a-time playbook, batched
 here only for todo-count sanity, not for skipping per-repo verification.
 
-- [ ] 11. [INFRA] P1. **Wave 1 (6 lowest-churn)**: `ibkr-gateway-infra` (25 commits/7d), `unified-trading-api` (40),
-      `unified-trading-system-ui` (55), `fund-administration-service` (58), `trading-agent-service` (59),
-      `system-integration-tests` (66). Evidence: one real green `quality-gates-v2` run URL per repo.
+- [x] 11. ✅ [INFRA] P1. **Wave 1 (6 lowest-churn) — all 6 shipped + verified green.** `quality-gates-v2.yml` +
+      `image-build-gate.yml` re-pointed at `unified-trading-ci@main` in each; `push:` only triggers on `main`/`staging`
+      (not LDR), so a bare quickmerge landing doesn't auto-fire the gate — manually dispatched
+      (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`) against each repo's actual landed commit to get
+      real evidence rather than trusting a stale pre-migration run. All 6 confirmed `completed/success`: -
+      `ibkr-gateway-infra@9e545b6` (run 31075913874) — also fixed a real pre-existing bug found while editing this file:
+      a PRIOR session had "fixed" a dispatch issue by making `quality-gates-v2.yml` self-reference
+      `IggyIkenna/ibkr-gateway-infra/...python-quality-gates-v2.yml`, a file that doesn't exist in that repo — CI had
+      been silently broken since commit `64ebd8d0`. A concurrent slot fixed it back to `unified-trading-pm` mid-session
+      (merge conflict, resolved in favor of `unified-trading-ci` — supersedes both). - `unified-trading-api@5dbff1a`
+      (run 31075915538). - `unified-trading-system-ui@21e5b29c` (run 31075917008) — only 1 file
+      (`image-build-gate.yml`); its `quality-gates-v2.yml` calls its own local `ui-quality-gates-v2.yml`, no PM
+      dependency (UI convention, no Python tools). Hit 2 real pre-existing machine-level bugs while shipping this one,
+      both fixed (not routed around): (1) `jsonschema`'s `rpds` dependency installed as x86_64 under an arm64 Python
+      framework install — fixed via `pip install --user --force-reinstall jsonschema`; (2) the REAL cause of repeated
+      failures even after fix (1): `/usr/local/bin/timeout` is a leftover Intel-only Homebrew `coreutils` binary with no
+      `/opt/homebrew` arm64 counterpart — macOS makes a Rosetta-translated parent's children default to its own (x86_64)
+      architecture slice of a universal binary, so `timeout 30 python3 ...` silently ran python3 in x86_64 mode
+      regardless of the arm64 `--user` install. Fixed via `brew install coreutils` (installs the missing native arm64
+      `/opt/homebrew/bin/timeout`, which now wins on PATH). This is a real, pre-existing machine-toolchain gap on this
+      slot (Ikenna's laptop) that would break `buildspec.aws.yaml` validation for ANY repo's QG run here, not something
+      specific to this migration — worth relaying if this slot is shared. - `fund-administration-service@bd976f0` (run
+      31075918712). - `trading-agent-service@6150f23` (run 31075920238). - `system-integration-tests@d42430b` (run
+      31075922319).
 - [ ] 12. [INFRA] P1. **Wave 2**: `greeks-service` (69), `deployment-ui` (76), `e2e-testing` (85), `execution-service`
       (96), `strategy-service` (99), `batch-live-reconciliation-service` (106). Evidence: same.
 - [ ] 13. [INFRA] P1. **Wave 3**: `client-reporting-api` (108), `alerting-service` (110),
@@ -343,3 +364,14 @@ here only for todo-count sanity, not for skipping per-repo verification.
   `detect_template_drift.py --baseline-write-allow-additions` requires `--baseline-write` alongside it (not standalone)
   to actually persist. Todo 3 (optional stretch) and todo 7 (per-machine runbook — this slot done, every other machine
   still pending, genuinely cannot be actioned from this session) remain open. Phase 4 (23-repo fan-out) not yet started.
+- **2026-08-06 (interactive session, continued): Phase 4 Wave 1 shipped and verified — todo 11 done, all 6 repos
+  green.** Found `push:` only triggers `quality-gates-v2` on `main`/`staging`, never on a bare LDR quickmerge landing —
+  every wave's verification needs an explicit `gh workflow run --ref live-defi-rollout` dispatch, not just "it shipped
+  cleanly." Two real pre-existing bugs found and fixed along the way, not routed around: `ibkr-gateway-infra` had a
+  silently-broken CI gate since 2026-08-04 (a prior session's mistaken self-reference fix pointed `uses:` at a file that
+  doesn't exist in that repo — corrected to `unified-trading-ci`, which also resolved a same-file merge conflict against
+  a concurrent slot's independent revert-to-PM fix); this slot (Ikenna's laptop) had a machine-level Intel/ARM Homebrew
+  toolchain gap (`/usr/local/bin/timeout` had no `/opt/homebrew` arm64 counterpart, so a Rosetta-translated `timeout`
+  forced its `python3` child into x86_64 mode, breaking `jsonschema`'s native deps for EVERY UI repo's
+  `buildspec.aws.yaml` check) — fixed via `brew install coreutils`, a genuine machine fix worth relaying if this slot is
+  shared with another operator. Next: Wave 2 (6 repos).
