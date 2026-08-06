@@ -442,10 +442,14 @@ rather than buried in a 345-line residuals plan. C: Fold it instead into
 `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
 operator can type a custom answer.
 
-**Status**: resolved — option A. The lock is mandatory (CLAUDE.md's own text is unambiguous); sharpened the
-mechanism-fix todo in `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` with the real
-commit-msg-vs-pre-commit staging nuance found while scoping it, and retro-cleaned the stale `locked_by:` on the
-already-independently-verified archived doc. `unified-trading-pm@2c61a8dc4`.
+**Status**: resolved — option A. Folded the single `BLOCKED-UPSTREAM` todo into
+`prediction_phase_ab_residuals_2026_07_24.md` § "A3 — Venue-perps + live CLOB depth residuals" (see that doc's
+"2026-07-26 fold-in (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A)" entry), then
+archived the emptied shell (`prediction_perps_kalshi_polymarket_parked_2026_07_24.md` →
+`/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`). **CORRECTED (plan_reconciler
+agt-65e60a 2026-08-06)**: this paragraph previously duplicated entry #11's unrelated resolution text (about the
+`locked_by:` deletion-gate mechanism) via an apparent copy-paste slip — the real-world fold DID happen correctly as
+described above, only this doc's own audit-trail text was wrong.
 
 ---
 

@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [sports, arbitrage, decay-window, alpha-gate, paper-trade, promotion-gate, design]
 related:
   [
-    plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
