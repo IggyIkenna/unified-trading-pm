@@ -249,3 +249,19 @@ for a human glance instead of being dropped.
   (todo 18 will re-edit the template too). Watch armed (`bidxjckrg`): polls all 4 repos' origin LDR for copies
   byte-matching the SSOT template (90s interval, 90-min cap). Resume when it fires: re-run PM QG → quickmerge Pass 2
   (`--agent --files` for the 5 changed paths) → verify SHA on origin → POST /done.
+
+## Deferred work after 2026-08-06
+
+| Item                                                                                    | State / why deferred                                                                                                                                      | Blocked on                                                                                                                      |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Push 4 ship commits (sweep script + 3 marker fixes + flips + block record) + POST /done | Cannot be done yet — PM QG RED on `workflow-template-parity` post-gate (4 NEW drifted `image-build-gate.yml` copies), condition stable, foreign in-flight | `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 14 (Wave 4) landing; watcher `bidxjckrg` re-invokes on "ROLLOUT LANDED" |
+| `data_completion_defi_2026_07_15.md` marker 5v3 (1000L line cap)                        | Operator-owned — human line-cap trim                                                                                                                      | [OPERATOR] P1 todo (above)                                                                                                      |
+| Todo 3 — COUNT_MISMATCH detection gap in Phase-0 inventory                              | Not done — owned by the issue's other assignee                                                                                                            | —                                                                                                                               |
+| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob` doc `+depends_on: []`         | Knowingly ignored — `fix_frontmatter.py` autofix artifact (quality-gates.sh:651) on a foreign doc; never staged by name                                   | —                                                                                                                               |
+
+**Lessons (pre-compact Step 6)**: `bash scripts/quality-gates.sh 2>&1 | tail -40` MASKS the exit code (tail's wins) — a
+failed QG can report exit 0. Run to a file and check the real `$?` (e.g.
+`bash scripts/quality-gates.sh > /tmp/qg.log 2>&1; tail -5 /tmp/qg.log`), or the harness output file.
+
+**Recommended next item** (when the watcher fires): re-run PM QG (real exit code) → quickmerge Pass 2
+`--agent --files '<5 changed paths>'` → verify SHA on origin → POST `/api/slots/6/done` → flip harness task #4.
