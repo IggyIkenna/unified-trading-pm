@@ -100,6 +100,18 @@ checkbox signal alone, but confirming it actually IS requires reading:
 
 ## Todos
 
+- [ ] [DOC] P1. **Archive the 2 docs that flipped `check_terminal_status_archived` from GREEN to RED on 2026-08-06** — a
+      DIFFERENT, narrower check than this doc's main backlog: these already carry a terminal `status: resolved` (the
+      human/agent judgment call is already made), they are simply still sitting in `plans/active/issues/`, so they need
+      only the mechanical `git mv` + banner + referrer sweep, not the per-doc content read the ~114 candidates require.
+      The 2 docs: `vm_zombie_watchdog_prefix_coverage_gap_2026_08_06.md` (filed+resolved same day by `slot-2·laptop`,
+      `e724407f0`) and `canonical_id_builder_retrofit_checklist_missing_finalize_2026_08_06.md` (resolved by
+      `slot-9·planning`, `4d77219cf`). Both 0 open todos, `locked_by:` empty. **Provenance**: measured by
+      `/plan-reconcile ao` 2026-08-06 — the check PASSED at that run's entry and FAILED at its exit, and `git log -S`
+      attributes both to other slots landing mid-run, not to the reconcile pass. Left unarchived deliberately because
+      their owning slots created them minutes earlier and may be mid-ritual; archiving under a concurrent session is
+      exactly how the active/archive duplicate-path divergence found the same day (`a62bdd8ea`) happens. **Done when**:
+      `python3 scripts/plan-hygiene/check_terminal_status_archived.py` reports 0 violations again.
 - [ ] [DOC] P1. Re-run `bash scripts/plan-hygiene/check_archive_candidates.sh` for the current live candidate list (it
       drifts with ongoing AO churn — do not reuse this doc's snapshot list without refreshing it first).
 - [ ] [DOC] P1. For each of the 6 active-plan candidates: read the full doc, confirm genuine completion (not just
