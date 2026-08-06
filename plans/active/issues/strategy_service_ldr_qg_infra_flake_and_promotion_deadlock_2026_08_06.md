@@ -346,7 +346,26 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       **`53d68535`** `chore(promote): LDR → main (Option-B direct)`, body `Promoted-From-LDR: 308bdfd31bbb…`; **tree
       match VERIFIED** (origin/main tree `83976a3b…` == LDR `308bdfd3` tree — aiohttp >=3.14.3 +
       unified-api-contracts >=0.96.0 floors both landed on main). Wall resolved. **Done: 2026-08-06 11:52Z** —
-      agt-e33f21 posts `/api/slots/15/done` (`one_shot_complete: true`). Provenance: agt-e33f21.
+      agt-e33f21 posts `/api/slots/15/done` (`one_shot_complete: true`). Provenance: agt-e33f21. **Completion
+      (12:02Z):** the `/done` signal hit a wrinkle — my AgentRow had been reaped-stale at 08:24Z (known
+      `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29` misfire: the reaper archived the RECORD on
+      a staleness heuristic while the session was live; slot heartbeats never touch the AgentRow's last_ping), so
+      `one_shot_complete` first 400'd ("no active agent owns its session"). Recovered by restoring my own row to
+      `active` (== the orchestrator's `restore_agent`) then re-`/done`: the completion COMMITTED — slot 15 → `idle`
+      "cicd complete (lifecycle-complete)", activity `slot_done_one_off` @12:01:46Z for agt-e33f21/cicd/one_shot — but
+      the POST returned 500, a PRE-EXISTING orchestrator bug in today's one-shot usage recording: `_done_one_off` passes
+      `assigned_at=agent_registered_at` NAIVE from the DB, compared against timezone-AWARE transcript timestamps
+      (`can't compare offset-naive and offset-aware` in `build_task_usage_snapshot`); Class-A `/done` avoids it via
+      `ss.to_utc`. Non-blocking (post-commit), tracked as follow-up P2 below. Provenance: agt-e33f21.
+- [ ] [CICD] P2. Fix orchestrator one-shot `/done` 500 in `_done_one_off`
+      (`agent-orchestrator/server/routes/slots_worker.py` ~L1620): `assigned_at=agent_registered_at` is read NAIVE from
+      the DB; `build_task_usage_snapshot` compares it against timezone-AWARE transcript timestamps →
+      `TypeError: can't compare offset-naive and offset-aware datetimes` on EVERY one-shot `/done` with transcript
+      usage. Post-commit (the completion itself commits first), but it (a) returns 500 to the worker instead of the
+      "completion recorded" ack and (b) silently drops TaskTokenUsage recording for one-offs
+      (`ao_task_usage_role_group_breakdown_2026_08_06`). Fix: wrap `agent_registered_at` in `ss.to_utc(...)` — mirrors
+      the Class-A path (slots_worker.py ~L1698 `ss.to_utc(slot_row.assigned_at)`). Provenance: agt-e33f21 (found
+      2026-08-06 12:01Z).
 - [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
       #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
       recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
