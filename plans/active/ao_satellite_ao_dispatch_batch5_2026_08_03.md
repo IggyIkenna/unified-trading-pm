@@ -204,7 +204,7 @@ below rather than duplicated here.
       checkbox flips `[x]` citing the governor's shipped commit(s)/tests as evidence, with an archival check to follow,
       or (b) it stays open with a NEW dated Progress Log entry naming the SPECIFIC uncovered gap with evidence — not a
       4th silent re-confirmation of "genuinely open." Source:
-      `/plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
+      `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
       only). Repo: agent-orchestrator (verification, read-only + a possible checkbox flip).
 
 - [ ] [DOCS] P2. [OPERATOR] **Fold the 2026-08-01 multi-agent slot-collision incident into two governance docs, scoped

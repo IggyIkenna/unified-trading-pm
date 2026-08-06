@@ -147,8 +147,14 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       check). Verified: fails on the 5 known duplicate pairs at HEAD; `--commit` mode flags the create-only signature on
       `7accf8ecf`; scratch-repo reproduction confirms proper rename (`R100`) + clean corpus pass and the two-path
       `--only` fix clears it.
-- [ ] [SCRIPT] P2. **Reconcile the 5 live diverged duplicate pairs** — for each of
-      `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`,
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-06 (slot-10) — 5 active duplicate twins removed.** Diffed all 5 pairs: archive
+      copies are canonical/superset (status: resolved, ARCHIVED banner, CLOSED todo prefixes); pair 1
+      (`ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`) had unique active-only provenance (fix shipped as
+      side-effect of `ao_done_categorization_display_and_quickmerge_gate`, sibling doc had credited it while checkboxes
+      were unflipped) — merged into archive Progress Log. Satellite plan reference updated
+      (`/plans/active/issues/host_saturation...` → `/plans/archive/issues/host_saturation...`). All 5 active twins
+      `git rm`'d. Zero duplicate pairs verified corpus-wide post-removal. Original text: **Reconcile the 5 live diverged
+      duplicate pairs** — for each of `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`,
       `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30`,
       `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26`,
       `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25`,

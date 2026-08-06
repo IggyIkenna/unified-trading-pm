@@ -26,7 +26,9 @@ execution_scope: local-only
 priority: P2
 estimate_class: research
 source: discovered while running dashboard Playwright regression suite for the Backlog Integrity panel
-resolved_by: "AO issue-doc sweep 2026-08-06 — agent-orchestrator@e761cb1 fixed the seed_e2e_state.py current_task mismatch; live-verified 2/2 passing across 3 consecutive Playwright runs."
+resolved_by:
+  "AO issue-doc sweep 2026-08-06 — agent-orchestrator@e761cb1 fixed the seed_e2e_state.py current_task mismatch;
+  live-verified 2/2 passing across 3 consecutive Playwright runs."
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -95,16 +97,15 @@ is just wrong to assume it won't fire.
       `WorkerLivenessWatchdog._reclaim_orphaned_dispatched_tasks` (120s grace period) reclaims the seeded
       `E2E-DISPATCHED` row because the fixture's `SlotRow.current_task` didn't match the seeded task — documented in
       `dashboard/tests/e2e/fixtures/seed_e2e_state.py:217-225`. Original text follows. Identify which background loop
-      (if any) resets a `dispatched`+`dispatched_to` `TaskRow` when the
-      target slot has no live worker, confirm it's the cause of the `E2E-DISPATCHED` seed drift described above (add a
-      log line / breakpoint / temporarily disable loops one at a time against the isolated e2e backend). Repo:
-      agent-orchestrator.
+      (if any) resets a `dispatched`+`dispatched_to` `TaskRow` when the target slot has no live worker, confirm it's the
+      cause of the `E2E-DISPATCHED` seed drift described above (add a log line / breakpoint / temporarily disable loops
+      one at a time against the isolated e2e backend). Repo: agent-orchestrator.
 - [x] [SCRIPT] P2. **CLOSED 2026-08-06 — `agent-orchestrator@e761cb1`.** Fixed the seed fixture to set
       `current_task="E2E-DISPATCHED"`, closing the mismatch the watchdog reclaim keyed on. **Live-verified**: ran
       `npx playwright test --project=chromium tests/e2e/backlog-detail.spec.ts -g "Queue lag|sorts chronologically"` 3
       consecutive times — 2/2 passed every run, matching this todo's own done-condition. Original text follows. Once
-      root-caused, fix either the seed script (`tests/e2e/fixtures/seed_e2e_state.py`) or the
-      reconciler so `backlog-detail.spec.ts`'s Queue-lag/sort tests pass deterministically on every run — re-run
+      root-caused, fix either the seed script (`tests/e2e/fixtures/seed_e2e_state.py`) or the reconciler so
+      `backlog-detail.spec.ts`'s Queue-lag/sort tests pass deterministically on every run — re-run
       `npx playwright test --project=chromium tests/e2e/backlog-detail.spec.ts` 3× in a row as the done-condition (no
       flake). Repo: agent-orchestrator.
 
@@ -131,3 +132,9 @@ is just wrong to assume it won't fire.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-06 (slot-10, duplicate-reconciliation)**: Active twin unique provenance merged — SCRIPT P2 fix was shipped
+  as a side-effect of `ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md`; the sibling doc
+  `/plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` had already credited the fix
+  while these two checkboxes were left unflipped, surfaced by `/plan-reconcile ao` 2026-08-06. Active twin
+  `plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md` removed (create-only archival
+  duplicate reconciliation).
