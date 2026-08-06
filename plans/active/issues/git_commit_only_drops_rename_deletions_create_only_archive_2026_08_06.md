@@ -158,8 +158,8 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       `git status --porcelain` check confirming no staged deletions were left uncommitted. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P3. **DONE 2026-08-06 (slot-6) — the parent doc archived.** The resolved parent doc
       `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` was moved to `plans/archive/issues/` via
-      `git mv` (`status: resolved`, ARCHIVED banner added) and every path referrer updated corpus-wide
-      (`/plans/active/issues/prek_patch_cache...` → `/plans/archive/issues/...` across 14 files: 6 plans + 8 scripts;
+      `git mv` (`status: resolved`, ARCHIVED banner added) and every path referrer updated corpus-wide (the old
+      `plans/active/issues/` path references → `plans/archive/issues/`, across 14 files: 6 plans + 8 scripts;
       keyword/historical bare-filename mentions intentionally left as-is). Shipped in the archival commit
       (unified-trading-pm, 2026-08-06). (repo: unified-trading-pm)
 
