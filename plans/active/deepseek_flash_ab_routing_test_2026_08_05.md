@@ -317,6 +317,48 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       and get re-swept), today's $67.67
       "worker" total will redistribute into worker/orchestrator/review without changing the $7.08 residual figure itself
       (attributed_total is invariant under that redistribution).
+- [x] 21. ✅ [BACKEND] P1. **Review-spend misattribution root-caused + fixed — `config.review_slot_ids()` drifted live
+      between when spend was recorded and when the dashboard reads it.** Operator flagged a live screenshot showing
+      `review_spend_usd=$0.0975` despite todo 20's own backfill having confirmed
+      $3.57 earlier the same day. Live
+      investigation (direct SSM query against `state.db`, not guessed): the RAW `slot_id=2` correctly-attributed sum was
+      still genuinely $3.568979344
+      — the backfilled data was intact. But the LIVE reconciliation endpoint returned `review_spend_usd=0.1249153644`,
+      exactly slot 1's own sum — because the live `.env.local` had `ORCHESTRATOR_REVIEW_SLOTS=1` (not the code default
+      of 2, and not what the Aug-5 backfill assumed). The reservation had genuinely moved: live slot table confirmed
+      slot 2 was now running `sub-e-odum2default` on `data_engineering` (not review, not even DeepSeek), while slot 1
+      was the one currently holding the review reservation. `compute_deepseek_wallet_reconciliation()` was re-deriving
+      `slot_id in config.review_slot_ids()` against TODAY'S config on every call, applied retroactively across the full
+      lifetime SUM — so every time the reservation moves, the entire historical review total silently reattributes to
+      whichever slot holds it now. Considered and rejected keying off `SlotRow.slot_role` instead (the more
+      obvious-looking fix): that field is a per-task dispatch craft/skill tag several CONCURRENT ordinary backlog
+      workers can carry (confirmed live: slots #1/#8/#10/#12 all showed `slot_role='review'` simultaneously, each with
+      real `task_usage` rows) — using it would conflate normal backlog-worker spend (already correctly captured
+      elsewhere) with the one persistent review agent's spend this table exists specifically to surface, undoing the
+      exact distinction todo 19/20 built. **Fix**: new nullable `DeepSeekMessageUsageRow.is_review_slot`, stamped once
+      per row by `DeepSeekUsagePoller._sweep_account` from `config.review_slot_ids()` AT SWEEP TIME (same
+      nullable/self-healing migration contract as `slot_id`) — `compute_deepseek_wallet_reconciliation()` now groups by
+      this snapshot instead of re-deriving membership live, so a row's review-ness is fixed at write time and immune to
+      the reservation moving later. 2 new regression tests (poller-side stamp + reconciliation split surviving a
+      reservation move across the same slot_id). QG green (2490 backend / 225 frontend). Landed
+      `agent-orchestrator@e936d05`. No live env-var change needed — whatever `ORCHESTRATOR_REVIEW_SLOTS` says at each
+      sweep is now captured correctly going forward; **not yet deployed to the live VM as of this entry** (ships on the
+      next LDR→VM deploy cycle).
+- [ ] 22. [BACKEND] P2. **Slot 10 repeated spawn failures for `deepseek-v4-pro` — root cause not found, self-resolved,
+      needs monitoring.** Same investigation surfaced 16 `spawn_retry_cap_reached` events for slot 10 +
+      `deepseek-v4-pro` between 2026-08-05 23:45 and 2026-08-06 07:15 (`session_alive: false, pane_state: "no_session"`,
+      pane_tail always EMPTY — the tmux session never comes up far enough to capture anything, pointing at the
+      `tmux_spawn._start_session` pre-flight checks, not a CLI-level crash after start). A same-day fix
+      (`agent-orchestrator@bc37d03`, already live) resets `spawn_retry_count` on every successful spawn path so a slot
+      that trips the cap once doesn't permanently lose the smarter pane-diagnosis retry — but that fix addresses losing
+      diagnostics on retry, not the underlying spawn failure. Checked `instruments-service`'s worktree under `.tabs/10/`
+      directly (an earlier `autospawn_failed` event at 00:13/00:54 blamed a
+      `instruments-service.broken-empty-clone-20260805` quarantine) — it's clean now (`git status`: nothing to commit,
+      real `.git/`), so that specific cause no longer reproduces, if it ever was the cause. No further
+      `spawn_retry_cap_reached` for slot 10 since 07:15; a `plan_health`/`na_eligibility_auditor` scheduled dispatch
+      successfully spawned `deepseek-v4-pro` on slot 10 from 07:47-08:05 and completed normally. Left open rather than
+      guessing further: needs live `tmux_spawn.py` tracing (or reproducing the failure) to actually pin the cause, not
+      more activity-log archaeology.
 
 ## Codex SSOTs
 
@@ -490,6 +532,24 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   `attributed_total_usd` and `residual_usd` are exactly unchanged by this (redistribution, not a new total, as
   predicted) — **final split: worker $64.27, orchestrator $0.00 (correct), review $3.57, attributed $67.84, residual
   $7.09**.
+- **2026-08-06 —
+  orchestrator-$0 re-confirmed independently; review-misattribution found + fixed (todo 21); slot-10
+  spawn-failure investigation opened (todo 22)**: operator, worried the earlier "$0
+  orchestrator" finding might be a mistagging artifact ("I thought we ran outta credits yesterday"), asked to verify the
+  transcript `model` field is trustworthy. Confirmed via code, not just data: `deepseek_usage.scan_session_usage` reads
+  `model` straight off the API response (`msg.get("model")`), not a client-side label — the ONE real mistagging bug
+  found this session (`agent-orchestrator@64c7724`, Aug 5) was the CLI's own `--model` argv flag showing "sonnet" while
+  a worker ran on DeepSeek, the opposite direction, and never touched `main_agent_keeper.py`. Independently,
+  `agent-orchestrator@ 26b99fe`'s own commit message says main_agent_keeper's fresh-spawn path "bypassed
+  select_account_for_spawn entirely... having NO DeepSeek fallback at all" before landing ~05:50 UTC 2026-08-06 — so the
+  orchestrator could not have run on DeepSeek at any point on 2026-08-05 as a matter of what code existed, independent
+  of the transcript evidence. Operator then asked to fix both the review-slot misattribution and dig into a live slot-10
+  spawn-failure pattern found along the way ("both"). Review misattribution: root-caused to `ORCHESTRATOR_REVIEW_SLOTS`
+  drifting live from 2 (Aug 5, when todo 20's backfill ran) to 1 (Aug 6) — see todo 21 for the full root-cause + fix
+  (shipped `agent-orchestrator@e936d05`, QG green, not yet deployed to the live VM). Slot 10: found a real ~7.5h
+  spawn-retry crash loop for `deepseek-v4-pro` (16 occurrences, always empty pane_tail) that had already stopped by the
+  time of live investigation and hasn't recurred since — left as an open follow-up (todo 22) rather than claiming a root
+  cause the evidence doesn't support.
 
 ## Deferred work after 2026-08-05
 
@@ -503,6 +563,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
 | Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
 | Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
+| Todo 22 — slot 10 repeated `deepseek-v4-pro` spawn-retry-cap failures, root cause not found                                                            | **Not done** — self-resolved as of 2026-08-06 07:15 UTC with no recurrence yet; needs live `tmux_spawn.py` tracing or a reproduction, not more log archaeology                          | Nothing — pick up directly, or wait for recurrence                |
+| Todo 21's `is_review_slot` fix — deploy to the live orchestrator VM                                                                                    | **Not done** — shipped to LDR (`agent-orchestrator@e936d05`, QG green) but not yet on the live VM as of this entry                                                                      | Next deploy cycle                                                 |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
