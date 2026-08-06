@@ -173,3 +173,8 @@ automatic fleet-wide safety net that investigation's stated intent was.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-2cd17a)**: KEEP-NA, valid — re-confirmed; the 2026-07-30
+  verdict (filed under the pre-retag `infra` tranche label) still holds unchanged: the single open todo is a genuine
+  unresolved architecture trade-off (reuse the existing 45s-TTL inventory endpoint vs. build a narrower alert-check-only
+  path) citing a specific OOM-regression-risk code comment. No content change since; doc has no `last_updated` field so
+  this refresh anchors the next incremental diff.

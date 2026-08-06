@@ -218,3 +218,7 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries, all resolving, matches the doc's own "Codex SSOTs"
   list + epic + skill) — coordination-index doc, legitimately code-free; no changes needed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-2cd17a)**: KEEP-NA, valid — this is the tranche's own
+  consolidated-closeout coordinator; its 5 open `[REVIEW]` todos are explicitly self-declared verification-only / "not
+  itself AO-eligible" (same convention as the sibling `infra_consolidated_closeout` doc), matching the bounded-outcome
+  bar this skill applies. No reclassification warranted.

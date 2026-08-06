@@ -620,3 +620,9 @@ safely-completable work. Terminal state:
       docs rather than restated here. No new issue doc filed; nothing was orphaned.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-2cd17a)**: KEEP-NA, valid — 0 open todos of its own (all
+  P1-P10 shipped or forked to owning child plans, per this doc's own 2026-08-02 Todos entry). NOT archived here: its
+  ARCHIVE-vs-`archive_exempt` disposition is the explicit open todo 3 of
+  `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` (already `assigned_vm: planning`,
+  operator-ruled 2026-08-06 to run only via that plan's own AO workers, not an interactive/one-shot session) — deferring
+  to that plan rather than racing it.
