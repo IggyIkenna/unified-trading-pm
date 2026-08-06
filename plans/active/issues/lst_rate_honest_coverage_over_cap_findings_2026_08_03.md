@@ -128,3 +128,10 @@ for the compact pointer back to this doc.
   the whole doc stays NA per the mixing rule. Doc stays `assigned_vm: NA`.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — re-confirms the 2026-08-04
+  verdict; the only change since was a context-scout metadata-only touch. Todo1/Todo2 [SCRIPT] remain bounded-in-
+  isolation but sequentially gated on each other; Todo3 [OPERATOR] remains a genuine judgment call (VM relaunch approach
+  pending the separate still-open P0 OOM issue). Doc stays `assigned_vm: NA` as a whole (per-doc field, one genuine
+  judgment item is enough). Incidental: `mtds-dex-swaps-backfill-3` VM (Todo3's subject) was last independently verified
+  stalled/OOM on 2026-08-03 — 3 days further elapsed with no fresh check in this doc; flagging for a
+  `/vm-preemption-billing-waste-audit` pass, not re-verified live in this run.

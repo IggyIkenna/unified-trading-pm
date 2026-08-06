@@ -141,3 +141,12 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   schema/computation gap, not a "should we keep this corpus" question) that pre-dates and is unaffected by the
   retirement decision.
 - **context-scout 2026-08-05**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): MIXED — items 1-3 ([DESIGN]/[IMPL]/[VERIFY],
+  target-schema decision + gated impl + post-ship verify) are KEEP-NA valid (live-writer-path design call + prose-gated
+  sequencing). Item 4 ([AUDIT] P3, grep other venues sharing this parser's legacy non-Messari/cumulative shape) is
+  independently bounded and worker-determinable in isolation — a genuine RECLASSIFY candidate — but `assigned_vm` is a
+  per-doc field and items 1-3 are genuinely NA, so held at doc-level KEEP-NA rather than split into a new doc this run
+  (same precedent as the origin na-audit plan holding classifier-flagged candidates NA on independent review). Recommend
+  a future pass extract item 4 into its own small `assigned_vm: planning` issue doc if capacity allows.
+  KEEP-NA-STALE(duplicate) hypothesis checked and ruled out — no active planning doc claims this scope. Doc stays
+  `assigned_vm: NA`.

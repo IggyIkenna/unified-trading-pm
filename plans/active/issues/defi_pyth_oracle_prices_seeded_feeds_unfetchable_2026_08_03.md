@@ -211,6 +211,16 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       fetched successfully and then silently discarded by `_filter_pyth_rows_to_is` every day since 2026-07-19 (will
       resolve going forward once shipped; does NOT backfill the already-lost 2026-07-19..2026-08-03 window, which is
       unrecoverable — Hermes only serves recent history per feed availability).
+- [ ] [OPERATOR] P1 (DO FIRST — direction-independent, ongoing data loss). Trigger `instruments-service` redeployment
+      (Cloud Run deploy or the `instruments-service-daily` Workflow re-trigger) so `instruments-service@6fbaae90`
+      (already merged to `origin/live-defi-rollout`, restores BTC/ETH/INF to `PYTH_PRICE_FEEDS`) actually goes live.
+      **Confirmed still blocking as of 2026-08-06**: the daily trigger (Cloud Scheduler → Workflow, 08:30 UTC) is still
+      running the pre-fix image — both the 2026-08-05 and 2026-08-06 published IS blobs were checked directly and still
+      only enumerate 9 pairs (no BTC/ETH/INF), so `_filter_pyth_rows_to_is` will keep silently dropping BTC/ETH/INF
+      every day this stays undeployed. Repo: instruments-service (deploy/trigger only, no code change — the fix already
+      shipped). Source: added by na-eligibility-audit 2026-08-06 (agt-e00d37) — this action existed only as Progress Log
+      prose (see the 2026-08-06 slot-12 entry below) and was never converted to a tracked checkbox, per the workspace
+      HARD RULE "every follow-up is a `- [ ]` todo, never prose."
 
 ## Progress Log
 
@@ -372,3 +382,11 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       exists.** IS redeployment is an [OPERATOR] action (Cloud Run deploy or Workflow trigger). Plan `[DATA] P2` stays
       UNFLIPPED — BTC/ETH/INF capture has not resumed post-fix.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — sole pre-existing open todo
+  (`[DATA] P3`, instrument_id convention reconciliation) is genuine design/judgment work, confirmed not duplicated
+  elsewhere (`defi_satellite_ao_dispatch_batch3_2026_07_26.md` explicitly disclaims it). **BIG FINDING**: today's
+  slot-12 VM run (above) proved the BTC/ETH/INF regression is STILL ACTIVE — code fixed but IS never redeployed — and
+  that fact existed only as Progress Log prose, never a tracked checkbox, violating the "every follow-up is a checkbox,
+  never prose" HARD RULE. Fixed in this same commit: added a new `[OPERATOR] P1` todo above tracking the IS redeploy
+  action. Flagging to the operator via this run's completion report — this is an ongoing, cross-repo, P1
+  data-correctness regression that did not actually resolve when the code merged.

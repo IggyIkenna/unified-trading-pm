@@ -756,3 +756,12 @@ auto-generated section's own owner script, rather than hand-editing the table) �
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate against the doc's only remaining
   open item (the P0 design decision on `catalog_trading.py`'s 5 broken archetypes, all under `target_universe/`).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — re-confirmed independently;
+  only diff since 2026-08-03 was a context-scout metadata-only touch. Sole open checkbox (5 broken archetypes needing
+  human trading-parameter rulings, `xfail(strict=True)`) independently re-verified live against strategy-service's test
+  file — still unfixed, still accurate; no active planning doc has claimed it
+  (`defi_satellite_ao_dispatch_ batch3_2026_07_26.md` explicitly says leave xfail'd, don't force-fix). Incidental, not
+  actioned: 2 untracked prose-only design items (RecursiveLoopOrchestrator translation-layer build; 3-repo
+  liquidation-feed integration), both independently spot-checked live and confirmed still real/unbuilt; 1 stale prose
+  fragment (archetype_slots sweep already done 2026-07-27 via batch3, doc text not updated) — hygiene notes only. Doc
+  stays `assigned_vm: NA`.

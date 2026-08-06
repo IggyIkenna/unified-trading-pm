@@ -389,3 +389,12 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   list at the sole remaining open item (the 4th instance, the drifted `openapi/prospectus/*.md` generator), replacing
   the stale first-instance-era entries.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — one of the best-evidenced
+  KEEP-NA cases in the corpus: prior audit passes (07-30/08-03/08-04) plus independent Deferred/non-batchable
+  classifications in 3 separate AO-dispatch-batch plans (batch2, batch3, batch6) all carve out the sole open item
+  (4th-instance `openapi/prospectus/*.md` generator resync) as human-design-gated, never dispatched. Independently
+  re-verified live today: grepped `unified-api-contracts` directly, confirmed the identical 5-file DRIFT list the doc
+  names is still affected, generator script unchanged since 2026-06-11. "Edited since" trigger was a metadata-only touch
+  (author-field backfill + context-scout refresh). Incidental, not actioned: 1 untracked prose-only item (build
+  deployment-ui's own capability-manifest generator) — likely moot-by-precedent given the surgical-prune workaround now
+  proven twice (DRIFT 07-21, GMX 08-04). Doc stays `assigned_vm: NA`.
