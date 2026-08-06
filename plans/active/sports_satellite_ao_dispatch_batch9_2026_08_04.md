@@ -300,7 +300,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
       `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call.**
 - [x] ✅ [CODE] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
-      `deployment-service@1c4457` ("feat(sports): filter market-tick-data-service from pre-match triggers for non-odds
+      `deployment-service@1c1e445` ("feat(sports): filter market-tick-data-service from pre-match triggers for non-odds
       leagues") + follow-ups `dce296a9`/`f78531e7`, 2026-08-05. Verified live — `_league_has_odds_coverage()` present
       (line 25) and wired into `evaluate_pre_match_triggers` (line 126), plus a full regression suite
       (`tests/unit/test_sports_trigger_odds_coverage_filter.py`, 8 unit tests). Source doc's own checkbox already `[x]`
