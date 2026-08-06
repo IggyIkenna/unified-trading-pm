@@ -204,14 +204,8 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
 
 ## Todos
 
-- [ ] 1. [INFRA] P0. **Per-repo distribution + `notify-slack.yml` dependency audit** — for each of the 9 candidate
-      templates, confirm via direct fleet grep which of the 26 repos actually carry a copy today (do not assume uniform
-      presence); for each of the 24 non-PM repos, grep for ALL local `uses: ./.github/workflows/*.yml` callers of that
-      repo's own `notify-slack.yml` copy and record whether `main-backmerge-to-ldr.yml`/
-      `semver-agent.yml`/`staging-backmerge-to-ldr.yml` are the ONLY callers (→ copy becomes deletable once those 3
-      migrate) or whether some other local-only workflow also depends on it (→ copy must stay). Done-when: a table in
-      this plan's Progress Log listing, per repo, which of the 9 templates are present and the notify-slack.yml verdict
-      (deletable / must-stay + why).
+- [x] 1. [INFRA] P0. **Per-repo distribution + `notify-slack.yml` dependency audit** — see "Todo 1 findings" below.
+      Live-bug fix shipped: execution-service@d537b812e, e2e-testing@14bec17, market-data-processing-service@8c5430aa.
 - [ ] 2. [INFRA] P0. **Correct `request-major-bump.yml`'s stale header comment** — its own text claims "(thin caller ->
       PM reusable workflow)", verified false by direct read (only `uses:` line is `actions/checkout@v5`); fix the
       comment to describe what it actually does before or as part of converting it, so the eventual
@@ -276,6 +270,33 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       identically for `unified-trading-pm` today and has no such guard either; scope this as its own small follow-up if
       pursued, don't block this plan on it.
 
+## Todo 1 findings (2026-08-06)
+
+**Distribution is NOT uniform** (confirmed, don't assume): `unified-trading-ci` carries none of the 9 (it's the future
+host, plus its own internal-use `notify-slack.yml` for `python-quality-gates-v2.yml`, unrelated to this audit).
+`unified-trading-pm` carries `main-backmerge-to-ldr.yml`/`major-bump-issue-handler.yml`/`notify-slack.yml`/
+`request-major-bump.yml`/`semver-agent.yml` but NOT `staging-backmerge-to-ldr.yml`/`staging-lock-check.yml`/
+`update-dependency-version.yml`/`version-registry-notify.yml` (PM's own promotion model differs — not a defect, just
+documented per this todo's "don't assume uniform presence" instruction).
+
+**`notify-slack.yml` verdict, all 21 non-PM/non-CI repos that carry it**: the ONLY local callers anywhere in the fleet
+are `main-backmerge-to-ldr.yml` and/or `semver-agent.yml` — **zero exceptions found** (checked every repo's full
+`.github/workflows/` tree, not just the 9 candidate templates). Once todos 4 (main-backmerge) and 5 (semver-agent) both
+migrate to `unified-trading-ci`-hosted reusable workflows, **every one of these 21 repos' local `notify-slack.yml`
+copies becomes deletable** (todo 6) — the design decision's "OTHER local-only workflow might still depend on it" caveat
+never actually materializes anywhere in the fleet.
+
+**LIVE BUG FOUND, FIXED same session (P0, not part of this plan's original scope)**: `execution-service`, `e2e-testing`,
+and `market-data-processing-service` carry `main-backmerge-to-ldr.yml` + `semver-agent.yml` (both of which call
+`./.github/workflows/notify-slack.yml` locally) but were **missing the `notify-slack.yml` file itself** — a pre-existing
+gap in `rollout-workflow-templates.sh`'s history, unrelated to today's `unified-trading-ci` extraction. Confirmed via
+`gh run list`: every push to these 3 repos' `main-backmerge-to-ldr.yml`/`semver-agent.yml` since at least 2026-08-05 has
+failed instantly (0s duration, GitHub's own diagnosis "workflow file issue") — a **multi-day live CI outage** on their
+LDR→main backmerge and semver-tagging pipelines, discovered incidentally while auditing for this plan. Fixed via
+`bash scripts/workflow-templates/rollout-workflow-templates.sh --template notify-slack.yml` (the sanctioned rollout
+mechanism, dry-run verified first) + a quickmerge per repo. Not a consequence of anything in this plan's design —
+flagged to the operator directly in-session, fixed immediately per the small+clear triage bar.
+
 ## Codex SSOTs
 
 - `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / reusable-workflow rollout mechanism; needs todo 9's
@@ -295,3 +316,10 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
   public `unified-trading-ci` + mixed public/private fleet callers is safe (live proof: `execution-service`/
   `strategy-service`, both PRIVATE, already ran `quality-gates-v2` successfully against it). No phase executed yet
   beyond authoring; todo 1 is the next step.
+
+- **2026-08-06 (later, interactive session) — todo 1 shipped**: Full per-repo distribution audit + `notify-slack.yml`
+  dependency audit complete (see "Todo 1 findings" above). Incidentally discovered a live, multi-day CI outage
+  (`execution-service`/`e2e-testing`/`market-data-processing-service` missing `notify-slack.yml` entirely despite two
+  other rolled-out templates calling it locally) — flagged to the operator immediately, fixed same session via the
+  sanctioned rollout script + a quickmerge per repo (`execution-service@d537b812e`, `e2e-testing@14bec17`,
+  `market-data-processing-service@8c5430aa`). Todo 2 (request-major-bump.yml stale comment) is next.
