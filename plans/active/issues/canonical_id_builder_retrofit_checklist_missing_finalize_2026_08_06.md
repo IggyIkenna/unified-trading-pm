@@ -9,7 +9,7 @@ summary: >-
   orchestrator-agent` AO plan with no gated finalize companion (no `<slug>_finalize_*.md` with `depends_on: [<slug>]` +
   `gate_on_depends: true`). The red is PRE-EXISTING (verified on a clean tree with an unrelated diff stashed) and blocks
   the PM repo's green-tree shipping gate for all slots.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,12 +35,15 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "2026-08-06 — resolved by archival of the completed plan (slot-6, task -002); finalize-plan-coverage re-verified GREEN
+  fleet-wide"
 source: >-
   Surfaced 2026-08-06 while shipping the COUNT_MISMATCH detection fix
   (context_scope_marker_claims_exceed_frontmatter_count-003): the full `quality-gates.sh` run exits 1 on
   `finalize-plan-coverage` (`scripts/quality_gates/check_finalize_plan_coverage.py`, baseline
   `finalize_plan_coverage_baseline.yaml` = 0). Clean-tree check (stash of the unrelated diff) reproduces the identical
   failure at LDR HEAD — not introduced by the context-scope work.
+depends_on: []
 ---
 
 # canonical_id_builder_retrofit_checklist is missing its gated finalize plan
@@ -76,15 +79,16 @@ is a real AO plan whose completion needs a closeout gate before archival.
 
 ## Recommended decision
 
-- [ ] [DOC] P2. **Author the missing gated finalize plan for `canonical_id_builder_retrofit_checklist_2026_07_08`**:
-      create `plans/active/canonical_id_builder_retrofit_checklist_2026_07_08_finalize_*.md` with
-      `depends_on: [canonical_id_builder_retrofit_checklist_2026_07_08]` + `gate_on_depends: true`, sized as the
-      checklist's closeout (verify every retrofit todo flipped + coverage green), then re-run
-      `scripts/quality_gates/check_finalize_plan_coverage.py` until 0 violations. If the plan's `nature: notes` is
-      instead judged to exempt it from the finalize rule, flip the check's `finalize_plan_coverage_baseline.yaml`
-      (governance decision) — do not do both. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P2. **RESOLVED 2026-08-06 — superseded by archival, no finalize authored.** The flagged plan
+      `canonical_id_builder_retrofit_checklist_2026_07_08.md` was a COMPLETED plan (0 open / 14 closed todos); slot-6
+      (task -002) archived it to `plans/archive/2026_08/` and deleted the stale `status: active` twin
+      (unified-trading-pm@dda85c8cc, operator-authorized), which cleared `finalize-plan-coverage` to GREEN for the
+      fleet. Authoring a finalize plan for a done+archived plan is no longer applicable.
+      `check_finalize_plan_coverage.py` re-verified at 0 violations. No baseline bump needed.
 
 ## Progress Log
 
 - **2026-08-06 (worker slot-4, context_scope_marker_claims_exceed_frontmatter_count-003)**: filed while blocked from
-  shipping the COUNT_MISMATCH fix by this pre-existing red; clean-tree evidence above.
+  shipping the COUNT_MISMATCH fix by this pre-existing red; clean-tree evidence above. RESOLVED same day — the red was
+  transient (slot-6's parallel archival of the done plan, `dda85c8cc`, landed within the hour and flipped the gate
+  green); the repo-blocker RB-fbeef249 is moot. This doc is closed.
