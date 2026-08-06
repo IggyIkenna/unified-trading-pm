@@ -92,13 +92,12 @@ context_scope: [scripts/quickmerge.sh, /codex/05-infrastructure/per-tab-worktree
 - **Established**: `scripts/dev/slot-cron-ff-pull.sh` runs every 5 min via cron (`crontab -l` confirmed) across
   `--all-slots`, and a separate `main-clone-ff-pull` cron sweep runs every 5 min (offset +3min) doing
   `git merge --ff-only` (which is safe by construction — it would FAIL, not reset, if local is ahead).
-- **NOT established**: which specific process actually performed the `branch: Reset to origin/live-defi-rollout`.
-  `slot-cron-ff-pull.sh`'s own header claims it never does this; a grep for `reset --hard`/`git branch -f` in that
-  script found no match. Candidates not yet ruled out: (a) a bug in `slot-cron-ff-pull.sh` where some other git
-  invocation (not literally `reset --hard`) produces the same reflog signature for a checked-out branch, (b) a DIFFERENT
-  concurrent agent/session with write access to this same clone performing its own ad-hoc reconciliation (e.g.
-  `git checkout -B live-defi-rollout origin/live-defi-rollout` to "get unstuck"), (c) some other scheduled automation
-  not enumerated here.
+- **Established (was "NOT established" — resolved by todo 1 below, updated 2026-08-06 `/plan-reconcile ao`)**: the
+  process is `scripts/quickmerge.sh`'s `cascade_dep_branch()`, NOT `slot-cron-ff-pull.sh` (confirmed clean by full
+  read). `cascade_dep_branch()` runs `git checkout -B "$branch_name" "origin/$branch_name"` unconditionally in a shared
+  clone whenever a **different, concurrent** agent's dependency-branch cascade walks through this repo as a transitive
+  ancestor — see todo 1's full writeup for the mechanism and todo 2 for the shipped fix (`unified-trading-pm@06dc7632`,
+  wip-preserve refs before realigning).
 
 ## Why this matters
 

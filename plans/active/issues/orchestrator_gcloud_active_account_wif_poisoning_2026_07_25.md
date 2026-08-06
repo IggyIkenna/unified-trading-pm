@@ -34,6 +34,7 @@ related:
     /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
     /codex/07-security/gha-wif-migration.md,
+    /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
   ]
 created: 2026-07-25
 author: unknown

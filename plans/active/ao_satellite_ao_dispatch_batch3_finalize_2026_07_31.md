@@ -73,11 +73,15 @@ source: >-
       3 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md` (its `[SCRIPT] P0`
       item), `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its `[BACKEND] P2` and
-      `[SCRIPT] P3` items), `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` (both its `[SCRIPT] P2` items
-      plus its `[DATA] P3` item), and `wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its own `[DATA] P3` item —
-      the duplicate this batch folded in, so it flips in lockstep with `orphaned_commit_recovery`'s `[DATA] P3`, not
-      independently). **Done when**: every one of those flips is committed with the `docs(plans):` prefix and cites the
-      real commit sha (or, for the read-only verification items, the reproduction evidence).
+      `[SCRIPT] P3` items), and `wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its own `[DATA] P3` item — the
+      duplicate this batch folded in, so it flips in lockstep with `orphaned_commit_recovery`'s `[DATA] P3`, not
+      independently). **`orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` — nothing to do here**: verified
+      2026-08-06 (`/plan-reconcile ao`) already
+      `plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` with all 4 todos `[x]` (a
+      different hygiene-sweep commit `82d6d6bf7` archived it, not this todo — its own `archive_exempt: true` comment
+      claiming routing through this exact todo is itself stale). **Done when**: every remaining flip above is committed
+      with the `docs(plans):` prefix and cites the real commit sha (or, for the read-only verification items, the
+      reproduction evidence).
 - [ ] [INFRA] P0. **Re-check both Deferred-bucket items' gates and spin any newly-cleared ones into batch 4** — for
       `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`'s `[REVIEW] P3` item, re-check whether it has
       since been scoped into its own dedicated plan (e.g. via `/plan-brainstorm`) — if so, mark this batch's Deferred
@@ -92,14 +96,15 @@ source: >-
       — no entry left unstated.
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
       re-check `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`,
-      `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md`,
-      `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` (likely still has open non-batched items — check
-      before archiving), and `wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its 2 `[SCRIPT] P3` items are still
-      deferred judgment calls — do not archive if so). Run the standard 6-step archival ritual (migrate any DEFERRED
-      item → banner → codex-alignment check → update CLAUDE.md/codex if a contract changed → fix every referrer's path
-      corpus-wide → clear the lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/`
-      returns only the archived copy's own path for each archived doc, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero hard failures.
+      `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md`
+      (`orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` already archived — verified 2026-08-06
+      `/plan-reconcile ao`, see todo 2 above, nothing to re-check here), and
+      `wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its 2 `[SCRIPT] P3` items are still deferred judgment
+      calls — do not archive if so). Run the standard 6-step archival ritual (migrate any DEFERRED item → banner →
+      codex-alignment check → update CLAUDE.md/codex if a contract changed → fix every referrer's path corpus-wide →
+      clear the lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/` returns only the
+      archived copy's own path for each archived doc, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports
+      zero hard failures.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, migrate any still-Deferred item into batch 4 (never
       leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_07/`, fix

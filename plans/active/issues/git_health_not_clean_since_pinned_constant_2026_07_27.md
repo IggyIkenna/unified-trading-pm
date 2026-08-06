@@ -22,7 +22,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [git-health, fleet-monitoring, worktree-health, reporter-bug, review-agent]
-related: []
+related: [/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md]
 created: 2026-07-27
 author: unknown
 parent_epic: orchestrator_master
