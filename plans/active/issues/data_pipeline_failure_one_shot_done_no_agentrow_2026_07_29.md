@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, one-shot-lifecycle, escalation, data_pipeline_failure, done-endpoint, agentrow]
 related:
   [
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-29
@@ -51,7 +51,7 @@ source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-790
 last_updated: 2026-07-29
 context_scope:
   [
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/routes/slots_worker.py,

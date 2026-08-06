@@ -654,9 +654,10 @@ absorb the actual remediation work.
   frozen-indexer investigation, CURVE/OPTIMISM stale-VM restart blocked on the missing `PROGRESS.json` checkpoint)
   remain correctly scoped and are the actual remaining work — not something this one-shot escalation pass re-derives or
   re-decides. This is another data point for the still-open cross-asset-group dedup gap
-  (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, Option A/B/C, operator/design
-  decision still pending): a full `data_pipeline_failure` orchestrator-agent session dispatched for a condition whose
-  root-cause-relevant state has not changed since the last verified reading. Commit is doc-only (`unified-trading-pm`).
+  (`/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, Option A/B/C,
+  operator/design decision still pending): a full `data_pipeline_failure` orchestrator-agent session dispatched for a
+  condition whose root-cause-relevant state has not changed since the last verified reading. Commit is doc-only
+  (`unified-trading-pm`).
 - 2026-08-02T~21:10Z (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`):
   resolved the open P2 "bad indexers transient vs. permanent" todo. Re-probed both subgraphs live (gateway + the
   sanctioned `scripts/subgraph_health_probe.py --dry-run` tool) after the 6-day window this todo's own bar required.

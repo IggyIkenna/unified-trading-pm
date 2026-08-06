@@ -70,7 +70,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
     deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
@@ -394,7 +394,7 @@ and the residual-KeyError defense-in-depth path.
       whether an OPEN, already-diagnosed issue doc already covers the exact `(asset_group, data_type, event)` tuple
       before the escalation fast path (`repository_dispatch escalate-to-orchestrator`) spawns another full
       `data_pipeline_failure` worker. Filed
-      `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
+      `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
       (agent-orchestrator/deployment-service, out of this doc's `market-tick-data-service` scope) — not fixed here.
       **Flipped 2026-08-05 (slot-15):** finding documented + tracked; implementation blocked on unresolved DESIGN
       decision (Option A/B/C) in the referenced issue doc — code fix lives there, not here.

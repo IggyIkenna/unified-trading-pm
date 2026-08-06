@@ -28,7 +28,7 @@ context_scope:
   [
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]

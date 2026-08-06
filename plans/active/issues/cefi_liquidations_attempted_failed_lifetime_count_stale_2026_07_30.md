@@ -35,7 +35,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 created: 2026-07-30
 author: unknown
@@ -56,7 +56,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
     deployment-service/deployment_service/data_pipeline_monitors/known_dead_cells_registry.py,
     deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 ---
 
@@ -187,13 +187,13 @@ not lost if the bound expires unanswered.
   of `44,422 / 749,121` — the `attempted_failed` numerator is byte-identical; only `attempted` (denominator) grew by 2,
   consistent with the boot context's own `attempted_failed_staleness` label "no new attempted_failed activity in 1d".
   Per the skip-condition this corpus has converged on (see
-  `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s 2026-07-30 entries — "no new
+  `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s 2026-07-30 entries — "no new
   activity since the doc's last verified reading", not a fresh full manifest read every time), did a cheap git-ancestor
   check instead of re-deriving the diagnosis: `market-tick-data-service@6a067cf1` (aiodns fix) is still an ancestor of
   `origin/live-defi-rollout`, and `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps
   `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause fixes remain in place; no new failure class observed; the operator
   decision on lifetime-count-vs-trailing-window (options A/B/C above) is still open and unaffected by this re-fire. No
-  code changed. Also filed `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
+  code changed. Also filed `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
   not already cross-linked) as the standing meta-issue this repeat dispatch itself is an instance of.
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly
   `[OPERATOR]`/operator-conditional (decide among options A/B/C; the DIAG follow-up is gated on that decision). Not
@@ -204,7 +204,7 @@ not lost if the bound expires unanswered.
   `44,422 / 749,123` — `attempted_failed` grew by only 3 rows and `attempted` by 16 over the intervening period,
   matching the boot context's own `attempted_failed_staleness` label ("only 3 attempted_failed row(s) in the last 1d —
   below the 500-row materiality floor; a decaying trickle on already-tracked backlog, not a fresh regression"). Per the
-  established skip-condition (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`),
+  established skip-condition (`/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`),
   did a cheap verification instead of re-deriving the diagnosis: confirmed `market-tick-data-service@6a067cf1` (aiodns
   fix) is still an ancestor of `origin/live-defi-rollout`, and
   `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause

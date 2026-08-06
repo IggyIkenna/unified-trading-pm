@@ -21,7 +21,7 @@ summary: >-
   needed vs. just appending to its Progress Log / verifying nothing regressed." This is real orchestrator-capacity waste
   (a full agent session per re-page of a KNOWN condition) and is NOT covered by the archived 2026-07-15 fix (that fix is
   about Slack noise, this is about escalation-worker dispatch).
-status: open
+status: resolved
 nature: process
 asset_group:
   [ao] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- was [cross-cutting]; the subject is
@@ -63,11 +63,20 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "Both todos done 2026-08-06. Option A operator-confirmed (dedup on 'no new write activity since the last verified
+  reading', via manifest max_attempted_at) and implemented: deployment-service@1b035c52, new module escalation_dedup.py
+  gating escalation.py::route_finding's _dispatch_to_orchestrator call; regression tests in
+  tests/unit/test_escalation_dedup.py."
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
 last_updated: 2026-08-06
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). Option A operator-confirmed and shipped
+> (deployment-service@1b035c52) -- the escalation dispatch path now skips a redundant worker spawn when no new write
+> activity has occurred since the last verified reading of a matched OPEN issue doc, and still dispatches normally on
+> genuinely new activity. Archived by /plan-reconcile ao.
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
 
