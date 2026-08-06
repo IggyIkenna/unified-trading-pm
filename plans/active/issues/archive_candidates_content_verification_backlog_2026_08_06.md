@@ -38,9 +38,9 @@ created: "2026-08-06"
 author: cicd escalation agt-4dd4f4
 last_updated: "2026-08-06"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
-assigned_role: cicd
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: review
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.5
@@ -133,6 +133,27 @@ checkbox signal alone, but confirming it actually IS requires reading:
       `resolved`/`false-positive`/`superseded` + `git mv` to `plans/archive/issues/` + fix referrers) or apply
       `archive_exempt: true` with justification. Re-run the check after each chunk to confirm the live count is trending
       down, not just churning.
+- [ ] [SCRIPT] P1. **Make `check_archive_candidates.sh` DIFF-SCOPED on the promote path — the gate's shape is the root
+      cause, not just the backlog.** Operator ruling 2026-08-06 (interactive): clear the backlog AND fix the shape,
+      because clearing alone re-arms the same trap the next time the corpus drifts — which on current evidence is days,
+      not months (the count grew 112 → **120** within hours on 2026-08-06, while `check_ag_closeout_linkage` went 77 →
+      81 against a baseline of 69). **The defect**: this check is enforced corpus-wide inside
+      `run_hygiene_sweep.sh --ci`, which is folded into the REQUIRED `quality-gates-v2` check by
+      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml:818` ("Plan hygiene hard gate (PM only)"). So an
+      LDR→main promote PR that touches **zero** plan docs still fails on ~15 other slots' accumulated doc debt. That is
+      not actionable by the promoter it blocks, and it is inconsistent with this workspace's own stated convention for
+      every comparable ratchet — CLAUDE.md: "**DTZ / TID251 / fallback-import baselines only go DOWN (no new violations
+      on shipping)**", i.e. diff-scoped, not absolute. **Why the baseline can't just be raised**: the check clamps its
+      baseline downward only (`min(n, existing)`), so it was pinned at `0` when the corpus was clean and has no
+      absorption for later drift; hand-raising it is explicitly forbidden by the check itself and would bless 120 docs
+      of real debt as permanently acceptable. **The fix**: fail only when the PR's OWN diff ADDS a candidate (compare
+      the candidate set at base vs head, as the existing todo-regression check already does against origin), leaving
+      pre-existing debt to the daily cron + this doc's remediation todos. The gate stays HARD — it simply stops
+      attributing other slots' debt to whoever happens to be promoting. **Done when**: a promote PR whose diff adds no
+      new candidate passes `quality-gates-v2` while the corpus still holds pre-existing candidates, AND a PR that adds
+      one still fails. Repo: unified-trading-ci (workflow) + unified-trading-pm (checker). **Cross-ref**:
+      `/plans/active/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` is the live incident
+      this prevents recurring.
 - [ ] [SCRIPT] P2. Once the backlog is cleared (or the residual is small + all `archive_exempt`-justified), consider
       whether this check's remediation should get its own dedicated skill (mirroring `/na-eligibility-audit`'s tranche +
       incremental-mode pattern) so future backlog growth from routine AO churn doesn't require another one-off
@@ -167,3 +188,24 @@ closest active tracking doc for this wall family):
    today's commits reads every recent citation as fabricated. Before treating its quickmerge re-gate failure as real,
    `git -C <sibling> fetch origin` each cited repo and re-run; only the citations that STILL don't resolve are genuine
    (and they're ratchet-baselined — a count at/below baseline passes). This cost a wasted re-gate cycle this session.
+
+- **2026-08-06 (`/plan-reconcile ao`, operator rulings, interactive)** — **This doc is now AO-DISPATCHED.**
+  `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, `assigned_role: cicd → review`
+  (matching what the `_finalize_*` plans already use for archival-ritual work; `cicd` was wrong by this doc's own
+  reasoning, which cites `agents/cicd.md`'s carve-out that deep reconciliation is not the gate-failure handler's job).
+  Operator was explicit that this work runs **on the orchestrator, not in an interactive session** — so the remediation
+  todos above are for AO workers to execute, and no interactive session should start batch-archiving from them.
+
+  **Ruling on BLK-46fa5703 (option A, re-scoped)**: the operator chose option A of
+  `/plans/active/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` — dispatch a worker to
+  clear the backlog — but **re-scoped to per-doc content verification**, explicitly NOT the mechanical batch-archive
+  that option A's original wording implied. This doc's central finding is the reason, and it was independently re-proven
+  the same day: closing two todos in `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`
+  dropped it to **0 open todos** — instantly making it an archive candidate — while its own prose documents an
+  UNRESOLVED, ongoing SQLite lock storm (143 `database is locked` occurrences in 32 minutes, silently killing a
+  plan-reconciler run). A batch pass would have archived a live production issue. That doc now carries an explicit
+  DO-NOT-ARCHIVE guard.
+
+  **Live counts at ruling time** (re-measure before starting — they drift): `check_archive_candidates` **120** (baseline
+  0), `check_ag_closeout_linkage` **81** orphans (baseline 69), `check_na_corpus_ratchet` over baseline. All three had
+  grown within hours of the incident doc being filed.

@@ -99,14 +99,43 @@ requested rather than autonomously starting it.
 - **A (recommended):** a worker clears the full plan-hygiene backlog on LDR now — archive the 112 done-but-unarchived
   docs, link the AG-closeout orphans to their closeout family, shrink the NA corpus below baseline. Unblocks promotion
   permanently; main goes green after the promote PR merges.
+
+  > **⚠️ A's wording above is CORRECTED by the 2026-08-06 ruling — do not execute it literally.** "Archive the 112
+  > done-but-unarchived docs" reads as a mechanical batch pass. It is not one, and running it as one is actively
+  > dangerous: `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` exists precisely to
+  > record that each candidate needs a per-doc content read, because "a doc can have every listed `- [ ]` checked while
+  > its own summary/Progress Log still describes an open question", and that blind batch-flipping "would risk silently
+  > mis-marking still-open work as resolved — **worse than staying blocked**." Proven live the same day: closing two
+  > todos in `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` dropped it to 0 open todos
+  > — instantly an archive candidate — while its own prose documents an unresolved, ongoing SQLite lock storm. A batch
+  > pass would have archived a live production issue.
+
 - **B:** reclassify as plan_health / route to the plan_reconciler; main stays red until the backlog is cleared.
 - **C:** operator is already handling it / wants promotion paused.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Decide BLK-46fa5703 (A/B/C). If A: dispatch a worker to clear the plan-hygiene backlog on
-      live-defi-rollout (archive 112 done docs, link 77 AG-closeout orphans, shrink NA corpus), then re-fire the
-      LDR→main promote PR. Evidence: /blocked BLK-46fa5703 + this doc.
+- [x] ✅ [OPERATOR] P1. Decide BLK-46fa5703 (A/B/C). — **RULED 2026-08-06 (operator, interactive): A, RE-SCOPED as
+      per-doc content verification.** Not B (leaves main red while all three gates grow), not C. Dispatch happened as a
+      frontmatter change, not a verbal hand-off:
+      `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` flipped to
+      `assigned_vm: planning` / `execution_scope: orchestrator-agent` / `assigned_role: review`, so AO workers execute
+      it — the operator was explicit this runs **on the orchestrator, not in an interactive session**. That doc's
+      existing todos are the method of record; see the ⚠️ correction under option A above for why the batch-archive
+      reading is void. **Re-measured at ruling time** (the doc's own figures were already stale within hours):
+      `check_archive_candidates` **120** (doc said 112, baseline 0), `check_ag_closeout_linkage` **81** orphans (doc
+      said 77, baseline 69), `check_na_corpus_ratchet` over baseline — all three growing, which is what ruled out B/C.
+- [ ] [REVIEW] P2. **Re-fire / re-check the LDR→main promote PR once the backlog work lands, and confirm the causal
+      chain actually holds.** Verified 2026-08-06 that the gate really is wired as this doc claims —
+      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml:818` runs
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` as the "Plan hygiene hard gate (PM only)", and
+      `check_archive_candidates.sh` is a `hard` check inside that sweep — so the diagnosis is sound. **But it was NOT
+      the check observed failing on the live PR**: on #2394 (`mergeStateStatus: BLOCKED`), `quality-gates-v2` was still
+      **pending** and the job actually reporting `fail` was **`content sentinel`, at exactly `10m00s`** — the signature
+      of a timeout, not a ratchet verdict (that run was later cancelled). So clearing the backlog may be **necessary but
+      not sufficient** for this specific PR. **Done when**: either a promote PR goes green after the backlog work, or
+      the residual failure is identified as a separate cause and filed as its own issue — do not assume the backlog was
+      the whole story. Repo: unified-trading-pm.
 
 ## Progress Log
 
