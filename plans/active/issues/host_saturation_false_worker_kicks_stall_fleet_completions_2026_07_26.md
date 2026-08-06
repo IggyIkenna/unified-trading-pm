@@ -222,3 +222,4 @@ is known-wrong is actively dangerous.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `scripts/quality-gates-base/base-service.sh`,
   the shared QG entry point the sole remaining `[DEVOPS] P1` admission-semaphore todo must touch; dropped the archived
   `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` sibling to stay within the minimal-list cap).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

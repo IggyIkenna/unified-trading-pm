@@ -611,3 +611,4 @@ longer has its own download button.
   marks genuinely contested + actively under concurrent investigation.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `mtds.py`, the source target for the
   still-open `[CODE] P1` "move `market_metadata` off the MTDS daily axis" todo).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

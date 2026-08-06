@@ -45,6 +45,13 @@ source: ["slot-11 agt-152447 blocked BLK-37a5da89 (2026-08-04); main agt-1756f6 
 drift_direction: advance-process
 estimate_class: infra
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/04-architecture/ci-alerting.md,
+    scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+  ]
 ---
 
 # Fleet CI outage: two stopped glue-runner units block UAC->main + 11 dependent repos
@@ -254,3 +261,6 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   or `find /etc/systemd/system -iname '*glue*'` FIRST — `actions.runner.*` is the wrong pattern fleet-wide here, and a
   `systemctl`/`journalctl` query against a non-existent unit name fails silently (empty output, not an error), which
   reads exactly like "nothing to report" instead of "you queried the wrong thing."
+- **context-scout 2026-08-06**: populated context_scope (4 entries). Note: the P2 todo's "Repo: agent-orchestrator
+  (deployment/monitoring)" pointer is STALE — the actual glue-runner-crash-loop-watchdog lives in THIS repo
+  (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh`), not agent-orchestrator; no such path exists there.

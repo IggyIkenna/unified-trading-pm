@@ -144,3 +144,4 @@ Not adjudicated here:
   `_cross_reference_fixture()` — is still present unchanged). The doc's own "Recommended decision" section still
   explicitly states "Not adjudicated here" before laying out the (A) delete vs (B) keep-and-document tradeoff — a
   genuine architecture call, not worker-determinable. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -649,3 +649,4 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   operator calls, so the outcome is not determinable by a worker alone
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

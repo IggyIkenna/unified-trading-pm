@@ -132,3 +132,4 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
   removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
   `reporter_stale=false` live before closing it.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

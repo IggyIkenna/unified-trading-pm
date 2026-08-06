@@ -181,3 +181,8 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note: the sibling doc
+  `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` already reports the
+  sports `league=` writer fix shipped (`instruments-service@ba87cc32`) — this doc's todos 1/3/4 (sports half) may be
+  stale/duplicative; not verified further, flagged for the next content pass, not resolved here (out of this skill's
+  scope).

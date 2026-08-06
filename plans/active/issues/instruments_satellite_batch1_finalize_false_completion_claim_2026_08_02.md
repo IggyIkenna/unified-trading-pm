@@ -237,3 +237,4 @@ No design call needed — every piece here is independently checkable, not a jud
   marked here because infra is the machine-assigned owning tranche; the retag itself is outside this skill's apply set.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — still accurate against current content.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

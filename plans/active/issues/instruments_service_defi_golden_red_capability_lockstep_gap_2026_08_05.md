@@ -46,6 +46,14 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md,
+    /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
+    instruments-service/scripts/regenerate_expected_universe_golden.py,
+    instruments-service/scripts/backfill_teams_full_history_2026_08_05.py,
+  ]
 ---
 
 ## Problem
@@ -338,3 +346,6 @@ byte-identical → a local QG red is fleet-wide, NOT a local-ahead-of-CI artifac
 read MUST be column-projected pyarrow (5 cols) — an unfiltered 9.25M-row read OOMs the 6G bounded-analysis cap (RSS
 7.35GB, 2026-08-05, first dry-run attempt); (3) PM issue-doc frontmatter: a `title:` containing `: ` must be a folded
 `> -` scalar or plan-hygiene fails with "mapping values are not allowed here" (82 corpus usages).
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries). No dedicated `## Progress Log` section exists in
+  this doc (dated `###` sections instead); appended here as the last line per the fallback convention.

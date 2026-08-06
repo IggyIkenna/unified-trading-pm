@@ -300,3 +300,4 @@ numbering.)**
   with an explicit 'Operator action required (any one of)' list and a prerequisite chain in another plan.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added `run_live_verify_tradfi.py`, the actual
   script the sole remaining `-004` todo needs re-run once the `prd/`-vs-`prod/` path disagreement resolves).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
