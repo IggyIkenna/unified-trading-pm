@@ -167,6 +167,14 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~07:34Z (data_engineering, pre-compact checkpoint #4)**: VM `cefi-fwd-20260806-065837` still
+  `RUNNING`. At 07:31Z log still on day=2026-05-23 — writing BITGET-SPOT book_snapshot_5 (very early in first day's
+  processing; derivative_ticker for BINANCE-FUTURES confirmed written at 07:02Z, other target venues expected within
+  day=2026-05-23 processing window). Both repos clean: `unified-trading-pm` ahead=0, `market-tick-data-service` ahead=0
+  (`467a3cd1`). Scratchpad empty. Memory dir empty (HARD RULE compliant). No dangling refs. State: CANNOT complete until
+  VM terminates (~19-24h from 06:58Z launch, 74 days × many venues). Compacting; wakeup re-armed. **Resume point**:
+  check VM status, verify derivative_ticker GCS object counts for all 5 target venues on day=2026-05-23, flip RE-OPENED
+  [DATA] P1 todo + POST /done once VM TERMINATES.
 - **slot-14 2026-08-06 ~07:30Z (data_engineering, pre-compact checkpoint #3)**: VM `cefi-fwd-20260806-065837` still
   `RUNNING`. At 07:27Z log on day=2026-05-23 — writing BITGET-FUTURES trades (progressed through derivative_ticker into
   trades phase). Both repos clean: `unified-trading-pm` ahead=0 (`5cde76ec5`), `market-tick-data-service` ahead=0
