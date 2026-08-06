@@ -619,4 +619,4 @@ safely-completable work. Terminal state:
       Remaining" table (above) is stale prose as of this check — all 4 rows are actually resolved, just tracked in other
       docs rather than restated here. No new issue doc filed; nothing was orphaned.
 
-- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

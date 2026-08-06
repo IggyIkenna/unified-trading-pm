@@ -643,6 +643,6 @@ background of that work.
   Diagnosed I/O starvation: volume at default 6,000 IOPS, shared-VM resource caps still active, no concurrency cap.
   Removed resource caps live. Bumped volume to 16,000 IOPS. Documented proposed worktree + shared-venv architecture.
   Identified remaining GitHub billing sources. Flagged stale codex docs.
-- **context-scout 2026-08-05**: populated context_scope (5 entries).
+- **context-scout 2026-08-05**: populated context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — actively-evolving incident audit, OPERATOR security items
