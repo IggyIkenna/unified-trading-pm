@@ -753,3 +753,20 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   the same GCS scratchpad. On completion: run it over all 348 dates (0 legacy objects remaining via
   `gcs_describe_object`/presence re-scan), 0 anomalies, then flip 4b-i's checkbox with final counts.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-06T09:1xZ (slot 5, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)** —
+  resumed the delete pass. **State recovered**: GCS checkpoint `_ops/4bi_run_checkpoint_latest.jsonl` at **144/273**
+  legacy-present days deleted (0 anomalies, 0 errors), no live process. Adapted slot-13's driver + verifier to this slot
+  (`run_4bi_delete_s5.py`, `verify_4bi_deletion_s5.py`), created MTDS venv (`uv sync --frozen`, uv.lock clean), dry-ran
+  read-only, and launched `--apply --delete-legacy` (retention re-verified fresh = 604800s) over the 129 remaining days.
+  **Measured the real per-day cost** on the first day (~2k condition_ids × 2 describes + 1 parquet read each, sequential
+  → 7+ min and not done) → **a single-run completion estimate of 15-20h** for 129 all-heavy Dec-Apr days, too long for
+  one session to survive reliably given this doc's 10+ death/resume cycles. **Parallelized** into 3 DISJOINT day-shards
+  (43d each, no write contention): `shard_A_days.txt` 2025-12-07..2026-01-18, `shard_B_days.txt` 2026-01-19..2026-03-02,
+  `shard_C_days.txt` 2026-03-03..2026-04-14 — 3 driver instances (`run_4bi_delete_s5.py --apply --delete-legacy` per
+  shard, each with its own `report_shard_{A,B,C}.jsonl`, mem-capped 8G, harness-tracked `run_in_background`) + a sharded
+  watchdog (`4bi_watchdog_shards_s5.sh`) that posts /progress every 5 min, syncs each shard report to
+  `_ops/4bi_report_shard_{A,B,C}.jsonl`, and merges baseline+shards into `_ops/4bi_run_checkpoint_latest.jsonl`.
+  **Resume state for the next resumer**: all tooling + shard day-files uploaded to `_ops/4bi_scratchpad_2026_08_06/`;
+  live frontier = the 3 `_ops/4bi_report_shard_*.jsonl` (merge by day, prefer higher `canonical_enriched`); verify via
+  `verify_4bi_deletion_s5.py --dates-file legacy_348_days.txt --report <merged>`. Still running — see next entry for the
+  outcome.
