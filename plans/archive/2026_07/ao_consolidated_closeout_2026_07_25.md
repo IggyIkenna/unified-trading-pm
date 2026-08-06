@@ -132,7 +132,7 @@ todos of its own**. The plans that actually work these docs' open items:
 (same backlog task dispatched to two slots simultaneously) ·
 [issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
 (ready P1 task undispatched, no matching worker, autospawn gap) ·
-[issues/dispatch_sequential_gate_fix_2026_07_24.md](/plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md)
+[issues/dispatch_sequential_gate_fix_2026_07_24.md](/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md)
 (`_claim_plan_for_slot` pinned all tasks to one slot, defeating intra-plan concurrency) ·
 [issues/gated_skip_park_no_slack_page_2026_07_25.md](/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md)
 (GATED skip-task auto-park path never pages Slack) ·
@@ -206,7 +206,7 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 (complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
 [ao_fleet_observability_kpis_2026_07_20.md](/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md)
 (dispatch-completion/escalator-efficacy/account-burn observability KPIs, archived 2026-07-31) ·
-[issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
+[issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/archive/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
 [issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
 (repo-docs cleanup deleted files still referenced in shipped AO server code) ·

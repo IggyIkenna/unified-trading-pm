@@ -22,7 +22,7 @@ tags: [agent-orchestrator, blocked-questions, escalation, ux, dashboard, dead-ag
 related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
   ]
 created: 2026-07-24
 author: unknown
@@ -40,7 +40,7 @@ depends_on: []
 context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,

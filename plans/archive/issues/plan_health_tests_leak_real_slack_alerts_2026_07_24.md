@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [agent-orchestrator, test-isolation, slack, plan-health, alerting]
 related:
   [
-    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
   ]
 created: 2026-07-24
@@ -40,7 +40,9 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by: "AO issue-doc sweep 2026-08-06 — all 6 todos independently re-verified [x] and live in code (agent-orchestrator@a545800, unified-trading-pm@2db15bb21); frontmatter status corrected from stale 'open'."
+resolved_by:
+  "AO issue-doc sweep 2026-08-06 — all 6 todos independently re-verified [x] and live in code
+  (agent-orchestrator@a545800, unified-trading-pm@2db15bb21); frontmatter status corrected from stale 'open'."
 locked_by:
 context_scope:
   [
@@ -144,7 +146,7 @@ n=14; `"drift Z"` = 1 test × 2 fires (of 3 calls) = n=28; `"rule X contradicted
 9 doc_drift tests + 2 dispatch-failure tests fixed in one commit — proof re-run showed 0 real `_post` calls across the
 whole suite (1609 passed).
 
-## Open todos
+## Todos (all closed)
 
 - [x] [BACKEND] P0. Add the missing `notify_slot_blocked`/`notify_plan_health_findings` mocks — scope widened from the
       original 4 to all 9 leaking doc_drift tests once the full `record_result()` control flow was traced. —
@@ -239,5 +241,17 @@ whole suite (1609 passed).
   remains a live design tradeoff (tracked, not correctness-blocking). Batch 5 todo 9 (`ao_satellite_ao_dispatch_batch5`)
   flipped `[x]` in the same turn with the same evidence.
 
-- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
-  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — boilerplate corrected 2026-08-06 (/plan-reconcile ao): the prior
+  marker's "Operator-gated, design-judgment, or standing-corpus-ruling work remains open" line fired without re-checking
+  todo state — `grep -c '^- \[ \]'` on this doc is 0 (the doc's own preceding same-day entry above already closed the
+  last todo, `unified-trading-pm@2db15bb21`). Correct state: **zero open todos**; this doc stays `assigned_vm: NA` only
+  because it is a closed historical record, not because any operator-gated/judgment work remains.
+- **duplicate-path corpus bug found + fixed 2026-08-06 (archival-ritual worker)**: the 2026-08-06 16:10 archival commit
+  (`unified-trading-pm@dcf897c30`) created this file at `plans/archive/issues/` but never removed the sibling copy left
+  behind at `plans/archive/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` — a `create`-only, not a real
+  `git mv` (plausibly the same concurrent-index-mutation class as
+  `/plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`, not confirmed which). A
+  later, unrelated commit (`unified-trading-pm@ee72c276d`, 18:26 same day, `/plan-reconcile ao`) then edited the stale
+  ACTIVE-path duplicate — unaware it had already been archived — fixing this doc's heading ("Open todos" → "Todos (all
+  closed)") and the na-eligibility marker directly above. Both fixes were real and are merged into this single surviving
+  copy in this edit; the stale duplicate at the active path has been deleted.

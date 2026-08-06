@@ -12,7 +12,7 @@ summary:
   through regen to the TaskRow, read by the dispatch guard. Shipped and QG-green on LDR; two follow-ups remain — update
   the two codex docs that still describe the old always-pin behavior, and verify the fix plus its DB migration landed on
   the live orchestrator VM after the pipeline promotes it.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -38,6 +38,10 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
+  "Both todos done: DOCS P1 fixed 2026-08-06 (operator-ruled during /plan-reconcile ao; codex docs corrected in
+  unified-trading-pm@41a51d9ff, verified ancestor of origin/live-defi-rollout, content independently re-verified against
+  the live docstring); BACKEND P1 self-serviced 2026-07-29 (all three live-VM checks pass: HEAD contains 867b1731e,
+  sequential column exists+populated, non-sequential plan's tasks dispatch to 5 distinct slots)."
 locked_by:
 context_scope:
   [
@@ -48,6 +52,10 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). Fix shipped `agent-orchestrator@867b1731e` (pinning
+> gated on `sequential: true`); both codex docs corrected (unified-trading-pm@41a51d9ff) and the live-VM verification
+> passed (2026-07-29). Archived by /plan-reconcile ao.
 
 ## What happened
 
