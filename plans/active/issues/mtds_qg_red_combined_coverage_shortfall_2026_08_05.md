@@ -255,11 +255,18 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   false fire on unrelated commits), NOT import-grep. On fire: re-gate (authoritative), then ship the 3 gas_fee files +
   flip P3 same-turn. Watcher recipe re-armed as `/tmp/watch_ratchet_fix2.sh`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (data_engineering slot-13) RATCHET BLOCKERS RESOLVED — QG GREEN**: verified at MTDS HEAD `841cf94f`: the
+  2 fe68844c ratchet blockers are already fixed upstream. TID251: `1c7edf32` added `# noqa: TID251` on
+  `reset_source_returned_zero_manifest.py:43` (slot-2). Funcsize: `aafbbfdf` trimmed `record_captured()` +
+  `_emit_captured_add()` to ≤50L (slot-2). Full `quality-gates.sh --no-fix` at HEAD: ALL GATES PASSED (34s). The P1
+  follow-up todo flipped [x]; gas_fee ship (slot-12's P3) is now unblocked.
 
 ## Follow-ups
 
-- [ ] [CI] P1. Clear the 2 upstream fe68844c ratchet blockers (TID251 + funcsize) so market-tick-data-service QG goes
-      green and the gas_fee ship unblocks — repo-blocker RB stays armed until then.
+- [x] ✅ [CI] P1. Clear the 2 upstream fe68844c ratchet blockers (TID251 + funcsize) so market-tick-data-service QG goes
+      green and the gas_fee ship unblocks — market-tick-data-service@841cf94f. Both fixes already shipped upstream:
+      TID251 noqa at 1c7edf32 (slot-2), funcsize trim at aafbbfdf (slot-2). Verified: QG green at HEAD (34s, all gates
+      passed). The gas_fee ship is now unblocked.
 
 > **2026-08-06 archive-candidate audit**: Progress Log RE-GATE #9 (2026-08-05, authoritative): repo QG is STILL RED on 2
 > upstream fe68844c ratchet blockers (TID251 + funcsize), slot-12's P3 gas_fee ship is 'STILL BLOCKED' and 'the RB stays
