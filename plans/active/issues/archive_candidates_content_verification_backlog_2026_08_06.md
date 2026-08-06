@@ -100,17 +100,26 @@ checkbox signal alone, but confirming it actually IS requires reading:
 
 ## Todos
 
-- [ ] [DOC] P1. **Archive the 2 docs that flipped `check_terminal_status_archived` from GREEN to RED on 2026-08-06** — a
-      DIFFERENT, narrower check than this doc's main backlog: these already carry a terminal `status: resolved` (the
-      human/agent judgment call is already made), they are simply still sitting in `plans/active/issues/`, so they need
-      only the mechanical `git mv` + banner + referrer sweep, not the per-doc content read the ~114 candidates require.
-      The 2 docs: `vm_zombie_watchdog_prefix_coverage_gap_2026_08_06.md` (filed+resolved same day by `slot-2·laptop`,
-      `e724407f0`) and `canonical_id_builder_retrofit_checklist_missing_finalize_2026_08_06.md` (resolved by
-      `slot-9·planning`, `4d77219cf`). Both 0 open todos, `locked_by:` empty. **Provenance**: measured by
-      `/plan-reconcile ao` 2026-08-06 — the check PASSED at that run's entry and FAILED at its exit, and `git log -S`
-      attributes both to other slots landing mid-run, not to the reconcile pass. Left unarchived deliberately because
-      their owning slots created them minutes earlier and may be mid-ritual; archiving under a concurrent session is
-      exactly how the active/archive duplicate-path divergence found the same day (`a62bdd8ea`) happens. **Done when**:
+- [x] ✅ [DOC] P1. **Archive the 2 docs that flipped `check_terminal_status_archived` from GREEN to RED on 2026-08-06**
+      (DONE 2026-08-06, cicd escalation agt-ca03f6 slot-9: archived
+      `vm_zombie_watchdog_prefix_coverage_gap_2026_08_06.md` +
+      `canonical_id_builder_retrofit_checklist_missing_finalize_2026_08_06.md` → `plans/archive/issues/`; also archived
+      the 2 additional terminal-status violations that surfaced since this doc was filed —
+      `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md` (superseded, work ported
+      to survivor) → `plans/archive/2026_08/`, and re-opened
+      `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` from `resolved` → `open` because it
+      carries an open P3 follow-up todo (archiving would silently drop it). `check_terminal_status_archived.py` now
+      reports 0 violations) — a DIFFERENT, narrower check than this doc's main backlog: these already carry a terminal
+      `status: resolved` (the human/agent judgment call is already made), they are simply still sitting in
+      `plans/active/issues/`, so they need only the mechanical `git mv` + banner + referrer sweep, not the per-doc
+      content read the ~114 candidates require. The 2 docs: `vm_zombie_watchdog_prefix_coverage_gap_2026_08_06.md`
+      (filed+resolved same day by `slot-2·laptop`, `e724407f0`) and
+      `canonical_id_builder_retrofit_checklist_missing_finalize_2026_08_06.md` (resolved by `slot-9·planning`,
+      `4d77219cf`). Both 0 open todos, `locked_by:` empty. **Provenance**: measured by `/plan-reconcile ao` 2026-08-06 —
+      the check PASSED at that run's entry and FAILED at its exit, and `git log -S` attributes both to other slots
+      landing mid-run, not to the reconcile pass. Left unarchived deliberately because their owning slots created them
+      minutes earlier and may be mid-ritual; archiving under a concurrent session is exactly how the active/archive
+      duplicate-path divergence found the same day (`a62bdd8ea`) happens. **Done when**:
       `python3 scripts/plan-hygiene/check_terminal_status_archived.py` reports 0 violations again.
 - [ ] [DOC] P1. Re-run `bash scripts/plan-hygiene/check_archive_candidates.sh` for the current live candidate list (it
       drifts with ongoing AO churn — do not reuse this doc's snapshot list without refreshing it first).
@@ -138,3 +147,8 @@ checkbox signal alone, but confirming it actually IS requires reading:
   the 2026-07-30 finalize-plan ruling). Left the remaining ~116 for this tracked follow-up rather than mass-flip
   `status` without reading each doc — scope explicitly excluded from a bounded CI-fix pass per
   `unified-trading-pm/agents/cicd.md`'s own carve-out (deep reconciliation is `plan_reconciler`'s job).
+- **2026-08-06 (cicd escalation agt-ca03f6, slot 9)**: completed Todo 1 (see the flip above) —
+  `check_terminal_status_archived` is now 0 violations. The remaining ~113 archive candidates + AG-closeout linkage +
+  NA-corpus ratchets stay tracked here and in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` for
+  `plan_reconciler`'s daily pass / `/na-eligibility-audit`; out of scope for this bounded CI-fix per the same carve-out.
+  This doc's own Todos 2-5 remain open.

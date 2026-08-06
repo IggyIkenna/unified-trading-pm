@@ -647,10 +647,6 @@ by hand._
   — Gated closeout for live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, added per the
   finalize-plan-coverage gate (task_template.md §4 — every `assigned_vm: planning` plan needs a companion gated finalize
   plan so its…
-- [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md)
-  — Gated closeout for live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md -- machine-held via
-  depends_on + gate_on_depends: true until all of that plan's todos are done. Verifies each of its own checkboxes
-  carries real…
 - [`master_data_canonicalisation_migration_catalogue_2026_06_07`](./master_data_canonicalisation_migration_catalogue_2026_06_07.md)
   — Master coordinator for data + manifest + schema migration + IS catalogue + pipeline_mode standardisation — a pure
   dependency-gated sequencer tracking the global DAG for the whole data-layer cutover.

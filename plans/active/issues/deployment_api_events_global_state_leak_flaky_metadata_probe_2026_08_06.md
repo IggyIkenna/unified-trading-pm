@@ -30,7 +30,7 @@ summary: >-
   without being able to interactively verify the actual root cause — a wrong fix there risks breaking every other
   consumer. Re-triggered `quality-gates-v2` on the promote PR head (`promote/deployment-api/37d6f143bf78`) instead;
   check whether the retry passes before deciding this needs a real fix vs. was a one-off flake.
-status: resolved
+status: open
 resolved_by: deployment-api@fa17399671
 nature: issue
 asset_group: [cross-cutting]
@@ -169,3 +169,12 @@ executes the real lifecycle context manager at all).
       `_ensure_events_initialized`'s autouse per-test reset (`tests/conftest.py`) not prevent this class of leak on CI
       specifically? The formally-undetermined root cause above may recur in a DIFFERENT test that doesn't have the
       luxury of mocking `run_lifecycle` away.
+
+## Progress Log
+
+- **2026-08-06 (cicd escalation agt-ca03f6, slot 9)**: Re-opened from `status: resolved` → `status: open` for
+  `check_terminal_status_archived` compliance. The primary fix (shipping `deployment-api@fa17399671`) is complete and
+  stays recorded in `resolved_by`, but the doc carries an open `- [ ]` P3 follow-up (the dual `unified_trading_library`
+  event-global-state footgun). A terminal `resolved` status on a doc with open work is a false-completion state per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`; archiving it would silently drop the follow-up
+  from active tracking. Kept in `plans/active/issues/` until the P3 todo lands or is moved to its own tracked issue.
