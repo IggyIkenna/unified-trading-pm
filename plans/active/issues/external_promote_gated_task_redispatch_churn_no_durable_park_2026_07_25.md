@@ -105,11 +105,11 @@ condition fires.
 > dispatches would have re-read the same dispatcher code twice. **Folded into one gated item below**; neither half was
 > dropped — both done-whens are preserved verbatim.
 
-- [ ] [BACKEND] P3. **READY.** Durably park via `auto_unpark__<task-id>` (not `priority_override`) in `auto_park.py`.
-      Context: in `agent-orchestrator`'s dispatcher (`server/auto_park.py`), a `priority_override` park does not survive
-      backlog re-derivation, but a named `auto_unpark__<task-id>` prereq does. Gate cleared 2026-08-01 — the
-      prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `/skip-current-task` `reason_code` audit)
-      found zero uncovered `reason_code` gaps; full table in
+- [x] ✅ [BACKEND] P3. **READY.** Durably park via `auto_unpark__<task-id>` (not `priority_override`) in `auto_park.py`.
+      — agent-orchestrator@23bd0b3 Context: in `agent-orchestrator`'s dispatcher (`server/auto_park.py`), a
+      `priority_override` park does not survive backlog re-derivation, but a named `auto_unpark__<task-id>` prereq does.
+      Gate cleared 2026-08-01 — the prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      `/skip-current-task` `reason_code` audit) found zero uncovered `reason_code` gaps; full table in
       `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`. In one change: **(1) [was todo 2 — do this
       first, it decides (2)]** Confirm why a `priority_override` (priority 999) park does not survive backlog
       re-derivation while a named `auto_unpark__` prereq does — document the difference so workers pick the durable
@@ -202,3 +202,14 @@ is about routing external-gate tasks through it instead of through the churn pat
   start" prefix in the todo text itself (the gate cleared 2026-08-01; the prefix would have read as a live instruction
   to a fresh worker). If `ao_satellite_ao_dispatch_batch6_2026_08_04.md` is later activated, its own todo 3 (same
   source, same mechanism) should be dropped or marked superseded-by-this-doc to avoid double dispatch.
+- **2026-08-06 (slot-6, infra worker)**: **IMPLEMENTED + SHIPPED.** agent-orchestrator@23bd0b3. Part 1 — documented the
+  priority_override vs auto_unpark__ prereq dual mechanism in `server/auto_park.py` module docstring (priority_override
+  survives regen since Defect B fix, but the auto_unpark__ prereq is the truly durable gate — stored in the
+  prerequisites store independently of backlog.yaml, gates dispatch at pick_next_task level, survives all regen paths
+  unconditionally). Part 2 — added `park_now: bool = False` field to `SkipCurrentTaskRequest`
+  (`server/models/slots.py`), wired in the skip handler (`server/routes/slots_ops.py`) so a worker that detects an
+  EXTERNAL gate calls `manual_park()` directly on the first skip, bypassing `maybe_auto_park`'s N-skip threshold. The
+  task parks with BOTH priority_override AND auto_unpark__<task-id> prereq — the same durable recipe `auto_park.py`'s
+  threshold escalation already uses, now triggerable on first encounter. Two new tests in `tests/test_auto_park.py`:
+  manual_park succeeds with no prior cooldown row, and the maybe_auto_park (threshold-gated) vs manual_park (park_now)
+  contrast. Full QG green (2507 passed, basedpyright 0/0/0).
