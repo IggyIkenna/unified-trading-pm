@@ -278,21 +278,32 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       server-stall artifacts) = SQLite `database is locked` contention 01:45→04:00 (34-57 err/hr in hrs 00-03) stalling
       the API; pending dispatch curls exceeded curl --max-time → HTTP 000 → `timeout`. Follow-up todos below: stale
       plan-reconciler unit, unreinstalled reconciler ceilings, no_capacity-never-alerts gap. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Re-install the plan-reconciler timer unit on the orchestrator VM from the repo installer
+- [x] ✅ [SCRIPT] P2. Re-install the plan-reconciler timer unit on the orchestrator VM from the repo installer
       (`sudo bash scripts/install-plan-reconciler-timer.sh`): the LIVE `/usr/local/bin/plan-reconciler-dispatch.sh` +
       `/etc/systemd/system/plan-reconciler.service` still run `--max-time 2400` / `TimeoutStartSec=2450` while the repo
       installer (updated 2026-07-30) generates 5950/6000 — a git pull alone does not regenerate an installed unit (the
       exact gap this doc's item 3 warns about). Under an API stall (as on 08-05) the old 40-min curl ceiling
-      force-terminates a legitimately-pending dispatch and reports a false `timeout`. (repo: agent-orchestrator)
+      force-terminates a legitimately-pending dispatch and reports a false `timeout`. (repo: agent-orchestrator) — DONE
+      2026-08-06 15:04 UTC (operator-approved sudo, same pass as the docs-reconcile/context-scout re-install below).
+      Verified live: `TimeoutStartSec=2450→6000`. NOTE the re-install ALSO applied the repo's intended cadence widening
+      `OnCalendar=*:00 → 0/2:00` (hourly → every 2h, even hours) — the live unit predated the 2026-07-30 widening;
+      flagged here because this todo's text only mentioned the timeout.
 - [x] ✅ [SCRIPT] P3. Bump the docs-reconcile + context-scout dispatch ceilings — both repo installers AND live units
       still run `--max-time 2400` / `TimeoutStartSec=2450` (the 08-04 item-3 bump covered only the auditors; these two
       were never raised). Bump to plan-reconciler's 5950/6000 and re-install the two units; same false-`timeout` class
       under a stall. (repo: agent-orchestrator) — agent-orchestrator@4eda2be (installers bumped: --max-time 2400→5950,
-      TimeoutStartSec 2450→6000 in both; live VM re-install needs operator sudo)
-- [ ] [DATA] P3. Alert gap surfaced by the 08-05 outage: a FULL-DAY `no_capacity` for every scheduled auditor (account
-      pool exhausted) is NOT self-resolving and does NOT page — `SCHEDULED_JOB_FAILURE_STATUSES` deliberately excludes
-      `no_capacity` as "routine". Add a detector for "zero scheduled dispatches in a 24h window / N consecutive
-      no_capacity across jobs" → page. (repo: agent-orchestrator)
+      TimeoutStartSec 2450→6000 in both) + LIVE VM RE-INSTALL DONE 2026-08-06 15:04 UTC (operator-approved sudo);
+      verified live: docs-reconciler + context-scout both now `TimeoutStartSec=6000`.
+- [x] ✅ [DATA] P3. Alert gap surfaced by the 08-05 outage: a FULL-DAY `no_capacity` for every scheduled auditor
+      (account pool exhausted) is NOT self-resolving and does NOT page — `SCHEDULED_JOB_FAILURE_STATUSES` deliberately
+      excludes `no_capacity` as "routine". Add a detector for "zero scheduled dispatches in a 24h window / N consecutive
+      no_capacity across jobs" → page. (repo: agent-orchestrator) — RESOLVED AT THE ROOT instead of by a detector:
+      agent-orchestrator@5087f30 makes a scheduled dispatch QUEUE rather than drop on no-capacity
+      (`ScheduledJobQueueRow`, dedup PK `<job>:<tranche>:<day>`, drained by the AutoSpawn tick, 24h abandon), so the
+      condition this detector was meant to catch no longer silently loses work — a scheduled caller should never report
+      `no_capacity` again. Paired with agent-orchestrator@5087f30's 503-classification fix, which stops a genuine
+      quarantine being filed under the non-paging `no_capacity` bucket (42 such rows over 08-04..06). Deployed +
+      verified live 2026-08-06 15:04 UTC.
 - [ ] [DATA] P3. Track residual `reaped-stale` after the fix: on 08-06, 3/20 auditor runs still ended reaped-stale
       (04:31 `agt-b334ff` ~37min, 06:31 `agt-121905` ~35min — no `tmux_session_lost` event in the archival window, so
       the sessionless-silent path) while siblings in the same batches completed. Determine mid-run death vs post-work
@@ -312,6 +323,25 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
       only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
       paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
+- [ ] [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed 2026-08-06
+      15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than `no_capacity` in
+      `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
+      `ScheduledJobQueueRow.status` flips `queued -> dispatched`, and (c) the dedup PK holds — an hourly retry across a
+      multi-hour outage leaves exactly ONE row per `<job>:<tranche>:<day>` and produces exactly ONE worker. Unit tests
+      cover all three (`tests/test_scheduled_jobs.py`), but no live no-capacity window has occurred since deploy. (repo:
+      agent-orchestrator)
+- [ ] [DATA] P3. Confirm the hoisted working-pane guard reduced false spawn-retry-cap pages (agent-orchestrator@9d26598,
+      deployed 2026-08-06 15:04 UTC). Baseline to beat, measured 2026-07-30..08-06 from the orchestrator journal: 45 cap
+      declarations, pane state at cap = frozen 19 / no_session 11 / **working 8** / idle 7. The 8 `pane=working` pages
+      were false by construction (the guard sat AFTER the cap branch, which `continue`s, so a capped slot never
+      consulted it). Re-measure the same 7-day window post-deploy; `working` should go to ~0. If it does not, the
+      remaining cases are a genuinely wedged-but-rendering pane and need a different signal than `classify_pane`. (repo:
+      agent-orchestrator)
+- [ ] [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
+      omits `job_name` (agent-orchestrator@5087f30). Once the queue has a few days of live evidence, decide whether to
+      (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
+      as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
+      agent-orchestrator)
 
 ## Progress Log
 
