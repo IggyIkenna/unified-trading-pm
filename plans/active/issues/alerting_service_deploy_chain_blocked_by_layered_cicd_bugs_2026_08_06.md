@@ -50,6 +50,7 @@ related:
     /plans/active/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 created: 2026-08-06
 last_updated: "2026-08-06"
@@ -134,3 +135,18 @@ together.
   is explicitly OUT OF SCOPE for this layer-3 fix (only the single missing workflow file is in scope via the
   `.github/**`-must-reach-main carve-out); redirected to a blob-level single-file push instead, which has zero conflict
   surface. Will re-dispatch `full-workspace-sit` once the GitHub incident clears.
+- **2026-08-06 ~17:20 UTC**: fleet-wide audit sub-agent completed and independently verified — actual scope was **10
+  repos** (not 7; my earlier grep missed 3 that lack `notify-slack.yml` on LDR itself, not just on main: `e2e-testing`,
+  `execution-service`, `market-data-processing-service`). Raw direct-push-to-main was attempted first (per my earlier
+  suggested carve-out) and **rejected fleet-wide by branch protection** (`GH013`, reproduced on 8 repos) — no bypass
+  actor configured, so the working mechanism ended up being a PR through the same required-check gate
+  (`quality-gates-v2` + `sit-gate/fleet-green`), landing the file on each repo's pending/new promote branch rather than
+  main directly. 9 of 10 repos now have `notify-slack.yml` on an open, otherwise-mergeable promote PR, blocked only on
+  the same GitHub Actions incident above. `agent-orchestrator` (the 10th) has two additional, unrelated, pre-existing
+  problems (a dangling reference to the now-deleted PM reusable-CI-workflow copy, and a genuine multi-file code conflict
+  vs LDR) that block it independent of this fix — filed separately per this doc's own todo #3:
+  `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`. `instruments-service` PR #1092 also
+  separately genuinely-failed `quality-gates-v2` (pre-existing, matches the known foreign-quickmerge-bypass list, not
+  chased here). Full detail in `strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md` § "Fleet-wide
+  audit" (commit `21a698c09`). Still waiting on the GitHub Actions incident to clear before any of the 9 can actually
+  merge.
