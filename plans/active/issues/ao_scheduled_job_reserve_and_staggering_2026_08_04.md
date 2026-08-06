@@ -225,8 +225,16 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
 - [x] ✅ [SCRIPT] P3. Track `/etc/systemd/system/orchestrator.service.d/cpu-priority.conf` in a repo —
       agent-orchestrator@c6366f5 (scripts/orchestrator-cpu-priority.conf, mirrored from live VM drop-in with lifecycle
       markers + install instructions).
-- [ ] [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an earlier
-      claim" above) if it recurs — not investigated this session, out of window.
+- [x] ✅ [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an
+      earlier claim" above) if it recurs — not investigated this session, out of window. — **INVESTIGATED 2026-08-06
+      (slot 3): CONFIRMED server-stall artifact, NOT a restart-in-flight artifact** (full detail in Progress Log). All
+      58 rows carry `dispatch_agent_id=NULL` (no worker spawned) and their dispatch curls (timer-launched 05:30-10:45)
+      hung against a ~5h API silence (activity_log empty 06:37→11:31) before burst-reporting timeout on recovery at
+      11:31:32-11:34:04. First orchestrator restart that day was 12:00:01 (ao-self-pull) — ~26min after the cluster.
+      Same class as the 08-05 04:00 cluster (SQLite `database is locked` stall, tracked in
+      `orchestrator_db_pool_exhaustion_state_poll_stall` + `ao_db_lock_storm`). Recurs (08-01:25, 08-02:41+58,
+      08-05:10); EVERY one of the 137 timeout rows has `dispatch_agent_id=NULL` — the dashboard "timeout" badge is
+      uniformly stall artifacts, never a real per-dispatch failure. (repo: agent-orchestrator)
 - [x] ✅ [SCRIPT] P2. Root-cause the 2026-08-04 14:01:32-14:02:35 "mass session-death" — NOT a discrete incident: host
       never rebooted (`last -x reboot`: up since 07-29, no 08-04 boot); `tmux_session_lost` fires 500-750×/day on every
       day (589 on 08-04, 752 on 08-03, 463 on 08-02, 309 on 08-05, all 16 slots) so the 5 events are routine churn, not
@@ -364,3 +372,27 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
   (`tmux_pruner.py`, not actually the slot-level stale-flip mechanism this doc discusses) to the real one
   (`worker_liveness_watchdog.py`, confirmed to hold `_reclaim_idle_lingering_sessions`, the reclaimer named in item 1
   above); trimmed the duplicate second install-timer script to stay within the 2-6 target.
+
+- **worker slot-3 2026-08-06 (todo -005 — the 08-02 ~11:34 UTC 58-way timeout cluster investigation)**: INVESTIGATED +
+  FLIPPED. Read `scheduled_job_runs` in the live `state.db` (read-only) directly:
+  - The 58 rows: all `status='timeout'`, `dispatch_agent_id=NULL` (no worker ever spawned). `started_at` spans
+    05:30:39→10:45:12 in the normal ~15-min audit cadence; `finished_at` clusters 11:31:32→11:34:04 (152s span, NOT the
+    doc's "~1.4s"). Activity_log shows a ~5h silence 06:37→11:31 (0 events), then a burst at 11:31:32+ (89/53/58/105
+    events/min: the 58 `scheduled_job_reported` + fresh `plan_health_dispatch_initiated` + escalations).
+  - **Root cause**: the dispatch curls (systemd-timer launched on schedule, independent of server health) POSTed
+    `/api/plan-health/dispatch` into a STALLED API; each exceeded its `--max-time` (2400s at the time) → HTTP 000 →
+    status=timeout; the report-back POSTs ALSO hung (server still stalled) and queued; on server recovery at ~11:31:35
+    all 58 queued reports processed in a burst. **NOT a restart-in-flight artifact** — the first ao-self-pull restart on
+    08-02 was 12:00:01Z (`FF 67996a8 -> 24bd611`), ~26min AFTER the cluster; the server was demonstrably alive at 11:31
+    (dispatching fresh tasks). dispatch_agent_id=NULL on every row = the dispatch never got far enough to spawn a
+    worker.
+  - **Recurrence**: same uniform signature across ALL timeout clusters — 08-01 07:36 (25, started 03:16+), 08-02 06:19
+    (41, started 00:30+), 08-02 11:31 (58), 08-05 04:00 (10, already root-caused as SQLite `database is locked`
+    contention in the -008 todo's annotation). **Every one of the 137 total timeout rows ever recorded has
+    `dispatch_agent_id=NULL`** — the dashboard's historical "58 failing"/"N failing" timeout badge is uniformly an
+    API-stall artifact, never a real per-dispatch failure. This is the same class as
+    `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` +
+    `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` (both still open). No new todo: the underlying recurring
+    API-stall/SQLite-lock root cause is already tracked there; the dispatch-ceiling bumps (item 3 + the -010 todo)
+    mitigate the false-timeout report only, they do not fix the stall. No code shipped (pure investigation, read-only
+    DB).
