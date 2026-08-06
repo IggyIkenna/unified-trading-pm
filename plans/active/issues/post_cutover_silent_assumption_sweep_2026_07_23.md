@@ -664,3 +664,31 @@ active batch — flagged again as the standing carve-out candidate. Doc stays NA
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — SUPERSEDED banners on 6 items, time-gated kill-switch, extraction
 candidates exist
+
+- **sub-agent 2026-08-06 — `service-deployed → deployment-service` slice shipped, live E2E verification IN PROGRESS (not
+  yet closed)**: full build + ship summary is inline at the todo above; this entry tracks verification status. Shipped
+  `deployment-service@5599bda8` (listener + allowlist + tests) → promoted to `main`, then found a REAL bug on the first
+  live test fire (a manually-simulated `service-deployed` dispatch for `alerting-service` v0.60.0): the workflow's
+  `pip install --quiet -e .` step failed in CI
+  (`ERROR: Could not find a version that satisfies the requirement unified-api-contracts<1.0.0,>=0.96.0` — no
+  GAR-authenticated Python index configured on a bare `ubuntu-latest` runner). Root cause:
+  `from deployment_service.auto_deploy_allowlist import ...` forces execution of `deployment_service/__init__.py`, which
+  pulls the package's full heavy dependency tree even though `auto_deploy_allowlist.py` itself has zero external
+  imports. Fixed by loading the file directly via `sys.path` (importing it as a bare top-level module, never touching
+  the package `__init__.py`) and dropping the now-unneeded pip-install step entirely — `deployment-service@4a69f9d0`.
+  Re-ran `quality-gates.sh --no-fix` against this exact commit post-fix (coordinator-requested sentinel check) —
+  confirmed `.qg_last_passed_sha` matches HEAD `4a69f9d0`, genuinely green, not just "looked fine." Also confirmed live
+  (before firing any dispatch) that `uts-shared-deployment-api`'s own separate `_DEPLOY=true` main-deploy Cloud Build
+  trigger had already redeployed my `deployment-api@d3ea7ac` (the `cloud_run_service_name`-override commit) to prod — so
+  the deploy target the listener calls already carries the fix. **Still open**: the bugfixed
+  `deployment-service@4a69f9d0` is on LDR, promotion to `main` is pending — blocked (not by anything in this fix) on the
+  unrelated SIT-stamping bug documented in `issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md` (now
+  fixed live at `system-integration-tests@0dc3ff1`, per that doc). Once `4a69f9d0` reaches `main`, the remaining step
+  is: re-fire
+  `gh api repos/IggyIkenna/deployment-service/dispatches -f event_type=service-deployed -F 'client_payload[service_name]=alerting-service' -F 'client_payload[version]=0.60.0' -F 'client_payload[image]=asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/alerting-service:0.60.0'`
+  and confirm `dp-alerting-subscriber`'s Cloud Run revision moves off `dp-alerting-subscriber-00015-lcn` (created
+  `2026-07-28T06:17:13Z`, image `alerting-service:diag-62b850c`) to a fresh revision on `alerting-service:0.60.0`. A
+  first fire attempt (pre-bugfix, run `31114870431`) correctly left `dp-alerting-subscriber` untouched on failure — no
+  partial/bad state, confirmed live. This is a genuinely different scope than the todo's remaining sub-items
+  (`cascade-qg-ordering.yml`, `sit-gate.yml`, the 24-repo `schema-changed` dispatch) — do not close those from this
+  entry.
