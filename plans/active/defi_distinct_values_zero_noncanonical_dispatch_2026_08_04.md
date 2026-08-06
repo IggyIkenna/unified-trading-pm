@@ -13,7 +13,11 @@ summary: >-
   evidence anything actually landed.
 status: active
 nature: process
-asset_group: [defi, cross-cutting]
+asset_group:
+  [defi] # corrected 2026-08-06 (ag-closeout-audit cross-cutting orthogonality fix) -- was [defi, cross-cutting], a
+  # genuine mistag: every substantive item (gas_fees legacy-chain venues, POOL casing, dex_pools/dex_swaps/
+  # rate_indices, HYPERLIQUID/EXTENDED/LIGHTER/BLAZESTAKE/GMX/KAMINO_LENDING venues) is defi-manifest-specific, not a
+  # mechanism spanning multiple asset groups. cross-cutting dropped.
 stage: [data]
 repos:
   [

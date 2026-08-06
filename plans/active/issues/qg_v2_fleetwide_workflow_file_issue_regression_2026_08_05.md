@@ -34,7 +34,11 @@ summary_continued: >-
   name the exact broken line/reference immediately.
 status: open
 nature: issue
-asset_group: [cross-cutting, ci]
+asset_group:
+  [ci] # corrected 2026-08-06 (ag-closeout-audit cross-cutting orthogonality fix) -- was [cross-cutting, ci], a genuine
+  # mistag: content is GitHub Actions reusable-workflow resolution across public/private repo visibility, breaking
+  # quality-gates-v2 fleet-wide -- squarely CI/CD pipeline mechanics, not cross-asset-group data-pipeline scope (no
+  # data/manifest/GCS-path content anywhere in the doc). cross-cutting dropped.
 stage: [meta]
 repos: [unified-trading-pm, greeks-service, deployment-service, agent-orchestrator]
 scope: [engineer, admin]

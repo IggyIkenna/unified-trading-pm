@@ -487,7 +487,10 @@ per-site verification across ~12 DeFi handlers — not a mass edit, needs care) 
 `_CANONICAL_CACHE` per bucket — is undone, touches the LIVE cefi/sports/tradfi manifest path, validate carefully) +
 `issues/manifest_reprocessing_ generic_utility_2026_07_07.md` (fully open, 4 todos — design → implement
 `select_shards_for_reprocess()` → wire as an IS CLI subcommand → optionally retire 13 near-identical one-off scripts;
-concrete design already specified).
+concrete design already specified) +
+[issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
+(self-dispatched, `assigned_vm: planning` — `vm-exec-with-gcs-tee.sh`'s `STALL_PROGRESS_REGEX=checkpoint` self-kills any
+real backfill VM across all 20 launchers using that wrapper; regex fix identified, VM relaunch/verify in flight).
 
 **Close-out criterion**: the CF-manifest-audit job green for all 5 AGs with cited evidence; the smoke-sweep residuals
 re-verified (not re-fixed if already resolved elsewhere); the DeFi concurrency refactor shipped; the manifest-OOM bound

@@ -19,7 +19,12 @@ summary: >-
   given the CLAUDE.md data-pipeline-correctness "big finding" bar (data-correctness, silent, production-live).
 status: open
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group:
+  [defi] # corrected 2026-08-06 (ag-closeout-audit orthogonality fix) -- was [defi, cross-cutting], a genuine mistag:
+  # the guardrail MECHANISM (_check_column_fill_regression) is shared/generic, same class as sports_cf8, but per that
+  # exact precedent (sports_cf8_available_at_backfill_regression_2026_07_13.md is tagged [sports] alone despite also
+  # noting cross-AG applicability) the INCIDENT itself is bucket-specific -- this is the DeFi bucket's fill-regression,
+  # not-yet-root-caused for DeFi specifically, remediation work will be DeFi-bucket-scoped. cross-cutting dropped.
 stage: [data]
 repos: [unified-trading-library, market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]

@@ -20,7 +20,12 @@ summary: >-
   10:37:55Z) is running the OLD (pre-fix) metadata and is on track to hit the same stall-kill around 11:38-11:43Z.
 status: open
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group:
+  [cross-cutting] # corrected 2026-08-06 (ag-closeout-audit orthogonality fix) -- was [defi, cross-cutting], a genuine
+  # mistag: vm-exec-with-gcs-tee.sh's stall-watchdog regex bug affects ALL 20 launchers using that wrapper across
+  # cefi/tradfi/features/mdps/ml (verified via grep, deployment-service/scripts/vm/), not just DeFi -- the flagged DeFi
+  # backfill VM was only the first to trip it, per the doc's own title ("relaunched VM is currently minutes from
+  # hitting the same kill"). Genuinely cross-AG VM-launcher/data-backfill reliability, not defi-specific.
 stage: [data, meta]
 repos: [deployment-service, market-data-processing-service, unified-trading-pm]
 scope: [engineer, admin]
@@ -224,9 +229,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                                                                                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                                                                                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                                                                                                  todos 6 and 7 below.
+                                                                                                                                                      only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                                                                                      `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                                                                                      todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
