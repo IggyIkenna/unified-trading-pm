@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md,
   ]
 created: "2026-08-05"
-last_updated: 2026-08-05
+last_updated: 2026-08-06
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -253,7 +253,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       the same moment: **$66.41 (diff −$2.05, well inside the operator's stated
       $10 tolerance — a real match)**. Task Token Usage total at the same moment: **$43.35 (diff −$25.11, confirmed real
       gap, not tolerance noise)** — see todo 19.
-- [ ] 19. [BACKEND] [DOC] P2. **Task Token Usage structurally cannot see review-agent spend — document it, decide
+- [x] 19. ✅ [BACKEND] [DOC] P2. **Task Token Usage structurally cannot see review-agent spend — document it, decide
       whether to fix it.** Root-caused the
       $25 gap from todo 18's ground-truth check: 4 of pro's slots (`#1/#8/#10/#12`)
       are persistent REVIEW agents (`slot_role='review'`), not backlog workers — they never get dispatched a task and
@@ -271,7 +271,52 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       call, not a unilateral agent decision) whether review-agent activity should get its OWN lightweight per-turn
       ledger entry (not a fake "task") so its real cost becomes independently visible/attributable, or whether this is
       accepted as out-of-scope forever. Flash's own smaller residual gap (~$2.35, no review-role slots) is NOT yet
-      explained by this mechanism — separate, smaller, still-open sub-question.
+      explained by this mechanism — separate, smaller, still-open sub-question. **Resolved 2026-08-06**: part (a) was
+      already satisfied by TaskUsageWindowsPanel's existing in-UI hint ("Completed tasks only... See the Accounts panel
+      for real-time per-account totals instead"); part (b) — operator ruled 2026-08-06: "orchestrator and review agent
+      spend yes we should track separately but not as per-task breakdowns" — implemented via todo 20, not a fake task
+      row. Correction: the earlier "4 slots are persistent review agents" claim in this todo's own body was itself wrong
+      — see the 2026-08-06 Progress Log correction below (only ONE real persistent review agent exists fleet-wide, off
+      the numbered slots entirely; `slot_role='review'` on slots #1/#8/#10/#12 is a worker craft/skill tag for
+      task-dispatch routing, unrelated to agent persistence).
+- [x] 20. ✅ [BACKEND] [UI] P2. **DeepSeek Wallet Reconciliation — worker/orchestrator/review spend split + operator
+      top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling. New
+      `deepseek_topups` table (operator-recorded real top-up events, audit-trail-only, never overwritten) + a nullable
+      `slot_id` on `deepseek_message_usage` (backfills naturally as the poller re-sweeps);
+      `compute_deepseek_wallet_     reconciliation()` splits attributed spend by `slot_id` (0=orchestrator,
+      `config.review_slot_ids()`=review, everything else=worker) and computes
+      `real_total_spend = known_topups − current_balance`, `residual =     real_total_spend − attributed_total` —
+      deliberately `None` (not a misleading 0) until at least one top-up is recorded. New `DeepSeekWalletPanel.tsx`
+      (table + a top-up-entry form) mounted on the dashboard next to each `TaskUsageWindowsPanel`. 6 backend pytest + 7
+      frontend vitest + 2 Playwright e2e (one caught a real autoflush-off bug: the POST route's same-session re-read
+      didn't see its own just-inserted row without an explicit `session.flush()` — fixed, this codebase runs with
+      autoflush off everywhere) — all green; full QG green (2464 backend / 212 frontend). Landed
+      `agent-orchestrator@0c5fb6e` (+ 4 of the new files landed in a neighboring concurrent-session commit
+      `agent-orchestrator@e430623` due to a shared-checkout staging race — see Progress Log; no work lost, both pushed,
+      `ahead=0`). Deployed live (VM `i-0c9b283b31d6b5ca7`, confirmed `HEAD=0c5fb6e` + `systemctl is-active`=active).
+      **Live-verified against the operator's real $105 top-up**:
+      balance $30.25 → real total spend
+      $74.75; attributed (worker-bucket only — `slot_id` backfill still pending
+      the next poller sweep) $67.67;
+      **residual $7.08 — matches the operator's own ~$5 non-AO-chat estimate, well inside the stated
+      $10 tolerance**. **Follow-up bug found + fixed same day, `agent-orchestrator@8385728`**:
+      operator asked "where is the orchestrator/review spend" — investigation found slot 0's real transcripts live
+      under `main_agent_keeper.MAIN_SESSION_NAME` ("orch-agent-main"), never under "orch-slot-0" (which doesn't exist
+      on disk — confirmed live) — the sweep was searching the wrong directory, so `orchestrator_spend_usd` was
+      STRUCTURALLY unreachable (not just pending backfill) until fixed. Same bug shape as
+      `test_slot_view_main_session_liveness.py`'s earlier, unrelated fix. Review (slot_id in
+      `config.review_slot_ids()`) had no such bug — `orch-slot-2` is a real directory — it was genuinely just
+      pending its next sweep. New regression test
+      `test_sweep_looks_up_slot_zero_via_main_session_name_not_orch_slot_zero`. QG green (2465/212), deployed live
+      (confirmed `HEAD=8385728` + active). Also resolved live: CI-escalation ("cicd" role) work dispatches onto a
+      real borrowed numbered slot (`server/escalation.py`'s `slot_id` plumbing through `do_spawn`/claim), so its
+      DeepSeek spend IS captured by the normal per-slot sweep and lands in the "worker" bucket — it is NOT part of
+      the residual, and is not a separate invisible category. The residual is genuinely isolated to spend from a
+      `claude` session run entirely outside every tracked slot/main-agent transcript directory (manual chats) —
+      once the orchestrator/review buckets finish backfilling (self-corrects as those sessions' transcripts grow
+      and get re-swept), today's $67.67
+      "worker" total will redistribute into worker/orchestrator/review without changing the $7.08 residual figure itself
+      (attributed_total is invariant under that redistribution).
 
 ## Codex SSOTs
 
@@ -396,21 +441,57 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   decision on whether review-agent spend should get its own visible ledger entry); flash's own smaller residual gap
   (~$2.35,
   no review-role slots) remains unexplained, separate open question.
+- **2026-08-06 — correction to the todo-19 "4 review-agent slots" claim, then todo 19+20 shipped**: operator asked
+  directly what the fleet's real persistent-agent roles are. Queried live `AgentRow` data — the "slots #1/#8/#10/#12 are
+  persistent review agents" claim in todo 19 was WRONG: those slots have real, substantial `task_usage` rows (112/65/87
+  completed tasks) — they're normal backlog workers whose `slot_role='review'` is a worker craft/skill tag for
+  task-dispatch routing (matches an `agents/review.md` persona), unrelated to `AgentRow.role` (the actual
+  persistent-agent classification). Corrected to the operator; retracted in todo 19's own body above. The REAL taxonomy:
+  persistent roles are `main` (orchestrator) and `review` (the one real persistent review agent, confirmed running on
+  host `ip-172-31-5-118`, off the numbered slots entirely), plus `plan_reconciler` and a `custom` bucket for
+  auto-triggered skill-agents (`cicd`, `docs_reconciler`, `conflict_resolver`, `data_pipeline_failure`,
+  `context_scout_auditor`, `na_eligibility_auditor`, `ag_closeout_auditor`, `plan_health`). Operator then ruled on todo
+  19(b): "orchestrator and review agent spend yes we should track separately but not as per-task breakdowns... the
+  residual gap is human work, which can be derived from the difference in actual spend... across the entire deepseek pro
+  and flash API... that residual can also be tracked in the UI." Shipped as todo 20 (see above for the full
+  implementation + evidence). Live-verified against the operator's real $105 top-up: residual $7.08, matching the
+  operator's own ~$5 non-AO estimate within the
+  stated $10 tolerance — a second independent validation of both the
+  cross-attribution fix (todo 18) and this new feature against real DeepSeek billing. One caveat carried forward:
+  orchestrator/review spend currently reads $0 live because `slot_id` is a newly-added nullable column that only
+  backfills as `DeepSeekUsagePoller` naturally re-sweeps existing transcripts (`merge()`); everything defaults to the
+  worker bucket until that next sweep cycle.
+- **2026-08-06 — orchestrator-spend bug found + fixed same day (`agent-orchestrator@8385728`)**: operator followed up
+  asking where the orchestrator/review split actually shows up, whether CI escalations count as tasks, and whether the
+  $7.08 residual is purely manual chats or also includes orchestrator/review/CI. Investigated live rather than
+  guessing: `~/.claude-configs/orch-slot-0` does not exist on the orchestrator VM — the main agent's real transcripts
+  live under `main_agent_keeper.MAIN_SESSION_NAME` ("orch-agent-main"). The sweep's `find_slot_transcripts(f"orch-
+  slot-{slot_id}")` call was unconditional, so slot 0 was searching a directory that never existed —
+  `orchestrator_spend_usd` could never be anything but $0,
+  not merely pending backfill. Same bug shape as an earlier, unrelated fix (`test_slot_view_main_session_liveness.py`,
+  2026-07-28) — that fix covered slot-liveness display, not the DeepSeek sweep, so this exact directory mismatch
+  survived in a second place. Fixed: slot 0 now resolves to `MAIN_SESSION_NAME`; every other slot unchanged. Verified
+  `orch-slot-2` (review) IS a real directory with real transcripts — no bug there, genuinely just pending its next sweep
+  (self-corrects once that session's transcript file next grows). Separately confirmed CI-escalation ("cicd" role)
+  dispatches run on a real borrowed numbered slot (`escalation.py`'s `slot_id` plumbing), so their spend already lands
+  correctly in the "worker" bucket via the normal per-slot sweep — not a hidden third category, not part of the
+  residual. New regression test proves slot 0 is never searched via "orch-slot-0". QG green (2465 backend/212 frontend),
+  deployed live, confirmed `HEAD=8385728` + `systemctl is-active`=active.
 
 ## Deferred work after 2026-08-05
 
-| Item                                                                                                                                                   | State / why deferred                                                                                                                                                                    | Blocked on                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                                                      | Nothing — pick up directly                                        |
-| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                                                | Nothing — pick up directly                                        |
-| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work. Clock starts `20:41:33` (first real flash selection), not the earlier deploy time — target check-in ≈`2026-08-06 20:41 UTC` | Elapsed time                                                      |
-| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                      | Todo 8                                                            |
-| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                      | Operator                                                          |
-| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
-| Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
-| Todo 19 — document Task Token Usage's blind spot on review-agent spend + operator decision on fixing it                                                | **Partially not-done** — the doc half is real work, pick up directly; the "should review-agent spend get its own ledger entry" half is **Operator-owned**                               | Doc half: nothing. Decision half: Operator                        |
-| Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
-| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
+| Item                                                                                                                                                   | State / why deferred                                                                                                                                                                                | Blocked on                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                                                                  | Nothing — pick up directly                                        |
+| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                                                            | Nothing — pick up directly                                        |
+| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work. Clock starts `20:41:33` (first real flash selection), not the earlier deploy time — target check-in ≈`2026-08-06 20:41 UTC`             | Elapsed time                                                      |
+| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                                  | Todo 8                                                            |
+| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                                  | Operator                                                          |
+| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                                      | Todos 9-11                                                        |
+| Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                                          | Nothing — pick up directly                                        |
+| Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                                     | Nothing — pick up directly                                        |
+| Confirm orchestrator/review buckets actually populate non-zero after the `orch-slot-0` fix (todo 20's follow-up)                                       | **Cannot be done yet** — needs the next `DeepSeekUsagePoller` sweep tick (600s) to touch each session's now-fixed/still-growing transcript; check the live wallet-reconciliation numbers after that | Elapsed time (~1 poller tick)                                     |
+| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                                | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
 selection). Do not re-poll the fleet for the A/B split itself in the meantime — todo 7 already confirmed the mechanism
