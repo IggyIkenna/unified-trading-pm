@@ -121,3 +121,22 @@ BLAZESTAKE still blocking — Option A still needed).
 - **2026-08-06 (slot-5, data_engineering)**: diagnosed from VM exit_code=1 log. Filed this issue. BLAZESTAKE
   attempted_failed + lending_indices stall = no valid date for the dep check. Recommended Option A (known-outage
   exemption code fix). BLOCKED-OPERATOR-DECISION.
+
+- **2026-08-06 (slot-6, data_pipeline_failure escalation agt-d87c1c)**: DP-FETCH-009 (`DP_RUN_MOSTLY_EMPTY`) fired on
+  `defi/lst_rates` — 1406 attempted_failed cells of 74859 attempted (ratio 1.9%, abs>=500). Verified via bounded
+  pushdown read of `_index/availability_index.parquet`:
+  - **1404/1406 = BLAZESTAKE venue rows**, all stamped
+    `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06` — deliberate retirement markers from
+    the shipped `relabel_retire_blazestake_venue_2026_08_06.py` (Phase B flips captured→attempted_failed + reason;
+    commits `5da218b9`/`cf84eb30`/`e8c5d29a`). NOT genuine fetch failures.
+  - **2/1406 = LIDO `429` rate-limit** — transient, self-resolving.
+  - **0 captured BLAZESTAKE rows remain** (retirement complete); UAC
+    `get_defi_declared_venues_for_data_type('lst_rates')` no longer returns BLAZESTAKE; all live handlers write
+    canonical `SOLBLAZE-SOLANA`.
+  - **Verdict: STATIC BACKLOG** — 1 attempted_failed row in last 1d (below the 500-row materiality floor); decaying
+    trickle on already-tracked backlog, NOT a fresh regression. No code fix shipped (root cause already fixed + tracked
+    here + in `defi_hyperliquid_residual_manifest_rows_2026_08_04.md`).
+  - **Residual (monitoring-hygiene, operator-owned)**: the 1404 permanent retirement markers keep `(defi, lst_rates)`
+    over the DP-FETCH-009 abs threshold, so the alert re-pages as STATIC BACKLOG each re-nag cooldown. Suppression /
+    paging-cadence policy for stale cells is explicitly left open to the operator/alerting owner per
+    `attempted_failed_staleness.py` module docstring — not decided here.
