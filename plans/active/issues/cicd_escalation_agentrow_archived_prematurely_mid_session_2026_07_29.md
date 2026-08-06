@@ -357,3 +357,24 @@ cleanly instead of ending on an issue-doc corroboration.
   `reporter` (`waiters_notified=1`); authoring slot 4 pinged; all slot repos clean on `live-defi-rollout`. Nothing lost
   — deliverable durably on LDR. Standing down per the documented closing pattern (final heartbeat + this recurrence
   note); the still-open `[BACKEND] P3` identity-matching fix remains the durable cure.
+- **2026-08-06 (scheduled `ag_closeout_auditor` agt-4ef1c1, slot 9, tranche=defi) — another restart-correlated
+  recurrence, same slot as the entry directly above, later the same day**: the Phase-1 Workflow this session launched
+  was reported `stopped` mid-run by a `task-notification` ("No completion record was found... it may have been
+  stopped... or running when the previous Claude Code process exited"), consistent with a mid-session backend/harness
+  restart — resumed cleanly via `Workflow({scriptPath, resumeFromRunId})` with all prior agent results cached, no work
+  lost. A subsequent `/heartbeat` call (context_used_pct=25, well before the restart-correlated one) returned a foreign
+  `new_task` (`ci_satellite_ao_dispatch_batch4-002`) unprompted — the same "dispatcher treats the slot as idle/
+  claimable" symptom the 2026-08-01 slot-4 entry above first flagged — correctly declined (this is a one-shot role, per
+  RULES.md never enters the backlog-drain loop).
+  `POST /api/slots/9/done {"task_id": "", ..., "one_shot_complete": true}` and a retry with `task_id: "agt-4ef1c1"` both
+  400d with the byte-identical message:
+  `"one_shot_complete on slot 9 but no active agent owns its session 'orch-slot-9' — a Class-A worker must /done with a task_id."`
+  `GET /api/agents` (no `include_finished` — the default listing) shows only 2 rows fleet-wide (`main`, `review`/slot-1)
+  — zero AgentRow for `agt-4ef1c1`/`orch-slot-9` at all, the same shape prior entries confirmed via the by-id lookup.
+  **Substantive deliverable COMPLETE regardless**: full `/ag-closeout-audit defi` Phase 0-3 run (107 AG-primary docs
+  classified via a 107-agent Workflow fan-out, 0 errors; drafted `defi_satellite_ao_dispatch_batch10_2026_08_06.md` +
+  `_finalize.md`, `status: draft`, 9 conflict-cleared AO-eligible todos); shipped + independently verified
+  `unified-trading-pm@1176ef806` is an ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor` confirmed
+  true); working tree clean on `live-defi-rollout`. Nothing lost — deliverable durably on LDR. Standing down per the
+  documented closing pattern (message `main` + this recurrence note, no further `/done` retries); the still-open
+  `[BACKEND] P3` identity-matching fix remains the durable cure.
