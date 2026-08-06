@@ -224,6 +224,36 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       a central-VM relaunch (that runbook's own scenario — a fresh box losing runner registration entirely — matches the
       "0 loaded units" signature here far better than a mere `systemctl stop`, worth checking VM uptime/instance-id
       against relaunch history first).
+- [x] ✅ [DIAG] P1. **CORRECTION to the "4th recurrence" todo above, 2026-08-06 (interactive session) — the "0 loaded
+      units anywhere" finding was a diagnosis performed against the WRONG box, not a real fleet-wide outage.**
+      Independently re-verified via read-only SSM `systemctl list-units 'github-glue-runner*' --all` on BOTH real
+      instances: (1) the OLD orchestrator VM (`i-0c9b283b31d6b5ca7`, private IP `172.31.5.118` — confirmed via
+      `hostname -I`, matching this doc's "planning VM (ip-172-31-5-118)" references) genuinely shows 0 loaded
+      `@glue-N`/`@writer-N` job-runner units (only `.slice` cgroup caps and `@github-glue-token-refresh-*` oneshot
+      timers, both cosmetic/expected) — **but this is CORRECT and BY DESIGN**, not a fault: the entire runner fleet was
+      deliberately migrated off this box per `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
+      confirmed complete as of 2026-08-05. (2) The actual dedicated escalation-runner VM (`i-042a6332509482556`, private
+      IP `172.31.3.59`, the SAME instance this doc's own 2026-08-05 entry calls "writer-pool host" and separately warns
+      "the planning VM and this writer-pool host are DIFFERENT instances despite the similar naming") is **healthy right
+      now**: 17 active `@glue-N`/`@writer-N` units, 0 failed, covering `agent-orchestrator`, `unified-trading-pm`,
+      `market-tick-data-service`, `execution-service`, `features-service`, `ml-service`, `strategy-service`,
+      `e2e-testing`. Practical consequence: the live `main_ci_red` escalations at the time of writing (deployment-api,
+      deployment-service, ibkr-gateway-infra, market-tick-data-service) are almost certainly genuine app/test-level CI
+      failures, NOT infra — MTDS's own runner is confirmed healthy, and
+      deployment-api/deployment-service/ibkr-gateway-infra have no units registered on the new VM at all (consistent
+      with being on the GitHub-hosted `self_hosted_runner_public_repo_revert` list, so this outage class was never even
+      applicable to them). **Does not retract the unified-api-contracts fix in the entry below** (that one correctly
+      diagnosed a stuck/unclaimed run and the `ubuntu-latest` re-roll fixed it regardless of root-cause attribution) —
+      only the "ENTIRE glue/writer pool ... is down" / "0 loaded units for every per-repo pool" framing in the
+      `[OPERATOR] P1` todo above, which conflated the correctly-decommissioned old VM with a real outage.
+- [ ] [INFRA] P3. **Disambiguate "the planning VM" in monitoring/docs and any future investigation checklist.** This
+      doc's own history calls at least 3 different real EC2 instances "the planning VM" at different points
+      (`i-0c9b283b31d6b5ca7` orchestrator box, `i-042a6332509482556` dedicated CI-runner VM, `i-0dd9812a96cdda5dc`
+      human-planning VM) — the ambiguity directly caused the misdiagnosis corrected above (an agent checked the old,
+      correctly-empty box instead of the new dedicated runner VM). Fix: rename references in this doc + the P2
+      monitoring-gap todo above to always name the instance ID or a stable label (e.g. "ci-runner-vm" for
+      `i-042a6332509482556`), and point the P2 watchdog work explicitly at `i-042a6332509482556` (the box that actually
+      hosts the fleet now), not `i-0c9b283b31d6b5ca7`.
 
 ## Progress Log
 
@@ -308,3 +338,14 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   wall (`quality-gates-v2` on unified-api-contracts main) but does **not** touch the underlying pool outage — added a
   fresh `[OPERATOR] P1` todo above since this doc's `status: open` correctly reflects that the root cause is back again,
   now at a larger blast radius than any prior entry.
+- **2026-08-06 (interactive session, operator-triggered CI audit)** — Operator asked why the "hundreds of AO
+  escalations" they were seeing didn't square with a 25-repo fleet; while investigating live `main_ci_red` escalations
+  (deployment-api, deployment-service, ibkr-gateway-infra, market-tick-data-service), re-checked this doc's "4th
+  recurrence" claim directly via SSM on both real instances rather than trusting the doc's prior framing. Found the "0
+  loaded units anywhere" evidence was gathered against `i-0c9b283b31d6b5ca7` — the OLD orchestrator VM, which is
+  SUPPOSED to be runner-free per the fleet-split plan — while the actual current runner VM (`i-042a6332509482556`) is
+  healthy (17/17 units active, 0 failed). Added the correction todo above rather than editing the original entry
+  (preserving the audit trail) plus a new P3 hardening todo to stop this recurring, since the "planning VM" naming
+  ambiguity has now caused at least one real misdiagnosis. Did not change `status` — the doc's other open items (P2
+  monitoring gap, P1 operator systemctl-start-or-reinstall action for the OLD claim, root-cause-of-original-stop) are
+  unaffected by this correction and stay open.
