@@ -913,3 +913,4 @@ overwrite.
   here), 1 `[PROCESS] P1` still needing a codex-authoring ruling.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -851,3 +851,8 @@ offered to the queue once these are the only real blockers.
   status — flagging purely so a future reconciliation sweep sees the connection and so
   `canonicalize_sports_league_id_ schema_2026_06_24.py`'s `--drop-out-of-universe` gains an exclusion for this doc's
   tracked raw-name population before anyone runs it again.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Fingerprint match:
+  `sports_curated_universe_domestic_selection_remaining_2026_07_25.md` — matched literal: the raw league-name population
+  (`PRIMERA_DIVISION`/`PREMIER_LEAGUE`/`CHAMPIONSHIP`/`2._BUNDESLIGA`/`SUPER_LEAGUE`) and
+  `canonicalize_sports_league_id_schema_2026_06_24.py` (already cross-linked in this doc's own 2026-08-03 entry above,
+  not a fresh find).

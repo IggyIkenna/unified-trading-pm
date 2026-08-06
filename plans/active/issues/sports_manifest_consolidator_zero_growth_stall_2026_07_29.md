@@ -469,3 +469,6 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
   finding this doc's resolution. Cross-linked both directions. If this pattern recurs a third time, it may be worth a
   codex callout (beyond the existing `manifest-consolidator-ssot.md` § "Diagnostic caveats" note) making the
   `dedup_dropped = rows_in - rows_out` derivation more prominent/harder to miss on first read.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Fingerprint match:
+  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` — matched literal: static `rows_out` + nonzero
+  `dedup_dropped` reasoning error (already cross-linked in this doc's own 2026-08-05 entry above, not a fresh find).

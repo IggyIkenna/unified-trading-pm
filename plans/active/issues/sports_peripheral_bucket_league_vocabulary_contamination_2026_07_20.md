@@ -45,6 +45,8 @@ context_scope:
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/epics/sports_master.md,
+    market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 
@@ -238,3 +240,5 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   `instruments-store-sports-prd-central-element-323112`); a follow-up dispatch must run the dry-run and produce the
   per-entity/per-pipeline_mode report before any `--apply-prod`. Flipped the issue doc's build+dry-run sub-todo
   checkbox; the plan-level P2 checkbox stays open (gated on the full migration, not just the script).
+- **context-scout 2026-08-06**: re-scouted; the migration script shipped 2026-08-04 is now the concrete apply-todo
+  target, added source path + the delete-safety protocol SSOT, now 5 entries.

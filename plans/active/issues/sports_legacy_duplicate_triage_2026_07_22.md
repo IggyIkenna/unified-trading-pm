@@ -465,3 +465,5 @@ point, per this data_type/day/league key."
   precedent (no delete, no migrate, leave as-is). `sports_reference_v2/` objects stay `no-migrate-first` indefinitely.
   Option (b) (extend canonical per-league write scope) is a separate product decision outside this issue's scope — it
   can be pursued independently but is not required to close this issue. No code changes needed (pure policy ruling).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Note (out of scope to
+  fix): all tracked todos now show `[x]`, but `status:` frontmatter still reads `open`.

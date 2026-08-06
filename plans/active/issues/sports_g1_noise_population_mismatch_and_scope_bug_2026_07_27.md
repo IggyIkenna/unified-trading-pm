@@ -259,3 +259,7 @@ script was run; no snapshots, no writes, no GCS deletes.
   needs the operator/main-side backlog edit.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Fingerprint match:
+  `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — matched literal: `day=2026-04-14` wrong-schema
+  `af_league_id`/`round` column-projection contamination (already cross-linked in both docs' own text, not a duplicate
+  investigation).

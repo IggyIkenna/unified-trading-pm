@@ -245,3 +245,6 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
   per-AG jobs exist for all 5 AGs using `instruments-service:latest` mutable tag; no non-sports equivalent of
   `uts-prod-instruments-service-sports-fixtures` exists. **Verdict: guard coverage is complete fleet-wide — all AGs are
   protected.** No code changes required; this closes the last open todo.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note (out of scope to
+  fix): the 2026-08-05 progress-log entry states this closes the last open todo, but `status:` frontmatter still reads
+  `open`.

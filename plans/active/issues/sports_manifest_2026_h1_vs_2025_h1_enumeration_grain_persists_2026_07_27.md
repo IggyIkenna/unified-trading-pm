@@ -410,3 +410,4 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   `expected_unattempted` in BOTH years. Follow-up: defi/tradfi need the same rolling-window fix + historical backfill;
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
