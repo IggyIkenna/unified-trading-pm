@@ -188,5 +188,5 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
   `perp_funding` 2026-06-04/06-05 only); (2) target shape confirmed = pure relabel into the cefi bucket (zero
   canonical-twin candidates — neither data_type exists in the cefi bucket); (3) migration script
   `migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py` written + dry-run-confirmed (7,599 planned copies). Added
-  `defi-hl-aster-ag-relabel` category to `launch-canonical-migration-vm.sh` (`deployment-service@71d4908`, rebased to
-  `aa51beb` under churn) to run it on a dedicated VM.
+  `defi-hl-aster-ag-relabel` category to `launch-canonical-migration-vm.sh` (`deployment-service@b0e3200`) to run it on
+  a dedicated VM.
