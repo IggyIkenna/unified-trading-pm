@@ -86,8 +86,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,372 already resolved, **58,531 needed** (denominator drift only — no backfill run yet)                                                          |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,372 already resolved, **only 999 needed** — nearly done                                                                                                   |
 | **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 74,456 already resolved, **34,206 needed** (was 64,439 on 08-04, **-30,233**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 78,332 already resolved, **30,330 needed** (was 64,723 on 08-04, **-34,393**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 74,855 already resolved, **33,807 needed** (was 64,439 on 08-04, **-30,632**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 78,731 already resolved, **29,931 needed** (was 64,723 on 08-04, **-34,792**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                   |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,8 +97,8 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T05:48Z: 128,244 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~33% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
+**Grand total needed, 2026-08-06T06:07Z: 127,446 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~34% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
 **+ 106,963 across FIXTURE_STATS+FIXTURE_LINEUPS** (48,432 + 58,531). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
 confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
 **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
@@ -653,4 +653,11 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-06T05:48Z** — Both lanes healthy. TEAMS 31,038→30,330 (-708), STANDINGS 34,914→34,206 (-708) — continued
   steady progress. FIXTURE_STATS flat for a 9th tick (48,432, unchanged) — approaching the ~10-tick re-verify milestone;
   will do one more run.log sanity check next tick if it's still flat. Grand total 128,244 (core 4) + 106,963
+  (FIXTURE_STATS+LINEUPS). Both VMs left running.
+- **2026-08-06T06:07Z — final planned FIXTURE_STATS re-verify.** TEAMS 30,330→29,931 (-399), STANDINGS 34,206→33,807
+  (-399) — continued progress. FIXTURE_STATS hit the 10th consecutive flat tick, so did the planned final sanity check:
+  `[[VM_PROGRESS]]` markers now at 2021-05-23, further advanced from the 2021-03-27 seen at the last re-verify (~57 more
+  days of real work processed while the manifest count stayed at 48,432 the whole time). Confirmed healthy — this is the
+  last planned re-verification; going forward, flat FIXTURE_STATS readings are fully trusted without further run.log
+  checks unless something structurally changes (VM disappears, preemption, etc.). Grand total 127,446 (core 4) + 106,963
   (FIXTURE_STATS+LINEUPS). Both VMs left running.
