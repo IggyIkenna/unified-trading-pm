@@ -125,3 +125,53 @@ resolved_by:
 - T-S1..S5 — suspected stale: tradfi_master:225 (62% backfill claim), infrastructure_master:65 (in-flight VM list),
   closeout:51 last_updated, archived cutover ALL-COMPLETE, aggregated_sources E4/E7/E8 → all grace/other-tranche/archive
   → report only.
+
+### B2 (batch 2) — 10 docs read in full (batch6_finalize / defi_pipeline_finalize / canonical_path_oracle / cefi_backfill / cefi_chain_drop / cefi_enumeration_audit / cefi_onchain_perp_batch / cefi_residual_followups / fail_hard / ml_training_launchers)
+
+**Pending candidates:**
+
+- C1 [P1] — defi_pipeline_finalize:12 `status: active` vs :57 body banner "STATUS: draft — NOT dispatched" —
+  frontmatter/body contradiction; AO-ingest surface at risk (dispatch-blocking). VERIFY which side newer (git blame)
+  then align.
+- C2 [P1] — cefi_backfill:111-113 open `[BACKEND] P2` todo still offers "Option B" while doc's own 08-04 cProfile
+  :144-152 says Option B wrong design (0.4%). FIX: align todo text.
+- C3 [P1] — cefi_enumeration_audit:216-248 [x] "NOT a marker-format problem" vs :267-281 [x] "no gap / measurement
+  artifact" — dual opposite [x] verdicts, no cross-ref. FIX: annotate cross-reference.
+- C4 [P1] — cefi_residual_followups:110-122 residual #3 entry still instructs `--apply` "9,850 authoritative" vs
+  :516-529 flipped (28,755 dropped, 0 residual). FIX: strike/annotate stale instruction.
+- C5 [P1] — canonical_path_oracle:57-61 resolved_by "1,697 colon_wire confirmed gone" vs :287-293 in-body CORRECTION
+  (false negative; 63 objects migrated). FIX: update machine-read surface.
+- C6 [P2] — cefi_chain_drop:108-109 venue breakdown units mix rows/groups — ambiguous, report.
+- C7-C9 [P2] — aggregated_sources digest drift (cefi_backfill "0 open" vs 1 real; fail_hard SHIPPED items listed open;
+  residual "14 open"+10,368) — GRACE → report.
+- C10 [P2] — defi_master:319 epic gate vs child P0 flip (defi epic) → report.
+- C11 [P3] — last_updated staleness: defi_pipeline_finalize:26, cefi_onchain_perp:42, ml_training:35 (all writable) →
+  mechanical bump.
+- Structural — canonical_path_oracle:299-300 embedded checkbox under [x] parent (regen misparse); ml_training:125-137
+  `- [ ] 1.` numbering (todo-format class).
+- AO — batch6_finalize 3 open todos READY; defi_pipeline_finalize NOT safe to dispatch until C1 resolved.
+
+### B0 (batch 0) — 10 docs read in full (aster_rolling_adv / track2_finalize / adapter_findings / coinbase_cde / shard24 / estate_orphan / features_universe_filter / mtds_smoketest / no_active_paper_run / onchain_venues_mislabeled)
+
+**Pending candidates:**
+
+- C1 [P1] — aster doc: Phase 2 "DONE 2026-07-26" checked todos (:177-187) vs Deferred table + design text "Not started"
+  (:97-100, :212). FIX: align stale Deferred/decision text.
+- C2 [P1] — features doc:264 premature `[x]` flip LC_TARBALL_FRESHNESS — own text :269-271 admits done-when's 2nd half
+  (real VM launch observation) never performed; 07-31 check :295-303 shows pre-flip blocked state; flip names a
+  DIFFERENT test-class set than the 07-31-verified set. Candidate: split/re-open half + annotate.
+- C3 [P2] — shard24:5-6 headline "NOT YET in live monitor image" vs own 08-06 log :195-197 (deployed, test-pass
+  unverified). FIX: align headline.
+- C4 [P2] — coinbase_cde:130-131 todo 1 "pending the registry-discrepancy follow-up" — resolved 07-30 by todo 2
+  (:141-147, instruments-service@f9fa7587). FIX: strike stale caveat.
+- C5 [P2] — aggregated_sources:307-309, :180-188 digest lists estate #3 + aster Phase-2 items as open vs sources [x] —
+  GRACE → report.
+- C6 [P2] — cefi_master:629-630 "5 active plans declare parent_epic: cefi_master" vs measured 51 (≥21 root-level) — epic
+  roster/count drift. VERIFY what the section means + regen vs hand-fix.
+- C7/C8 [P3] — verified non-contradictions (closeout Track 2 / DERIBIT gap) — no action.
+- ARCHIVE CANDIDATES — coinbase_cde (3/3 [x], sha-evidenced) + features_universe_filter (5/5 [x] but C2 premature flip →
+  NOT archive-ready until C2 resolved). Both assigned_vm: planning, status: open, writable. Cross-tranche grep required
+  before any archive.
+- AO — track2_finalize 4 open todos READY (machine-held, sequential, done-when on all).
+- Structural — mtds_smoketest:409 `[~]` non-standard checkbox marker (regen silently drops); estate:143-174 grotesque
+  indentation (P3); aster:83-84 bold span crosses physical lines (P3).
