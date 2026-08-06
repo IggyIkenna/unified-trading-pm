@@ -74,15 +74,18 @@ context_scope:
       actually capturing the underlying per-symbol data (the 2026-06-24 relaunch this plan's own SCRIPT P0 cites wrote
       `book_snapshot_5`/`trades`, not this bundle). Track-2 itself
       (`plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) is NOT done: its backfill VM
-      (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) was **preempted 2026-07-28T10:51 UTC and never recovered**
-      (~2.3% of the target span processed — see that plan's 2026-07-30 Progress Log entry +
-      `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`), and its 2 POST-BACKFILL gate todos
-      (`-004`/`-005`) are durably parked on `cefi-track2-backfill-vm-terminated=false` pending recovery. **Decision (per
-      this todo's own fork): leave `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` `status: active` —
-      do NOT force-archive it.** Added a cross-reference banner there pointing at this finding. **This finalize plan is
-      ALSO NOT archived**, despite its own only todo now being `[x]`: archiving it would remove the sole active plan
-      gating `cefi_deribit_binance_futures_bundle_verification_2026_06_20` (`assigned_vm:planning`, 7 todos, not itself
-      a finalize plan) via `depends_on`+`gate_on_depends: true`, which would regress
+      (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) was **preempted 2026-07-28T10:51 UTC at ~2.3% and is still
+      NOT recovered to completion as of 2026-08-06 despite 5 documented relaunches** (2026-07-30 ×2 — re-preempted
+      18:48Z and 2026-07-31T06:14Z; 2026-08-01 WORKER_STALLED watchdog kill; 2026-08-02 self-delete; 2026-08-06
+      ON_DEMAND/non-SPOT `cefi-queue-heavy-binancefutu-x17-20260806-163512` RUNNING per
+      `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s relaunch chain — corrected 2026-08-06 by
+      plan-reconcile; the earlier "never recovered" phrasing was stale from 2026-07-31), and its 2 POST-BACKFILL gate
+      todos (`-004`/`-005`) are durably parked on `cefi-track2-backfill-vm-terminated=false` pending recovery.
+      **Decision (per this todo's own fork): leave `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md`
+      `status: active` — do NOT force-archive it.** Added a cross-reference banner there pointing at this finding.
+      **This finalize plan is ALSO NOT archived**, despite its own only todo now being `[x]`: archiving it would remove
+      the sole active plan gating `cefi_deribit_binance_futures_bundle_verification_2026_06_20` (`assigned_vm:planning`,
+      7 todos, not itself a finalize plan) via `depends_on`+`gate_on_depends: true`, which would regress
       `scripts/quality_gates/check_finalize_plan_coverage.py`'s coverage baseline (no other active plan gates that
       slug). This doc stays in `plans/active/`, `status: active`, purely to keep serving that structural gate until the
       residual closes. **Re-check trigger tracked as a real todo** (not left as prose): added todo 4 to
