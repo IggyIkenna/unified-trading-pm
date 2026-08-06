@@ -182,13 +182,18 @@ Other: operator can type a custom answer
       `--tranche cefi --json`'s `covering_paths` now includes all four named forks (16 covering docs, up from 12; 97
       members, down from 102 with the 5 newly-covering main docs excluded).
       `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` added and passing.
-- [ ] [SCRIPT] P1. **RULED 2026-08-06 (operator), option A: `assigned_vm: NA` + status active/open DOES count as an
+- [x] ✅ [SCRIPT] P1. **RULED 2026-08-06 (operator), option A: `assigned_vm: NA` + status active/open DOES count as an
       orphan candidate — matches the tooling's actual behavior.** An NA doc with no covering plan is a real dispatch gap
       worth surfacing, not something to silently exclude just because it technically "has an owner: itself." `[SCRIPT]`
       tag (was `[OPERATOR]`) — the decision is made; remaining work is mechanical: fix SKILL.md's wording to match
       `generate_ag_closeout_audit_candidates.py`'s actual `self_dispatched` predicate (the script is correct, the prose
       was wrong), and re-run cefi's headline count to confirm it lands on 19, not 0. **Done when**: SKILL.md and the
-      script agree, and this doc cites the ruling. Repo: unified-trading-pm.
+      script agree, and this doc cites the ruling. Repo: unified-trading-pm. — SKILL.md fixed at
+      unified-trading-pm@4017e884a (2026-07-30, proactive fix while awaiting operator decision; confirmed by operator
+      2026-08-06 option A). Re-ran cefi 2026-08-06: 9 orphans (all assigned_vm=NA), confirming the tooling reading is
+      active — count NOT zero (which the old SKILL.md wording would produce). The drop from 19 to 9 is corpus drift
+      (week of archival/reclassification/covering-plan creation since 2026-07-30 measurement). SKILL.md and script
+      agree.
 - [x] ✅ [PM] P3. Archive `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (Finding 3 —
       all todos done with commit evidence, nothing reopened) per the archival ritual, filling `resolved_by:` first.
       Repo: unified-trading-pm. — unified-trading-pm@a101de9f0. Moved to `/plans/archive/issues/`, `status: resolved`,
