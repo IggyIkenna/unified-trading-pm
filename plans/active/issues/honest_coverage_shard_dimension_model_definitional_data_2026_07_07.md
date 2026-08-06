@@ -471,11 +471,13 @@ longer has its own download button.
       (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model — either drop it from
       `PREDICTION_DATA_TYPE_META` entirely (per UAC's own "not separate" disclaimer) or route its presence-tracking
       through the genesis/day-scope catalogue mechanism instead.
-- [x] ✅ [VERIFY] P2. **NOT closed here — genuinely contested, actively being investigated concurrently as of
-      2026-07-29/30, left open rather than force a premature verdict.** Two independent investigations this session
-      reached DIFFERENT conclusions: one found `corporate_action_confirmed`/`earnings_result` (POLYGON) registered with
-      no real MTDS capture code (real writer in features-service's calendar module) produced a real orphan population,
-      independently fixed via `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s corporate_action/ earnings cleanup
+- [x] ✅ [VERIFY] P2. **CLOSED 2026-08-03 (na-eligibility-audit; evidence below) — was NOT closed 2026-07-29/30 here:
+      genuinely contested, actively being investigated concurrently, left open rather than force a premature verdict;
+      the flip is legitimate and the DONE annotation below records the verified settlement (leading-bold clarified
+      2026-08-06 by plan-reconcile).** Two independent investigations this session reached DIFFERENT conclusions: one
+      found `corporate_action_confirmed`/`earnings_result` (POLYGON) registered with no real MTDS capture code (real
+      writer in features-service's calendar module) produced a real orphan population, independently fixed via
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s corporate_action/ earnings cleanup
       (`instruments-service@03f71c81`, `market-tick-data-service@c24db4cf`); a second, independently more thorough pass
       found `enumerate_expected_universe.py`'s own code comment states **"TRADFI IS DELIBERATELY NOT GATED"** (unlike
       CeFi) — meaning corporate_action_confirmed/earnings_result seeded as `empty_confirmed` placeholders under the real

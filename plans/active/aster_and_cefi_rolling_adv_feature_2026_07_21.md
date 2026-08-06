@@ -207,8 +207,8 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 
 ## Deferred work after 2026-07-21
 
-| Item                                     | Status      | Why deferred                                                |
-| ---------------------------------------- | ----------- | ----------------------------------------------------------- |
-| Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later |
-| Phase 3 (strategy-side wiring)           | Not started | Needs a design conversation on cap %/placement              |
-| `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out            |
+| Item                                     | Status                                                                       | Why deferred                                                                                                                                                                                                                                                          |
+| ---------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 (MDPS candle coverage extension) | Core ask DONE 2026-07-26; 2 residuals filed separately (see Phase 2 section) | Was deferred (consumer-first, producer later) until AO batch1 executed it 2026-07-26 (`cefi_satellite_ao_dispatch_batch1_2026_07_25.md` todo -001); full-range confirmation gated on the mdps candle-manifest-emission fix — row updated 2026-08-06 by plan-reconcile |
+| Phase 3 (strategy-side wiring)           | Not started                                                                  | Needs a design conversation on cap %/placement                                                                                                                                                                                                                        |
+| `book_depth.py` → Phase-1 utility wiring | Not started                                                                  | Stretch, only after Phase 1 ships and proves out                                                                                                                                                                                                                      |
