@@ -360,3 +360,14 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   window makes this a ~30-min run (not the 7+ month backfill the launcher's "DO NOT LAUNCH without operator [ack]"
   header was written for). Flipped `[OPERATOR] P2` checkbox. VM is RUNNING; `[DATA] P2` re-verify todo in the plan stays
   UNFLIPPED pending `EXIT_STATUS=0` + post-VM manifest re-read.
+  - **2026-08-06 01:29Z (slot-12, FINAL, same dispatch)** — **VM completed `exit_code=0`** (deployment `d696682c`).
+    Per-VM manifest: 23 dates (2026-07-15..2026-08-06), 219 PYTH SOLANA rows, all `captured`.
+    - **JTO/RAY/WIF/JUP/USDC**: captured on ALL 23 dates ✓ — MTDS@cd017a1c confirmed working end-to-end.
+    - **BTC/ETH/INF**: captured only 2026-07-15..2026-07-18 (4 dates, no IS blob, filter no-op). Dropped
+      2026-07-19..2026-08-06 (19 dates — IS PYTH-SOLANA blob exists with pre-fix 9-feed set). **IS@6fbaae90 code is on
+      LDR but IS service has NOT been redeployed**: `instruments-service-daily-trigger` (Cloud Scheduler → Workflow
+      `instruments-service-daily`, 08:30 UTC daily) still publishes 9-feed blobs from the pre-fix deployed image. The
+      2026-08-05 and 2026-08-06 IS blobs were verified directly — both have only 9 pairs (no BTC/ETH/INF). **Until IS
+      republishes, `_filter_pyth_rows_to_is` will silently drop BTC/ETH/INF for every date where a PYTH-SOLANA blob
+      exists.** IS redeployment is an [OPERATOR] action (Cloud Run deploy or Workflow trigger). Plan `[DATA] P2` stays
+      UNFLIPPED — BTC/ETH/INF capture has not resumed post-fix.
