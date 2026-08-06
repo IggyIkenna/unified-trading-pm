@@ -265,6 +265,41 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       monitoring-gap todo above to always name the instance ID or a stable label (e.g. "ci-runner-vm" for
       `i-042a6332509482556`), and point the P2 watchdog work explicitly at `i-042a6332509482556` (the box that actually
       hosts the fleet now), not `i-0c9b283b31d6b5ca7`.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-06 (same session, shipped `879e3e109`).** A THIRD distinct monitoring-gap
+      dimension found 2026-08-06: the crash-loop watchdog was structurally false-positiving on every healthy `@glue-N`
+      unit, independent of the cleanly-inactive/wedged gaps above.** `is_crash_looping()` only checked
+      `SubState=auto-restart` + `NRestarts>=5`, but per `github-glue-runner@.service`'s own design comment ("glue-*: one
+      job per process, restart to re-register"), `Restart=always` fires on EVERY exit including a clean job-completion
+      (`Runner listener exit with 0 return code, stop the service, no retry needed`), and `NRestarts` is a lifetime
+      counter that never resets. A healthy glue-N unit crosses the threshold within its first few jobs, then sits above
+      it FOREVER — any 5-min poll landing in the ~5s restart window between two clean job cycles pages a false
+      `CRITICAL "runner process is DOWN"` alert on a unit that was never down. Live-caught in real time (see Progress
+      Log): this exact bug produced the operator-visible alert that opened the session
+      (`github-glue-runner@glue-2.service`, `NRestarts=968`) plus two more mid-session (`glue-3`/`glue-5`), each
+      independently confirmed via `journalctl` to be clean `Result=success` exits with zero actual failures — `glue-3`/
+      `glue-5` even self-"recovered" ~6 minutes later purely from poll-timing luck, the exact false-alert-then-bookend
+      flap this fix eliminates structurally rather than by chance. **Fix**: gate `is_crash_looping()` on
+      `Result !=     success` (systemd's verdict on the unit's last completed run) in addition to the existing checks —
+      the original 2026-07-28 GCP_PROJECT-missing incident this watchdog was built for exited non-zero every time, so
+      real crash-loop detection is unaffected. **Deployed live** to `i-042a6332509482556` (`/usr/local/sbin/`, plus the
+      `/opt/github-glue-runners/repo/` and `/opt/glue-deploy/unified-trading-pm/` mirrors — all three previously
+      divergent, now matching one hash) and verified via a manual trigger (`0/17 crash-looping`, empty `alerted-units`
+      state file) BEFORE the repo commit — host QG capacity was critical at diagnosis time (load avg ~168, ~60MB free
+      RAM, ~91% swap used, 8-9 concurrent `quality-gates.sh` runs from other slots) and quickmerge's full QG has no skip
+      path, so committing then risked tipping a shared, already memory-constrained host into an OOM cascade that could
+      kill other slots' legitimate runs (the exact class in
+      `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`). Host load dropped (~10
+      within the hour) and the fix shipped to `live-defi-rollout` as `879e3e109` (quickmerge's SHA-sentinel skipped a
+      redundant Pass-2 QG re-run, so this added no extra host load) — draining to `main` via `ldr-to-main-promote.yml`
+      on the normal ~15-30min SLA, not yet independently re-verified on `main`.
+- [ ] [INFRA] P3. **No automated deploy/sync exists for this watchdog script at all — found while fixing the item
+      above.** The live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) was already stale
+      before today's fix, missing the 2026-08-05 unit-enumeration pattern-match fix documented in this same script's own
+      header comment (bare `grep glue` vs. the `github-glue-runner*` glob). No workflow, cron, or install script
+      references `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (`setup-glue-runners.sh`, the closest candidate,
+      doesn't touch it) — every prior fix needed a manual SSM copy that evidently didn't happen consistently. Wire an
+      automated sync (e.g. a step in `setup-glue-runners.sh`, or a small `git pull`-and-diff timer) so a future repo fix
+      actually reaches the host instead of silently sitting uncommitted-to-production indefinitely.
 
 ## Progress Log
 
@@ -363,3 +398,28 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — sole [OPERATOR] P1 item (4th recurrence, whole runner pool down)
   independently confirmed 6x since 2026-08-04 that AO-worker/main identities structurally lack the needed SSM reach;
   whole doc stays NA despite 2 more-bounded-looking sibling items.
+- **2026-08-06 (interactive session, operator flagged a live CRITICAL alert: `github-glue-runner@glue-2.service`
+  crash-looping on `i-042a6332509482556`, `NRestarts=968`)** — Diagnosed via read-only SSM before touching anything:
+  `systemctl show` returned `Result=success`/`ExecMainStatus=0` and `journalctl` showed the unit's last exit was a clean
+  `Runner listener exit with 0 return code, stop the service, no retry needed` immediately following a completed job —
+  not a crash. Root-caused to a structural false-positive bug in `is_crash_looping()` affecting the entire `@glue-N`
+  pool (full mechanism + fix in the new `[INFRA] P1` todo above), confirmed live a second way when `glue-3`/`glue-5`
+  independently false-paged mid-session (journal 13:07:51Z) and self-"recovered" ~6 minutes later (13:13:11Z) purely
+  from poll-timing luck — the exact noisy flap this fix eliminates structurally. Fixed `is_crash_looping()` to require
+  `Result != success`, verified `shellcheck`-clean (exit 0) and `bash -n`-clean. While preparing to deploy, also found
+  the live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) had a DIFFERENT hash than both
+  repo-tracked mirrors on the same host (`/opt/github-glue-runners/repo/`, `/opt/glue-deploy/unified-trading-pm/`) —
+  missing the 2026-08-05 unit-enumeration fix, because no automated deploy path exists for this file (new `[INFRA] P3`
+  todo above). Deployed the fully-current script to all three on-host locations via SSM (backed up the prior
+  `/usr/local/sbin/` copy first), then manually triggered `glue-runner-crash-loop-watchdog.service`: clean
+  `OK -- 0/17 glue-runner units crash-looping` reading, `alerted-units` state file empty afterward — confirmed fixed and
+  verified live. Held the repo commit initially — host QG capacity was in a critical state at diagnosis time (load avg
+  ~168 dropping to ~17 over ~10min, free RAM as low as ~60MB, swap ~91% used, 8-9 concurrent `quality-gates.sh --no-fix`
+  runs from other slots observed throughout) and quickmerge's full QG has no skip path.
+- **2026-08-06 (same session, operator asked to retry shipping)** — Rechecked host load: dropped to ~10 (1-min avg), 1
+  other QG running, still tight on swap (~93% used) but no longer in the acute range from the earlier reading. Shipped
+  `scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` via quickmerge as `879e3e109` — landed on
+  `live-defi-rollout` (quickmerge's SHA-sentinel skipped a redundant Pass-2 QG re-run since Pass 1 had already verified
+  this exact tree, so the ship itself added no additional host load). Closed the `[INFRA] P1` todo above with the SHA.
+  Not yet independently re-verified on `main` (drains via `ldr-to-main-promote.yml`, ~15-30min SLA) — the live fix on
+  `i-042a6332509482556` predates and is independent of this commit landing anywhere.
