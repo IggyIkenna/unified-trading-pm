@@ -124,3 +124,4 @@ run already covers them under different instrument routing), not a mechanical da
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
   gating strategy-desk judgment call (whether/when to start a paper run) still holds, so the companion bounded [DIAG]
   audit item stays whole-doc-NA (it only serves the gated decision).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

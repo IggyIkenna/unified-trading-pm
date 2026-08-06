@@ -169,3 +169,4 @@ rather than the filer marking their own work ready-to-dispatch in one unbroken a
 - **context-scout 2026-08-03**: refreshed context_scope (2 entries, unchanged) — both entries already map 1:1 onto this
   doc's two todos (the SCRIPT todo touches `generate_na_doc_tranche_inventory.py`, the DOCS todo touches the SKILL.md
   Phase-0 section); genuinely minimal and correct, no expansion needed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.

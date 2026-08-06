@@ -166,3 +166,4 @@ reasoning above.
   that entry only described in prose: rewrote `[SCRIPT] P1`'s text in place (still open — docstring reconciliation +
   contingent Option-B revert remain live work). `[OPERATOR] P1` stays open and NA (genuine, now higher-stakes
   ratification call); `[SCRIPT] P2`/`[RESEARCH] P2` unaffected.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

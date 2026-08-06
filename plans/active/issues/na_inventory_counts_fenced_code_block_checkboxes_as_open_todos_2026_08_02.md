@@ -184,3 +184,4 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
   (`check_finalize_plan_coverage.py` only globs `plans/active/*.md` plan docs).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `check_todo_format.sh`, confirmed affected
   by the same fence-blindness bug per the doc's own "Recommended fix" evidence and todo 2.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

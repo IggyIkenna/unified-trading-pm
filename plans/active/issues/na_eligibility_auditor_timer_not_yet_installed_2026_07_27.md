@@ -150,3 +150,5 @@ which is why it's tracked here instead of folded into the code commits above.
     fire (2026-07-28 07:00 UTC) did hit `Active: failed` with curl TIMEOUT/HTTP:000** (already documented in the P2 item
     below — the `--max-time 2400` budget was unmeasured and too low), but the timer self-recovered on subsequent fires
     without code changes. This P3 is satisfied: the timer-wiring contract is operational.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged. Note: all todos in this
+  doc now appear checked — flagging for archival review, out of scope for this pass.

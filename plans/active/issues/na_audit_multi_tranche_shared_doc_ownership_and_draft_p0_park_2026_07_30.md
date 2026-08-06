@@ -300,3 +300,4 @@ scope on every run. Fix belongs with Finding 3's script todo.
   (Finding 3's marker-format script + `task_template.md` exclusion, Finding 4's line-cap gate) since Findings 1 and 2
   are now closed; added the two concrete script targets (`generate_na_doc_tranche_inventory.py`, `check_line_caps.sh`)
   and `task_template.md` that were previously named in prose but not cited.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

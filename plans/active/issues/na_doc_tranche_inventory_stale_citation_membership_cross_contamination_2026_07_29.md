@@ -229,6 +229,7 @@ class in a third script.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the sibling script
   `generate_ag_closeout_audit_candidates.py`, the near-duplicate the doc's own "Fix direction" and remaining P3 todo
   (shared-helper extraction) name directly.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 ## Codex SSOTs
 

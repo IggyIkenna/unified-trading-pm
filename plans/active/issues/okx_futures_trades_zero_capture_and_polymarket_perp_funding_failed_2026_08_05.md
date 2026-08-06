@@ -34,7 +34,8 @@ context_scope:
   [
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/live/connectors/,
+    market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py,
+    unified-api-contracts/unified_api_contracts/registry/cefi_perp_venue_endpoints.py,
   ]
 depends_on: []
 resolved_by:
@@ -116,3 +117,8 @@ different failure modes) — treat them as independent work items, not a single 
 ## Codex SSOTs
 
 `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `/codex/02-data/availability-manifest-and-data-status.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: re-scouted; context_scope narrowed to the two actual fixed source files
+  (okx_futures_ws.py, cefi_perp_venue_endpoints.py) in place of the generic connectors/ directory, now 4 entries.
