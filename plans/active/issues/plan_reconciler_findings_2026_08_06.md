@@ -169,6 +169,26 @@ STEP-4 verification state: items 1,4,8,10,11,16,17,20 are mechanical frontmatter
 (quotes provided); items 2,5,6,7,9,12,15 need the quote-pair re-location + authority judgment — refuter/confirmer pass
 in STEP 4. Items 18,19 need care (stash_pile purge = destructive-ish, operator-flavored; annotate only).
 
+## Hunter results — J (mechanical adjudicator, 16 flags) — 2026-08-06
+
+All verdicts: **real** (no parser artifacts).
+
+1. **A** — 3 batch5 danglings CONFIRMED real (matches orchestrator inline check): 08_01:30 (W → repoint), 08_04:33 +
+   08_06:35 (G → file). Prose mentions at 08_01:127/130/233 are bare basenames — not violations.
+2. **B** — 2 orphans CONFIRMED real (both created 2026-08-06, grace → file; fix at next audit after grace = add
+   `related:` link to `infra_consolidated_closeout_2026_07_25`). `ao_worker_context_thrash` also cited by
+   governance_sweep_deferred_followups (cross-cutting, itself orphaned) — NOT a parser-artifact path.
+3. **C** — INDEX.md: both real. Stale batch5 row at :846; missing closeout row at :829 (no bullet). Fix = REGEN via
+   `python3 scripts/plans/regenerate_active_plan_index.py` (wired into run_hygiene_sweep.sh; auto-drops archived + adds
+   every `doc_type: plan` — never hand-edit between AUTO-INDEX markers).
+4. **D** — todo-format NON_CANONICAL ×15 (leading ordinal `N.`/`Nc.` before `[TAG]`, priority parsed OK):
+   `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` lines 214/221/229/238/242/251/258/264 (GRACE →
+   file), `self_hosted_runner_public_repo_revert_2026_08_05.md` lines 257/276 (W → strip ordinals),
+   `shared_ci_workflow_repo_extraction_2026_08_06.md` lines 201/265/306/407/473 (GRACE → file). `fix_todo_format.sh`
+   does NOT handle this pattern (dry-run 0) — manual strip or fixer extension.
+5. **E** — clean in-shard (3 corpus violations all non-infra). Awareness: `plans/active/issues/stash_audit_reports/*` (2
+   docs, `status: resolved`, `nature: record`) sit outside the checker's glob — not corpus, not violations.
+
 ## Coverage (hunters / batches / docs)
 
 - 10 hunters launched 2026-08-06 ~22:05 UTC (model=sonnet): A infra-satellite family (10 docs), B governance legacy (6),
