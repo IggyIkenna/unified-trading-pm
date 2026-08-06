@@ -736,3 +736,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   the LIVE working checkpoint is synced there every 5 min at
   `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_run_checkpoint_latest.jsonl` (pull that + the two
   `.txt`/`.json` inputs to resume). See next entry for the outcome.
+- **2026-08-06T01:2xZ (slot 13, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)** —
+  resumed the delete pass after slot-4's run died at **46/273** legacy-present days (no live process found; slot-4 tmux
+  respawned 01:20Z; the GCS checkpoint `_ops/4bi_run_checkpoint_latest.jsonl` synced at 01:16Z with 46 lines is the
+  durable frontier). Recovered that 46-day checkpoint; adapted the driver to this slot (`run_4bi_delete_s13.py` — same
+  code, `MTDS` path → `.tabs/13/`); created slot-13's MTDS venv (`uv sync`, then reverted the incidental `uv.lock`
+  re-resolution side-effect — tree clean). Fresh soft-delete retention check passed (`604800`s) and **launched
+  `--apply --delete-legacy` over the remaining 227 days at 01:25:39Z** (driver + watchdog harness-tracked
+  `run_in_background`, mem-capped 12G). First frontier days may log `cids=0/deleted=0` — slot-4's unsynced tail (last ~4
+  min before its death) already deleted them; idempotent re-verify, harmless. **Durable resume state**: live checkpoint
+  synced every 5 min to `_ops/4bi_run_checkpoint_latest.jsonl`; adapted driver + watchdog uploaded to
+  `_ops/4bi_scratchpad_2026_08_06/run_4bi_delete_s13.py` + `4bi_watchdog_s13.sh`; inputs `legacy_348_days.txt` +
+  `legacy_presence.json` already there. On completion: verify all 348 dates deleted (0 legacy objects remaining via
+  `gcs_describe_object`/presence re-scan), 0 anomalies, then flip 4b-i's checkbox with final counts.
