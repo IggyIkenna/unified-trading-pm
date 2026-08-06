@@ -38,7 +38,10 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
 assigned_role: backend_engineer
-sequential: true # all 4 todos change the same file (server/verify.py) — same-file overlap, must serialise
+sequential:
+  true # 3 of 4 todos change the same file (server/verify.py, same-file overlap); todo 3 [DOC] is not a
+  # same-file case (it edits unified-trading-pm's task_template.md) but is logically gated on the other three
+  # shipping first per its own text ("once either fix above ships") — verified 2026-08-06 (/plan-reconcile ao)
 drift_direction: advance-code
 depends_on: []
 resolved_by:
