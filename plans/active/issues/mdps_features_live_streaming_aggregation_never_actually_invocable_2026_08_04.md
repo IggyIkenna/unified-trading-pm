@@ -266,18 +266,28 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `tests/commodity/unit/test_cli.py::TestSerialise` (previously patched the now-removed `asdict` import) to patch
       `CommoditySignal.model_dump` instead, and added a real (unmocked) `_serialise` test in
       `tests/commodity/unit/test_signal_publisher.py`. Full quality-gates.sh green on this SHA.
-- [ ] [BACKEND] P1. **RULED 2026-08-06 (operator), option (i): consolidate into fewer async/threaded worker processes.**
-      `[BACKEND]` tag (was `[OPERATOR]`) — the biggest code change of the three, but the only one that actually fixes
-      DeFi's 3,535-shard scale (options ii/iii don't). AO-dispatchable as a real architecture implementation task.
-      **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi (3,535 shards —
-      infeasible as one-process-per-shard on any single VM).** The 2026-07-29 topology ruling (option (a): one OS
-      process per `(venue, data_type)` MDPS shard) does not scale past TradFi's 14 shards. Real options: (i) consolidate
-      multiple shards into fewer async/threaded worker processes instead of 1 process per shard (bigger code change,
-      most scalable), (ii) split each asset_group's cluster across N VMs by shard range (simpler, more VMs = more cost),
-      (iii) a much larger single machine type per asset_group sized to shard count (doesn't fix DeFi's 3,535 — no single
-      VM RAM size makes 3,535 separate Python processes with full import overhead viable). This is a genuine
-      architecture decision, not a lookup — needs operator sign-off before any CEFI/DeFi launch is re-attempted.
-      Reference: this doc's Evidence section for the OOM proof + exact shard counts.
+- [x] ✅ [BACKEND] P1. **RULED 2026-08-06 (operator), option (i): consolidate into fewer async/threaded worker
+      processes.** `[BACKEND]` tag (was `[OPERATOR]`) — the biggest code change of the three, but the only one that
+      actually fixes DeFi's 3,535-shard scale (options ii/iii don't). AO-dispatchable as a real architecture
+      implementation task. **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and
+      DeFi (3,535 shards — infeasible as one-process-per-shard on any single VM).** The 2026-07-29 topology ruling
+      (option (a): one OS process per `(venue, data_type)` MDPS shard) does not scale past TradFi's 14 shards. Real
+      options: (i) consolidate multiple shards into fewer async/threaded worker processes instead of 1 process per shard
+      (bigger code change, most scalable), (ii) split each asset_group's cluster across N VMs by shard range (simpler,
+      more VMs = more cost), (iii) a much larger single machine type per asset_group sized to shard count (doesn't fix
+      DeFi's 3,535 — no single VM RAM size makes 3,535 separate Python processes with full import overhead viable). This
+      is a genuine architecture decision, not a lookup — needs operator sign-off before any CEFI/DeFi launch is
+      re-attempted. Reference: this doc's Evidence section for the OOM proof + exact shard counts. —
+      market-data-processing-service@df45ef8 (multi-shard async consolidation: `--shard-specs` + comma-separated
+      `MDPS_SHARD_SPEC` bridge in `_bridge_operation_and_build_continuous_args()`; `live_aggregator_handler.run()` now
+      hosts N shards as N concurrent async aggregator loops, each a DISTINCT Redis consumer in the shared `mdps` group
+      so XREADGROUP load-balances boundary events; single-shard path keeps the unsuffixed consumer_name byte-for-byte; 7
+      new regression tests; full quality-gates.sh green) + deployment-service@da788b8 (`mdps-features-live` fanout
+      groups `MDPS_SHARDS_PER_WORKER` shards per worker process as a comma-separated `MDPS_SHARD_SPEC`; default 1 =
+      prior one-process-per- shard behavior; `set -e`-safe empty-batch guard; full quality-gates.sh green).
+      Consolidation is the ONLY option that makes CEFI (117) / DeFi (3,535) re-pilots viable — set
+      `MDPS_SHARDS_PER_WORKER` at launch (operator sign-off still required before any CEFI/DeFi re-launch, per the
+      RULING).
 - [x] ✅ [DATA] P2. **Re-pilot TradFi first (lowest risk, 14 shards)** — PILOT COMPLETED 2026-08-04, slot-16 (infra). VM
       `mdps-features-live-tradfi-20260804-192248` launched, all tarballs fresh, startup clean. **All 5 code fixes
       VERIFIED WORKING**: (1) MDPS `MDPS_SHARD_SPEC` env-var bridge correctly produces
@@ -383,3 +393,19 @@ OOM if left running). The named successor is this issue doc's Todos below.
   unblocks the next TradFi re-pilot on the Pub/Sub front.
 - **context-scout 2026-08-06**: populated context_scope (5 entries) — verified all 5 pre-existing frontmatter entries
   resolve on disk; list still accurate against current doc content, no change made.
+- **2026-08-06 (slot-11, backend_engineer)**: shipped todo 11 — the operator-ruled option (i) consolidation.
+  `market-data-processing-service@df45ef8`: `--shard-specs` (multi-token list) alongside the legacy `--shard-spec`;
+  `MDPS_SHARD_SPEC` env bridge now accepts comma-separated 1..N specs (single spec → `--shard-spec`, N>1 →
+  `--shard-specs`); `live_aggregator_handler.run()` hosts N shards as N concurrent async aggregator loops via
+  `asyncio.gather(return_exceptions=True)`, each aggregator a DISTINCT Redis consumer (per-shard consumer_name suffix)
+  in the shared `mdps` group — without the suffix every aggregator in a process would read the same boundary-crossed
+  events and double-process them; single-shard path keeps the legacy unsuffixed consumer_name byte-for-byte. Shard-level
+  failure isolation: a shard whose loop raises is logged (its coverage is recovered by XAUTOCLAIM re-delivery to the
+  group's healthy consumers) while sibling shards keep running. `deployment-service@da788b8`: the `mdps-features-live`
+  fanout groups `MDPS_SHARDS_PER_WORKER` shards per worker process (default 1 = prior one-process-per-shard behavior),
+  emitting a comma-separated `MDPS_SHARD_SPEC`; explicit `return 0` on the empty-batch flush guard (set -e-safe for AGs
+  like prediction/sports with zero MDPS shards but live features families). 7 new/updated regression tests; full
+  quality-gates.sh green on both SHAs; both verified on origin/live-defi-rollout. Consolidation is the only option that
+  fixes CEFI (117) / DeFi (3,535) scale; a CEFI/DeFi re-launch still needs operator sign-off (per the RULING) — re-pilot
+  with `MDPS_SHARDS_PER_WORKER=N` and watch RSS. Acknowledged the 2026-08-06 operator OOM directive: no heavy local
+  compute launched this session (only the standard per-repo QG runs), no OOM-killed process to record.
