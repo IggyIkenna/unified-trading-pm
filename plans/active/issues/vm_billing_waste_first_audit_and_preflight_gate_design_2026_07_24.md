@@ -449,3 +449,6 @@ context_scope:
   gate's marker mechanism) is operator-gated per batch1's own BLOCKED-OPERATOR-DECISION section on the
   manifest-schema-vs-side-table choice and its schema blast radius. Zero `assigned_vm`/backlog impact.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Prior markers were KEEP-NA-STALE; 6 of 7 todos done via batch1
+  (08-03), sole remaining pre-flight-gate design is operator-gated (schema blast radius). Citation unchanged.

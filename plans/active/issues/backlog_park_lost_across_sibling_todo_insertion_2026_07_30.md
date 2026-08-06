@@ -158,3 +158,6 @@ not the dispatch-tooling gap). Suggested next steps:
   Cross-validated: the same-day sibling `/ag-closeout-audit ao` batch6 run independently declined this same doc into its
   "too-large/unscoped-design" bucket.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

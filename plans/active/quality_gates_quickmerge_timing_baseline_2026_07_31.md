@@ -450,3 +450,6 @@ solo work.
   make a todo — left standing as an authorial call rather than overridden, since converting it would also grow the NA
   corpus.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

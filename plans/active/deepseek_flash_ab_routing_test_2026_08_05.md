@@ -510,3 +510,6 @@ selection). Do not re-poll the fleet for the A/B split itself in the meantime �
 works; further early checks just burn an SSM round-trip without changing the answer to anything actionable yet. Todo 17
 (Fleet-table label fix) is real, standalone work that could be picked up independently of the 24h wait if there's
 appetite for it.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

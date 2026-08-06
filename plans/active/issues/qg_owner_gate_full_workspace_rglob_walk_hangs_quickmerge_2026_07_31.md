@@ -211,3 +211,6 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
   and remain the minimal-correct set (codex QG SSOT + related plan + verified source script) — no changes.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

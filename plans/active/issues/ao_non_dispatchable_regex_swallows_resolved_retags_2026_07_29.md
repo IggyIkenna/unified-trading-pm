@@ -228,3 +228,6 @@ past tense rather than deleting it outright.
   the next day (`unified-trading-pm@14478ca26`) — per this skill's own citation class (b), a revert is a standing
   ruling, not re-litigated.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

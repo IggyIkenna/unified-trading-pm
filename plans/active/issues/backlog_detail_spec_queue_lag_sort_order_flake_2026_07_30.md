@@ -114,3 +114,7 @@ first:
   (still `assigned_vm: NA`/local-only per the 2026-07-31 operator directive); citation still accurate. In scope this run
   only via an incidental corpus-wide touch, no content drift.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Sole open todo duplicates
+  ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md (itself NA/local-only per 2026-07-31 operator
+  directive). Prior 2026-08-04 marker unchanged.

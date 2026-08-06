@@ -187,3 +187,8 @@ is about routing external-gate tasks through it instead of through the churn pat
   `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`, the archived audit doc whose per-`reason_code`
   table this doc's own Progress Log names as the input the implementation todo proceeds against.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, CONFLICT-PARKED — RECLASSIFY held — sole remaining item verbatim-claimed
+  by ao_satellite_ao_dispatch_batch6's open [BACKEND] P3 todo (same two-part durable-park mechanism, same done-when,
+  source explicitly cited); batch6_finalize owns the checkbox flip. Parked as BLOCKED-OPERATOR-DECISION — dispatch
+  through batch6, not a parallel flip.

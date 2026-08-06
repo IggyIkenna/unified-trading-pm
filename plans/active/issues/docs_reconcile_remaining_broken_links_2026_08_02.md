@@ -250,3 +250,6 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   survivors fresh (still no confident successor for any). `doc_body_link_baseline.yaml` ratcheted 21→11 via
   `--update-baseline` (verified zero NEW breakage first). `unified-trading-pm@72b0f5724`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

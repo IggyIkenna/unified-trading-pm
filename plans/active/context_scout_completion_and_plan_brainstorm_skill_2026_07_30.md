@@ -188,3 +188,7 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   `/plan-brainstorm` classifies resolved scope against
 - `plans/active/task_template.md` — LOCAL vs AO-dispatched track, finding S (the specific failure mode
   `/plan-brainstorm` is meant to reduce upstream of)
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Sole open todo (context_scope corpus backfill + docspec.py
+  FieldSpec flip) is the same item already tracked verbatim as todo 1 of ao_satellite_ao_dispatch_batch3 (assigned_vm:
+  planning, real progress). Prior 2026-08-01 marker unchanged.

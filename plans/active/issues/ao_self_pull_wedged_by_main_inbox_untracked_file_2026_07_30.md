@@ -229,3 +229,6 @@ follows correctly — only the webhook config is missing).
   (previously listed both as `/agents/main.md` and `unified-trading-pm/agents/main.md`, the same file); content
   otherwise unchanged and all entries verified to resolve.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

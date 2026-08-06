@@ -228,3 +228,6 @@ convention's scope).
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (codex
   SSOT + PLAN_FORMAT + task_template + the standing checker script) — no changes.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

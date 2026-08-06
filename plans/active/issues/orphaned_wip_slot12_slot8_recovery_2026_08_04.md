@@ -163,3 +163,6 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   `fleet_git_health_ip_185...`'s marker today for the citation). Not reclassified — would create a competing/duplicate
   dispatch claim against batch6 once activated.
 - **context-scout 2026-08-06**: populated context_scope (3 entries).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

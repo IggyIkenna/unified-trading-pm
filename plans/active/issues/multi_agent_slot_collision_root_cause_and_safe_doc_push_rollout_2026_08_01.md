@@ -187,3 +187,6 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   operator decision.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

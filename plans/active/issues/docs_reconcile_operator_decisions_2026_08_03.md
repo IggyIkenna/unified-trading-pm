@@ -109,3 +109,6 @@ near-mechanical choice — see "Why this needed a human anyway" below.
   itself confirms this is not mechanically resolvable. Doc's own summary states the authority call is "an authority call
   this skill never auto-decides, in any mode."
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

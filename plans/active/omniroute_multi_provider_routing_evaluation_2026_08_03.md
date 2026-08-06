@@ -742,3 +742,6 @@ here rather than forced through.
       `rate_limited_until` reaches a datetime comparison). Until then the round-2 harness fixes — including the
       cross-provider dedup fix that affects the fleet's general-purpose cost tool — stay local and the fleet keeps
       over-counting non-Anthropic usage 1.9–3.8×.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

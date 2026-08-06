@@ -136,3 +136,6 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`, the doc that now actually tracks todos #1+#2's diagnostic work per
   the 2026-08-03 na-eligibility-audit citation above).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

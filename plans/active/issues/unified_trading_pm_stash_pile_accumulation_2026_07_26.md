@@ -181,3 +181,6 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the generic epic pointer for the guardrail
   hook that actually blocks the open `[OPERATOR]` mechanical-drop todos (`block_destructive_commands.py`).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

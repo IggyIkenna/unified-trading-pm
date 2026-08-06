@@ -719,3 +719,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   remain in this specific population at this corpus snapshot. Also flagged (not fixed):
   `cefi_consolidated_native_ao_extract_2026_07_25.md` has `status: active` in frontmatter but its own body text says
   "Status: draft... never auto-shipped to active" — a self-contradiction worth a maintainer's look.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (incremental-skip) — Skipped per incremental diff — unchanged
+  since 2026-08-03 marker. Still the live origin plan for this skill; 13 open todos, all genuinely
+  operator-gated/judgment.

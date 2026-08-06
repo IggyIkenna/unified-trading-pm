@@ -210,3 +210,6 @@ same-corpus dependencies). Instead:
   `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
   decision, explicitly "not a worker's call to make unilaterally".
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

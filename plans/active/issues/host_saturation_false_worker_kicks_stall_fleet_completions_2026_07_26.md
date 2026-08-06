@@ -223,3 +223,6 @@ is known-wrong is actively dangerous.
   the shared QG entry point the sole remaining `[DEVOPS] P1` admission-semaphore todo must touch; dropped the archived
   `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` sibling to stay within the minimal-list cap).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

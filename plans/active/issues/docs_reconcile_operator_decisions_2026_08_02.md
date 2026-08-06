@@ -204,3 +204,6 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   `summary:` frontmatter) — a same-gate recurrence found by this run's Phase 1 summary-quality hunter, independently
   re-verified (string length + live `locked_by` re-check) before parking rather than auto-fixing. Full Phase 5 report in
   this run's `/done` evidence + chat transcript (dispatch agt-cea8ef).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

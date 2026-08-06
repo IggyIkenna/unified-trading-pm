@@ -134,3 +134,6 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
   cover both the `[UI]`/`[DATA]` todo pair (dashboard + orm.py) and the `[BACKEND]` follow-up
   (worker_liveness/**init**.py).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

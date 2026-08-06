@@ -121,3 +121,6 @@ described work was already done, complete, and separately documented.
   drift. Same reasoning holds: the sole open item is an explicitly-unscoped design question, not a bounded task.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

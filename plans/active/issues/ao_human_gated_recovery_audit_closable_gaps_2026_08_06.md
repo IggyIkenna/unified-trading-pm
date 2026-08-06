@@ -117,3 +117,8 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
       directly on the orchestrator host during full-fleet hours, per the existing "heavy compute on shared host" SSOT
       (`/codex/05-infrastructure/vm-launcher-runbook.md`), given they're already sharing CPU with the CPUWeight=4000-
       prioritized orchestrator cgroup?
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

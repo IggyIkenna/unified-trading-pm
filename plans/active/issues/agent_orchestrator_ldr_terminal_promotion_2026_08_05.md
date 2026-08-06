@@ -189,3 +189,6 @@ Confirmed by direct code/config reading before changing anything (not assumed):
   re-opening spurious agent-orchestrator promote PRs off that stale copy (`#804`, opened 2026-08-06T00:48). Logged as a
   new P2 todo above rather than fixed in-session (root cause is a different repo's qg_red blocker, out of scope for a
   one-shot ldr_qg_failure escalation).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -408,3 +408,6 @@ default from an external reference.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

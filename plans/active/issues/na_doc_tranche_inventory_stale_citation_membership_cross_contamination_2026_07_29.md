@@ -238,3 +238,6 @@ class in a third script.
 - `/cursor-configs/skills/na-eligibility-audit/SKILL.md` — Phase 0, which relies on this script's output
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the 2026-07-27 schema-migration section both scripts are stale
   against
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

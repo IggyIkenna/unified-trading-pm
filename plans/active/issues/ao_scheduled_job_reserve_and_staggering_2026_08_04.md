@@ -45,13 +45,13 @@ related:
   ]
 created: 2026-08-04
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
-assigned_role: NA
+assigned_role: infra
 drift_direction: flat
 last_updated: 2026-08-04
 source: ["interactive session, operator-driven, 2026-08-04"]
@@ -220,6 +220,11 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06**: RECLASSIFY NA→planning — all 5 open todos are bounded verification/engineering
+  with deterministic outcomes (cgroup io.weight check after VM restart, API query for 3 tranche outcomes, PSI
+  re-measure, commit cpu-priority.conf drop-in tracking, conditional 58-timeout cluster investigation); conflict-check
+  CLEAR against all active planning docs, sibling batches, and consolidated closeouts. assigned_vm flipped in-place,
+  assigned_role=infra, execution_scope=orchestrator-agent.
 - **context-scout 2026-08-05**: populated/refreshed context_scope (6 entries) — corrected a wrong file
   (`tmux_pruner.py`, not actually the slot-level stale-flip mechanism this doc discusses) to the real one
   (`worker_liveness_watchdog.py`, confirmed to hold `_reclaim_idle_lingering_sessions`, the reclaimer named in item 1

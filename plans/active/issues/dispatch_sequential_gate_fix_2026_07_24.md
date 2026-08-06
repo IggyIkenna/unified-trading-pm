@@ -154,3 +154,6 @@ backfill).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

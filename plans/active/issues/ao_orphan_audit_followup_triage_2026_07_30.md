@@ -132,3 +132,6 @@ source:
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. Re-verified: the
   stale-pointer finding above (batch2 doesn't actually cover `ao_recovery_audit_layer1_deleted_2026_07_15`) is still
   unfixed on the live batch2 doc.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

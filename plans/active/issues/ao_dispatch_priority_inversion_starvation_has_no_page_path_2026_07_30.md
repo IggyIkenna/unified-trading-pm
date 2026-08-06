@@ -187,3 +187,6 @@ this, each time invisible until someone reads the backlog by hand.
   Cross-validated: today's same-day sibling `/ag-closeout-audit ao` batch6 run reached the identical conclusion
   independently ("already the named archival target of batch3_finalize's own gated todos").
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

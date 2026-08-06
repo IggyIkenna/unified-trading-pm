@@ -300,3 +300,6 @@ under active consideration, and only once its 3 prerequisite research todos reso
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the setup guide for the multi-account
   headless-auth codex SSOT this doc's own "Codex SSOTs" section names as the mechanism deliberately NOT reused.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

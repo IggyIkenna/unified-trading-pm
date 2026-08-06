@@ -341,3 +341,6 @@ cleanly instead of ending on an issue-doc corroboration.
   Cross-validated: today's sibling `/ag-closeout-audit ao` batch6 run independently declined this doc into its
   "too-large/unscoped-design" bucket.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

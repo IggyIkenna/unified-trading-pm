@@ -232,3 +232,6 @@ whole suite (1609 passed).
   `# noqa: qg-empty-fallback`, satisfying the original Gate. The batch1-ruled "grant IAM + REMOVE fallback" direction
   remains a live design tradeoff (tracked, not correctness-blocking). Batch 5 todo 9 (`ao_satellite_ao_dispatch_batch5`)
   flipped `[x]` in the same turn with the same evidence.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

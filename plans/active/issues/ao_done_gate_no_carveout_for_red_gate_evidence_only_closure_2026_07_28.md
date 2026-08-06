@@ -283,3 +283,6 @@ forces an operator/main manual DB patch outside the normal flow.
   resolve; doc's own remaining work (the `[DOC] P3` `task_template.md` note-add) is already reflected.
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (6 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

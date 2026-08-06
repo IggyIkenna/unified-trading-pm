@@ -912,3 +912,6 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   today by `/ag-closeout-audit ao`) — same two items, independently found. `assigned_vm` stays NA (extraction ≠
   reclassify-in-place; flipping this doc would also dispatch the other 6 genuinely-gated items).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

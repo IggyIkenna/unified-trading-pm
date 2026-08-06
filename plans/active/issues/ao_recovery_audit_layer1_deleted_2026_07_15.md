@@ -185,3 +185,6 @@ function.
       AO worker-role) that consumes PubSub `agent-recovery-actions`, decides a `SignoffVerdict`, and POSTs to the
       already-live `POST /safety-ops/signoffs`; scheduled LAST, after the in-flight AO dispatch-correctness work (see
       "Operator ruling 2026-07-16" above).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

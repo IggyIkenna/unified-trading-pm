@@ -239,3 +239,6 @@ cefi-specific** — same defect now reproduced on a second tranche.
 - **context-scout 2026-08-05**: re-scouted; swapped `/agents/review.md` for
   `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` (now the doc actually tracking the remaining 2 open
   todos per the 2026-08-04 na-eligibility-audit marker above), 5 entries.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

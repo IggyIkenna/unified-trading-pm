@@ -205,3 +205,6 @@ and just burn more contended compute.
   it is actively costing real promotion cadence, not just visibility.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -326,3 +326,6 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 - **context-scout 2026-08-06**: re-scouted; added `/plans/active/resource_watchdog_host_guardian_2026_08_05.md` (the
   2026-08-05 systemd RSS-killer, a live instance of this doc's recommended option 1, cross-linked but not yet in
   context_scope), now 6 entries.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

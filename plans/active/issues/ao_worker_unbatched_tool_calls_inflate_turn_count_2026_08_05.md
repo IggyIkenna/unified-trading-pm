@@ -99,3 +99,6 @@ them"), but the instruction is not being followed in practice, at least in this 
 ## Progress Log
 
 - **context-scout 2026-08-05**: populated context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

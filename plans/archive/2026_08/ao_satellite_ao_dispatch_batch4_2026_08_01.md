@@ -176,3 +176,7 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
   `plan` doc's own archival-pending state, not a reclassification question (it was NA/local-only by this tranche's
   established convention from inception, per the frontmatter note the 2026-08-01 batch-1 classification pass already
   recorded).
+
+- **na-eligibility-audit 2026-08-06**: ARCHIVE — 0 open todos — sole todo shipped agent-orchestrator@7911083 (failover
+  release-signal fix + 3 tests). locked_by empty. Paired finalize plan (assigned_vm: planning) owns the full archival
+  ritual. Archived 2026-08-06.

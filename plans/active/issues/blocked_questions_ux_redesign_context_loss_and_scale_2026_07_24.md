@@ -148,3 +148,6 @@ exists" section together before scoping the workstream.
 - [ ] [DESIGN] P2. **Scope the blocked-question UX redesign** — capture `claude_session_id` on `BlockedRow` at creation
       time, wire a transcript-jump affordance into the resolution UI, and address cross-question dedup/similarity;
       explicitly deferred by the operator 2026-07-24, not yet scoped or actioned.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

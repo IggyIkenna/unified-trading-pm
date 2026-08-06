@@ -467,3 +467,6 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   request. All three remain genuinely operator-gated, no change since the 2026-07-30 verdict.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- was epic+plan-only; added the 3 real source files
   behind the 3 still-open P0 items (SM secret sync script, dirty-worktree resolver, VM bootstrap script).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

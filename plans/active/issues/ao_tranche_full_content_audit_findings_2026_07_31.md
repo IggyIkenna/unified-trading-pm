@@ -163,3 +163,6 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   item but the doc stays whole-NA since `assigned_vm` is doc-granular). Cross-validated: the same-day sibling
   `/ag-closeout-audit ao` batch6 run also declined this doc as operator-gated.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
