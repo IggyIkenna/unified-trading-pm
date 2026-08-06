@@ -181,7 +181,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -208,10 +208,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
-        "large_file_count": 0,
         "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 87.6
+        "large_file_count": 0,
+        "coverage_pct": null
       }
     },
     "client-reporting-api": {
@@ -706,7 +706,7 @@
         "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 88.24
       },
       "breaking_scan_dir": "ibkr_gateway_client"
     },
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1112,10 +1112,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "coverage_pct": 9.42
       }
     },
     "trading-agent-service": {
@@ -1174,10 +1174,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "large_file_count": 0,
+        "coverage_pct": 73.53
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 37,
         "qg_red_reason": null,
+        "warn_file_count": 37,
         "large_file_count": 27,
-        "coverage_pct": null
+        "coverage_pct": 95.73
       }
     },
     "unified-trading-library": {
@@ -1274,10 +1274,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 7,
         "qg_red_reason": null,
-        "coverage_pct": 89.29,
-        "warn_file_count": 22
+        "warn_file_count": 22,
+        "large_file_count": 7,
+        "coverage_pct": 89.3
       }
     },
     "unified-trading-pm": {
@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 0,
-        "qg_red_reason": "qg",
-        "coverage_pct": 73.86,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": null
       }
     },
     "unified-trading-api": {
@@ -2042,7 +2042,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
