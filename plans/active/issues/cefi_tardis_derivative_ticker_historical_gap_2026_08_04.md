@@ -89,6 +89,16 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-14 2026-08-06 ~16:25Z (data_engineering, checkpoint #13, task
+  `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. day=2026-05-27 now
+  complete (21 ok/3 failed: same known trio — `DERIBIT` empty-error, `KRAKEN-SPOT` non-canonical-path bug, `ASTER`
+  UpstreamTimestampBiasError — all out of my task's scope). All 5 of my task's target venues
+  (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES) remain clean across 5 processed days now
+  (2026-05-23→27), no new regressions. Pace holding ~1h42m-2h05m/day. PM `9346b4f9e` ahead=0 (another slot's unrelated
+  work pulled in via ff-pull). **Resume**: keep polling; once VM TERMINATED, bounded-spot-check derivative_ticker GCS
+  objects for the 5 target venues across 2026-05-23→2026-08-05, flip the RE-OPENED [DATA] P1 todo with evidence (DERIBIT
+  explicitly NOT claimed — separately covered by task -003), commit + push, POST /done for
+  task_id=cefi_tardis_derivative_ticker_historical_gap-002.
 - **slot-14 2026-08-06 ~14:22Z (data_engineering, checkpoint #12, task
   `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. day=2026-05-26 now
   complete (20 ok/2 failed: `DERIBIT` empty-error — expected, pre-RC3 code, out of my task's scope per slot-9's separate
