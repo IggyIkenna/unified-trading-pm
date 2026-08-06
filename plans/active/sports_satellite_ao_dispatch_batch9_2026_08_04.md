@@ -369,14 +369,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       manifest query only. Source: `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
       when: a per-data_type verdict (genuine-expansion / seeding-artifact / mixed) is reached and documented for each of
       the 3 outlier data_types.
-- [ ] [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
+- [x] ✅ [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
       (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py`) to cover the 28 currently-unmapped
-      league_ids (A-LEAGUE, ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP, and
-      19 more listed in the source doc), using the same static `sports_bookmaker_league_coverage.json`-derived
-      ALL-PRESENT-bookmaker-set methodology already used for the 23 mapped leagues. Source:
-      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`. Done when: all 28 listed league_ids resolve via
-      `LEAGUE_ID_TO_TIER` to either a populated `EXPECTED_BOOKMAKER_MARKET_SETS` entry or the explicit no-expectation
-      tier, and `bash scripts/quality-gates.sh` is green on unified-api-contracts.
+      league_ids — unified-api-contracts@6d72669b. All 28 league_ids mapped: 6 to tier_1_domestic (ALLSVENSKAN,
+      ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS + SOCCER_* aliases), 2 to tier_2_domestic (EKSTRAKLASA,
+      SUPER_LIG + SOCCER_POLAND_EKSTRAKLASA), 13 to no_expectation (zero observed coverage). QG green, 4 new regression
+      tests pass. LEAGUE_ID_TO_TIER now exported from honest_coverage facade. Source:
+      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`.
 - [ ] [DOC] P3. Reconcile the sports live-wiring sequencing cross-reference between
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` and
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md` — the readiness plan's "Prerequisites already
