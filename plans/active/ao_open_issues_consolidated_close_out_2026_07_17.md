@@ -108,16 +108,16 @@ All are **LOCAL** (`assigned_vm: NA`, `execution_scope: local-only`) — operato
 AO-dispatched. Moved items are marked `➡️ MOVED` inline below and **must not be actioned here**; this plan keeps their
 audit record only.
 
-| #   | Plan                                           | Scope                                                                | Status (2026-07-20)                           |
-| --- | ---------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------- |
-| 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | ✅ **ARCHIVED** — residual → Phase 8          |
-| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | ✅ ARCHIVED — residual → Phase 8              |
-| 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | ✅ **ARCHIVED** — 8/8, no residual            |
-| 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | ✅ **ARCHIVED** — 7/7                         |
-| 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | ✅ **ARCHIVED** — residual → Phase 8          |
-| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | ✅ **ARCHIVED** — 5/5, no residual            |
-| 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | 🟡 OPEN — overclaimed gate + operator-gated   |
-| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | ✅ **ARCHIVED 2026-07-31** — 9/9, no residual |
+| #   | Plan                                           | Scope                                                                | Status (2026-07-20)                                                                                 |
+| --- | ---------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | ✅ **ARCHIVED** — residual → Phase 8                                                                |
+| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | ✅ ARCHIVED — residual → Phase 8                                                                    |
+| 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | ✅ **ARCHIVED** — 8/8, no residual                                                                  |
+| 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | ✅ **ARCHIVED** — 7/7                                                                               |
+| 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | ✅ **ARCHIVED** — residual → Phase 8                                                                |
+| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | ✅ **ARCHIVED** — 5/5, no residual                                                                  |
+| 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | ✅ **ARCHIVED** — 5/5, no residual (corrected 2026-08-06 (/plan-reconcile ao); was stale "🟡 OPEN") |
+| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | ✅ **ARCHIVED 2026-07-31** — 9/9, no residual                                                       |
 
 **`ao_fleet_observability_kpis` — ✅ ARCHIVED 2026-07-31, 9/9, no residual** (superseded the "live thread"/AF-1b note
 that lived here — the escalation-redispatch cap it described landed as part of that plan's own closeout).
@@ -815,7 +815,10 @@ NOT AO and are deliberately out of scope here.
       direction 2026-07-20: hold this retry until the other concurrently-landing AO plans (`ao_dispatch_liveness_p0`,
       `ao_failover_multi_vm_readiness`, `ao_fleet_infra_hardening`, `ao_fleet_observability_kpis`,
       `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) settle** — a live central VM mid-restart-churn from
-      several concurrent plans is a bad environment to draw conclusions in. \_Source:
+      several concurrent plans is a bad environment to draw conclusions in. **Gate cleared — corrected 2026-08-06
+      (/plan-reconcile ao): all 6 named plans are now confirmed archived** (`ao_fleet_infra_hardening` corrected above
+      to ✅ ARCHIVED, 5/5, no residual; the other 5 were already shown archived in the split-out table above). The hold
+      no longer blocks a retry — this P0 stays unflipped, the run itself still needs to happen. \_Source:
       `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).*
 - [ ] [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
       reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;

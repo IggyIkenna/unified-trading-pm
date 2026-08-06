@@ -96,8 +96,9 @@ below rather than duplicated here.
   `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` — todo 2 corrects one stale "MISTAGGED" table row,
   todo 3 corrects a different MOVED-item summary sentence + table cell. **Land todo 2 before todo 3** (re-pull fresh
   immediately before todo 3's edit and re-check for a merge conflict on that file — it is actively co-edited by
-  na-eligibility-audit/context-scout passes on an almost-daily cadence and currently sits at 902/1000 lines, so also
-  re-verify the line-cap headroom before adding any new text there).
+  na-eligibility-audit/context-scout passes on an almost-daily cadence and measured 983/1000 lines on 2026-08-06
+  (`wc -l`, /plan-reconcile ao — was 902/1000 at drafting time; the file keeps growing, so **re-measure again
+  immediately before shipping this todo**, do not trust either cached figure).
 - **File-adjacency #2 (soft caution, not a hard collision)**: todo 7 (`self_declared_complete` wiring in
   `agent-orchestrator/server/worker_liveness/_respawn.py`) shares that file with
   `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`'s own still-open
@@ -112,9 +113,11 @@ below rather than duplicated here.
   re-grep-before-starting caution as above.
 - **Todo 6 touches a codex SSOT (`per-tab-worktrees.md`) and the QG-size-capped `cursor-configs/CLAUDE.md`** — obtain
   operator sign-off before committing either edit, per the workspace HARD RULE that a codex/CLAUDE.md change needs
-  sign-off (same convention batch2's `[DOCS] P1` codex-edit todo used). `cursor-configs/CLAUDE.md` measured 40,942 B
-  against the 40,960 B hard cap at drafting time (18 B headroom) — any net-positive addition needs an offsetting
-  condensation in the same edit; extend the existing SSOT-pointer parenthetical rather than adding a new sentence.
+  sign-off (same convention batch2's `[DOCS] P1` codex-edit todo used). `cursor-configs/CLAUDE.md` measured 40,942 B at
+  drafting time (18 B headroom) and **40,956 B on 2026-08-06** (`wc -c`, /plan-reconcile ao — only 4 B headroom against
+  the 40,960 B hard cap now) — **re-measure again immediately before shipping this todo**, headroom is shrinking and any
+  net-positive addition needs an offsetting condensation in the same edit; extend the existing SSOT-pointer
+  parenthetical rather than adding a new sentence.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
   finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`) reconciles evidence back into
   every source doc and runs archival.
@@ -292,11 +295,15 @@ below rather than duplicated here.
       reaper-overeagerness fix only — its other 2 items stay held/deferred per that doc's own state). Repo:
       agent-orchestrator.
 
-## Deferred — full per-doc disposition of the 30 declined orphaned candidates
+## Deferred — full per-doc disposition of the 31 declined orphaned candidates
 
 **Ledger check**: 41 candidates − 1 `archivable_now` − 1 `archivable_after_planned_work` − 9 orphaned-and-eligible
-(drafted as todos 1, 3-10 above) = 30 orphaned-and-declined, all named below (count verified against the Workflow
-journal, not eyeballed). Every one falls into one of these non-batchable categories per the skill's own taxonomy:
+(drafted as todos 1, 3-10 above) = **31** orphaned-and-declined (corrected 2026-08-06 (/plan-reconcile ao): the "= 30"
+this formula previously concluded did not match its own enumerated list below, which a direct recount gives 31 —
+matching this doc's own 2026-08-03 self-correction entry's 24+7=31 math; the "9 orphaned-and-eligible" subtraction input
+above is the stale figure the arithmetic never reconciled against). All 31 named below (recounted via `grep -oE` over
+the category list, not eyeballed). Every one falls into one of these non-batchable categories per the skill's own
+taxonomy:
 
 - **Operator-gated** (an explicit `[OPERATOR]` tag or "not yet decided, for operator review" framing — the largest
   class): `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`,
@@ -327,10 +334,15 @@ journal, not eyeballed). Every one falls into one of these non-batchable categor
   `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`; or by another doc's own already-owned
   todo: `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` (its remaining item
   duplicates `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s own todo — both that doc's annotation and
-  batch1's archived Deferred section explicitly forbid drafting a competing todo here).
+  batch1's archived Deferred section explicitly forbid drafting a competing todo here); **moved here 2026-08-06
+  (/plan-reconcile ao)**: `git_health_not_clean_since_pinned_constant_2026_07_27.md` (2 of its 3 `[BACKEND] P3` todos
+  are already tracked as one combined todo in `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (active,
+  `assigned_vm: planning`), same "another doc's own already-owned todo" shape as the `orchestrator_planregen_prune...`
+  case just above — its 3rd todo is a genuine design-judgment fork (new field vs. hysteresis bugfix) that batch3's own
+  combined todo explicitly excludes from its bounded scope, so it was previously mis-bucketed under
+  "Credential/host-access gaps" below, which does not describe its actual blocker).
 - **Credential/host-access gaps** beyond a standard dev checkout:
-  `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg,
-  `git_health_not_clean_since_pinned_constant_2026_07_27.md`.
+  `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg.
 - **Newly-created (2026-08-01..08-03) docs**, each independently gated on a design fork or operator decision per their
   own text: `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`,
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,

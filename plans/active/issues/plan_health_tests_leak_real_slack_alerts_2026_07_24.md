@@ -138,7 +138,7 @@ n=14; `"drift Z"` = 1 test × 2 fires (of 3 calls) = n=28; `"rule X contradicted
 9 doc_drift tests + 2 dispatch-failure tests fixed in one commit — proof re-run showed 0 real `_post` calls across the
 whole suite (1609 passed).
 
-## Open todos
+## Todos (all closed)
 
 - [x] [BACKEND] P0. Add the missing `notify_slot_blocked`/`notify_plan_health_findings` mocks — scope widened from the
       original 4 to all 9 leaking doc_drift tests once the full `record_result()` control flow was traced. —
@@ -233,5 +233,8 @@ whole suite (1609 passed).
   remains a live design tradeoff (tracked, not correctness-blocking). Batch 5 todo 9 (`ao_satellite_ao_dispatch_batch5`)
   flipped `[x]` in the same turn with the same evidence.
 
-- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
-  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — boilerplate corrected 2026-08-06 (/plan-reconcile ao): the prior
+  marker's "Operator-gated, design-judgment, or standing-corpus-ruling work remains open" line fired without re-checking
+  todo state — `grep -c '^- \[ \]'` on this doc is 0 (the doc's own preceding same-day entry above already closed the
+  last todo, `unified-trading-pm@2db15bb21`). Correct state: **zero open todos**; this doc stays `assigned_vm: NA` only
+  because it is a closed historical record, not because any operator-gated/judgment work remains.
