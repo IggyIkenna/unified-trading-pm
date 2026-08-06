@@ -17,7 +17,7 @@ summary: >
   blocker (confirmed separately: per-VM manifest shards ARE updating continuously via a different code path —
   `ManifestWriter: per-VM shard updated` log lines are healthy and frequent — so this is isolated to the boundary-event
   side, not silently blocking prediction data capture itself).
-status: resolved
+status: complete # archived 2026-08-06 -- 0 open todos (all retracted/resolved 2026-08-03), 0 corpus referrers, self-declared archive-eligible; archived by /ag-closeout-audit prediction (dispatch agt-1591dd)
 nature: issue
 asset_group: [prediction]
 stage: [data]

@@ -397,6 +397,18 @@ fixture-linked before MVP backfill.
     `polymarket_clob`/`polymarket_gamma_api`, spanning dates back to 2018; NOT the already-fixed captured-row defect).
     The doc's own bundle-atom root-cause remediation (items 1-6) and its combined residual close-out (a/b/c/d) are all
     done/superseded — only this one residual todo remains open.
+  - [`plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
+    — **added to this index 2026-08-06** (`/ag-closeout-audit prediction`, closing a `check_ag_closeout_linkage.py`
+    graph-disconnection gap — see
+    [`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)).
+    Self-dispatched (`assigned_vm: planning`, `status: open`), so not orphaned in the ag-closeout-audit sense — but was
+    graph-disconnected from this closeout family (no `related:`/mention link), which is now fixed by this citation. Code
+    fix (writer `instrument_type` stale-literal) + root-cause fix + prod deploy all DONE 2026-08-01/03 per the doc's own
+    todos 1 and 3; **[OPERATOR] P2** (todo 2) — decide whether to lift
+    `canonicalize_prediction_manifest_2026_07_18.py`'s HELD prod-run status — reads `[ ]` at the top level but its own
+    body text describes steps 2-6 (dry-run + 2 full apply/verify rounds) as DONE 2026-08-03; not independently
+    re-verified or flipped by this run (self-dispatched doc, outside this audit's remit to edit) — flagging the apparent
+    stale-checkbox for whoever next touches this doc or a future `/na-eligibility-audit`/`/plan-reconcile` pass.
   - [`plans/archive/issues/phantom_captures_prediction_2026_06_28.md`](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
     — 0 open todos (writer-fix done; final re-fetch/backfill todo SUPERSEDED 2026-07-29 into Phase-D MVP-backfill gate +
     data_completion_prediction; archived)
