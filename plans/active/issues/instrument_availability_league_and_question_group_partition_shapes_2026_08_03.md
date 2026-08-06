@@ -190,10 +190,18 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       `instruments-service@ba87cc32`, current LDR equivalent `4e25aae1`). Migration tool extended with
       `_SPORTS_LEAGUE_FLAT_RE` to recognize + migrate the legacy shape. Writer fix surviving on LDR confirmed 2026-08-06
       via code inspection (slot 8). Depends on todo 1.
-- [ ] 4. [DATA] P1. Historical migration: copy the ~172,592 (at investigation time, growing) sports `league=` objects to
-      the ruled full-hive target — mirrors this doc's own `migrate_instrument_availability_hive_2026_08_03.py` pattern
-      (copy-if-missing + metadata-verify, VM-scoped, never deletes the source). Depends on todo 1 + todo 3 (writer fixed
-      first, so no new non-compliant objects land during/after the historical copy).
+- [x] ✅ 4. [DATA] P1. **EXECUTED 2026-08-06 (slot 6, data_engineering craft).** Historical migration of sports
+      `league=` objects via
+      `migrate_instrument_availability_hive_2026_08_03.py --asset-group sports --apply-prod     --confirm-prod-write`
+      (PROD, `instruments-store-sports-prd-central-element-323112`). Results: **172,348 copied**, **247
+      content_mismatch** (all `day=2026-08-02`, writer-fix cutover day — resolved via `--resolve-content-mismatch`: 8
+      flat_wins, 7 hive_wins, 230 tie_flat_bytes, **2 disjoint** flagged for manual review), **0 failed**.
+      Post-migration dry-run confirms **188,680 total hive objects** (reconciles: 16,332 pre-existing + 172,348 copied =
+      188,680 ✓). Flat sources preserved (copy-only, never deletes). 2 disjoint pairs carried forward:
+      `KUWAIT_DIVISION_1/day=2026-08-02` (flat=4 hive=4, neither superset) and `ROMANIA_LIGA_I/day=2026-08-09` (flat=2
+      hive=2, neither superset) — same instrument-churn class as the sibling doc's 14 disjoint pairs, not
+      migration-blocking. — instruments-service (migration execution, no code change — script already shipped by todo
+      3/sibling doc todo 2).
 - [ ] 5. [DATA] P2. IF todo 2 finds prediction's `canonical_question_group=` shape still live: fix that writer too (same
       pattern as todo 3) and migrate its historical objects (same pattern as todo 4). IF todo 2 confirms
       historical-only: just run the historical migration (no writer fix needed). Depends on todo 1 + todo 2.
