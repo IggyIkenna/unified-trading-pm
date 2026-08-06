@@ -24,7 +24,21 @@ AUDIT_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/repo-management/run-aud
 
 cd "$WORKSPACE_ROOT"
 
+# Resolve a native-arch fswatch explicitly — launchd's default PATH doesn't include
+# Homebrew's bin dirs, and an Intel (x86_64) fswatch run under Rosetta on Apple
+# Silicon segfaults on the recursive-watch syscalls this script needs (found live
+# 2026-08-06: /usr/local/bin/fswatch crash-looped on every invocation). Prefer the
+# native Apple Silicon path, fall back to Intel Homebrew / bare PATH lookup for
+# other machines.
+if [ -x /opt/homebrew/bin/fswatch ]; then
+  FSWATCH_BIN=/opt/homebrew/bin/fswatch
+elif [ -x /usr/local/bin/fswatch ]; then
+  FSWATCH_BIN=/usr/local/bin/fswatch
+else
+  FSWATCH_BIN="$(command -v fswatch)"
+fi
+
 # Watch .git/logs (commits, resets, checkouts). -l 2 debounces.
-exec /usr/local/bin/fswatch -o -r -l 2 -i '\.git/logs' . | while read -r _; do
+exec "$FSWATCH_BIN" -o -r -l 2 -i '\.git/logs' . | while read -r _; do
   bash "$AUDIT_SCRIPT"
 done
