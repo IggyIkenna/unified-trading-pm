@@ -746,3 +746,6 @@ Coverage is the verification lens — every number flows through `compute_honest
   3 remaining open items (EXTENDED raise-vs-fallback judgment call, a consolidator-health-gated config revert, the G1
   umbrella marker) are all still genuinely human/judgment/gated work.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict; the
+  3 remaining open items (G1 gate sign-off not recorded, EXTENDED raise-vs-fallback judgment call, a
+  consolidator-health-gated `MANIFEST_ALLOW_STALE_FALLBACK` revert) are still genuinely human/judgment/gated work.

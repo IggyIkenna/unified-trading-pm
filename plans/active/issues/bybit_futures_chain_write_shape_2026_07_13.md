@@ -180,3 +180,8 @@ workspace).
   ready-to-execute work sitting with no live dispatch path pending batch4's activation — flagged again in this run's
   report per the 2026-08-02 pass's own note.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above the sole
+  open item is already correct and current: the work is extracted verbatim into
+  `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1, which remains `status: draft` (unactivated 6+ days,
+  confirmed via today's `ag_closeout_audit_cefi_parked_2026_08_06.md`). Nothing to fix; revisit only if batch4 stalls
+  without ever activating.

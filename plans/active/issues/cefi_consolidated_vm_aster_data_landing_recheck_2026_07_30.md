@@ -174,3 +174,8 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA-STALE (already-duplicated) — reaffirms the
   2026-08-02 verdict, banner and citations still accurate, no content change since besides the context-scout refresh.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above both open
+  items is already correct and current: extracted verbatim into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo
+  2, which remains `status: draft`. Flagging for the tranche report (not a verdict change): the underlying ASTER
+  live-landing gap has escalated (3 consecutive days zero `live_*` objects, VM fleet churn) while its dispatch vehicle
+  sits unreviewed.

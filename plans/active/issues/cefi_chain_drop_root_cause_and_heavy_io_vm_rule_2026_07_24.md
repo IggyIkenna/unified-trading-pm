@@ -549,3 +549,7 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   manifest-consolidator pause/verify/apply/resume sequence — resuming is itself a judgment call, not
   worker-determinable.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict; the
+  sole open item (resume the paused prod-GCS-rename migration) wraps a manifest-consolidator pause/verify/apply/resume
+  sequence lacking an `[OPERATOR]` tag or stated reversibility justification, and this doc's own history records 2
+  near-misses from this exact class of action. Resuming is a judgment call, not worker-determinable.

@@ -613,3 +613,7 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   confirmed in `_DRYRUN_COLS` at `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`,
   `1284606a` on LDR — fix predates the triage. All evidence in `cefi_4surface_migration_execution_log_2026_07_24.md`.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — hub/coordination doc that references
+  (does not duplicate) every open cefi plan/issue; of 15 open items, most sit under explicit redirect banners (the fleet
+  docs are ground truth, not this roll-up) or are embedded judgment/design calls from a source plan per an operator
+  sequencing ruling. Not a dispatchable unit.

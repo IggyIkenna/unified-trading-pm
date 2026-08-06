@@ -125,3 +125,7 @@ run already covers them under different instrument routing), not a mechanical da
   gating strategy-desk judgment call (whether/when to start a paper run) still holds, so the companion bounded [DIAG]
   audit item stays whole-doc-NA (it only serves the gated decision).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
+  gating `[OPERATOR]` strategy-desk call (whether/when to start a paper run) still holds, so the companion `[DIAG]` item
+  stays whole-doc-NA (it only serves the gated decision). The `[DIAG]` item was independently drafted into
+  `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` (still draft).

@@ -167,3 +167,7 @@ reasoning above.
   contingent Option-B revert remain live work). `[OPERATOR] P1` stays open and NA (genuine, now higher-stakes
   ratification call); `[SCRIPT] P2`/`[RESEARCH] P2` unaffected.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — `[OPERATOR] P1` ratification remains
+  the load-bearing open gate. Today's independent `/ag-closeout-audit cefi` run reached convergent classification,
+  drafting (not activating) the non-operator sub-items into batch6/batch8 — strong cross-validation that whole-doc NA
+  pending operator ratification is correct.

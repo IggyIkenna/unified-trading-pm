@@ -182,3 +182,7 @@ as this update.
   sole remaining open item is an explicitly non-actionable standing tripwire for a hypothetical future connector change,
   not currently dispatchable work.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict; the
+  doc's main question was resolved via an explicit 2026-08-02 operator ruling (`BLK-5aa3ce78`), the sole remaining item
+  is a self-described non-actionable standing tripwire for a future connector change, kept open (not archived) per the
+  doc's own Progress Log.

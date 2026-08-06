@@ -196,3 +196,7 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 3
   of 4 closure actions are still prod GCS pipeline_mode re-partition/merges against a live split-brain needing
   delete/move-safety gating, and the 4th (find+fix the writer) sequences before them, so the doc stays NA as a unit.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 3
+  of 4 closure actions are still prod GCS `pipeline_mode` re-partition/merges against a live split-brain needing
+  delete/move-safety gating, and the 4th (find+fix the writer) sequences before them via batch4 (still draft), so the
+  doc stays NA as a unit.

@@ -604,3 +604,8 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   backfills, not worker-determinable facts.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — all 4 open todos remain
+  judgment/design/blocked investigative work into an unresolved native-memory OOM root cause across CEFI/sports MTDS
+  backfills. Flagging for whoever next touches this doc: the `BLOCKED-CREDENTIALS` item has a 2026-08-02 operator
+  purchase-decision with no later in-doc confirmation credits were actually restored — worth a live re-check rather than
+  assuming still-blocked.

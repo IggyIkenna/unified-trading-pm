@@ -164,3 +164,6 @@ real progress, until this fix.
   `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 4 (`status: draft`), which the 2026-08-01 pass didn't flag;
   applied the citation banner above. `assigned_vm` left `NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above the sole
+  open item is already correct and current: extracted verbatim into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`
+  todo 4, which remains `status: draft`. Revisit only if batch4 stalls without ever activating.

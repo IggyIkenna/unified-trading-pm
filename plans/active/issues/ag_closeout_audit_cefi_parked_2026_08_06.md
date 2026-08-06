@@ -194,3 +194,7 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
 - **context-scout 2026-08-06**: populated/refreshed context_scope (5 entries) — added the sibling
   `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` issue this same run filed (New finding 2 above),
   previously only in `related:`.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — freshly filed today by the sibling
+  `/ag-closeout-audit` skill; todo 1 is an explicit `[OPERATOR]` approval gate for 4 drafted satellite batches, todo 2
+  is minor docs-linkage hygiene incidental to the doc's core purpose. No trap triggered; both items correctly remain
+  open.

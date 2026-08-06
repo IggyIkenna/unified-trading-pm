@@ -223,3 +223,7 @@ depend on.
   1-2 stay correctly held back from reclassify (batch4 still `status: draft`, duplicate-dispatch risk), items 3-5 remain
   genuinely open corroborating data for the separate still-open shard-16 investigation. No reclassification.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms prior verdicts; items 1-2
+  sit under a redirect banner to batch4 (still draft), items 3-5 are annotated data points feeding the separate
+  still-open `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` investigation, not standalone dispatchable
+  todos.
