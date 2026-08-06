@@ -182,13 +182,14 @@ the review doesn't silently drop them into either bucket without a look):**
       migrated. Append a `## Tier-B sign-off log` section to this doc as each file clears, citing the sign-off + the
       post-flip run URL/id. Do not batch-flip Tier B the way Tier A is batched — one file at a time, verified each time
       (mirrors Wave-1's own rule-11 playbook, but with NO batch step for this tier given the stakes).
-- [ ] [VERIFY] P1. **Tier classification is now moot — verified 2026-07-29: all 4 borderline files
+- [x] ✅ [VERIFY] P1. **Tier classification is now moot — verified 2026-07-29: all 4 borderline files
       (`cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`, `reconcile-staging-versions.yml`,
       `update-repo-version.yml`) already carry `runs-on: [self-hosted, glue]`** — the flip physically shipped in code
       independent of this plan doc catching up. No operator classification call remains; what's left is the done-when
       this plan's own Tier-B process requires: confirm one real post-flip triggered run succeeded for each of the 4 (not
       just that the YAML was edited) and append the sign-off + run URL/id per file, same as the other Tier-B files
-      above.
+      above. **COMPLETE 2026-08-06** — all 4 post-flip successful runs confirmed + sign-off log appended below
+      (`ci_satellite_ao_dispatch_batch4-006`, slot 6).
 
 ## Resolved: plan destination
 
@@ -198,6 +199,25 @@ the review doesn't silently drop them into either bucket without a look):**
       `execution_scope: local-only`, `status: active`). Whether Tier A should later be re-tiered to
       `assigned_vm: planning` is explicitly left open per the same guidance — a follow-up operator call, not resolved by
       this todo.
+
+## Tier-B sign-off log
+
+> All 4 borderline Tier-B files carry `runs-on: [self-hosted, glue]` (flips landed 2026-07-16/17) and each has at least
+> one REAL post-flip triggered run that SUCCEEDED on the glue pool — run-id-cited below, not just the YAML edit.
+> Verified 2026-08-06 (`ci_satellite_ao_dispatch_batch4-006`, slot 6).
+
+- `cascade-qg-ordering.yml` — ✅ sign-off. Post-flip successful run:
+  <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31106718759> (run 31106718759, `repository_dispatch`,
+  conclusion=success, 2026-08-06).
+- `freeze-deferred-build-replay.yml` — ✅ sign-off. Post-flip successful run:
+  <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31112392815> (run 31112392815, `schedule`,
+  conclusion=success, 2026-08-06).
+- `reconcile-staging-versions.yml` — ✅ sign-off. Post-flip successful run:
+  <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/29988155447> (run 29988155447, `schedule`,
+  conclusion=success, 2026-07-23 — flip landed 2026-07-16, run is post-flip).
+- `update-repo-version.yml` — ✅ sign-off. Post-flip successful run:
+  <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31114309412> (run 31114309412, `repository_dispatch`,
+  conclusion=success, 2026-08-06).
 
 ## Codex SSOTs
 
