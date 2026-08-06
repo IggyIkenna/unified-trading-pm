@@ -74,7 +74,7 @@ superseded_by:
 `features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (written out in full there; deliberately NOT
 reproduced verbatim here, because a broken path quoted in prose is itself counted by `check_reference_paths.py` and
 would make this doc a source of the very violation it reports). **That archive path does not exist.** The calendar doc
-is still live at `/plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` with 1 open
+is still live at `/plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` with 1 open
 todo; the doc that actually got archived that day is its SIBLING,
 `/plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`. The bad link landed
 in `unified-trading-pm@40edd70b4` ("archive fully-resolved features_sports_is_test_run issue + correct stale codex doc")
@@ -84,7 +84,7 @@ refs the reference-path existence ratchet counts.
 Why it is parked and not fixed: any edit under `codex/**` is authority-gated (skill § "STILL ASK / PARK — blast
 radius"), and this run was explicitly barred from codex edits. Strong evidence does not buy the authority.
 
-- **A: repoint the codex line to `/plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`
+- **A: repoint the codex line to `/plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`
   [WORKER REC]** — one-line, matches observable reality (the file is there, `os.path.exists` says so), and preserves the
   codex doc's intent of pointing at the calendar finding. **APPLIED 2026-07-30** —
   `/codex/02-data/is-test-run-audit-2026-04-20.md:48` repointed to the live active path with an inline note explaining
@@ -144,22 +144,22 @@ question rather than 36 times.
       no host left "unknown".
 
       **Partial progress 2026-07-30 (satellite corpus-hygiene pass) — genuinely not completable this session, left
-          open:**
+              open:**
 
-          | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
-          | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-          | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
-          | AO orchestrator VM (`planning`)    | unknown                 | unknown                              | Not attempted this session (would need SSM/interactive access + a judgment call on crontab-write permission for the invoking identity, matching the `ip-172-31-5-118` precedent above — treating as OPERATOR-adjacent rather than guessing).                                                                |
-          | human-planning VM (`i-0dd9812a96cdda5dc`) | unknown          | unknown                              | Not attempted this session, same reasoning as above.                                                                                                                                                                         |
-          | `ip-172-31-5-118`                  | present (per provenance) | present (per provenance)             | Per the provenance doc, the operator already installed both here personally.                                                                                                                                                |
+              | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
+              | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+              | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
+              | AO orchestrator VM (`planning`)    | unknown                 | unknown                              | Not attempted this session (would need SSM/interactive access + a judgment call on crontab-write permission for the invoking identity, matching the `ip-172-31-5-118` precedent above — treating as OPERATOR-adjacent rather than guessing).                                                                |
+              | human-planning VM (`i-0dd9812a96cdda5dc`) | unknown          | unknown                              | Not attempted this session, same reasoning as above.                                                                                                                                                                         |
+              | `ip-172-31-5-118`                  | present (per provenance) | present (per provenance)             | Per the provenance doc, the operator already installed both here personally.                                                                                                                                                |
 
-          Still 2 hosts fully "unknown" and 1 host blocked-not-installed — done-when NOT yet met. Left as an open todo
-          rather than force-completed against a foreign dirty clone or unverified VM access.
+              Still 2 hosts fully "unknown" and 1 host blocked-not-installed — done-when NOT yet met. Left as an open todo
+              rather than force-completed against a foreign dirty clone or unverified VM access.
 
-          — fixed 2026-08-06 (/plan-reconcile ao): the table above and its surrounding paragraphs had runaway leading
-          whitespace (322 spaces/line) causing markdown code-block rendering; re-indented to the normal 6-space
-          continuation indent, text/table content preserved exactly. The todo itself remains open (unrelated to this
-          whitespace fix).
+              — fixed 2026-08-06 (/plan-reconcile ao): the table above and its surrounding paragraphs had runaway leading
+              whitespace (322 spaces/line) causing markdown code-block rendering; re-indented to the normal 6-space
+              continuation indent, text/table content preserved exactly. The todo itself remains open (unrelated to this
+              whitespace fix).
 
 ## Reported, not parked — coverage gaps this run is honest about
 

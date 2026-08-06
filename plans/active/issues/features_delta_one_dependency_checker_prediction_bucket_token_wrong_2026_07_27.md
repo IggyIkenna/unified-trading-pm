@@ -266,3 +266,11 @@ four now route through the one helper.
   is actually leftover install corruption.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement on a longer-running VM or
+      dedicated benchmark leg (feature writes did not complete within the 40-min pipeline timeout).
+
+> **2026-08-06 archive-candidate audit**: Benchmark [DATA] P3 todo marked [x] but 'Full benchmark measurement
+> (throughput number) needs a longer-running VM or dedicated benchmark leg' — the measurement itself never completed.

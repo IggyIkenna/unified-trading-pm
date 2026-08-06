@@ -33,7 +33,7 @@ repos: [market-data-processing-service, unified-api-contracts]
 scope: [engineer]
 tags: [tradfi, mdps, manifest, schema-contract, row-key, chain-bundle, backfill]
 related:
-  - /plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md
+  - /plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md
 created: "2026-07-31"
 source: [mdps-backfill-tradfi-y2020es-20260731-023743 run.log, first-day spot-check after relaunching the fixed fleet]
 parent_epic: infrastructure_master

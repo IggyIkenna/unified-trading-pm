@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [tradfi, fx, venue, data-correctness, manifest, duplicate-rows, canonicalisation, distinct-values, delete-safety]
 related:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /plans/archive/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
@@ -185,3 +185,12 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
   prose, and `_umi_yahoo.py`/`venue_fetch.py` (neither is the confirmed root cause), swapped in the actually-implicated
   `migrate_tradfi_canonical_2026_07.py` (missing `_VENUE_REMAP`, the root cause per the 2026-08-04 code-trace — a repeat
   occurrence is not structurally prevented until that gap is closed).
+
+## Follow-ups
+
+- [ ] [SCRIPT] P3. Add _VENUE_REMAP (e.g. {"YAHOO_FINANCE": "FX"}, plus the SPOT bare-segment handling) to
+      migrate_tradfi_canonical_2026_07.py so a repeat wrong-venue promotion is structurally prevented
+
+> **2026-08-06 archive-candidate audit**: Doc's own Progress Log (context-scout 2026-08-06): 'a repeat occurrence is not
+> structurally prevented until that gap is closed' — the root cause (missing _VENUE_REMAP in the July migration
+> executor) was identified but never fixed, and that gap is not a tracked - [ ] todo.

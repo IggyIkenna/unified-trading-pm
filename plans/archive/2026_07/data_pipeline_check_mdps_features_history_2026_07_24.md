@@ -1191,7 +1191,7 @@ local process was killed mid-run 4 times across different backgrounding strategi
 `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. A secondary, minor
 finding (byte-identical candle written to two different paths — with/without `instrument_type=` segment — across
 consecutive force runs) is tracked separately:
-`/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
+`/plans/archive/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
 
 **Disposition:** todo 8 stays OPEN (not flipped) — the force-leg _mechanism_ is proven, but the todo's actual scope
 ("every MVP candle shard, all AGs") and even a single clean automated skip-proof are not yet met. Report written this
@@ -1387,7 +1387,7 @@ local process was killed mid-run 4 times across different backgrounding strategi
 `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. A secondary, minor
 finding (byte-identical candle written to two different paths — with/without `instrument_type=` segment — across
 consecutive force runs) is tracked separately:
-`/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
+`/plans/archive/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
 
 **Disposition:** todo 8 stays OPEN (not flipped) — the force-leg _mechanism_ is proven, but the todo's actual scope
 ("every MVP candle shard, all AGs") and even a single clean automated skip-proof are not yet met. Report written this

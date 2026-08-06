@@ -55,7 +55,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
+    /plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
     /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
@@ -88,7 +88,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/cli/parser.py,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_mdps.py,
-    /plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
+    /plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
   ]
 ---
 
@@ -409,3 +409,13 @@ OOM if left running). The named successor is this issue doc's Todos below.
   fixes CEFI (117) / DeFi (3,535) scale; a CEFI/DeFi re-launch still needs operator sign-off (per the RULING) — re-pilot
   with `MDPS_SHARDS_PER_WORKER=N` and watch RSS. Acknowledged the 2026-08-06 operator OOM directive: no heavy local
   compute launched this session (only the standard per-repo QG runs), no OOM-killed process to record.
+
+## Follow-ups
+
+- [ ] [INFRA] P1. Re-pilot the mdps-features-live cluster for CEFI (117 shards) / DeFi (3,535 shards) after operator
+      sign-off, launching with MDPS_SHARDS_PER_WORKER=N, and verify operational live operation
+
+> **2026-08-06 archive-candidate audit**: All 11 todos [x], but the doc's own conclusion is the cluster is still NOT
+> operationally launchable for CEFI/DeFi: the last todo and Progress Log state 'operator sign-off still required before
+> any CEFI/DeFi re-launch, per the RULING' — a prose-described pending re-pilot/verification with no tracked `- [ ]`
+> todo.

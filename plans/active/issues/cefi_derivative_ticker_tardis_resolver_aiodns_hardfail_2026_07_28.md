@@ -39,7 +39,7 @@ scope: [engineer, admin]
 tags: [data-correctness, attempted-failed, cefi, tardis, dns, aiodns, resolver, dp-fetch-009]
 related:
   [
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/archive/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
@@ -69,7 +69,7 @@ last_updated: 2026-08-03
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
@@ -611,3 +611,17 @@ and the residual-KeyError defense-in-depth path.
   `55d88025`: `git merge-base --is-ancestor 6a067cf1 55d88025` = true; `git merge-base --is-ancestor 6c6fab03 55d88025`
   = true. No code change this session (all fixes already shipped in prior sessions). Plan checkbox flipped; all todos
   now `[x]`.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Chase the flagged-but-unconfirmed fetch_l2_book / book_snapshot_5 case-sensitivity hypothesis — the
+      doc's own Open Questions section states the same uppercased K*-symbol coin feeds
+      HyperliquidS3Downloader.fetch_l2_book's S3 object key (l2Book/KPEPE.lz4 vs kPEPE.lz4), which would 404 on every
+      hour for the 6 k-prefixed symbols as a SILENT absence, 'flagged as a plausible follow-up, not chased... not
+      confirmed against the live manifest'.
+
+> **2026-08-06 archive-candidate audit**: All 9 todos are [x] and the three root causes + VM cycle are fixed/verified
+> (aiodns @6a067cf1, HYPERLIQUID @6c6fab03, VM cycled 2026-08-06, tarball ancestors verified). But the Open Questions
+> section explicitly leaves a plausible follow-up 'flagged... not chased, not confirmed' for a different data_type
+> (book_snapshot_5) — a prose-only open question/follow-up, never a tracked todo. Conservative bias -> NEEDS_TODO (the
+> untraced catalogue uppercasing source is out-of-repo and noted as non-blocking).

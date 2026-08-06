@@ -255,3 +255,13 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   false fire on unrelated commits), NOT import-grep. On fire: re-gate (authoritative), then ship the 3 gas_fee files +
   flip P3 same-turn. Watcher recipe re-armed as `/tmp/watch_ratchet_fix2.sh`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [CI] P1. Clear the 2 upstream fe68844c ratchet blockers (TID251 + funcsize) so market-tick-data-service QG goes
+      green and the gas_fee ship unblocks — repo-blocker RB stays armed until then.
+
+> **2026-08-06 archive-candidate audit**: Progress Log RE-GATE #9 (2026-08-05, authoritative): repo QG is STILL RED on 2
+> upstream fe68844c ratchet blockers (TID251 + funcsize), slot-12's P3 gas_fee ship is 'STILL BLOCKED' and 'the RB stays
+> armed' — a live unresolved fleet-blocking incident, not a resolved one. [KEEP_OPEN todo synthesized from justification
+> by archive sweep]

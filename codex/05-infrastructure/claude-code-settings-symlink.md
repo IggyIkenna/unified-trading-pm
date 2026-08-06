@@ -162,7 +162,7 @@ already protected, and it forfeits the net.
 
 Stale local registrations are swept: `scripts/workspace/link-claude-skills.sh` step (4.5) strips any `PreCompact` key
 from a machine's `.claude/settings.local.json`, so a host still carrying the retired block gets auto-compact back on its
-next run. SSOT for the failure mode: `/plans/active/issues/ao_worker_context_saturation_unrecoverable_2026_08_06.md`.
+next run. SSOT for the failure mode: `/plans/archive/issues/ao_worker_context_saturation_unrecoverable_2026_08_06.md`.
 
 ## Notes
 

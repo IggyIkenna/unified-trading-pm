@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [manifest-writer, thread-safety, concurrency, oom, race-condition, vm, defi]
 related:
   [
-    /plans/active/issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md,
+    /plans/archive/issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
   ]
 created: "2026-08-06"

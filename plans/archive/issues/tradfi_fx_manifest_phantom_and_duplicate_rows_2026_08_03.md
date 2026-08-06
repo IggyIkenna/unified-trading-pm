@@ -27,7 +27,7 @@ tags:
   [tradfi, fx, data-correctness, manifest, phantom-rows, duplicate-rows, instrument-id, capture-status, reconciliation]
 related:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
     /plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -54,7 +54,7 @@ superseded_by:
 source: "Found while executing tradfi_fx_provenance_and_manifest_id_defects-002, 2026-08-03, slot 8."
 context_scope:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/scripts/restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py,
   ]

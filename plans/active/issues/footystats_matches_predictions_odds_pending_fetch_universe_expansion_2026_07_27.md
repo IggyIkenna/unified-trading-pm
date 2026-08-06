@@ -316,3 +316,16 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
   `provider_league_ids.py` and `enumerate_expected_universe.py`, since the remaining `[DIAG] P3` follow-up re-verifies
   that exact fix in production; dropped the now-superseded `sports_satellite_ao_dispatch_batch4` archived dispatch doc).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [CODE] P2. Rebuild + redeploy the instruments-service:latest Docker image from a post-fix live-defi-rollout
+      checkout (to pick up unified-api-contracts@2a674aa8 _FOOTYSTATS_LEAGUE_COVERAGE) and re-verify (footystats,
+      MATCHES/PREDICTIONS/ODDS) pending_fetch for the 15 target leagues over >=2 consecutive days — the [x] [DIAG] P3
+      todo's own 2026-08-05 text confirms the entity_coverage gate is NOT firing in production (113 post-fix rows, zero
+      EXPECTED_NO_PROVIDER_COVERAGE, deployed image likely predates the fix) and says 'Re-triage needed'.
+
+> **2026-08-06 archive-candidate audit**: The [x] [DIAG] P3 todo is a clear checkbox-vs-prose contradiction: its body
+> confirms the shipped fix is NOT holding in production, that the deployed Cloud Run image predates the fix, and
+> explicitly calls for re-triage (rebuild+redeploy+re-verify) — none of which is a tracked open todo. The 2026-08-05
+> Progress Log restates 'file a new [INFRA]/[CODE] todo'.

@@ -362,3 +362,14 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Fix heartbeat status field that never updates past 'starting' on LONG_LIVED_LIVE VMs (cosmetic, 'worth
+      a P3 note', flagged 2026-08-01).
+- [ ] [DATA] P3. Investigate the 'instrument-window flush failed ASTER:PERPETUAL:1000LUNC-USDT@LIN' exception in
+      _publish_boundary_event (minor, 'worth a P3 note, not investigated further', flagged 2026-08-02).
+
+> **2026-08-06 archive-candidate audit**: Doc's own entries flag two unfixed bugs as 'worth a P3 note but not
+> investigated further here' — prose-only deferrals never turned into tracked `- [ ]` todos (all incident todos
+> themselves are done, but these two would evaporate on archival).

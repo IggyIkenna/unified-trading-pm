@@ -70,7 +70,7 @@ last_reviewed:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/active/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
+    /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py,
     instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py,
     instruments-service/instruments_service/reference_data/factory.py,

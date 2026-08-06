@@ -95,7 +95,7 @@ context_scope:
 > (`market-tick-data-service@dcd1bc8d`/`@5d856acb`/`@17204fca`/`@fb32fb65`); the P3 "~76 prediction rows" todo was found
 > stale by ~4 orders of magnitude on re-check (real corpus-wide count ~652k+) and redirected to the already-in-progress,
 > correctly-scoped, operator-gated effort at
-> `/plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` (todo 2, `[OPERATOR]`) and
+> `/plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md` (todo 2, `[OPERATOR]`) and
 > `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` (tasks `-001`/`-006`) rather than executed here.
 > Moved to `plans/archive/issues/`.
 

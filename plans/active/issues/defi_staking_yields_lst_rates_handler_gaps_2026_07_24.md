@@ -359,3 +359,13 @@ independent plans.
   calibrated AI days split across two phases. Full scoping in §7 above.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged. All §6 residual todos are
   now checked done — doc appears eligible for closeout review (not this skill's scope to act on).
+
+## Follow-ups
+
+- [ ] [SERVICE] P2. Implement staking-yields capability-completion for the 11 missing protocols (Phase 1: 8 DefiLlama
+      protocols ~2.5d; Phase 2: 3 AAVE Oracle protocols ~1.5d) — file as a new plan per §7
+
+> **2026-08-06 archive-candidate audit**: All 4 checkboxes are [x], but §7 describes ~30-32h of unimplemented work
+> ('File as a single plan with two sequential phases') — the capability-completion for
+> YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/SYMBIOTIC/KARAK/RENZO/KELPDAO/PUFFER/JITORESTAKING was only scoped, never
+> implemented, and no plan was filed; a deferred follow-up in prose with no tracked `- [ ]` todo.

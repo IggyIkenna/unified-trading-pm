@@ -26,8 +26,8 @@ scope: [engineer]
 tags: [defi, expected-universe, golden-drift, protocol-capabilities, lst-rates, qg-red, cross-repo, lockstep]
 related:
   [
-    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
-    /plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md,
+    /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/archive/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md,
     /plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md,
     /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
@@ -48,7 +48,7 @@ locked_since:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
     /plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md,
     /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
     instruments-service/scripts/regenerate_expected_universe_golden.py,
@@ -349,3 +349,15 @@ read MUST be column-projected pyarrow (5 cols) — an unfiltered 9.25M-row read 
 
 - **context-scout 2026-08-06**: populated context_scope (5 entries). No dedicated `## Progress Log` section exists in
   this doc (dated `###` sections instead); appended here as the last line per the fallback convention.
+
+## Follow-ups
+
+- [ ] [OPS] P3. POST /done sports_consolidated_native_ao_extract-022 (lifecycle close-out) — the Deferred-work table
+      lists it as PENDING (final step) and the resume-path text says 'Nothing pending for this task except the /done
+      POST'.
+
+> **2026-08-06 archive-candidate audit**: Core issue (defi golden red) is genuinely resolved (golden cleared 13:07:59Z
+> via lockstep regen instruments-service@0975de10; backfill shipped and completed 44296/44296; census done; flip shipped
+> d6fa4db9e). But the doc's own Deferred-work table carries an explicitly PENDING prose item (POST /done
+> sports_consolidated_native_ao_extract-022) that was never converted to a tracked todo — a deferred follow-up in prose
+> blocks archival.

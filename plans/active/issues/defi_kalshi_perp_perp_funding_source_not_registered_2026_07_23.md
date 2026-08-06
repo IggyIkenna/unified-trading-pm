@@ -160,3 +160,17 @@ concrete, currently-failing symptom; the classification question is the census a
   (a)/(b)/(c) operator-design decision on the 567 already-written manifest-absent objects remains genuine NA judgment
   work, unchanged. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [OPERATOR] P2. Decide the (a)/(b)/(c) disposition of the 567 already-written, still-GCS-present,
+      still-manifest-absent 2026-05-29..2026-07-25 KALSHI_PERP defi perp_funding objects (backfill into DEFI manifest
+      as-is / migrate+re-emit under CEFI to match the shipped @2aa23de5 reroute / accept as a historical gap), then ship
+      the chosen fix and re-run affected-day manifest rebuilds to backfill the missing rows.
+
+> **2026-08-06 archive-candidate audit**: Doc's central item is prose-only: 'Still open: whether the 567
+> already-written, still-GCS-present, still-manifest-absent 2026-05-29..2026-07-25 DEFI objects above should be (a)
+> backfilled into the DEFI manifest as-is, (b) migrated/re-emitted into the CEFI manifest... or (c) left as an accepted
+> historical gap — an operator/design decision, not resolved here' — never converted to a `- [ ]` todo; the 2
+> `[DIAG] P2` checkboxes are closed but secondary (na-eligibility-audit 2026-08-02/04 re-affirms the (a)/(b)/(c)
+> decision is genuine NA judgment work).

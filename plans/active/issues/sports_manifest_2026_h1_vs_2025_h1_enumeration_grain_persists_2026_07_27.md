@@ -411,3 +411,12 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P2. Complete remaining chunks 3-7 (2022..2026-04-04) of the job (2) historical expected_unattempted
+      backfill and run the post-run cell-seeding ratio re-check (done-when gate).
+
+> **2026-08-06 archive-candidate audit**: Todo 4 is flipped [x] but its own text says 'post-run ratio re-check
+> transferred to slot 8 entry (open todo)', and Progress Log (slot 8 + slot 6, 2026-08-04) confirms 'Chunks 3-7 not yet
+> reached' and the done-when ratio re-check never ran — false-completion on an incomplete multi-hour backfill.

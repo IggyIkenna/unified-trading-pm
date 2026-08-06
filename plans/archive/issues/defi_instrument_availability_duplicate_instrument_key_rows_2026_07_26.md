@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [defi, instrument_availability, duplicate-rows, data-quality, dex-pools]
 related:
   [
-    /plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md,
+    /plans/archive/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 created: 2026-07-26

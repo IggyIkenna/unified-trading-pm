@@ -38,7 +38,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/archive/2026_08/issues/mtds_prediction_live_boundary_event_topic_missing_2026_08_03.md,
-    /plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
+    /plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
   ]
 created: "2026-08-06"
 author: unknown
@@ -152,7 +152,7 @@ were fixed directly (squarely this tranche's own file ownership, no collision ri
    `check_ag_closeout_linkage.py`'s `TARGET_DIRS` is `plans/active` only, so an archived doc drops out of its candidate
    scan entirely.
 2. **Added a citation** for
-   [`issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
+   [`issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
    to `prediction_consolidated_closeout_2026_07_18.md`'s "Manifest / CQG / phantom" aggregated-sources bucket (this
    commit) — self-dispatched (`assigned_vm: planning`), so not orphaned in the ag-closeout-audit sense, but had no
    `related:`/mention link back to its closeout family. Noted in the new citation: its `[OPERATOR] P2` todo 2 reads

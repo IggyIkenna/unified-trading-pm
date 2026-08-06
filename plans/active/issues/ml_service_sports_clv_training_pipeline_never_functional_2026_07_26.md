@@ -192,7 +192,7 @@ same CLI path would hit the identical wall.
       `/plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
       **CLOSED-BY-CITATION 2026-08-06 (na-eligibility-audit, sports tranche, KEEP-NA-STALE)**: the retrain this todo
       asks for was independently completed and GCS-verified in
-      `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (an
+      `/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (an
       `assigned_vm: planning` doc) — its 2026-08-03 Progress Log records 3 CLV model variants trained via
       `--operation train --skip-dependency-check --task-type regression` against real prod `features-sports-prd` data
       (window 2026-04-01..17, matching this todo's date range), non-degenerate target
@@ -221,7 +221,7 @@ same CLI path would hit the identical wall.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Note (not context_scope,
   flagging only):
-  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` reports the
+  `/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` reports the
   CLV retrain actually succeeded end-to-end (2026-08-03, via `--operation train --skip-dependency-check`, 3 GCS-verified
   model artifacts) — this doc's own open `[ML] P2` todo 2 ("retrain the 3 CLV model variants") may already be satisfied
   in substance by that separate doc's work; not verified in enough depth this pass to flip the checkbox myself (out of

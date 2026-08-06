@@ -24,7 +24,7 @@ related:
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
+    /plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -220,8 +220,8 @@ Three candidate directions — genuinely a design decision, not something a sing
       does NOT hold for the literal `pipeline` command this todo specifies. Full diagnostic evidence + 4 actionable
       todos (the wiring gap, the NaN crash, the broken bare `ml-service` console script, and a 758-vs-2383-fixtures
       discrepancy worth re-checking) filed at
-      `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This todo
-      stays open, now blocked on that new doc. **UPDATE 2026-08-03 (slot-3, `data_engineering`)**: that child doc's
+      `/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This
+      todo stays open, now blocked on that new doc. **UPDATE 2026-08-03 (slot-3, `data_engineering`)**: that child doc's
       Findings 1+2 (the wiring gap + the NaN crash) are now FIXED and shipped as `ml-service@37d59f1`. Continuing past
       them surfaced 3 MORE gaps (child doc Findings 4-6): CLV needs `--task-type regression`, not the CLI default
       `classification` (LightGBM needs 0-indexed labels; CLV's target is `{-1,0,1}` — no code fix, just the correct
@@ -316,7 +316,7 @@ Three candidate directions — genuinely a design decision, not something a sing
      larger/longer operation) — left as an explicit, scoped follow-up in the todo text itself rather than claimed done.
 - 2026-08-03 (slot-11, `data_engineering`): attempted the literal retrain, genuinely blocked one layer deeper — see the
   updated `[ML] P2` todo text above for the summary. Full evidence, root cause, and 4 actionable follow-up todos at
-  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This is a
+  `/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`. This is a
   big-finding-class result (contradicts this doc's own "RATIFIED + VERIFIED" claim for a specific code path) — operator
   notified.
 - 2026-08-03 (slot-3, `data_engineering`, pre-compact checkpoint): picked up the same todo independently — had already
@@ -359,7 +359,7 @@ Three candidate directions — genuinely a design decision, not something a sing
   (`store_model` is never called from that path) and that `--operation train --skip-dependency-check` is the
   actually-correct command, and used it to produce + verify all 3 real trained artifacts this todo requires. Full
   evidence chain in
-  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (its own
+  `/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (its own
   Findings 1+2 fixed-and-closed, Findings 4-6 documented, remaining `[CODE] P3`/`[DATA] P3`/`[INFRA] P2` follow-ups left
   open for whoever picks them up next — not blocking this todo's own completion).
 
@@ -374,7 +374,7 @@ Three candidate directions — genuinely a design decision, not something a sing
 
 **Recommended next item (superseded 2026-08-03, twice — see below)**: the retrain was attempted and is now blocked one
 layer deeper — see the 2026-08-03 Progress Log entry above and
-`/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` for the actual
+`/plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` for the actual
 next actionable work (`PipelineHandler`'s CLV target generation needs the same `odds_targets`-merge wiring
 `TrainingOrchestrator` already has).
 

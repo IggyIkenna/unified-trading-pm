@@ -260,19 +260,19 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       restarts is a real sample, not a quiet window.
 
       **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
-                  ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
-                  journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
-                  silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
-                  the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
-                  terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
-                  (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
-                  `--since` older than retention produces a confident-looking zero that means nothing.
+                      ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+                      journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+                      silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+                      the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+                      terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+                      (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+                      `--since` older than retention produces a confident-looking zero that means nothing.
 
-                  **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
-                  restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
-                  glance against
-                  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
-                  Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+                      **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+                      restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+                      glance against
+                      `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+                      Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
 
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
@@ -415,3 +415,13 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   backlog requires a per-doc content read rather than a mechanical batch archive. **Before archiving**: confirm the
   lock-storm question is resolved (or re-opened as its own tracked todo/doc), not merely that the checkboxes are ticked.
   `status:` is deliberately left `open`.
+
+## Follow-ups
+
+- [ ] [AO] P0. Resolve the SQLite 'database is locked' storm (Problem 1 — 143 locks in 32 min killing plan-reconciler
+      runs) — DO-NOT-ARCHIVE guard: this live incident is not closed by the todos above.
+
+> **2026-08-06 archive-candidate audit**: Explicit DO-NOT-ARCHIVE guard in the doc's own Progress Log (2026-08-06):
+> 'this doc now has 0 open - [ ] todos but MUST NOT be archived on that signal alone... Problem 1... the SQLite database
+> is locked storm, is not closed by anything above' — status deliberately left open. [KEEP_OPEN todo synthesized from
+> justification by archive sweep]

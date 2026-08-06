@@ -32,7 +32,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, plan-reconcile, parked-findings, dispatch-gap, data-loss-risk, self-dispatched-caveat]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
@@ -69,7 +69,7 @@ source: >-
   live) before a fresh 45-agent Phase 1 Workflow fan-out over the full candidate set.
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,

@@ -37,7 +37,7 @@ related:
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
@@ -68,7 +68,7 @@ context_scope:
   [
     deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 ---
 
@@ -174,7 +174,7 @@ market-data-tick buckets specifically.
 ## Interaction with the sibling `--env staging` gap (read before fixing either alone)
 
 A sibling finding from the same plan's Track K (features) checkpoint,
-`/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`, independently discovered that
+`/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`, independently discovered that
 none of the 4 `pipeline_e2e_check.py` drivers pass `--env staging` when launching a `-test-`-bucket smoke VM, so all 4
 launch under `uts-prd-sa` (prod-tier) instead of `uts-test-sa` (test-tier) — and shipped a fix for `features-service`,
 with a P0 todo to apply the same fix to `market-data-processing-service`. **That fix alone is NOT sufficient for MDPS**:

@@ -46,7 +46,7 @@ tags:
 related:
   [
     /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
-    /plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
+    /plans/archive/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
     /plans/archive/issues/tradfi_manifest_consolidator_staleness_budget_missing_2026_07_31.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
   ]
@@ -80,7 +80,7 @@ last_updated: 2026-08-02
 context_scope:
   [
     /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
-    /plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
+    /plans/archive/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]

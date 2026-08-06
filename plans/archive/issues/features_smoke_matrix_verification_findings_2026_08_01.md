@@ -320,7 +320,7 @@ not duplicated here.
       Apply→force-consolidate→Resume backfill sequence (its own todos at that plan's lines 296-308: Apply
       `rebuild_tradfi_manifest.py` full-range, then Resume the cron). This exact root cause (deliberate, plan-owned
       pause, not a stuck/broken automation) is already fully diagnosed in the sibling issue
-      `/plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` — not re-derived here,
+      `/plans/archive/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` — not re-derived here,
       cross-referenced. **ETA / current status**: the tradfi Apply step has NOT started — no worker/tmux session is
       currently running `rebuild_tradfi_manifest.py` for tradfi (confirmed via a live pane sweep), and its Resume-cron
       backlog task (`mtds_available_at_cross_asset_backfill-003`) is `queued`/undispatched. This lags its sibling
@@ -407,8 +407,8 @@ not duplicated here.
 - 2026-08-01 (slot-7, data_engineering, backlog task `features_smoke_matrix_verification_findings-005`): closed the
   finding-4a (TRADFI) todo via investigation, not a fix — root cause is a DELIBERATE cron pause owned by a different
   in-flight plan (`mtds_available_at_cross_asset_backfill_2026_07_13.md`), already independently diagnosed in
-  `/plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md`; cross-referenced rather than
-  re-derived. Confirmed via live checks: cron still `PAUSED`, index still stale (now ~53,900s, up from the original
+  `/plans/archive/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md`; cross-referenced rather
+  than re-derived. Confirmed via live checks: cron still `PAUSED`, index still stale (now ~53,900s, up from the original
   47,309s reading — actively worsening, not recovering on its own). Confirmed tradfi's own Apply step
   (`rebuild_tradfi_manifest.py`) has not even started (no live process, Resume-cron task `-003` still queued) — behind
   its sibling prediction lane, which IS actively running. Did not run the Apply/Resume myself: that work is already

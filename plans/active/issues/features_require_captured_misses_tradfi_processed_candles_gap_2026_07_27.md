@@ -34,7 +34,7 @@ context_scope:
   [
     features-service/scripts/pipeline_e2e_check.py,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 ---
@@ -260,3 +260,16 @@ input gap didn't change.
     tracking as a low-priority issue. No new code shipped — the fixes from 2026-07-27 are sufficient; the blocking
     condition is purely upstream data availability.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Track the pre-existing 'ticks' malformed instrument_id surfaced during the 2026-08-05 TRADFI delta_one
+      re-run (the instrument scanner picked up a data_type name, not a real instrument) — the 2026-08-05 Progress Log
+      says it is 'a separate, pre-existing bug... not blocking this shard's proof but worth tracking as a low-priority
+      issue', a prose-only follow-up.
+
+> **2026-08-06 archive-candidate audit**: Both todos are [x] and the two-layer fix is confirmed working
+> (features-service@1b272676 + @ecd548b8, re-run CONFIRMED 2026-08-05; the honest-empty TRADFI path is now correctly
+> skipped). But the genuine force+skip proof remains gated on upstream TRADFI MDPS candle backfill, and the 'ticks'
+> malformed instrument_id is explicitly flagged in prose as 'worth tracking as a low-priority issue' — a follow-up that
+> was never made a tracked todo.

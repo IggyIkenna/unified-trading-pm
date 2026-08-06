@@ -240,3 +240,14 @@ this service relative to its documented, measured requirement.
   note only. (repo: deployment-service, deployment-api)
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [INFRA] P1. Resolve the deployment-api Cloud Run SIGABRT root cause + cold-start exit(0)
+      still-reproduces-on-automatic-deploys (manual update-traffic workaround only) — root-cause investigation is the
+      right owner; must not be archived while unresolved.
+
+> **2026-08-06 archive-candidate audit**: Live unresolved incident: the SIGABRT root cause 'remains unresolved' and the
+> cold-start exit(0) bug 'still reproduces on automatic deploys' (only a manual update-traffic workaround exists; P3 was
+> a forced/operator cutover, not a clean resolution) — the doc itself warns its root-cause investigation remains the
+> right owner and must not be archived. [KEEP_OPEN todo synthesized from justification by archive sweep]

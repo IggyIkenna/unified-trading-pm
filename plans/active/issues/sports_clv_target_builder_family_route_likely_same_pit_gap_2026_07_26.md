@@ -126,3 +126,15 @@ they would silently inherit the same architecture gap this whole chain exists to
 - **context-scout 2026-08-06**: re-scouted; added
   `features-service/features_service/sports/exporters/odds_features_exporter.py` (concrete PIT-gate + schema-absence
   evidence source from the 2026-08-05 verdict), now 4 entries.
+
+## Follow-ups
+
+- [ ] [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns: either
+      file [DESIGN] implementation todos for a structurally-separated export of
+      odds_home_close/odds_draw_close/odds_away_close piped into CLVTargetBuilder.build(), or confirm pregame_clv_family
+      is not used in any real production retrain and mark the doc resolved as moot
+
+> **2026-08-06 archive-candidate audit**: The sole [DATA] P3 todo (verdict ALWAYS-NULL) is checked but its own text and
+> the 2026-08-05 Progress Log defer an explicit follow-up — 'either (a) file [DESIGN]->2 implementation todos ... OR (b)
+> confirm pregame_clv_family is not used in any real production retrain and mark this doc resolved as moot' and 'whether
+> it drives actual retrains was not determined in this session' — that decision was never turned into a tracked todo.

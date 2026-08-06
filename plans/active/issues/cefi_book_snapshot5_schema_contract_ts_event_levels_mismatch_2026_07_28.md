@@ -68,7 +68,7 @@ tags:
 related:
   [
     /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -106,7 +106,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,

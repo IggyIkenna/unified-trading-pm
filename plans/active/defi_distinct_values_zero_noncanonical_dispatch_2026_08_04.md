@@ -65,7 +65,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md,
+    /plans/archive/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -180,7 +180,7 @@ zero-non-canonical dispatch above and should not get lost in the volume of that 
 | gas_fees manifest-row purge (12,425 phantom rows)                     | **Cannot be done yet** — GCS side is 100% complete and verified; manifest cleanup blocked by a diagnosed VM-boot `gsutil` infra hang, not a script bug.                                                    | VM infra fix — see `/plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`. |
 | Balancer `dex_pool_state` writer-schema gap                           | **Not done** — filed, needs its own writer-level design/fix (cumulative vs. daily columns causing silent $0 fee reads).                                                                                    | Nobody — see `/plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`.                       |
 | BLAZESTAKE production ownership (who writes NEW SOLBLAZE-SOLANA data) | **Operator-owned** — historical data hygiene is fully done; this is a genuine human design decision, not work.                                                                                             | Operator decision.                                                                                                           |
-| GMX manifest-column-fill regression (11 columns, 73.92%→71.71%)       | **Not done** — CRITICAL big finding, root-caused as benign (candidate b: legitimate dilution from net-new rows) by a fleet sub-agent but not yet formally closed out in its own issue doc.                 | Nobody — see `/plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.     |
+| GMX manifest-column-fill regression (11 columns, 73.92%→71.71%)       | **Not done** — CRITICAL big finding, root-caused as benign (candidate b: legitimate dilution from net-new rows) by a fleet sub-agent but not yet formally closed out in its own issue doc.                 | Nobody — see `/plans/archive/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.    |
 
 **Recommended next item**: `dex_swaps` — it's the largest remaining real-data item (up to 84% legacy-only in some pairs)
 and already has the bounded-sampling groundwork done; the per-venue fold pattern is proven (POOL casing, dex_pools) and

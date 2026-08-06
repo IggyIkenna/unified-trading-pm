@@ -594,7 +594,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
       emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
       (path-template mismatch). Issue doc + 3 follow-up todos:
-      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
+      `/plans/archive/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
 - [ ] [DATA] P1. **Prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows** (NEW 2026-07-24,
       folded in from archived `sports_master_closeout_2026_07_21.md`). The already-deleted 6,110-object subset is now
       PHANTOM (drift, not a coverage gap — the real data is still covered by the `SOCCER_*` uppercase twins). Clean via

@@ -308,3 +308,12 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — re-scoped per operator ruling, work extracted to batch5
+
+## Follow-ups
+
+- [ ] [DEVOPS] P2. Run the end-to-end proof on real infra: a manual gcloud builds submit (storageSource, empty
+      SHORT_SHA) must recover via the VERSION fallback instead of invalid reference format/exit 125 — cite the build id.
+
+> **2026-08-06 archive-candidate audit**: Re-scoped rollout shipped + drift checker GREEN, but the todo's own step-2
+> done-when 'Prove at least ONE repo end-to-end' remains outstanding — 2026-08-06 Progress Log lists it as 'run on the
+> real infra, build id cited ... when complete'.

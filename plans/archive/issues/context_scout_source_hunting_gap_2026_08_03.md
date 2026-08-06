@@ -6,7 +6,7 @@ title:
   repro, not measured on a corpus sample"
 summary:
   "Investigating why session context blows past 200k despite `context_scope` being populated, I traced a concrete repro:
-  `/plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md`'s P2 todo
+  `/plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md`'s P2 todo
   (added 2026-07-31, commit ce22ca1d0) is a root-cause investigation naming specific concepts in prose --
   `weekend`/`holiday`, `venue_trading_calendar`/`EXPECTED_WEEKEND` marker, `DEPENDENCY CHECK FAILED` -- across two named
   repos (market-tick-data-service, market-data-processing-service). `cursor-configs/skills/context-scout/ SKILL.md`
@@ -35,7 +35,7 @@ scope: [engineer, admin]
 tags: [context-scope, context-scout, plan-hygiene, tooling, agent-context-cost, mvi, source-path-hunting]
 related:
   [
-    /plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
+    /plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
     /plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
@@ -62,7 +62,7 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
+    /plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
     cursor-configs/skills/context-scout/SKILL.md,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
   ]
@@ -117,8 +117,8 @@ to matter most.
 ## Todos
 
 - [x] ✅ [SCRIPT] P2. Manually run `/context-scout` Phase 1 against
-      `/plans/active/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` and confirm
-      it now surfaces `market_data_processing_service/app/core/dependency_checker.py` and/or
+      `/plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md` and
+      confirm it now surfaces `market_data_processing_service/app/core/dependency_checker.py` and/or
       `market_tick_data_service/scripts/reclass_per_instrument_weekend_holiday_eu.py` (or the actual correct
       weekend-marker-write module, once identified) as source-path entries. This is a live demonstration the fix works
       on the exact repro case, not a theoretical claim. — unified-trading-pm (this commit). Manually ran Phase 1 against

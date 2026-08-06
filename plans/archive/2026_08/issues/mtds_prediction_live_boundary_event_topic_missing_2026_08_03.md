@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [live-pipeline, pubsub, boundary-event, mdps, prediction, data-correctness, false-positive]
 related:
   [
-    /plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
+    /plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
     /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /codex/05-infrastructure/live-pipeline-architecture.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
@@ -56,7 +56,7 @@ context_scope:
     /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     deployment-service/terraform/gcp/qg_snapshot_scheduler.tf,
     /codex/02-data/live-data-persistence-and-event-log.md,
-    /plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
+    /plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
   ]
 ---
 

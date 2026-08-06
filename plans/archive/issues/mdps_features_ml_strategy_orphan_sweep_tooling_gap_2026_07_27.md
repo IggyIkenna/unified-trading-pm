@@ -60,7 +60,7 @@ locked_since:
 context_scope:
   [
     /codex/02-data/orphan-object-detection.md,
-    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     strategy-service/scripts/strategy_orphan_sweep.py,
     strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
     ml-service/scripts/ml_orphan_sweep.py,
@@ -322,7 +322,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       captured cells) with 7 real orphan objects (genuine 2025-06-15/16 backtest artifacts) — a real data-correctness
       gap, filed as its own doc rather than absorbed into this todo's "validate the tool" scope (mirrors todo 1's/todo
       2b's own precedent):
-      [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
+      [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
       (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the ml_models/etc.
       manifest-WRITE design pass are each their own genuine judgment call — split to todo 3c below rather than guessed
       at in this dispatch, mirroring how todo 2 split unwired families to 2b/2c/2d.
@@ -488,7 +488,7 @@ lets each one be built, validated, and run to real completion on its own timelin
   `strategy_instructions`'s real run found the manifest completely absent in prod (0 captured cells) with 7 real orphan
   objects — filed as its own doc, out of this todo's "validate the tool" scope, mirroring todo 1's/todo 2b's own
   precedent:
-  [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
+  [`ml_strategy_manifest_coverage_gap_2026_08_03.md`](/plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md).
   Flipped todo 3b (genuinely complete: build + validate + PATH_REGISTRY decision + the sibling-corpus bug the real run
   caught, all done). Split (b) strategy_orders/positions/pnl wiring, (c) backtest_results investigation, and (d) the
   ml_models manifest-WRITE design pass to new todo 3c — each is its own genuine judgment call, mirroring todo 2's own

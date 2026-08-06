@@ -25,7 +25,7 @@ related:
   [
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
-    /plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
+    /plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
   ]
 created: "2026-08-03"
 last_updated: "2026-08-03"
@@ -49,7 +49,7 @@ context_scope:
   [
     /plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
-    /plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
+    /plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md,
     deployment-service/scripts/vm/reap-zombies.sh,
     market-data-processing-service/scripts/backfill_defi_dex_pool_swaps_source_correction.py,
   ]
@@ -186,7 +186,7 @@ NEW root cause in the same incident family, not a duplicate.
       immediately before its self-delete — i.e. the VM was SELF-killed by `vm-exec-with-gcs-tee.sh`'s own stall watchdog
       (a `STALL_PROGRESS_REGEX=checkpoint` misconfiguration in the launcher — the tool only logs "checkpoint" every 20th
       day, never per-day), NOT reaped by reap-zombies.sh. Filed as
-      `/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md` (P0) with the full evidence
+      `/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md` (P0) with the full evidence
       chain, the launcher fix (already applied, `STALL_PROGRESS_REGEX=day=`), and a time-critical callout that the
       relaunched VM (`backfill-defi-dex-swaps-20260803-103749`) is running the OLD pre-fix metadata and is on track to
       hit the identical self-kill imminently. Todo 1's reap-zombies.sh log-path fix remains a real, independently
@@ -252,7 +252,7 @@ NEW root cause in the same incident family, not a duplicate.
   `launch-backfill-defi-dex-swaps-source-correction-vm.sh` (the tool only logs "checkpoint" every 20th day, so the
   watchdog's 3600s no-progress threshold trips before the first checkpoint on every real run). Full evidence chain + the
   fix (already applied, `STALL_PROGRESS_REGEX=day=`, pending ship) + a time-critical note that the relaunched VM is
-  running the pre-fix metadata: `/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`
+  running the pre-fix metadata: `/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`
   (P0). Todo 1's reap-zombies.sh fix stays valid/necessary (a real bug, just not this incident's cause). Todos 3-4
   remain open. No GCS deletes/mutations performed — read-only investigation (30-day `gcloud logging read`, GCS log
   reads, `gcloud compute instances describe`) plus the launcher-script edit filed in the new doc.

@@ -378,3 +378,14 @@ root-cause fix.
   NOT the real write site — see the 2026-08-04 P2 finding above), swapped in the real fix sites
   `venue_fetch.py::_record_venue_shard_counts` and `_tradfi_manifest_shard.py` for anyone reconciling the pre-existing
   blank-`instrument_id` backfill this fix doesn't retroactively touch.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Write and run a dedicated script to backfill the 28,307+111 pre-existing blank-instrument_id manifest
+      rows in market-data-tick-tradfi-prd _index (derive canonical bundle ID via _resolve_chain_bundle_manifest_id and
+      rewrite the rows).
+
+> **2026-08-06 archive-candidate audit**: The P2 fix (market-tick-data-service@65beaeaf) covers NEW captures only; the
+> P3 todo verified none of the 3 existing migration scripts can reconcile the pre-existing blank-instrument_id rows and
+> 'a new, dedicated script would be needed', but no - [ ] todo tracks writing/running it — context-scout 2026-08-06
+> still refers to 'the pre-existing blank-instrument_id backfill this fix doesn't retroactively touch'.

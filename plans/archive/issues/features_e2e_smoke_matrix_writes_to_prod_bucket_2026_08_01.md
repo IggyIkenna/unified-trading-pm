@@ -38,7 +38,7 @@ tags:
 related:
   [
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md,
+    /plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md,
     /plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/05-infrastructure/gcs-object-operations.md,

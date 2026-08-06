@@ -288,7 +288,7 @@ The consolidator chain is NOT one job — it is two, and only the first is healt
 **Net**: the versions-consolidator (#1) is not the broken component — the manifest cache genuinely is current on `main`.
 The gap this census measures in (a) is a downstream symptom of #2's ~3-day-old, previously-unreported outage. Filed as
 its own P1 finding (out of this todo's read-only scope to fix):
-[/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
+[/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
 
 ### (c) Stall-alarm confirmation — the 22 repos reported STALLED 2026-07-23
 

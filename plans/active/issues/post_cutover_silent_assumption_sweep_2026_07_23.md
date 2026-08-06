@@ -482,7 +482,7 @@ codex, or a future staging re-entry gets a dead pipeline.
       the writer (`update-repo-version.yml`) is healthy and `main`'s cache is current. Full dated table + evidence:
       [/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md](/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md)
       § "Fleet version/tag-state census (2026-08-02)". New P1 filed for the backmerge outage:
-      [/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
+      [/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
       This todo itself stays unchecked — the census is done, but the 11 still-stalled repos and the new backmerge P1 are
       open follow-up work, not this todo's own completion.
 - [x] ✅ [INFRA] P1. **`publish-package.yml`'s per-repo DISPATCHER was never actually installed on the two frozen

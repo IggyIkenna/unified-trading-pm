@@ -222,3 +222,13 @@ overhead.
   the queue via `/skip-current-task`; `-001` is genuinely data_engineering-craft work (manifest/data-status API) and
   should dispatch next.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [CODE] P3. Add quote_asset/margin_type to the deployment-api data-status API response for cefi chain shards
+      (prose: 'still genuinely open, just no longer blocked'); - [ ] [UI] P3. Make the deployment-ui coverage heatmap
+      filterable by quote_asset/margin_type once the API exposes them (still open, transitively gated).
+
+> **2026-08-06 archive-candidate audit**: Both CODE and UI todos are marked [x] but the inline na-eligibility-audit
+> 2026-08-03 note says 'the actual API work ... has not been implemented; this is still genuinely open, just no longer
+> blocked' and 'Same applies to the UI todo below' — checkbox contradicts the prose.

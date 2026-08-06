@@ -5,7 +5,7 @@ title: >-
   relaunch replays the launcher blind, unlike RelaunchPreemptedVm's checkpoint-aware path
 summary: >-
   Discovered as a byproduct of reconciling
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md's 6 todos, 2026-07-27. That doc's own
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md's 6 todos, 2026-07-27. That doc's own
   todo 2 evidence text already flagged (in passing) that `RelaunchStalledVm` "has NO checkpoint/resume logic at all,"
   but this was never converted into its own tracked todo or issue doc. Independently re-verified this session by a
   full-file read of `deployment-service/scripts/recovery/relaunch_stalled_vm.py`: `RelaunchStalledVm.relaunch()` takes
@@ -38,7 +38,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,

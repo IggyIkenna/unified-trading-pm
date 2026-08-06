@@ -163,7 +163,7 @@ outage), not on strategy-service — escalate via this issue doc (BLOCKED-UPSTRE
       for hours and then cancel are hanging, not merely being superseded by a newer push — a concurrency-superseded run
       cancels promptly. Worth checking whether the same root cause explains both repos before fixing them separately.
       Provenance: observed incidentally while verifying an unrelated UAC promotion during the AO context-saturation
-      session (see `/plans/active/issues/ao_blocked_question_not_retired_when_condition_resolves_2026_08_06.md`).
+      session (see `/plans/archive/issues/ao_blocked_question_not_retired_when_condition_resolves_2026_08_06.md`).
 
 - [x] [CICD] P0. Quality-gates-v2 on promote PR #495 (run 31074521897, head `6ef522d3`) is VERIFIED GREEN (06:14Z).
       SUPERSEDED 2026-08-06 07:44Z: PR #495 closed-UNMERGED by the fleet bot (LDR moved to 9af7501d80 → PR #496). The

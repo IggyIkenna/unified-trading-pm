@@ -25,7 +25,7 @@ related:
   [
     /codex/06-coding-standards/ui-testing-layers.md,
     /codex/04-architecture/orphan-audit.md,
-    /plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md,
+    /plans/archive/issues/deployment_api_live_mock_parity_2026_07_17.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-31
@@ -46,7 +46,7 @@ context_scope:
     deployment-ui/tests/smoke/daily_costs_and_vm_detail.spec.ts,
     deployment-ui/src/lib/mock-api.ts,
     /codex/06-coding-standards/ui-testing-layers.md,
-    /plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md,
+    /plans/archive/issues/deployment_api_live_mock_parity_2026_07_17.md,
   ]
 drift_direction: advance-code
 source:

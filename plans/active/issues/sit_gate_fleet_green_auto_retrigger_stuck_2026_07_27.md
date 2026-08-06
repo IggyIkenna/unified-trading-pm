@@ -197,3 +197,14 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   under high-frequency promoter ticks. Unblocked manually via `gh run rerun`? No — the IN_PROGRESS run was not forcibly
   recovered; diagnosis filed as escalation `agt-f85daa` (cicd slot 8). The deployment-service PR #716 code is clean
   (quality-gates-v2=SUCCESS on PR head, run 31077855577) — the ONLY blocker is `sit-gate/fleet-green`.
+
+## Follow-ups
+
+- [ ] [CI] P0. Investigate the recurring sit-gate fleet-green auto-retrigger failures (08-05: fix never reached main;
+      08-06 dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) — escalation agt-f85daa
+      diagnosis pending, gate still failing fleet-wide.
+
+> **2026-08-06 archive-candidate audit**: Live unresolved incident: 08-05 recurrence shows the documented fix
+> system-integration-tests@69b93bc 'had NEVER reached main' ('fix authored + on LDR', not live), and 08-06 recurrence
+> (dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) was 'diagnosis filed as escalation
+> agt-f85daa' - the gate is still failing fleet-wide [KEEP_OPEN todo synthesized from justification by archive sweep]

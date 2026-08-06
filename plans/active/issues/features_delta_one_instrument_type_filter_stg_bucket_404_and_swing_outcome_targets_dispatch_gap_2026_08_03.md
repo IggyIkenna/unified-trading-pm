@@ -40,8 +40,8 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 created: 2026-08-03
 author: unknown
@@ -62,7 +62,7 @@ context_scope:
     features-service/features_service/delta_one/engine/orchestrator.py,
     unified-trading-library/unified_trading_library/pipeline_mode_resolver.py,
     features-service/features_service/delta_one/app/core/data_loader.py,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 resolved_by:
 ---
@@ -379,3 +379,12 @@ from `calculators/__init__.py`'s module-level registry):
   the tracked `UNEXPECTED_DATA_GAP` residual blocker). No code change. Re-pinged authoring slot (`dp-fleet-monitor`)
   with this outcome.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Scope a -test-/IS_TEST_RUN-aware relaxation of _filter_market_state's gap-tolerance
+      (boundary_tolerance) so sparse dev-tier TRADFI runs don't fail on a production-density assumption.
+
+> **2026-08-06 archive-candidate audit**: P3 verdict (a) accepted the sparse-data environment as a characteristic, but
+> Progress Log says a gap-tolerance relaxation 'should be scoped as its own follow-up' — deferred work with no tracked
+> todo.

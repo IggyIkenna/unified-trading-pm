@@ -368,7 +368,7 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 > `capture_status= expected_unattempted`, unrelated to the 4 orphan objects above), meaning some enumerator still treats
 > GMX as a valid venue. Filed as its own issue rather than folded in here since it's a genuinely different, unresolved
 > root cause (a catalogue-level artifact, not the generated-bundle/source-registry class this doc tracks):
-> `/plans/active/issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`.
+> `/plans/archive/issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`.
 
 ## Todos
 

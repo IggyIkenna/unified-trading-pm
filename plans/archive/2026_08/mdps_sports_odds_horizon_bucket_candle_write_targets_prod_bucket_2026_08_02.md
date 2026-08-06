@@ -36,7 +36,7 @@ related:
   [
     /plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
     /plans/archive/issues/bucket_iam_group_a_market_data_tick_prefix_missing_asset_group_2026_08_01.md,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
     /plans/audit/results/data_pipeline_e2e_check_mdps_2026_08_01.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -66,7 +66,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
     market-data-processing-service/market_data_processing_service/config.py,
     market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py,
-    /plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
+    /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 ---
 

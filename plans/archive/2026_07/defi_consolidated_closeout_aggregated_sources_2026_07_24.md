@@ -354,7 +354,7 @@ picture.
     — ✅ ARCHIVED 2026-07-27, all 14 todos done: Pyth Hermes/jitoSOL resolved as **clip**
     (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
     broader sweep beyond that concrete precedent filed separately at
-    `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
+    `/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
   - [`plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`](/plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md)
     (5 open — ⛔ GATES Track 1's LENDING retire)
     - **[CODE] P0.** Ship the retire atomically across UAC+MTDS+UTL in ONE wave — a partial wave IS the outage (the
@@ -467,7 +467,7 @@ picture.
     - **4. [DECISION] P2.** If todo 1 confirms stale legacy rows, rule on remediation — accepted historical artifact vs
       targeted manifest correction.
     - **5. [DATA] P3.** Append F10 to the reconciliation register per the audit's own maintenance-contract note.
-  - [`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`](/plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md)
+  - [`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`](/plans/archive/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md)
     (4 open)
     - **[VERIFY] P2.** Confirm the exact `completeness_pct` before/after impact of adding an exclusion guard vs adding
       the 7 keys without one — answers whether Path A is safe directly.
@@ -525,7 +525,7 @@ picture.
       `UNAVAILABLE` since at least 2026-07-05.
   - [`plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`](/plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`](/plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md)
+  - [`plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`](/plans/archive/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`](/plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
@@ -796,7 +796,7 @@ picture.
     — e2e DeFi strategy configs taxonomy/wizard round-trip fidelity gaps; repos/paths all `e2e-testing/scripts/defi/*`.
 
 - **Newly discovered (ag_closeout_auditor sweep, 2026-07-27)**:
-  - [`issues/read_availability_index_bare_defi_callers_2026_07_27.md`](/plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md)
+  - [`issues/read_availability_index_bare_defi_callers_2026_07_27.md`](/plans/archive/issues/read_availability_index_bare_defi_callers_2026_07_27.md)
     (`asset_group: [defi]`, `status: open`, `assigned_vm: planning` — already checkbox-formatted, 17 real todos, not
     previously named in this section) — full-corpus audit of ~35-40 bare `read_availability_index()` call sites across 8
     repos reachable on the 1.58 GB defi availability index with no `columns=`/`filters=` projection (OOM risk, matching

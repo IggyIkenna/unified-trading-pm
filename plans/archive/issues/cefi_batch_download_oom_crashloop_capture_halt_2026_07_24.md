@@ -34,7 +34,7 @@ related:
     /plans/audit/results/data_pipeline_reconciliation_cefi_2026_07_24.md,
     /plans/audit/results/data_pipeline_reconciliation_cefi_2026_07_20.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: 2026-07-24

@@ -631,7 +631,7 @@ flipping the checkbox.
   **NOT** add `--no-cpu-throttling`; (5) verify convergence with evidence (`active/` count drop + deploy build id + a
   post-deploy reap-tick observation); (6) ship via the normal `quickmerge --agent` + LDR→main promote flow — if
   verification can't complete in one dispatch tick, **park durably rather than churn** (cites
-  `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`).
+  `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`).
 
   **Researched the exact implementation this session (no code shipped yet — intentional; see rationale below):**
   - **Reap logic to call**: `SyncService().reap_stale_deployments(max_reap=500)`

@@ -228,7 +228,7 @@ drift_direction: advance-code
     whether these are the same finding filed twice or genuinely distinct; flagging, not resolving.
   - [`plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`](/plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`](/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md)
+  - [`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`](/plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md)
     (5 open):
     - **1. [OPERATOR] P1.** Rule on the 1,492 v2 pre-floor rows
     - **2. [DATA] P2.** Migrate-forward the 58 v2 post-floor rows (16 days) into canonical `entity=fixtures`

@@ -35,7 +35,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
-    /plans/active/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
+    /plans/archive/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md,
   ]
 drift_direction: none
 locked_by:
@@ -73,7 +73,7 @@ source:
 - [x] [DATA] P1. ✅ **Verify the re-stamp landed honestly against the LIVE prod manifest** (not against the script's own
       self-report). Re-read `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` with a
       column-projected / predicate-pushdown read (never a full materialisation — see
-      `/plans/active/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md`) and confirm all
+      `/plans/archive/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md`) and confirm all
       three properties the source plan's own script asserts: rows-in == rows-out, 0 duplicate `row_key`s, and ONLY the
       confirmed-lending rows flipped `liquidation` -> `lending`. **Done when**: the three measured numbers are cited
       here with the read's own date. — **2026-07-30 (slot-12)**: independent standalone read (not a re-run of

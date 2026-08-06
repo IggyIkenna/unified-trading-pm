@@ -48,7 +48,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
   ]
 created: 2026-08-06

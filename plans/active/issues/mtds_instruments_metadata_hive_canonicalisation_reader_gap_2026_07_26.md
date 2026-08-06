@@ -359,3 +359,12 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   suppression header from `lending_rewards_handler.py`. Smoke-fetch verification deferred to next capture cycle per todo
   9(b-c).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Verify solend/marginfi risk_params in the next capture cycle: live smoke-fetch through the fixed
+      reader + confirm manifest rows appear (todo 9(b-c), deferred 2026-08-05 slot-4).
+
+> **2026-08-06 archive-candidate audit**: Progress Log (slot-4, 2026-08-05): 'Smoke-fetch verification deferred to next
+> capture cycle per todo 9(b-c)' — todo 9's own stated done-when (b)/(c) was deferred in prose and never turned into a
+> tracked `- [ ]` todo.

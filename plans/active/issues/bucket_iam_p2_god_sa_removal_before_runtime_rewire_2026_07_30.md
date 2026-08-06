@@ -33,7 +33,7 @@ tags: [iam, terraform, sequencing-hazard, production-safety, gcp, bucket-tiers]
 related:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]

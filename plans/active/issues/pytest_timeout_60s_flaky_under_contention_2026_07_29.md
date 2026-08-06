@@ -638,3 +638,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   OS-scheduler/xdist contention, not an absolute wall-clock threshold that any single raise can fix. Checkbox flipped
   with this entry. Slot left clean (0 commits ahead of `origin/live-defi-rollout` in every repo; only this doc touched).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [CI] P1. Root-cause the xdist-contention flake class (confirmed NOT closed by the 60->150s raise; recurrences
+      across 10 repos) + resolve the runner-contention capacity question — tracking SSOT for
+      fleet_wide_qg_capacity_crisis.
+
+> **2026-08-06 archive-candidate audit**: Live unresolved incident: the flake class is explicitly confirmed NOT closed
+> by the 60->150s raise (todo 3's verdict), recurrences continue across 10 repos (latest survey 2026-08-04 found related
+> xdist-contention failures; the class is 'confirmed NOT closed'), and todos 5/6 carry un-met 'Done when' conditions
+> (todo 5: 'Not yet root-caused'; todo 6: runner-contention capacity question genuinely open). This is the tracking SSOT
+> for an ongoing, recurring fleet-wide QG contention incident (tied to fleet_wide_qg_capacity_crisis). Archiving while
+> the class is confirmed open would lose the tracking record. No explicit DO-NOT-ARCHIVE guard but the live-incident
+> criterion applies. [KEEP_OPEN todo synthesized from justification by archive sweep]

@@ -472,3 +472,18 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Fingerprint match:
   `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` — matched literal: static `rows_out` + nonzero
   `dedup_dropped` reasoning error (already cross-linked in this doc's own 2026-08-05 entry above, not a fresh find).
+
+## Follow-ups
+
+- [ ] [DATA] P3. Explain the 23 sentinel-free missing odds_api days (2020-06-06..2026-04-15 with neither an odds_api row
+      nor an ODDS_API sentinel row) not covered by the ODDS_API sentinel-collision mechanism — §4 states 'The 23
+      sentinel-free missing days are NOT yet explained' and the root-cause section says they 'need a separate look', but
+      no tracked todo carries them. (The separate 595-day canonical gap re-run is already a tracked P1 todo in
+      sports_odds_api_scattered_multiyear_gaps_2026_07_27.md.)
+
+> **2026-08-06 archive-candidate audit**: Consolidator is EXONERATED (banner: RESOLVED 2026-07-30, static rows_out is
+> in-place UPDATE) and the real root cause (check_shard_freshness ODDS_API-sentinel collision skipping 572/595 dates) is
+> diagnosed and fixed (market-tick-data-service@362e64e3). But the doc retains prose-only open items: the 23
+> sentinel-free missing days are 'NOT yet explained' (folded into the blast-radius todo whose DONE content only proves
+> sports-only, not their cause), and the P1 todo itself notes the 595-day canonical gap is still open (owned by the
+> sibling doc). Conservative bias -> NEEDS_TODO for the 23-day residual.

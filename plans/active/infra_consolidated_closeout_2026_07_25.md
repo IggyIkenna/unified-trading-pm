@@ -163,7 +163,7 @@ INDEX.md; `scripts/plans/regenerate_active_plan_index.py` built + wired into `ru
 263 plans/10 domains; both findings resolved, doc archived) ·
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
 (generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern) ·
-[issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md](/plans/active/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md)
+[issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md](/plans/archive/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md)
 (stale SSOT citations in 7 domain smoke_matrix.py files — doc-hygiene; added 2026-08-06 closeout-linkage fix).
 
 **Close-out criterion**: each tooling doc's own open todos closed; the zero-checkbox sweep's findings triaged; the

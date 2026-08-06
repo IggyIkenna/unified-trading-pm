@@ -23,7 +23,7 @@ tags: [orphan, manifest-completeness, strategy, ml, dead-code, design-gap, opera
 related:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-08-03"
@@ -46,7 +46,7 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
     strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
     strategy-service/strategy_service/engine/core/gcs_storage_service.py,

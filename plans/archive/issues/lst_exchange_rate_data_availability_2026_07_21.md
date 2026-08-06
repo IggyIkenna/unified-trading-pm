@@ -51,7 +51,7 @@ locked_by:
 > this doc's own tracked todos — they are (and remain) tracked in the sibling build plan
 > `/plans/active/lst_rate_honest_coverage_2026_07_21.md`, so nothing here evaporates. A genuinely NEW residual gap found
 > during this closure — `oracle_prices` (all 3 venues) silent for 8 days since 2026-07-22 — is filed separately:
-> `/plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`.
+> `/plans/archive/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`.
 
 # LST exchange-rate data availability — the four rates
 

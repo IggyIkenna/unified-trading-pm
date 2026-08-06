@@ -42,7 +42,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md,
+    /plans/archive/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -70,7 +70,7 @@ context_scope:
   [
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md,
+    /plans/archive/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 ---
@@ -100,7 +100,7 @@ context_scope:
    already fully documented: `/plans/active/defi_consolidated_closeout_2026_07_18.md` Track 8 (`gate_on_depends: true`,
    depends_on `defi_track01_per_instrument_and_canon_id_2026_07_24` +
    `defi_lending_writer_retire_prerequisite_2026_07_20`) and independently re-confirmed by
-   `/plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md` (slot-16, 2026-07-30) for the
+   `/plans/archive/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md` (slot-16, 2026-07-30) for the
    oracle_prices leg specifically — that agent correctly declined to un-pause, citing the same gate, and flagged the
    migration VM as idle 6 days as a heads-up for Track 1's owner.
 5. **NEW as of today: the gate's prerequisite is confirmed DEAD, not just idle.**

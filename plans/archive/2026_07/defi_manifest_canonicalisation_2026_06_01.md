@@ -1233,7 +1233,7 @@ What to verify/wire (B0 corrected scope):
 >       `defi_dedicated_bucket_shared_migration_2026_07_13.md`. Legacy top-level `dex_pools/` + `lending_indices/` trees
 >       FOLDED + DELETED 2026-07-21 (0 objects). Residual: 1,042 legacy-FORM `dex_pool_state` objects remain in the
 >       shared `-prd` bucket — tracked by P2 todos in
->       `/plans/active/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
+>       `/plans/archive/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
 >       manifest_master.
 > - [x] ✅ [DATA] P0. C0-RD5b — **orphan sweep of the pre-existing legacy-FORM objects ALREADY in `-prd`** — **VERIFIED
 >       2026-08-05 via live GCS scan** (slot-11, bounded streaming scan of
@@ -1242,7 +1242,7 @@ What to verify/wire (B0 corrected scope):
 >       measured 2026-06-02 have been reduced to 1,042 — the bulk (dex_pools/ flat trees, dex-swaps-prd objects) were
 >       cleaned up by the 2026-07-10/13/21 work cited above. Residuals + a SEPARATE finding (ticks_migrated_ artifacts
 >       from 2026-04-18 lacking pipeline_mode=) are now tracked as actionable P2 todos in
->       `/plans/active/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
+>       `/plans/archive/issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`. parent_epic:
 >       manifest_master.
 > - [ ] [CODE] P1. C0-RD6 — **exclude the exact-alias columns from the `dex_swaps` superset union** (DeFi #4, from
 >       archived `features_service_defi_data_loading_blockers`). Slot-7 DeFi #3 investigation confirmed `swap_count` ==

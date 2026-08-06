@@ -33,7 +33,7 @@ tags:
   [agent-orchestrator, blocked-queue, worker-liveness, dispatch, watchdog, timeout-policy, design, operator-reported]
 related:
   [
-    /plans/active/issues/ao_blocked_question_not_retired_when_condition_resolves_2026_08_06.md,
+    /plans/archive/issues/ao_blocked_question_not_retired_when_condition_resolves_2026_08_06.md,
     /plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md,
     /plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,

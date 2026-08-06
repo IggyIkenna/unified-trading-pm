@@ -21,7 +21,7 @@ related:
   [
     ../sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
-    /plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
+    /plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
   ]
 created: "2026-07-20"
 author: unknown

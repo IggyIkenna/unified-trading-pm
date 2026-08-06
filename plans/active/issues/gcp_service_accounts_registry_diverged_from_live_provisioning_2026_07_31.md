@@ -38,7 +38,7 @@ depends_on: []
 context_scope:
   [
     deployment-service/configs/gcp_service_accounts.yaml,
-    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+    /plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,

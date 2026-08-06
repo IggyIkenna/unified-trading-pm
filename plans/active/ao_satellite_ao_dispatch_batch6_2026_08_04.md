@@ -147,7 +147,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       it's reusable as the worker-callable primitive before building a parallel one. **Done when**: both halves land; a
       promote-gated task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh worker every
       tick, resuming only when the gate clears; a test simulates "ref not yet on main." Source:
-      `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
+      `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
       remaining item — GATED-prefix cleared 2026-08-03, see that doc's own inline note). Repo: agent-orchestrator.
 
 - [ ] [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a warning

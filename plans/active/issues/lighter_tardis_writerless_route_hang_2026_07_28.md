@@ -165,3 +165,13 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
   (`tardis_batch_download.py`, `streaming_writer.py`, `streaming_shard_finalizer.py`, `events_interface/__init__.py`)
   more precise than the prior generic entries — swapped `umi_tick_provider.py`/`event_facade.py` for those, kept
   `in_flight_registry.py` (still the evidence log source) and the source dispatch plan, now 6 entries.
+
+## Follow-ups
+
+- [ ] [CODE] P3. Implement one of the 3 recommended fixes for the Tardis writer=None/setup_events() hang
+      (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload timeout in _upload_gcs_with_retry,
+      or graceful log_event RuntimeError degradation) - human design decision pending per Progress Log 2026-08-05
+
+> **2026-08-06 archive-candidate audit**: DIAG todo is [x] (root cause traced to the blocking run_in_executor await),
+> but the Progress Log's 'Recommended fix (human design decision - 3 options)' is never implemented - the hang is only
+> diagnosed, not fixed, and no follow-up todo tracks the fix

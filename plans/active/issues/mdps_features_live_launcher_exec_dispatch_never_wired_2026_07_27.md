@@ -267,3 +267,12 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   observable via missing heartbeats. No code change needed — the suspected gap does not exist. All 5 todos in this issue
   doc are now done; plan is eligible for archival.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [VERIFY] P2. Run a real mdps-features-live VM launch and confirm the exec-dispatch branch
+      (deployment-service@e7d17f2) boots the MDPS shard processes + features-service family processes successfully
+
+> **2026-08-06 archive-candidate audit**: Progress Log explicitly says 'Real live-VM confirmation (an actual
+> mdps-features-live launch) is still pending — out of scope for this todo' — a deferred operational verification of the
+> shipped wiring that is not tracked as a - [ ] todo, despite the 'eligible for archival' claim.

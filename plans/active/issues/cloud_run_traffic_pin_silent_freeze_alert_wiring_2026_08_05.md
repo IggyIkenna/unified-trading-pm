@@ -197,3 +197,13 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   cold-start-failure case. Added cross-reference + Progress Log entry to the cold-start doc with this analysis; no
   duplication of investigation. Flipped this todo's checkbox. (repo: unified-trading-pm, doc-only)
 - **context-scout 2026-08-05**: populated context_scope (4 entries).
+
+## Follow-ups
+
+- [ ] [INFRA] P2. Store the Slack #ci-failures webhook in Secret Manager (cloud-monitoring-slack-ci-failures-webhook),
+      deploy traffic-pin-to-slack-bridge.py as a Cloud Run service with a push subscription on the Pub/Sub topic, and
+      trigger a canary rollback to verify end-to-end Slack delivery.
+
+> **2026-08-06 archive-candidate audit**: Todo 1 is flipped [x] but its own body lists 'NOT DONE (needs operator): (a)
+> store Slack webhook, (b) deploy the bridge as Cloud Run, (c) verify end-to-end Slack delivery' — the alert is loggable
+> but not yet paging, and these items have no separate - [ ] todos.

@@ -415,3 +415,15 @@ just belongs on a different layer than instrument_type does, and conflating the 
   captured). Kept out of `EXPECTED_COVERAGE_BY_ASSET_GROUP` intentionally — that update belongs with the deployment-api
   `PREDICTION_DATA_TYPE_META` retirement follow-up. QG green, 2 files touched (8 insertions).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [OPERATOR] P2. Decide for each over-claiming DeFi (venue, data_type) pair
+      (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/KAMINO/AAVE_V3/ALCHEMY-*) whether to wire a real MTDS capture handler or
+      roll back the aspirational genesis date (clear roll-back candidates: AAVE-ETHEREUM/oracle_prices,
+      MAKER-ETHEREUM/lst_rates)
+
+> **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
+> 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real
+> capture path for vs. retire the aspirational genesis date'; the deployment-api PREDICTION_DATA_TYPE_META retirement
+> (finding 5) is also deferred as 'a separate follow-up' with no tracked todo.

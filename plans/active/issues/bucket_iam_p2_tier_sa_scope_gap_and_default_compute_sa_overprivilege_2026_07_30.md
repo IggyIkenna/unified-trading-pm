@@ -39,7 +39,7 @@ related:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
-    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
@@ -295,3 +295,16 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
   P2.1b caller this doc's P0/P3.1/P3.2 findings directly gate).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate — all todos now `[x]`
   done, minimal set stays correct pending archival.
+
+## Follow-ups
+
+- [ ] [CODE] P3. Wire the remaining 30 VM launchers that do not source launcher_common.sh to their tier SAs — P3.2
+      (deployment-service@ce7ef8f) states '30 launchers remain unwired: they do not source launcher_common.sh, need
+      structural changes before tier-SA integration — filed as follow-up' (a deferred follow-up in prose, never a
+      tracked todo).
+
+> **2026-08-06 archive-candidate audit**: All 5 todos are [x]: P0 operator ruling (C: hybrid), P1 tier-SA grants
+> (deployment-service@e8684fe), P2 deploy-shared wiring (@118ad9e), P3.1 default-compute-SA hardening (@c76f710), P3.2
+> launcher rewiring (@ce7ef8f). But P3.2 explicitly defers '30 launchers remain unwired... filed as follow-up' as
+> prose-only — a deferred follow-up never converted to a `- [ ]` todo, which the workspace's own 'every follow-up is a
+> todo' hard rule requires.

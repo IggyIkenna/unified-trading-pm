@@ -131,5 +131,5 @@ an operator glancing at the dashboard sees parked-task count even without readin
   doc comment at `server/auto_park.py:96` cites this doc's own slug, confirming the fix was written to close the gap for
   all three, not just GATED). `OTHER` is structurally exempt — it never reaches `_park_task` at all, so it cannot
   exhibit this class of silent gap. This clears
-  `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`'s GATED prerequisite
-  — its implementation todo can now dispatch.
+  `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`'s GATED
+  prerequisite — its implementation todo can now dispatch.

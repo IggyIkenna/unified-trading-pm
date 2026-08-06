@@ -333,3 +333,13 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   expanded `context_scope` from 2→5 pre-computed entries, and added a Progress Log marker. Result: 896L, well under the
   1000L hard cap — `check_line_caps.sh` passes. All 11 docs in this issue are now resolved; all checkboxes flipped.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [SCRIPT] P3. Complete the full context-scout for fleet_audit_triad_deferred_followups_2026_06_01.md (Phase-1
+      analysis + a proper context_scope list; the applied entry is a stub).
+
+> **2026-08-06 archive-candidate audit**: The doc's locked-docs note explicitly says
+> 'fleet_audit_triad_deferred_followups_2026_06_01.md had no proposed list computed ... a future pass should do the full
+> scout, not just apply this stub' — a deferred follow-up in prose with no - [ ] todo, even though all numbered
+> checkboxes are flipped.

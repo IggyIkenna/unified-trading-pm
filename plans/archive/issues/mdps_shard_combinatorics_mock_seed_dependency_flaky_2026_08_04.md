@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [flaky-test, mock-seed-data, shard-combinatorics, qg, test-infra]
 related:
   [
-    /plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
+    /plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
     /plans/archive/issues/mdps_test_instruments_domain_separation_bucket_naming_error_2026_08_04.md,
   ]
 created: "2026-08-04"

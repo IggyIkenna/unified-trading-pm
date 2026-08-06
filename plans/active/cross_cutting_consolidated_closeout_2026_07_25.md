@@ -488,7 +488,7 @@ per-site verification across ~12 DeFi handlers — not a mass edit, needs care) 
 `issues/manifest_reprocessing_ generic_utility_2026_07_07.md` (fully open, 4 todos — design → implement
 `select_shards_for_reprocess()` → wire as an IS CLI subcommand → optionally retire 13 near-identical one-off scripts;
 concrete design already specified) +
-[issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
+[issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
 (self-dispatched, `assigned_vm: planning` — `vm-exec-with-gcs-tee.sh`'s `STALL_PROGRESS_REGEX=checkpoint` self-kills any
 real backfill VM across all 20 launchers using that wrapper; regex fix identified, VM relaunch/verify in flight).
 
@@ -546,7 +546,7 @@ historical-snapshot banner.
 **Sources**:
 [asset_class_to_asset_group_rename_2026_07_21.md](/plans/active/asset_class_to_asset_group_rename_2026_07_21.md) (UAC
 domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos) ·
-[issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/active/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
+[issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/archive/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
 (manifest/catalogue distinct-values census gaps across strategy/features/fixtures/UAC registries) ·
 [issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/archive/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
 (shard-key CLI convention coverage audit across instruments-service/MDPS/features-service — RESOLVED 2026-07-28,

@@ -136,7 +136,7 @@ todos of its own**. The plans that actually work these docs' open items:
 (`_claim_plan_for_slot` pinned all tasks to one slot, defeating intra-plan concurrency) ·
 [issues/gated_skip_park_no_slack_page_2026_07_25.md](/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md)
 (GATED skip-task auto-park path never pages Slack) ·
-[issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
+[issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
 [issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
 (escalation-dispatch vs backlog-dispatch repo-collision blind spot) ·

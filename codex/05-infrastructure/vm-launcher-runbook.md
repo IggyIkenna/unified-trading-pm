@@ -128,7 +128,7 @@ IAM lockdown, `uts-prd-sa`'s `storage.objectAdmin` grant is IAM-Condition-scoped
 unmodified driver 403s on every force/skip leg against a `-test-` bucket. Fixed 2026-08-01 in all 4 existing drivers
 (`features-service`, `instruments-service`, `market-data-processing-service`, `market-tick-data-service`); any NEW
 `pipeline_e2e_check.py`-family driver must carry the same `--env staging` fix from the start. Full incident + fix
-details: `/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`.
+details: `/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`.
 
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
 

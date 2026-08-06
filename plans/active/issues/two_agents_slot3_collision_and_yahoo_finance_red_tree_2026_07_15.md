@@ -188,3 +188,14 @@ is not complete until the counterpart's files build again, not just until your o
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+## Follow-ups
+
+- [ ] [OPERATOR] P2. Decide the each-slot-ONE-agent / explicit file-ownership policy (operator-gated design call) —
+      na-eligibility-audit 2026-08-06 marks this as remaining open.
+
+> **2026-08-06 archive-candidate audit**: The sole hunk-scope todo was RULED decided-against 2026-08-06, but the
+> na-eligibility-audit 2026-08-06 marker explicitly says 'Operator-gated, design-judgment, or standing-corpus-ruling
+> work remains open' and the doc's core ask (each-slot-ONE-agent / explicit file ownership) is an unresolved operator
+> policy call the doc itself declines to close, with the collision-class mitigation still tracked in a separate live
+> issue doc — genuinely ambiguous, so kept open. [KEEP_OPEN todo synthesized from justification by archive sweep]

@@ -171,3 +171,15 @@ group doesn't consume that data_type.
   (--feature-group funding_oi → --dry-run passed to features CLI). Monitor watching VM for runtime throughput evidence.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Confirm the D1 delta_one leg's real throughput improved materially (fewer log lines / shorter
+      wall-clock for the same date range) — collect runtime evidence from VM features-delta-one-defi-20260805-105902
+      once the monitor completes; the f932908b scoping fix is verified but the throughput re-verification itself is
+      still pending
+
+> **2026-08-06 archive-candidate audit**: The [DATA] P3 re-verify todo is marked [x] but its own evidence and the
+> 2026-08-05 Progress Log say the verification VM only confirmed parameter threading and a monitor is still 'active for
+> runtime throughput' — the todo's done-when (throughput improved materially) has not been demonstrated, so the checkbox
+> is premature.

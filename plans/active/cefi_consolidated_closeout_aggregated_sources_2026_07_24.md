@@ -168,7 +168,7 @@ context_scope:
           to `processed_candles/`.
     - 16. **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect so skip-if-fresh can be trusted
           post-migration.
-  - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
+  - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/archive/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
     — filed as a tracked follow-up to root-cause during the candle_canonical_path_migration_execution_2026_07_24.md work
     above (two consecutive `--force` writes for the identical CEFI:BINANCE-FUTURES shard landed at two different object
     paths — with vs. without the `instrument_type=` segment — despite byte-identical content).
@@ -201,7 +201,7 @@ context_scope:
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`](/plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`](/plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md)
+  - [`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`](/plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md)
     - **[OPS] P0.** Confirm status of this plan's Track-2 DERIBIT Wave-3 backfill; launch if not running (cap-1
       `tardis-concurrency-guard.sh`-gated).
     - **[REVIEW] P1.** Close `tardis_concurrent_ip_lockout_2026_07_12.md`'s open post-fix G4 re-measurement todo once
@@ -456,7 +456,7 @@ context_scope:
     — ✅ ARCHIVED 2026-07-27, all 14 todos done: Pyth Hermes/jitoSOL resolved as **clip**
     (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
     broader sweep beyond that concrete precedent filed separately at
-    `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
+    `/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
   - [`plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
     (status: active)
     - **[VERIFY] P0.** Phase-D gate — full Stage-4 historical carry tracer over 2022-01-01..today across all 7

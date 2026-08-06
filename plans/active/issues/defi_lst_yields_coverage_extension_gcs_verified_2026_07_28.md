@@ -54,7 +54,7 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
+    /plans/archive/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
     features-service/features_service/onchain/cli/main.py,
     features-service/features_service/onchain/app/core/data_loader.py,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
@@ -191,7 +191,7 @@ structural limitation.
 - **2026-07-28 (slot-6)**: Before the backfill could write ANY day, hit two independent bugs that made `lst_yields` (and
   sibling `lst_native_rates`) 100%-unwritable — not historical-data-specific, reproduced even on 2026-04-10 (already
   inside the prior successful window) when re-run under current code. Root-caused + fixed both (see
-  `/plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` for full detail): (1)
+  `/plans/archive/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` for full detail): (1)
   `lst_native_rate_ts` called `.dt.epoch()` on the raw MTDS `timestamp` column, which is a bare `YYYY-MM-DD` string not
   a Datetime, producing all-null and tripping the WriteGate's 95%-NaN threshold; (2) unmapped tokens (not in UAC
   `LST_TOKEN_TO_PROTOCOL_ASSET`) were left in output with null protocol/asset, dragging `completeness_fraction` below
@@ -213,3 +213,14 @@ structural limitation.
   and the naming-ssot codex (less load-bearing than the sibling writegate-fix issue, which carries the LIVE backfill
   status the sole remaining [DATA] P1 todo needs to check before re-running).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P1. Confirm-to-completion of the lst_yields backfill resume (launched 2026-08-05 slot-13, --start-date
+      2023-11-01 --end-date 2026-08-05, ~980 missing days, I/O-bound ~8h) — the [x] todo only verified 835 days
+      (2021-08-17..2023-10 nearly complete) before the backfill stalled; the resume's day-partition completion and full
+      coverage through 2026-08-05 are unconfirmed.
+
+> **2026-08-06 archive-candidate audit**: Single [x] [DATA] P1 todo claims DONE but its own body says the backfill
+> stalled and only the RESUME was LAUNCHED for the ~980 missing days — completion of that range was never verified.
+> Prose-only in-flight work under a checked box; the original 'confirm-to-completion' done-when is not met.

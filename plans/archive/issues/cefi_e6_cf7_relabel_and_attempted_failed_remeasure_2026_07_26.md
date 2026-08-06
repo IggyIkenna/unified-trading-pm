@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [cefi, attempted-failed, data-correctness, relabel, tardis, deribit, diagnostic]
 related:
   [
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
@@ -46,11 +46,11 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md,
+    /plans/archive/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
   ]
 ---
@@ -180,11 +180,11 @@ rows) is real but small and not urgent.
   waiting on). All three docs read; the split is by **BUCKET**, and it is clean — the two active docs were never
   measuring the same rows:
 
-  | Doc                                                                                  | Bucket / population it OWNS                                                                                                                                                                                                            |
-  | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | **THIS doc**                                                                         | `market-data-tick-cefi-prd-central-element-323112` (MTDS tick manifest) — the **9,750**-row blank-`data_type` population: 9,743 BACKFILL + 7 bare-`OKX` RECLASSIFY                                                                     |
-  | `/plans/active/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md` | `instruments-store-cefi-prd-central-element-323112` (IS instruments manifest) — the **1** `captured`+blank row (BITFINEX-SPOT, 2023-12-16); its 5,806 non-captured blanks are already closed by evidence as correct universal behavior |
-  | `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`          | **Not an owner — shared TOOLING**, and already resolved/archived (4/4 done). It shipped the instruments-service `--operation reprocess-shards` CLI; reuse it, do not re-register a competing one-off script.                           |
+  | Doc                                                                                   | Bucket / population it OWNS                                                                                                                                                                                                            |
+  | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **THIS doc**                                                                          | `market-data-tick-cefi-prd-central-element-323112` (MTDS tick manifest) — the **9,750**-row blank-`data_type` population: 9,743 BACKFILL + 7 bare-`OKX` RECLASSIFY                                                                     |
+  | `/plans/archive/issues/cefi_instruments_store_blank_data_type_residual_2026_07_29.md` | `instruments-store-cefi-prd-central-element-323112` (IS instruments manifest) — the **1** `captured`+blank row (BITFINEX-SPOT, 2023-12-16); its 5,806 non-captured blanks are already closed by evidence as correct universal behavior |
+  | `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`           | **Not an owner — shared TOOLING**, and already resolved/archived (4/4 done). It shipped the instruments-service `--operation reprocess-shards` CLI; reuse it, do not re-register a competing one-off script.                           |
 
   Neither active doc's population overlaps the other's, so both stay open and independently dispatchable — the only
   thing that was ever wrong here was the missing cross-reference, now added in both directions. The genuinely-unresolved

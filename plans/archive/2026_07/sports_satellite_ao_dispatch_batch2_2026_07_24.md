@@ -54,7 +54,7 @@ related:
     /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,

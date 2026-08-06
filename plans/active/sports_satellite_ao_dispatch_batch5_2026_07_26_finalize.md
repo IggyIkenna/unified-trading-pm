@@ -44,7 +44,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md,
+    /plans/archive/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
@@ -130,7 +130,7 @@ context_scope:
       every prior "genuinely dispatchable, just not picked up" verdict (slots 11/3/16) was a reasonable read at the time
       but is now known to be off by one level: dispatchability itself was the missing piece. Filed as corroborating
       evidence (not a new doc — same shape, second independent case) in
-      `/plans/active/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md`'s Progress Log
+      `/plans/archive/issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md`'s Progress Log
       (unified-trading-pm commit follows) — both this todo and that doc's affected todo share the identical shape
       (bolded multi-clause description immediately after the priority marker, followed by lettered sub-parts spanning
       many lines), strengthening that doc's own parser-shape hypothesis. Releasing again via

@@ -39,9 +39,9 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/cleanup_legacy_twins.py,
-    /plans/active/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md,
+    /plans/archive/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
   ]
 drift_direction: advance-code
 depends_on:
@@ -79,7 +79,7 @@ The prerequisite this todo needs (orphan-sweep `orphan_class_E=0` + a byte-verif
 `/plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`'s own task 2 (🎯 GATE MET 2026-07-10 17:17:22 UTC —
 `A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · C_manifest_infra=38 · C2_non_data=7,884,651 · D_junk=105,207 · E_orphan_real=0`
 [note: the 2026-07-30 re-sweep updated B_legacy_duplicate from 995→900 — see
-`/plans/active/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`], over 10,584,946
+`/plans/archive/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`], over 10,584,946
 objects). The report itself lives at
 `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` — 900 actionable rows
 (0 orphan-E + 900 legacy-B), which is this plan's verified-delete candidate set. Read that task's full entry for the

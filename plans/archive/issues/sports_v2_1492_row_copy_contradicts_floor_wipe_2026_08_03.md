@@ -29,7 +29,7 @@ related:
     /codex/02-data/sports-2020-06-data-floor.md,
     /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
     /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
@@ -60,7 +60,7 @@ context_scope:
   [
     /codex/02-data/sports-2020-06-data-floor.md,
     /plans/archive/issues/sports_reference_v2_1492_row_canonical_copy_2026_08_03.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py,
   ]
 ---
@@ -93,10 +93,10 @@ The 1,492 `sports_reference_v2/by_date/day={D}/entity={fixtures|fixture_stats}/.
 2020-05-25, confirmed 15/15 still present) are the **same fabrication-by-construction population**, sitting under the v2
 migration-staging prefix that the 2026-07-21 wipe campaign's scope (`sports_reference/by_date` +
 `sports_reference/fixtures`) never reached — confirmed directly in
-`/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md` §2: "these 1,492 rows... are not a 'legacy duplicate
-awaiting twin-verified delete' question at all — they are the same fabrication-by-construction category already being
-wiped elsewhere, just under a prefix the existing wipe missed." That doc's own §7 todo 1 recommendation was explicit:
-**fold into the existing pre-floor-wipe operator-gated process** (extend `deployment-service`'s
+`/plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md` §2: "these 1,492 rows... are not a 'legacy
+duplicate awaiting twin-verified delete' question at all — they are the same fabrication-by-construction category
+already being wiped elsewhere, just under a prefix the existing wipe missed." That doc's own §7 todo 1 recommendation
+was explicit: **fold into the existing pre-floor-wipe operator-gated process** (extend `deployment-service`'s
 `wipe_pre_floor_sports_2026_07_21.py`-style tool to also cover `sports_reference_v2/`) — i.e. DELETE, never
 copy-to-canonical. `sports_consolidated_closeout_2026_07_19.md`'s own cull-todo citation (added by the 2026-08-02
 `/plan-reconcile` pass) repeats this verbatim: "ruled that they fold explicitly into the pre-floor-wipe scope per

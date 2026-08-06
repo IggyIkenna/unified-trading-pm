@@ -31,7 +31,7 @@ related:
     /plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
     /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md,
+    /plans/archive/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-31

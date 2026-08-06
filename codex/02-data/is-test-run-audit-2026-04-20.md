@@ -45,7 +45,7 @@ the Phase 1 deliverable of the institutional smoke matrix plan
 > `volatility`/`onchain`/`cross_instrument`/`commodity` (`features-service@710c1a72`), `multi_timeframe` (audited, needs
 > no change — its `engine/orchestrator.py::_resolve_sink_bucket()` already wraps `config.get_output_bucket()` with the
 > same `get_data_sink` check at the actual write call site). Record:
-> `/plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (still open, 1 remaining
+> `/plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (still open, 1 remaining
 > `[DATA] P3` todo as of 2026-07-30 — corrected from a dangling archive-path link per
 > `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` finding P1-A: the doc archived that day was its
 > SIBLING, `features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`, not this one),

@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [quality-gates, credential-ask, ping, stale-check, taxonomy]
 related:
   [
-    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
@@ -45,7 +45,7 @@ context_scope:
   [
     scripts/quality_gates/check_credential_ask_orphans.py,
     agents/RULES.md,
-    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /codex/02-data/external-data-always-available-rule.md,
   ]
 ---

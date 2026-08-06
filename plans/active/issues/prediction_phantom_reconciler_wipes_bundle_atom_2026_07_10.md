@@ -337,3 +337,13 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
   `tradfi`/IBKR currently mis-stamps `batch_fred` — out of this P2's scope, needs its own rule-11 cross-AG
   verification).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Backstamp historical rows for affected non-prediction venues (tradfi IBKR/ECB/OFR/YAHOO/EIA, cefi
+      HYPERLIQUID/ASTER/EXTENDED_STARKNET, defi CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS) via per-asset_group restamp
+      scripts per the Kalshi precedent
+
+> **2026-08-06 archive-candidate audit**: The [DATA] P3 todo fixed enumerate_expected_universe.py
+> (instruments-service@2b165597) but its own completion says 'Backstamp of historical rows is a follow-on data
+> operation' - a deferred follow-up not turned into its own todo

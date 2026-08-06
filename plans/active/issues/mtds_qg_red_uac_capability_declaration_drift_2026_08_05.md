@@ -39,7 +39,7 @@ context_scope:
     market-tick-data-service/tests/unit/test_collect_handler_schema.py,
     market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py,
     /plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
-    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
   ]
 ---
 
@@ -54,7 +54,7 @@ context_scope:
 - **MTDS test**: `tests/unit/test_collect_handler_schema.py:187-194` asserts every declared mtds_operation has an entry
   in `_CLI_OP_TO_MODULE`. There is no `collect-rewards` key — only `collect-eigenlayer-rewards`.
 - **Class**: declared-but-unimplemented operation — the same class as the audit's Finding C
-  (`/plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md`, resolved for LIDO/ETHERFI by
+  (`/plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md`, resolved for LIDO/ETHERFI by
   removing aspirational `rewards` at `unified-api-contracts@bc397b93`). AAVE's `collect-rewards` was added AFTER that
   resolution and is unwired.
 

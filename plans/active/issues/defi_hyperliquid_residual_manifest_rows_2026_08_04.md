@@ -360,3 +360,12 @@ gap**, not a delete-safety question:
   memory-bounded large-manifest processing) — not applied (already clean). All 5 todos now done; plan is
   archive-eligible (no lock).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P1. Resolve the BLAZESTAKE/SOLBLAZE-SOLANA zero-live-producer residual: operator/design decision (Options
+      A/B/C) on adapter ownership, then wire the producer (1 remaining live-data-gap venue of 4).
+
+> **2026-08-06 archive-candidate audit**: Summary says 'RESOLVED for 3 of 4 venues, 1 remaining live-data-gap finding' —
+> BLAZESTAKE/SOLBLAZE-SOLANA has zero live producer, explicitly 'NOT fixed in this dispatch', operator/design decision
+> on adapter ownership (Options A/B/C) still pending. [KEEP_OPEN todo synthesized from justification by archive sweep]

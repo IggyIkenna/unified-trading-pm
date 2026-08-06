@@ -146,3 +146,17 @@ context_scope:
   delete — out of scope for this task. Evidence: manifest query (bounded column-projected read, features-service venv),
   Tardis API probe, code audit of venue_mapping.py, symbol_rules.py, mvp_scope.py v10, launch-cefi-sharded-backfill.sh.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P2. Re-verify HYPERLIQUID captured rows for the 2023-04-15..2023-12-31 window once the backfill VM
+      completes
+- [ ] [DATA] P2. Dispatch the DERIBIT 2019 historical backfill (YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy,
+      then light once heavy frees the Tardis slot)
+- [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator
+      re-adds to MVP scope) — 704 wasted attempted_failed rows/day continue
+
+> **2026-08-06 archive-candidate audit**: All 3 checkboxes [x] but each describes a prose-only follow-up explicitly 'not
+> re-dispatched as a separate todo': HYPERLIQUID post-backfill row re-verify, DERIBIT YEARS=2019 backfill launch (code
+> fixed but never launched), and BINANCE-DELIVERY zombie still unresolved (704 wasted rows/day) — plus the header
+> fold-into-parent-and-delete instruction never executed.
