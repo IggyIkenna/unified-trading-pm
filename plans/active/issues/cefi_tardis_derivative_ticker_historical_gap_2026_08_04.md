@@ -89,6 +89,20 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-14 2026-08-06 ~14:22Z (data_engineering, checkpoint #12, task
+  `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. day=2026-05-26 now
+  complete (20 ok/2 failed: `DERIBIT` empty-error — expected, pre-RC3 code, out of my task's scope per slot-9's separate
+  task -003; `ASTER` UpstreamTimestampBiasError, unrelated pre-existing bug). All 5 of my task's target venues
+  (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/ BITGET-FUTURES) continue succeeding every day — day=2026-05-24 had a
+  3rd unrelated failure (KRAKEN-SPOT non-canonical-path bug), day=2026-05-25 also 3 failed (same KRAKEN-SPOT+ASTER),
+  day=2026-05-26 down to just 2 (DERIBIT+ASTER) — no new target-venue regressions observed across 4 processed days.
+  Pace: day=2026-05-23→24 took 1h43m, 24→25 took 1h42m, 25→26 took 2h05m (slight slowdown, not concerning). Confirms
+  slot-9's multi-day ETA (~2026-08-11/12) and operator ruling (AskUserQuestion 2026-08-06: "Wait for termination", no
+  `--force` override). Both repos clean ahead=0 (PM head prior to this commit, MTDS `143de313`). **Resume**: keep
+  polling; once VM TERMINATED, bounded-spot-check derivative_ticker GCS objects for the 5 target venues across
+  2026-05-23→2026-08-05, flip the RE-OPENED [DATA] P1 todo with evidence (DERIBIT explicitly NOT claimed — separately
+  covered by task -003), commit `docs(plans):` + push, POST /done for
+  task_id=cefi_tardis_derivative_ticker_historical_gap-002.
 - **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, post-compact
   re-arm)**: session re-armed after `/compact`. Forward-poll `cefi-fwd-20260806-065837` still RUNNING
   (market_tick_data_service PID active, ~348% CPU), fleet re-counted =1 via `tardis_running_vm_count` (Tardis cap still
