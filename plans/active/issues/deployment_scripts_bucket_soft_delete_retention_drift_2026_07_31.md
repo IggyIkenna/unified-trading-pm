@@ -111,6 +111,19 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
+- **final-drain pre-gate re-dispatch 2026-08-06 (slot-6, infra, task
+  `deployment_scripts_bucket_soft_delete_retention_drift-002`)**: dispatched 2026-08-06T14:21Z — predates the plan's
+  on/after-08-09 gate. Fresh `gcs_bucket_stats.py` run at `2026-08-06T14:21:56Z` —
+  `deployment-scripts-central-element-323112` = **48,549.5 GiB total / 98.6% bloat_pct / 47,887 GiB soft-deleted
+  (681,428 objects / 51,418,720,022,176 B)**. Soft-deleted count BYTE-IDENTICAL to the three earlier 08-06 reads
+  (11:07Z/13:46Z/14:09Z) — series flat since ~08-05, accumulation stopped. Live
+  `softDeletePolicy. retentionDurationSeconds` re-confirmed **0** (fix intact, no drift back). **Done-when NOT met**
+  (98.6% vs ≤9%) and not verifiable today — the plan's gate is on/after 08-09 (pre-08-02 7-day purge countdowns complete
+  ~08-09). Checkbox left unchecked (date-gated). No new churn; writer-side investigation not warranted. **Note**: this
+  date-gated todo keeps re-dispatching pre-gate because the backlog derives from the unchecked checkbox — suppress
+  dispatch until 08-09 or accept cheap read-only re-runs; final confirmation due on/after 08-09. (repo:
+  deployment-service, verification-only.)
+
 - **residual-drain verification final 2026-08-06 (slot-8, infra, task
   `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: Three Cloud Monitoring reads on 08-06 (11:07Z, 13:46Z,
   14:09Z) all byte-identical: **681,428 soft-deleted objects / 51,418,720,022,176 B (~47.9 TiB)** — flat since ~08-05
