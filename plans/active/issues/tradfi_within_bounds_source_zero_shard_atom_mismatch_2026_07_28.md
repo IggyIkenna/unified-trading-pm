@@ -349,3 +349,8 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
   since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — re-verified, unchanged
+  (5th consecutive pass).** All 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1 stays operator-gated per
+  the 2026-07-30/07-31/08-01/08-04 entries (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo
+  3 remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
+  since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.

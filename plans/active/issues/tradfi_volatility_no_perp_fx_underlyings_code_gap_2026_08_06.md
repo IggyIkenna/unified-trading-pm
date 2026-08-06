@@ -116,3 +116,9 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
 - **2026-08-06 (slot-5, data_engineering)**: diagnosed from VM exit_code=0 / 0/10 groups log. Confirmed TRADFI MTDS has
   no PERPETUAL type (FUTURE/futures_chain exist instead). `_resolve_spot_perp` is CEFI-only in practice.
   BLOCKED-OPERATOR-DECISION for fix approach.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — operator-gated by
+  construction (first pass on this 2026-08-06 doc).** Both open todos re-read end-to-end; count reconciled (2/2). Todo 1
+  IS the operator decision itself (confirm fix approach A/B/C + provide the 6A/6B/6C/6E/6J → `CME:FUTURE:XXX`
+  instrument_id mapping convention); todo 2 is explicitly gated "once `_resolve_spot_perp` returns correct ..." on the
+  operator's ruling. Fails the bounded-outcome bar by design — nothing a worker can determine alone. Nothing to
+  reclassify.

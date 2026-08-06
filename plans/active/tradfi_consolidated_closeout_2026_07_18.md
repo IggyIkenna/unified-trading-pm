@@ -967,3 +967,11 @@ since drafted AO-dispatchable candidates off this plan's satellite docs and nati
 operator activation.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA — 0 native open todos (sole
+  `[DATA] P2` MVP-cell-wiring checkbox flipped `[x]` 2026-08-04), coordination index disposition unchanged.** This doc
+  is the tranche's aggregated-reference umbrella + `check_ag_closeout_linkage.py` linkage anchor, and its archival
+  disposition is the still-pending operator decision (item 8 in
+  `tradfi_autonomous_session_operator_decisions_2026_07_25.md`, option B recommended: keep as the tranche coordination
+  index) — a folding/archival judgment call, never autonomous. `depends_on` 3 still-active children
+  (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
+  `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.

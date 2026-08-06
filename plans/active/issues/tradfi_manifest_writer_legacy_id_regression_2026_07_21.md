@@ -463,3 +463,9 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout `context_scope` touches
   since. Nothing to reclassify.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — re-verified, unchanged
+  (5th consecutive pass).** Sole open todo (the historical manifest repair) re-read end-to-end; count reconciled (1/1).
+  Same two independently-sufficient grounds as 2026-08-01/08-02/08-04 still hold: the registration/recovery script
+  identification step remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a
+  stated safe-idempotent justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout
+  `context_scope` touches since. Nothing to reclassify.
