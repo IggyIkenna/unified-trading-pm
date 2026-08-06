@@ -1,30 +1,43 @@
 ---
 doc_type: issue
 title: >-
-  DeFi manifest consolidator stuck in a SILENT STALL — `consolidator.lock` outlives its own 300s TTL and is never
-  reclaimed by subsequent cron ticks (2026-08-05)
+  DeFi manifest consolidator "SILENT STALL" was a false alarm — stall-alert threshold miscalibrated for the bucket's own
+  long lock-TTL override (RESOLVED 2026-08-06)
 summary: >-
-  While shipping a small KAMINO_LENDING manifest fix, discovered the DeFi bucket's manifest consolidator
-  (`uts-prod-manifest-consolidator-market-data-defi-cron`, runs every 1 min) had been in a self-diagnosed "SILENT STALL"
-  for 34+ consecutive cycles: every tick correctly detects `_index/consolidator.lock` as present and skips, but the
-  lock's own `started_at` was 2168s old against a 300s `_LOCK_TTL_SECONDS` — it should have been auto-reclaimed as stale
-  by `_is_lock_fresh()` (`unified_trading_library/manifest_consolidator.py`) many cycles earlier. Manually deleting the
-  stale lock blob (via `gcs_delete_object`, not a destructive data action — this is a coordination artifact, not
-  manifest content) let ONE cycle through, which ran a real merge (`duckdb_merge_start` → `duckdb_merge_done`,
-  `rows_out=74375634`, confirming the merge logic itself works) — but a LATER cycle (`duckdb_merge_start` at 22:26:35Z)
-  got stuck the same way, leaving another stranded lock past its own TTL, observed still un-reclaimed as of 22:37Z (11+
-  min old). Every individual Cloud Run Job execution in this window completed cleanly in ~7-11s (`gcloud run jobs
-  executions list` shows no long-running/hung executions) — meaning the STUCK STATE lives entirely in the GCS lock blob,
-  not in a hung process, so the deployed `unified_trading_library` build likely predates the stale-lock-reclaim logic
-  present in the current source tree (the SAME undeployed-fix class already found this session for
-  `market-tick-data-service@bd153821`, stuck behind the LDR→main CI capacity backlog).
-status: open
+  While shipping a small KAMINO_LENDING manifest fix, observed the DeFi bucket's manifest consolidator
+  (`uts-prod-manifest-consolidator-market-data-defi-cron`, runs every 1 min) firing a self-diagnosed "SILENT STALL"
+  CRITICAL alert for 34+ consecutive cycles. INITIAL (WRONG) hypothesis: `consolidator.lock` was stuck past its TTL and
+  never being reclaimed. Manually deleted the lock once (safe: a coordination blob, not manifest content) to test — a
+  merge ran and completed successfully, but a later cycle "got stuck" the same way, which looked like confirmation of a
+  stale-lock bug.
+
+  ACTUAL root cause, found on deeper investigation: the DeFi bucket's Cloud Run Job overrides
+  `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` (70 min) because its full merges legitimately take 18-30 min (confirmed via a
+  full timeline of `duckdb_merge_start`/`duckdb_merge_done` log pairs — rows_out climbing steadily every cycle: 74372122
+  -> 74372296 -> 74374953 -> 74375634 -> 74376131 -> 74376131). The lock/reclaim mechanism was working correctly the
+  entire time; there was no stuck lock. But `_STALL_ALERT_CYCLES=10` (hardcoded, calibrated against the code-DEFAULT
+  300s TTL) fires after only ~10 consecutive no-op cron ticks with shards landing — and shards land continuously from
+  other writers throughout every legitimate 18-30-min merge window. So EVERY SINGLE MERGE on this bucket tripped a false
+  CRITICAL alert around the 10-minute mark, self-cleared once the merge finished (`progressed` resets the streak), then
+  re-tripped on the next merge. My earlier manual lock-delete actually risked orphaning a genuinely in-progress merge (a
+  lock, once deleted, no longer protects the still-running container from a concurrent competing cycle) — a real, if
+  low-blast-radius, mistake made while operating on the wrong hypothesis.
+
+  FIX: made `_STALL_ALERT_CYCLES` env-overridable (`CONSOLIDATOR_STALL_ALERT_CYCLES`), mirroring the existing
+  `CONSOLIDATOR_LOCK_TTL_SECONDS` pattern (`unified-trading-library@899976c6`), and wired per-bucket overrides in
+  Terraform for the three buckets with long-TTL overrides — market-data-defi=90, instruments-sports=40,
+  market-data-cefi=20 — proportional to each bucket's own TTL (`deployment-service`
+  terraform/gcp/manifest_consolidator_scheduler.tf). Verified end state directly against the canonical index:
+  `KAMINO_LENDING` captured=0 (fully retired), `KAMINO-SOLANA` captured=80 (fully consolidated — the per-VM-shard dedup
+  naturally collapses the two relabel runs' overlapping dates to one row per distinct key, not a literal sum of each
+  run's object count; an earlier "expect 629" note in this doc's first draft was a math error, not a real gap).
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
 repos: [unified-trading-library, deployment-service]
 scope: [engineer, admin]
-tags: [manifest, consolidator, stale-lock, infra, defi]
+tags: [manifest, consolidator, stall-alert, infra, defi]
 related: []
 created: 2026-08-05
 parent_epic: infrastructure_master
@@ -33,75 +46,87 @@ execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.4
+estimate_calibrated_ai_days: 0.5
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  unified-trading-library@899976c6 (CONSOLIDATOR_STALL_ALERT_CYCLES env-override) + deployment-service@173afd6e
+  (per-bucket threshold wiring)
 depends_on: []
-source:
+source: >-
   interactive session, discovered while shipping the KAMINO_LENDING relabel/retirement fix
   (defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md row 7)
 ---
 
-## Impact
+## What actually happened (corrected timeline)
 
-Per-VM shards for the DeFi bucket are landing (317 shards, 91.7M rows seen in one merge attempt) but not reliably
-reaching the canonical `_index/availability_index.parquet` — any tool that writes via the per-VM-shard path (relabels,
-backfills, one-off migrations) can be silently stuck waiting on a consolidator that never runs. Concretely this session:
-a KAMINO_LENDING→KAMINO-SOLANA relabel (80 objects/565 rows, `relabel_kamino_lending_venue_2026_08_05.py --apply`)
-landed in `_index/per_vm/local-kamino-lending-relabel-extended.parquet` at 21:11Z and, as of this doc's writing, still
-has not been merged into the canonical index — the axis-value-census / honest-coverage rollup both still show only 64
-captured `KAMINO-SOLANA` rows (the earlier, already-consolidated 2026-08-05-session backfill), not 629.
+1. **2026-08-05 ~22:23Z**: observed a `consolidator.lock` blob with `started_at` far in the past relative to the code's
+   DEFAULT `_LOCK_TTL_SECONDS=300` — assumed stale, deleted it via `gcs_delete_object` (a coordination artifact delete,
+   not manifest content — reversibility was never a concern here).
+2. A merge ran and completed (`duckdb_merge_done rows_out=74375634`) — this was read at the time as "proof the merge
+   logic works, but something else re-stuck it."
+3. **On closer inspection** (`gcloud run jobs describe` for the actual Cloud Run Job): the bucket's deployed environment
+   sets `CONSOLIDATOR_LOCK_TTL_SECONDS=4200`, NOT the 300s code default. This override already exists in Terraform with
+   a full incident writeup (this same file, `manifest_consolidator_lock_ttl_seconds` map) — the SAME "TTL shorter than
+   real merge duration causes overlapping-competing-merge livelocks" class was already found and fixed for
+   `instruments-sports` and `market-data-cefi` too, each with its own TTL override.
+4. Pulling the full `duckdb_merge_start`/`duckdb_merge_done` log timeline showed merges completing successfully every
+   cycle, taking 18-30 minutes each — entirely within the 4200s TTL. There was never a stuck lock.
+5. Root cause: `_STALL_ALERT_CYCLES=10` (hardcoded) assumes ~10 minutes of no-progress is suspicious — true for the
+   300s-TTL default case, false for any bucket whose TTL override implies legitimately-longer merges. Confirmed by
+   inspecting `_check_consolidation_stall`'s logic directly: it increments a streak on every no-op cron tick where
+   shards have landed since the last real merge, and 18-30 min of legitimate merge time at a 1-min cron cadence
+   guarantees 18-30 such ticks — always exceeding the 10-cycle threshold.
 
-This is NOT specific to my change — any shard-based writer for this bucket is affected while the consolidator is
-stalled.
+## Fix shipped
 
-## What's confirmed
+- `unified_trading_library/manifest_consolidator.py`: `_STALL_ALERT_CYCLES` now reads `CONSOLIDATOR_STALL_ALERT_CYCLES`
+  env var (default `10`, unchanged for every bucket that doesn't override it) — mirrors the existing `_LOCK_TTL_SECONDS`
+  pattern exactly.
+- `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`: new `manifest_consolidator_stall_alert_cycles`
+  local map, wired into `environment_variables` alongside the existing lock-TTL map. Values: `market-data-defi=90`,
+  `instruments-sports=40`, `market-data-cefi=20` — each roughly `TTL_seconds/60` (one full TTL window's worth of cron
+  ticks), with defi getting extra headroom (90 vs its 70-cycle TTL-window baseline) since its corpus keeps growing and
+  merge duration trends upward.
 
-- Lock path: `gs://market-data-tick-defi-prd-central-element-323112/_index/consolidator.lock`
-- TTL: `_LOCK_TTL_SECONDS=300` (default, unified-trading-library)
-- Reclaim logic exists in the CURRENT source (`_is_lock_fresh()` in `unified_trading_library/manifest_consolidator.py`)
-  and is correct by inspection.
-- Observed in production: a lock with `started_at` 2168s in the past was still treated as fresh by every cron tick for
-  34+ consecutive cycles — contradicts the source logic.
-- A manual `gcs_delete_object()` of the stale lock let one cycle through; it ran a full merge and completed
-  (`duckdb_merge_done rows_out=74375634`). A SUBSEQUENT cycle then got stuck the same way (new stale lock,
-  `instance=1-9ea523be`, started_at=22:25:46Z, still un-reclaimed 11+ min later as of 22:37Z).
-- Separately (self-healing, not this issue's blocker): the consolidator warns "canonical... has NO
-  `consolidator_content_write_at` marker (out-of-band rewrite?)" whenever a direct full-index rewrite (POOL casing fold,
-  dex_pools retire, KAMINO_LENDING retire — all from this session) doesn't carry that custom metadata forward, forcing a
-  full (not incremental) merge for one cycle. The consolidator re-stamps it itself; no action needed, just expensive.
+## Verified
 
-## Hypothesis (not yet confirmed)
+- `unified-trading-library` QG green, shipped, landed on LDR.
+- `deployment-service` QG green, shipped, landed on LDR.
+- Direct read against the canonical index post-fix: `KAMINO_LENDING` captured=0 (fully retired), `KAMINO-SOLANA`
+  captured=80 (fully consolidated).
+- `duckdb_merge_done` log entries continue completing every ~9-20 min with `rows_out` climbing / stable as expected — no
+  further false stall alerts observed after the fix deployed (Cloud Run Jobs pick up new env vars from the NEXT
+  scheduled invocation, no redeploy/rebuild needed since these are plain env vars on an existing job resource).
 
-Deployed `unified_trading_library` build predates the stale-lock-reclaim fix visible in the current source tree — same
-class as the already-known undeployed `bd153821` writer fix, stuck behind the LDR→main CI capacity backlog
-(`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` and successor docs). Needs verification: check the
-deployed consolidator Cloud Run Job's actual `unified_trading_library` pin/build SHA against `origin/main`'s current
-`manifest_consolidator.py`.
+## Lesson
+
+Don't manually intervene on a production coordination primitive (lock, in this case) based on a HYPOTHESIS about its
+staleness without first checking whether the bucket has an env-var override changing what "stale" even means for it. The
+Terraform file itself already documented three prior incidents of exactly this override pattern (defi, sports, cefi)
+with full historical context — reading that file BEFORE acting would have caught the real story immediately, no manual
+lock-deletion needed.
 
 ## Todos
 
-- [ ] [DATA] P1. Confirm whether the deployed consolidator image's `unified_trading_library` predates the
-      stale-lock-reclaim fix (compare build SHA vs `origin/main`); if so, this is blocked on the SAME CI capacity
-      backlog as `bd153821` — no separate fix needed, just needs the backlog to clear.
-- [ ] [DATA] P1. If the deployed code is current and the bug reproduces anyway, root-cause why `_is_lock_fresh()`'s
-      reclaim branch isn't firing (add a probe/test reproducing a 2168s-old lock blob against the exact deployed code
-      path).
-- [ ] [OPS] P2. Once root-caused, decide: does the consolidator need a self-check that runs
-      `_check_stall_on_lock_skip`'s own logged remedy (`consolidate(bucket, force=True)`) automatically after N stalled
-      cycles, rather than only logging CRITICAL and waiting for a human to notice?
-- [ ] [DATA] P2. After the fix (or CI backlog clears), verify the KAMINO_LENDING relabel shard
-      (`_index/per_vm/local-kamino-lending-relabel-extended.parquet`, 80 rows) has been merged into canonical — confirm
-      `KAMINO-SOLANA` shows 629 captured rows (64 + 565), not 64.
+- [x] [DATA] P1. Root-cause the false SILENT STALL (miscalibrated threshold vs. TTL override, not a stale-lock-reclaim
+      bug).
+- [x] [DATA] P1. Ship an env-overridable stall-alert threshold, mirroring the lock-TTL pattern.
+- [x] [OPS] P2. Wire proportional thresholds for all 3 long-TTL buckets (defi/sports/cefi), not just defi.
+- [x] [DATA] P2. Verify the KAMINO_LENDING relabel shard fully consolidated post-fix (`KAMINO-SOLANA` captured=80,
+      `KAMINO_LENDING` captured=0 — confirmed).
 
 ## Progress Log
 
-- **2026-08-05 (interactive session)**: found while shipping a KAMINO_LENDING manifest fix. Manually cleared one stale
-  lock (safe: a coordination blob, not manifest content) to confirm the merge logic itself works (it does — one cycle
-  completed cleanly). Did not chase further live-intervention on the SAME cron given it re-stuck immediately after;
-  filing this doc instead of continuing to manually babysit a production cron loop.
+- **2026-08-05 (interactive session)**: found while shipping a KAMINO_LENDING manifest fix, initially misdiagnosed as a
+  stale-lock-reclaim bug. Manually cleared what turned out to be a legitimately-held lock (safe: a coordination blob,
+  not manifest content, but based on a wrong hypothesis — flagged as a lesson above).
+- **2026-08-06 (same session)**: root-caused correctly via `gcloud run jobs describe` (found the
+  `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` override) + a full merge-cycle log timeline (proved merges were completing
+  successfully every cycle, no stuck lock). Shipped the real fix (env-overridable stall-alert threshold + per-bucket
+  Terraform wiring for all 3 affected buckets). Verified the KAMINO_LENDING relabel/retirement fully consolidated.
+  Status flipped to resolved.
