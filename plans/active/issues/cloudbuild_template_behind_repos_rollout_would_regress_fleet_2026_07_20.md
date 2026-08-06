@@ -247,6 +247,32 @@ silently regresses the fleet again.
      valid YAML. The guard logic was simulated (manual submit → recovers via VERSION; both-empty → FATAL diagnostic;
      trigger → SHORT_SHA).
 
+- **2026-08-06 (batch5 todo 1 worker, slot 5) — step-2 guard rollout SHIPPED on LDR, checker GREEN against the real
+  branch.** At pickup the step-2 claim above was NOT yet reflected on `origin/live-defi-rollout`: **0/17 consumers
+  carried `SAFE_SHA`**, and the drift checker was RED (6 repos over baseline: deployment-api 27>16, deployment-ui 10>0,
+  execution 11>10, ibkr 2>1, market-tick-data 11>8, unified-trading-system-ui 10>0) — the slot-4 forward-ports had
+  landed (templates + baseline ratchet) but the per-repo guard writes + their resulting baseline reconciliation had not.
+  This session completed and shipped the missing half:
+  - **Guard hand-applied to all 17 image-building consumers** (the would-drop-content guard still refuses a full
+    `rollout-cloudbuild.py --apply` for every consumer, so hand-apply is the sanctioned path). 13 bash-build consumers
+    got the `SAFE_SHA`→`VERSION` fallback + FATAL diagnostic inserted after the `VERSION=` line + `-t ...:$SHORT_SHA`
+    re-pointed to `:$$SAFE_SHA`; `deployment-api` + `deployment-ui` + `unified-trading-system-ui` (list-form builds)
+    were converted to the bash guard form (deployment-api preserving its `SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0` /
+    `PROJECT_ID` build args); `ibkr-gateway-infra` was reconciled to its template render (VERSION-less guard on
+    `build-terraform-image` + fetch-tags placement).
+  - **4 over-baseline repos reconciled** so the checker is green against the real LDR state: `execution-service` +
+    `market-tick-data-service` quality-gates aligned to the service template's `_RUN_INIMAGE_QG` guard (with the
+    substitution declared); `market-tick-data-service` auth-precheck + extract-version aligned to the render;
+    `unified-trading-system-ui` quality-gates → pnpm (the repo already carries `pnpm-lock.yaml`; its npm-ci form was
+    stale). `deployment-ui`'s build conversion cleared its list-form markers (count 11→0, its pnpm quality-gates already
+    matches the template).
+  - **`check_cloudbuild_template_drift.py` GREEN (exit 0)** against the post-ship LDR state; baseline re-ratcheted DOWN
+    to the residual (b) set (ibkr 1→0) and the note now records the per-repo (b) WHY. Every touched consumer's
+    `cloudbuild.yaml` parses as valid YAML and passes `check_cloudbuild_substitutions.py`.
+  - **End-to-end proof**: a manual `gcloud builds submit` (storageSource, so `SHORT_SHA` is empty) must recover via the
+    `VERSION` fallback instead of `invalid reference format` — run on the real infra, build id cited in the plan flip
+    when complete.
+
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — closest-to-eligible candidate in this

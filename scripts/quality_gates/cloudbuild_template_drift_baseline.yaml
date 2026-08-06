@@ -15,38 +15,17 @@
 #
 # SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
 # + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.
-# + plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md (todo 1 — 2026-08-06).
-#
-# 2026-08-06: ratcheted DOWN fleet-wide by batch5 todo 1 (the re-scoped cloudbuild
-# empty-tag-guard rollout). Template forward-ports landed (fetch-tags step, _RUN_INIMAGE_QG
-# guard, auth-precheck gar_token persistence, publish-wheel git+hatch-vcs pin, api-template
-# authenticated extract-version + availableSecrets, ui-template pnpm quality-gates, guard in
-# api/infra/ui templates) and the empty-tag guard was hand-applied to every consumer's build
-# step. The residual counts below are the category-(b) INTENTIONAL per-repo divergence set:
-#   - deployment-api (16): the baseline's archetype — bespoke vendor-deps / deploy /
-#     redeploy-monitor-jobs / operability-probe / fetch-ui steps + custom build (list-args ->
-#     bash, SCM_PRETEND_VERSION=0.0.0) + custom pull-base-image / quality-gates / auth-precheck.
-#   - execution-service (10): operability-probe, stage-siblings (vendored dep staging), custom
-#     build (plain SCM arg vs template's dist-specific form) + extract-version / publish-wheel.
-#   - features-service (12): operability-probe, redeploy-features-jobs, fetch-tags (hardcoded
-#     REMOTE), custom build/extract-version/publish-wheel text.
-#   - batch-live-reconciliation-service (9): operability-probe, fetch-tags, custom build.
-#   - market-tick-data-service (8): image-import-smoke + stage-workspace-deps (dep-skew gates),
-#     custom build/extract-version text.
-#   - alerting/greeks/instruments/ml/strategy/trading-agent (5-8): operability-probe (per-service
-#     health probe — probe target differs per service, not expressible in one template block),
-#     plus per-service build/extract-version comment variations.
-#   - client-reporting-api (3) / fund-admin + market-data-processing (5): custom api/service
-#     build + auth-precheck text.
-#   - ibkr-gateway-infra (1): build-wheel text variation.
-# These are DELIBERATE per-repo customizations (baselined, never "fixed"); the template render
-# is still refused for them by the rollout tool's would-drop-content guard, so their future
-# cloudbuild edits must stay hand-applied or be forward-ported first.
-note: >-
-  Seeded 2026-07-28 (ci_satellite_ao_dispatch_batch1 [INFRA] P2). Ratcheted DOWN 2026-08-06 by
+note:
+  "Seeded 2026-07-28 (ci_satellite_ao_dispatch_batch1 [INFRA] P2). Ratcheted DOWN 2026-08-06 by
   ci_satellite_ao_dispatch_batch5 todo 1 (cloudbuild empty-tag-guard rollout: template forward-ports + guard
   hand-applied to every consumer). Residual counts = category-(b) intentional per-repo divergence (see inline comment
-  above). Checker GREEN at baseline.
+  above). WHY per repo: operability-probe (repo-specific in-image IMPORT target) on
+  alerting/batch-live/execution/features/instruments/ml/strategy/trading-agent/ deployment-api; gar_token
+  BuildKit-secret build variant on alerting/greeks/ instruments/strategy/client-reporting-api; deployment-api
+  vendor-deps/deploy/ redeploy-monitor-jobs steps; features redeploy-features-jobs; execution stage-siblings;
+  market-tick-data image-import-smoke/stage-workspace-deps (dep-skew gates); extract-version comment/format variants;
+  build-step SCM-arg form (plain SETUPTOOLS_SCM_PRETEND_VERSION vs template _FOR_<PKG_UPPER>). Full classification in
+  the source issue doc Progress Log. Checker GREEN at baseline."
 repos:
   alerting-service:
     count: 8
@@ -69,7 +48,7 @@ repos:
   greeks-service:
     count: 5
   ibkr-gateway-infra:
-    count: 1
+    count: 0
   instruments-service:
     count: 7
   market-data-processing-service:
