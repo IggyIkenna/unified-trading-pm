@@ -14,7 +14,7 @@ summary: >-
   13:29:02Z after RSS climbed 4.6→30.7GiB in ~4min, before ever reaching the gap days. Does NOT re-block the -015 gap
   backfill (the gap-day VM mtds-backfill-odds-gap-20260806, 07-27→08-06 --force, completed cleanly) — it blocks any
   FUTURE wide-window backfill (e.g. the 03-28..07-26 catch-up the OOM'd VM was doing).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data, live]
@@ -40,6 +40,16 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  [
+    "deployment-service@a0143b51 (2026-08-06) -- implemented option (a) from the recommended decision below: when
+    VM_ASSET_GROUP=sports AND VM_VENUE/VM_LEAGUE are both empty (the exact unscoped case), setup-data-pipeline-vm.sh's
+    mtds-backfill chunk-loop generation now discovers the live Prediction-tier league list at boot and fans the
+    invocation out to one subprocess PER LEAGUE (each ~1/30th the memory of the unscoped call, each a fresh process)
+    instead of one process for all ~30 leagues at once. Mirrors the already-proven --league scoping fix on the live
+    dispatch path (deployment-service@4e0e03d) rather than the riskier option (b) streaming-write refactor. Every other
+    launcher/asset_group/venue/explicitly-scoped sports run is byte-identical to before. 4 new regression tests
+    (TestMtdsSportsPerLeagueFanOut) + 1 updated pre-existing assertion, quality-gates.sh green.",
+  ]
 source: ["-015 backfill dispatch (sports_fast_t1_recon_oom_live_capture_outage), 2026-08-06 slot 3"]
 ---
 
@@ -86,3 +96,17 @@ Fix the backfill VM path so a wide-window odds backfill cannot OOM, then (option
       `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`'s root-cause section) so `all_rows` never
       materialises a whole day in memory. Done when: a wide-window backfill VM completes without OOM. (repo:
       market-tick-data-service, deployment-service)
+
+## Resolution (2026-08-06)
+
+- [x] [DATA] P2. Fixed via option (a), implemented at the launcher-infra level rather than as separate manual VM
+      launches: `deployment-service@a0143b51` modifies `setup-data-pipeline-vm.sh`'s `mtds-backfill` chunk-loop
+      generation so an unscoped sports-odds run (VM_ASSET_GROUP=sports, VM_VENUE empty, VM_LEAGUE empty) auto-discovers
+      the live Prediction-tier league list and fans out to one subprocess per league within the SAME VM, instead of
+      requiring the operator to hand-launch ~30 separate VMs. Every other launcher/asset_group/venue/explicitly-scoped
+      sports run is byte-identical to before (verified — 4 new regression tests + 1 updated pre-existing assertion,
+      `quality-gates.sh` green). "Done when" not yet independently re-verified against a fresh wide-window launch using
+      the new code (the currently-running `mtds-backfill-odds-catchup-bigmem-20260806` predates this fix and is
+      completing via a separate ops-level mitigation, a bigger machine type) — the NEXT unscoped odds_api backfill
+      launched after this commit will exercise the real fix end-to-end. Tracked in
+      `sports_af_full_entity_completion_2026_08_03.md`'s Progress Log.
