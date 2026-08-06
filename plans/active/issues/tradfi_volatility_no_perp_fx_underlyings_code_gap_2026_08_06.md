@@ -104,9 +104,16 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Confirm fix approach for TRADFI FX spot-price lookup** — Option A (make `_resolve_spot_perp`
-      asset-group-aware, use futures_chain for TRADFI) is recommended. BLOCKED until operator confirms and provides the
-      6A/6B/6C/6E/6J → CME:FUTURE:XXX instrument_id mapping convention.
+- [ ] [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`) — make
+      `_resolve_spot_perp` asset-group-aware, use `futures_chain`/`FUTURE` instrument_type for TRADFI. **Mapping
+      convention — standard CME FX futures underlyings** (widely-known market convention, not fabricated): 6A =
+      Australian Dollar, 6B = British Pound, 6C = Canadian Dollar, 6E = Euro, 6J = Japanese Yen — each maps to its
+      corresponding CME FX futures contract. **The exact internal `instrument_id` STRING format still needs verification
+      against the live catalogue before implementing** (this codebase's dated-derivative convention uses a
+      `@LIN`/`@INV`-marker + expiry shape per the OKX-FUTURES precedent elsewhere in this sweep — confirm the equivalent
+      CME FUTURE naming by querying the actual catalogue for existing 6A/6B/6C/6E/6J entries, don't assume the shape).
+      **Confirm fix approach for TRADFI FX spot-price lookup** — Option A (make `_resolve_spot_perp` asset-group-aware,
+      use futures_chain for TRADFI) is recommended.
 - [ ] [DATA] P1. **Implement Option A and relaunch TRADFI:volatility benchmark** — once `_resolve_spot_perp` returns
       correct (venue, symbol) for TRADFI FX underlyings, relaunch
       `launch-features-vm.sh FAMILY=volatility ASSET_GROUP=TRADFI` to capture real throughput.

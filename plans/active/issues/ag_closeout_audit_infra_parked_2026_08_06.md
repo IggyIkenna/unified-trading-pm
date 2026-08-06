@@ -205,10 +205,13 @@ findings since each produced either a durable entry here or a shipped fix).
 - [ ] [OPERATOR] P1. **Resolve `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s `asset_group` mistag**
       (finding 6, fourth consecutive day) — pick one of the 3 parked options (authorize tranche retag / corpus-wide
       non-sharded pass / `owning_tranche()` fallback change).
-- [ ] [OPERATOR] P2. **Review + approve/decline the 4 backlogged drafted infra batches** (findings 14/17) —
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
+      batches reviewed and flipped `status: active`. The "missing finalize twins for batch4/batch5" sub-note is moot —
+      `check_finalize_plan_coverage.py` passed with 0 violations post-activation, confirming both correctly qualify for
+      the single-todo carve-out (`task_template.md` §4) and need no separate finalize plan. Original text preserved
+      below for record. **Review + approve/decline the 4 backlogged drafted infra batches** (findings 14/17) —
       `infra_satellite_ao_dispatch_batch4` (1 todo), `batch5` (1), `batch6` (2, 1 resolved-elsewhere), `batch7` (3) —
-      combined 7 todos, all pre-conflict-checked; oldest 6 days. While reviewing: also draft the missing finalize twins
-      for batch4/batch5 (finding 16).
+      combined 7 todos, all pre-conflict-checked; oldest 6 days.
 - [ ] [OPERATOR] P2. **Complete the traffic-pin Slack routing** (finding 15, option A recommended) — store the
       `cloud-monitoring-slack-ci-failures-webhook` secret (a); then dispatch/execute the bridge deploy (b) + canary
       verify (c), which become a clean batch candidate once (a) lands.

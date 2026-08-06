@@ -19,7 +19,7 @@ asset_group: [ao, cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api]
 scope: [engineer, admin]
-tags: [omniroute, llm-gateway, cost, multi-provider, model-tier, security]
+tags: [omniroute, llm-gateway, cost, multi-provider, model-tier, security, superseded]
 related:
   [
     /codex/06-coding-standards/model-tier-selection.md,
@@ -70,7 +70,9 @@ context_scope:
 > — and treat this doc's gateway design as still-valid research, not as a live plan.
 >
 > **The 5 provider API keys were deliberately NOT revoked** (operator override, same ruling): the no-go is on OmniRoute
-> as a routing layer, not on the underlying model providers.
+> as a routing layer, not on the underlying model providers. (Reconciled 2026-08-06: a concurrent session's own
+> supersede-in-place edit reached the same conclusion — DeepSeek makes OmniRoute unnecessary — this fuller version,
+> which already completed the actual archival, is the one kept.)
 
 ## Why this doc exists, and why it stays LOCAL despite the build-grade detail below
 

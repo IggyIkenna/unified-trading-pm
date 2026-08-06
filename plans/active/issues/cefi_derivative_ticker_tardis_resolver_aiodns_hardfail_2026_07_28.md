@@ -347,14 +347,18 @@ and the residual-KeyError defense-in-depth path.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
-- [ ] [OPERATOR] P1. **New finding (agt-829d55, 2026-08-03, slot-9): the numerator IS genuinely moving again — NOT the
-      static backlog every prior dispatch found — and traces to a specific, currently-RUNNING live VM stuck on pre-fix
-      code, not a new code bug.** A fresh, bounded, column-projected `read_availability_index` read
-      (`data_type=derivative_ticker`, `capture_status=attempted_failed`) found 158,815 total rows (vs the 158,475-static
-      reading every dispatch since agt-40f31f on 2026-07-30 confirmed) — the FIRST numerator movement in 4 days.
-      Filtering to `written_at` within the last 24h found 1,821 fresh rows, 1,730 of them `venue=HYPERLIQUID`
-      (`pipeline_mode=batch_hyperliquid`) with `error_reason` EXACTLY matching the two signatures this doc's
-      `market-tick-data-service@6c6fab03` fix already root-caused and fixed: 1,696 rows
+- [ ] [INFRA] P1. **RULED 2026-08-06 (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the
+      diagnosis is not in question (root-caused, fix already shipped and correct); the gate was self-service SSH/delete
+      access, not judgment. The additive-then-subtractive design (new VM up + verified healthy BEFORE the old one is
+      deleted, shard-isolated writes so no corruption risk from briefly running both) is itself the safety mechanism —
+      dispatch to a worker/session with `unified-trading-sa`-class access. **New finding (agt-829d55, 2026-08-03,
+      slot-9): the numerator IS genuinely moving again — NOT the static backlog every prior dispatch found — and traces
+      to a specific, currently-RUNNING live VM stuck on pre-fix code, not a new code bug.** A fresh, bounded,
+      column-projected `read_availability_index` read (`data_type=derivative_ticker`, `capture_status=attempted_failed`)
+      found 158,815 total rows (vs the 158,475-static reading every dispatch since agt-40f31f on 2026-07-30 confirmed) —
+      the FIRST numerator movement in 4 days. Filtering to `written_at` within the last 24h found 1,821 fresh rows,
+      1,730 of them `venue=HYPERLIQUID` (`pipeline_mode=batch_hyperliquid`) with `error_reason` EXACTLY matching the two
+      signatures this doc's `market-tick-data-service@6c6fab03` fix already root-caused and fixed: 1,696 rows
       `"(429, None, 'null', None, {'Content-Type'..."` (Root cause #2) + 28 rows `'KBONK'`/`'KLUNC'`/`'KSHIB'`/
       `'KNEIRO'`/`'KFLOKI'`/`'KPEPE'` bare `KeyError` (Root cause #3), plus 31 `Tardis HTTP 403 code=274` (BYBIT,
       unrelated pre-existing 403-family) and 10 `UNCLASSIFIED:404`. Verified `6c6fab03` IS an ancestor of

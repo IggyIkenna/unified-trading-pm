@@ -168,12 +168,12 @@ not something an AO worker should guess at.
       same functional classification (still `C_manifest_infra`, still excluded), but a FUTURE non-parquet object that
       ISN'T this known sidecar now stays distinguishable in the `reason` column instead of reading identically to this
       one. New unit test asserts the explicit reason string; full suite 44/44 passed.
-- [ ] 4. [OPERATOR] P1. **Root-cause the calendar phantom-captured anomaly** (6 manifest rows, 0 backing objects,
-      confirmed via direct bucket listing) — is the calendar writer STILL producing phantom captured rows today (a live
-      correctness bug needing an immediate fix), or is this a one-time historical artifact (e.g. from a renamed/retired
-      bucket-kind fold, safe to just retract the 6 stale rows)? This judgment call decides whether the fix is "patch the
-      live writer" or "retract 6 manifest rows" — resolve via an interactive session before writing the actual fix todo,
-      don't guess at it here.
+- [ ] 4. [DIAG] P1. **RULED 2026-08-06 (operator): investigate first, don't assume.** `[DIAG]` tag (was `[OPERATOR]`),
+      AO-dispatchable — run the live-vs-historical determination this todo already specifies (check whether the calendar
+      writer is STILL producing phantom captured rows today, or whether this is a one-time historical artifact), then
+      file the actual fix ("patch the live writer" or "retract 6 manifest rows") as a separate follow-up todo once the
+      finding is in. **Root-cause the calendar phantom-captured anomaly** (6 manifest rows, 0 backing objects, confirmed
+      via direct bucket listing).
 
 ## Progress Log
 

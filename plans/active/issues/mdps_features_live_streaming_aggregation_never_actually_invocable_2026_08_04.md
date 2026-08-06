@@ -266,13 +266,16 @@ OOM if left running). The named successor is this issue doc's Todos below.
       `tests/commodity/unit/test_cli.py::TestSerialise` (previously patched the now-removed `asdict` import) to patch
       `CommoditySignal.model_dump` instead, and added a real (unmocked) `_serialise` test in
       `tests/commodity/unit/test_signal_publisher.py`. Full quality-gates.sh green on this SHA.
-- [ ] [OPERATOR] P1. **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi
-      (3,535 shards — infeasible as one-process-per-shard on any single VM).** The 2026-07-29 topology ruling (option
-      (a): one OS process per `(venue, data_type)` MDPS shard) does not scale past TradFi's 14 shards. Real options: (i)
-      consolidate multiple shards into fewer async/threaded worker processes instead of 1 process per shard (bigger code
-      change, most scalable), (ii) split each asset_group's cluster across N VMs by shard range (simpler, more VMs =
-      more cost), (iii) a much larger single machine type per asset_group sized to shard count (doesn't fix DeFi's 3,535
-      — no single VM RAM size makes 3,535 separate Python processes with full import overhead viable). This is a genuine
+- [ ] [BACKEND] P1. **RULED 2026-08-06 (operator), option (i): consolidate into fewer async/threaded worker processes.**
+      `[BACKEND]` tag (was `[OPERATOR]`) — the biggest code change of the three, but the only one that actually fixes
+      DeFi's 3,535-shard scale (options ii/iii don't). AO-dispatchable as a real architecture implementation task.
+      **Decide the process-topology fix for CEFI (117 shards, confirmed OOM at e2-standard-8) and DeFi (3,535 shards —
+      infeasible as one-process-per-shard on any single VM).** The 2026-07-29 topology ruling (option (a): one OS
+      process per `(venue, data_type)` MDPS shard) does not scale past TradFi's 14 shards. Real options: (i) consolidate
+      multiple shards into fewer async/threaded worker processes instead of 1 process per shard (bigger code change,
+      most scalable), (ii) split each asset_group's cluster across N VMs by shard range (simpler, more VMs = more cost),
+      (iii) a much larger single machine type per asset_group sized to shard count (doesn't fix DeFi's 3,535 — no single
+      VM RAM size makes 3,535 separate Python processes with full import overhead viable). This is a genuine
       architecture decision, not a lookup — needs operator sign-off before any CEFI/DeFi launch is re-attempted.
       Reference: this doc's Evidence section for the OOM proof + exact shard counts.
 - [x] ✅ [DATA] P2. **Re-pilot TradFi first (lowest risk, 14 shards)** — PILOT COMPLETED 2026-08-04, slot-16 (infra). VM

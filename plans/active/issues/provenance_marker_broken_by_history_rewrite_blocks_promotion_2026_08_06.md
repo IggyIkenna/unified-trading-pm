@@ -161,11 +161,18 @@ Two reasons, mirroring the UTL-34-bypass precedent
       commits now correctly exposed by the fixed range (a separate, distinct issue per this doc's own precedent, not
       re-opened here), and alerting-service turned out to be blocked by an unrelated SIT-gate timing condition, not this
       bug (see Progress Log for the distinction).
-- [ ] [OPERATOR] P1. **Tactical unblock in parallel**: for each of the 3 stuck repos, get exactly one clean promote PR
-      merged (admin-merge after a real diff review, or resolve the underlying 19/N-commit provenance list first via
-      owning-agent re-ship / operator-authorized `reprovenance_bypass.sh` sweep per repo) — the repo then self-heals
-      (new marker = valid post-rewrite SHA), matching how execution-service and e2e-testing already recovered on their
-      own.
+- [ ] [DEVOPS] P2. **UPDATED 2026-08-06 (governance sweep) — largely superseded by the now-shipped root-cause fix above,
+      re-scoped to what's actually left.** `[DEVOPS]` tag (was `[OPERATOR]`), downgraded P1→P2 — per the root-cause
+      todo's own DONE note (line 160-163), the range computation is now correct for all 4 originally- flagged repos; the
+      3 that remain blocked are stuck on genuinely UNRELATED issues (foreign quickmerge-bypass commits now correctly
+      exposed by the fixed range; alerting-service on an unrelated SIT-gate timing condition) — not this bug anymore. No
+      parallel tactical unblock is needed for the provenance-marker problem itself, since it's fixed. What's left is
+      auditing whether each of the 3 repos' NEW individually-different blocker needs its own tactical unblock — that's
+      per-repo diagnostic work, not a single operator decision. **Tactical unblock in parallel**: for each of the 3
+      stuck repos, get exactly one clean promote PR merged (admin-merge after a real diff review, or resolve the
+      underlying 19/N-commit provenance list first via owning-agent re-ship / operator-authorized
+      `reprovenance_bypass.sh` sweep per repo) — the repo then self-heals (new marker = valid post-rewrite SHA),
+      matching how execution-service and e2e-testing already recovered on their own.
 - [ ] [DEVOPS] P2. Audit whether any OTHER repos have a `chore(promote)`-titled merge whose `mergedAt` predates
       2026-08-05T11:24:53Z but were not part of the 5-repo history-rewrite set — confirm this is genuinely scoped to
       exactly {instruments-service, unified-trading-library, market-data-processing-service} and not wider.

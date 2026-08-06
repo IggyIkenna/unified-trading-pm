@@ -133,10 +133,16 @@ Two directions, both viable, not adjudicated by this doc:
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, verified live, updated that codex doc's
       grants list. `routing.py`/`sports_factory.py` left unchanged (Option A requires no code change — confirmed by
       reading both files first). (repo: execution-service config only, + GCP Secret Manager; no code shipped)
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
-      todo 5 for the full question + options — filed there, not duplicated here). Once the credential wiring is fixed,
-      place a real Kalshi paper order through execution-service end-to-end (order submit → fill/ack → position update)
-      against the elections-subdomain host and capture logs/commit evidence it works — this is the ORIGINAL verification
+- [ ] [DATA] P1. **RULED 2026-08-06 (operator): NO — do not touch the live exchange.** The 2026-07-28 ruling's scope
+      limit stands; placing a real order on `api.elections.kalshi.com` remains unauthorized. The original verification
+      ask (`kalshi_live_capture_regression_and_drift_2026_07_13.md`) stays unfulfillable as literally worded — find a
+      non-live verification path (e.g. a sandbox/testnet host if Kalshi offers one, or verify the
+      order-submit/fill/ack/position-update code path via mocked responses instead of a real venue call) rather than
+      re-asking this question. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 for the full question + options — filed there, not
+      duplicated here). Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
+      end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
+      logs/commit evidence it works — this is the ORIGINAL verification
       `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above (now unblocked —
       credentials exist). **Not attempted**: `KalshiAdapter` defaults to Kalshi's LIVE production host
       (`api.elections.kalshi.com`, which literally matches this todo's "elections-subdomain host" text) — this

@@ -148,7 +148,9 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       reads `pure doc/plan-flip → scripts/dev/safe-doc-push.sh`, with topic parity in `SUB_AGENT_MANDATORY_RULES.md`.
       CLAUDE.md had **4 bytes** of headroom against its 40,960 B hard cap, so per its own "condense a rule, never raise
       the cap" rule the mandate paid for itself (two provenance datestamps + one duplicated `label-check ADVISORY`
-      clause); both files land under cap.
+      clause); both files land under cap. (Reconciled 2026-08-06: an independently-reached, less-evidenced duplicate
+      ruling from a concurrent session agreed on "mandate" — this fuller version, already executed with the shipped
+      commit, is the one kept.)
 - [ ] [SCRIPT] P1. **`safe-doc-push.sh` corrupts a RENAME on its retry path — fix before the mandate is fully safe.**
       Discovered live 2026-08-06 while archiving a plan under the newly-mandated flow. Mechanism, verified by
       reproduction: `git` reports only a rename's **DESTINATION** in `git diff --cached --name-only` (the source is

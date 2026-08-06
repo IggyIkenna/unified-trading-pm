@@ -156,10 +156,12 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Bump `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"lst-rates"` entry
-      `memory = "2Gi"` to a higher value (e.g. `"4Gi"`) and `terraform apply` — the fast, low-risk mitigation while the
-      real memory driver is investigated. Tagged `[OPERATOR]` because it's a `deployment-service` infra change outside
-      every currently-dispatched repo's scope, not because it's a judgment call — the change itself is mechanical.
+- [ ] [INFRA] P1. **RULED 2026-08-06 (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the
+      doc's own text already says this is mechanical, not a judgment call; per the operator's standing policy on
+      plan-scoped infra changes, dispatch it directly. Bump
+      `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"lst-rates"` entry `memory = "2Gi"` to a higher
+      value (e.g. `"4Gi"`) and `terraform apply` — the fast, low-risk mitigation while the real memory driver is
+      investigated.
 - [ ] [DIAG] P1. Root-cause the actual memory driver in `market-tick-data-service`'s `collect-lst-rates` path (11 EVM +
       4 Solana venues in one process) — candidates to check first: (a) whether
       `_gas_fee_helpers.bounded_freshness_warmup`'s manifest read is bounded the same way

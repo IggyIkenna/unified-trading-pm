@@ -150,7 +150,19 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 
 ## Todos
 
-- [ ] 1. [OPERATOR] P1. **Sports half RESOLVED 2026-08-03 — narrowed to prediction only.** This todo duplicated
+- [x] ✅ 1. [OPERATOR] P1. **Prediction half RESOLVED 2026-08-06 (independently, via completed migration work — no
+      operator ruling paragraph needed).**
+      `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` todo 3
+      (`instruments-service@aaa0866c`/`eca688ac6`) investigated the identical
+      `canonical_question_group={G}/day={D}/venue={V}/...` shape, confirmed historical-only (last write 2026-07-22, same
+      `a9be6ce9` writer-fix cutover as sports), and migrated it directly into the already-ruled base
+      `instrument_availability` template (no `canonical_question_group=` trailing key) rather than adding one — now
+      reflected in `codex/02-data/cross-asset-canonical-target-ssot.md` §8's prediction banner. This answers the "rule
+      on the canonical position" question in the negative (it collapses into the base shape) via completed migration
+      rather than a separate ruling. **Todos 2/5's prediction-half scope is now moot for the same reason — not
+      independently re-verified/flipped here (out of this bonus finding's scope), flagged for a future pass.** Original
+      text preserved below for record. **Sports half RESOLVED 2026-08-03 — narrowed to prediction only.** This todo
+      duplicated
       `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`
       todo 1 (same underlying decision, filed independently same day by a different slot): the operator ruled on that
       doc's todo 1 — option (a), `league=` is a legitimate sports trailing key

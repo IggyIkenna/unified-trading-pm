@@ -114,11 +114,20 @@ DP-CATALOG-001 could still recur — but the risk is narrower than "main has no 
       (`git show 497c4f5e` confirms it) and `check_strict_quickmerge.py` correctly classifies it as
       `passed through     quickmerge` (not a violation). PR #1084's closure was NOT caused by `497c4f5e`'s own
       provenance — see the BLOCKED-OPERATOR todo below for the real cause.
-- [ ] [BLOCKED-OPERATOR] P1. **Cannot verify the promotion PR merges to main or the deployed image freshness** — the
-      actual blocker is a much larger, newly-discovered, cross-repo issue: the LDR→main provenance-marker computation is
-      corrupted for instruments-service (and 2 other repos) by the 2026-08-05T11:24:53Z security-driven git history
-      rewrite, producing a false-positive-flooded ~3,701-commit provenance range instead of the real ~19-commit one.
-      Full finding + evidence + remedy options:
+- [ ] [CI] P1. **UPDATED 2026-08-06 — root-cause fix already shipped (`unified-trading-pm@7b5390649`), but
+      instruments-service specifically still needs a second, separate step.** `[CI]` tag (was `[BLOCKED-OPERATOR]`) —
+      `commit_reachable()`'s ancestry check is hardened and live; the marker-corruption bug itself is fixed fleet-wide.
+      But per `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s own follow-up finding, the
+      now-CORRECT range computation exposes that instruments-service's real range is a genuine ~19-commit foreign,
+      multi-subsystem list — this was never a marker-bug artifact, it's real un-promoted work needing either the owning
+      agents to re-ship their own commits or an operator-authorized `reprovenance_bypass.sh` sweep (per the
+      `utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md` precedent) — a judgment call not resolved by
+      this ruling. Re-verify (a)/(b)/(c) below once THAT second step lands, not just the marker-bug fix. **Cannot verify
+      the promotion PR merges to main or the deployed image freshness** — the actual blocker is a much larger,
+      newly-discovered, cross-repo issue: the LDR→main provenance-marker computation is corrupted for
+      instruments-service (and 2 other repos) by the 2026-08-05T11:24:53Z security-driven git history rewrite, producing
+      a false-positive-flooded ~3,701-commit provenance range instead of the real ~19-commit one. Full finding +
+      evidence + remedy options:
       `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`. Not fixable
       within this session's scope (foreign bulk-bless / gate-code-change both need an operator call per the
       `utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md` precedent). Once that doc's remedy lands and

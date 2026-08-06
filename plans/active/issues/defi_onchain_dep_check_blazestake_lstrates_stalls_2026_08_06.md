@@ -107,9 +107,8 @@ BLAZESTAKE still blocking — Option A still needed).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Confirm resolution path for BLAZESTAKE blocking lst_rates dep check** — Option A (add BLAZESTAKE
-      to known-outage exemption in `dependency_checker.py`) is recommended; BLOCKED until operator signs off (affects
-      dep-check behavior).
+- [ ] [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
+      add BLAZESTAKE to the known-outage exemption in `dependency_checker.py`'s `_KNOWN_OUTAGE_VENUES_BY_SVC`.
 - [ ] [DATA] P1. **Implement chosen option and relaunch DEFI:onchain benchmark VM** — once dep check passes for any
       date, relaunch `launch-features-vm.sh FAMILY=onchain ASSET_GROUP=DEFI start_date=<clean_date>` and capture
       throughput numbers for -056. Target date: 2026-07-29 or 2026-07-30 (if Option A ships + lending_indices present

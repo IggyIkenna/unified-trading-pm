@@ -171,11 +171,14 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Review + approve/decline the 4 backlogged drafted cefi batches** (finding 1) —
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
+      batches reviewed and flipped `status: active` — batch4/6 activated as-drafted after verification; batch7's one
+      stale todo (already-deleted stray file) marked done-elsewhere; batch8's stale docstring todo marked done-elsewhere
+      and its history-rewrite-affected SHA citation corrected. Original text preserved below for record. **Review +
+      approve/decline the 4 backlogged drafted cefi batches** (finding 1) —
       `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` (7 todos), `batch6_2026_08_02.md` (6 todos),
       `batch7_2026_08_03.md` (3 todos), and this run's `batch8_2026_08_06.md` (3 todos, incl. 1 P1 confirmed-defect
-      fix). None is individually large or `[OPERATOR]`-tagged on its own merits; a single review pass would likely clear
-      most or all to `active`.
+      fix).
 - [ ] [DOCS] P3. **Add a `related:`/digest mention for
       `multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md`** in the cefi closeout
       family (finding from Phase 1 candidate set B) — self-dispatched and already being worked, just missing from the

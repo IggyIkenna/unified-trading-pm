@@ -8,13 +8,13 @@ summary: >-
   the per-provider quality/rate-limit/cost matrix on real repo tasks, then a go/no-go. Free-tier "frontier models for
   free" is already disproven (0/4 keyless providers functional, all blocked by anti-abuse); the real question is whether
   managed failover across paid+free API keys beats the hand-rotation the team does today.
-status: active
+status: superseded
 nature: process
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: [omniroute, cost-optimization, llm-routing, claude-accounts, evaluation]
+tags: [omniroute, cost-optimization, llm-routing, claude-accounts, evaluation, superseded]
 related:
   - plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md
   - plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md
@@ -47,9 +47,18 @@ context_scope:
   ]
 ---
 
-> **🟡 A live OmniRoute instance is running on the operator's host** (`127.0.0.1:20128`, loopback-only,
-> `REQUIRE_API_KEY=true`). It holds real API keys for 5 providers. Do not expose it beyond loopback and never point it
-> at a Claude Max OAuth token — see the security section in
+> **🔴 SUPERSEDED 2026-08-06 (operator ruling).** The team moved directly to DeepSeek without needing OmniRoute's
+> multi-provider routing/failover layer — DeepSeek alone is already cheap enough that the evaluation's go/no-go question
+> is moot. This plan's remaining open items (go/no-go, cost-vs-invoice reconciliation, the correction-banner question on
+> the 2026-07-31 "do not integrate" audit) are declined, not answered — do not dispatch them. The `agent-orchestrator`
+> commits blocked by this plan's harness work (an unrelated pre-existing `test_autospawn.py` order-dependent failure)
+> should be unblocked separately on their own merits, not as part of finishing this evaluation. Candidate for the
+> standard 6-step archival ritual in a follow-up housekeeping pass — left `status: superseded` here rather than moved,
+> so this ruling is visible in place first.
+>
+> **🟡 A live OmniRoute instance may still be running on the operator's host** (`127.0.0.1:20128`, loopback-only,
+> `REQUIRE_API_KEY=true`) with real API keys for 5 providers — tear it down as part of the archival follow-up if still
+> live. Do not expose it beyond loopback and never point it at a Claude Max OAuth token — see the security section in
 > `agent-orchestrator/scripts/orchestrator/omniroute-eval/README.md`.
 
 ## Why this plan exists

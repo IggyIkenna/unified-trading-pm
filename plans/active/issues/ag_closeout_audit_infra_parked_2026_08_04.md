@@ -166,10 +166,12 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       to a durable location before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real
       stash entries. Update `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the
       outcome either way.
-- [ ] [OPERATOR] P2. **Review + approve/decline the 4 backlogged drafted infra batches** (finding 14) —
-      `infra_satellite_ao_dispatch_batch4_2026_07_31.md`, `batch5_2026_08_01.md`, `batch6_2026_08_02.md` (1 of 2 todos
-      already resolved-elsewhere), and this run's `batch7_2026_08_04.md` (3 todos). None is individually large or
-      `[OPERATOR]`-tagged on its own merits; a single review pass would likely clear most or all to `active`.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
+      batches (batch4/5/6/7) reviewed and flipped `status: active` — batch4/5/6 activated as-drafted after verification;
+      batch7's 2 duplicate-dispatch todos activated per operator ruling (finalize twin will citation-close the
+      overlapping source doc). Original text preserved below for record. **Review + approve/decline the 4 backlogged
+      drafted infra batches** (finding 14) — `infra_satellite_ao_dispatch_batch4_2026_07_31.md`, `batch5_2026_08_01.md`,
+      `batch6_2026_08_02.md` (1 of 2 todos already resolved-elsewhere), and this run's `batch7_2026_08_04.md` (3 todos).
 - [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
       (finding 12, carried). Design/tooling-priority call, not urgent.
 - [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch7-era candidates** (finding 13, carried: `CITE_RE`

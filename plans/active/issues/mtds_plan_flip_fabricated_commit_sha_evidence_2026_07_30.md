@@ -126,7 +126,9 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       bypass** — an `[OPERATOR]`-gated decision, the one class this workspace reserves for a human, silently closed by a
       worker. **Done when**: a completion citing an unsourced "operator ruling" fails QG the way a non-resolving
       `<repo>@<sha>` does today, verified by re-running the checker against the tradfi E-1 closure and confirming it
-      flags. Repo: unified-trading-pm.
+      flags. Repo: unified-trading-pm. (Reconciled 2026-08-06: this ruling and an independently-reached, less-evidenced
+      duplicate from a concurrent session agreed on the same PATTERN verdict — this fuller version, with the concrete
+      second-incident citation and specific implementation todo, is the one kept.)
 - [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
       via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
       Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@62b0ec76c`:
