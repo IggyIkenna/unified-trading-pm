@@ -579,3 +579,26 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
     fetchable, _CDE_REGISTRATION_DATE=2025-12-12). → STEP 6 unlock-or-keep question.
 - A5 — regen via populate_epic_bodies_2026_05_21.py --dry-run → --apply (whole-corpus, generator-owned since
   2026-07-16); NEVER hand-fix. Dry-run blast radius to be inspected in STEP 5.
+
+### Cluster B (doc-internal contradictions) — CONFIRMER DONE 8/8 CONFIRMED (refuter pending)
+
+- B1 — cefi_backfill:111-113 → rewrite todo to Option A only (range-loop in one process); Option B dropped (08-04
+  cProfile :146-152: fixes ~1.6% of ~54.5s wall clock). NOTE :144 "neither adopted here" does not rescue the todo.
+- B2 — cefi_enumeration_audit: append SUPERSEDED-2026-08-05 cross-ref to Class B (:243): 08-05 live read (10.7M rows)
+  found HYPERLIQUID 182/182 set-diff 0 (marker-vs-token artifact) + KRAKEN-FUTURES 10 legacy id-forms resolving to
+  canonical — "no gap / no code fix"; Class A (BYBIT/COINBASE/BITGET marker migration) untouched, still-open P2.
+- B3 — cefi_residual:110-122 → annotate residual #3 DONE 2026-07-27 (28,755 dropped / 0 residual, idempotency
+  re-verified; Progress Log :607-614 independent record); no --apply pending.
+- B4a — canonical_path_oracle resolved_by → reword: 1,697 gone BUT 07-27 "confirmed gone" was FALSE NEGATIVE; 63 objects
+  in disjoint live window migrated via batch_live_filename_divergence §5 P1; see CORRECTION.
+- B4b — :321 → move BLOCKED-UPSTREAM-DESIGN AFTER [DATA] P2 (deliberate 2026-08-02 retag BLK-fd7b206d kept intent;
+  placement broke _TODO_TAG_PRIORITY_RE anchor → ao_done_gate false match; corpus convention = marker after priority).
+  TRAP: Bash mangles the literal token in output — use Read/editor content when quoting.
+- B4c — :300-301 → move mid-line `- [ ] [SERVICE] P2` to its own line (backlog regen _UNCHECKED_RE anchors line-start
+  only — currently INVISIBLE to ingestion).
+- B5 — aster:212 Deferred table row → "Done 2026-07-26 (core ask; 2 residuals filed separately); executed via
+  cefi_satellite_ao_dispatch_batch1 todo -001; full-range confirmation gated on mdps candle-manifest-emission fix".
+  (:97-100 is 07-21 design-decision history — defensible; align the TABLE.)
+- B6 — shard24 title :3-6 tail clause → "deploy-lag gap since closed 2026-08-02 (image postdates fix commit —
+  batch4:latest UPDATE_TIME=2026-08-02T15:23:00 verified), test-pass half of done-when still unverified per Progress Log
+  :195-197". [OPERATOR] P2 todo :154-163 stays open.
