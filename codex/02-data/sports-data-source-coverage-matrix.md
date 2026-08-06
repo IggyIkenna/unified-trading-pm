@@ -244,11 +244,11 @@ currently-active data_type.
 
 Expected leagues: 33 PREDICTION. Singleton-locked launcher per 2026-04-19 incident.
 
-| data_type               | Coverage axis                          | Expected shards per day                    | `record_empty` expected |
-| ----------------------- | -------------------------------------- | ------------------------------------------ | ----------------------- |
-| `SFI_LEAGUES`           | per-league × periodic (weekly cadence) | 33 leagues × cadence-dates                 | Yes                     |
-| `SFI_STANDINGS`         | per-league × periodic (weekly cadence) | 33 leagues × cadence-dates                 | Yes                     |
-| `SFI_PROGRESSIVE_STATS` | per-league × per-fixture-date          | (33 SFI leagues, date) pairs with fixtures | Yes                     |
+| data_type               | Coverage axis                                                                                                                                                                                                                | Expected shards per day                      | `record_empty` expected |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------- |
+| `SFI_LEAGUES`           | per-league × periodic (weekly cadence) — RETIRED 2026-05-05 (same commit as `TRANSFERMARKT_LEAGUES` above, `unified-api-contracts@b5210c2b`; catalog mapping now lives in UAC `SOCCER_FOOTBALL_INFO_IDS`, not captured data) | 33 leagues × cadence-dates (historical only) | Yes                     |
+| `SFI_STANDINGS`         | per-league × periodic (weekly cadence)                                                                                                                                                                                       | 33 leagues × cadence-dates                   | Yes                     |
+| `SFI_PROGRESSIVE_STATS` | per-league × per-fixture-date                                                                                                                                                                                                | (33 SFI leagues, date) pairs with fixtures   | Yes                     |
 
 ### 2.6 Open-Meteo (weather) — source key = `open_meteo`
 
