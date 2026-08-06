@@ -70,3 +70,8 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) — the migration itself is unaffected (this repo's
   quality-gates-v2 job runs on GitHub-hosted infra, not the self-hosted glue fleet).
 - **context-scout 2026-08-06**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (no action) — strong git-level evidence
+  (unified-trading-system-ui@3c2efb2c) suggests this is already fixed, but it is not runtime-verified (vitest not run)
+  and the doc's real subject-matter owner is `ui` (asset_group mistag). Disposition (retag + verify + archive) is
+  already tracked as ag_closeout_audit_cross_cutting_parked_2026_08_06.md's own todo #3, owned by the `ui` tranche —
+  deferring to that rather than duplicating or archiving here.

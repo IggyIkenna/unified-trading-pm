@@ -120,3 +120,6 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
   harmless"), which is very likely why quickmerge's re-gate treats this finding as fatal while the standalone script
   reports "ALL QUALITY GATES PASSED."
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — first assessment: genuine mix — todo 1's root cause is
+  unresolved and needs the ratchet-owner's sign-off, todo 2 depends on todo 1 landing first (no structural gate, so
+  default concurrent AO dispatch would race it) and touches a laptop-local uncommitted WIP; whole doc stays NA.

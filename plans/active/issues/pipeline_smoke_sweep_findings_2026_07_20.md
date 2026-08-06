@@ -94,8 +94,12 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
 
 ## 4. Still open
 
-- **prediction** cannot be smoked until its bucket resolution is fixed (dedicated `pred` flat kind, not a
-  per-asset_group `market-data` entry).
+- ~~**prediction** cannot be smoked until its bucket resolution is fixed (dedicated `pred` flat kind, not a
+  per-asset_group `market-data` entry).~~ **STALE (na-eligibility-audit 2026-08-06)**: already fixed elsewhere —
+  `data_pipeline_e2e_milestones_gate_2026_07_24.md:463` documents the fix pattern as already known/applied, and
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md:812-815` independently labels this exact sub-item
+  "DUPLICATE/STALE ... same BucketNamingError class already root-caused and fixed." The other two sub-items below (DeFi
+  migration gate, sports staleness) remain genuinely open/unverified per the 2026-08-03 entry below.
 - **DeFi** smoke is blocked while `canonical-migration-defi-rebuild` runs — the consolidated manifest goes stale
   (measured 1111s > the 120s threshold), the reader falls back to per-VM shards, and `--require-captured` cannot
   determine capture state, so every cell filters out. A watcher is armed to run it automatically once the fleet lands
@@ -128,3 +132,7 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
   bucket-consolidation + disk-starvation archived sibling docs and the batch1 satellite plan that analysed this doc's
   "Still open" section).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, stale items — sub-item 1 (prediction bucket-resolution fix) is
+  stale/already-fixed-elsewhere, annotated inline below with citations. Sub-items 2-3 (DeFi smoke / sports staleness)
+  remain genuinely unverified (live GCS/manifest verification is /data-pipeline-reconciliation's scope, not this
+  skill's) — doc stays NA overall, single checkbox bundling all 3 cannot be partially closed.

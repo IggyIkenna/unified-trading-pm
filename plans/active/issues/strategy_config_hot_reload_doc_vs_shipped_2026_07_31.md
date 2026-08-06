@@ -116,3 +116,5 @@ stating that the allow-list and error type do not exist and that the instrument 
   (`instrument-lifecycle-cache-delta-hot-reload.md`) the open `[OPERATOR]` position-state-safety ruling bears on;
   dropped the generic epic pointer.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01 (unchanged): sole remaining todo is an
+  [OPERATOR] 3-way design call on live-trading position-state safety.

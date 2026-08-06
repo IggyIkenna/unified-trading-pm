@@ -117,3 +117,5 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
   put this doc back in incremental scope was the context-scout backfill above, not a content change; both open items
   remain a genuine tri-way breaking-contract design decision ([OPERATOR]) and its gated follow-up test ([TEST]).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): item 1 is an undecided
+  breaking-vs-non-breaking UAC contract design call (A/B/C), item 2 sequentially depends on item 1's ruling.

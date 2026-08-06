@@ -105,3 +105,5 @@ not a code defect.
   data-mutation completions) consolidating 3 independent review-flagged instances — a genuine policy decision, not a
   worker-determinable fact.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): sole todo is an [OPERATOR]
+  policy-scope-change ruling request (extend PLAN_FORMAT.md §8b), not a worker-determinable fact.

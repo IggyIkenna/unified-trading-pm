@@ -165,3 +165,6 @@ Two independent fix directions, either or both:
   per-slot bootstrap tooling inherited by every slot at clone time, todo 1 modifies production VM-launcher scripts —
   both are shared-blast-radius infra changes needing a direction decision first, not worker-determinable alone.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1-2 modify
+  multi-agent-safety-critical shared bootstrap infra with an undecided architecture choice; todo 3 (document) alone
+  doesn't clear the whole-doc bar.
