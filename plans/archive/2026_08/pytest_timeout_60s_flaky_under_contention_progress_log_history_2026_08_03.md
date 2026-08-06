@@ -15,7 +15,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags:
   [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist, history, line-cap-remediation]
-related: [/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md]
+related: [/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md]
 created: 2026-08-03
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -36,9 +36,9 @@ drift_direction: none
 # Global QG pytest-timeout flaky-under-contention — Progress Log history
 
 > Extracted verbatim 2026-08-03 (line-cap remediation, live doc was at 996/1000 lines) from
-> `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md`'s Progress Log. This covers every entry
-> from the doc's founding (2026-07-29) through the 2026-08-01 ~00:49Z redispatch entry. The live doc's Progress Log
-> continues from the 2026-08-01 ~00:42Z client-reporting-api entry onward (kept in place — extraction boundary was
+> `/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md`'s Progress Log. This covers every
+> entry from the doc's founding (2026-07-29) through the 2026-08-01 ~00:49Z redispatch entry. The live doc's Progress
+> Log continues from the 2026-08-01 ~00:42Z client-reporting-api entry onward (kept in place — extraction boundary was
 > chosen to preserve the most recent ~1/3 of corroborations in the live doc).
 
 ## Progress Log

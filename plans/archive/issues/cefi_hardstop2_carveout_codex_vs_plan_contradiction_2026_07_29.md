@@ -54,7 +54,7 @@ context_scope:
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
     /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
     /codex/02-data/orphan-object-detection.md,
-    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
   ]
 ---
 

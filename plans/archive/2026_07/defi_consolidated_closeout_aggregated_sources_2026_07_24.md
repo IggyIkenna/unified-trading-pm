@@ -467,7 +467,7 @@ picture.
     - **4. [DECISION] P2.** If todo 1 confirms stale legacy rows, rule on remediation — accepted historical artifact vs
       targeted manifest correction.
     - **5. [DATA] P3.** Append F10 to the reconciliation register per the audit's own maintenance-contract note.
-  - [`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`](/plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md)
+  - [`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`](/plans/archive/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md)
     (4 open)
     - **[VERIFY] P2.** Confirm the exact `completeness_pct` before/after impact of adding an exclusion guard vs adding
       the 7 keys without one — answers whether Path A is safe directly.
@@ -796,7 +796,7 @@ picture.
     — e2e DeFi strategy configs taxonomy/wizard round-trip fidelity gaps; repos/paths all `e2e-testing/scripts/defi/*`.
 
 - **Newly discovered (ag_closeout_auditor sweep, 2026-07-27)**:
-  - [`issues/read_availability_index_bare_defi_callers_2026_07_27.md`](/plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md)
+  - [`issues/read_availability_index_bare_defi_callers_2026_07_27.md`](/plans/archive/issues/read_availability_index_bare_defi_callers_2026_07_27.md)
     (`asset_group: [defi]`, `status: open`, `assigned_vm: planning` — already checkbox-formatted, 17 real todos, not
     previously named in this section) — full-corpus audit of ~35-40 bare `read_availability_index()` call sites across 8
     repos reachable on the 1.58 GB defi availability index with no `columns=`/`filters=` projection (OOM risk, matching
