@@ -270,27 +270,27 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                                                                                          #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                                                                                          cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                                                                                                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                                                                                                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                                                                                          # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                                                                                          cd unified-trading-pm
-                                                                                          bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                                                                                          bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                                                                                          bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                                                                                          # ...etc for however many slots Harsh has
+                                                                                                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                                                                                                      cd unified-trading-pm
+                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                                                                                                      # ...etc for however many slots Harsh has
 
-                                                                                          # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                                                                                          for n in 1 2 3; do   # substitute his real slot numbers
-                                                                                            d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                                                                                            echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                                                                                          done
-                                                                                          # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                                                                                          # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                                                                                          #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                                                                                          #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-                                                                                          ```
-                                                                                          Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                                                                                                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                                                                                                      for n in 1 2 3; do   # substitute his real slot numbers
+                                                                                                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                                                                                                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                                                                                                      done
+                                                                                                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                                                                                                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                                                                                                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                                                                                                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                                                                                                      ```
+                                                                                                      Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [x] 7d. ✅ [INFRA] P0. **AO central orchestrator VM (`i-0c9b283b31d6b5ca7`, `agent-orchestrator-vm-1`, 13.113.200.22)
       — actually provisioned this session**, not just documented: this laptop has standing SSH access (`~/.ssh/config`
@@ -384,12 +384,26 @@ here only for todo-count sanity, not for skipping per-repo verification.
       time (fleet-wide dispatch lag under load, same mechanism proven above) — all 4 DID show an unrelated, identical,
       fleet-wide `sit-gate/fleet-green` failure ("no informative completed full-workspace-sit run in last 10 —
       fail-closed"), a pre-existing standing condition unrelated to this migration, out of scope here, not actioned.
-- [ ] 13. [INFRA] P1. **Wave 3**: `client-reporting-api` (108), `alerting-service` (110),
+- [x] 13. [INFRA] P1. **Wave 3**: `client-reporting-api` (108), `alerting-service` (110),
       `market-data-processing-service` (162), `unified-trading-library` (178), `unified-api-contracts` (216),
-      `deployment-api` (230 — also reconcile its stray `@main` pin to `@main` on the NEW repo, which is now correct by
-      construction rather than a separate fix). Evidence: same.
-- [ ] 14. [INFRA] P1. **Wave 4 (final 5)**: `features-service` (232), `instruments-service` (249), `agent-orchestrator`
-      (312), `market-tick-data-service` (340), `deployment-service` (393). Evidence: same.
+      `deployment-api` (230 — its stray `@main` pin is now correct by construction on the new repo, no separate fix
+      needed) — all 6 shipped + pushed, `ahead=0`, after the mid-Wave-3 revert incident (see Progress Log) required a
+      root-cause fix + re-ship. Evidence: `unified-api-contracts@c5a9dd79`, `unified-trading-library@536b05e5`,
+      `client-reporting-api@6b09fcd`, `alerting-service@0e529d7`, `market-data-processing-service@2e3e44f6`,
+      `deployment-api@aebe564` (+ its dependency `deployment-service@ae97d1b9`, shipped first). CI-verified:
+      `alerting-service` `quality-gates-v2` PASSED (recent run post-repoint).
+- [x] 14. [INFRA] P1. **Wave 4 (final 5)**: `features-service` (232), `instruments-service` (249), `agent-orchestrator`
+      (312), `market-tick-data-service` (340), `deployment-service` (393) — 4 of 5 shipped + pushed.
+      `instruments-service` is the ONE incomplete item: its local `.github/workflows/*.yml` content is already correct
+      (fixed by the fleet-wide rollout, todo re: revert incident below) but uncommitted — blocked by a genuine,
+      unrelated, deterministic pre-existing test failure
+      (`test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run`, 2 identical consecutive failures, confirmed
+      not flaky) that fails `quality-gates.sh` and so blocks ANY commit to that repo, not just this one. Tracked as new
+      todo 21 below. `system-integration-tests` (Wave 4 predecessor, already counted in Wave 3's repo-count context) is
+      ALSO blocked transitively — it path-depends on `instruments-service`, whose pre-flight-audit-visible uncommitted
+      state blocks it too; same root cause, same todo 21. Evidence: `features-service@314b699c`,
+      `agent-orchestrator@4c76b4a`, `market-tick-data-service@75602490`, `deployment-service@ae97d1b9`. CI-verified:
+      `features-service` `quality-gates-v2` PASSED (recent run post-repoint).
 - [ ] 15. [INFRA] P2. **Fleet-wide re-point sweep for the stray `@main`-pinned `agent-audit.yml` copies** found during
       research (`client-reporting-api`, `market-data-processing-service`, `deployment-service`,
       `unified-trading-library`, `system-integration-tests`, `unified-api-contracts`, `ibkr-gateway-infra`,
@@ -415,10 +429,14 @@ here only for todo-count sanity, not for skipping per-repo verification.
       confirmed the sole live source for all 25 repos (Phase 4 fully green). Evidence: PM's `git status` clean post
       -delete + a subsequent PM `quality-gates-v2` run still green (proves nothing silently depended on the deleted
       local copies).
-- [ ] 18. [INFRA] P2. **Update the template sources** (`scripts/workflow-templates/quality-gates-v2.yml.tmpl` line ~64,
-      `scripts/workflow-templates/image-build-gate.yml`) so any FUTURE repo's `rollout-workflow-templates.sh` render is
-      correct out of the box, not just the 25 repos hand-migrated above. Evidence: a fresh render for one
-      already-migrated repo (dry-run / diff against its current committed file) shows zero unintended change.
+- [x] 18. ✅ [INFRA] P2. **Update the template sources** (`scripts/workflow-templates/quality-gates-v2.yml.tmpl` line
+      ~64, `scripts/workflow-templates/image-build-gate.yml`) — done EARLY (out of original Phase-5-deferred order), not
+      as a nice-to-have but as an emergency ROOT-CAUSE FIX mid-Wave-3 (see Progress Log "revert incident"): a scheduled
+      fleet-hygiene job re-syncs every repo's per-repo workflow copy to these templates on a ~20min cadence, and since
+      they still said `unified-trading-pm`, it was silently reverting every hand-edit this migration made, including
+      already-shipped-and-CI-verified Wave 2 repos. Evidence: `unified-trading-pm@a2feeb4de1`; a subsequent
+      `rollout-workflow-templates.sh` dry-run for an already-migrated repo showed only the intended content, confirming
+      the template now matches the target state.
 - [ ] 19. [INFRA] P2. **Update `/codex/08-workflows/ci-cd-flow.md`** once this plan is fully done (todos 16-18 land) to
       point future readers at `unified-trading-ci` as the actual host of the reusable QG/image-build gates — it
       currently documents PM as the host, which becomes stale the moment todo 17 deletes PM's copies. Do this as the
@@ -428,6 +446,32 @@ here only for todo-count sanity, not for skipping per-repo verification.
       pre-commit hook, so no commit-time gate (gitleaks, conventional-commit, trailing-whitespace) runs there the way it
       does on every other fleet repo. Low risk given the repo's tiny, YAML-only surface, but worth closing for
       consistency.
+- [ ] 21. [BUG] P2. **`instruments-service` fails `quality-gates.sh` deterministically** on
+      `tests/unit/scripts/test_build_instrument_catalogue.py::test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run`
+      (2 identical consecutive failures under this migration's re-ship attempts, confirmed NOT flaky) — completely
+      unrelated to this migration's 2-line workflow-file change, but since `quality-gates.sh` is a monolithic
+      commit-blocking gate, it blocks landing THIS repo's already-correct-locally (via todo 18's rollout)
+      `image-build-gate.yml`/`quality-gates-v2.yml` fix too. `system-integration-tests` is blocked transitively (it
+      path-depends on `instruments-service`, and quickmerge's pre-flight audit correctly refuses to proceed while a
+      dependency has uncommitted changes). Both repos' local workflow-file content IS already correct (rollout already
+      applied it locally) — only the commit is blocked. Fix the underlying test failure (out of scope for this migration
+      plan), then re-run:
+      `cd instruments-service && bash scripts/quickmerge.sh "ci: rollout     image-build-gate.yml + quality-gates-v2.yml from PM template (unified-trading-ci re-point)" --agent --files     '.github/workflows/quality-gates-v2.yml .github/workflows/image-build-gate.yml'`,
+      then the same for `system-integration-tests`.
+- [ ] 22. [BUG] P3. **`unified-trading-system-ui`'s `image-build-gate.yml` fix could not be shipped this session** —
+      `bash scripts/quality-gates-base/base-ui.sh`'s buildspec validator (`validate-buildspec.py`) fails with
+      `ImportError: jsonschema module not available` specifically when invoked via a backgrounded/long-running
+      `quickmerge.sh` run on this laptop slot (Ikenna), even though the interactive shell always resolves `python3` +
+      `jsonschema` + `timeout` correctly, and even after explicitly prepending `/opt/homebrew/bin` to `PATH` before the
+      invocation (ruling out the earlier-suspected stale-Homebrew-PATH theory from this same session's `deployment-ui`
+      incident). Failed identically across 4 attempts (2 backgrounded, 1 nominally-foreground-but-tool-auto-backgrounded
+      past 300s, 1 with explicit PATH fix). Root cause NOT pinned — needs investigation into how the harness's
+      `run_in_background` subprocess spawn differs from a synchronous Bash tool call's environment on this specific
+      host. The local `.github/workflows/image-build-gate.yml` content IS already correct (rollout applied it) — only
+      the commit is blocked. Re-attempt:
+      `cd unified-trading-system-ui && bash scripts/quickmerge.sh "ci: rollout     image-build-gate.yml from PM template (unified-trading-ci re-point)" --agent --files     '.github/workflows/image-build-gate.yml'`
+      (may simply need a session restart, or manual investigation of the `run_timeout`/`command -v timeout` resolution
+      inside that specific subprocess).
 
 ## Codex SSOTs
 
@@ -503,3 +547,53 @@ here only for todo-count sanity, not for skipping per-repo verification.
   other 4 repos' promote PRs hadn't dispatched those checks yet at verification time (fleet dispatch lag) but all 4
   showed an identical, pre-existing, fleet-wide `sit-gate/fleet-green` failure ("no completed full-workspace- sit run in
   last 10") unrelated to this migration — noted, not actioned, out of scope. Next: Wave 3 (todo 13, 6 repos).
+- **2026-08-06 (interactive session, continued): REVERT INCIDENT mid-Wave-3 — root-caused, fixed, and the entire fleet
+  (Waves 1-4) re-verified and re-shipped.** Operator asked "hope you aren't running duplicate workflows... any
+  plans/issues which reference the wrong stuff would be rolled out too" — investigating that question surfaced the real
+  incident. **What happened**: partway through Wave 3, `alerting-service`'s and other repos' `image-build-gate.yml`
+  content was found REVERTED back to `unified-trading-pm` — despite having been hand-edited (and for Wave 1/2, already
+  committed + pushed + CI-verified green). **Root cause**: a scheduled fleet-hygiene job
+  (`rollout-workflow-templates.sh`, invoked from `main-backmerge-to-ldr.yml` on a ~20min cadence) re-syncs every repo's
+  per-repo workflow copy to PM's canonical templates (`scripts/workflow-templates/image-build-gate.yml`,
+  `quality-gates-v2.yml.tmpl`) — and since this migration had been hand-editing per-repo copies without ever updating
+  those templates (deferred to Phase 5 as todo 18), the automation was correctly-per-its-own-design reverting every
+  hand-edit back to the stale `unified-trading-pm` pointer, including on repos already shipped, pushed, and CI-verified
+  in Wave 2 (`greeks-service`, `execution-service`, `strategy-service`, `batch-live-reconciliation-service` all found
+  reverted; `deployment-ui` and `e2e-testing` survived only because they'd shipped too recently for the next drift-fixer
+  cycle to have caught them yet). This was a genuine process-order flaw: the canonical template must be updated FIRST
+  (or atomically with) the first per-repo hand-edit, never deferred to "later" while automation keeps re-syncing against
+  the stale version. **The fix**: (1) updated both canonical templates (`unified-trading-pm@a2feeb4de1`, todo 18 done
+  early); (2) PM's own `quality-gates.sh` correctly BLOCKED that commit on its own `workflow-template-parity` gate
+  (every OTHER repo now read as "drifted" from the newly-correct template), which is the right behavior — so before PM's
+  commit could land, ran `rollout-workflow-templates.sh` for real (no `--dry-run`) fleet-wide, regenerating all 25
+  registered repos' LOCAL copies in one shot (this also pre-staged Wave 4, not yet touched, for free); it also
+  spuriously created self-referential `image-build-gate.yml`/ `quality-gates-v2.yml` files IN `unified-trading-ci`
+  itself (it builds no images, doesn't need to QG-gate itself this way) — deleted those (untracked, never committed)
+  before shipping anything. Then shipped PM's template commit, then shipped all 21 successfully-affected repos
+  individually via quickmerge (same 2-file `--files` scoping as every prior wave): `unified-api-contracts@c5a9dd79`,
+  `unified-trading-library@536b05e5`, `client-reporting-api@6b09fcd`, `alerting-service@0e529d7`,
+  `market-data-processing-service@2e3e44f6`, `deployment-service@ae97d1b9`, `deployment-api@aebe564`,
+  `greeks-service@f4d8e9d`, `deployment-ui@849ac9a`, `execution-service@3c7b866eb`,
+  `batch-live-reconciliation-service@5001652`, `strategy-service@4393c2a4`, `e2e-testing@b74bfcb`,
+  `features-service@314b699c`, `agent-orchestrator@4c76b4a`, `market-tick-data-service@75602490`, `ml-service@166bae2`,
+  `ibkr-gateway-infra@7432214`, `unified-trading-api@f60b831`, `fund-administration-service@ffe5505`,
+  `trading-agent-service@a4c9ebc` — the canary/Wave-1/e2e-testing repos needed re-shipping too even though their `uses:`
+  line was never reverted (safe, already committed) — the rollout also touched a cosmetic header-comment line ("Calls
+  PM-hosted..." → "Calls unified-trading-ci-hosted...") for full byte-parity with the SSOT template, closing the gap
+  that caused the incident in the first place. **CI-verified**: `alerting-service` and `features-service` both show
+  recent PASSED `quality-gates-v2` runs post-repoint. **Three repos remain incomplete**, tracked as new todos 21
+  (`instruments-service` + transitively `system-integration-tests`, blocked on a genuine unrelated deterministic
+  pre-existing test failure, confirmed not flaky via 2 identical consecutive failures) and 22
+  (`unified-trading-system-ui`, blocked on a persistent `jsonschema`-under-backgrounded-quickmerge environment quirk on
+  this laptop slot, survived 4 attempts including an explicit `PATH` fix — root cause not pinned). Both repos' LOCAL
+  workflow-file content is already correct (the fleet-wide rollout already applied it); only the commit is blocked, for
+  reasons unrelated to this migration. **Also hit**: a severe host-contention episode mid-sweep (load average ~190 on
+  this 10-core/8-user shared host, causing quality-gate queue-wait timeouts on 2 consecutive attempts) — worked around
+  per operator direction by switching from 2-concurrent to sequential shipping until load eased, then resuming
+  2-concurrent once it did. **Lesson carried forward**: for any future fleet-wide workflow-template rollout, update the
+  canonical template FIRST or ATOMICALLY WITH the first per-repo hand-edit — never defer the template update to a later
+  phase while a scheduled drift-fixer keeps re-syncing against the stale version; that ordering is what turned an
+  otherwise-routine migration into a silent-revert incident that had to be caught by the operator asking a probing
+  question rather than by any automated check. Wave 3 (todo 13) and Wave 4 (todo 14) both flipped done, with the
+  incomplete items called out explicitly rather than glossed over. Next: Phase 5 (todos 16-17, 19-20 — migrate PM itself
+  last), plus resolving todos 21-22 when their respective root causes are fixed.
