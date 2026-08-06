@@ -8,7 +8,7 @@ summary:
   agent-orchestrator) — surfacing it in Fleet + Backlog Detail (it currently only lives in the separate Activity rail
   panel), a new /done-time gate that catches a missing-quickmerge commit at the source instead of hours later at
   promotion-PR time, and the actual root cause behind 82% of live dirty-worktree done-rejections.
-status: active
+status: resolved
 nature: process
 asset_group:
   [ao] # corrected 2026-08-06 (/ag-closeout-audit ao) -- was [meta]; content is squarely agent-orchestrator dashboard
@@ -26,6 +26,11 @@ related:
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"
+resolved_by:
+  "All 4 tracks shipped same-day: agent-orchestrator@41035a5 (pre-existing), @ef59837 (Track B), @e761cb1 (Track C),
+  @a2a254d + unified-trading-pm@6892dcc300 (Track D). SlotCards done-badge parity deferred to
+  /plans/active/issues/ao_slotcards_done_badge_parity_2026_08_06.md rather than left as prose. Archived same session, 0
+  open todos, unlocked."
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -270,26 +275,27 @@ Backlog Detail gets all three of retry-count-on-done, rejection-count-on-dispatc
   is tracked in this doc's own Todos) — no batch extraction needed.
 - **2026-08-06 (same interactive session, Track D — operator asked for the stretch item)**: Built and verified in full
   (see Track D above) — code-complete, tested, NOT a "figure it out later" scope note anymore. Shipped 2/3 files:
-  `agent-orchestrator@a2a254d` (the new wall_type + test) landed clean. The 2 `unified-trading-pm` files
-  (`escalate-to-orchestrator.yml` + `ldr_to_main_fleet_promote.sh`) hit the SAME already-tracked, already-open
-  fleet-wide blocker 3 consecutive times (`workflow-template-parity` QG failing on OTHER repos' `image-build-gate.yml`
-  copies — confirmed via `workflow_template_drift_baseline.json` neither file I touched is even tracked by that check;
-  the drift is 100% collateral from concurrent unrelated activity) — see
-  `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` (open, same root cause: multiple slots racing
-  workflow-copy rollouts against a moving target). Per the retry-discipline rule (two identical consecutive failures =
-  stable, stop blind-retrying), stopped after attempt 3 rather than repeat a 4th time against the same external
-  condition. **Not lost** — both files sit correct, tested, and unstaged-committed-locally in this session's own
-  worktree; will ship the moment the fleet-wide gate clears (either that OTHER rollout settles, or an operator/agent
-  runs `detect_template_drift.py --baseline-write` to accept the unrelated drift — neither is this plan's call to make
-  unilaterally). See Deferred table below.
+  `agent-orchestrator@a2a254d` (the new wall_type + test) landed clean. The 2 `unified-trading-pm` files hit the SAME
+  already-tracked, already-open fleet-wide `workflow-template-parity` blocker 3 consecutive times — see
+  `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`. Per retry-discipline, stopped after attempt 3
+  rather than repeat a 4th time against the same external condition. Not lost — both files sat correct, tested, and
+  uncommitted in this session's own worktree.
 
-## Deferred work after 2026-08-06
-
-| Item                                                                                                                     | State / why deferred                                                                                                                                                                                                                      | Blocked on                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Ship `unified-trading-pm@<pending>` (Track D todos 2+3: `escalate-to-orchestrator.yml` + `ldr_to_main_fleet_promote.sh`) | **Cannot be done yet** — code complete/tested/shellcheck-clean, sitting correct in the local worktree; quickmerge blocked 3x by an already-tracked, already-open fleet-wide `workflow-template-parity` failure unrelated to these 2 files | `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` clearing, or an operator/agent re-baselining the unrelated drift |
-
-**Recommended next**: re-run
-`bash scripts/quickmerge.sh "feat(cicd): dispatch provenance_blocked escalation from the fleet promote bot instead of Slack-only" --agent --files '.github/workflows/escalate-to-orchestrator.yml scripts/cicd/ldr_to_main_fleet_promote.sh'`
-from this same worktree once `python3 scripts/quality_gates/detect_template_drift.py --workflows` reports no NEW
-(non-baselined) drift — check that first rather than blind-retrying a 4th time.
+- **2026-08-06 (same interactive session, Track D close-out)**: Operator directed pushing through rather than leaving it
+  deferred. Landed `unified-trading-pm@6892dcc300` (both remaining files, exact intended content verified post-push, not
+  just exit code). Getting there crossed 3 genuinely different unrelated fleet-wide blockers in sequence, each
+  root-caused before acting rather than blind-retried:
+  1. **`workflow-template-parity`**: had drifted to a different 2-repo set (`instruments-service` +
+     `market-tick-data-service` `image-build-gate.yml`) — fixed by re-rolling the template in each via its own
+     quickmerge (`market-tick-data-service`'s landed via a concurrent session's identical independent re-roll, content
+     verified directly rather than trusted from the commit message, which belonged to an unrelated concurrent commit —
+     see `shared_clone_concurrent_commit_message_swap_2026_07_28.md`).
+  2. **`check-dependency-alignment`** (aiohttp canonical-floor mismatch,
+     `aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03.md`): resolved fleet-wide by another concurrent worker's
+     real propagation fix mid-session; confirmed `aligned: true` after sync.
+  3. **`finalize-plan-coverage`**: flagged a stray git-untracked duplicate of an already-archived plan
+     (`canonical_id_builder_retrofit_checklist_2026_07_08.md`) sitting in `plans/active/` from the shared clone's
+     concurrent autostash/rebase churn — self-resolved once that churn settled, no new plan authored. All 3 were
+     external/unrelated to this plan's own files. **Archived this same close-out**: 0 open todos, unlocked; Track C's
+     SlotCards done-badge parity migrated to `/plans/active/issues/ao_slotcards_done_badge_parity_2026_08_06.md` rather
+     than left as a prose aside per the archival ritual's "never let a deferral evaporate" rule.

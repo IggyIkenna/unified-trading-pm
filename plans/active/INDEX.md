@@ -934,12 +934,8 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (3)
+### meta (2)
 
-- [`ao_done_categorization_display_and_quickmerge_gate_2026_08_06`](./ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md)
-  — Three related fixes, all discovered from one operator session on the AO dashboard's Done ✓/✗ split (commit 41035a5,
-  agent-orchestrator) — surfacing it in Fleet + Backlog Detail (it currently only lives in the separate Activity rail
-  panel),…
 - [`quality_gates_quickmerge_timing_baseline_2026_07_31`](./quality_gates_quickmerge_timing_baseline_2026_07_31.md) —
   Measure wall-clock + per-phase timing of `quality-gates.sh` (across its mode/scope flags) and `quickmerge.sh` on
   unified-trading-pm — first a single-agent baseline on this host, then the same measurements on the planning-vm where

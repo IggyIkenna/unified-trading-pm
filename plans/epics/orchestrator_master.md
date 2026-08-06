@@ -38,7 +38,6 @@ codex_ssots:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 related_plans:
-  - ../active/ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - ../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
@@ -336,10 +335,6 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
-
-### [`ao_done_categorization_display_and_quickmerge_gate_2026_08_06`](../active/ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md)
-
-**status**: active · **estimate**: 0.6 cal AI-days (class: refactor)
 
 ### [`ao_satellite_ao_dispatch_batch2_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md)
 
