@@ -82,12 +82,12 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                          |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                        |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 197,634 already resolved, **46,234 needed** (continued progress, -608 this tick) — ACTIVE via `af-backfill-20260806-022033`                        |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 201,652 already resolved, **45,711 needed** (continued progress, -523 this tick) — ACTIVE via `af-backfill-20260806-022033`                        |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                   |
 | **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 81,617 already resolved, **27,045 needed** (was 64,439 on 08-04, **-37,394**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 85,493 already resolved, **23,169 needed** (was 64,723 on 08-04, **-41,554**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 82,519 already resolved, **26,143 needed** (was 64,439 on 08-04, **-38,296**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 86,395 already resolved, **22,267 needed** (was 64,723 on 08-04, **-42,456**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                   |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,9 +97,9 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T09:17Z: 113,921 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~41% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
-**+ 104,757 across FIXTURE_STATS+FIXTURE_LINEUPS** (46,234 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
+**Grand total needed, 2026-08-06T09:38Z: 112,117 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~42% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
+**+ 104,234 across FIXTURE_STATS+FIXTURE_LINEUPS** (45,711 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
 confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
 **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
 once dispatched.
@@ -701,3 +701,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   gaps. Proposed launching footystats+weather+sfi backfills next (odds_api deferred pending the canonicalization fix);
   operator has not yet confirmed — pending their reply, not started, not this doc's scope regardless (separate vendors,
   unrelated to the API-Football downgrade goal this doc tracks).
+- **2026-08-06T09:38Z** — TEAMS 23,169→22,267 (-902), STANDINGS 27,045→26,143 (-902) — continued progress. FIXTURE_STATS
+  46,234→45,711 (-523). Grand total 112,117 (core 4) + 104,234 (FIXTURE_STATS+LINEUPS). **Git-discipline finding**: hit
+  an unresolved-merge-conflict state on `git pull` this tick — `git stash list` showed 8 accumulated `autostash` entries
+  on this checkout (evidence of repeated failed autostash-pops from prior sessions, not caused by this tick). The
+  specific blocking conflict was on `plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` (not owned by this doc's
+  work) — verified read-only that its working-tree content was byte-identical (md5-matched) to both HEAD and origin
+  before marking it resolved via `git add`, so nothing was discarded; the stash's content had already been independently
+  committed by another agent (`28f357806`) moments earlier, making the conflict a redundant echo, not a real divergence.
+  Unstaged (not deleted) an unrelated foreign new-file artifact from the same stash-pop (`e2e_deepseek_poller_...md`,
+  confirmed already separately committed under the same SHA) so it wouldn't ride along in my commit. Left the 8 stash
+  entries untouched (not mine to drop) and left `scripts/plan-hygiene/check_archive_candidates.sh` (unrelated modified
+  file) alone. Both VMs left running throughout, no impact to the campaign itself.
