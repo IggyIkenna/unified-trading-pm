@@ -71,7 +71,7 @@ context_scope:
       todos (checkbox AND prose-form — do not trust checkbox count alone); only flip its `status` to `resolved` if it
       genuinely reaches 0. **Done when**: all source-doc checkboxes/sections are flipped with verified evidence, and any
       doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
-- [ ] [REVIEW] P1. **Re-check batch3's Deferred items** (the operator-gated, conflict/sequence-gated, and 9
+- [x] ✅ [REVIEW] P1. **Re-check batch3's Deferred items** (the operator-gated, conflict/sequence-gated, and 9
       non-batchable-orphan items), now that batch3's own todos have landed. For each: re-read the specific gating ground
       to check if it has cleared — if so, extract it as a new tracked todo in a follow-up `batch4` (do not draft it
       directly here — this finalize plan's scope is reconciliation, not fresh drafting); if still genuinely unresolved,
@@ -104,5 +104,58 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-06 (slot-8, review role) — Todo 2 deferred re-check COMPLETE** (every Deferred item in the parent
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md` re-read against its gating ground; per-item verdicts below).
+  Independent verification done this pass: `strategy-service@e93902d8` (the A2 staking leg that gates E3) confirmed an
+  ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor`);
+  `defi_consolidated_closeout_2026_07_18.md:200` re-read and still states all kinds resolve `kind="tick-data"` on the
+  single `market-data-tick-defi-prd` — the dedicated→shared consolidation remains shipped. Cross-checked against the
+  later re-checks already performed by batch5-finalize (2026-08-05) and batch6 (2026-07-30) so no already-open operator
+  question is re-asked. Note: the "follow-up `batch4`" named in the todo text has since run and been archived (defi
+  batch4 2026-07-26 + batch5 2026-07-27); defi batch6 is the current active batch and already carries forward the
+  cleared-gate item below — so the extraction target is batch6/batch7's Deferred, not a new batch4. **GATE CLEARED →
+  ready for extraction (option (a)):**
+  - **E3 recursive-staking borrow leg** (`lst_rate_honest_coverage_2026_07_21.md` Phase 6 `[STRATEGY] P3`) —
+    sequence-gate CLEARED: the A2 staking leg (batch3 todo 4) landed (`strategy-service@e93902d8`, verified ancestor of
+    LDR). Standing scoping step still applies per the doc (money-path 3-lens review; Aave-oracle unblock alone
+    insufficient) — batch6 (2026-07-30) re-categorized it operator-gated (money-path) and carries it in its own Deferred
+    for batch7. Ready to draft as a batch7 todo with that scoping pre-condition. E3 checkbox stays `- [ ]` in the source
+    doc (its own flip is source-doc reconciliation, not this todo).
+  - `defi_expected_unattempted_seeder_design_2026_07_26.md` — CLEARED: archived 2026-08, `status: complete` (superseded
+    by batch6's fresh triage).
+  - `defi_five_never_captured_venues_fix_2026_07_22.md` — CLEARED: archived, `status: superseded` (superseded_by
+    `five_broken_defi_capture_paths_shipped_2026_07_22.md`, resolved, same date — all 5 handled).
+  - `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — CLEARED: archived, `status: resolved` (its one
+    todo shipped 2026-07-30 `features-service@d8a643a0`; recompute scope tracked in
+    `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`). **STILL GATED → re-verified, left
+    explicitly deferred (option (b)):**
+  - `defi_turbo_api_hides_real_captured_data_2026_07_07.md` (HYPERLIQUID/ASTER into UAC `ALL_DEFI_VENUES`) —
+    `status: open`; the UAC-registry-level CEFI+DEFI double-counting ruling is still open (batch5-finalize: STILL
+    BLOCKED; batch6: operator-gated). No re-ask.
+  - `defi_migration_audit_log_2026_07_24.md` items 3/5/7/8/10 (dedicated-bucket premise) — premise RE-VERIFIED STALE:
+    the dedicated→shared consolidation is still shipped (`defi_consolidated_closeout_2026_07_18.md:200`); doc
+    `status: active`, `assigned_vm: NA`. Drafting these as dedicated-bucket migrate todos would re-introduce the
+    divergence the consolidation removed — operator reconciliation of item text vs the shipped shared-bucket
+    architecture is still needed (batch6: 10 of 11 remaining items are design/operator-sign-off calls).
+  - `defi_migration_audit_log` item 2 (SOURCE_PRIORITY Solana source) + item 9 (delete legacy buckets) + item 1 (Era-B
+    legacy retirement) — item 2's "which Solana source is canonical" operator ruling still open; item 9's destructive
+    legacy-bucket delete still needs operator sign-off per the GCS delete-safety HARD RULE; item 1 still warrants its
+    own dedicated plan (large cascade-coupled UAC+MTDS registry+test drop).
+  - `data_completion_defi_2026_07_15.md` G6 Jupiter historical reconstruction — G1 (Orca+Raydium pool-state backfill)
+    still operator-launched/not scheduled by a covering plan, and the simulation-vs-pool-states approach is still an
+    undecided research/design call (batch6: "G6 explicitly parked by batch3"). G6 checkbox still `- [ ]` in the source
+    doc.
+  - `defi_venue_lst_rates_residual_2026_07_24.md` — `status: active`; bare-`SUSHISWAP` classic-vs-V3 alias
+    data-semantics ruling still open.
+  - `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` — `status: open`; CARRY_STAKED_BASIS
+    delete-vs-re-leg strategy-domain ruling still unruled (batch5-finalize: STILL BLOCKED).
+  - `defi_morpho_lending_indices_never_wired_2026_07_12.md` — `status: open`; time-gated on
+    `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, still not confirmed complete.
+  - `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — `status: open`; `[DECISION]` remediation ruling (accept
+    legacy artifact vs targeted manifest correction) still open.
+  - `defi_upstream_instruments_catalog_stale_2026_07_15.md` — `status: open`; `[DESIGN] P3` retry-sweep-signal mechanism
+    ownership still unruled (batch5-finalize: STILL BLOCKED).
+  - `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` — `status: open`; generator-vs-committed
+    prospectus reconciliation design decision still needed (batch6: operator-gated).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal.
