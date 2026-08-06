@@ -965,3 +965,24 @@ availability index (~40s) and is silently killed by the background task system. 
 **Checkpoint**: -056 checkbox stays `[ ]` pending volatility and onchain completion. Watchdog
 (`/home/ubuntu/.claude-configs/orch-slot-5/cc-tmpdir/…/scratchpad/watchdog.log`, checks every 10 min, PID 152282) +
 wakeup at ~03:22 UTC to collect numbers and flip the checkbox.
+
+### 2026-08-06 (slot-5, data_engineering continued) — both VMs done; 2 new upstream blockers filed
+
+**TRADFI:volatility** — VM `features-e2e-tradfi-20260806-024229-40bb75` exit_code=0 but 0/10 groups. Root cause:
+`_resolve_spot_perp` (data_loader.py:356) searches for `instrument_type=PERPETUAL` in TRADFI MTDS, but TRADFI has
+FUTURE/futures_chain only (no perpetual swaps). FX underlyings 6A/6B/6C/6E/6J from IS catalogue have no PERPETUAL
+records → 0 spot prices → 0 features computed (honest-absence guard correct). **BLOCKED-OPERATOR-DECISION** — fix
+requires making `_resolve_spot_perp` TRADFI-aware (use futures_chain). Issue:
+`/plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
+
+**DEFI:onchain** — VM `features-e2e-defi-20260806-025432-onch5` exit_code=1. 3 deps failed on 2026-07-27: (1) lst_rates:
+BLAZESTAKE venue has `attempted_failed` on every date; no known-outage exemption in `_KNOWN_OUTAGE_VENUES_BY_SVC`;
+BLAZESTAKE→SOLBLAZE-SOLANA canonical migration shard adds new venue rows but doesn't clean up old BLAZESTAKE rows. (2)
+lending_indices: stalled after 2026-07-31 (no data for 2026-08-01+). No date satisfies BOTH (dates ≤07-31 fail
+lst_rates, dates ≥08-01 fail lending_indices). (3) perp_funding: HYPERLIQUID fine for ≥2026-07-30 (not the binding
+constraint). **BLOCKED-OPERATOR-DECISION** — fix: add BLAZESTAKE to known-outage exemption for lst_rates dep check.
+Issue: `/plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`
+
+**Status of -056**: commodity DONE (39 s/shard-day). Volatility + onchain blocked upstream. ☑ Commodity number committed
+(`plans/audit/results/data_pipeline_e2e_check_features_2026_08_05.md`). Remaining two families require operator
+decisions (see issue docs above).
