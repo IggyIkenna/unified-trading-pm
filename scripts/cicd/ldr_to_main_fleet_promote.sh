@@ -405,6 +405,24 @@ provenance_check_ok() {
         '' \
         '**Do NOT hand-arm auto-merge to "unblock" this** — that promotes the bypassed code AND moves the provenance baseline past it, so the violation is laundered and never flagged again (happened 2026-07-16).')"
       gh pr comment "$_PR_ID" --repo "$OWNER/$REPO" --body "$_PROV_BODY" 2>/dev/null || true
+      # ao_done_categorization_display_and_quickmerge_gate_2026_08_06 Track D: hand this
+      # to a worker instead of leaving it Slack-only (promotion_lag_monitor.py's hourly
+      # alert was the only signal before this — easy to miss, and this exact condition
+      # sat blocked ~23h before 2026-07-16's mishandling). $_PROV_OUT already names the
+      # violating commit(s) (%h %s per check_strict_quickmerge.py) — pass it straight
+      # through as context rather than making the worker re-derive it. Dedup is
+      # downstream (server/escalation.py's DB-backed find_open_escalation_id on
+      # (repo, pr_number, wall_type)) — same posture as every other repository_dispatch
+      # fired from this fleet (e.g. ci_failure_watcher.py's _dispatch_escalation): a
+      # repeat tick while the block persists re-fires the dispatch, the orchestrator
+      # no-ops the duplicate spawn. Best-effort: a dispatch failure must never block the
+      # provenance gate itself from doing its job (the `|| true`/`2>/dev/null` below).
+      _PROV_CTX="$(printf 'Promotion PR %s#%s (live-defi-rollout->main) is BLOCKED by the provenance gate — auto-merge NOT (re-)armed.\n\n%s\n\nDetermine the remedy per violating commit: if it is the live-defi-rollout branch tip, re-ship via `quickmerge --agent --files '"'"'<paths>'"'"'`; if a later commit already landed on top, re-shipping cannot clear it — run `scripts/cicd/reprovenance_bypass.sh <sha> --push` instead (after confirming the range still fails the dep-alignment gate it runs). Do NOT hand-arm auto-merge on the promote PR — that launders the violation past the provenance baseline (2026-07-16 incident).\n' "$OWNER/$REPO" "$_PR_ID" "$_PROV_OUT")"
+      _PROV_PAYLOAD="$(jq -n --arg ctx "$_PROV_CTX" --arg pr "$_PR_ID" --arg repo "$REPO" \
+        '{event_type:"escalate-to-orchestrator",client_payload:{repo:$repo,pr_number:$pr,wall_type:"provenance_blocked",context:$ctx,authoring_slot:"ldr-to-main-promote-fleet"}}')"
+      printf '%s' "$_PROV_PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - >/dev/null 2>&1 \
+        && echo "  -> dispatched provenance_blocked escalation for $REPO#$_PR_ID" \
+        || echo "  WARN: provenance_blocked escalation dispatch failed for $REPO#$_PR_ID (non-fatal — Slack alert via promotion_lag_monitor.py still fires)"
       rm -rf "$_PROV_TMP"
       return 1
     elif [ "${_PROV_RC:-0}" -ne 0 ]; then
