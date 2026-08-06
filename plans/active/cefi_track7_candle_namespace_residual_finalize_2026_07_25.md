@@ -57,12 +57,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the delete's evidence into both true source docs.** Flip Track 7's delete checkbox in
+- [x] ✅ [REVIEW] P1. **Reconcile the delete's evidence into both true source docs.** Flip Track 7's delete checkbox in
       `cefi_consolidated_closeout_2026_07_18.md`, citing the delete operation's evidence (object count deleted, the
       pre-delete bundle-completeness verification cited from `cefi_consolidated_native_ao_extract_2026_07_25.md`'s
       candidate-7 todo). Close todo 19 in `candle_feature_canonical_path_divergence_2026_07_20.md`, referencing this
       track's resolution. Repo: unified-trading-pm. **Done when**: both checkboxes/sections are flipped with verified
-      evidence.
+      evidence. **DONE (slot-4 review, 2026-08-06)** — Track 7's delete section in
+      `cefi_consolidated_closeout_2026_07_18.md` is flipped to `✅ DONE 2026-08-04` (`unified-trading-pm@1ea317100`,
+      2026-08-05), citing the full delete evidence from the archived `cefi_consolidated_native_ao_extract_2026_07_25.md`
+      todo-7 Progress Log: Part (a) raw-tick presence verified for ALL 8 affected days PASS; Part (b) all 149 CSV-listed
+      objects (93 BYBIT `futures_chain` + 56 DERIBIT `options_chain`) confirmed deleted (`gsutil stat` → 404). Issue
+      todo 19 in `candle_feature_canonical_path_divergence_2026_07_20.md` is flipped `[x]` (na-eligibility-audit
+      2026-08-03) with the `_copy_verify_delete()` retry-idempotency fix + CEFI mop-up evidence (0/149 legacy-path
+      objects remain in GCS), referencing this track's resolution.
 - [ ] [DOC] P2. **Archive `cefi_track7_candle_namespace_residual_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run the
       codex-alignment check → grep the corpus for every referrer of `cefi_track7_candle_namespace_residual_2026_07_25`
