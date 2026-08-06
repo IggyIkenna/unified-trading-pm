@@ -145,6 +145,14 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       manifest-write/heartbeat apply pass afterward (preserving `record_captured` grain + shard-level isolation, the
       pattern `mtds@ff1b5d51` established), or carries an in-code note saying why it must stay serial. Re-check
       `dex_swaps_handler.py`'s 900-line cap first — the note below still applies.
+- [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
+      `live/websocket_runner.py::_record_empty_window` and
+      `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking
+      manifest write as items 1-2 but from sync functions, so the fix needs signature changes up the call chain (make
+      the enclosing path async, or dispatch the write via a dedicated executor the way `mtds@ff1b5d51` did for item 2).
+      Lower value than items 1-2 (zero-row paths only) — added 2026-08-06, previously untracked prose. **Done when**:
+      both sites no longer call the blocking manifest-write helper directly from a sync function, verified the same way
+      item 2's shipped fix was (confirm the call is still awaited, ordering preserved).
 
 ## Progress Log
 
@@ -165,3 +173,9 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   2026-08-01 rationale (a concurrency-critical shared-writer change needing per-handler verification, not a mass edit)
   still holds.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms the 2026-07-30 park (GENUINE overlap w/
+  cross_cutting_satellite_ao_dispatch_batch1) and the 2026-08-03 reaffirmation: sole open todo needs per-handler
+  concurrency-safety judgment, not a mechanical edit. NEW this pass: found problem #3 ("Live sibling sites in SYNC
+  functions" — websocket_runner.py::_record_empty_window + live_aggregator.py::_handle_zero_tick_window) listed in the
+  doc's own "Open" section but with zero checkbox tracking it anywhere in the corpus — added a tracked todo below per
+  the workspace's "every follow-up is a checkbox, never prose" rule.

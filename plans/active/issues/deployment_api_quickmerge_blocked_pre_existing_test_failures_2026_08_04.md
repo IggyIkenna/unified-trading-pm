@@ -128,3 +128,6 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
   repo. Todo 3 (re-ship the VM-classification fix) left open — that fix lives in a different session's
   `.tabs/2/deployment-api` local checkout, not reachable from this `.tabs/4` checkout. **Status stays `open`** (not all
   3 todos done) — flip to `resolved` once todo 3's owner re-ships and cites evidence.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — sole remaining todo scopes to re-shipping a DIFFERENT
+  interactive session's (.tabs/2) uncommitted local WIP, structurally unreachable from an AO-dispatched worker under
+  this workspace's per-slot-worktree isolation — an access/environment gate, not a judgment one.

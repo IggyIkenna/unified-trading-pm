@@ -515,3 +515,5 @@ is the single place to scan them all in one pass.
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
   stale count) -- unchanged; this is a standing tracking/index surface (0 open todos by design), no source path applies
   -- real work lives in the cited target plans.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): `archive_exempt: true`,
+  standing reference surface by operator ruling; 0 open todos is expected/by design, not an archival signal here.

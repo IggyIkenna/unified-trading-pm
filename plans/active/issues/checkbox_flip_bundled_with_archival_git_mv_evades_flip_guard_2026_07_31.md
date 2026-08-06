@@ -134,3 +134,5 @@ repeated per-incident coaching.
 - **context-scout 2026-08-03**: re-verified context_scope (3 entries) — already minimal + source-anchored (`verify.py`
   is confirmed to be the actual guard implementation), left unchanged.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01 (unchanged): sole todo requires an
+  operator/plan-owner decision among 3 named options (A/B/C) before the implementation step is determinable.

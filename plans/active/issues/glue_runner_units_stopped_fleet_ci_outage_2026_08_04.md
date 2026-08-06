@@ -349,3 +349,6 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   ambiguity has now caused at least one real misdiagnosis. Did not change `status` — the doc's other open items (P2
   monitoring gap, P1 operator systemctl-start-or-reinstall action for the OLD claim, root-cause-of-original-stop) are
   unaffected by this correction and stay open.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — sole [OPERATOR] P1 item (4th recurrence, whole runner pool down)
+  independently confirmed 6x since 2026-08-04 that AO-worker/main identities structurally lack the needed SSM reach;
+  whole doc stays NA despite 2 more-bounded-looking sibling items.

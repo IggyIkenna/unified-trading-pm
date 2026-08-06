@@ -155,3 +155,6 @@ the triage given their concentration.
 - **context-scout 2026-08-06**: re-verified context_scope, no change needed (4 entries) — the script under
   investigation, the exact baseline data file the fix-todos update, the producing skill, and the directly-referenced
   prior sibling bug in the same script remain the minimal correct set.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — fresh doc (filed today); genuine mix — todos 1-2 are bounded
+  audit/hygiene work with explicit Done-when clauses, todo 3 is an open "is this worth building" feature-investment call
+  phrased as "Consider whether...", no stated done-when.

@@ -881,3 +881,5 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   planning until operator personally runs /ag-closeout-audit + /plan-reconcile for this AG; sole open item is a
   meta-note about untracked digest items, not dispatchable work itself.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): explicit 2026-07-25 operator
+  gate blocks flipping assigned_vm until the operator personally runs /ag-closeout-audit + /plan-reconcile for this AG.

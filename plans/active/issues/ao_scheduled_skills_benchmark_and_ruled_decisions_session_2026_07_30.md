@@ -347,3 +347,6 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   minimal set for the remaining open items (benchmark re-runs, the PM-checkout-staleness follow-up, the benchmark-
   artifact update).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): remaining items are
+  soft/low-value benchmark re-run asks or gated on those landing first plus a broad synthesis call; none independently
+  worker-executable.
