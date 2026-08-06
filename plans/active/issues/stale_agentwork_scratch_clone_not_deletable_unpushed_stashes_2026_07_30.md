@@ -157,3 +157,4 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   anticipated, just not the specific gap it originally named. Verdict stays KEEP-NA (if anything, more clearly
   operator-gated now, not less) — this is a content-accuracy update, not a reclassification.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -115,3 +115,4 @@ stating that the allow-list and error type do not exist and that the instrument 
   (`config_reloaders.py`) and its UTL base class (`domain_config_reloader.py`), and the sibling codex doc
   (`instrument-lifecycle-cache-delta-hot-reload.md`) the open `[OPERATOR]` position-state-safety ruling bears on;
   dropped the generic epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

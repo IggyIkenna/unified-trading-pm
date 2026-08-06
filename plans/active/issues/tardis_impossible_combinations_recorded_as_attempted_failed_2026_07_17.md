@@ -194,3 +194,4 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in
   `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate
   todo must coordinate with) for the generic `cefi_master.md` epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

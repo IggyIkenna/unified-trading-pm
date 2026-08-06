@@ -332,3 +332,4 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
   decision-16 investigation.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

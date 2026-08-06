@@ -29,6 +29,14 @@ parent_epic: sports_master
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    instruments-service/scripts/reemit_la_liga2_odds_manifest_rows.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
+    /plans/epics/sports_master.md,
+  ]
 ---
 
 # Sports ODDS rebuild delta — LA_LIGA_2 data loss
@@ -141,3 +149,7 @@ b4bac708, so it may now be stale and in need of removal.
       captured + 1,885 empty in manifest (the reported +1 GCS-only edge case was not independently verified — full GCS
       walk was too heavy for in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2
       @2026-08-05 ~07:30Z
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries).

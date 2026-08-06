@@ -61,10 +61,9 @@ resolved_by:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_cme_converter.py,
-    execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_opra_converter.py,
+    market-tick-data-service/docs/tradfi-venue-coverage-matrix.md,
   ]
 ---
 
@@ -432,3 +431,5 @@ doc directly — per that plan's own stated reconciliation pattern.
   `market-tick-data-service@7db75b1a` (`quality-gates.sh` full green, shipped via `quickmerge.sh --agent`, verified
   ancestor of origin). Checkbox flipped above.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: refreshed context_scope (4 entries) — every other todo is now DONE, so narrowed to the
+  one remaining open `[OPERATOR] P2` item (Finding M-3, the 2 unused MTDS converter classes + the stale doc credit).

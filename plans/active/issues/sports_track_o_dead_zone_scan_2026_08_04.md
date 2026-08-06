@@ -37,6 +37,14 @@ depends_on: []
 last_updated: 2026-08-04
 locked_by:
 locked_since:
+context_scope:
+  [
+    market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    market-data-processing-service/scripts/sample_bm_minutes_distribution.py,
+    /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 ---
 
 # Track O dead-zone scan — findings
@@ -223,3 +231,5 @@ mechanism directly (manifest data is circumstantial; raw bm_minutes is the direc
   fixtures → `bm_time` is more stale → more rows fall in the 615-minute dead zone (765<bm_minutes<1380). (3) These are
   data-availability issues, not code throttling. **Recommendation**: the dead-zone fix (item a — T-18h horizon or
   widened T-24h cap) is the correct lever; there is no scraper-cadence bug to fix here.
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries).

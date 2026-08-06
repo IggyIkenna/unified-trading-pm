@@ -176,3 +176,4 @@ just (c).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the sibling "todo 3b" doc (the real VM
   run gap (c) cites as prior evidence) and the orphan-detection codex SSOT, and swapped the ml-service writer in for the
   sweep-tool script since this doc's decision is about the 3 write-site gaps, not the future sweep extension.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -53,10 +53,9 @@ source:
 context_scope:
   [
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
   ]
 ---
 
@@ -374,3 +373,8 @@ root-cause fix.
   derives the canonical bundle ID via `_resolve_chain_bundle_manifest_id(venue, itype, underlying, data_type)` → e.g.
   `CME:FUTURE:SP500`. The canonical derivation logic already exists and is proven (`market-tick-data-service@65beaeaf`);
   the gap is only the manifest-row update mechanism.
+- **context-scout 2026-08-06**: re-scouted; all todos are now DONE, so trimmed context_scope from 5 to 4 entries —
+  dropped `tradfi_consolidated_closeout_2026_07_18.md` (generic parent index) and `databento_enrichment.py` (confirmed
+  NOT the real write site — see the 2026-08-04 P2 finding above), swapped in the real fix sites
+  `venue_fetch.py::_record_venue_shard_counts` and `_tradfi_manifest_shard.py` for anyone reconciling the pre-existing
+  blank-`instrument_id` backfill this fix doesn't retroactively touch.

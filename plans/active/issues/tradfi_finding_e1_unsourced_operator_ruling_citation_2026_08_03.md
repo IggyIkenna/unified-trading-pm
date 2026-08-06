@@ -133,3 +133,4 @@ worse than just fixing the citation once the source is confirmed or the decision
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
 - **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (4 entries) — genuinely
   code-free (evidence-integrity/findings-triage doc, both open todos operator-gated), no source path added.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

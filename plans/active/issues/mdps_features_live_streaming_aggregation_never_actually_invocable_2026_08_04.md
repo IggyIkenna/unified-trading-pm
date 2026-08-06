@@ -330,7 +330,9 @@ OOM if left running). The named successor is this issue doc's Todos below.
       invoked by the mdps-features-live path, since `mdps_mvp_universe('prediction')` returns zero shards structurally —
       MDPS's candle-shard model does not apply to prediction at all. Whoever picks up that todo should read this doc's
       "Structural finding" section first so the adapter registration isn't mistaken for a depth-history fix. —
-      unified-trading-pm@34d31c1d2
+      unified-trading-pm@042a135d4 (corrected 2026-08-06 by context-scout: original citation `34d31c1d2` did not
+      resolve; `042a135d4` is the actual commit that added this checkbox+citation, self-referential-hash mistake,
+      verified via `git log` on this file)
 
 ## Progress Log
 

@@ -313,3 +313,4 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   (4th consecutive pass).** Sole open todo re-read end-to-end; count reconciled (1/1). No content change since the
   2026-08-02 verdict — only two context-scout `context_scope` touches since. Still self-tagged `P1-OPERATOR-DECISION`,
   blocked on the non-injective `EXCHANGE_CODE_TO_NAME` SSOT contradiction; nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

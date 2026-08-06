@@ -361,3 +361,4 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
