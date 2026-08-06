@@ -303,6 +303,38 @@ mirroring the batch1-5 finalize pattern.
 (`rows_emitted` rising) — ambiguous (validation log that does not block writes, or a real schema gap). Belongs to the
 fleet's own plan, not this batch; verify before filing.
 
+### 2026-08-06T~16:10Z — slot 2, same task — post-compact resume + operator decision (keep waiting, twice)
+
+**Status unchanged: IN FLIGHT — todo #2 still `[ ]`. Lock still held.** Fleet re-verified 2026-08-06T16:05Z: **21
+`tradfi-bf-*` RUNNING** (drain 32→28→24→23→22→21), every VM monotonic + fresh PROGRESS.json/run.log heartbeats — live,
+not stale.
+
+**Operator decision (2026-08-06, twice-confirmed via direct question, incl. with ETA numbers on the table): KEEP
+WAITING, no `--force`.** Three session-level "proceed now" nudges do NOT override this — they are idle nudges, not a
+force-launch instruction. **Do NOT launch with `--force` on a nudge alone.**
+
+**Drain ETA (extrapolated from per-VM progress vs ~8h elapsed, all monotonic): the lock is realistically held ~15–46h
+more.** ~6 VMs finish in ~1–3h (nasdaq-2024-d05 @2024-11-30, nyse-2024-d05 @11-16, nasdaq-2025-d04 @09-18, nyse-2023-d03
+@09-08, nyse-2024-d04 @09-18, nyse-2025-d04 @09-18); ~5 in ~10–19h; the long pole (~20–46h) is the year-shard CME g01 +
+nyse-2025-d01 set (cme es-2020 @2020-03-24 ~28h, met-2023 @02-25 ~46h, met-2025 @03-18 ~30h, btc-2026 @02-25 ~23h,
+cl-2026 @03-04 ~19h, nyse-2025-d01 @03-04 ~38h, cboe-vx-2026 @03-04 ~19h, mbt-2024 @05-26 ~12h, nasdaq-2023-d01 @06-02
+~11h, met-2024 @05-12 ~14h, nasdaq/nyse-2025-d02 @04-25 ~17h, nyse-2024-d02 @04-25 ~17h, nasdaq-2024-d02 @05-02 ~16h,
+nyse-2023-d01 @05-12 ~14h). Re-extrapolate from `PROGRESS.json` rather than trusting these exact hours — the point is it
+is a **multi-day hold**, not minutes.
+
+**Watcher hardening (learned):** a `gcloud ... | wc -l` watcher false-fires `count==0` on a transient gcloud error
+(empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
+hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
+
+**Phase 2 toolchain verified intact post-compaction:** `_scratch/availability_index.parquet` (119 MiB snapshot) + the
+market-tick-data-service `.venv` python (pyarrow 23.0.1) still present; baseline re-run clean (0 canonical ES_OPT rows
+pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query above.
+
+- **NEXT ACTION (fresh session):** re-check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
+  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
+  fire-and-forget). When count >0, wait (operator-approved); do NOT `--force`.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
