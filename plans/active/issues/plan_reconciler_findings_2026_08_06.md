@@ -76,3 +76,74 @@ leftover staged WIP (`plan_reconciler_ci_late_findings_2026_08_06.md` staged-mod
 ## Refuted (dropped by verify)
 
 ## Plans not reached
+
+---
+
+## Hunter results — 10/10 complete (2026-08-06)
+
+All 10 hunters returned (A,B,C,D,E,F,G1,G2,EPIC,CODEX — sonnet, read-only, full-doc reads, no writes). Every non-grace
+sports doc was read in full by exactly one hunter; the epic was read by the EPIC hunter + cross-checked by 6 batch
+hunters (zero doc↔epic track/status contradictions on batch docs; the epic's OWN listing drift is flagged below).
+
+## Candidate registry (deduped; verify status as of 2026-08-06 22:30 UTC)
+
+**V-wave 1 in flight (adversarial pairs, 6 agents):**
+
+- **V1 [P0]** odds-api launch-readiness cross-doc contradiction —
+  `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md:279-280,294` ("NOT YET LAUNCHED (corrected
+  2026-08-02 … both gates are clear)") vs `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md:163-170,173,181-183`
+  ("BLOCKED-CREDENTIALS 2026-08-02: OUT OF USAGE CREDITS, `x-requests-remaining: -772`, /v4/historical 401 since 08-01
+  12:40:24Z" + an embedded "UNBLOCKED 2026-07-31 … launch the backfill" directive inside the same P1) vs
+  `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md:183-189` (same 401 evidence). Acting on doc A launches a
+  backfill whose every call 401s. → cross-doc banner fix + operator notify.
+- **V2 [P1]** false-progress flip — `sports_closeout_track_s2_foldin_2026_07_25.md:391` features-recompute `[x]` flipped
+  at launch (slot-4, 08-06) while Progress Log :521-528 records VM `fts-backfill-20260806-012831` still RUNNING (~1h in
+  at 02:34Z, no exit signal); done-when ("VM exit 0, manifest rows written") unmet; slot-13 reverted the identical
+  pattern earlier the same day (:460-461); also `--force` (:398) vs `--redo-all` (:517) discrepancy on the same
+  relaunch. → revert + note.
+- **V3 [P1]** false-progress flip — `candle_feature_canonical_path_divergence_2026_07_20.md:317` todo 3 `[x]` "✅
+  VERIFIED 2026-08-04" while its own continuation (:329-330) + Progress-Log audits (:533-535, :589-593) say the ~7.1M
+  TradFi leaf-id repair is unresolved pending an operator ruling. → revert or adjudicate.
+- **MECH-1a/1b/2 (3 confirmer agents, in flight)** — ~35 mechanical edits: frontmatter last_updated (~19 docs), statuses
+  (sports_index_recency → resolved; sports_catalog resolved_by clear), counts (process_killed 2/2→3/3; fixtures_schedule
+  85→≥86; halftime banner 5→3; batch5 12→11), stale summaries/titles (cf8, force_fetch, scattered_multiyear_gaps),
+  banners (track_x draft; finalize draft), path repoints (~15: mdps_features×4, catalog_league_grain×3,
+  group_c+odds_feature_naming, dependency_check×2, backfill_smoke×2, convention `../`×7, canonical_universe
+  p2_history×2, footystats×2), codex-ref plan-side fixes (batch10_finalize — GRACE-deferred; canonical_universe:424 —
+  wave 2), epic 8-item drift (E1-E8).
+
+**Wave-2 verify (after wave 1):** V4 stats_delayed recommended-decision banner · V5 sweep-part2 K0-DECISION banner · V6
+canonical_universe floor banner · V7 audit §1.3 count fix · V8 canonical_universe:424 codex-ref repoint.
+
+**Refuted (dropped by verify, no flip):** all 15 missed-flip candidates across hunters carry their own counter-evidence
+— operator-gated (canonical_universe:319 E8 `--drop-stale` BLOCKED-OPERATOR; cf8:357 BLK-d9137d48 STOP; halftime:197
+cutover-gated), prereq-sha-only (arb_decay:144, group_c:77, batch5:116, sweep:604, footystats:173, data_completion:414,
+backfill_smoke:284), or genuinely open per the doc's own notes (smoketest:358 FLUID, audit:825 umbrella, estate:344,
+part2:211/:758, stale_fixture:246, batch_odds:279). **prereqs:118 (batch_footystats copy+swap) =
+reported-done-unflipped** — fresh census 0 non-registry rows, 15,980/15,980 verify PASS, only ship-mechanics pending
+(RB-166e706f) — SOFT self-report only, no HARD evidence chain in-session → FILED, not flipped.
+
+**P1 route (owner decision):** `mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` —
+`assigned_vm: planning` + `execution_scope: orchestrator-agent` with ZERO checkboxes (verified by grep: 0
+`- [ ]`/`- [x]`); remediation exists only as prose (:130-141) so the AO can never ingest a data-correctness masking
+defect. Fix direction (convert prose→todos vs flip NA) is a content call → route to owner.
+
+**Archive candidates (operator review):** (1) `instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` —
+superseded duplicate physically in active/issues, zero-checkbox by design, `locked_since: 2026-05-21` predates
+`created: 2026-07-30` (impossible lock metadata — copy-paste; lock blocks auto-archive → ASK); refs from
+`zero_checkbox_sweep_all_tranches_2026_07_31.md`, `ag_closeout_audit_sports_tooling_followups_2026_08_06.md`,
+`docs_reconcile_operator_decisions_2026_08_02.md` (sports/cross-tranche referrers noted). (2)
+`sports_index_recency_masked_captured_atoms_2026_07_13.md` — all 7 todos done; status→resolved + archive after fix.
+
+**Epic drift (EPIC hunter, 8 items, non-grace 52h):** E1 golden-window coordinator banner → dead superseded coordinator
+(:67-75; :20/:71 wrong `../active/` paths) · E2 Assigned-listing: 6 archived-complete plans shown "active"
+(:1387-1430) + "16 active plans" vs measured 25 (:1382) + 17 actual plans missing — section is SCRIPT-GENERATED
+(`scripts/plans/populate_epic_bodies_2026_05_21.py`), no epic filter → hand-edit sports_master only + flag fleet re-run
+· E3 SFI backfill BLOCKED-ON-FREEZE stale (:1351-1353; freeze lifted 2026-07-17) · E4 P0 "DO NOT resume FWD/BACKFILL
+VMs" self-contradictory (:448-449; Phase 2 complete 05-23, Phase 4 resumed) · E5 master-plan cross-refs wrong path +
+"KEPT ACTIVE" false claim (:1546-1549) · E6 last_updated (:62) → 2026-08-02 · E7 critical-path "Phase 1 partial" (:367;
+all phases complete) · E8 dangling `plans/ai/` ref (:1550, dir gone).
+
+**Grace-deferred:** `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` codex-ref path swap (3h — GRACE;
+`codex/11-project-management/plan-completion-and-archival-discipline.md` → `12-agent-workflow/…`, verified moved) ·
+native_ao_extract draft banner + last_updated (GRACE, context-only).
