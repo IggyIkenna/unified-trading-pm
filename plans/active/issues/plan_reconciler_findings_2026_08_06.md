@@ -80,6 +80,13 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
       two then raced on the same `depends_on`+`gate_on_depends: true` target (de-raced this run by superseding the
       duplicate, see Flips verified). Make the existence check resilient to a `_2026_MM_DD` date-suffix variant of the
       expected filename, not just the exact string.
+- [ ] [CODE] P3. **The `/heartbeat` "🟥 GIT STATUS RED — AHEAD=N unpushed, push to live-defi-rollout" auto-nudge doesn't
+      know about PR-based dispatches.** Fired repeatedly this run (`AHEAD=18`→`20`) even though this dispatch's own boot
+      mandate explicitly required a review-PR workflow (never push straight to `live-defi-rollout` during this "proving
+      phase") — correctly not acted on, but a future session could reflexively comply and violate its own mandate.
+      Repo/file not yet located (agent-orchestrator server, likely the same heartbeat-response builder that reads git
+      ahead-count per slot) — whoever picks this up should first confirm how the server would even know a slot's current
+      dispatch is PR-mode (a per-dispatch flag? role-based?) before proposing a suppression condition.
 - [x] ✅ [ADMIN] P1. **Resume STEP 8 of this dispatch (agt-4fdce1).** Operator answered all 3 questions 2026-08-06
       ~13:12 UTC, ~12.5h after they were raised. All 3 applied: `BLK-5eeacb63` (duplicate finalize-plan race — kept
       `..._finalize.md`, ported the other's `[REVIEW]` todo in first, then superseded+archived the duplicate,
@@ -338,3 +345,12 @@ now done — see above.)
   finding into two half-informed ones. The rule ("grep `plans/active/`+`issues/` before ANY task") applies just as much
   to a reconciler's own operational blockers as to the plans it's reconciling — worth remembering next time a tool/API
   call fails unexpectedly mid-run, before assuming it's novel.
+- **The `/heartbeat` response's "🟥 GIT STATUS RED — AHEAD=N unpushed, push to live-defi-rollout" auto-nudge is a false
+  positive for a dispatch explicitly running a PR-based (not direct-to-`live-defi-rollout`) workflow.** Fired at least
+  twice this session (`AHEAD=18`, later `AHEAD=20`) because it measures this branch's distance from `live-defi-rollout`
+  — which grows by design under this dispatch's original boot mandate to open a review PR rather than push directly,
+  during the stated "proving phase." Correctly NOT acted on both times (pushing straight to `live-defi-rollout` would
+  have violated that mandate and CLAUDE.md's own quickmerge-only rule), but the nudge itself doesn't know that context
+  and will keep firing every heartbeat for any PR-based dispatch. Worth a future fix (suppress the nudge when the slot's
+  current dispatch is explicitly PR-mode) but not this reconciler's scope to change — recorded here so a future session
+  doesn't reflexively comply with it mid-PR-based-run.
