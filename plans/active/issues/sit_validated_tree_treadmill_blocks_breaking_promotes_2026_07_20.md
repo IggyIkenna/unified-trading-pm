@@ -12,7 +12,7 @@ summary: >-
   carries a genuinely breaking delta. The intuitive fix (retarget the promote to the validated ancestor) was designed
   and then REJECTED by adversarial review on two independently-verified fatal grounds — recorded here so it is not
   re-derived and re-attempted.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -52,7 +52,7 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     system-integration-tests/.github/workflows/full-workspace-sit.yml,
   ]
-resolved_by:
+resolved_by: interactive session, 2026-08-06 — unified-trading-pm@16c9653eb + system-integration-tests@59e0e5b
 ---
 
 # The SIT gate races a moving branch
@@ -121,11 +121,36 @@ decide "already promoted".
 
 ## Todos
 
-- [ ] [DEVOPS] P2. Decide the direction (lease vs SIT-sha-pin + gate-side change vs accept-and-monitor) and record the
-      ruling here. Do NOT ship a retarget without addressing BOTH fatal objections above.
-- [ ] [DEVOPS] P2. If a retarget is chosen: move the `sit-gate/fleet-green` POST (`:497-511`) to after the SIT gate
-      closes (after `:622`) so it always lands on the final PR head, and assert the PR head carries that status before
-      arming auto-merge.
+- [x] ✅ [DEVOPS] P2. **RULED 2026-08-06 (interactive session, operator-approved direction: "Pin SIT dispatch to a SHA +
+      move the gate-side status POST after the gate")** — SIT-sha-pin implemented (see todo below). The
+      retarget-vs-lease-vs-accept-and-monitor fork above is now MOOT for the specific race this doc originally
+      described: the architecture changed underneath it since 2026-07-20. `sit-gate/fleet-green` (the actual REQUIRED
+      branch-protection check) is no longer a per-repo tree-fingerprint comparison at all — it's now a fleet-shared
+      signal computed once per tick from "did the last completed (non-cancelled) full-workspace-sit run succeed"
+      (`ldr_to_main_fleet_promote.sh` lines ~48-113, added between 2026-07-12 and 2026-07-29). The ORIGINAL moving-tree
+      race (`sit_validated_tree == LDR_TREE`) survives only in the separate, narrower "SIT gate part 2" per-repo
+      breaking-delta check (lines ~538-669) — that's where the sha-pin below actually applies.
+- [x] ✅ [DEVOPS] P2. **SIT-sha-pin implemented 2026-08-06** (this doc's "candidate direction" — the retarget/move-POST
+      idea was superseded by the architecture change above, not implemented as originally worded).
+      `unified-trading-pm@16c9653eb` + `system-integration-tests@59e0e5b`: the per-repo breaking-delta dispatch
+      (`ldr-main-breaking-gate`) now carries `sha: "$LDR_SHA"` in its `client_payload`, and `full-workspace-sit.yml`
+      pins its checkout of the NAMED repo to that exact sha (falls back to the live tip for the nightly cron / manual
+      dispatch / plain fleet-green retrigger, none of which name a repo+sha). Only the one gated repo is pinned — every
+      other sibling in the assembled cross-repo workspace still clones its own live tip. **Separately, and more
+      urgently**: found + fixed a LIVE, actively-blocking bug in the SAME code region while implementing this — see the
+      new todo below (cancel-storm), which was the actual thing blocking deployment-service/ibkr-gateway-infra/MTDS
+      promotions today, not the original tree-race this doc describes.
+- [x] ✅ [DEVOPS] P0. **NEW, found + fixed 2026-08-06 (interactive session) — the actual live blocker today, a DIFFERENT
+      bug from this doc's own tree-race framing.** `process_repo` runs every repo in a PARALLEL background subshell;
+      when multiple repos hit `SIT GATE BLOCK` in the same fleet-bot tick, each independently dispatched
+      `full-workspace-sit` — GitHub's `concurrency: group=${{ github.workflow }}, cancel-in-progress: false` then
+      cancelled each previously-QUEUED (not yet started) run on every new dispatch, so SIT runs got
+      queued-then-cancelled in a loop forever and `sit-gate/fleet-green` stayed permanently RED, blocking EVERY
+      `ldr_main` promotion fleet-wide (see
+      `plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`, which root-caused
+      and live-diagnosed this the same day). Fix (same commits as above): an `mkdir`-based mutex shared between the
+      fleet-green auto-retrigger and the per-repo dispatch — only ONE dispatch fires per tick, regardless of how many
+      repos hit the block branch.
 - [x] ✅ [DEVOPS] P3. Retire `staging-backmerge-to-ldr` for `ldr_main` repos as separate hygiene, explicitly labelled
       NOT the treadmill fix. **SHIPPED (verified 2026-07-25, plan-reconcile)**: `unified-trading-pm@a7b5cc27c` (verified
       ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`) commented out
@@ -246,3 +271,15 @@ risk). Doc stays NA overall — 2 genuinely open items remain (the direction rul
   `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the second file touched by the status-clobber
   fix)).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (interactive session, operator-triggered CI audit) — RESOLVED.** Operator approved the SIT-sha-pin
+  direction for the open todos above. While implementing, found the architecture had moved since 2026-07-20
+  (`sit-gate/fleet-green` is now a fleet-shared "was the last completed SIT run green" signal, not a per-repo tree
+  comparison — the original moving-tree race survives only in the narrower per-repo breaking-delta check) AND found a
+  DIFFERENT, actively-blocking bug in the same code region: a cancel-storm from multiple parallel-subshell repos each
+  independently dispatching `full-workspace-sit` in one tick, cancelling each other's queued runs via GitHub's
+  concurrency group — the thing actually holding deployment-service/ibkr-gateway-infra/market-tick-data-service/
+  strategy-service promotions today (cross-referenced live against
+  `plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`, which independently
+  root-caused the same storm the same day). Shipped both fixes together: `unified-trading-pm@16c9653eb` (mutex + sha-pin
+  in `ldr_to_main_fleet_promote.sh`) and `system-integration-tests@59e0e5b` (pinned checkout in
+  `full-workspace-sit.yml`). All todos done; closing.
