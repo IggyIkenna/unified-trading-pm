@@ -144,18 +144,26 @@ worker behind it in the first place; it has never been extended to a real, curre
 ## Todos
 
 - [x] [OPERATOR] P2. **Rule on the design questions above** — see "Operator ruling (2026-08-06)" above.
-- [ ] [INFRA] P3. **Wire `authority` into the real `/blocked` path.** Add an
-      `authority: Literal["main_agent",     "operator"]` field to `BlockedRequest` (`models/worker_api.py:242-248`);
-      thread it through to `BlockedRow.authority` at creation in the `/blocked` handler (`routes/slots_worker.py`). Add
-      a regression test asserting a worker-declared `authority` round-trips onto the row.
-- [ ] [INFRA] P3. **Implement the differentiated timeout in `blocked_reconcile.py`**, following the same pattern the
-      retirement sweep already uses (`classify_retirement()`) rather than a new parallel mechanism: `main_agent`-tagged
-      rows past 10min (config knob, not hardcoded) → kill slot + requeue task fresh; `operator`-tagged rows past 4h
-      (config knob) → same kill + requeue-on-answer model. **Gated on the `SlotMessageRow` task_id-scoping fix above
-      being shipped first** (see "Ordering").
+- [x] [INFRA] P3. **Wire `authority` into the real `/blocked` path.** `agent-orchestrator@cc5961e` — added
+      `authority: Literal["main_agent", "operator"] = "main_agent"` to `BlockedRequest`, threaded through
+      `blocked_slot()` to `add_blocked()` and into the `slot_blocked` activity log; 2 regression tests
+      (`tests/test_blocked_authority_field.py`) covering both the declared-value round-trip and the default.
+- [x] [INFRA] P3. **Implement the differentiated timeout in `blocked_reconcile.py`** — `agent-orchestrator@9777c02`. Two
+      new config knobs (`blocked_main_agent_timeout_minutes=10`, `blocked_operator_timeout_hours=4.0`); a third
+      classification (`classify_timeout`) in `reconcile_once`'s sweep, after retirement + the plans-corpus match both
+      miss, following `classify_retirement()`'s exact pattern; `_timeout_blocked_slot` kills the tmux session + frees
+      the slot + requeues the task fresh via the same mechanism `POST /reassign(kill_worker=true)` uses. Guards against
+      acting on an already-orphaned row (slot moved on some other way since the question was raised) by requiring
+      `slot.current_task == row.task_id`. 7 regression tests (`tests/test_blocked_slot_timeout.py`) covering
+      classification for both buckets, the full kill+requeue path, an operator-bucket row correctly left alone within
+      budget, and the orphan guard. Shipped AFTER the cross-delivery fix per "Ordering" above (that fix shipped first,
+      same session, `agent-orchestrator@365e18e`).
 - [ ] [INFRA] P3. **Give the main-agent a bounded first-answer window on `main_agent`-tagged questions** before that
-      bucket's kill timer fires — the specific mechanism (a dedicated triage poll vs. reusing an existing tick) is an
-      implementation detail for whoever picks this up, not re-litigated here.
+      bucket's kill timer fires — **NOT implemented**, deliberately deferred: the shipped timeout applies uniformly at
+      the 10-minute deadline with no dedicated "main-agent gets first crack" sub-mechanism (the main agent CAN still
+      answer via the normal `/answer` endpoint any time before the deadline, which loosely satisfies the spirit, but
+      nothing actively prompts/triages it to do so). The specific mechanism (a dedicated triage poll vs. reusing an
+      existing tick) is still an implementation detail for whoever picks this up.
 
 ## Progress Log
 
@@ -172,3 +180,17 @@ eligibility bar (an open-ended judgment call is not an AO-dispatchable todo unti
 Operator ruled on all open design questions via AskUserQuestion (see "Operator ruling" section above); this doc is now
 implementation-ready pending the cross-delivery fix landing first. Not yet implemented — todos above are scoped but
 unstarted.
+
+### 2026-08-06 (same session, continued) — implemented + shipped
+
+Both `[INFRA]` todos landed same session, in the correct order: cross-delivery fix first (`agent-orchestrator@365e18e`,
+tracked in the companion doc), then authority-field wiring (`agent-orchestrator@cc5961e`), then the differentiated
+timeout itself (`agent-orchestrator@9777c02`). Full `quality-gates.sh` green at every step (2588 tests passing after the
+final ship, 0 lint/type errors). The 4th todo (a dedicated main-agent first-answer window) is explicitly NOT implemented
+— left open above with the reasoning. This doc stays `open`, not archived, until that one lands or is deliberately
+dropped.
+
+Note for whoever picks up the remaining todo: `blocked_reconcile.reconcile_once` now runs on a live orchestrator that
+WILL kill real workers on a timer — verify the two config knobs
+(`blocked_main_agent_timeout_minutes`/`blocked_operator_timeout_hours`) are behaving as expected in production before
+tuning them further.
