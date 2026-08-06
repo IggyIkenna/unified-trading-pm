@@ -249,3 +249,4 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   code-correctness check beyond this skill's retrieval-layer-doc-health charter. Re-verified all 10 VALID_JUDGMENT
   survivors fresh (still no confident successor for any). `doc_body_link_baseline.yaml` ratcheted 21→11 via
   `--update-baseline` (verified zero NEW breakage first). `unified-trading-pm@72b0f5724`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

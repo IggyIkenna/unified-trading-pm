@@ -229,3 +229,4 @@ argument for that issue's Option A). Cross-linked from there.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a stale, unreferenced
   `utl_uac_skew_fleet_audit_2026_07_15.md` entry and added the two source scripts this doc's Progress Log names directly
   (the banned reclass script + the light-VM launcher that was edited/reverted 2026-07-29).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

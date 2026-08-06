@@ -388,3 +388,4 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — instances 1-3 are now resolved, so retargeted the
   list at the sole remaining open item (the 4th instance, the drifted `openapi/prospectus/*.md` generator), replacing
   the stale first-instance-era entries.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -147,3 +147,5 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   call, not a worker inference.] B: The resolutions are coincidental/unrelated to this doc's specific asks — reopen with
   corrected framing reflecting what actually happened. C: Something else — operator has context these three read-only
   passes don't. Other: operator can type a custom answer.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

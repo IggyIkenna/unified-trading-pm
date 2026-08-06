@@ -173,3 +173,4 @@ reproduce.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
   sole todo still bundles an unsolved writer root-cause, a corpus-wide census, and a reclassify migration, none of which
   is worker-determinable alone.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

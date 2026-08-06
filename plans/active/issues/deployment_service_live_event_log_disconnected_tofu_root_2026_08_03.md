@@ -92,3 +92,4 @@ judgment call, hence `assigned_vm: NA`.
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the parent issue this doc was explicitly
   deferred from, which is the whole reason the "two independent OpenTofu roots" question exists.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

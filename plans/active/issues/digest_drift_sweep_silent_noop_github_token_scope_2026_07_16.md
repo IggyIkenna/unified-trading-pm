@@ -330,3 +330,4 @@ RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change
 
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body; no change needed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

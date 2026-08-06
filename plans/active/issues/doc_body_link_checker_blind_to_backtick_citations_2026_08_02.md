@@ -123,3 +123,4 @@ corpus actually uses was never brought into the checker's purview.
   marker on this doc; prior marker was the `infra` tranche, 2026-08-02, same verdict). The doc's own "Options" still
   present a genuine P1-vs-P2 scope/risk fork on a shared QG-infra checker with no live-violation-count measurement taken
   yet — a real judgment call, not a bounded worker-determinable outcome. Content unchanged since the last marker.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

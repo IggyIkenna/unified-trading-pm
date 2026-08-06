@@ -368,3 +368,4 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   cliff, P1-C dead-doctrine-refs) remain genuine authority calls, matching every prior pass; doc stays NA.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body; no change needed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

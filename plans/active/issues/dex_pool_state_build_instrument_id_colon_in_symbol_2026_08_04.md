@@ -25,6 +25,13 @@ resolved_by: ""
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
+  ]
 ---
 
 ## What I found
@@ -103,3 +110,6 @@ details preserved), while other pools in the same shard succeed normally.
       `batch_onchain_subgraph`, source=onchain_subgraph) — 32 captured overwrites absorbed by the consolidator.
       Verified: base index clean of `attempted_failed` (updated 2026-08-05T00:37:50); reader census
       `remaining attempted_failed build_instrument_id dex_pool_state rows: 0`.
+
+- **context-scout 2026-08-06**: populated context_scope (4 entries). No "## Progress Log" section existed in this doc;
+  appended as a new final section instead.

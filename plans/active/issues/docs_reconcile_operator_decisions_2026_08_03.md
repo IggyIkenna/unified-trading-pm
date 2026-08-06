@@ -108,3 +108,4 @@ near-mechanical choice — see "Why this needed a human anyway" below.
   adversarial reviewers split on the verdict (refuter UPHELD as a genuine collision, confirmer NOT CONFIRMED), which
   itself confirms this is not mechanically resolvable. Doc's own summary states the authority call is "an authority call
   this skill never auto-decides, in any mode."
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

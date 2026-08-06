@@ -59,7 +59,7 @@ context_scope:
     deployment-service/deployment_service/shard_builder.py,
     deployment-service/deployment_service/deployment/worker_manager.py,
     deployment-service/configs/sharding.execution-service.yaml,
-    deployment-service/scripts/run-all-quality-gates.sh,
+    scripts/repo-management/run-all-quality-gates.sh,
   ]
 ---
 
@@ -154,3 +154,6 @@ form and were NOT fixed as part of that todo:
   `run-all-quality-gates.sh` has a canonical copy at `unified-trading-pm/scripts/repo-management/` that derives repos
   from `workspace-manifest.json`. The deployment-service copies were stale duplicates with hardcoded incorrect repo
   names (execution-services, ml-training-service, ml-inference-service, market-tick-data-handler).
+- **context-scout 2026-08-05**: re-scouted; deployment-service's `run-all-quality-gates.sh` was deleted (2026-08-04
+  finding-2 fix), swapped the context_scope entry to the canonical `scripts/repo-management/run-all-quality-gates.sh`,
+  now 5 entries.
