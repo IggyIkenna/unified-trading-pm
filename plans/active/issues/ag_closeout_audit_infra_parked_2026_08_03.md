@@ -283,6 +283,10 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [OPERATOR] findings 10/11 (batch3 blank-flip
+  re-apply; missing stash-backup bundle) + tooling findings 12/13 (design-scope); operator-gated, not
+  worker-determinable.
+
 - **2026-08-03** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 12). Re-derived the
   candidate set (13 covering docs, 45 members — up from 43 on 2026-08-02 — 2 never-cited). Re-checked all 9
   carried-forward findings live before fresh triage (5 resolved, 1 still open, 3 superseded by this run's own new

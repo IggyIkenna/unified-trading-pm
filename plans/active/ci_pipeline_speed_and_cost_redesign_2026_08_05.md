@@ -325,3 +325,10 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. No Progress Log section
   exists in this doc, so this marker is appended as the final line instead.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — sole open todo (warm git-object cache for JIT
+  runners) carries an explicit "Do NOT roll out until this is understood" constraint + 2 documented live incidents from
+  touching this runner infra; deployed-but-no-op mystery needs on-VM diagnosis — operator/live-infra judgment, not
+  worker-determinable.

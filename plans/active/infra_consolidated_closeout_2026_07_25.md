@@ -212,6 +212,10 @@ not data-pipeline).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — unchanged; 3 [REVIEW] roll-up todos exist by
+  resolved operator decision #38 (issues/autonomous_session_operator_decisions_2026_07_25.md,
+  unified-trading-pm@2c61a8dc4); confirmed on citation, not re-derived.
+
 - **2026-07-25** — Doc authored from the same corpus-wide classification pass as
   `ao_consolidated_closeout_2026_07_25.md` and `ci_consolidated_closeout_2026_07_25.md` — the third and last of the 3
   new topic tranches. ~32 docs classified into this infra tranche across `infrastructure_master`, `plan_hygiene_master`,

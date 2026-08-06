@@ -144,6 +144,10 @@ the highest-priority open question.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [DIAG]/[DATA] P1s: VM-boot gsutil hang
+  root-cause + concurrent-launch pattern check + relaunch + manifest-purge verification; infra-flakiness diagnosis +
+  VM-launch execution, not bounded worker dispatch.
+
 - **interactive session 2026-08-05 (`/autonomous` continuation)**: 15 VM-launch attempts across ~3 hours. Confirmed
   GCS-object-delete phase 100% complete via direct verification (not inferred). Found + fixed 3 real IAM gaps (all
   shipped, IaC-tracked). Found + fixed 2 real script reliability issues (discovery-phase silence,

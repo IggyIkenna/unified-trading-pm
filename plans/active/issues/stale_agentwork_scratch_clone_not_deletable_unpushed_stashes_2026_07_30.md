@@ -126,6 +126,10 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [OPERATOR] P2, done-when no longer satisfiable
+  as written (backup bundle absent on real host); operator investigation required (relocated durably vs unrecovered
+  loss).
+
 - **na-eligibility-audit 2026-07-31**: KEEP-NA, valid (infra tranche, dispatch agt-676f1e) — sole remaining open todo is
   explicitly `[OPERATOR]`-tagged and its own text states the guardrail (`block_destructive_commands.py`) unconditionally
   blocks any agent from running it, no override. Unambiguous human-only action. No other action.

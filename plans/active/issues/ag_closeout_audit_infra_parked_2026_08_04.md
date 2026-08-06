@@ -178,6 +178,10 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — findings 10/11/14 [OPERATOR]-gated (incl. the 4
+  backlogged draft infra batches awaiting operator review) + 12/13 carried tooling design items; no bounded worker-only
+  item.
+
 - **2026-08-04** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 10). Re-derived the
   candidate set (13 covering docs, unchanged; 50 members, up from 45 on 2026-08-03; 3 never-cited). Re-checked all 3
   carried-forward findings live before fresh triage (0 resolved, 3 still open, unchanged). Direct-read all 3 net-new

@@ -170,6 +170,10 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — 2 open items both operator/real-host-gated:
+  stash-clone deletion confirm on the real host (done-when no longer satisfiable as written) + ao_self_pull asset_group
+  retag (owning-tranche deadlock, BLOCKED-OPERATOR-DECISION in the closeout).
+
 - **2026-07-31 ~21:26 UTC** — `/ag-closeout-audit infra` re-dispatched same-day (autonomous mode, scheduled, slot 13,
   ~7h after the 14:06 UTC run that produced findings 1-2 + `infra_satellite_ao_dispatch_batch4_2026_07_31.md`). Findings
   1-2 re-checked live: both still unreconciled (`delta_proxy_repricer.py` checkbox still `[ ]`, the stash-clone todo 3

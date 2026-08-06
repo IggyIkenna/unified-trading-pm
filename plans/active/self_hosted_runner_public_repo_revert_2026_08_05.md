@@ -334,6 +334,10 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — operator-directed local plan (Progress Log
+  2026-08-05); todo 24 (PM's own revert) requires the same per-file mechanism-landscape care on live CI + todo 20 is
+  timing-gated re-measurement; neither stale nor duplicated.
+
 - **2026-08-05**: Plan authored following an interactive investigation (live `gh repo list` visibility check
   cross-referenced against `self-hosted-qg-repos.txt`, plus a full-fleet `runs-on:` sweep). Operator confirmed all 17
   identified repos are intentionally public and asked for this to be tracked as a human/local plan (not AO-dispatched —

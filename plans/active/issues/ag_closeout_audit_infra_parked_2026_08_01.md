@@ -186,17 +186,21 @@ no drift:
 
 ## Todos
 
-- [ ] [DOCS] P3. Update or remove the stale `draft` banner in `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s body
-      text (finding 4). Done when: the banner matches the frontmatter `status: active` state (or is removed entirely now
-      that the doc has real shipped work under it).
+- [x] ✅ [DOCS] P3. Update or remove the stale `draft` banner in `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s
+      body **CLOSED 2026-08-06 (na-eligibility-audit)**: banner already replaced 2026-08-02 by the operator's flip
+      commit (dfdb0887f) — batch3 now carries an "ACTIVE + DISPATCHABLE (2026-08-02)" banner, verified live. text
+      (finding 4). Done when: the banner matches the frontmatter `status: active` state (or is removed entirely now that
+      the doc has real shipped work under it).
 - [ ] [SCRIPT] P3. Harden `generate_ag_closeout_audit_candidates.py`'s `CITE_RE` matching so a Progress Log narrative
       mention of a filename does not count as a dispatch citation (finding 5). Done when: a doc named only in a covering
       doc's prose/Progress Log (not in a `Source:` line or todo) still reports as never-cited, verified by a regression
       case using `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s exact current situation as the test
       fixture.
-- [ ] [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`'s `asset_group`
-      `[meta]` → `[ao]` (finding 6) — owning-tranche fix, leave to the `ao`-tranche's own audit or a corpus-wide
-      `meta`-fold-in pass, not this run. Done when: the tag is corrected and ~~the doc is folded into
+- [x] ✅ [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`'s
+      `asset_group` **CLOSED 2026-08-06 (na-eligibility-audit)**: done 2026-08-02 by operator ruling
+      (plan_reconcile_parked_operator_decisions na-eligibility-audit item 19, option A) — live `asset_group: [ao]`,
+      verified. `[meta]` → `[ao]` (finding 6) — owning-tranche fix, leave to the `ao`-tranche's own audit or a
+      corpus-wide `meta`-fold-in pass, not this run. Done when: the tag is corrected and ~~the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership~~. **STALE (na-eligibility-audit 2026-08-03)** —
       `ao_consolidated_closeout_2026_07_25.md` archived 2026-07-30 (`status: complete`); its own ARCHIVED banner says it
       no longer tracks live Sources membership (37/44 orphaned as of that date) and redirects membership authority to
@@ -206,13 +210,21 @@ no drift:
       ("editing the literal doc this todo named is moot since it archived 2026-07-30 and its own banner already
       redirects membership authority elsewhere"). The retag half of this todo is still open and undone; only the fold-in
       target needs updating to the live doc.
-- [ ] [DOCS] P3. Re-carry forward the 3 still-open 2026-07-31 findings/todos (reconcile `delta_proxy_repricer.py`'s
-      checkbox; positively confirm the stash-clone directory's real-host state; retag
+- [x] ✅ [DOCS] P3. Re-carry forward the 3 still-open 2026-07-31 findings/todos (reconcile `delta_proxy_repricer.py`'s
+      **CLOSED 2026-08-06 (na-eligibility-audit)**: superseded — the findings now live in the 08-02/08-03/08-04 parked
+      registers: delta_proxy_repricer.py checkbox shipped (execution-service@89fbf99d, closeout 08-03); stash-clone
+      real-host state + ao_self_pull retag carried as open findings in the newer registers. checkbox; positively confirm
+      the stash-clone directory's real-host state; retag
       `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) — see
       `issues/ag_closeout_audit_infra_parked_2026_07_31.md`'s own Todos section for the authoritative text; not restated
       here to avoid drift between two copies.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA-STALE-ITEMS — 3 of 4 closed, doc stays NA.** Closed:
+  batch3 stale draft banner (replaced by ACTIVE+DISPATCHABLE banner, verified); qg_owner_gate retag (live `[ao]`,
+  verified); re-carry-forward (superseded by the 08-02/08-03/08-04 registers). Item 2 (CITE_RE harden in
+  generate_ag_closeout_audit_candidates.py) stays open — genuine still-unresolved tooling gap.
 
 - **2026-08-01** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 5). Re-derived the
   candidate set (`generate_ag_closeout_audit_candidates.py --tranche infra`: 39 members, 10 covering docs, 1

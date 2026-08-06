@@ -28,8 +28,9 @@ created: 2026-08-03
 author: unknown
 priority: P2
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 sequential: true
 depends_on: []
 locked_by:
@@ -96,5 +97,12 @@ currently-unpatched CVEs (2026-59881/69243/69244) — that rescue is P1 and shou
 unified-trading-library resolves off this doc's 16-repo mismatch list, leaving 15.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **RECLASSIFY — flipped to `assigned_vm: planning`.** All 4 todos
+  [SCRIPT]-tagged, bounded, mechanical aiohttp floor propagation (bump workspace-constraints.toml to >=3.14.3, regen
+  canonical manifest, propagate across 16 repos, verify alignment). No banner / no operator ruling / no revert marker.
+  Conflict-check cleared: no active planning doc claims the floor bump (batch1's workspace-constraints mention is
+  setuptools-specific + explicitly deferred; batch1:640 cites THIS doc as the stalled-fan-out tracker; sibling NA issue
+  `orphan_cve_aiohttp_fix_slot5_unpushed` claims a different mechanism with explicit sequencing).
 
 - **context-scout 2026-08-05**: populated context_scope (5 entries).

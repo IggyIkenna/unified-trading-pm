@@ -187,6 +187,9 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — 3 [HUMAN] P2 items (stall-timeout/auto-kill
+  design, naming-heuristic allowlist, cron reprioritization); design/operator decisions, not bounded outcomes.
+
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   fleet-wide blast-radius verification/judgment call (avoiding false positives against legitimately-continuous
   live/paper VM names) that the doc itself says was explicitly rejected as out-of-scope for a prior, narrower fix.

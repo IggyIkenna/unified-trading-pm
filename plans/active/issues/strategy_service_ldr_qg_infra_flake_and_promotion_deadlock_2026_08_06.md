@@ -342,3 +342,8 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
   `head_sha` instead.
 - **Background `Bash run_in_background` watchers get reaped by the harness under load** (two killed mid-wait); the
   `Monitor` tool is the reliable long-watch mechanism for external state.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [CICD] P0/P1 live promotion-deadlock incident
+  items (sit-gate completion wait + main-backmerge notify-slack ref fix), operator/live-CI judgment in flight.

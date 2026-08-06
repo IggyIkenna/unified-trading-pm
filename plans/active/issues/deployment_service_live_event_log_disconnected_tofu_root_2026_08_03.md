@@ -90,6 +90,10 @@ judgment call, hence `assigned_vm: NA`.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — sole item [OPERATOR] P3 (git-history
+  investigation whether live_event_log/ was ever wired); its bounded investigation half is already extracted in
+  infra_satellite_ao_dispatch_batch7 (draft); the structural decision half stays operator-gated.
+
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the parent issue this doc was explicitly
   deferred from, which is the whole reason the "two independent OpenTofu roots" question exists.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

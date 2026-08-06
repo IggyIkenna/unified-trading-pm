@@ -29,8 +29,9 @@ author: unknown
 last_updated: "2026-07-31"
 priority: P3
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 estimate_class: research
 drift_direction: unclear
 source: >-
@@ -114,6 +115,13 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       deployment-service (verification only, no code path).
 
 ## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **RECLASSIFY — flipped to `assigned_vm: planning`.** The
+  drift-direction judgment call was RESOLVED by operator ruling 2026-08-02 (option (a) applied live,
+  `retentionDurationSeconds` verified 0, `unified-trading-pm`/plan_reconcile_parked_operator_decisions item 24); the
+  sole remaining todo (residual-drain verification: fresh `gcs_bucket_stats.py` on/after 2026-08-09, stated done-when)
+  is bounded, read-only, worker-determinable — date-gated (temporal, not a judgment gate). Conflict-check cleared:
+  batch1's bloat-audit todo is [x] DONE and defers this verification here explicitly ("one home").
 
 - **na-eligibility-audit 2026-08-02** (infra tranche, incremental run): **KEEP-NA, valid.** First verdict for this doc
   (no prior marker). Read end-to-end; `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. The sole todo

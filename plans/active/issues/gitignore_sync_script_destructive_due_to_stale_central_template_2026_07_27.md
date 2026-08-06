@@ -129,6 +129,9 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — template reconciliation is a judgment call
+  (which .gitignore is canonical) + post-fix verification sweep; operator/design-flavored, not a bounded flip.
+
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Central remaining item
   (reconciling the template against PM's live .gitignore) is explicitly self-described as real diffing/merging work
   needing human judgment, not mechanical.

@@ -260,9 +260,12 @@ verified complete**.
 > `restaking_rewards`/`lst_rates` via a Helius RPC adapter path (not subgraph). These 5 builds are high-stakes
 > data-pipeline work (the "heartbeat") — do each as its own verified, QG-green shippable unit, NOT a bulk rush.
 
-- [ ] [CODE] P3. UAC D8 Starknet `infura_compatible` template: keep + add a clarifying note (Infura is a removed
-      _provider name_ but the public Starknet endpoint shape is retained); rename the key away from `infura_` to avoid
-      the banned-name confusion. Source: defi_code_codex_drift D8.
+- [x] ✅ [CODE] P3. UAC D8 Starknet `infura_compatible` template: keep + add a clarifying note (Infura is a removed
+      **CLOSED 2026-08-06 (na-eligibility-audit)**: shipped in `infra_satellite_ao_dispatch_batch1_2026_07_26.md:444`
+      (unified-api-contracts@862ff5a6): template was already DELETED 2026-06-09 as D8 (UAC@8a117153), nothing left to
+      rename — premise stale, checkbox never flipped. _provider name_ but the public Starknet endpoint shape is
+      retained); rename the key away from `infura_` to avoid the banned-name confusion. Source: defi_code_codex_drift
+      D8.
 - `BLOCKED-DISCIPLINE` [CODE] P2. UAC: drop duplicate cols `swap_count`/`volume_quote_usd` from `_DEX_EXT` — MUST bundle
   into the C0 migration walk (single-walk discipline), NOT standalone. Source: features_service_defi #4.
 - `BLOCKED-DISCIPLINE` [CODE] P1. UAC: `FEATURE_GROUP_DATA_TYPE_OVERRIDES["defi"]` → `dex_pool_swaps` — coordinate with
@@ -430,11 +433,13 @@ verified complete**.
       claims this same file for a 3-value UI split and is already `status: active` — let batch1 land first, pick this up
       in an infra batch once quiet (batch1's own finalize plan already re-checks this exact conflict before shipping).
       Do NOT dispatch this todo concurrently with batch1.
-- [ ] [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace
-      (`/api/data-status/pipeline-trace?instrument&date`) threading one instrument/date through all stages with per-hop
-      `capture_status`, + a UI view. Larger feature; coordinate with the in-flight data-status canonicalisation slot.
-      Source: e2e-pipeline-manifest-wiring (G-TRACE). **REHOMED 2026-07-27** — per operator decision
-      (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as a new todo directly into
+- [x] ✅ [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace **CLOSED 2026-08-06
+      (na-eligibility-audit)**: shipped in `infra_satellite_ao_dispatch_batch1_2026_07_26.md:722` (DONE 2026-08-04,
+      deployment-api@4c394e9 + deployment-ui@10d2a60); doc's own line 436 already says REHOMED 2026-07-27 into batch1 —
+      checkbox never flipped. (`/api/data-status/pipeline-trace?instrument&date`) threading one instrument/date through
+      all stages with per-hop `capture_status`, + a UI view. Larger feature; coordinate with the in-flight data-status
+      canonicalisation slot. Source: e2e-pipeline-manifest-wiring (G-TRACE). **REHOMED 2026-07-27** — per operator
+      decision (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as a new todo directly into
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its `## Deferred`). Not executed yet
       — tracked there going forward; not duplicating here.
 - [x] ✅ [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
@@ -507,6 +512,11 @@ stash-archive purge). This session's mandate was the infra-relevant slice only �
 tracked here.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA-STALE — 2 citation closes, doc stays NA.** G-TRACE +
+  UAC D8 infura items closed citing `infra_satellite_ao_dispatch_batch1_2026_07_26.md:722/444` (see closes); remaining 7
+  items unchanged (mixed judgment/operator-gated content). locked_by live-defi-rollout — citation closes + marker only,
+  no archival.
 
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — confirmed the 5 items the
   2026-07-27 `/plan-vintage-audit` Archive-readiness verdict already marked as duplicated/rehomed into

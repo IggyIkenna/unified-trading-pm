@@ -366,6 +366,10 @@ new pool is confirmed green, (3) only then resize AO down.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — operator-approved human plan with explicit dated
+  hold (Progress Log 2026-08-04: "STOP before the actual AO box downsize and wait for explicit confirmation"); remaining
+  items = AO downsize under hold + 24h-soak-gated on-disk cleanup where this plan already recorded a teardown incident.
+
 - **2026-08-03 (autonomous execution start)**: Operator said "let's do the plan in full" — began execution per
   `/autonomous`, in file order, per this plan's own Hard Sequencing Rule. Todos 1-2 (both read-only, no infra touched)
   completed with a materially significant finding: **AWS credits do NOT reliably cover current spend.** Live

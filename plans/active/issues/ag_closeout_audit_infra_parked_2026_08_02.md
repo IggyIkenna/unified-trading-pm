@@ -205,21 +205,33 @@ both still awaiting operator approval to flip to `active`. Neither has been acti
 
 ## Todos
 
-- [ ] [DOCS] P2. Flip `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm: NA` → `planning` (finding 7) —
-      OPERATOR CONFIRMATION NEEDED first (this changes live dispatch state). Done when: the field is flipped and the
-      remaining `[BACKEND] P3` todo appears in the live AO backlog (verify via `/check-agent-orchestrator` or
-      equivalent).
-- [ ] [DOCS] P3. Drop the redundant `meta` co-tag from `issues/git_health_not_clean_since_pinned_constant_2026_07_27.md`
-      (finding 8). Done when: `asset_group: [infrastructure]` only.
-- [ ] [OPERATOR] P0. **Rule on `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P0-A before 2026-08-15** (finding 9,
-      re-surfaced from that doc's own prior parking) — the `check_codex_doc_freshness.py` 144-doc bulk-stamp cliff. 13
-      days remaining as of this run's date. See that doc's own §P0-A for options A-D.
-- [ ] [DOCS] P3. Re-carry forward the 6 still-open 2026-08-01/07-31 findings (delta_proxy_repricer.py checkbox; confirm
-      stash-clone directory's real-host state; retag `ao_self_pull_wedged` + `qg_owner_gate` mistags to `[ao]`; fix
-      batch3's stale banner; harden `CITE_RE`) — see `issues/ag_closeout_audit_infra_parked_2026_08_01.md`'s own Todos
-      section for the authoritative text; not restated here to avoid drift between two copies.
+- [x] ✅ [DOCS] P2. Flip `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm: NA` → `planning` (finding 7)
+      — **CLOSED 2026-08-06 (na-eligibility-audit)**: now in place — live `assigned_vm: planning` with the 2026-08-02
+      correction comment (operator ruling, finding 7), verified in batch3 frontmatter. OPERATOR CONFIRMATION NEEDED
+      first (this changes live dispatch state). Done when: the field is flipped and the remaining `[BACKEND] P3` todo
+      appears in the live AO backlog (verify via `/check-agent-orchestrator` or equivalent).
+- [x] ✅ [DOCS] P3. Drop the redundant `meta` co-tag from
+      `issues/git_health_not_clean_since_pinned_constant_2026_07_27.md` **CLOSED 2026-08-06 (na-eligibility-audit)**:
+      resolved by the broader 2026-08-02 operator-ruled retag — live `asset_group: [ao, meta]` with the multi-value kept
+      intentionally (comment documents the ruling), verified. (finding 8). Done when: `asset_group: [infrastructure]`
+      only.
+- [x] ✅ [OPERATOR] P0. **Rule on `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P0-A before 2026-08-15** (finding 9,
+      **CLOSED 2026-08-06 (na-eligibility-audit)**: operator-ruled 2026-08-03 (closeout Progress Log: "P0-A 2026-08-15
+      cliff operator-ruled"), resolved. re-surfaced from that doc's own prior parking) — the
+      `check_codex_doc_freshness.py` 144-doc bulk-stamp cliff. 13 days remaining as of this run's date. See that doc's
+      own §P0-A for options A-D.
+- [x] ✅ [DOCS] P3. Re-carry forward the 6 still-open 2026-08-01/07-31 findings (delta_proxy_repricer.py checkbox;
+      confirm **CLOSED 2026-08-06 (na-eligibility-audit)**: superseded — carried into the 08-03/08-04 parked registers'
+      carried-forward lists (batch3 blank-flip re-apply as finding 10, stash-backup bundle as finding 11, plus 12/13
+      tooling findings). stash-clone directory's real-host state; retag `ao_self_pull_wedged` + `qg_owner_gate` mistags
+      to `[ao]`; fix batch3's stale banner; harden `CITE_RE`) — see
+      `issues/ag_closeout_audit_infra_parked_2026_08_01.md`'s own Todos section for the authoritative text; not restated
+      here to avoid drift between two copies.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA-STALE-ITEMS — all 4 items closed as resolved/superseded
+  (see closes), doc stays NA** as the parked-findings register lineage (later registers hold the still-live findings).
 
 - **2026-08-02** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 11). Re-derived the
   candidate set (`generate_ag_closeout_audit_candidates.py --tranche infra`: 39→43 members mid-run after a same-day

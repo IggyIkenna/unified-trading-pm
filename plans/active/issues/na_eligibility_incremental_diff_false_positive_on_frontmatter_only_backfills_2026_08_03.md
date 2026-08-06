@@ -160,6 +160,15 @@ rather than the filer marking their own work ready-to-dispatch in one unbroken a
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA — RECLASSIFY-signal CONFLICT, parked
+  BLOCKED-OPERATOR-DECISION, NOT flipped.** Both todos are bounded (content-hash/frontmatter-blind diff verification in
+  `generate_na_doc_tranche_inventory.py`; SKILL.md Phase 0 update), but
+  `infra_satellite_ao_dispatch_batch7_2026_08_04.md` (assigned_vm: planning, status: draft, drafted 2026-08-04 by
+  /ag-closeout-audit) already holds BOTH claims verbatim and its finalize twin plans to flip this doc's checkboxes on
+  ship — flipping now would create a duplicate dispatch vehicle for the same two items. Conflict-check §3 CONFLICT: do
+  not prefer one side. Operator ruling needed: (A) activate batch7 + citation-close this doc's two todos; (B) keep
+  batch7 draft, flip this doc, strip batch7's two overlapping todos; (C) leave both.
+
 - **2026-08-03** — Filed by `/na-eligibility-audit` (tranche `infra`, autonomous scheduled run, dispatch agt-a41abf).
   Found while manually `git show`/`git blame`-verifying every Phase-0 "in scope" doc in the infra tranche's 39-doc
   population before trusting the date-fallback flag, per this run's own "grep-then-READ, not grep-then-conclude"
