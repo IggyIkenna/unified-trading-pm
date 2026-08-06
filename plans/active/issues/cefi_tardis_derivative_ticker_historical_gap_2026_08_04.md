@@ -167,6 +167,16 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~08:00Z (data_engineering, heartbeat checkpoint #6)**: VM `cefi-fwd-20260806-065837` RUNNING. PM
+  repo synced to `dfd40db6b` (ahead=0). BYBIT derivative_ticker fully confirmed: **444 perpetual objects** for
+  day=2026-05-23 written ~07:44-07:47Z (ZK, ZKC, ZKP, ZRO, ZORA, ZRX, ZBT, ZEN, ZEREBRO, ZEC seen as last batch —
+  alphabetical end). VM log at 07:50Z shows BYBIT perpetual trades + COINBASE-FUTURES book_snapshot_5 being processed in
+  parallel. DERIBIT/OKX-SWAP derivative_ticker NOT yet in log (come after COINBASE alphabetically). Catalogue confirms
+  DERIBIT (339178 mvp rows) + OKX-SWAP (485 mvp rows) will produce derivative_ticker. BINANCE-DELIVERY=0 confirmed
+  correct (no mvp rows). **AO heartbeat sent and acknowledged** (task
+  `cefi_tardis_derivative_ticker_historical_gap-002`, `/api/slots/14/heartbeat`). ETA VM completion ~01:00-07:00Z
+  2026-08-07. **Resume**: verify DERIBIT + OKX-SWAP derivative_ticker GCS objects once VM terminates, then flip
+  RE-OPENED [DATA] P1 todo + docs(plans): commit + POST /done.
 - **slot-14 2026-08-06 ~07:42Z (data_engineering, heartbeat checkpoint #5)**: VM `cefi-fwd-20260806-065837` RUNNING. At
   07:37Z log on day=2026-05-23, BITGET-SPOT book_snapshot_5 phase. Venue processing order is alphabetical:
   BINANCE-DELIVERY→BINANCE-FUTURES→BINANCE-SPOT→BITFINEX-FUTURES→BITFINEX-SPOT→BITGET-FUTURES→BITGET-SPOT; next = BYBIT.
