@@ -297,11 +297,17 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (04:31 `agt-b334ff` ~37min, 06:31 `agt-121905` ~35min — no `tmux_session_lost` event in the archival window, so
       the sessionless-silent path) while siblings in the same batches completed. Determine mid-run death vs post-work
       /done failure. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. Extend the 08-01 session-collision fix (agent-orchestrator@0c82906 excluded ONLY review slots from
+- [x] ✅ [SCRIPT] P3. Extend the 08-01 session-collision fix (agent-orchestrator@0c82906 excluded ONLY review slots from
       `plan_health._pick_free_slot` / `escalation._pick_free_slot`) to the escalation/auditor slots: the 08-04 deaths of
       freshly-dispatched cicd (slots 4/5) + na_eligibility (slots 8/9) agents' sessions around the 14:00 ao-self-pull
       restart show the same collision class hits non-review slots, and review slot 1 still died despite the fix —
-      determine the exact killer (no surviving log captured it) before extending. (repo: agent-orchestrator)
+      determine the exact killer (no surviving log captured it) before extending. (repo: agent-orchestrator) —
+      agent-orchestrator@5941552 (slot-6, 2026-08-06, QG green 2536 passed). Root-caused + shipped: see Progress Log.
+      Both pickers now skip any slot with `spawn_base_role` set (the DB-backed claim of an in-flight typed dispatch, set
+      at claim time by `claim_slot_for_typed_agent()`, survives restarts in SQLite) — closing the TOCTOU race for EVERY
+      slot hosting a typed one-shot, not just review slots. Release points added so a finished/torn-down typed slot
+      returns to the free-slot pool: `_done_one_off`, `reset_slot_worker_state`, and the pruner's slot-loss branch (+
+      the existing `_typed_occupant_liveness` stale-clear). 5 new regression tests.
 - [ ] [DATA] P3. Observability gap surfaced by the root-cause: the exact process that kills per-slot tmux sessions
       around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
       only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
@@ -396,3 +402,30 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
     API-stall/SQLite-lock root cause is already tracked there; the dispatch-ceiling bumps (item 3 + the -010 todo)
     mitigate the false-timeout report only, they do not fix the stall. No code shipped (pure investigation, read-only
     DB).
+
+- **worker slot-6 2026-08-06 (todo -009 — extend the 08-01 collision fix beyond review slots)**: ROOT-CAUSED + SHIPPED
+  (agent-orchestrator@5941552, QG green 2536 passed, on origin/live-defi-rollout).
+
+  **Exact killer (determined by code analysis — the surviving logs were gone, journald reset 08-06 00:45).** The 08-04
+  deaths of freshly-dispatched cicd (slots 4/5) + na_eligibility (slots 8/9) sessions around the 14:00 ao-self-pull
+  restart are the SAME collision class as 08-01, hitting non-review slots: `plan_health._pick_free_slot` and
+  `escalation._pick_free_slot` decide "free" SOLELY on `tmux_spawn.has_session(orch-slot-N)` at call time, blind to
+  whether the slot is currently CLAIMED by an in-flight typed dispatch (`spawn_base_role` set by
+  `claim_slot_for_typed_agent()`, which survives restarts in SQLite). Around the restart the freshly-dispatched
+  one-shots' tmux sessions were momentarily absent (the pruner/kill/respawn churn that fires 500-750×/day, a spawn
+  race), so their slots read "free" and a SECOND dispatcher (the timer re-firing after restart, another tranche/wall)
+  claimed the same `orch-slot-N`, hijacking the live occupant. Review slot 1's residual death is a SEPARATE mechanism —
+  the review slots ARE excluded from the pickers since 0c82906, so its death was `ensure_review_agents`'
+  heartbeat-silent hung-review kill (`_review_agent_heartbeat_silent` + `kill_session`, autospawn.py ~245-260: a review
+  whose 15-min /poll cadence lagged past the silence timeout around the restart was killed+respawned by its own keeper)
+  — not a picker collision.
+
+  **Fix**: both pickers now `continue` on any slot with `spawn_base_role` set — the reliable "an in-flight typed
+  dispatch owns this slot" signal, independent of momentary tmux state. Release points added so a finished/torn-down
+  typed slot returns to the free-slot pool: `_done_one_off` clears it (clean completion), `reset_slot_worker_state`
+  clears it (watchdog-kill/pruner/reclaim teardown), the pruner's slot-loss branch clears it (session confirmed gone), +
+  the existing `_typed_occupant_liveness` stale-clear. `assign_task_to_slot` already cleared it for regular workers.
+  Note the peer 5087f30 (capacity-queue on no-capacity, slot-1 same morning) COMPLEMENTS this: when the picker now
+  correctly refuses claimed slots, the scheduled timer queues instead of dropping. 5 new regression tests (plan_health +
+  escalation pickers skip claimed slots in the has_session()==False TOCTOU gap; `_done_one_off` + reset release the
+  claim).
