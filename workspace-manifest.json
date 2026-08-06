@@ -369,7 +369,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -393,10 +393,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
+        "coverage_pct": 73.74,
         "large_file_count": 6,
-        "qg_red_reason": "qg",
-        "warn_file_count": 9,
-        "coverage_pct": 73.64
+        "qg_red_reason": null,
+        "warn_file_count": 9
       }
     },
     "execution-service": {
@@ -533,7 +533,7 @@
       "codebase_health": {
         "coverage_pct": 86.65,
         "large_file_count": 2,
-        "qg_red_reason": "qg",
+        "qg_red_reason": null,
         "warn_file_count": 16
       },
       "ldr_ci_status": "GREEN",
@@ -655,8 +655,8 @@
         "carry-rates"
       ],
       "codebase_health": {
+        "coverage_pct": null,
         "large_file_count": 0,
-        "coverage_pct": 86.35,
         "qg_red_reason": null,
         "warn_file_count": 0
       },
@@ -683,7 +683,7 @@
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -765,10 +765,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.03,
-        "warn_file_count": 11,
+        "coverage_pct": 91.04,
         "large_file_count": 8,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "warn_file_count": 11
       }
     },
     "market-data-processing-service": {
@@ -1112,10 +1112,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
+        "coverage_pct": 9.57,
         "large_file_count": 0,
-        "warn_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "warn_file_count": 0
       }
     },
     "trading-agent-service": {
@@ -1146,7 +1146,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/trading-agent-service",
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 50,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1174,10 +1174,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
         "large_file_count": 0,
-        "qg_red_reason": "qg",
-        "warn_file_count": 0,
-        "coverage_pct": 73.53
+        "qg_red_reason": null,
+        "warn_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1376,7 +1376,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1526,9 +1526,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
         "coverage_pct": null,
-        "warn_file_count": 7,
-        "large_file_count": 16,
-        "qg_red_reason": null
+        "large_file_count": 17,
+        "qg_red_reason": null,
+        "warn_file_count": 6
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
