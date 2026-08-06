@@ -167,6 +167,13 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~07:20Z (data_engineering, pre-compact checkpoint)**: VM `cefi-fwd-20260806-065837` still
+  `RUNNING`. At 07:18Z still processing day=2026-05-23 (book_snapshot_5 phase — BINANCE-FUTURES perpetual + BINANCE-SPOT
+  spot_pair uploads confirmed active; derivative_ticker objects for BINANCE-FUTURES already written at 07:02Z). Both
+  repos clean: `unified-trading-pm` ahead=0 (last `81ae4220a`), `market-tick-data-service` ahead=0 (`467a3cd1`).
+  Scratchpad empty. No dangling refs. Compacting context; ScheduleWakeup re-armed for 07:50Z to continue monitoring.
+  **Resume point**: check VM status, verify derivative_ticker object counts for all 5 target venues on day=2026-05-23,
+  then flip RE-OPENED [DATA] P1 todo + POST /done once VM TERMINATES.
 - **slot-14 2026-08-06 ~06:45Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-002`)**: Two root
   causes identified and fixed: **(RC1 — IAM)** `uts-prd-sa` lacked `storage.objects.list` on
   `instruments-store-cefi-prd-central-element-323112` (`roles/storage.legacyBucketReader` only); `gcsfs.find()` got 403
