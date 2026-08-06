@@ -113,17 +113,49 @@ worker behind it in the first place; it has never been extended to a real, curre
   (`ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md`)? A kill-and-reuse-the-slot policy
   applied at scale will hit that cross-delivery gap far more often than the rare manual "Reassign" click does today.
 
+## Operator ruling (2026-08-06)
+
+- **Routing**: worker self-declares `authority` at `/blocked` time (extend `BlockedRequest` + wire the already-existing
+  `BlockedRow.authority` field) — fast path, one API call, no new triage stage for every question. The main-agent gets a
+  bounded first crack at answering ONLY within the `main_agent`-tagged bucket, before that bucket's timer expires — not
+  a fleet-wide triage pass over every blocked question (rejected: adds latency even to obviously operator-only questions
+  like wallet keys / force-push).
+- **`main_agent` bucket (~10min budget, operator's own number from the doc's summary)**: unanswered at the deadline →
+  kill the tmux session (same mechanism `reassign_slot` already uses) + free the slot; the in-flight task the worker was
+  doing before it blocked is abandoned and **requeued as fresh backlog work**, not resumed — mirrors the existing
+  `BLK-op-*` precedent, now extended to a real occupied slot instead of only the synthetic `slot_id=0` sentinel row.
+- **`operator` bucket (hours-long budget)**: same model — free the slot once the budget elapses, and once the operator
+  answers, **redispatch fresh** rather than resuming a killed session (accepts the context-loss tradeoff named in the
+  doc as the cost of not tying up a slot for hours). `continue_on` is NOT the primary mitigation for this bucket under
+  this ruling — a worker may still declare `continue_on` to stay productive while waiting, but it does not gate or
+  extend the N-hour timer; killing + fresh redispatch is the default once the budget elapses regardless of `continue_on`
+  state.
+- **Operator-bucket threshold**: no explicit number was given for this ruling round — proposing **N = 4 hours** as the
+  starting default (long enough not to prematurely kill a genuinely slow-to-answer operator question, short enough to
+  bound slot-hostage time; same order of magnitude as this codebase's other backoff/TTL windows, e.g. escalation.py's
+  `QUEUE_TTL_HOURS=24`/`HARD_ABANDON_HOURS=48` scaled down for a much cheaper resource — one slot, not a whole queue).
+  **Flagged as adjustable, not re-litigated here** — correct via a follow-up ruling if 4h is wrong in practice.
+- **Ordering**: confirmed — this ships AFTER
+  `/plans/active/issues/ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06.md`'s fix lands. A
+  kill-and-reuse-the-slot policy applied at the cadence this design implies will hit that cross-delivery gap far more
+  often than the rare manual "Reassign" click does today — shipping this first without that fix would make the known bug
+  materially worse, not just leave it unaddressed.
+
 ## Todos
 
-- [ ] [OPERATOR] P2. **Rule on the design questions above** — thresholds, what "redispatch" means for a real occupied
-      slot, and whether `continue_on` stays primary or killing becomes default for operator-gated questions. Nothing
-      below should be implemented before this ruling; the risk of guessing wrong here is the same class of harm the
-      watchdog's existing "never kill blocked" rule was written to prevent.
-- [ ] [INFRA] P3. **Once ruled: wire `authority` (or a new field) into the real `/blocked` path.** `BlockedRequest`
-      currently has no `authority` field — a worker can't self-tag a question today even though the schema already has a
-      place to put it.
-- [ ] [INFRA] P3. **Once ruled: implement the differentiated timeout in `blocked_reconcile.py`**, following the same
-      pattern the retirement sweep already uses (`classify_retirement()`), rather than a new parallel mechanism.
+- [x] [OPERATOR] P2. **Rule on the design questions above** — see "Operator ruling (2026-08-06)" above.
+- [ ] [INFRA] P3. **Wire `authority` into the real `/blocked` path.** Add an
+      `authority: Literal["main_agent",     "operator"]` field to `BlockedRequest` (`models/worker_api.py:242-248`);
+      thread it through to `BlockedRow.authority` at creation in the `/blocked` handler (`routes/slots_worker.py`). Add
+      a regression test asserting a worker-declared `authority` round-trips onto the row.
+- [ ] [INFRA] P3. **Implement the differentiated timeout in `blocked_reconcile.py`**, following the same pattern the
+      retirement sweep already uses (`classify_retirement()`) rather than a new parallel mechanism: `main_agent`-tagged
+      rows past 10min (config knob, not hardcoded) → kill slot + requeue task fresh; `operator`-tagged rows past 4h
+      (config knob) → same kill + requeue-on-answer model. **Gated on the `SlotMessageRow` task_id-scoping fix above
+      being shipped first** (see "Ordering").
+- [ ] [INFRA] P3. **Give the main-agent a bounded first-answer window on `main_agent`-tagged questions** before that
+      bucket's kill timer fires — the specific mechanism (a dedicated triage poll vs. reusing an existing tick) is an
+      implementation detail for whoever picks this up, not re-litigated here.
 
 ## Progress Log
 
@@ -134,3 +166,9 @@ Filed after the operator described the proposed policy and asked whether it alre
 corpus for any `authority`-differentiated timeout or "free the slot" design — confirmed none exists, including as dead
 code. Filed as design/operator-ruling-needed rather than a scoped implementation todo, per the dispatch-scope
 eligibility bar (an open-ended judgment call is not an AO-dispatchable todo until the operator names the shape).
+
+### 2026-08-06 (later, interactive session) — operator ruled
+
+Operator ruled on all open design questions via AskUserQuestion (see "Operator ruling" section above); this doc is now
+implementation-ready pending the cross-delivery fix landing first. Not yet implemented — todos above are scoped but
+unstarted.
