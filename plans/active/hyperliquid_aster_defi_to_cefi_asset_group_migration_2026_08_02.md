@@ -94,24 +94,35 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
 
 ### Phase 1 — Confirm scope + build the migration script (P1)
 
-- [ ] [DATA] P1. Full day-by-day, data_type-by-data_type object count for both venues across the entire
+- [x] ✅ [DATA] P1. Full day-by-day, data_type-by-data_type object count for both venues across the entire
       `asset_group=defi` window (targeted prefix listing per day — reuse the per-day-parallel pattern from
       `scripts/audit_aster_cefi_in_defi_bucket_scope_2026_07_13.py`, NOT a whole-bucket scan). Write result to
       `_index/audit/hyperliquid_aster_defi_asset_group_scope_2026_08_0X.parquet` (mirrors that script's output
       convention). Confirm exact first/last day with data per venue + enumerate every `data_type` present (at least
       `perp_funding` + `perp_daily_ctx` confirmed above; check for `derivative_ticker`/`trades` too — the retired
-      `_perp_funding_hl_aster.py` staged more than one leg per the archived ASTER-bucket plan's root-cause note).
-- [ ] [DATA] P1. Confirm the canonical CEFI-bucket target path shape for these two venues + data_types (same
+      `_perp_funding_hl_aster.py` staged more than one leg per the archived ASTER-bucket plan's root-cause note). —
+      market-tick-data-service@24f11df7 (audit_hyperliquid_aster_defi_asset_group_scope_2026_08_06.py ran →
+      `_index/audit/hyperliquid_aster_defi_asset_group_scope_2026_08_06.parquet`; 7,599 objects: HYPERLIQUID 6,683
+      `perp_daily_ctx` 2026-05-10→06-01 + `perp_funding` 06-04→06-09, ASTER 916 `perp_funding` 06-04/06-05 only).
+- [x] ✅ [DATA] P1. Confirm the canonical CEFI-bucket target path shape for these two venues + data_types (same
       `resolve_bucket_name(asset_group="cefi")` pattern the ASTER-bucket-placement migration used) and whether a
       canonical-twin already exists anywhere (parity check by `(size, crc32c)`, never existence-only — same rule the
-      ASTER precedent enforced after finding per-day symbol gaps even in its "near-100%-duplicated" window).
-- [ ] [DATA] P1. Write the migration script (new sibling under `market-tick-data-service/scripts/`, e.g.
+      ASTER precedent enforced after finding per-day symbol gaps even in its "near-100%-duplicated" window). —
+      market-tick-data-service@24f11df7: target = cefi bucket via `resolve_bucket_name(asset_group="cefi")`; pure
+      relabel (only `asset_group=defi`→`cefi` changes; day/pipeline_mode/venue/chain/instrument_type/data_type +
+      filename unchanged). Zero canonical-twin candidates: neither `perp_daily_ctx` nor `perp_funding` exists in the
+      cefi bucket for these venues (live-confirmed 2026-08-06 — cefi bucket carries only `book_snapshot_5`/
+      `derivative_ticker`/`trades`).
+- [x] ✅ [DATA] P1. Write the migration script (new sibling under `market-tick-data-service/scripts/`, e.g.
       `migrate_hyperliquid_aster_defi_asset_group_2026_08_0X.py`) — same-bucket-or-cross-bucket copy (whichever the
       Phase-1-Todo-2 answer requires) from `asset_group=defi` to `asset_group=cefi`, same relative
       day/pipeline_mode/venue/chain/instrument_type/data_type partitions otherwise unchanged unless the canonical
       CEFI-bucket shape differs. `--dry-run` default, `--apply` to mutate, idempotent parity-checked skip — same
       convention as every prior `migrate_*` script in this dir (`migration_common.py` helpers). Never deletes the
-      `asset_group=defi` source (Phase 4, separate operator-gated step).
+      `asset_group=defi` source (Phase 4, separate operator-gated step). — market-tick-data-service@24f11df7:
+      `migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py` (cross-bucket copy defi→cefi, `--dry-run` default /
+      `--apply` to mutate, parity-checked idempotent skip, per-day PROGRESS.json checkpoint, per-object isolation).
+      Dry-run planned 7,599 copies; never deletes the defi source.
 
 ### Phase 2 — Execute the migration (P1, VM — heavy I/O, not local-machine)
 
@@ -168,3 +179,14 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
   GCS (bounded per-day checks, not a full walk) with writes stopped between 2026-06-05 and 2026-06-20. Filed
   `status: draft` / `assigned_vm: NA` per the ask-before-creating default (no operator round-trip available in this
   dispatch).
+- 2026-08-06 (slot 4, task `hyperliquid_aster_defi_to_cefi_asset_group_migration-004`): task -004 (Phase 2, INFRA VM
+  launch) was dispatched/resumed while Phase-1 tasks -001..-003 were still queued and the migration script did not
+  exist. Per the plan-is-sized-for-one-agent model, completed the Phase-1 deliverables inline (todos 1-3 flipped this
+  entry, code `market-tick-data-service@24f11df7`): (1) scope audit script
+  `audit_hyperliquid_aster_defi_asset_group_scope_2026_08_06.py` → `_index/audit/..._2026_08_06.parquet` on the defi
+  bucket (7,599 objects: HYPERLIQUID 6,683 `perp_daily_ctx` 2026-05-10→06-01 + `perp_funding` 06-04→06-09; ASTER 916
+  `perp_funding` 2026-06-04/06-05 only); (2) target shape confirmed = pure relabel into the cefi bucket (zero
+  canonical-twin candidates — neither data_type exists in the cefi bucket); (3) migration script
+  `migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py` written + dry-run-confirmed (7,599 planned copies). Added
+  `defi-hl-aster-ag-relabel` category to `launch-canonical-migration-vm.sh` (`deployment-service@71d4908`, rebased to
+  `aa51beb` under churn) to run it on a dedicated VM.
