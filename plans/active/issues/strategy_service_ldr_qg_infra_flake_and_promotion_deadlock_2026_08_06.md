@@ -309,10 +309,14 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 
 ## Follow-ups (added 2026-08-06 ~07:57Z)
 
-- [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`) v2 run **31085361119** (31082724876
-      cancelled 08:33Z — cache-save wait; both legs PASS on 31085361119) → auto-merge → verify main HEAD is the promote
-      squash → POST /done (`one_shot_complete: true`). If superseded by a newer promote PR, repeat the
-      conflict-resolution recipe above. Provenance: agt-e33f21.
+- [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`). **CORRECTED root cause (09:40Z):** the
+      PR-triggered v2 run 31082724876 was cancelled 08:33Z mid-cache-save, leaving the PR's required check
+      `Quality Gates (strategy-service) / quality-gates-v2` = FAILURE — and a **workflow_dispatch** run's same-named
+      check (31085361119, both legs PASS 09:33Z) does **NOT** count toward PR mergeability, so the PR stayed BLOCKED.
+      **Fix issued 09:37Z: `gh run rerun 31082724876`** (queued; re-tests f369eda7 on the same merge ref — main 19565cd3
+      unchanged). On success → PR #496 auto-merge (SQUASH) → verify main HEAD is the promote squash → POST /done
+      (`one_shot_complete: true`). If superseded by a newer promote PR, repeat the conflict-resolution recipe above.
+      Provenance: agt-e33f21.
 - [x] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
       world-readable, abandoned 05:57Z, foreign session's). **RESOLVED: file gone as of 09:25Z (operator/cleanup removed
       it).** Provenance: agt-e33f21 security finding.
@@ -362,6 +366,32 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 - Correction applies to the follow-up todos below: the cache-save is NOT a P0 blocker; PR #491's 0MB-disk failure (a
   real disk-full) is a distinct event from today's slow-but-successful saves.
 
+## agt-e33f21 follow-up — CORRECTION #2: dispatch-run check does NOT unblock the PR; the PR-triggered run was cancelled (2026-08-06 ~09:40Z)
+
+**The CORRECTION #1 prediction ("run terminal ~09:38Z → PR #496 auto-merge fires") was WRONG. The PR stayed BLOCKED even
+after a successful v2 run.** True root cause of the BLOCKED state + the real fix:
+
+- **GitHub does NOT count a `workflow_dispatch` run's check runs toward a PR's required-check evaluation.** After
+  `31085361119` (workflow_dispatch on `promote/strategy-service/9af7501d8058`) completed SUCCESS at 09:33:51Z — with the
+  exact required context `Quality Gates (strategy-service) / quality-gates-v2` = success (verified via
+  `gh run view --json jobs`: content sentinel ✅, QG slice checks ✅, QG slice tests ✅, quality-gates-v2 ✅) — PR #496
+  remained `mergeStateStatus: BLOCKED`, `mergeable: MERGEABLE`, auto-merge armed (SQUASH, 07:44Z), no required reviews,
+  `sit-gate/fleet-green` = success on the head. ONLY the v2 required check was unsatisfied.
+- **Why:** the ONLY PR-triggered v2 run was **31082724876** (pull_request event, head `f369eda7`) — cancelled 08:33Z
+  mid-cache-save → its `quality-gates-v2` job concluded **FAILURE** (the required context is now a FAILED PR-check-suite
+  check run). GitHub evaluates required checks for a PR from its own check suites (PR-triggered runs / their re-runs); a
+  same-named check from a manually-dispatched run on the same head commit is displayed on the commit but does not
+  satisfy the PR's required check.
+- **Clarification on the run taxonomy (from `gh run view --json jobs`, NOT `--branch` which mixes workflows):**
+  31082724588 = `validate` cloud-build workflow (GCP/AWS CodeBuild jobs, NOT the v2 gate); 31082723850 = Plan Alignment
+  Check workflow (FAILURE, unrelated gate); **31082724876 = the real PR-triggered v2 run**; 31085361119 = my dispatch.
+- **Fix: `gh run rerun 31082724876`** (issued 09:37Z, now queued). Re-running a PR-triggered run creates a fresh
+  PR-associated check suite on the same merge ref (`refs/pull/496/merge`; base main `19565cd3` unchanged since the run
+  was created → same merge commit) with the same context names — GitHub will count THIS run's pass. Terminal ETA
+  ~10:20-11:00Z (queued behind the in-progress LDR dispatch 31087089844 on the single glue runner + two ~15-min
+  cache-saves). Verify via `gh run view 31082724876 --json jobs` for the `quality-gates-v2` job = success, then PR #496
+  auto-merges.
+
 ## Lessons / traps (agt-e33f21, re-learned at cost)
 
 - **`gh api .../actions/runs?workflow_id=<filename>` does a FUZZY name match.** `workflow_id=full-workspace-sit.yml`
@@ -391,6 +421,18 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 - **Harness reaps long-lived background bash** (heartbeat loops, `run_in_background` watchers, and even `Monitor`
   scripts all died mid-session, exit 144 / silent). Reliable long-wait mechanisms: `ScheduleWakeup` (fired on time every
   time) + `CronCreate` recurring prompts (harness-managed, survive reaping) + one-shot `Bash` backup checks.
+- **A `workflow_dispatch` run's check runs do NOT satisfy a PR's required status check** — only the PR's own check suite
+  (pull_request-triggered runs + their re-runs) counts for mergeability. To green a blocked promote PR, re-run the
+  PR-triggered run (`gh run rerun <pr-triggered-run-id>`) — do NOT "re-dispatch" the workflow on the branch; it passes
+  but the PR stays BLOCKED. Diagnose via `gh run view <id> --json jobs` (job names tell you WHICH workflow a run is —
+  `validate / GCP Cloud Build` = cloud-build, `Plan Alignment Check` = plan-alignment,
+  `Quality Gates (strategy-service) / quality-gates-v2` = the v2 gate) and by the run's `event` (`pull_request` = PR's
+  own suite, `workflow_dispatch` = won't count).
+- **A cancelled PR-triggered v2 run leaves the required check context FAILED (conclusion=failure, not "missing")** — the
+  cancelled `quality-gates-v2` aggregate job reddens the PR and keeps it BLOCKED even after a manual pass. Only a re-run
+  of that PR run (or a new PR commit) flips it.
+- **`gh run list --branch <promote-ref>` mixes multiple workflows** (cloud-build validate, plan-alignment, v2 all run on
+  the promote branch) — always disambiguate by `--json jobs` / `event` before concluding which run is the gate.
 
 ## Progress Log
 
