@@ -122,9 +122,10 @@ items.
       shipped 2026-07-30, is narrowly scoped to ODDS_API per its own design (no fleet-wide blast radius), includes a
       403-line test file, and is already merged past two subsequent promote/backmerge commits.
 
-## Failed mid-run on a real network outage (API ENOTFOUND / FailedToOpenSocket across MULTIPLE independent agents in
+## Failed mid-run on a real network outage (API ENOTFOUND / FailedToOpenSocket across MULTIPLE independent agents in the same window) — NOT logic bugs, safe and correct to retry as-is once connectivity is confirmed stable
 
-the same window) — NOT logic bugs, safe and correct to retry as-is once connectivity is confirmed stable
+— fixed 2026-08-06 (/plan-reconcile ao): heading previously broke mid-parenthetical across a line-wrap, orphaning the
+closing paren on the next paragraph's first word; merged onto one line, text preserved exactly.
 
 The retry script already exists and is untouched (branch-name collisions checked clean — no leftover
 `ao-fix-*`/`ao-fresh-*` branches or worktrees from the failed attempts):
