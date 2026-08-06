@@ -56,14 +56,6 @@ locked_since: 2026-05-07
 
 # ML + Features Master (umbrella)
 
-> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
-> [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
-> phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),
-> `utl_reuse_phase3_ml_model_registry_2026_07_13` (ml ModelRegistry),
-> `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent slots: do not
-> re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase plans land —
-> check them first.
-
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation + live-pipeline activation 2026-05-08**
 >
 > [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md) merges the 8

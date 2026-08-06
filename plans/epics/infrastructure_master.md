@@ -122,14 +122,6 @@ locked_since: 2026-05-07
 
 # Infrastructure Master — shard / data-status / deployment-build umbrella
 
-> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
-> [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
-> phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),
-> `utl_reuse_phase3_ml_model_registry_2026_07_13` (ml ModelRegistry),
-> `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent slots: do not
-> re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase plans land —
-> check them first.
-
 ## Scope
 
 Single source of truth for **shard-granularity propagation, data-status drilldown, and deployment-service build
@@ -871,11 +863,11 @@ Active sub-plans owned by or closely coordinated with this epic:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [VERIFY] P1. **PARTIALLY DONE 2026-07-27**: the tracker
+- [x] ✅ [VERIFY] P1. **DONE 2026-08-06 (plan_reconciler agt-4fdce1)**: the tracker
       (`plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and its whole split family are now
       archived (operator `[unlock-plan]` granted, `june_2026_vintage_audit_findings_2026_07_27.md` §5#34) — the 10 split
-      children were already archived, this was the last one. **STILL OPEN**: remove the 5 Phase-0 in-flight banners
-      (`> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**`, still present in `infrastructure_master.md`,
-      `strategy_master.md`, `features_and_ml_master.md`, `execution_master.md`, `orchestrator_master.md` as of
-      2026-07-27) + run plan-hygiene + active-inventory regen. (FOLDED IN from
+      children were already archived, this was the last one. Removed the 5 Phase-0 in-flight banners
+      (`> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**`) from `infrastructure_master.md`,
+      `strategy_master.md`, `features_and_ml_master.md`, `execution_master.md`, `orchestrator_master.md`; plan-hygiene +
+      active-inventory regen already ran this session (STEP 1). (FOLDED IN from
       utl_reuse_phase8_codex_ssot_archive_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)
