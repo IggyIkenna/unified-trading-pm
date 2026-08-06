@@ -396,3 +396,14 @@ Two genuinely different directions, not mutually exclusive with the naming recon
     promotion also failing. This CI red gate may be blocking IS from being redeployed, keeping the PYTH-SOLANA
     `instrument_availability` blob stuck on the pre-fix 9-feed set. Not a Pyth-specific issue — IS CI has been red since
     at least 2026-08-05. Operator may need to unblock this separately from the Pyth fix itself.
+  - **2026-08-06 03:50Z (slot-12, RESOLUTION)** — **MTDS union fix shipped + verified.**
+    `market-tick-data-service@202bacc9` (LDR via quickmerge, QG green): modified `_filter_pyth_rows_to_is` to union
+    IS-enumerated pairs with the collector's own static `_PYTH_FEEDS` pairs — a stale/missing IS catalogue entry can
+    never silently drop a feed the collector explicitly supports. Verified via `pyth-lst-backfill-20260806-035000`
+    (1-day VM, 2026-08-06, `exit_code=0`): all 12 PYTH SOLANA feeds captured including BTC/USD, ETH/USD, INF/USD —
+    confirmed via per-VM manifest (all `captured`). JTO/RAY/WIF/JUP/USDC also captured (MTDS@cd017a1c). **This resolves
+    the BTC/ETH/INF data-loss regression documented in this issue** — the fix is self-contained in MTDS and does not
+    depend on IS republishing. IS@6fbaae90 (restoring BTC/ETH/INF to `PYTH_PRICE_FEEDS`) remains on LDR as a
+    complementary SSOT fix; the union guard makes the collector resilient to any future IS catalogue gap. Plan
+    `[DATA] P2` flipped with evidence. Remaining: `[DATA] P3` (instrument_id naming reconciliation) is tracked
+    separately.

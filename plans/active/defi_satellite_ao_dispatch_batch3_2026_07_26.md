@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                                                                                          chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                                                                                          pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                                                                                          `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                                                                                          the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                                                                                          chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                                                                                          2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                                                                                          6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                                                                                          timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                                                                                          `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                                                                                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                                                                                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                                                                                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                                                                                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                                                                                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                                                                                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                                                                                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                                                                                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                                                                                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                                                                                          **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                                                                                          `returns`/onchain reconfirmed). Evidence:
-                                                                                                                          `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                                                                                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                                                                                              `returns`/onchain reconfirmed). Evidence:
+                                                                                                                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -256,14 +256,16 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       indefinitely-unflipped checkbox. `_write_oracle_rows` naming reconciliation already tracked as `[DATA] P3` in the
       issue doc.
 
-- [ ] [DATA] P2. Re-verify Pyth `oracle_prices` BTC/ETH/INF capture resumption: once a live/backfill collection has run
-      AFTER `instruments-service@dec90cc0` + `market-tick-data-service@cd017a1c` land, run a bounded manifest read
-      (`filters=` predicate-pushdown on `venue=PYTH, data_type=oracle_prices`, no whole-corpus walk) confirming
-      BTC/ETH/INF rows resume `captured`/`empty_confirmed` post-fix (no more silent drops via
-      `_filter_pyth_rows_to_is`). Also confirm JTO/RAY/WIF/JUP/USDC now produce real `captured` rows under their current
-      (`{symbol}/usd`) naming, even though family-3's `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` rows will still read
-      `expected_unattempted` until `[DATA] P3`'s naming reconciliation lands separately. Repo: unified-trading-pm
-      (verification only, no code). Source: split from this plan's C6 `[BACKEND] P1` todo, 2026-08-03 (slot-8).
+- [x] ✅ [DATA] P2. Re-verify Pyth `oracle_prices` BTC/ETH/INF capture resumption — **CONFIRMED: fix shipped + verified
+      (slot-12, 2026-08-06).** `market-tick-data-service@202bacc9` (LDR via quickmerge): modified
+      `_filter_pyth_rows_to_is` to union IS-enumerated pairs with the collector's own static `_PYTH_FEEDS` pairs, so a
+      stale/missing IS catalogue entry can never silently drop a feed the collector explicitly supports. Verified via
+      `pyth-lst-backfill-20260806-035000` (1-day VM, 2026-08-06, `exit_code=0`): all 12 PYTH SOLANA feeds captured
+      including BTC/USD, ETH/USD, INF/USD (confirmed via per-VM manifest read — `captured` status, not
+      `empty_confirmed`). JTO/RAY/WIF/JUP/USDC also `captured` (MTDS@cd017a1c fix). Both code fixes on LDR and verified
+      end-to-end. IS@6fbaae90 (restoring BTC/ETH/INF to `PYTH_PRICE_FEEDS`) is ALSO on LDR — the MTDS-side union guards
+      against the stale-IS-blob gap regardless. **Evidence**: per-VM manifest
+      `pyth-lst-backfill-20260806-035000.parquet` (2026-08-06: 12 PYTH SOLANA feeds, BTC=True, all `captured`).
 
 - [x] ✅ [VERIFY] P2. Grep-then-READ whether DeFi arb/carry net-of-gas cost (gas_price × gas_units — execution
       `estimate_gas` gas_units × the captured per-chain `gas_fees` price) is actually wired in any consumer — **VERDICT:
