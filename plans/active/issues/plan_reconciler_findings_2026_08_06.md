@@ -274,11 +274,25 @@ relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and c
   aster "0 open"+digest conflict, dp_catalog "resolved, 2 open", okx AAPL-USD research, operator-gated --apply with no
   checkboxes).
 
-## Resume guide (written at /pre-compact 2026-08-06 ~20:25 UTC — context was compacted mid-run)
+## Resume guide (updated at 2nd /pre-compact 2026-08-06 ~22:15 UTC — STEP 4-7 DONE, STEP 8 in wait-loop)
 
-**Run state:** STEP 1-3 COMPLETE (8/8 hunters in: B0-B4, T, M, C — both B4 and codex-alignment results recorded, see
-their sections below). STEP 4 (adversarial verify) → STEP 5 (apply on review branch `plan_reconciler/agt-bf8439`) → STEP
-6 (route) → STEP 7 (PR + result POST) → STEP 8 (/done) NOT started.
+**Run state — STEPS 1-7 COMPLETE. STEP 8 IN PROGRESS (wait-loop):**
+
+- STEP 4 done: 8 verifiers (refuter+confirmer ×4 clusters) — 25 CONFIRMED / 2 refuted; split adjudications: A4→route
+  (coinbase_cde locked), B1→annotate-don't-drop, B6→tiebreaker by direct evidence (image UPDATE_TIME
+  2026-08-02T15:23:00), D4→sha-trap (1284606a pre-rewrite twin → cite 97801b5d everywhere).
+- STEP 5 done: 13 commits on `plan_reconciler/agt-bf8439` (ahead=0, clean tree) — all fixes listed in
+  `## Flips verified` + `## STEP-4 verdicts` sections; 25 files touched.
+- STEP 6 done: Q1-Q6 POSTed via /api/slots/12/blocked (all can_continue: true) — ASTER attempted_failed (P1), archived
+  ALL-COMPLETE (P1), coinbase_cde unlock, epic-regen scope, archive_exempt dual-direction, codex-drift sweep.
+- STEP 7 done: PR https://github.com/IggyIkenna/unified-trading-pm/pull/2398 (review into live-defi-rollout);
+  plan-health result POSTed 200 ok (25 confirmed/2 refuted, 93 docs, 43 grace, sha 4a5c9963, pr_url #2398).
+- **STEP 8 (only remaining)**: wait-loop armed (background task bxmxi5mlo, 12×5min polling GET /api/slots/12/messages +
+  /progress heartbeats; exits with ANSWERS-ARRIVED on non-empty messages or WAIT-TIMEOUT-1H-NO-ANSWERS — its completion
+  re-invokes this session). On answers: apply each (same verified-fix discipline; a ruled codex edit is now authorized)
+  → checkpoint-commit BY NAME → push → then `POST /api/slots/12/done`
+  `{"task_id":"agt-bf8439","sha":"<head>","evidence":"...","one_shot_complete":true}` — THE LAST ACTION. If the
+  wait-loop times out with no answers: re-arm it and keep waiting (do NOT /done with questions open).
 
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
 needed (dedup'd across hunters):
@@ -663,3 +677,26 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
 | coinbase_cde archival (unlock + 6-step ritual)          | locked_by + operator question Q3                  | Q3 answer                |
 | ASTER attempted_failed annotation on closeout           | GRACE (read-only this run)                        | grace window + Q1 answer |
 | epic regen + archival rituals from other tranches' runs | out of shard scope                                | their runs               |
+
+### Lessons learned 2nd half (STEP 4-7 — don't re-learn)
+
+- **PRE-HISTORY-REWRITE SHA TRAP (hit 3× this run)**: any sha cited in a doc written before the 2026-08-05 history
+  rewrite may be a diverged twin NOT on origin/live-defi-rollout (`1284606a`→`97801b5d`, `f9fa7587`→`82d86feb`;
+  `752eaff` dangling entirely). ALWAYS `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing in a
+  flip; on fail, find the twin by same-subject/timestamp (the twin is the ancestor-of-LDR commit with the same message).
+- **/blocked endpoint schema**:
+  `{"task_id","question","options":["A: ...","B: ..."],"recommendation","can_continue", "continue_on"}` — a
+  `message`-keyed payload gets 422.
+- **plan-health result path**: `/api/plan-health/result` (DASH), not `/api/plan_health/result` (404).
+- **Prettier-padded lines**: proseWrap-padded docs have huge trailing whitespace — Edit old_string must be a SHORT
+  unique substring (padding excluded); the pre-commit prettier autostage normalizes the result.
+- **Bash mangles `BLOCKED-UPSTREAM-DESIGN`** in command output (renders as `n`) — quote the token from Read/editor
+  content, never from grep output.
+- **Frontmatter edits via perl -0pi are error-prone** (duplicated keys possible) — use the Edit tool and verify with
+  `rg -n` after.
+- **2026-07-30 no-double-gate ruling applied 3×**: finalize body banner "STATUS: draft — NOT dispatched" is the STALE
+  side; frontmatter `status: active` is correct → align the BODY, never the frontmatter.
+- **Zero-checkbox sweep is live**: 2 docs this run had prose "Suggested follow-up/remediation" sections with no `- [ ]`
+  — convert, don't leave prose (backlog regen only sees line-start `- [ ]`).
+- **Epic regen is whole-corpus**: populate_epic_bodies_2026_05_21.py has no --epic flag; a cefi-shard run must NOT regen
+  (collides with concurrent tranche runs on shared epics) — defer to unsharded runs.
