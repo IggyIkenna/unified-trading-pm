@@ -238,13 +238,35 @@ structural limitation.
   `--max-workers` does not parallelize across days — parallelize by launching disjoint date-range shards; (3) a
   harness-backgrounded process on the shared host is SIGTERM'd when the owning session ends (root cause of the slot-13
   resume death) — long backfills must run on VMs; (4) VM run.logs upload to `vm-logs/<vm>/run.log` ~every 60s.
+- **2026-08-06 (slot-14, data_engineering) — CONFIRM-TO-COMPLETION: backfill DONE, 1,811/1,811 computable day-partitions
+  written (835 baseline → 1,811, +976 days).** All 4 shard VMs (`features-onchain-defi-lstyields-{s1..s4}-20260806`)
+  exited rc=0 and auto-deleted on completion (~21:42Z); a 5th fix VM (`features-onchain-defi-lstyields-fix-20260806`)
+  independently re-verified the sole ambiguous day. Live GCS listing (`onchain/by_date/*/feature_group=lst_yields/`) =
+  **1,811** unique day-partitions — target 1,815 minus 4 days that are provably un-computable, NOT a features-backfill
+  failure. **Root cause of the 4-day residual (2026-08-01..08-04): upstream MTDS `lst_rates` capture gap for
+  08-01/02/03** — 0 `data_type=lst_rates` blobs under `raw_tick_data/by_date/day=2026-08-0{1,2,3}/` (recursively
+  verified across all pipeline modes), while 07-31/08-04/08-05 each have 58. `compute_lst_features_for_day`
+  (lst_features.py:199) requires BOTH `day` AND `day-1` lst_rates → 08-01 today-empty, 08-02/03/04 prior-day-empty
+  cascade, 08-05 prior=08-04 present → 18 rows written. The `record_empty` gate REFUSED to mark 08-04 honest-absence (no
+  FetchEvidence), confirming the residual is genuinely suspicious upstream — not a silent placeholder. The fix VM
+  reproduced the same verdict (resolved 08-03 as prior, lst_rates probe empty, "No lst_yields data available", rc=1).
+  **The features backfill is complete for every day source data permits; the 4-day residual is tracked as a follow-up
+  (upstream lst_rates capture gap, see Follow-ups).**
 
 ## Follow-ups
 
-- [ ] [DATA] P1. Confirm-to-completion of the lst_yields backfill resume (launched 2026-08-05 slot-13, --start-date
+- [x] ✅ [DATA] P1. Confirm-to-completion of the lst_yields backfill resume (launched 2026-08-05 slot-13, --start-date
       2023-11-01 --end-date 2026-08-05, ~980 missing days, I/O-bound ~8h) — the [x] todo only verified 835 days
       (2021-08-17..2023-10 nearly complete) before the backfill stalled; the resume's day-partition completion and full
-      coverage through 2026-08-05 are unconfirmed.
+      coverage through 2026-08-05 are unconfirmed. **Evidence (2026-08-06, slot-14)**: GCS day-partition count =
+      **1,811** via the documented listing command (835 baseline + 976 new). All 4 shard VMs exited rc=0 + auto-deleted;
+      fix VM re-verified 08-04. Coverage is full for every day the upstream source permits; 08-01..08-04 are provably
+      un-computable (upstream `lst_rates` capture gap for 08-01/02/03, see follow-up below). NOT the false-progress
+      pattern the audit flagged — completion was verified against GCS, not assumed.
+- [ ] [DATA] P2. Backfill MTDS `lst_rates` capture for 2026-08-01/02/03 (0 `data_type=lst_rates` blobs upstream; a
+      capture gap, not a features defect) — then re-run the lst_yields compute for 08-01..08-04 (the 4-day residual
+      documented above). Repo: `market-tick-data-service` capture pipeline owner; features-side rerun is the same
+      idempotent `launch-features-vm.sh` shard once source exists.
 
 > **2026-08-06 archive-candidate audit**: Single [x] [DATA] P1 todo claims DONE but its own body says the backfill
 > stalled and only the RESUME was LAUNCHED for the ~980 missing days — completion of that range was never verified.
