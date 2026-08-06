@@ -82,9 +82,10 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       proceed.** Evidence: coverage matrix in this doc's 2026-08-06 Progress Log entry.
 
 - [ ] [DATA] P2. **After VM `cefi-fwd-20260806-065837` terminates**: build new MTDS tarball from sha=`b2cc2742` (RC3
-      fix: `_catalogue_symbols_for_venue_date` returns None when all entries have `available_from > target`), then
-      launch targeted backfill for DERIBIT+OKX-SWAP only (2026-05-23→2026-08-05) — RC3 fix enables IS by_date fallback
-      for these venues. Confirm via `gsutil ls` of `venue=DERIBIT` and `venue=OKX-SWAP` derivative_ticker paths.
+      fix), then launch targeted backfill for **DERIBIT ONLY** (2026-05-23→2026-08-05) — RC3 fix enables IS by_date
+      fallback for DERIBIT (catalogue entries all have `available_from > 2026-05-23`). OKX-SWAP is NOT affected
+      (confirmed 310 objects for 2026-05-23 in current VM run). Confirm via
+      `gsutil ls venue=DERIBIT/perpetual/derivative_ticker/`.
 
 ## Progress Log
 
@@ -187,6 +188,12 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   gaps, not from RC3 changes). VM `cefi-fwd-20260806-065837` still RUNNING at day=2026-05-24 (heartbeat 09:00Z) — CANNOT
   benefit from RC3 fix (tarball baked at launch with sha=467a3cd1). DERIBIT/OKX-SWAP derivative_ticker = 0 in this run.
   Follow-up todo added: targeted DERIBIT+OKX-SWAP backfill after VM terminates with new tarball@b2cc2742.
+- **slot-14 2026-08-06 ~09:05Z (data_engineering, checkpoint #9 — OKX-SWAP confirmed working, DERIBIT-only gap)**: GCS
+  verification for day=2026-05-23 (current VM, post day=2026-05-23 completion log): BINANCE-FUTURES=508 ✅ · BYBIT=444
+  ✅ · OKX-SWAP=**310** ✅ · KRAKEN-FUTURES=253 ✅ · BITGET-FUTURES=436 ✅ · DERIBIT=**0** ❌ (RC3 confirmed).
+  **OKX-SWAP does NOT have RC3** — its catalogue entries cover 2026-05-23. The only remaining gap is DERIBIT. P2 todo
+  corrected to DERIBIT-only backfill. VM still RUNNING at day=2026-05-24. MTDS@b2cc2742 ahead=0. PM@dad09ec1c + this
+  update.
 - **slot-14 2026-08-06 ~08:08Z (data_engineering, heartbeat checkpoint #7)**: VM `cefi-fwd-20260806-065837` RUNNING
   (healthy, cpu=286%, rss=5.4GB, log growing). PM repo synced to `dfd40db6b` (ahead=0 after ff-pull). DERIBIT actively
   being processed: `futures_chain` complete (47266 rows, 82 dated futures written to GCS), `options_chain` single bulk
