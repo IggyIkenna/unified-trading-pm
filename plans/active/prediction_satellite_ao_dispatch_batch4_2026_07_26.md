@@ -770,3 +770,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   live frontier = the 3 `_ops/4bi_report_shard_*.jsonl` (merge by day, prefer higher `canonical_enriched`); verify via
   `verify_4bi_deletion_s5.py --dates-file legacy_348_days.txt --report <merged>`. Still running — see next entry for the
   outcome.
+- **2026-08-06T10:1xZ (slot 5, same task)** — **rebalanced 3 → 6 shards** after measuring real per-shard rates: A (Dec)
+  ~4.6 min/day, B (Jan) ~7.7 min/day, C (Mar-Apr) ~13.5 min/day → the contiguous assignment made C a **~10h critical
+  path** (outlives any session). At 10:15, with **25/273** days done clean, killed the 3 drivers + old watchdog
+  (SIGTERM, idempotent — partial in-flight days re-processed, report-driven done-set preserved) and relaunched **6
+  balanced shards** of the **104 remaining** days, round-robin by date so heavy Mar-Apr days interleave with light
+  Dec-Jan: `shard2_{A..F}_days.txt` (A/B 18d, C/D/E/F 17d), each driver its own `report_shard2_{A..F}.jsonl` (mem-capped
+  8G, harness-tracked), + 6-shard watchdog `4bi_watchdog_shards2_s5.sh` (merges all 6 into
+  `_ops/4bi_run_checkpoint_latest.jsonl`, syncs each report to `_ops/4bi_report_shard2_{A..F}.jsonl`). Rebalance tooling
+  (`rebalance_4bi.py`, shard2 day-files, watchdog) uploaded to `_ops/4bi_scratchpad_2026_08_06/`. **Resume state for the
+  next resumer**: live frontier = the 6 `_ops/4bi_report_shard2_*.jsonl` (merge by day, prefer higher
+  `canonical_enriched`); est. completion ~2.5h. Still running — see next entry for the outcome.
