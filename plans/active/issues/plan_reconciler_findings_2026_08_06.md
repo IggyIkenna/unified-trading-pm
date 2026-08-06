@@ -479,3 +479,25 @@ cefi_enumeration_audit, coinbase_cde, estate_orphan, tardis_impossible, mtds_bac
 uac_per_venue_seed, mtds_pipeline_check x2, no_active_paper_run, onchain_venues_mislabeled, prediction_capture,
 cefi_ml_directional, instruments_batch1, + 6 no-codex-ref docs (phantom_audit, features_universe_filter,
 deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finalize).
+
+## STEP 4 verdicts (adversarial verify — refuter/confirmer pairs, 8 agents)
+
+### Cluster D (codex-alignment) — refuter DONE 6/6 CONFIRMED
+
+- **D1 CONFIRMED** — backfill_smoke:302-305 todo 6 → flip `[x]` "answered by action — RULED in-scope": register §6b
+  (canonical-cutover-register.md:378-379) + non-canonical-path-inventory.md:243 + archive
+  instrument_availability_hive_canonicalisation:190-193 (sink-PREFIX co-fix `instruments-service@a9be6ce9` same commit,
+  co-migrated 2026-08-03). ALSO strip leading `6.` (todo-format non-canonical). Residuals noted (sports fixtures /
+  32,846 content_mismatch) do not contradict.
+- **D2 CONFIRMED** — cefi_4surface:867 → reword "(dropped from this log's context_scope as redundant for its focus)"
+  (cross-asset-canonical-target-ssot.md status: current, live-cited at availability-manifest:1117 + 10+ refs; commit
+  2748b15fc shows context_scope trim, not supersession).
+- **D3 CONFIRMED** — adapter_findings:99-100 → re-point to `/codex/02-data/honest-coverage-model.md` § "coverage.json v2
+  schema (CK1)" (data-status-endpoint-contract.md grep-0 coverage.json).
+- **D4 CONFIRMED** — candle_feature:206 → mark pre-amendment history; **752eaff DANGLING — DO NOT CITE**; cite
+  unified-trading-pm@9161c8d7b/6bd8b4e5b (codex mentions all NEGATIVE — claim strengthened).
+- **D5 CONFIRMED** — mtds_is_full_adapter_smoketest:128-130 → add honest-absence-downstream-handling.md:97 citation
+  (data-pipeline-correctness-hard-rule.md grep-0 placeholder).
+- **D6 CONFIRMED** — autonomous_decisions:445-448 entry-12 → replace with fold-into-prediction_phase_ab_residuals § A3
+  resolution (prediction_phase_ab_residuals:279 "2026-07-26 fold-in … entry #12, option A" + archived shell status:
+  complete + `unified-trading-pm@2c61a8dc4`).
