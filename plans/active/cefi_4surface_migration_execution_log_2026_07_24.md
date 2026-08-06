@@ -795,9 +795,11 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
       is the pre-history-rewrite twin of that commit — not on `origin/live-defi-rollout`, do not cite it; identical
       tree, content-verified at HEAD). The v2 script reuses v1's `_DRYRUN_COLS` via `importlib`, so both paths read
       `chain` in dry-run. Re-run/decide half split to its own todo below (2026-08-06, plan-reconcile).
-- [ ] [SCRIPT] P0. Re-run `investigate_chain_lossy_20260724.py` against the FULL schema — promote the script from the
-      session scratchpad to `scripts/` first per the one-off lifecycle rule (it does not exist in
-      `instruments-service/scripts/` today) — to get the actual current lossy-group count, inspect a sample, then decide
+- [ ] [SCRIPT] P0. Re-run the chain-lossy diagnostic against the FULL schema — the original
+      `investigate_chain_lossy_20260724.py` is GONE (verified 2026-08-06: exists nowhere on disk; the originating
+      2026-07-24 session's scratchpad was wiped), so re-create it from the documented procedure
+      (/plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md:94 + this doc's body :760-789)
+      or write a fresh minimal probe — to get the actual current lossy-group count, inspect a sample, then decide
       `--keep-chain` vs. a repair vs. a fixed dry-run + clean `--apply` (the "Recommended next" text below).
 
 **Operator returned and said stop** (not the 6-hour window elapsing — an explicit interrupt). Per the autonomous skill's
