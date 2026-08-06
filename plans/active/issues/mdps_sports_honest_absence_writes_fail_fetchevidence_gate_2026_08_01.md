@@ -140,24 +140,36 @@ findings 3 and 4 have concrete bounded next steps, tracked as todos below.
       (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real manifest row
       (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B gate. (repo:
       `market-data-processing-service`)
-- [ ] [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
-      crash.** Grep a failing VM's `run.log` for `❌ Exception processing` (specifically — the generic
-      `Traceback|Exception` search already came back null twice) to catch the file-level exception
-      `batch_workers.py:513` should log before the summary. Done-when: either that grep locates the raising frame, or it
-      is null and `_process_instrument_file`'s full body + `_submit_instrument_file_tasks` have been read to find the
-      raise whose `str(e)` is `""`. (repo: `market-data-processing-service`)
-- [ ] [DIAG] P2. **Local repro against the known-bad instrument_ids** — e.g.
+- [x] ✅ [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
+      crash.** RESOLVED 2026-08-06 (slot-11, `sports_satellite_ao_dispatch_batch9-008`): the grep for
+      `❌ Exception     processing` (batch_workers.py:513) returned **0 hits** on VM `...-134301-2bf067`'s `run.log` —
+      the `_collect_future_result` exception branches NEVER fired. Disproven: no exception of any kind was raised (0
+      hits also for `❌ Error processing`, `Traceback`, `falling back to eager`, AND the `classify_and_emit_error`
+      structured-error pattern), and the summary's instrument_ids are canonical ids, NOT `blob_path` (ruling out the
+      fallback `instrument_id=blob_path` branch). Root cause is finding 1's pre-fix success formula on a stale floating
+      tarball — see Progress Log 2026-08-06. (repo: `market-data-processing-service`)
+- [x] ✅ [DIAG] P2. **Local repro against the known-bad instrument_ids** — e.g.
       `FOOTBALL:bovada:h2h:soccer_argentina_primera_division:2025/2026:Racing Club-Estudiantes::AWAY` for `2025-12-18`
-      (finding 4) and `2025-12-24` (finding 3). Confirmed deterministic across ≥3 runs per date and reproducing on two
-      independent dates, so a single local run settles it without more log archaeology. Done-when: the crash is
-      reproduced locally and the raising frame is named. (repo: `market-data-processing-service`)
-- [ ] [DIAG] P3. **Read `_streaming_filter_slice` / `_streaming_resolve_inst_info` line-by-line** (finding 3's residual)
-      for a raise that stringifies to `""`; these two calls inside `_process_chain_bundle_streaming`'s per-symbol loop
-      (`live_workers_streaming.py:777-823`) are NOT individually try/excepted, unlike
-      `_streaming_process_slice_timeframes`. Done-when: either a candidate raise is named or both are confirmed
-      raise-free. NOTE: finding 4 already DISCONFIRMED the "falling back to eager" half of this hypothesis (zero hits
-      for that log string), so this is now the narrow residual, not the leading theory. (repo:
+      (finding 4) and `2025-12-24` (finding 3). RESOLVED 2026-08-06 WITHOUT a local run: commit forensics on the
+      deployment archive (`git_commit=b2a450e87a` for BOTH finding-3's `130846` and finding-4's `134301` VMs) + the
+      run.log signature are conclusive (see Progress Log 2026-08-06) — the "crash" is a `success`-formula
+      misclassification, not a runtime error a local run would surface. A local repro is no longer needed. (repo:
       `market-data-processing-service`)
+- [x] ✅ [DIAG] P3. **Read `_streaming_filter_slice` / `_streaming_resolve_inst_info` line-by-line** (finding 3's
+      residual) for a raise that stringifies to `""`; these two calls inside `_process_chain_bundle_streaming`'s
+      per-symbol loop (`live_workers_streaming.py:777-823`) are NOT individually try/excepted, unlike
+      `_streaming_process_slice_timeframes`. Done-when: either a candidate raise is named or both are confirmed
+      raise-free. RESOLVED 2026-08-06 (slot-11): both functions read line-by-line and are raise-free for the failing
+      shape (no raise reachable that isn't individually try/excepted); confirmed empirically — 0
+      `falling back to     eager`, 0 `classify_and_emit_error` in `...-134301-2bf067`'s run.log, so neither ever raised
+      for any of the 50. Hypothesis DISPROVEN. See Progress Log 2026-08-06. (repo: `market-data-processing-service`)
+- [ ] [DATA] P3. **Verify the current MDPS floating tarball includes the success-formula fix (`33b323c`/`8358b9f`)
+      before any `mdps-backfill-sports-` relaunch for `2025-12-18`/`2025-12-24`** — confirm the deployed image/tarball's
+      `git_commit` is post-`33b323c` (i.e. `live_workers.py` computes `success = len(errors) == 0`, NOT the pre-fix
+      `... and len(processed_timeframes) == len(valid_tfs)`), then gate the `[SCRIPT] P3` relaunch on it. Root cause of
+      the findings-3/4 recurrence was the FLOATING (unpinned) MDPS tarball serving pre-fix code `b2a450e87a` all day on
+      2026-08-01 — deployment archives show VMs launched 13:08–14:50Z ran `b2a450e87a` despite the 12:31:14Z fix. (repo:
+      `deployment-service`)
 - [ ] [SCRIPT] P3. **Do NOT relaunch `mdps-backfill-sports-` for `2025-12-24` / `2025-12-18` until the above lands** —
       the prefix has already failed 6x in one day against `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound, and the
       crash is proven deterministic, so each further relaunch reproduces the identical `~50/N` failure and burns compute
@@ -178,7 +190,14 @@ run was already in flight for the same date (`mdps-backfill-sports-pcskip-202608
 `13:19:28Z`). Finding 2 (the honest-absence `FetchEvidence` gate, this doc's main subject) is unaffected — it degrades
 to a `WARNING` and does not crash the VM — and remains open pending the operator's A vs B call.
 
-## Finding 3 (NEW, open) — the streaming chain-bundle path has its OWN "Unknown error" crash, unfixed by 8358b9f
+## Finding 3 (RESOLVED 2026-08-06 — NOT a streaming-path bug; pre-fix success formula on stale floating tarball)
+
+> **RESOLVED 2026-08-06 (slot-11, `sports_satellite_ao_dispatch_batch9-008`)**: this finding's premise ("proves
+> `8358b9f` does not cover this crash path") was WRONG — `130846` ran stale pre-fix code `b2a450e87a` via the floating
+> MDPS tarball. The `_streaming_filter_slice`/`_streaming_resolve_inst_info` unguarded-raise hypothesis is DISPROVEN
+> (both raise-free; 0 `falling back to eager`; 0 `classify_and_emit_error`). The crash is finding 1's pre-fix
+> `success = len(errors) == 0 and len(processed_timeframes) == len(valid_tfs)` misclassification. Full forensics in the
+> Progress Log 2026-08-06.
 
 A THIRD DP-VM-001 escalation (`agt-14585b`) landed on VM `mdps-backfill-sports-pcskip-20260801-130846-2bf067`
 (`deployment_id=276fe963-2060-4a41-934e-d954f39c2409`, `exit_code=1`, date `2025-12-24`) — the exact "recovery run
@@ -241,7 +260,13 @@ STOP relaunching, file an issue") a 6th relaunch would almost certainly reproduc
 finding stays `status: open` pending a follow-up read of `_maybe_dispatch_chain_streaming`'s fallback + the two
 unguarded per-slice helper calls.
 
-## Finding 4 (NEW, open) — reproduces on a DIFFERENT date too; "falling back to eager" hypothesis disconfirmed; new lead
+## Finding 4 (RESOLVED 2026-08-06 — `_collect_future_result` lead closed; same pre-fix success-formula root cause)
+
+> **RESOLVED 2026-08-06 (slot-11, `sports_satellite_ao_dispatch_batch9-008`)**: the `❌ Exception processing` grep on
+> `134301`'s run.log returned 0 hits — `_collect_future_result`'s exception branches (batch_workers.py:513/531) NEVER
+> fired, and the summary's instrument_ids are canonical ids, not `blob_path`, ruling out the empty-`str(e)` fallback
+> branch. `134301` ran the same stale pre-fix commit `b2a450e87a` as `130846`. The crash is finding 1's pre-fix
+> `success`-formula misclassification, not any exception path. Full forensics in the Progress Log 2026-08-06.
 
 A FOURTH DP-VM-001 escalation (`agt-b6e124`, VM `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`,
 `deployment_id=dc5c436b-e1fd-4977-bef5-d1f9dbb97294`, `exit_code=1`, `started_at=13:45:50Z`, well after both the
@@ -421,3 +446,36 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   direct-escalation channel already covering dispatch — not stable backlog work. The 3 `[DIAG]` crash-hunt todos remain
   open-ended root-cause investigation; the `[SCRIPT]` no-relaunch item is a standing STOP; Finding 5's 2 todos (bounded
   fix + grep check) don't independently justify splitting this doc while it's still mid-incident.
+
+- **2026-08-06 (slot-11, data_engineering — executing `sports_satellite_ao_dispatch_batch9-008`, the combined
+  findings-3+4 DIAG)**: **Findings 3 + 4 RESOLVED. The `~50/N "Unknown error"` crash is NOT an exception — it is finding
+  1's EXACT bug recurring on a stale floating tarball.** Forensics on VM
+  `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067` (`run.log`, ~24MB):
+  - **Zero exceptions anywhere** — 0 hits for `❌ Exception processing` (batch_workers.py:513 `_collect_future_result`),
+    `❌ Error processing` (live_workers.py eager except), `Traceback`, `falling back to eager`
+    (`_maybe_dispatch_chain_streaming` fall-through), AND the `classify_and_emit_error` structured-error pattern
+    (`[market-data-processing-service] ... error in process_instrument_file / process_chain*`). So
+    `_collect_future_result` exception branches, `_streaming_process_slice_timeframes`'s per-slice except, and
+    `_process_chain_timeframe`'s per-instrument except NEVER fired — findings 3/4's hypothesized raise (streaming
+    unguarded helper, or empty `str(e)` via `_collect_future_result`) is DISPROVEN.
+  - **The 50 failures are `ProcessingResult(success=False, error_message=None)` from the PRE-fix
+    `_run_adapter_and_write` success formula**
+    `success = len(errors) == 0 and len(processed_timeframes) == len(valid_tfs)` (pre-`33b323c`). Every failing
+    instrument is a zero-candle honest-absence file (adapter drops ALL rows via bm_time>fetch_utc causality /
+    staleness-cap filters → `_make_empty_candle_output()` → `_write_or_record_empty_timeframe` returns `(0, None, None)`
+    → `processed_timeframes=[]` but `valid_tfs=[15m,1h]` → `0 == 2` False → `success=False`), and
+    `error_message="; ".join(errors) if errors else None` = `None` → "Unknown error" at `process_handler.py:468`. This
+    is the EXACT signature finding 1 root-caused and `33b323c` fixed (its commit message documents the identical 52/594
+    count on the sibling `114120` VM).
+  - **Why it recurred on findings 3+4's VMs**: the MDPS tarball is FLOATING (unpinned — `TARBALL_PINS.json`:
+    `"floating": ["UTL_TARBALL_SHA", "MDPS_TARBALL_SHA"]`). BOTH finding-3's `130846` and finding-4's `134301` ran the
+    SAME stale commit `b2a450e87a` (deployment-archive `git_commit`), and every `mdps-backfill-sports-`/sports VM
+    launched 13:08–14:50Z on 2026-08-01 ran `b2a450e87a` — even though the fix landed in the repo at 12:31:14Z. Findings
+    3+4's premise that these VMs ran post-fix code ("started well after the 8358b9f fix") was WRONG; the fix never
+    reached the running VMs' image. (`b2a450e87a` is no longer reachable in the repo — purged by the 2026-08-05 history
+    rewrite — but the pre-fix `success` signature in the run.log + the deployment archives are conclusive.)
+  - **Finding 5 independence CONFIRMED**: 0 `[partition_mismatch]` hits in this VM's run.log — none of the 50 "Unknown
+    error" instruments share the venue-mismatch root cause.
+  - **Resolution**: the code fix (`success = len(errors) == 0`) is already on `origin/live-defi-rollout` HEAD — no code
+    change ships from this task. Residual gap = the stale-tarball mechanism → new `[DATA] P3` todo above (verify the
+    current MDPS tarball carries `33b323c` before the `[SCRIPT] P3` relaunch gate).

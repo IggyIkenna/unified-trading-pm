@@ -182,7 +182,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       decision). Source: `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: a SPORTS
       honest-absence candle timeframe produces a real manifest row (not a WARNING log with zero rows written), proven on
       one re-run day in `market-data-processing-service`.
-- [ ] [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
+- [x] ✅ [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, combined into one sequential pass per
       the skill's same-source-doc rule) in `market-data-processing-service`: (1) grep the failing VM's `run.log` (e.g.
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`) for `❌ Exception processing` to locate the
@@ -195,7 +195,18 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       2025-12-24/2025-12-18 until this investigation's conclusion lands. Source:
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: the raising frame/exception
       is named (via whichever step first identifies it) and documented in the doc's Progress Log, or all 3 steps are
-      exhausted with a documented "raise-free, cause still unknown" conclusion.
+      exhausted with a documented "raise-free, cause still unknown" conclusion. **COMPLETED 2026-08-06 (slot-11)**: step
+      1's grep came back 0 hits — `_collect_future_result`'s exception branches never fired (also 0 for
+      `❌ Error processing`, `Traceback`, `falling back to eager`, `classify_and_emit_error`). **Root cause: NOT an
+      exception.** It is finding 1's pre-fix `_run_adapter_and_write` success formula
+      (`success = len(errors) == 0 and len(processed_timeframes) == len(valid_tfs)`, pre-`33b323c`) misclassifying
+      zero-candle honest-absence files as `success=False, error_message=None` → "Unknown error". Findings 3+4's VMs
+      (`130846`, `134301`) both ran stale pre-fix commit `b2a450e87a` via the FLOATING (unpinned) MDPS tarball — the
+      `33b323c` fix landed in the repo at 12:31:14Z but the tarball served pre-fix code to every sports VM launched
+      13:08–14:50Z that day. Findings 3/4 hypotheses (streaming unguarded raise; `_collect_future_result` empty
+      `str(e)`) BOTH DISPROVEN; finding 5 independence confirmed (0 `[partition_mismatch]`). The fix is already on LDR
+      HEAD — no code change shipped; residual tarball-staleness gap tracked as a new `[DATA] P3` todo in the source
+      doc's findings-3/4 section. Evidence documented in the source doc's Progress Log 2026-08-06.
 - [ ] [CODE] P2. Investigate-then-fix finding 5 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` in `market-data-processing-service`:
       first grep findings-3/4's VM `run.log`s (e.g. `mdps-backfill-sports-pcskip-20260801-130846-2bf067` /
