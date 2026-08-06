@@ -344,3 +344,16 @@ cleanly instead of ending on an issue-doc corroboration.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-06 (cicd escalation agt-ca03f6, slot 9, wall ldr_qg_failure / repo-blocker RB-fbeef249) — another
+  restart-correlated recurrence of the identical terminal symptom**: `POST /api/slots/9/done {one_shot_complete: true}`
+  (and a retry with `task_id: "agt-ca03f6"`) both 400
+  `"one_shot_complete on slot 9 but no active agent owns its session 'orch-slot-9' — a Class-A worker must /done with a task_id."`
+  Correlated with a mid-session backend outage (server unreachable ~30s mid-session; identical 400 before and after
+  recovery — same restart-variant shape as the 2026-08-04 `agt-8e2ecb`/slot-10 entry; a fresh `/done` retry after the
+  server returned still 400s deterministically). **Substantive deliverable COMPLETE regardless**: declared blocker cause
+  (finalize-plan-coverage QG red) already green on origin via `6c5927a06`; fixed `check_terminal_status_archived` 4->0
+  (3 docs archived, 1 re-opened for its open P3 follow-up); landed + independently verified
+  `unified-trading-pm@fc207c245` is an ancestor of `origin/live-defi-rollout`; repo-blocker RB-fbeef249 resolved via
+  `reporter` (`waiters_notified=1`); authoring slot 4 pinged; all slot repos clean on `live-defi-rollout`. Nothing lost
+  — deliverable durably on LDR. Standing down per the documented closing pattern (final heartbeat + this recurrence
+  note); the still-open `[BACKEND] P3` identity-matching fix remains the durable cure.
