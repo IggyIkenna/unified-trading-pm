@@ -81,6 +81,11 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       raw input must land before `defi_cefi_venue_chain_axis_contamination-011`'s corpus recompute (gated, NOT run) can
       proceed.** Evidence: coverage matrix in this doc's 2026-08-06 Progress Log entry.
 
+- [ ] [DATA] P2. **After VM `cefi-fwd-20260806-065837` terminates**: build new MTDS tarball from sha=`b2cc2742` (RC3
+      fix: `_catalogue_symbols_for_venue_date` returns None when all entries have `available_from > target`), then
+      launch targeted backfill for DERIBIT+OKX-SWAP only (2026-05-23→2026-08-05) — RC3 fix enables IS by_date fallback
+      for these venues. Confirm via `gsutil ls` of `venue=DERIBIT` and `venue=OKX-SWAP` derivative_ticker paths.
+
 ## Progress Log
 
 - **slot-9 2026-08-06 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-011`)**: **CORRECTION — the ✅
@@ -167,6 +172,21 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~09:00Z (data_engineering, checkpoint #8 — RC3 found + fixed)**: **CORRECTION to checkpoints #5
+  and #6**: the claim "DERIBIT: 339178 mvp=True rows → will produce derivative_ticker" was WRONG. Those 339178 rows were
+  queried WITHOUT date filtering; all have `available_from > 2026-05-23`. Filtered: `active_df.empty` → code at line 254
+  returned `[]` → `_resolve_symbols` line 884 sees `[]` (not None) → IS fallback never fires → 0 derivative_ticker
+  objects for DERIBIT. Same for OKX-SWAP (catalogue entries also all post-2026-05-23). **RC3 root cause**:
+  `_catalogue_symbols_for_venue_date` returned `[]` on `active_df.empty` regardless of WHY it was empty. Fix: if
+  `active_df.empty` AND all venue entries have `available_from > target`, return `None` (IS fallback). Shipped:
+  `market-tick-data-service@b2cc2742`
+  (`fix(cefi): return None from catalogue path when all entries have available_from after target — IS fallback fires for DERIBIT/OKX-SWAP historical backfills`),
+  QG green. Two regression tests added (`test_catalogue_built_after_target_date_returns_none`,
+  `test_catalogue_all_delisted_before_target_returns_empty_list`). PM QG ratchet baselines lowered:
+  `no_empty_string_fallback_baseline.yaml` → 2367, `ruff_rule_ratchet_baseline.yaml` → DTZ:236/TID251:262 (pre-existing
+  gaps, not from RC3 changes). VM `cefi-fwd-20260806-065837` still RUNNING at day=2026-05-24 (heartbeat 09:00Z) — CANNOT
+  benefit from RC3 fix (tarball baked at launch with sha=467a3cd1). DERIBIT/OKX-SWAP derivative_ticker = 0 in this run.
+  Follow-up todo added: targeted DERIBIT+OKX-SWAP backfill after VM terminates with new tarball@b2cc2742.
 - **slot-14 2026-08-06 ~08:08Z (data_engineering, heartbeat checkpoint #7)**: VM `cefi-fwd-20260806-065837` RUNNING
   (healthy, cpu=286%, rss=5.4GB, log growing). PM repo synced to `dfd40db6b` (ahead=0 after ff-pull). DERIBIT actively
   being processed: `futures_chain` complete (47266 rows, 82 dated futures written to GCS), `options_chain` single bulk
