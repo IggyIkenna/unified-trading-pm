@@ -92,12 +92,20 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
       silent. Resolution is by filename against `plans/active/` vs `plans/archive/`, driven off the task's `plan_ref`.
       Test: `…::test_retires_when_plan_doc_archived`.
 
-- [ ] [INFRA] P2. **Add a periodic staleness re-check for standing questions.** Neither trigger above would have caught
-      `BLK-4781b9af`: its task was still open and no doc was archived — the external world (GitHub) simply moved on.
-      Give a question an optional machine-checkable `recheck` predicate (for a CI/PR-shaped question: is the PR still
-      open, is the required check still missing) evaluated on a timer, and auto-retire with evidence when the predicate
-      says the condition cleared. Where no predicate is expressible, at minimum surface an age on the dashboard so a
-      15h-old question is visibly abnormal.
+- [x] ✅ [INFRA] P2. **Add a periodic staleness re-check for standing questions.** Neither trigger above would have
+      caught `BLK-4781b9af`: its task was still open and no doc was archived — the external world (GitHub) simply moved
+      on. Give a question an optional machine-checkable `recheck` predicate (for a CI/PR-shaped question: is the PR
+      still open, is the required check still missing) evaluated on a timer, and auto-retire with evidence when the
+      predicate says the condition cleared. Where no predicate is expressible, at minimum surface an age on the
+      dashboard so a 15h-old question is visibly abnormal. **SHIPPED (age half) — agent-orchestrator@ceab325.** A
+      question standing past `tuning.blocked_question_stale_after_hours` (new, default 8) now re-reminds via the
+      existing `notify_slot_blocked` path, deduped by `blocked_question_reremind_cooldown_hours` (default 12) rather
+      than paging every sweep tick — the alerting SSOT's fire-on-change / re-remind rule. Cooldown entries drop once an
+      id stops being pending, so a later question with the same id alerts fresh. Tests:
+      `tests/test_blocked_reconcile.py::test_reminds_on_a_question_standing_past_the_threshold` (asserts the real 15h
+      BLK-4781b9af shape), `…::test_does_not_remind_on_a_young_question`,
+      `…::test_reremind_is_deduped_by_cooldown_not_fired_every_tick`. **NOT shipped: the machine-checkable external
+      predicate** — split into its own todo below rather than half-built, because it needs an operator decision first.
 
 - [x] ✅ [INFRA] P2. **Bookend every auto-retirement in Slack.** `/codex/04-architecture/agent-orchestrator-alerting.md`
       requires that every actionable alert that paged an OPEN gets a ✅ CLOSE bookend in-channel. A question that paged
@@ -121,6 +129,20 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
       very case that motivated this issue (BLK-4781b9af — a GitHub PR superseded and main gone green) is caught by
       NEITHER shipped trigger, because its task never went terminal and no doc was archived. That is precisely todo 3's
       external-condition re-check, which is therefore the load-bearing remaining work here, not a nice-to-have.
+
+- [ ] [OPERATOR] P2. **Decide whether the orchestrator may make outbound GitHub reads, then build the external-condition
+      predicate.** The other half of todo 3, and the ONLY thing that would have caught the case this issue was filed
+      for: BLK-4781b9af asked "admin-merge PR #861?"; the PR was closed as superseded and `quality-gates-v2` went green
+      on main ~11h later, yet its task never went terminal and no doc was archived — so neither shipped retirement
+      trigger sees it. The 2026-08-06 prod sweep confirmed that empirically (`checked=26, retired=0`). A predicate
+      (`gh pr view <n> --json state`, or the required-check status) would auto-retire it with evidence. **Operator
+      decision needed BEFORE building**: the reconciler makes zero outbound network calls today, and adding them inside
+      its sweep tick brings rate limits, timeouts and a token into a loop that currently cannot fail externally.
+      Options: (a) grant a read-only `GH_TOKEN` and call GitHub from the sweep behind a timeout + circuit breaker; (b)
+      have the EXISTING ci-failure-watcher (already credentialled for GitHub) publish PR/check state that the reconciler
+      reads locally — no new egress from the sweep; (c) stop at the age re-remind above and let a human close stale
+      questions. **(b) recommended** — it reuses an already-credentialled GitHub consumer and keeps the reconciler
+      network-free.
 
 ## Progress Log
 
