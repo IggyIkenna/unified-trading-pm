@@ -117,15 +117,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Extend `run_2yr_config_grid_backtest.py` with an `ML_DIRECTIONAL_CONTINUOUS` archetype entry.** In
-      `strategy-service/scripts/run_2yr_config_grid_backtest.py`, the script currently only supports
-      `StrategyArchetype.CARRY_STAKED_BASIS` and `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` (both DeFi archetypes)
-      in `SUPPORTED_ARCHETYPES` (line 136) and every per-archetype dispatch point (dimension tables ~line 227/234,
-      branch logic ~line 356/362/526/537/602/606). Mirror the existing pattern to add `ML_DIRECTIONAL_CONTINUOUS` with
-      grid dimensions `position_size_pct` / `confidence_threshold` / `stop_loss_bps` / `take_profit_bps` /
-      `model_family`. This is a pure code task — no live-capital or wallet-credential dependency, and is deliberately
-      separable from the actual 2-year VM-run + GCS-output-inspection half of the same source-doc gate, which 3
-      independent audit passes have consistently classified operator-scheduled (not drafted here). Source:
+- [x] ✅ [BACKEND] P2. **Extend `run_2yr_config_grid_backtest.py` with an `ML_DIRECTIONAL_CONTINUOUS` archetype entry —
+      strategy-service@dff5b2c0** In `strategy-service/scripts/run_2yr_config_grid_backtest.py`, the script currently
+      only supports `StrategyArchetype.CARRY_STAKED_BASIS` and `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` (both DeFi
+      archetypes) in `SUPPORTED_ARCHETYPES` (line 136) and every per-archetype dispatch point (dimension tables ~line
+      227/234, branch logic ~line 356/362/526/537/602/606). Mirror the existing pattern to add
+      `ML_DIRECTIONAL_CONTINUOUS` with grid dimensions `position_size_pct` / `confidence_threshold` / `stop_loss_bps` /
+      `take_profit_bps` / `model_family`. This is a pure code task — no live-capital or wallet-credential dependency,
+      and is deliberately separable from the actual 2-year VM-run + GCS-output-inspection half of the same source-doc
+      gate, which 3 independent audit passes have consistently classified operator-scheduled (not drafted here). Source:
       `cefi_ml_directional_continuous_live_2026_06_20.md` (the `[VERIFY] P0` todo's first sub-requirement only). **Done
       when**: `ML_DIRECTIONAL_CONTINUOUS` is added to `SUPPORTED_ARCHETYPES` with a working dimension table and branch
       coverage at every existing per-archetype dispatch point, QG is green, and a unit test proves the new archetype is
