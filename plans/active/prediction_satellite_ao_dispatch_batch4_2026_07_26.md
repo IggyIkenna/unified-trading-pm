@@ -781,3 +781,15 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   (`rebalance_4bi.py`, shard2 day-files, watchdog) uploaded to `_ops/4bi_scratchpad_2026_08_06/`. **Resume state for the
   next resumer**: live frontier = the 6 `_ops/4bi_report_shard2_*.jsonl` (merge by day, prefer higher
   `canonical_enriched`); est. completion ~2.5h. Still running — see next entry for the outcome.
+- **2026-08-06T18:3xZ (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)** —
+  resumed the 4b-i delete pass. Recovered state from GCS: merged checkpoint at 263/348 days (0 anomalies), 6 shard
+  reports from slot-5's rebalanced run. **10 legacy-present days remaining** (2026-04-04..2026-04-14, minus 2026-04-05
+  which was already done), plus 75 legacy-absent days (already deleted, documented in legacy_presence.json). Adapted
+  slot-5's driver + watchdog to slot 8 (only path change: `.tabs/5/` → `.tabs/8/`), seeded the report with the 263-day
+  baseline to skip already-done days, verified MTDS venv exists, re-verified soft-delete retention (604800s, qualifies
+  for reversibility), and launched `--apply --delete-legacy` over the 10 remaining days (mem-capped 12G via
+  `run-bounded-analysis.sh`, harness-tracked `run_in_background` + self-heartbeating watchdog posting /progress every 5
+  min, syncing report to `_ops/4bi_report_s8.jsonl`). **Lesson**: the driver uses `--report` as both done-set filter AND
+  output — seed it with the baseline checkpoint before launching, or it re-processes all 273 present days. **Lesson**:
+  `run-bounded-analysis.sh` lives in `unified-trading-pm/scripts/dev/`, not in the service repos. Still running — see
+  next entry for the outcome.
