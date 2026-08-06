@@ -55,7 +55,8 @@ IN_SCOPE_STATUS = {
 MARKER_RE = re.compile(r"context-scout\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 # COUNT_MISMATCH detection: parenthetical count claim in a context-scout Progress Log bullet.
-COUNT_RE = re.compile(r"\((\d+)\s+entries?\)")
+# Matches "(1 entry)" and "(4 entries)" — the two forms used in corpus markers.
+COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\)")
 # Marker bullet window: bounds how far to scan before/after the marker text.
 _WINDOW_END_PATTERNS = ("\n- ", "\n## ", "\n```", "\n---", "\n> ")
 _MAX_MARKER_WINDOW_CHARS = 2000

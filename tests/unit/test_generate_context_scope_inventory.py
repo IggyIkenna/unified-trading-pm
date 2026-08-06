@@ -135,7 +135,7 @@ def test_latest_marker_info_returns_date_and_position():
     assert info is not None
     date, pos = info
     assert date == "2026-08-03"
-    assert body[pos : pos + 20].startswith("context-scout 2026-08")
+    assert body[pos : pos + 25].startswith("context-scout 2026-08-03")
 
 
 def test_latest_marker_info_none_when_absent():
